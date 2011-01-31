@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<project name="coref" default="compile" basedir=".">
+
+  <property name="build.path"     value="${basedir}/classes" />
+  <property name="source.path"    value="${basedir}/src" />
+  <property name="test.path"    value="${basedir}/tests" />
+  <property name="test.raw.path"    value="${test.path}/raw-test-output" />
+  <property name="test.reports.path"    value="${test.path}/test-reports" />
+
+  <property name="compile.debug"       value="true"/>
+  <property name="compile.deprecation" value="false"/>
+  <property name="compile.optimize"    value="true"/>
+  <property name="compile.source"      value="1.6" />
+  <property name="compile.target"      value="1.6" />
+  <property name="compile.encoding"    value="utf-8" />
+
+  <target name="classpath" description="Sets the classpath">
+    <echo message="${ant.project.name}" />
+    <path id="classpath">
+      <fileset dir="${basedir}/lib">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+    <path id="classes">
+      <pathelement location="${build.path}" />
+    </path>
+  </target>
+
+  <target name="clean" description="Delete old classes">
+    <echo message="${ant.project.name}" />
+    <delete includeemptydirs="true" failonerror="false">
+      <fileset dir="${build.path}/" includes="**/*"/>
+      <fileset dir="${test.path}"/>
+    </delete>
+  </target>
+
+  <target name="build-dir" description="Create build output directories">
+    <mkdir dir="${build.path}" />
+  </target>
+
+  <target name="resources" description="Copy resources to build output directory">
+    <!-- 
+    <mkdir dir="${build.path}/coe/lang" />
+    <copy todir="${build.path}/coe/lang">
+      <fileset dir="${source.path}/coe/lang">
+    	<include name="*.txt"/>
+      </fileset>
+    </copy>
+    -->
+  </target>
+  
+  <target name="compile" depends="classpath,build-dir,resources"
+          description="Compile core sources">
+    <echo message="${ant.project.name}" />
+    <javac srcdir="${source.path}"
+           destdir="${build.path}"
+           debug="${compile.debug}"
+           encoding="utf-8" 
+	   deprecation="${compile.deprecation}"
+           optimize="${compile.optimize}"
+           source="${compile.source}"
+           target="${compile.target}"
+	   includeantruntime="false">
+      <classpath refid="classpath" />
+      <compilerarg value="-Xlint:cast"/>
+      <compilerarg value="-Xlint:finally"/>
+      <compilerarg value="-Xlint:path"/>
+    </javac>
+  </target>
+
+  <target name="junit" depends="compile"
+	  description="Run JUnit tests">
+    <mkdir dir="${test.raw.path}"/>
+    <mkdir dir="${test.reports.path}"/>
+    <junit printsummary="yes" failureproperty="junit.failure">
+      <classpath>
+        <path refid="classpath"/>
+        <path refid="classes"/>
+      </classpath>
+      <batchtest todir="${test.raw.path}">
+        <fileset dir="${source.path}" includes="**/*Test.java"/>
+	<formatter type="xml"/>
+      </batchtest>
+    </junit>
+    <junitreport todir="${test.path}">
+      <fileset dir="${test.raw.path}"/>
+      <report todir="${test.reports.path}"/>
+    </junitreport>
+    <fail if="junit.failure" message="Unit test(s) failed.  See reports!"/>
+  </target>
+
+  <target name="all" depends="clean,compile,junit"
+          description="Clean and re-compile." />
+
+</project>
