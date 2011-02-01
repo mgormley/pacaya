@@ -2,12 +2,12 @@ package edu.jhu.hltcoe.eval;
 
 import java.io.PrintWriter;
 
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.inference.Trainer;
 
 public class DependencyParserEvaluator implements Evaluator {
 
     @Override
-    public void evaluate(Model model) {
+    public void evaluate(Trainer model) {
         // TODO Auto-generated method stub
         
     }

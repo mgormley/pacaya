@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -9,14 +10,16 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
+import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
-import edu.stanford.nlp.trees.MemoryTreebank;
+import edu.jhu.hltcoe.inference.Trainer;
+import edu.jhu.hltcoe.inference.TrainerFactory;
 import edu.stanford.nlp.ling.CategoryWordTag;
+import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
+import edu.stanford.nlp.trees.MemoryTreebank;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Treebank;
@@ -39,10 +42,12 @@ public class PipelineRunner {
             pt.percolateHeads(chf);
           }
         });
+        
+        SentenceCollection sentences = new SentenceCollection(treebank);
 
         // Train the model
-        Model model = ModelFactory.getModel(cmd);
-        model.train(treebank);
+        Trainer model = TrainerFactory.getModel(cmd);
+        model.train(sentences);
 
         // Evaluate the model
         PrintWriter pw = new PrintWriter(System.out);
@@ -59,7 +64,7 @@ public class PipelineRunner {
         // Options not specific to the model
         options.addOption("tr", "train", true, "Training data.");
 
-        ModelFactory.addOptions(options);
+        TrainerFactory.addOptions(options);
         return options;
     }
 
