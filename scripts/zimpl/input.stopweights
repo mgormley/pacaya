@@ -1,0 +1,24 @@
+$ l 0 0.99999
+$ l 1 0.99999
+$ r 0 0.9
+$ r 1 0.9
+
+eat l 0 .5
+eat l 1 .5
+eat r 0 .5
+eat r 1 .5
+
+feed l 0 .5
+feed l 1 .5
+feed r 0 .5
+feed r 1 .5
+
+chicken l 0 .5
+chicken l 1 .5
+chicken r 0 .5
+chicken r 1 .5
+
+the l 0 .5
+the l 1 .5
+the r 0 .5
+the r 1 .5

@@ -1,0 +1,25 @@
+$ eat .3
+$ feed .3
+$ chicken .1
+$ the .1
+eat eat .1
+eat feed .2
+eat chicken .3
+eat the .2
+eat $ 1
+feed eat .1
+feed feed .1
+feed chicken .4
+feed the .2
+feed $ 1
+chicken eat .1
+chicken feed .1
+chicken chicken .1
+chicken the .3
+chicken $ 1
+the eat .1
+the feed .1
+the chicken .1
+the the .1
+the $ 1
+
