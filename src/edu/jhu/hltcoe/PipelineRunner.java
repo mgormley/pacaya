@@ -9,6 +9,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
+import edu.stanford.nlp.trees.MemoryTreebank;
+import edu.stanford.nlp.ling.CategoryWordTag;
+import edu.stanford.nlp.trees.CollinsHeadFinder;
+import edu.stanford.nlp.trees.HeadFinder;
+import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreeVisitor;
+import edu.stanford.nlp.trees.Treebank;
+
 public class PipelineRunner {
 
     public PipelineRunner() {
@@ -17,18 +25,25 @@ public class PipelineRunner {
 
     public void run(CommandLine cmd) throws ParseException {
         // Read the data
-        String dataPath = cmd.getOptionValue("data");
-        DataReader dataReader = new DataReader();
-        dataReader.loadPath(dataPath);
+        String trainPath = cmd.getOptionValue("train");
+        Treebank treebank = new MemoryTreebank();
+        CategoryWordTag.suppressTerminalDetails = true;
+        treebank.loadPath(trainPath);
+        final HeadFinder chf = new CollinsHeadFinder();
+        treebank.apply(new TreeVisitor() {
+          public void visitTree(Tree pt) {
+            pt.percolateHeads(chf);
+          }
+        });
 
         // Train the model
         Model model = ModelFactory.getModel(cmd);
-        model.train(dataReader.getData());
+        model.train(treebank);
 
         // Evaluate the model
         PrintWriter pw = new PrintWriter(System.out);
         if (cmd.hasOption("psuedo-word")) {
-            Evaluator pwEval = new PsuedoWordEvaluator();
+            Evaluator pwEval = new DependencyParserEvaluator();
             pwEval.evaluate(model);
             pwEval.print(pw);
         }
@@ -38,7 +53,7 @@ public class PipelineRunner {
         Options options = new Options();
         
         // Options not specific to the model
-        options.addOption("d", "data", true, "Input data.");
+        options.addOption("tr", "train", true, "Training data.");
 
         ModelFactory.addOptions(options);
         return options;
@@ -48,7 +63,7 @@ public class PipelineRunner {
         String usage = "java " + PipelineRunner.class.getName() + " [OPTIONS]";
         CommandLineParser parser = new PosixParser();
         Options options = createOptions();
-        String[] requiredOptions = new String[] { "data" };
+        String[] requiredOptions = new String[] { "train" };
 
         CommandLine cmd = null;
         final HelpFormatter formatter = new HelpFormatter();

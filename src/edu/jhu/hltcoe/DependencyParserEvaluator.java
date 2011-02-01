@@ -2,7 +2,7 @@ package edu.jhu.hltcoe;
 
 import java.io.PrintWriter;
 
-public class PsuedoWordEvaluator implements Evaluator {
+public class DependencyParserEvaluator implements Evaluator {
 
     @Override
     public void evaluate(Model model) {

@@ -1,7 +1,10 @@
 package edu.jhu.hltcoe;
 
-public interface Model {
+import edu.stanford.nlp.parser.ViterbiParser;
+import edu.stanford.nlp.trees.Treebank;
 
-    void train(Object data);
+public interface Model extends ViterbiParser {
+
+    void train(Treebank treebank);
 
 }
