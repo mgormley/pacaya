@@ -9,6 +9,10 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
+import edu.jhu.hltcoe.eval.Evaluator;
+import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.ModelFactory;
 import edu.stanford.nlp.trees.MemoryTreebank;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.CollinsHeadFinder;

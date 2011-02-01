@@ -1,6 +1,8 @@
-package edu.jhu.hltcoe;
+package edu.jhu.hltcoe.eval;
 
 import java.io.PrintWriter;
+
+import edu.jhu.hltcoe.model.Model;
 
 public class DependencyParserEvaluator implements Evaluator {
 

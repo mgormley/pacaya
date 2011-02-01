@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe;
+package edu.jhu.hltcoe.model;
 
 import edu.stanford.nlp.parser.ViterbiParser;
 import edu.stanford.nlp.trees.Treebank;

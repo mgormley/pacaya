@@ -1,8 +1,9 @@
-package edu.jhu.hltcoe;
+package edu.jhu.hltcoe.model;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+
 
 
 public class ModelFactory {
