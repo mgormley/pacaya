@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe;
 
 import java.io.PrintWriter;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,13 +9,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
+import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.inference.Trainer;
 import edu.jhu.hltcoe.inference.TrainerFactory;
 import edu.stanford.nlp.ling.CategoryWordTag;
-import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.MemoryTreebank;
@@ -43,6 +42,7 @@ public class PipelineRunner {
           }
         });
         
+        DepTreebank depTreebank = new DepTreebank(treebank);
         SentenceCollection sentences = new SentenceCollection(treebank);
 
         // Train the model

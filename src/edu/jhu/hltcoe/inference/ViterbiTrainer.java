@@ -1,49 +1,40 @@
 package edu.jhu.hltcoe.inference;
 
-import java.util.List;
-
+import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.ling.Sentence;
-import edu.stanford.nlp.trees.Tree;
 
-public class ViterbiTrainer implements Trainer {
+public class ViterbiTrainer<M extends Model> implements Trainer {
 
     private ViterbiParser parser;
-    private Model model;
-    private int iterations;
+    private EMTrainer<M,DepTreebank> emTrainer;
     
-    public ViterbiTrainer(ViterbiParser parser, Model model, int iterations) {
+    public ViterbiTrainer(ViterbiParser parser, MStep<M,DepTreebank> mStep, ModelFactory<M> modelFactory, int iterations) {
         this.parser = parser;
-        this.model = model;
-        this.iterations = iterations;
+        emTrainer = new EMTrainer<M,DepTreebank>(new ViterbiEStep(), mStep, modelFactory, iterations);
     }
     
     @Override
     public void train(SentenceCollection sentences) {
-        for (int i=0; i<iterations; i++) {
-            //Treebank treebank = 
+        emTrainer.train(sentences);
+    }
+
+    private class ViterbiEStep implements EStep<M,DepTreebank> {
+
+        @Override
+        public DepTreebank getCounts(SentenceCollection sentences, M model) {
+            DepTreebank treebank = new DepTreebank();
+            for (Sentence sentence: sentences) {
+                DepTree tree = parser.getViterbiParse(sentence);
+                treebank.add(tree);
+            }
+            return treebank;
         }
+        
     }
-
-    @Override
-    public Tree getBestParse() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean parse(List<? extends HasWord> sentence) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean parse(List<? extends HasWord> sentence, String goal) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
+    
 }
