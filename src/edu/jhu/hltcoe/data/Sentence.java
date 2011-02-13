@@ -1,7 +1,15 @@
 package edu.jhu.hltcoe.data;
 
-import edu.stanford.nlp.ling.TaggedWord;
+import java.util.ArrayList;
 
-public class Sentence extends edu.stanford.nlp.ling.Sentence<TaggedWord> {
+
+public class Sentence extends ArrayList<TaggedWord> {
+
+    public Sentence(DepTree tree) {
+        super();
+        for (DepTreeNode node : tree.getNodes()) {
+            add(node.getLabel());
+        }
+    }
 
 }

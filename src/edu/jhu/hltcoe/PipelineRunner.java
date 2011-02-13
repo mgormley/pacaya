@@ -43,7 +43,7 @@ public class PipelineRunner {
         });
         
         DepTreebank depTreebank = new DepTreebank(treebank);
-        SentenceCollection sentences = new SentenceCollection(treebank);
+        SentenceCollection sentences = new SentenceCollection(depTreebank);
 
         // Train the model
         Trainer model = TrainerFactory.getModel(cmd);

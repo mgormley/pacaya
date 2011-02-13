@@ -13,7 +13,7 @@ import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.XMLUtils;
 
 /**
- * Modified from Christopher Manning's original version.
+ * Modified from Christopher Manning's original version. Used by DepTree.
  * 
  * An individual dependency between a head and a dependent. The head and
  * dependent are represented as a Label. For example, these can be a Word or a

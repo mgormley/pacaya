@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-import edu.stanford.nlp.ling.TaggedWord;
+import edu.stanford.nlp.ling.HasTag;
+import edu.stanford.nlp.ling.HasWord;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -17,11 +18,13 @@ public class DepTree {
     private static final int EMPTY = -2;
     private static final int WALL = -1;
     
-    private List<TaggedWord> nodes = new ArrayList<TaggedWord>();
+    private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
     private int[] parents;
     
-    public DepTree(Tree tree) {
+    public DepTree(Tree tree) {  
         List<Tree> leaves = tree.getLeaves();
+
+        // Create parents array
         parents = new int[leaves.size()];
         Arrays.fill(parents, EMPTY);
         
@@ -49,6 +52,37 @@ public class DepTree {
             }
         }
         checkTree();
+        
+        // Create nodes
+        int position = 0;
+        for (Tree leaf : leaves) {
+            Label label = leaf.label();
+            String word = null;
+            if (label instanceof HasWord) {
+                word = ((HasWord)label).word();
+            }
+            String tag = null;
+            if (label instanceof HasTag) {
+                tag = ((HasTag)label).tag();
+            }
+            assert(word != null || tag != null);
+            nodes.add(new DepTreeNode(word, tag, position));            
+            position++;
+        }
+        
+        // Add parent/child links to DepTreeNodes
+        assert(nodes.size() == parents.length);
+        for (int i=0; i<parents.length; i++) {
+            DepTreeNode node = nodes.get(i);
+            if (parents[i] != WALL) {
+                node.setParent(nodes.get(parents[i]));
+            }
+            for (int j=0; j<parents.length; j++) {
+                if (parents[j] == i) {
+                    node.addChild(nodes.get(j));
+                }
+            }
+        }
     }
 
     private void checkTree() {
@@ -144,6 +178,10 @@ public class DepTree {
             }
         }
         return deps;
+    }
+
+    public List<DepTreeNode> getNodes() {
+        return nodes;
     }
 
 }
