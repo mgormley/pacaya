@@ -1,9 +1,9 @@
 package edu.jhu.hltcoe.inference;
 
-import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.model.Model;
 
-public interface MStep<M,C> {
+public interface MStep<C> {
 
-    M getModel(C counts);
+    Model getModel(C counts);
 
 }

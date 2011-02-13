@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.model;
 
-public interface ModelFactory<M> {
+public interface ModelFactory {
 
-    M getInstance();
+    Model getInstance();
 
 }

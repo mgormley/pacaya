@@ -8,17 +8,16 @@ import edu.jhu.hltcoe.model.ModelFactory;
  * 
  * @author mgormley
  *
- * @param <M> The model type
  * @param <C> The type of expected counts
  */
-public class EMTrainer<M extends Model,C> implements Trainer {
+public class EMTrainer<C> implements Trainer {
 
-    private EStep<M,C> eStep;
-    private MStep<M,C> mStep;
-    private ModelFactory<M> modelFactory;
+    private EStep<C> eStep;
+    private MStep<C> mStep;
+    private ModelFactory modelFactory;
     private int iterations;
     
-    public EMTrainer(EStep<M,C> eStep, MStep<M,C> mStep, ModelFactory<M> modelFactory, int iterations) {
+    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations) {
         this.eStep = eStep;
         this.mStep = mStep;
         this.modelFactory = modelFactory;
@@ -28,7 +27,7 @@ public class EMTrainer<M extends Model,C> implements Trainer {
     @Override
     public void train(SentenceCollection sentences) {
         // Initialize the parameters of the model
-        M model = modelFactory.getInstance();
+        Model model = modelFactory.getInstance();
         
         // Run iterations of EM 
         for (int i=0; i<iterations; i++) {
