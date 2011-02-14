@@ -43,6 +43,19 @@ param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 # ---------- Dependency Tree Constraints ----------
 var arc[AllArcs] binary;
 
+# Other tree constraints
+# Each node should have a parent (except the wall)
+subto one_incoming_arc:
+    forall <s> in Sents:
+        forall <j> in { 1 to Length[s] }:
+	    sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
+
+# The wall has no incoming arcs
+subto no_parent_for_wall:
+    forall <s> in Sents:
+       forall <i> in { 1 to Length[s] }: 
+           arc[s,i,0] == 0;
+
 # ==================================================
 # ==== Option 1: Projective parsing ====
 # O(n^2) constraints 
@@ -70,19 +83,6 @@ subto proj_parse:
 #     forall <s,i,j> in AllArcs:
 #         flow[s,i,j] <= Length[s] * arc[s,i,j];
 # ==================================================
-
-# Other tree constraints
-# Each node should have a parent (except the wall)
-subto one_incoming_arc:
-    forall <s> in Sents:
-        forall <j> in { 1 to Length[s] }:
-	    sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
-
-# The wall has no incoming arcs
-subto no_parent_for_wall:
-    forall <s> in Sents:
-       forall <i> in { 1 to Length[s] }: 
-           arc[s,i,0] == 0;
 
 # ---------- DMV log-likelihood ----------
 
