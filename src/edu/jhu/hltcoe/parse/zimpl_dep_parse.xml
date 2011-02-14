@@ -42,7 +42,8 @@ param ChooseWeight[AllWordPairs] := read InputChooseWeights as "<1s, 2s> 3n";
 # input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
 param InputStopWeights := "input.stopweights";
 set LR := {"l","r"};
-set StopSet := AllWords * LR * {0, 1};
+#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
+set StopSet := { read InputStopWeights as "<1s,2s,3n>" };
 param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 
 	    ]]>
@@ -65,6 +66,11 @@ subto no_parent_for_wall:
        forall <i> in { 1 to Length[s] }: 
            arc[s,i,0] == 0;
            
+# The wall has one outgoing arc
+subto one_child_for_wall:
+    forall <s> in Sents:
+       1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
+
     	]]>
 	</code>	
 	<code id="deptree-proj">

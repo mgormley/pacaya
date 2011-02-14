@@ -15,7 +15,7 @@ public class GurobiIlpSolver implements IlpSolver {
 
     private static final String gurobiBinary = "gurobi_cl";
     private final Pattern spaceRegex = Pattern.compile(" ");
-    private final Pattern tabRegex = Pattern.compile("\t");
+    private final Pattern tabRegex = Pattern.compile("\\s+");
     
     private String zimplFile;
     private Map<String, String> result;
@@ -31,6 +31,8 @@ public class GurobiIlpSolver implements IlpSolver {
 
     @Override
     public void solve() {
+        result = new HashMap<String, String>();
+        
         // Run Zimpl
         ZimplRunner zimplRunner = new ZimplRunner(zimplFile);
         zimplRunner.runZimpl();
@@ -51,7 +53,7 @@ public class GurobiIlpSolver implements IlpSolver {
         // Read tbl file and map variable values to original names
         try {
             Map<String,String> solMap = readGurobiSol(solFile);
-            Map<String,String> tblMap = readTblMap(solFile);
+            Map<String,String> tblMap = readTblMap(tblFile);
             
             for (Entry<String, String> entry : solMap.entrySet()) {
                 String gurobiVar = entry.getKey();
@@ -79,15 +81,17 @@ public class GurobiIlpSolver implements IlpSolver {
         return solMap;
     }
     
-    private Map<String,String> readTblMap(String solFile) throws IOException {
+    private Map<String,String> readTblMap(String tblFile) throws IOException {
         Map<String,String> tblMap = new HashMap<String,String>();
         
-        BufferedReader reader = new BufferedReader(new FileReader(solFile));
+        BufferedReader reader = new BufferedReader(new FileReader(tblFile));
         String line;
         while((line = reader.readLine()) != null) {
             String[] splits = tabRegex.split(line);
             String gurobiVar = splits[3];
             String zimplVar = splits[4];
+            // Remove double quotes
+            zimplVar = zimplVar.substring(1,zimplVar.length()-1);
             tblMap.put(gurobiVar, zimplVar);
         }
         return tblMap;

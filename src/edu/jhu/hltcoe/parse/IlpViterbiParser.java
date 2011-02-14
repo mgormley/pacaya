@@ -123,7 +123,7 @@ public class IlpViterbiParser implements ViterbiParser {
                 // Unused: int sentId = Integer.parseInt(splits[1]);
                 int parent = Integer.parseInt(splits[2]);
                 int child = Integer.parseInt(splits[3]);
-                if (Integer.parseInt(value) == 1) {
+                if (value.equals("1")) {
                     // Must subtract one from each position
                     parents[child-1] = parent-1;
                 }
