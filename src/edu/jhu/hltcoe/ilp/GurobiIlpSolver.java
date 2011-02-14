@@ -15,7 +15,7 @@ public class GurobiIlpSolver implements IlpSolver {
 
     private static final String gurobiBinary = "gurobi_cl";
     private final Pattern spaceRegex = Pattern.compile(" ");
-    private final Pattern tabRegex = Pattern.compile(" ");
+    private final Pattern tabRegex = Pattern.compile("\t");
     
     private String zimplFile;
     private Map<String, String> result;
@@ -84,7 +84,7 @@ public class GurobiIlpSolver implements IlpSolver {
         BufferedReader reader = new BufferedReader(new FileReader(solFile));
         String line;
         while((line = reader.readLine()) != null) {
-            String[] splits = spaceRegex.split(line);
+            String[] splits = tabRegex.split(line);
             String gurobiVar = splits[3];
             String zimplVar = splits[4];
             tblMap.put(gurobiVar, zimplVar);

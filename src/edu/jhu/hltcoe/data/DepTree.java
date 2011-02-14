@@ -51,7 +51,6 @@ public class DepTree {
                 parents[i] = WALL;
             }
         }
-        checkTree();
         
         // Create nodes
         int position = 0;
@@ -71,7 +70,20 @@ public class DepTree {
         }
         
         // Add parent/child links to DepTreeNodes
-        assert(nodes.size() == parents.length);
+        addParentChildLinksToNodes();
+    }
+
+    public DepTree(Sentence sentence, int[] parents) {
+        this.parents = parents;
+        for (TaggedWord tw : sentence) {
+            nodes.add(new DepTreeNode(tw));
+        }
+        // Add parent/child links to DepTreeNodes
+        addParentChildLinksToNodes();
+    }
+    
+    private void addParentChildLinksToNodes() {
+        checkTree();
         for (int i=0; i<parents.length; i++) {
             DepTreeNode node = nodes.get(i);
             if (parents[i] != WALL) {
@@ -107,6 +119,11 @@ public class DepTree {
                 }
                 parent = parents[parent];
             }
+        }
+
+        // Check for proper list lengths
+        if (nodes.size() != parents.length) {
+            throw new IllegalStateException("Number of nodes does not equal number of parents");
         }
     }
 

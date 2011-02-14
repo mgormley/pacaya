@@ -15,6 +15,10 @@ public class DepTreeNode {
         this.label = new TaggedWord(word, tag, position);
     }
 
+    public DepTreeNode(TaggedWord tw) {
+        this.label = tw;
+    }
+
     public TaggedWord getLabel() {
         return label;
     }
