@@ -13,15 +13,12 @@ public class Command {
         // private constructor
     }
 
-    public static void runCommand(String[] cmdArray, String logFile) {
+    public static void runCommand(String[] cmdArray, String logFile, File dir) {
         ProcessBuilder pb = new ProcessBuilder(cmdArray);
         pb.redirectErrorStream(true);
+        pb.directory(dir);
         try {
             Process proc = pb.start();
-            if (proc.waitFor() != 0) {
-                throw new RuntimeException("zimpl failed with exit code: " + proc.exitValue());
-            }
-            
             // Redirect stderr and stdout to logFile
             InputStream inputStream = new BufferedInputStream(proc.getInputStream());
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(logFile));
@@ -35,7 +32,11 @@ public class Command {
      
             inputStream.close();
             out.flush();
-            out.close();            
+            out.close();       
+
+            if (proc.waitFor() != 0) {
+                throw new RuntimeException("zimpl failed with exit code: " + proc.exitValue());
+            }
         } catch (Exception e) {
             throw new RuntimeException("Exception thrown while trying to exec zimpl", e);
         }
@@ -44,7 +45,7 @@ public class Command {
     public static File createTempDir() {
         File tempDir;
         try {
-            tempDir = File.createTempFile("ilp_parse", "");
+            tempDir = File.createTempFile("ilp_parse", "", new File("."));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

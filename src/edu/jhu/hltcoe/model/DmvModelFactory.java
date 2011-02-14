@@ -90,7 +90,7 @@ public class DmvModelFactory implements ModelFactory {
         Map<Label, Set<Label>> map = new HashMap<Label, Set<Label>>();
         for (Sentence sent : sentences) {
             for (int i = 0; i < sent.size(); i++) {
-                for (int j = 0; i < sent.size(); j++) {
+                for (int j = 0; j < sent.size(); j++) {
                     if (j != i) {
                         Label parent = sent.get(i);
                         Label child = sent.get(j);

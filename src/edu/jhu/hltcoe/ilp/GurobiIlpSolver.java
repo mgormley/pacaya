@@ -44,8 +44,9 @@ public class GurobiIlpSolver implements IlpSolver {
                 "ResultFile="+solFile,
                 lpFile };
         //TODO: handle infeasible case
-        String gurobiLog = new File(zimplFile).getParent() + "/gurobi.log";
-        Command.runCommand(cmdArray, gurobiLog);
+        String zimplFileParent = new File(zimplFile).getParent();
+        String gurobiLog = zimplFileParent + "/gurobi.log";
+        Command.runCommand(cmdArray, gurobiLog, new File(zimplFileParent));
 
         // Read tbl file and map variable values to original names
         try {

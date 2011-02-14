@@ -35,8 +35,9 @@ public class ZimplRunner {
                 "-t", type, 
                 "-v"+String.valueOf(verbosity), 
                 zimplFile };
-        String zimplLog = new File(zimplFile).getParent() + "/zimpl.log";
-        Command.runCommand(cmdArray, zimplLog);
+        String zimplFileParent = new File(zimplFile).getParent();
+        String zimplLog = zimplFileParent + "/zimpl.log";
+        Command.runCommand(cmdArray, zimplLog, new File(zimplFileParent));
     }
 
 }

@@ -55,7 +55,8 @@ public class DepTree implements Iterable<DepTreeNode> {
         // Create nodes
         int position = 0;
         for (Tree leaf : leaves) {
-            edu.stanford.nlp.ling.Label label = leaf.label();
+            // Note: it is the parent of the leaf that has the word AND the tag
+            edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
             String word = null;
             if (label instanceof HasWord) {
                 word = ((HasWord)label).word();

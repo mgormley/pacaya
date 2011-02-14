@@ -61,7 +61,7 @@ public class IlpViterbiParser implements ViterbiParser {
             for (int i=0; i<sentence.size(); i++) {
                 Label label = sentence.get(i); 
                 // Must add one to each word position
-                sentWriter.format("0 %d %s\n", i+1, label.getLabel());
+                sentWriter.format("0 %d \"%s\"\n", i+1, label.getLabel());
             }
             sentWriter.close();
             
@@ -76,7 +76,7 @@ public class IlpViterbiParser implements ViterbiParser {
                 String leftRight = entry.getKey().get2();
                 int adjacent = entry.getKey().get3() ? 1 : 0;
                 double weight = entry.getValue();
-                stopWeightsWriter.format("%s %s %d %f\n", label.getLabel(), leftRight, adjacent, weight);
+                stopWeightsWriter.format("\"%s\" %s %d %f\n", label.getLabel(), leftRight, adjacent, weight);
             }
             stopWeightsWriter.close();
             
@@ -87,7 +87,7 @@ public class IlpViterbiParser implements ViterbiParser {
                 Label parent = entry.getKey().get1();
                 Label child = entry.getKey().get2();
                 double weight = entry.getValue();
-                chooseWeightsWriter.format("%s %s %f\n", parent.getLabel(), child.getLabel(), weight);
+                chooseWeightsWriter.format("\"%s\" \"%s\" %f\n", parent.getLabel(), child.getLabel(), weight);
             }
             chooseWeightsWriter.close();
             
