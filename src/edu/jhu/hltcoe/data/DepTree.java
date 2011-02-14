@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.stanford.nlp.ling.HasTag;
@@ -12,7 +13,7 @@ import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.Tree;
 
-public class DepTree {
+public class DepTree implements Iterable<DepTreeNode> {
 
     private static final int EMPTY = -2;
     private static final int WALL = -1;
@@ -74,8 +75,9 @@ public class DepTree {
 
     public DepTree(Sentence sentence, int[] parents) {
         this.parents = parents;
-        for (Label tw : sentence) {
-            nodes.add(new DepTreeNode(tw));
+        for (int i=0; i<sentence.size(); i++) {
+            Label label = sentence.get(i);
+            nodes.add(new DepTreeNode(label, i));
         }
         // Add parent/child links to DepTreeNodes
         addParentChildLinksToNodes();
@@ -198,6 +200,10 @@ public class DepTree {
 
     public List<DepTreeNode> getNodes() {
         return nodes;
+    }
+
+    public Iterator<DepTreeNode> iterator() {
+        return nodes.iterator();
     }
 
 }

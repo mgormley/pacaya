@@ -8,6 +8,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.model.DmvMStep;
 import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
+import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
 import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 
@@ -39,7 +40,7 @@ public class TrainerFactory {
             if (modelName.equals("dmv")) {
                 parser = new IlpViterbiParser(true);
                 mStep = new DmvMStep();
-                modelFactory = new DmvModelFactory();
+                modelFactory = new DmvModelFactory(new RandomWeightGenerator());
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }

@@ -5,12 +5,10 @@ public class TaggedWord implements Label {
 
     private String word;
     private String tag;
-    private int position;
     
-    public TaggedWord(String word, String tag, int position) {
+    public TaggedWord(String word, String tag) {
         this.word = word;
         this.tag = tag;
-        this.position = position;
     }
 
     public String getWord() {
@@ -19,11 +17,6 @@ public class TaggedWord implements Label {
 
     public String getTag() {
         return tag;
-    }
-
-    @Deprecated
-    public int getPosition() {
-        return position;
     }
     
     public String getLabel() {

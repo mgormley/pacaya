@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,17 @@ public class Utilities {
 		}
 	}
 
+    public static <X,Y> void increment(Map<X,Map<Y,Integer>> map, X key1, Y key2, Integer incr) {
+        if (map.containsKey(key1)) {
+            Map<Y,Integer> subMap = map.get(key1);
+            increment(subMap, key2, incr);
+        } else {
+            Map<Y,Integer> subMap = new HashMap<Y,Integer>();
+            increment(subMap, key2, incr);
+            map.put(key1, subMap);
+        }
+    }
+    
 	/**
 	 * @return The resulting set
 	 */

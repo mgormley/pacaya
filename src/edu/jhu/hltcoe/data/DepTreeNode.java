@@ -6,17 +6,20 @@ import java.util.List;
 public class DepTreeNode {
 
     public static final DepTreeNode WALL = null; 
-    
+
+    private int position;
     private Label label;
     private DepTreeNode parent = WALL;
     private List<DepTreeNode> children = new ArrayList<DepTreeNode>();
     
     public DepTreeNode(String word, String tag, int position) {
-        this.label = new TaggedWord(word, tag, position);
+        this.label = new TaggedWord(word, tag);
+        this.position = position;
     }
 
-    public DepTreeNode(Label tw) {
+    public DepTreeNode(Label tw, int position) {
         this.label = tw;
+        this.position = position;
     }
 
     public Label getLabel() {
@@ -37,6 +40,26 @@ public class DepTreeNode {
 
     void addChild(DepTreeNode child) {
         children.add(child);
+    }
+
+    public List<DepTreeNode> getChildrenToSide(String lr) {
+        List<DepTreeNode> sideChildren = new ArrayList<DepTreeNode>();
+        if (lr.equals("l")) {
+            for (DepTreeNode child : children) {
+                if (child.position < this.position){
+                    sideChildren.add(child);
+                }
+            }
+        } else if (lr.equals("r")) {
+            for (DepTreeNode child : children) {
+                if (this.position < child.position){
+                    sideChildren.add(child);
+                }
+            }            
+        } else {
+            throw new IllegalArgumentException("invalid lr arg: "+ lr);
+        }
+        return sideChildren;
     }    
 
 }
