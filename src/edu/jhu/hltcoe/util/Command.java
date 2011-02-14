@@ -2,7 +2,9 @@ package edu.jhu.hltcoe.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class Command {
@@ -37,6 +39,22 @@ public class Command {
         } catch (Exception e) {
             throw new RuntimeException("Exception thrown while trying to exec zimpl", e);
         }
+    }
+
+    public static File createTempDir() {
+        File tempDir;
+        try {
+            tempDir = File.createTempFile("ilp_parse", "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (!tempDir.delete()) {
+            throw new RuntimeException("Could not delete temp file as expected: " + tempDir);
+        }
+        if (!tempDir.mkdir()) {
+            throw new RuntimeException("Could not mkdir as expected: " + tempDir);
+        }
+        return tempDir;
     }
     
 }

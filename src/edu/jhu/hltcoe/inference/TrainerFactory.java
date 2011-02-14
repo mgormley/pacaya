@@ -37,7 +37,7 @@ public class TrainerFactory {
             ModelFactory modelFactory;
             
             if (modelName.equals("dmv")) {
-                parser = new IlpViterbiParser();
+                parser = new IlpViterbiParser(true);
                 mStep = new DmvMStep();
                 modelFactory = new DmvModelFactory();
             } else {

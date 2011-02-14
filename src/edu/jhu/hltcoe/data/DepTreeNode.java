@@ -7,7 +7,7 @@ public class DepTreeNode {
 
     public static final DepTreeNode WALL = null; 
     
-    private TaggedWord label;
+    private Label label;
     private DepTreeNode parent = WALL;
     private List<DepTreeNode> children = new ArrayList<DepTreeNode>();
     
@@ -15,11 +15,11 @@ public class DepTreeNode {
         this.label = new TaggedWord(word, tag, position);
     }
 
-    public DepTreeNode(TaggedWord tw) {
+    public DepTreeNode(Label tw) {
         this.label = tw;
     }
 
-    public TaggedWord getLabel() {
+    public Label getLabel() {
         return label;
     }
 

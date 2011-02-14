@@ -27,7 +27,7 @@ public class EMTrainer<C> implements Trainer {
     @Override
     public void train(SentenceCollection sentences) {
         // Initialize the parameters of the model
-        Model model = modelFactory.getInstance();
+        Model model = modelFactory.getInstance(sentences);
         
         // Run iterations of EM 
         for (int i=0; i<iterations; i++) {

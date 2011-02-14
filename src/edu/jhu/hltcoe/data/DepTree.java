@@ -7,7 +7,6 @@ import java.util.List;
 
 import edu.stanford.nlp.ling.HasTag;
 import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -55,7 +54,7 @@ public class DepTree {
         // Create nodes
         int position = 0;
         for (Tree leaf : leaves) {
-            Label label = leaf.label();
+            edu.stanford.nlp.ling.Label label = leaf.label();
             String word = null;
             if (label instanceof HasWord) {
                 word = ((HasWord)label).word();
@@ -75,7 +74,7 @@ public class DepTree {
 
     public DepTree(Sentence sentence, int[] parents) {
         this.parents = parents;
-        for (TaggedWord tw : sentence) {
+        for (Label tw : sentence) {
             nodes.add(new DepTreeNode(tw));
         }
         // Add parent/child links to DepTreeNodes

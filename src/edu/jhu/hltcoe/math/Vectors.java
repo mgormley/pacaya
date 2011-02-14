@@ -1,0 +1,61 @@
+package edu.jhu.hltcoe.math;
+
+import edu.jhu.hltcoe.util.Utilities;
+
+public class Vectors {
+
+    private Vectors() {
+        // private constructor
+    }
+    
+
+    public static double sum(double[] vector) {
+        double sum = 0.0;
+        for(int i=0; i<vector.length; i++) {
+            sum += vector[i];
+        }
+        return sum;
+    }
+
+
+    public static void assertNoZeroes(double[] draw, double[] logDraw) {
+        assertNoZeros(draw);
+        assertNoNegInfs(logDraw);
+    }
+
+    public static void assertNoNegInfs(double[] logDraw) {
+        for (int i=0; i<logDraw.length; i++) {
+            assert(!Double.isNaN(logDraw[i]));
+            assert(!Double.isInfinite(logDraw[i]));
+        }
+    }
+
+    public static void assertNoZeros(double[] draw) {
+        for (int i=0; i<draw.length; i++) {
+            assert(!Double.isNaN(draw[i]));
+            assert(draw[i] != 0.0);
+        }
+    }
+    
+    public static double[] getExpLogPhi(double[] logPhi) {
+        double[] phi = new double[logPhi.length];
+        for (int i=0; i<phi.length; i++) {
+            phi[i] = Utilities.exp(logPhi[i]);
+        }
+        return phi;
+    }
+
+
+    public static double[] getLogPhi(double[] phi) {
+        double[] logPhi = new double[phi.length];
+        Vectors.updateLogPhi(phi, logPhi);
+        return logPhi;
+    }
+
+
+    public static void updateLogPhi(double[] phi, double[] logPhi) {
+    	for (int t=0; t<logPhi.length; t++) {
+    		logPhi[t] = Utilities.log(phi[t]);
+    	}
+    }
+}

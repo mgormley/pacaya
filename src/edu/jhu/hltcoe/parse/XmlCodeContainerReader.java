@@ -31,6 +31,11 @@ public class XmlCodeContainerReader {
             throw new RuntimeException("Unable to find resource: " + resourceName);
         }
         loadZimplCodeFromInputStream(inputStream);
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
             
     public void loadZimplCodeFromInputStream(InputStream inputStream) {
