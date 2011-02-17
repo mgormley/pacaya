@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe;
 
+import java.io.File;
 import java.io.PrintWriter;
 
 import org.apache.commons.cli.CommandLine;
@@ -15,6 +16,7 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.inference.Trainer;
 import edu.jhu.hltcoe.inference.TrainerFactory;
+import edu.jhu.hltcoe.util.Command;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -29,7 +31,7 @@ public class PipelineRunner {
         // TODO:
     }
 
-    public void run(CommandLine cmd) throws ParseException {
+    public void run(CommandLine cmd) throws ParseException {        
         // Read the data
         String trainPath = cmd.getOptionValue("train");
         Treebank treebank = new MemoryTreebank();

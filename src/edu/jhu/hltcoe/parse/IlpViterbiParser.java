@@ -26,17 +26,19 @@ public class IlpViterbiParser implements ViterbiParser {
     private Map<String,String> codeMap;
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
     private boolean projective;
-
+    private File workspace;
+    
     public IlpViterbiParser(boolean projective) {
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
+        workspace = Command.createTempDir("workspace", new File("."));
     }
     
     @Override
     public DepTree getViterbiParse(Sentence sentence, Model model) {
         // Create workspace
-        File tempDir = Command.createTempDir();
+        File tempDir = Command.createTempDir("ilp_parse", workspace);
         
         // Encode sentences and model
         String zimplFile = encode(tempDir, sentence, model);

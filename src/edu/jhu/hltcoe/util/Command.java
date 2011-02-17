@@ -9,6 +9,8 @@ import java.io.InputStream;
 
 public class Command {
 
+    private static final int NUM_DIGITS = 3;
+    
     private Command() {
         // private constructor
     }
@@ -42,20 +44,40 @@ public class Command {
         }
     }
 
-    public static File createTempDir() {
+    public static File createTempDir(String prefix, File parentDir) {
         File tempDir;
         try {
-            tempDir = File.createTempFile("ilp_parse", "", new File("."));
+            tempDir = getTempPath(prefix, parentDir);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-        if (!tempDir.delete()) {
-            throw new RuntimeException("Could not delete temp file as expected: " + tempDir);
         }
         if (!tempDir.mkdir()) {
             throw new RuntimeException("Could not mkdir as expected: " + tempDir);
         }
         return tempDir;
     }
-    
+       
+    /**
+     * Creates a file object of a currently available path, but does
+     * not create the file. This method is not thread safe.
+     */
+    private static File getTempPath(String prefix, File parentDir) throws IOException {
+        final int maxI = (int)Math.pow(10, NUM_DIGITS);
+        String formatStr = "%s_%0"+NUM_DIGITS+"d";
+        File path;
+        int i;
+        for (i=0; i<maxI; i++) {
+            path = new File(parentDir, String.format(formatStr, prefix, i));
+            if (!path.exists()) {
+                return path;
+            }
+        }
+        // If we ran out of short file names, just create a long one
+        path = File.createTempFile(prefix, "", parentDir);
+        if (!path.delete()) {
+            throw new RuntimeException("Could not delete temp file as expected: " + path);
+        }
+        return path;
+    }
+   
 }
