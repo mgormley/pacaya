@@ -53,6 +53,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
         
         // Create nodes
+        nodes.add(new WallDepTreeNode());
         int position = 0;
         for (Tree leaf : leaves) {
             // Note: it is the parent of the leaf that has the word AND the tag
@@ -76,6 +77,7 @@ public class DepTree implements Iterable<DepTreeNode> {
 
     public DepTree(Sentence sentence, int[] parents) {
         this.parents = parents;
+        nodes.add(new WallDepTreeNode());
         for (int i=0; i<sentence.size(); i++) {
             Label label = sentence.get(i);
             nodes.add(new DepTreeNode(label, i));
@@ -84,16 +86,18 @@ public class DepTree implements Iterable<DepTreeNode> {
         addParentChildLinksToNodes();
     }
     
+    private DepTreeNode getNodeByPosition(int position) {
+        return nodes.get(position+1);
+    }
+    
     private void addParentChildLinksToNodes() {
         checkTree();
         for (int i=0; i<parents.length; i++) {
-            DepTreeNode node = nodes.get(i);
-            if (parents[i] != WALL) {
-                node.setParent(nodes.get(parents[i]));
-            }
+            DepTreeNode node = getNodeByPosition(i);
+            node.setParent(getNodeByPosition(parents[i]));
             for (int j=0; j<parents.length; j++) {
                 if (parents[j] == i) {
-                    node.addChild(nodes.get(j));
+                    node.addChild(getNodeByPosition(j));
                 }
             }
         }
@@ -124,7 +128,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
 
         // Check for proper list lengths
-        if (nodes.size() != parents.length) {
+        if (nodes.size()-1 != parents.length) {
             throw new IllegalStateException("Number of nodes does not equal number of parents");
         }
     }

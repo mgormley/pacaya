@@ -22,6 +22,7 @@ public class Command {
         try {
             Process proc = pb.start();
             // Redirect stderr and stdout to logFile
+            // TODO: in Java 7, use redirectOutput(Redirect.to(logFile))
             InputStream inputStream = new BufferedInputStream(proc.getInputStream());
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(logFile));
             

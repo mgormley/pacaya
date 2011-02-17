@@ -62,4 +62,7 @@ public class DepTreeNode {
         return sideChildren;
     }    
 
+    public boolean isWall() {
+        return false; 
+    }
 }

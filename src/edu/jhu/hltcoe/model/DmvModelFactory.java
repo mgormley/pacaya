@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.model;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Map.Entry;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
@@ -26,25 +26,6 @@ public class DmvModelFactory implements ModelFactory {
     
     public DmvModelFactory(WeightGenerator weightGen) {
         this.weightGen = weightGen;
-    }
-    
-    public interface WeightGenerator {
-        double getStopWeight(Triple<Label, String, Boolean> triple);
-        double[] getChooseMulti(Label parent, List<Label> children);
-    }
-    
-    public static class RandomWeightGenerator implements WeightGenerator {
-
-        @Override
-        public double getStopWeight(Triple<Label, String, Boolean> triple) {
-            return Prng.random.nextDouble();
-        }
-        
-        @Override
-        public double[] getChooseMulti(Label parent, List<Label> children) {
-            return Multinomials.randomMultinomial(children.size());
-        }
-        
     }
 
     @Override
@@ -83,6 +64,8 @@ public class DmvModelFactory implements ModelFactory {
                 vocab.add(label);
             }
         }
+        // Special case for Wall
+        vocab.add(WallDepTreeNode.WALL_LABEL);
         return vocab;
     }
 
@@ -90,15 +73,38 @@ public class DmvModelFactory implements ModelFactory {
         Map<Label, Set<Label>> map = new HashMap<Label, Set<Label>>();
         for (Sentence sent : sentences) {
             for (int i = 0; i < sent.size(); i++) {
+                Label parent = sent.get(i);
                 for (int j = 0; j < sent.size(); j++) {
                     if (j != i) {
-                        Label parent = sent.get(i);
                         Label child = sent.get(j);
                         Utilities.addToSet(map, parent, child);
                     }
                 }
+                // Special case for Wall
+                Utilities.addToSet(map, WallDepTreeNode.WALL_LABEL, parent);
+                Utilities.addToSet(map, parent, WallDepTreeNode.WALL_LABEL);
             }
         }
         return map;
     }
+        
+    public interface WeightGenerator {
+        double getStopWeight(Triple<Label, String, Boolean> triple);
+        double[] getChooseMulti(Label parent, List<Label> children);
+    }
+    
+    public static class RandomWeightGenerator implements WeightGenerator {
+
+        @Override
+        public double getStopWeight(Triple<Label, String, Boolean> triple) {
+            return Prng.random.nextDouble();
+        }
+        
+        @Override
+        public double[] getChooseMulti(Label parent, List<Label> children) {
+            return Multinomials.randomMultinomial(children.size());
+        }
+        
+    }
+    
 }

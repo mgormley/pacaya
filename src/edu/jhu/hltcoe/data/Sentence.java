@@ -8,7 +8,9 @@ public class Sentence extends ArrayList<Label> {
     public Sentence(DepTree tree) {
         super();
         for (DepTreeNode node : tree.getNodes()) {
-            add(node.getLabel());
+            if (!node.isWall()) {
+                add(node.getLabel());
+            }
         }
     }
 

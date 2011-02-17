@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.parse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -10,10 +11,15 @@ import java.util.regex.Pattern;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.GurobiIlpSolver;
 import edu.jhu.hltcoe.ilp.IlpSolver;
+import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.model.DmvModel;
+import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
@@ -21,8 +27,7 @@ import edu.jhu.hltcoe.util.Triple;
 public class IlpViterbiParser implements ViterbiParser {
 
     private static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
-    private static final String WALL_ID = "$";
-    private static final int WALL_POSITION = 0;
+    private static final int ZIMPL_WALL_POSITION = 0;
     private Map<String,String> codeMap;
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
     private boolean projective;
@@ -56,13 +61,18 @@ public class IlpViterbiParser implements ViterbiParser {
 
     private String encode(File tempDir, Sentence sentence, Model model) {
         try {
+            SentenceCollection sentences = new SentenceCollection();
+            sentences.add(sentence);
+            
             // Encode sentence
-            encodeSentence(tempDir, sentence);
+            encodeSentences(tempDir, sentences);
             
             // Encode model 
             //TODO: handle more than just the DMV
             DmvModel dmv = (DmvModel)model;
-            encodeDmv(tempDir, dmv);
+            WeightCopier weightCopier = new WeightCopier(dmv);
+            DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences);
+            encodeDmv(tempDir, filteredDmv);
             
             // Create .zpl file
             File zimplFile = createZimplFile(tempDir);
@@ -90,14 +100,17 @@ public class IlpViterbiParser implements ViterbiParser {
         return zimplFile;
     }
 
-    private void encodeSentence(File tempDir, Sentence sentence) throws FileNotFoundException {
+    private void encodeSentences(File tempDir, SentenceCollection sentences) throws FileNotFoundException {
         File sentFile = new File(tempDir, "input.sent");
         PrintWriter sentWriter = new PrintWriter(sentFile);
-        sentWriter.format("0 %d %s\n", WALL_POSITION, WALL_ID);
-        for (int i=0; i<sentence.size(); i++) {
-            Label label = sentence.get(i); 
-            // Must add one to each word position
-            sentWriter.format("0 %d \"%s\"\n", i+1, label.getLabel());
+        sentWriter.format("0 %d %s\n", ZIMPL_WALL_POSITION, WallDepTreeNode.WALL_ID);
+        for(int s=0; s<sentences.size(); s++) {
+            Sentence sentence = sentences.get(s);
+            for (int i=0; i<sentence.size(); i++) {
+                Label label = sentence.get(i); 
+                // Must add one to each word position
+                sentWriter.format("%d %d \"%s\"\n", s, i+1, label.getLabel());
+            }
         }
         sentWriter.close();
     }
@@ -150,5 +163,31 @@ public class IlpViterbiParser implements ViterbiParser {
 
     public static void main(String[] args) {
         new IlpViterbiParser(true);
+    }
+    
+    private static class WeightCopier implements WeightGenerator {
+
+        private DmvModel dmv;
+        
+        public WeightCopier(DmvModel dmv) {
+            this.dmv = dmv;
+        }
+
+        @Override
+        public double[] getChooseMulti(Label parent, List<Label> children) {
+            Map<Pair<Label, Label>, Double> cw_map = dmv.getChooseWeights();
+            double[] mult = new double[children.size()];
+            for (int i=0; i<mult.length; i++) {
+                mult[i] = cw_map.get(new Pair<Label,Label>(parent, children.get(i)));
+            }
+            // Do NOT normalize the multinomial
+            return mult;
+        }
+
+        @Override
+        public double getStopWeight(Triple<Label, String, Boolean> triple) {
+            return dmv.getStopWeights().get(triple);
+        }
+        
     }
 }
