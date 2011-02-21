@@ -1,6 +1,5 @@
 package edu.jhu.hltcoe;
 
-import java.io.File;
 import java.io.PrintWriter;
 
 import org.apache.commons.cli.CommandLine;
@@ -9,6 +8,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
@@ -16,7 +17,7 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.inference.Trainer;
 import edu.jhu.hltcoe.inference.TrainerFactory;
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -27,12 +28,14 @@ import edu.stanford.nlp.trees.Treebank;
 
 public class PipelineRunner {
 
+    private static Logger log = Logger.getLogger(PipelineRunner.class);
+
     public PipelineRunner() {
-        // TODO:
     }
 
     public void run(CommandLine cmd) throws ParseException {        
         // Read the data
+        log.info("Reading data");
         String trainPath = cmd.getOptionValue("train");
         Treebank treebank = new MemoryTreebank();
         CategoryWordTag.suppressTerminalDetails = true;
@@ -48,10 +51,12 @@ public class PipelineRunner {
         SentenceCollection sentences = new SentenceCollection(depTreebank);
 
         // Train the model
+        log.info("Training model");
         Trainer model = TrainerFactory.getModel(cmd);
         model.train(sentences);
 
         // Evaluate the model
+        log.info("Evaluating model");
         PrintWriter pw = new PrintWriter(System.out);
         if (cmd.hasOption("psuedo-word")) {
             Evaluator pwEval = new DependencyParserEvaluator();
@@ -70,7 +75,13 @@ public class PipelineRunner {
         return options;
     }
 
+    private static void configureLogging() {
+        BasicConfigurator.configure();
+    }
+    
     public static void main(String[] args) {
+        configureLogging();
+        
         String usage = "java " + PipelineRunner.class.getName() + " [OPTIONS]";
         CommandLineParser parser = new PosixParser();
         Options options = createOptions();

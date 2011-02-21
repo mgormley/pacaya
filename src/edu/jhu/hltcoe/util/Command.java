@@ -15,7 +15,7 @@ public class Command {
         // private constructor
     }
 
-    public static void runCommand(String[] cmdArray, String logFile, File dir) {
+    public static void runCommand(String[] cmdArray, File logFile, File dir) {
         ProcessBuilder pb = new ProcessBuilder(cmdArray);
         pb.redirectErrorStream(true);
         pb.directory(dir);

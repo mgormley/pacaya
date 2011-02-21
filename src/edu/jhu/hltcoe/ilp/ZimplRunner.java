@@ -9,19 +9,21 @@ public class ZimplRunner {
     
     private static final String zimplBinary = "/Users/mgormley/Documents/JHU4_S10/dep_parse/bin/zimpl-3.1.0.darwin.x86.gnu.opt";
     private String outputPrefix;
-    private String zimplFile;
+    private File zimplFile;
+    private File tempDir;
     
-    public ZimplRunner(String zimplFile) {
+    public ZimplRunner(File zimplFile, File tempDir) {
         this.zimplFile = zimplFile;
-        outputPrefix = zimplFile.replaceAll(".zpl$", "");
+        this.tempDir = tempDir;
+        this.outputPrefix = new File(tempDir, zimplFile.getName().replace(".zpl", "")).getAbsolutePath();
     }
 
-    public String getLpFile() {
-        return outputPrefix + ".lp";
+    public File getLpFile() {
+        return new File(outputPrefix + ".lp");
     }
     
-    public String getTblFile() {
-        return outputPrefix + ".tbl";
+    public File getTblFile() {
+        return new File(outputPrefix + ".tbl");
     }
     
     public void runZimpl() {
@@ -34,10 +36,9 @@ public class ZimplRunner {
                 "-o", outputPrefix,
                 "-t", type, 
                 "-v"+String.valueOf(verbosity), 
-                zimplFile };
-        String zimplFileParent = new File(zimplFile).getParent();
-        String zimplLog = zimplFileParent + "/zimpl.log";
-        Command.runCommand(cmdArray, zimplLog, new File(zimplFileParent));
+                zimplFile.getAbsolutePath() };
+        File zimplLog = new File(outputPrefix + ".log");
+        Command.runCommand(cmdArray, zimplLog, tempDir);
     }
 
 }

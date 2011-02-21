@@ -8,14 +8,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.ilp.GurobiIlpSolver;
-import edu.jhu.hltcoe.ilp.IlpSolver;
-import edu.jhu.hltcoe.math.Multinomials;
+import edu.jhu.hltcoe.ilp.JavaGurobiIlpSolver;
+import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
@@ -26,6 +27,8 @@ import edu.jhu.hltcoe.util.Triple;
 
 public class IlpViterbiParser implements ViterbiParser {
 
+    private static Logger log = Logger.getLogger(IlpViterbiParser.class);
+    
     private static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;
     private Map<String,String> codeMap;
@@ -46,20 +49,19 @@ public class IlpViterbiParser implements ViterbiParser {
         File tempDir = Command.createTempDir("ilp_parse", workspace);
         
         // Encode sentences and model
-        String zimplFile = encode(tempDir, sentence, model);
+        File zimplFile = encode(tempDir, sentence, model);
         
-        // Run zimpl
-        // Run ILP solver
-        IlpSolver ilpSolver = new GurobiIlpSolver(zimplFile);
-        ilpSolver.solve();
-        Map<String,String> result = ilpSolver.getResult();
+        // Run zimpl and then ILP solver
+        ZimplSolver solver = new ZimplSolver(tempDir, new JavaGurobiIlpSolver(tempDir));
+        solver.solve(zimplFile);
+        Map<String,Double> result = solver.getResult();
         
         // Decode parses
         DepTree tree = decode(sentence, result);
         return tree;
     }
 
-    private String encode(File tempDir, Sentence sentence, Model model) {
+    private File encode(File tempDir, Sentence sentence, Model model) {
         try {
             SentenceCollection sentences = new SentenceCollection();
             sentences.add(sentence);
@@ -77,7 +79,7 @@ public class IlpViterbiParser implements ViterbiParser {
             // Create .zpl file
             File zimplFile = createZimplFile(tempDir);
             
-            return zimplFile.getAbsolutePath();
+            return zimplFile;
 
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -140,18 +142,19 @@ public class IlpViterbiParser implements ViterbiParser {
         chooseWeightsWriter.close();
     }
     
-    private DepTree decode(Sentence sentence, Map<String, String> result) {
+    private DepTree decode(Sentence sentence, Map<String,Double> result) {
         int[] parents = new int[sentence.size()];
-        for (Entry<String,String> entry : result.entrySet()) {
+        for (Entry<String,Double> entry : result.entrySet()) {
             String zimplVar = entry.getKey();
-            String value = entry.getValue();
+            Double value = entry.getValue();
             String[] splits = zimplVarRegex.split(zimplVar);
             String varType = splits[0];
             if (varType.equals("arc")) {
                 // Unused: int sentId = Integer.parseInt(splits[1]);
                 int parent = Integer.parseInt(splits[2]);
                 int child = Integer.parseInt(splits[3]);
-                if (value.equals("1")) {
+                long longVal = Math.round(value);
+                if (longVal == 1) {
                     // Must subtract one from each position
                     parents[child-1] = parent-1;
                 }

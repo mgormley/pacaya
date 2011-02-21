@@ -1,11 +1,12 @@
 package edu.jhu.hltcoe.ilp;
 
+import java.io.File;
 import java.util.Map;
 
 public interface IlpSolver {
 
-    void solve();
+    void solve(File lpFile);
 
-    Map<String, String> getResult();
+    Map<String, Double> getResult();
 
 }
