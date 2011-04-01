@@ -38,10 +38,10 @@ public class Command {
             out.close();       
 
             if (proc.waitFor() != 0) {
-                throw new RuntimeException("zimpl failed with exit code: " + proc.exitValue());
+                throw new RuntimeException("Command " + cmdArray + " failed with exit code: " + proc.exitValue());
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception thrown while trying to exec zimpl", e);
+            throw new RuntimeException("Exception thrown while trying to exec command " + cmdArray, e);
         }
     }
 
