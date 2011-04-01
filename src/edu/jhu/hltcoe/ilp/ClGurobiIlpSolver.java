@@ -33,10 +33,10 @@ public class ClGurobiIlpSolver implements IlpSolver {
         result = null;
         
         // Run Gurobi
-        File solFile = new File(tempDir, lpFile.getName().replaceAll(".lp$", ".sol"));
+        File solFile = new File(tempDir, lpFile.getName().replace(".lp", ".sol"));
         String[] cmdArray = new String[] {
                 gurobiBinary,
-                "ResultFile="+solFile,
+                "ResultFile="+solFile.getAbsolutePath(),
                 lpFile.getAbsolutePath() };
         //TODO: handle infeasible case
         File gurobiLog = new File(tempDir, "gurobi.log");

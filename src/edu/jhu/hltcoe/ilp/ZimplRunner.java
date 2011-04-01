@@ -37,7 +37,7 @@ public class ZimplRunner {
                 "-t", type, 
                 "-v"+String.valueOf(verbosity), 
                 zimplFile.getAbsolutePath() };
-        File zimplLog = new File(outputPrefix + ".log");
+        File zimplLog = new File(tempDir, "zimpl.log");
         Command.runCommand(cmdArray, zimplLog, tempDir);
     }
 
