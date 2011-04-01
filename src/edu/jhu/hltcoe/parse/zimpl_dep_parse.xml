@@ -78,11 +78,28 @@ subto one_child_for_wall:
 # ==================================================
 # ==== Option 1: Projective parsing ====
 # O(n^2) constraints 
-subto proj_parse:
-    forall <s> in Sents:
-        forall <i> in { 0 to Length[s] - 1 }:
-            forall <j> in { i + 1 to Length[s] }:
-                vif arc[s,i,j] + arc[s,j,i] > 0 then abs(i-j) == sum <k,l> in {i to j}*{i to j} with k != l: arc[s,k,l] end;
+# If arc[s,i,j] == 1, then Word[s,i] must dominate all the children under that arc.
+# 
+# This constraint ensures that Word[s,i] is an ancestor of each of the nodes under the arc.
+subto proj_parse_dominate:
+    forall <s,i,j> in AllArcs with abs(i-j) > 1:
+        vif arc[s,i,j] == 1 then 
+            (sum <k,l> in {min(i,j) to max(i,j)}*{min(i,j) to max(i,j)} with k != l and i != l: arc[s,k,l]) == abs(i-j)-1 
+        end;
+
+# This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
+subto proj_parse_no_illegal_parents:
+    forall <s,i,j> in AllArcs with abs(i-j) > 1:
+        vif arc[s,i,j] == 1 then 
+            (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l <= min(i,j) or l >= max(i,j)): arc[s,k,l]) == 0 
+        end;
+
+# This constraint ensures that Word[s,i]'s parent is not among the nodes under the arc.
+subto proj_parse_parent:
+    forall <s,i,j> in AllArcs:
+        vif arc[s,i,j] == 1 then 
+            (sum <k> in {min(i,j) to max(i,j)} with i != k: arc[s,k,i]) == 0 
+        end;
 # ==================================================
     	
     	]]>
