@@ -15,7 +15,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.ilp.JavaGurobiIlpSolver;
+import edu.jhu.hltcoe.ilp.ClGurobiIlpSolver;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.DmvModelFactory;
@@ -37,6 +37,7 @@ public class IlpViterbiParser implements ViterbiParser {
     private File workspace;
     
     public IlpViterbiParser(boolean projective) {
+        this.projective = projective;
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
@@ -52,7 +53,7 @@ public class IlpViterbiParser implements ViterbiParser {
         File zimplFile = encode(tempDir, sentence, model);
         
         // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, new JavaGurobiIlpSolver(tempDir));
+        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
         
