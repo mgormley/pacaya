@@ -15,8 +15,8 @@ import edu.stanford.nlp.trees.Tree;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
-    private static final int EMPTY = -2;
-    private static final int WALL = -1;
+    private static final int EMPTY_IDX = -2;
+    static final int WALL_IDX = -1;
     
     private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
     private int[] parents;
@@ -26,7 +26,7 @@ public class DepTree implements Iterable<DepTreeNode> {
 
         // Create parents array
         parents = new int[leaves.size()];
-        Arrays.fill(parents, EMPTY);
+        Arrays.fill(parents, EMPTY_IDX);
         
         HeadFinder hf = new CollinsHeadFinder();
         Collection<Dependency<Tree, Tree, Object>> dependencies = mapDependencies(tree, hf);
@@ -40,15 +40,15 @@ public class DepTree implements Iterable<DepTreeNode> {
             
             if (childIdx < 0) {
                 throw new IllegalStateException("Child not found in leaves: " + child);
-            } else if (parents[childIdx] != EMPTY) {
+            } else if (parents[childIdx] != EMPTY_IDX) {
                 throw new IllegalStateException("Multiple parents for the same node: " + child);
             }
             
             parents[childIdx] = parentIdx;
         }
         for (int i=0; i<parents.length; i++) {
-            if (parents[i] == EMPTY) {
-                parents[i] = WALL;
+            if (parents[i] == EMPTY_IDX) {
+                parents[i] = WALL_IDX;
             }
         }
         
@@ -103,13 +103,14 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
 
+    // TODO: add check for projectivity (when appropriate)
     private void checkTree() {
         // Check that there is exactly one node with the WALL as its parent
-        int emptyCount = countChildrenOf(EMPTY);
+        int emptyCount = countChildrenOf(EMPTY_IDX);
         if (emptyCount != 0) {
             throw new IllegalStateException("Found an empty parent cell. emptyCount=" + emptyCount);
         }
-        int wallCount = countChildrenOf(WALL);
+        int wallCount = countChildrenOf(WALL_IDX);
         if (wallCount != 1) {
             throw new IllegalStateException("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
         }
@@ -118,7 +119,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         for (int i=0; i<parents.length; i++) {
             int numAncestors = 0;
             int parent = parents[i];
-            while(parent != WALL) {
+            while(parent != WALL_IDX) {
                 numAncestors += 1;
                 if (numAncestors > parents.length - 1) {
                     throw new IllegalStateException("Found cycle in parents array");
@@ -160,10 +161,7 @@ public class DepTree implements Iterable<DepTreeNode> {
     
     @Override
     public String toString() {
-        for (int i=0; i<parents.length; i++) {
-            //TODO:
-        }
-        return super.toString();
+        return nodes.toString();
     }
 
     public static Collection<Dependency<Tree, Tree, Object>> mapDependencies(Tree tree, HeadFinder hf) {

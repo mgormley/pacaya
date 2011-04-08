@@ -65,4 +65,15 @@ public class DepTreeNode {
     public boolean isWall() {
         return false; 
     }
+    
+    @Override
+    public String toString() {
+        int parentPos;
+        if (parent == WALL) {
+            parentPos = DepTree.WALL_IDX;
+        } else {
+            parentPos = parent.position;
+        }
+        return String.format("%d:%s-->%d", position, label.getLabel(), parentPos);
+    }
 }
