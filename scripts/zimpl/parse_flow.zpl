@@ -65,7 +65,7 @@ subto no_parent_for_wall:
 subto proj_parse_dominate:
     forall <s,i,j> in AllArcs with abs(i-j) > 1:
         vif arc[s,i,j] == 1 then 
-            (sum <k,l> in {min(i,j) to max(i,j)}*{min(i,j) to max(i,j)} with k != l and i != l: arc[s,k,l]) == abs(i-j)-1 
+            (sum <k,l> in {min(i,j) to max(i,j)}*{min(i,j) to max(i,j)} with k != l and i != l: arc[s,k,l]) == abs(i-j) 
         end;
 
 # This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
