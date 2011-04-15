@@ -16,30 +16,11 @@ do print Sents;
 do forall <s> in Sents do print Tokens[s];
 do forall <s,i> in AllTokens do print Word[s,i];
 
-
-# The domain of Arcs is pairs of token indices
-# Don't allow the wall symbol (token 0) to have a parent
-set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
-set TempArcs := union <s> in Sents: Arcs[s];
-set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
-
 # The following 4 lines don't work
 # The domain of WordPairs is pairs of words
 #set Words[<s> in Sents] := { <w> in AllWords with Word[s,i] == w};
 #set WordPairs[<s> in Sents] := Words[s] * Words[s];
 #set AllWordPairs := union <s> in Sents: WordPairs;
-
-# Dynamic Programming indicator variables
-set Triangles[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s]};
-set TempTriangles := union <s> in Sents: Triangles[s];
-set AllTriangles := { <s,i,j> in Sents*TempTriangles with <i,j> in Triangles[s] }; # TODO: this should be horribly slow
-set Trapezoids[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
-set TempTrapezoids := union <s> in Sents: Trapezoids[s];
-set AllTrapezoids := { <s,i,j> in Sents*TempTrapezoids with <i,j> in Trapezoids[s] }; # TODO: this should be horribly slow
-
-var tri[AllTriangles] binary;
-#var fintri[AllTriangles] binary;
-var trap[AllTrapezoids] binary;
 
 # input.chooseweights contains "<parent word, child word> weight"
 param InputChooseWeights := "input.chooseweights";
@@ -52,13 +33,37 @@ set LR := {"l","r"};
 set StopSet := AllWords * LR * {0, 1};
 param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 
+
+
+# The domain of Arcs is pairs of token indices
+set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
+set TempArcs := union <s> in Sents: Arcs[s];
+set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
+
+# Dynamic Programming indicator variables
+# In the DP formulation arc[] was originally named trap[], but they are equivalent
+set DerivArcs[<s> in Sents] := {<i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i <= j and j <= k and i < k and j > 0};
+set TempDerivArcs := union <s> in Sents: DerivArcs[s];
+set AllDerivArcs := { <s,i,j,k> in Sents*TempDerivArcs with <i,j,k> in DerivArcs[s] }; # TODO: this should be horribly slow
+
+set Triangles[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s]};
+set TempTriangles := union <s> in Sents: Triangles[s];
+set AllTriangles := { <s,i,j> in Sents*TempTriangles with <i,j> in Triangles[s] }; # TODO: this should be horribly slow
+
+set DerivTris[<s> in Sents] := {<i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with (i < j and j <= k) or (k <= j and j < i)};
+set TempDerivTris := union <s> in Sents: DerivTris[s];
+set AllDerivTris := { <s,i,j,k> in Sents*TempDerivTris with <i,j,k> in DerivTris[s] }; # TODO: this should be horribly slow
+
+
+
 # ---------- Dependency Tree Constraints ----------
 var arc[AllArcs] binary;
+var deriv_arc[AllDerivArcs] binary;
+var tri[AllTriangles] binary;
+var deriv_tri[AllDerivTris] binary;
+#var fintri[AllTriangles] binary;
 
 # A trapazoid from i --> j indicates an arc from parent i to child j
-subto trapazoid_arc_equiv:
-      forall <s,i,j> in AllArcs:
-      	     arc[s,i,j] == trap[s,i,j];
 
 # This constraint says there must be a single final triangle from the
 # wall to the end of the sentence.
@@ -76,37 +81,47 @@ subto initialize:
       forall <s,i,j> in AllTriangles with i == j:
       	     tri[s,i,j] == 1;
 
-# trap[s,i,k] can only exist if tri[s,i,j-1] and tri[s,j,k] are both on
+# Create indicator variables for which derivation we use to create arc[s,i,k] or arc[s,k,i]
+# if deriv_arc[s,i,j,k] == 1 then tri[s,i,j-1] == 1 AND tri[s,k,j] == 1
+subto deriv_attach:
+      forall <s,i,j,k> in AllDerivArcs:
+      	     2*deriv_arc[s,i,j,k] <= tri[s,i,j-1] + tri[s,k,j];
+
+# if arc[s,i,k] == 1 then tri[s,i,j-1] and tri[s,j,k] for some valid j (this is like an OR)
 #TODO: In the DP attach_right and attach_left are different because the final triangle is on the head side only. Does that matter?
 subto attach_right:
-      forall <s> in Sents:
-      	     forall <i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i <= j and j <= k and i < k and j > 0:
-	     	    tri[s,i,j-1] + tri[s,k,j] + 1.1 >= 2*trap[s,i,k];
+      forall <s,i,k> in AllArcs with i < k:
+     	    arc[s,i,k]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
 subto attach_left:
-      forall <s> in Sents:
-      	     forall <i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i <= j and j <= k and i < k and j > 0:
-	     	    tri[s,i,j-1] + tri[s,k,j] + 1.1 >= 2*trap[s,k,i];
+      forall <s,i,k> in AllArcs with i < k:
+      	    arc[s,k,i]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
 
-# trap[s,i,j] and trap[s,j,i] cannot be on at the same time
-subto valid_traps:
-      forall <s,i,j> in AllTrapezoids with i < j:
-      	     trap[s,i,j] + trap[s,j,i] == 1;
-# trap[s,i,0] must be off for all i != 0, since that would indicate that i is the parent of the wall
+# Create indicator variables for the derivation of tri[s,i,k] or tri[s,k,i]
+# if deriv_tri[s,i,j,k] == 1 then arc[s,i,j] == 1 and tri[s,j,k] == 1
+# The case of i < j corresponds to a complete_right, and j < i corresponds to complete_left
+subto deriv_complete_right:
+      forall <s,i,j,k> in AllDerivTris:
+      	     2*deriv_tri[s,i,j,k] <= arc[s,i,j] + tri[s,j,k];
+
+# Complete right/left
+subto complete_right_left:
+      forall <s> in Sents:
+      	     forall <i,k> in {Tokens[s] * Tokens[s]} with (i < k) or (k < i):
+	     	    tri[s,i,k] <= sum <j> in Tokens[s] with <i,j,k> in DerivTris[s]: deriv_tri[s,i,j,k];
+
+# TODO: Remove
+# # arc[s,i,j] and arc[s,j,i] cannot be on at the same time
+# subto valid_traps:
+#       forall <s,i,j> in AllArcs with i < j:
+#       	     arc[s,i,j] + arc[s,j,i] == 1;
+
+# TODO: Should switch to the other initialization
+# TODO: this could be taken care of by the parameter weights (i.e. this should have probability 0)
+# arc[s,i,0] must be off for all i != 0, since that would indicate that i is the parent of the wall
 subto valid_traps_wall:
       forall <s> in Sents:
       	     forall <i> in {1 to Length[s]}:
-	     	    trap[s,i,0] == 0;
-
-# Complete right/left
-subto complete_right:
-      forall <s> in Sents:
-      	     forall <i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i < j and j <= k:
-	     	    trap[s,i,j] + tri[s,j,k] + 1.1 >= 2*tri[s,i,k];
-subto complete_left:
-      forall <s> in Sents:
-      	     forall <i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i <= j and j < k:
-	     	    tri[s,j,i] + trap[s,k,j] + 1.1 >= 2*tri[s,k,i];
-
+	     	    arc[s,i,0] == 0;
 
 
 # # -------------
