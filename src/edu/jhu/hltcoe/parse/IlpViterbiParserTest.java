@@ -37,8 +37,10 @@ public class IlpViterbiParserTest {
     @Test
     public void testFirstSentenceFromWsj() {
         SentenceCollection sentences = new SentenceCollection();
+        // Below is the full sentence, but the DP_PROJ is too slow to parse it. Instead we use
+        // just a part of it.
         //sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
-        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN"));
+        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT"));
         ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator());
         Model model = modelFactory.getInstance(sentences);
 
