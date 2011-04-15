@@ -208,5 +208,13 @@ public class DepTree implements Iterable<DepTreeNode> {
     public Iterator<DepTreeNode> iterator() {
         return nodes.iterator();
     }
+    
+    /**
+     * For testing only.
+     * @return
+     */
+    public int[] getParents() {
+        return parents;
+    }
 
 }

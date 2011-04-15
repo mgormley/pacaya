@@ -33,11 +33,37 @@ public class IlpViterbiParser implements ViterbiParser {
     private static final int ZIMPL_WALL_POSITION = 0;
     private Map<String,String> codeMap;
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
-    private boolean projective;
+    private IlpFormulation formulation;
     private File workspace;
     
-    public IlpViterbiParser(boolean projective) {
-        this.projective = projective;
+    public enum IlpFormulation {
+        DP_PROJ("deptree-dp-proj"),
+        EXPLICIT_PROJ("deptree-explicit-proj"),
+        FLOW_NONPROJ("deptree-flow-nonproj");
+        
+        private String id;
+        
+        private IlpFormulation(String id) {
+            this.id = id;
+        }
+        
+        @Override
+        public String toString() {
+            return id;
+        }
+        
+        public static IlpFormulation getById(String id) {
+            for (IlpFormulation f : values()) {
+                if (f.id.equals(id)) {
+                    return f;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognized IlpFormulation id: " + id);
+        }
+    }
+    
+    public IlpViterbiParser(IlpFormulation formulation) {
+        this.formulation = formulation;
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
@@ -93,11 +119,7 @@ public class IlpViterbiParser implements ViterbiParser {
         zimplWriter = new PrintWriter(zimplFile);
         zimplWriter.write(codeMap.get("setup"));
         zimplWriter.write(codeMap.get("deptree-general"));
-        if (projective) {
-            zimplWriter.write(codeMap.get("deptree-proj"));
-        } else {
-            zimplWriter.write(codeMap.get("deptree-nonproj"));
-        }
+        zimplWriter.write(codeMap.get(formulation.toString()));
         zimplWriter.write(codeMap.get("dmv-objective"));
         zimplWriter.close();
         return zimplFile;
@@ -166,7 +188,7 @@ public class IlpViterbiParser implements ViterbiParser {
     }
 
     public static void main(String[] args) {
-        new IlpViterbiParser(true);
+        new IlpViterbiParser(IlpFormulation.DP_PROJ);
     }
     
     private static class WeightCopier implements WeightGenerator {
