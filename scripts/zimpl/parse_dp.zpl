@@ -33,16 +33,46 @@ set LR := {"l","r"};
 set StopSet := AllWords * LR * {0, 1};
 param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 
-
-
 # The domain of Arcs is pairs of token indices
 set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
 set TempArcs := union <s> in Sents: Arcs[s];
 set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
 
-# Dynamic Programming indicator variables
+var arc[AllArcs] binary;
+
+# ---------- Dependency Tree Constraints ----------
+# ----------- The first three constraints from the flow version -------------
+
+# IMPORTANT NOTE: We can leave the one_incoming_arc constraint 
+# out in the DP version, however it will be much less effecient.
+
+# Other tree constraints
+# Each node should have a parent (except the wall)
+subto one_incoming_arc:
+    forall <s> in Sents:
+        forall <j> in { 1 to Length[s] }:
+	    sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
+
+# TODO: Should switch to the other initialization
+# TODO: this could be taken care of by the parameter weights (i.e. this should have probability 0)
+# arc[s,i,0] must be off for all i != 0, since that would indicate that i is the parent of the wall
+# The wall has no incoming arcs
+subto no_parent_for_wall:
+    forall <s> in Sents:
+       forall <i> in { 1 to Length[s] }: 
+           arc[s,i,0] == 0;
+        
+# The wall has one outgoing arc
+subto one_child_for_wall:
+    forall <s> in Sents:
+       1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
+
+# =====================================================
+# ==== Option 3: Dynamic Programming proj. parsing ====
+
+# --------- Dynamic Programming variables ----------
 # In the DP formulation arc[] was originally named trap[], but they are equivalent
-set DerivArcs[<s> in Sents] := {<i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i <= j and j <= k and i < k and j > 0};
+set DerivArcs[<s> in Sents] := {<i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} with i < j and j <= k and i < k and j > 0};
 set TempDerivArcs := union <s> in Sents: DerivArcs[s];
 set AllDerivArcs := { <s,i,j,k> in Sents*TempDerivArcs with <i,j,k> in DerivArcs[s] }; # TODO: this should be horribly slow
 
@@ -54,15 +84,11 @@ set DerivTris[<s> in Sents] := {<i,j,k> in {Tokens[s] * Tokens[s] * Tokens[s]} w
 set TempDerivTris := union <s> in Sents: DerivTris[s];
 set AllDerivTris := { <s,i,j,k> in Sents*TempDerivTris with <i,j,k> in DerivTris[s] }; # TODO: this should be horribly slow
 
-
-
-# ---------- Dependency Tree Constraints ----------
-var arc[AllArcs] binary;
 var deriv_arc[AllDerivArcs] binary;
 var tri[AllTriangles] binary;
 var deriv_tri[AllDerivTris] binary;
-#var fintri[AllTriangles] binary;
 
+# --------- Dynamic Programming contraints ----------
 # A trapazoid from i --> j indicates an arc from parent i to child j
 
 # This constraint says there must be a single final triangle from the
@@ -108,63 +134,7 @@ subto complete_right_left:
       forall <s> in Sents:
       	     forall <i,k> in {Tokens[s] * Tokens[s]} with (i < k) or (k < i):
 	     	    tri[s,i,k] <= sum <j> in Tokens[s] with <i,j,k> in DerivTris[s]: deriv_tri[s,i,j,k];
-
-# TODO: Remove
-# # arc[s,i,j] and arc[s,j,i] cannot be on at the same time
-# subto valid_traps:
-#       forall <s,i,j> in AllArcs with i < j:
-#       	     arc[s,i,j] + arc[s,j,i] == 1;
-
-# TODO: Should switch to the other initialization
-# TODO: this could be taken care of by the parameter weights (i.e. this should have probability 0)
-# arc[s,i,0] must be off for all i != 0, since that would indicate that i is the parent of the wall
-subto valid_traps_wall:
-      forall <s> in Sents:
-      	     forall <i> in {1 to Length[s]}:
-	     	    arc[s,i,0] == 0;
-
-
-# # -------------
-
-# # Other tree constraints
-# # Each node should have a parent (except the wall)
-# subto one_incoming_arc:
-#     forall <s> in Sents:
-#         forall <j> in { 1 to Length[s] }:
-# 	    sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
-
-# # The wall has no incoming arcs
-# subto no_parent_for_wall:
-#     forall <s> in Sents:
-#        forall <i> in { 1 to Length[s] }: 
-#            arc[s,i,0] == 0;
-
-# # ==================================================
-# # ==== Option 1: Projective parsing ====
-# # O(n^2) constraints 
-# # If arc[s,i,j] == 1, then Word[s,i] must dominate all the children under that arc.
-# # 
-# # This constraint ensures that Word[s,i] is an ancestor of each of the nodes under the arc.
-# subto proj_parse_dominate:
-#     forall <s,i,j> in AllArcs with abs(i-j) > 1:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k,l> in {min(i,j) to max(i,j)}*{min(i,j) to max(i,j)} with k != l and i != l: arc[s,k,l]) == abs(i-j) 
-#         end;
-
-# # This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
-# subto proj_parse_no_illegal_parents:
-#     forall <s,i,j> in AllArcs with abs(i-j) > 1:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l <= min(i,j) or l >= max(i,j)): arc[s,k,l]) == 0 
-#         end;
-
-# # This constraint ensures that Word[s,i]'s parent is not among the nodes under the arc.
-# subto proj_parse_parent:
-#     forall <s,i,j> in AllArcs:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k> in {min(i,j) to max(i,j)} with i != k: arc[s,k,i]) == 0 
-#         end;
-
+# =====================================================
 
 # ---------- DMV log-likelihood ----------
 

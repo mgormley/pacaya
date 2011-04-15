@@ -16,13 +16,6 @@ do print Sents;
 do forall <s> in Sents do print Tokens[s];
 do forall <s,i> in AllTokens do print Word[s,i];
 
-
-# The domain of Arcs is pairs of token indices
-# Don't allow the wall symbol (token 0) to have a parent
-set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
-set TempArcs := union <s> in Sents: Arcs[s];
-set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
-
 # The following 4 lines don't work
 # The domain of WordPairs is pairs of words
 #set Words[<s> in Sents] := { <w> in AllWords with Word[s,i] == w};
@@ -40,8 +33,14 @@ set LR := {"l","r"};
 set StopSet := AllWords * LR * {0, 1};
 param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 
-# ---------- Dependency Tree Constraints ----------
+# The domain of Arcs is pairs of token indices
+set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
+set TempArcs := union <s> in Sents: Arcs[s];
+set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
+
 var arc[AllArcs] binary;
+
+# ---------- Dependency Tree Constraints ----------
 
 # Other tree constraints
 # Each node should have a parent (except the wall)
@@ -55,6 +54,11 @@ subto no_parent_for_wall:
     forall <s> in Sents:
        forall <i> in { 1 to Length[s] }: 
            arc[s,i,0] == 0;
+        
+# The wall has one outgoing arc
+subto one_child_for_wall:
+    forall <s> in Sents:
+       1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
 
 # ==================================================
 # ==== Option 1: Projective parsing ====
