@@ -19,6 +19,7 @@ public class Command {
         ProcessBuilder pb = new ProcessBuilder(cmdArray);
         pb.redirectErrorStream(true);
         pb.directory(dir);
+        byte[] bytes = null;
         try {
             Process proc = pb.start();
             // Redirect stderr and stdout to logFile
@@ -27,7 +28,7 @@ public class Command {
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(logFile));
             
             int read=0;
-            byte[] bytes = new byte[1024];
+            bytes = new byte[1024];
      
             while((read = inputStream.read(bytes))!= -1){
                 out.write(bytes, 0, read);
@@ -35,14 +36,19 @@ public class Command {
      
             inputStream.close();
             out.flush();
-            out.close();       
+            out.close();
 
             if (proc.waitFor() != 0) {
-                throw new RuntimeException("Command " + cmdArray + " failed with exit code: " + proc.exitValue());
+                throw new RuntimeException("Command " + cmdArray + " failed with exit code: " + proc.exitValue() + "\n" + tail(bytes));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception thrown while trying to exec command " + cmdArray, e);
+            throw new RuntimeException("Exception thrown while trying to exec command " + cmdArray + "\n" + tail(bytes), e);
         }
+    }
+
+    private static String tail(byte[] bytes) {
+        String byteStr = new String(bytes);
+        return byteStr.substring(Math.max(byteStr.length() - 200, 0), byteStr.length());
     }
 
     public static File createTempDir(String prefix, File parentDir) {
