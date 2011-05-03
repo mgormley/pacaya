@@ -11,13 +11,13 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.inference.Trainer;
 import edu.jhu.hltcoe.inference.TrainerFactory;
-import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -47,7 +47,33 @@ public class PipelineRunner {
           }
         });
         
-        DepTreebank depTreebank = new DepTreebank(treebank);
+        // Reduce size of treebank
+        DepTreebank depTreebank;
+        if (cmd.hasOption("maxSentenceLength") || cmd.hasOption("maxNumSentences")) {
+            DepTreebank depTreebankTmp = new DepTreebank(treebank);
+            depTreebank = new DepTreebank();
+            int maxSentenceLength = Integer.MAX_VALUE;
+            if (cmd.hasOption("maxSentenceLength")) {
+                maxSentenceLength = Integer.valueOf(cmd.getOptionValue("maxSentenceLength"));
+            }
+            int maxNumSentences = Integer.MAX_VALUE;
+            if (cmd.hasOption("maxNumSentences")) {
+                maxNumSentences = Integer.valueOf(cmd.getOptionValue("maxNumSentences"));
+            }
+            for (DepTree tree : depTreebankTmp) {
+                if (depTreebank.size() > maxNumSentences) {
+                    break;
+                }
+                int len = tree.getNodes().size();
+                if (len <= maxSentenceLength) {
+                    depTreebank.add(tree);
+                }
+            }
+        } else {
+            depTreebank = new DepTreebank(treebank);
+        }
+        log.info("Number of sentences: " + depTreebank.size());
+        
         SentenceCollection sentences = new SentenceCollection(depTreebank);
 
         // Train the model
@@ -70,6 +96,8 @@ public class PipelineRunner {
         
         // Options not specific to the model
         options.addOption("tr", "train", true, "Training data.");
+        options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
+        options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training.");
 
         TrainerFactory.addOptions(options);
         return options;
