@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.util.Arrays;
 
 public class Command {
 
@@ -19,7 +21,6 @@ public class Command {
         ProcessBuilder pb = new ProcessBuilder(cmdArray);
         pb.redirectErrorStream(true);
         pb.directory(dir);
-        byte[] bytes = null;
         try {
             Process proc = pb.start();
             // Redirect stderr and stdout to logFile
@@ -28,7 +29,7 @@ public class Command {
             BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(logFile));
             
             int read=0;
-            bytes = new byte[1024];
+            byte[] bytes = new byte[1024];
      
             while((read = inputStream.read(bytes))!= -1){
                 out.write(bytes, 0, read);
@@ -39,16 +40,23 @@ public class Command {
             out.close();
 
             if (proc.waitFor() != 0) {
-                throw new RuntimeException("Command " + cmdArray + " failed with exit code: " + proc.exitValue() + "\n" + tail(bytes));
+                throw new RuntimeException("Command " + pb.command() + " failed with exit code: " + proc.exitValue() + "\n" + tail(logFile));
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception thrown while trying to exec command " + cmdArray + "\n" + tail(bytes), e);
+            throw new RuntimeException("Exception thrown while trying to exec command " + pb.command() + "\n" + tail(logFile), e);
         }
     }
 
-    private static String tail(byte[] bytes) {
-        String byteStr = new String(bytes);
-        return byteStr.substring(Math.max(byteStr.length() - 200, 0), byteStr.length());
+    private static String tail(File logFile) {
+        try {
+            RandomAccessFile raf = new RandomAccessFile(logFile, "r");
+            byte[] bytes = new byte[500];
+            raf.skipBytes((int)raf.length() - bytes.length);
+            int read = raf.read(bytes);
+            return new String(Arrays.copyOf(bytes, read));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static File createTempDir(String prefix, File parentDir) {
