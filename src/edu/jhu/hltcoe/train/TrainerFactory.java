@@ -9,6 +9,7 @@ import edu.jhu.hltcoe.model.DmvMStep;
 import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
+import edu.jhu.hltcoe.parse.IlpViterbiCorpusParser;
 import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.IlpViterbiParser.IlpFormulation;
@@ -21,6 +22,7 @@ public class TrainerFactory {
         options.addOption("a", "algorithm", true, "Inference algorithm.");
         options.addOption("i", "iterations", true, "Number of iterations.");
         options.addOption("m", "model", true, "Model.");
+        options.addOption("p", "parser", true, "Parser.");
         options.addOption("f", "formulation", true, "ILP formulation for parsing");
         options.addOption("l", "lambda", true, "Value for add-lambda smoothing.");
     }
@@ -33,6 +35,8 @@ public class TrainerFactory {
                 Integer.parseInt(cmd.getOptionValue("iterations")) : 10;
         final String modelName = cmd.hasOption("model") ? 
                 cmd.getOptionValue("model") : "dmv";
+        final String parserName = cmd.hasOption("parser") ? 
+                cmd.getOptionValue("parser") : "ilp-sentence";
         final IlpFormulation formulation = cmd.hasOption("formulation") ? 
                 IlpFormulation.getById(cmd.getOptionValue("formulation")) : IlpFormulation.DP_PROJ;
         final double lambda = cmd.hasOption("lambda") ?
@@ -45,7 +49,13 @@ public class TrainerFactory {
             ModelFactory modelFactory;
             
             if (modelName.equals("dmv")) {
-                parser = new IlpViterbiParser(formulation);
+                if (parserName.equals("ilp-sentence")) {
+                    parser = new IlpViterbiParser(formulation);
+                } else if (parserName.equals("ilp-corpus")) {
+                    parser = new IlpViterbiCorpusParser(formulation);
+                } else {
+                    throw new ParseException("Parser not supported: " + parserName);
+                }
                 mStep = new DmvMStep(lambda);
                 modelFactory = new DmvModelFactory(new RandomWeightGenerator());
             } else {

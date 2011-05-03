@@ -15,7 +15,7 @@ import edu.stanford.nlp.trees.Tree;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
-    private static final int EMPTY_IDX = -2;
+    public static final int EMPTY_IDX = -2;
     static final int WALL_IDX = -1;
     
     private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();

@@ -27,10 +27,10 @@ do forall <s,i> in AllTokens do print Word[s,i];
 #set WordPairs[<s> in Sents] := Words[s] * Words[s];
 #set AllWordPairs := union <s> in Sents: WordPairs;
 
-# input.chooseweights contains "<parent word, child word> weight"
+# input.chooseweights contains "<parent word, lr, child word> weight"
 param InputChooseWeights := "input.chooseweights";
-set AllWordPairs := { read InputChooseWeights as "<1s, 2s>" };
-param ChooseWeight[AllWordPairs] := read InputChooseWeights as "<1s, 2s> 3n";
+set AllWordPairs := { read InputChooseWeights as "<1s, 2s, 3s>" };
+param ChooseWeight[AllWordPairs] := read InputChooseWeights as "<1s, 2s, 3s> 4n";
 
 # input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
 param InputStopWeights := "input.stopweights";
@@ -327,7 +327,10 @@ subto numNALeftAndRight:
         vif numToSide[s,i,lr] - 1 > 0 then numNA[s,i,lr] == numToSide[s,i,lr] - 1 else numNA[s,i,lr] == 0 end;
 
 maximize goal: 
-    (sum <s,i,j> in AllArcs: arc[s,i,j] * log(ChooseWeight[Word[s,i],Word[s,j]]))
+    (sum <s,i,j> in AllArcs: 
+        if i < j 
+        then arc[s,i,j] * log(ChooseWeight[Word[s,i],"r",Word[s,j]]) 
+        else arc[s,i,j] * log(ChooseWeight[Word[s,i],"l",Word[s,j]]) end) 
     + (sum <s,i,lr> in AllTokensLR: 
           (genAdj[s,i,lr] * log(StopWeight[Word[s,i],lr,0])
 	   + (1 - genAdj[s,i,lr]) * log(StopWeight[Word[s,i],lr,1])

@@ -31,18 +31,7 @@ public class ViterbiTrainer implements Trainer {
 
         @Override
         public DepTreebank getCounts(SentenceCollection sentences, Model model) {
-            Stopwatch stopwatch = new Stopwatch();
-            DepTreebank treebank = new DepTreebank();
-            for (Sentence sentence: sentences) {
-                stopwatch.start();
-                DepTree tree = parser.getViterbiParse(sentence, model);
-                stopwatch.stop();
-                treebank.add(tree);
-                log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
-                        stopwatch.getAverageDuration().getDurationInMilliseconds(), 
-                        stopwatch.getCount()));
-            }
-            return treebank;
+            return parser.getViterbiParse(sentences, model);
         }
         
     }

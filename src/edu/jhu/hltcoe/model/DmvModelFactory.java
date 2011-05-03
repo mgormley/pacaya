@@ -30,8 +30,11 @@ public class DmvModelFactory implements ModelFactory {
 
     @Override
     public Model getInstance(SentenceCollection sentences) {
+        // TODO: we waste effort on parameters that cannot ever appear
+        // in the corpus.
+        
         DmvModel dmv = new DmvModel();
-        Set<Label> vocab = getVocab(sentences);
+        Set<Label> vocab = sentences.getVocab();
         for (Label label : vocab) {
             for (String lr : leftRight) {
                 for (boolean adj : adjacent) {
@@ -42,31 +45,25 @@ public class DmvModelFactory implements ModelFactory {
                 }
             }
         }
-
-        Map<Label, Set<Label>> parentChildMap = getParentChildMap(sentences);
-        for (Entry<Label, Set<Label>> entry : parentChildMap.entrySet()) {
-            Label parent = entry.getKey();
-            List<Label> children = new ArrayList<Label>(entry.getValue());
-            double[] multinomial = weightGen.getChooseMulti(parent, children);
-            for (int i = 0; i < multinomial.length; i++) {
-                Pair<Label, Label> pair = new Pair<Label, Label>(parent, children.get(i));
-                dmv.putChooseWeight(pair, multinomial[i]);
+        // OLD WAY used a parentChildMap
+//        Map<Label, Set<Label>> parentChildMap = getParentChildMap(sentences);
+//        for (Entry<Label, Set<Label>> entry : parentChildMap.entrySet()) {
+//            Label parent = entry.getKey();
+//            List<Label> children = new ArrayList<Label>(entry.getValue());
+        // TODO: This is slow making a list like this
+        List<Label> vocabList = new ArrayList<Label>(vocab);
+        for (Label parent : vocabList) {
+            for (String lr : leftRight) {
+                Pair<Label,String> pair = new Pair<Label,String>(parent, lr);
+                double[] multinomial = weightGen.getChooseMulti(pair, vocabList);
+                for (int i = 0; i < multinomial.length; i++) {
+                    Triple<Label, String, Label> triple = new Triple<Label, String, Label>(parent, lr, vocabList.get(i));
+                    dmv.putChooseWeight(triple, multinomial[i]);
+                }
             }
         }
 
         return dmv;
-    }
-
-    public static Set<Label> getVocab(SentenceCollection sentences) {
-        Set<Label> vocab = new HashSet<Label>();
-        for (Sentence sent : sentences) {
-            for (Label label : sent) {
-                vocab.add(label);
-            }
-        }
-        // Special case for Wall
-        vocab.add(WallDepTreeNode.WALL_LABEL);
-        return vocab;
     }
 
     public static Map<Label, Set<Label>> getParentChildMap(SentenceCollection sentences) {
@@ -90,7 +87,7 @@ public class DmvModelFactory implements ModelFactory {
         
     public interface WeightGenerator {
         double getStopWeight(Triple<Label, String, Boolean> triple);
-        double[] getChooseMulti(Label parent, List<Label> children);
+        double[] getChooseMulti(Pair<Label, String> pair, List<Label> children);
     }
     
     public static class RandomWeightGenerator implements WeightGenerator {
@@ -101,7 +98,7 @@ public class DmvModelFactory implements ModelFactory {
         }
         
         @Override
-        public double[] getChooseMulti(Label parent, List<Label> children) {
+        public double[] getChooseMulti(Pair<Label, String> pair, List<Label> children) {
             return Multinomials.randomMultinomial(children.size());
         }
         

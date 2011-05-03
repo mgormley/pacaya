@@ -3,12 +3,14 @@ package edu.jhu.hltcoe.parse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
+import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -24,6 +26,7 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Triple;
 
 public class IlpViterbiParser implements ViterbiParser {
@@ -35,7 +38,7 @@ public class IlpViterbiParser implements ViterbiParser {
     private Map<String,String> codeMap;
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
     private IlpFormulation formulation;
-    private File workspace;
+    protected File workspace;
     
     public enum IlpFormulation {
         DP_PROJ("deptree-dp-proj", true),
@@ -81,11 +84,20 @@ public class IlpViterbiParser implements ViterbiParser {
     }
     
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
-        DepTreebank depTreebank = new DepTreebank();
-        for (Sentence sentence : sentences) {
-            depTreebank.add(getViterbiParse(sentence, model));
+        // TODO: could be a field
+        Stopwatch stopwatch = new Stopwatch();
+
+        DepTreebank treebank = new DepTreebank();
+        for (Sentence sentence: sentences) {
+            stopwatch.start();
+            DepTree tree = getViterbiParse(sentence, model);
+            stopwatch.stop();
+            treebank.add(tree);
+            log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
+                    Time.avgMs(stopwatch),
+                    stopwatch.getCount()));
         }
-        return depTreebank;
+        return treebank;
     }
     
     @Override
@@ -107,10 +119,13 @@ public class IlpViterbiParser implements ViterbiParser {
     }
 
     private File encode(File tempDir, Sentence sentence, Model model) {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.add(sentence);
+        return encode(tempDir, sentences, model);
+    }
+
+    protected File encode(File tempDir, SentenceCollection sentences, Model model) {
         try {
-            SentenceCollection sentences = new SentenceCollection();
-            sentences.add(sentence);
-            
             // Encode sentence
             encodeSentences(tempDir, sentences);
             
@@ -160,9 +175,9 @@ public class IlpViterbiParser implements ViterbiParser {
     private void encodeSentences(File tempDir, SentenceCollection sentences) throws FileNotFoundException {
         File sentFile = new File(tempDir, "input.sent");
         PrintWriter sentWriter = new PrintWriter(sentFile);
-        sentWriter.format("0 %d %s\n", ZIMPL_WALL_POSITION, WallDepTreeNode.WALL_ID);
         for(int s=0; s<sentences.size(); s++) {
             Sentence sentence = sentences.get(s);
+            sentWriter.format("%d %d %s\n", s, ZIMPL_WALL_POSITION, WallDepTreeNode.WALL_ID);
             for (int i=0; i<sentence.size(); i++) {
                 Label label = sentence.get(i); 
                 // Must add one to each word position
@@ -187,36 +202,57 @@ public class IlpViterbiParser implements ViterbiParser {
         
         File chooseWeightsFile = new File(tempDir, "input.chooseweights");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<Pair<Label,Label>,Double> chooseWeights = dmv.getChooseWeights();
-        for (Entry<Pair<Label,Label>,Double> entry : chooseWeights.entrySet()) {
+        Map<Triple<Label,String,Label>,Double> chooseWeights = dmv.getChooseWeights();
+        for (Entry<Triple<Label,String,Label>,Double> entry : chooseWeights.entrySet()) {
             Label parent = entry.getKey().get1();
-            Label child = entry.getKey().get2();
+            String lr = entry.getKey().get2();
+            Label child = entry.getKey().get3();
             double weight = entry.getValue();
-            chooseWeightsWriter.format("\"%s\" \"%s\" %f\n", parent.getLabel(), child.getLabel(), weight);
+            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %f\n", parent.getLabel(), lr, child.getLabel(), weight);
         }
         chooseWeightsWriter.close();
     }
     
     private DepTree decode(Sentence sentence, Map<String,Double> result) {
-        int[] parents = new int[sentence.size()];
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.add(sentence);
+        DepTreebank depTreebank = decode(sentences, result);
+        assert(depTreebank.size() == 0);
+        return depTreebank.get(0);
+    }
+    
+    protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
+        DepTreebank depTreebank = new DepTreebank();
+        
+        int[][] parents = new int[sentences.size()][];
+        for (int i=0; i<sentences.size(); i++) {
+            parents[i] = new int[sentences.get(i).size()];
+            Arrays.fill(parents[i], DepTree.EMPTY_IDX);
+        }
+        
         for (Entry<String,Double> entry : result.entrySet()) {
             String zimplVar = entry.getKey();
             Double value = entry.getValue();
             String[] splits = zimplVarRegex.split(zimplVar);
             String varType = splits[0];
             if (varType.equals("arc")) {
-                // Unused: int sentId = Integer.parseInt(splits[1]);
+                int sentId = Integer.parseInt(splits[1]);
                 int parent = Integer.parseInt(splits[2]);
                 int child = Integer.parseInt(splits[3]);
                 long longVal = Math.round(value);
                 if (longVal == 1) {
                     // Must subtract one from each position
-                    parents[child-1] = parent-1;
+                    parents[sentId][child-1] = parent-1;
                 }
             }
         }
-        DepTree tree = new DepTree(sentence, parents, formulation.isProjective());
-        return tree;
+        
+        for (int i=0; i<sentences.size(); i++) {
+            DepTree tree = new DepTree(sentences.get(i), parents[i], formulation.isProjective());
+            depTreebank.add(tree);
+        }
+        
+        return depTreebank;
     }
 
     public static void main(String[] args) {
@@ -232,11 +268,14 @@ public class IlpViterbiParser implements ViterbiParser {
         }
 
         @Override
-        public double[] getChooseMulti(Label parent, List<Label> children) {
-            Map<Pair<Label, Label>, Double> cw_map = dmv.getChooseWeights();
+        public double[] getChooseMulti(Pair<Label,String> pair, List<Label> children) {
+            Map<Triple<Label,String,Label>, Double> cw_map = dmv.getChooseWeights();
             double[] mult = new double[children.size()];
+            
+            Label parent = pair.get1();
+            String lr = pair.get2();
             for (int i=0; i<mult.length; i++) {
-                mult[i] = cw_map.get(new Pair<Label,Label>(parent, children.get(i)));
+                mult[i] = cw_map.get(new Triple<Label,String,Label>(parent, lr, children.get(i)));
             }
             // Do NOT normalize the multinomial
             return mult;

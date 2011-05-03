@@ -12,6 +12,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.train.MStep;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -60,14 +61,18 @@ public class DmvMStep implements MStep<DepTreebank> {
         return stopCounts;
     }
 
-    private Map<Label, Map<Label, Integer>> getChooseCounts(DepTreebank treebank) {
-        Map<Label,Map<Label,Integer>> chooseCounts = new HashMap<Label,Map<Label,Integer>>();
+    private Map<Pair<Label, String>, Map<Label, Integer>> getChooseCounts(DepTreebank treebank) {
+        Map<Pair<Label, String>,Map<Label,Integer>> chooseCounts = new HashMap<Pair<Label, String>,Map<Label,Integer>>();
         for (DepTree tree : treebank) {
             for (DepTreeNode parentNode : tree) {
                 Label parent = parentNode.getLabel();
-                for (DepTreeNode childNode : parentNode.getChildren()) {
-                    Label child = childNode.getLabel();
-                    Utilities.increment(chooseCounts, parent, child, 1);
+                for (String lr : DmvModelFactory.leftRight) {
+                    List<DepTreeNode> sideChildren = parentNode.getChildrenToSide(lr);
+                    Pair<Label, String> pair = new Pair<Label, String>(parent, lr);
+                    for (DepTreeNode childNode : sideChildren) {
+                        Label child = childNode.getLabel();
+                        Utilities.increment(chooseCounts, pair, child, 1);
+                    }
                 }
             }
         }
@@ -76,11 +81,11 @@ public class DmvMStep implements MStep<DepTreebank> {
 
     public static class MLWeightGenerator implements WeightGenerator {
         
-        private Map<Label,Map<Label,Integer>> chooseCounts;
+        private Map<Pair<Label, String>,Map<Label,Integer>> chooseCounts;
         private Map<Triple<Label,String,Boolean>,Map<Boolean,Integer>> stopCounts;
         private double lambda;
         
-        public MLWeightGenerator(Map<Label, Map<Label, Integer>> chooseCounts,
+        public MLWeightGenerator(Map<Pair<Label, String>, Map<Label, Integer>> chooseCounts,
                 Map<Triple<Label, String, Boolean>, Map<Boolean, Integer>> stopCounts, double lambda) {
             this.chooseCounts = chooseCounts;
             this.stopCounts = stopCounts;
@@ -88,8 +93,8 @@ public class DmvMStep implements MStep<DepTreebank> {
         }
 
         @Override
-        public double[] getChooseMulti(Label parent, List<Label> children) {
-            Map<Label,Integer> childCounts = chooseCounts.get(parent);
+        public double[] getChooseMulti(Pair<Label, String> pair, List<Label> children) {
+            Map<Label,Integer> childCounts = chooseCounts.get(pair);
             double[] mult = new double[children.size()];
             for (int i=0; i<mult.length; i++) {
                 int childCount;
