@@ -40,7 +40,7 @@ public class ViterbiTrainer implements Trainer {
                 stopwatch.stop();
                 treebank.add(tree);
                 log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
-                        stopwatch.getMedianDuration().getDurationInMilliseconds(), 
+                        stopwatch.getAverageDuration().getDurationInMilliseconds(), 
                         stopwatch.getCount()));
             }
             return treebank;
