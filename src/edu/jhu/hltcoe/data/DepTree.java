@@ -20,8 +20,9 @@ public class DepTree implements Iterable<DepTreeNode> {
     
     private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
     private int[] parents;
+    private boolean isProjective;
     
-    public DepTree(Tree tree) {  
+    public DepTree(Tree tree) {
         List<Tree> leaves = tree.getLeaves();
 
         // Create parents array
@@ -73,9 +74,12 @@ public class DepTree implements Iterable<DepTreeNode> {
         
         // Add parent/child links to DepTreeNodes
         addParentChildLinksToNodes();
+        
+        this.isProjective = checkIsProjective();
     }
 
-    public DepTree(Sentence sentence, int[] parents) {
+    public DepTree(Sentence sentence, int[] parents, boolean isProjective) {
+        this.isProjective = isProjective;
         this.parents = parents;
         nodes.add(new WallDepTreeNode());
         for (int i=0; i<sentence.size(); i++) {
@@ -132,6 +136,36 @@ public class DepTree implements Iterable<DepTreeNode> {
         if (nodes.size()-1 != parents.length) {
             throw new IllegalStateException("Number of nodes does not equal number of parents");
         }
+        
+        // Check for projectivity if necessary
+        if (isProjective) {
+            if (!checkIsProjective()) {
+                throw new IllegalStateException("Found non-projective arcs in tree");
+            }
+        }
+    }
+    
+    private boolean checkIsProjective() {
+        for (int i=0; i<parents.length; i++) {
+            int pari = parents[i] == WALL_IDX ? parents.length : parents[i];
+            int minI = i < pari ? i : pari;
+            int maxI = i > pari ? i : pari;
+            for (int j=0; j<parents.length; j++) {
+                if (j == i) {
+                    continue;
+                }
+                if (minI < j && j < maxI) {
+                    if (!(minI <= parents[j] && parents[j] <= maxI)) {
+                        return false;
+                    }
+                } else {
+                    if (!(parents[j] <= minI || parents[j] >= maxI)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private int countChildrenOf(int parent) {

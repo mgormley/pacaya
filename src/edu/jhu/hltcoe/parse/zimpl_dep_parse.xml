@@ -45,7 +45,13 @@ set TempArcs := union <s> in Sents: Arcs[s];
 set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
 
 var arc[AllArcs] binary;
-
+       
+# This constraint is optional, but we include it for all formulations    
+# The wall has one outgoing arc
+subto one_child_for_wall:
+    forall <s> in Sents:
+       1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
+       
 	    ]]>
 	</code>
 	<code id="deptree-general">
@@ -64,11 +70,6 @@ subto no_parent_for_wall:
     forall <s> in Sents:
        forall <i> in { 1 to Length[s] }: 
            arc[s,i,0] == 0;
-           
-# The wall has one outgoing arc
-subto one_child_for_wall:
-    forall <s> in Sents:
-       1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
 
     	]]>
 	</code>	
@@ -127,6 +128,98 @@ subto flow_bound:
 
     	]]>
 	</code>
+	<code id="deptree-flow-proj">
+    	<![CDATA[   
+# ==================================================
+# ==== Option 4: Projective parsing (also requires constraints from Option 2) ====
+# This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
+# and that the parents of those nodes are not outside the range[i,j]
+subto proj_parse_no_illegal_parents:
+    forall <s,i,j> in AllArcs with abs(i-j) > 1:
+        (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l < min(i,j) or l > max(i,j)): (arc[s,k,l] + arc[s,l,k])) <= Length[s] * (1 - arc[s,i,j]); 
+# ==================================================
+
+    	]]>
+	</code>
+	<code id="deptree-multiflow-nonproj">
+    	<![CDATA[   
+# ==================================================
+# ==== Option 5: Multi-commodity flow non-projective parsing ====
+# The domain of Arcs is pairs of token indices
+set MFlowArcs[<s> in Sents] := {<i,j,k> in Tokens[s] * Tokens[s] * Tokens[s] with i != j and k != 0};
+set TempMFlowArcs := union <s> in Sents: MFlowArcs[s];
+set AllMFlowArcs := { <s,i,j,k> in Sents*TempMFlowArcs with <i,j,k> in MFlowArcs[s] }; # TODO: this should be horribly slow
+
+# The mflow[s,i,j,k] indicates the flow of commidity k across arc <i,j>
+var mflow[AllMFlowArcs] real >= 0 <= 1;
+
+# The root sends one unit of commodity to each node
+subto mflow_one_unit: 
+    forall <s> in Sents:
+       	forall <k> in { 1 to Length[s] }:
+       		(sum <j,0,k> in MFlowArcs[s]: mflow[s,j,0,k]) - (sum <0,j,k> in MFlowArcs[s]: mflow[s,0,j,k])
+       			== -1;
+
+# Any node consumes its own commodity and no other
+subto mflow_self_consumption:
+    forall <s> in Sents:
+        forall <i> in { 1 to Length[s] }:
+        	forall <k> in { 1 to Length[s] }:
+        		(sum <j,i,k> in MFlowArcs[s]: mflow[s,j,i,k]) - (sum <i,j,k> in MFlowArcs[s]: mflow[s,i,j,k])
+        			== (if i == k then 1 else 0 end);
+
+# Disabled arcs do not carry any flow
+subto mflow_disabled:
+    forall <s,i,j,k> in AllMFlowArcs:
+    	mflow[s,i,j,k] <= arc[s,i,j];
+    	
+# There are exactly n enabled arcs
+subto mflow_enabled:
+	forall <s> in Sents:
+		Length[s] == sum <i,j> in Arcs[s]: arc[s,i,j];
+
+# Indicates a path from i to j
+var path[AllArcs] binary; 
+
+# Path indicator variables 
+subto path_one:
+	forall <s,j,k> in AllArcs with j != 0 and k != 0:
+		path[s,j,k] == sum <i> in Tokens[s] with i != j: mflow[s,i,j,k];
+subto path_two:
+	forall <s,i,j> in AllArcs with i == 0:
+		path[s,i,j] == 1;
+subto path_three:
+	forall <s,i,j> in AllArcs with j == 0:
+		path[s,i,j] == 0;
+		
+# Indicates a non-projective arc from i to j
+var nparc[AllArcs] binary;
+
+subto nparc_one:
+	forall <s,i,j> in AllArcs:
+		nparc[s,i,j] <= arc[s,i,j];
+subto nparc_two:
+	forall <s,i,j,k> in AllMFlowArcs with min(i,j) <= k and k <= max(i,j) and i != k:		
+		nparc[s,i,j] >= arc[s,i,j] - path[s,i,k];
+subto nparc_three:
+	forall <s,i,j> in AllArcs:
+		nparc[s,i,j] <= - (sum <k> in {min(i,j)+1 to max(i,j)-1}: path[s,i,k]) + abs(j-i) - 1;
+	
+# ==================================================
+
+    	]]>
+	</code>
+	<code id="deptree-multiflow-proj">
+    	<![CDATA[   
+# ==================================================
+# ==== Option 6: Projective parsing (also requires constraints from Option 5) ====
+subto mf_projective:
+	forall <s,i,j> in AllArcs:
+		nparc[s,i,j] == 0;
+# ==================================================
+
+    	]]>
+	</code>
 	<code id="deptree-dp-proj">
     	<![CDATA[   
 # =====================================================
@@ -179,10 +272,13 @@ subto deriv_attach:
 #TODO: In the DP attach_right and attach_left are different because the final triangle is on the head side only. Does that matter?
 subto attach_right:
       forall <s,i,k> in AllArcs with i < k:
-     	    arc[s,i,k]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
-subto attach_left:
-      forall <s,i,k> in AllArcs with i < k:
-      	    arc[s,k,i]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
+     	    arc[s,i,k] + arc[s,k,i]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
+#subto attach_right:
+#      forall <s,i,k> in AllArcs with i < k:
+#     	    arc[s,i,k]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
+#subto attach_left:
+#      forall <s,i,k> in AllArcs with i < k:
+#      	    arc[s,k,i]  <= sum <j> in Tokens[s] with <i,j,k> in DerivArcs[s]: deriv_arc[s,i,j,k];
 
 # Create indicator variables for the derivation of tri[s,i,k] or tri[s,k,i]
 # if deriv_tri[s,i,j,k] == 1 then arc[s,i,j] == 1 and tri[s,j,k] == 1
@@ -195,7 +291,7 @@ subto deriv_complete_right:
 subto complete_right_left:
       forall <s> in Sents:
       	     forall <i,k> in {Tokens[s] * Tokens[s]} with (i < k) or (k < i):
-	     	    tri[s,i,k] <= sum <j> in Tokens[s] with <i,j,k> in DerivTris[s]: deriv_tri[s,i,j,k];
+	     	    tri[s,i,k] == sum <j> in Tokens[s] with <i,j,k> in DerivTris[s]: deriv_tri[s,i,j,k];
 # =====================================================
 
     	]]>

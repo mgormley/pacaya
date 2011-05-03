@@ -37,14 +37,19 @@ public class IlpViterbiParser implements ViterbiParser {
     private File workspace;
     
     public enum IlpFormulation {
-        DP_PROJ("deptree-dp-proj"),
-        EXPLICIT_PROJ("deptree-explicit-proj"),
-        FLOW_NONPROJ("deptree-flow-nonproj");
+        DP_PROJ("deptree-dp-proj", true),
+        EXPLICIT_PROJ("deptree-explicit-proj", true),
+        FLOW_NONPROJ("deptree-flow-nonproj", false),
+        FLOW_PROJ("deptree-flow-proj", true),
+        MFLOW_NONPROJ("deptree-multiflow-nonproj", false),
+        MFLOW_PROJ("deptree-multiflow-proj", true);
         
         private String id;
+        private boolean isProjective;
         
-        private IlpFormulation(String id) {
+        private IlpFormulation(String id, boolean isProjective) {
             this.id = id;
+            this.isProjective = isProjective;
         }
         
         @Override
@@ -59,6 +64,10 @@ public class IlpViterbiParser implements ViterbiParser {
                 }
             }
             throw new IllegalArgumentException("Unrecognized IlpFormulation id: " + id);
+        }
+        
+        public boolean isProjective() {
+            return isProjective;
         }
     }
     
@@ -117,12 +126,26 @@ public class IlpViterbiParser implements ViterbiParser {
         File zimplFile = new File(tempDir, "parse.zpl");
         PrintWriter zimplWriter;
         zimplWriter = new PrintWriter(zimplFile);
-        zimplWriter.write(codeMap.get("setup"));
-        zimplWriter.write(codeMap.get("deptree-general"));
-        zimplWriter.write(codeMap.get(formulation.toString()));
-        zimplWriter.write(codeMap.get("dmv-objective"));
+        zimplWriter.write(getCodeSnippet("setup"));
+        if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
+            zimplWriter.write(getCodeSnippet("deptree-general"));
+        }
+        if (formulation == IlpFormulation.FLOW_PROJ) {
+            zimplWriter.write(getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
+        } else if (formulation == IlpFormulation.MFLOW_PROJ) {
+            zimplWriter.write(getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
+        }
+        zimplWriter.write(getCodeSnippet(formulation));
+        zimplWriter.write(getCodeSnippet("dmv-objective"));
         zimplWriter.close();
         return zimplFile;
+    }
+    
+    private String getCodeSnippet(Object id) {
+        if (id instanceof IlpFormulation) {
+            return codeMap.get(id.toString());
+        } 
+        return codeMap.get(id);
     }
 
     private void encodeSentences(File tempDir, SentenceCollection sentences) throws FileNotFoundException {
@@ -183,7 +206,7 @@ public class IlpViterbiParser implements ViterbiParser {
                 }
             }
         }
-        DepTree tree = new DepTree(sentence, parents);
+        DepTree tree = new DepTree(sentence, parents, formulation.isProjective());
         return tree;
     }
 
