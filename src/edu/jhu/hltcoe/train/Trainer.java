@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.inference;
+package edu.jhu.hltcoe.train;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.stanford.nlp.parser.ViterbiParser;

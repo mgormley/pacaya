@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.inference;
+package edu.jhu.hltcoe.train;
 
 import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;

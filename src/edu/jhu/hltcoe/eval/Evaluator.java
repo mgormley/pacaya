@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.eval;
 
 import java.io.PrintWriter;
 
-import edu.jhu.hltcoe.inference.Trainer;
+import edu.jhu.hltcoe.train.Trainer;
 
 public interface Evaluator {
 

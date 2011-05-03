@@ -9,9 +9,9 @@ import edu.jhu.hltcoe.data.DepTreeNode;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.inference.MStep;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
+import edu.jhu.hltcoe.train.MStep;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 

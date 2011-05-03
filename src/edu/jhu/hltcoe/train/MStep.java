@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.inference;
+package edu.jhu.hltcoe.train;
 
 import edu.jhu.hltcoe.model.Model;
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.inference;
+package edu.jhu.hltcoe.train;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
