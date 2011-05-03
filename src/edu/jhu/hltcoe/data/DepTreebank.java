@@ -7,6 +7,8 @@ import edu.stanford.nlp.trees.Treebank;
 
 public class DepTreebank extends ArrayList<DepTree> {
 
+    private SentenceCollection sentences = null;
+    
     public DepTreebank() {
         // TODO Auto-generated constructor stub
     }
@@ -17,5 +19,11 @@ public class DepTreebank extends ArrayList<DepTree> {
         }
     }
 
+    public SentenceCollection getSentences() {
+        if (sentences == null) {
+            sentences = new SentenceCollection(this);
+        }
+        return sentences;
+    }
     
 }

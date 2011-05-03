@@ -17,13 +17,19 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvMStep implements MStep<DepTreebank> {
 
+    private double lambda;
+    
+    public DmvMStep(double lambda) {
+        this.lambda = lambda;
+    }
+
     @Override
     public Model getModel(DepTreebank treebank) {
-        WeightGenerator weightGen = new MLWeightGenerator(getChooseCounts(treebank), getStopCounts(treebank));
+        WeightGenerator weightGen = new MLWeightGenerator(getChooseCounts(treebank), getStopCounts(treebank), lambda);
         DmvModelFactory dmvFactory = new DmvModelFactory(weightGen);
 
-        // TODO: this is a huge waste of computation (but kind of convenient)
-        SentenceCollection sentences = new SentenceCollection(treebank);
+        // TODO: this is a huge waste of computation, since treebank is new each time (but kind of convenient)
+        SentenceCollection sentences = treebank.getSentences();
         
         DmvModel dmv = (DmvModel)dmvFactory.getInstance(sentences);
         return dmv;
@@ -72,11 +78,13 @@ public class DmvMStep implements MStep<DepTreebank> {
         
         private Map<Label,Map<Label,Integer>> chooseCounts;
         private Map<Triple<Label,String,Boolean>,Map<Boolean,Integer>> stopCounts;
+        private double lambda;
         
         public MLWeightGenerator(Map<Label, Map<Label, Integer>> chooseCounts,
-                Map<Triple<Label, String, Boolean>, Map<Boolean, Integer>> stopCounts) {
+                Map<Triple<Label, String, Boolean>, Map<Boolean, Integer>> stopCounts, double lambda) {
             this.chooseCounts = chooseCounts;
             this.stopCounts = stopCounts;
+            this.lambda = lambda;
         }
 
         @Override
@@ -84,7 +92,14 @@ public class DmvMStep implements MStep<DepTreebank> {
             Map<Label,Integer> childCounts = chooseCounts.get(parent);
             double[] mult = new double[children.size()];
             for (int i=0; i<mult.length; i++) {
-                mult[i] = childCounts.get(children.get(i));
+                int childCount;
+                if (childCounts != null) {
+                    childCount = Utilities.safeGet(childCounts, children.get(i));
+                } else {
+                    // Sometimes a label will only ever have been a leaf, so it will have no child counts
+                    childCount = 0;
+                }
+                mult[i] = childCount + lambda;
             }
             Multinomials.normalizeProps(mult);
             return mult;
@@ -93,9 +108,17 @@ public class DmvMStep implements MStep<DepTreebank> {
         @Override
         public double getStopWeight(Triple<Label, String, Boolean> triple) {
             Map<Boolean,Integer> map = stopCounts.get(triple);
-            double numStop = Utilities.safeGet(map, Boolean.TRUE);
-            double numNotStop = Utilities.safeGet(map, Boolean.FALSE);
-            double weight = numStop / (numStop + numNotStop);
+            double numStop;
+            double numNotStop;
+            if (map != null) {
+                numStop = Utilities.safeGet(map, Boolean.TRUE);
+                numNotStop = Utilities.safeGet(map, Boolean.FALSE);
+            } else {
+                // Sometimes we won't have observed this particular triple, so rely on smoothing.
+                numStop = 0;
+                numNotStop = 0;
+            }
+            double weight = (numStop + lambda) / (numStop + numNotStop + 2*lambda);
             return weight;
         }
         

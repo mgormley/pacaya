@@ -1,13 +1,11 @@
 package edu.jhu.hltcoe.eval;
 
-import java.io.PrintWriter;
-
-import edu.jhu.hltcoe.train.Trainer;
+import edu.jhu.hltcoe.model.Model;
 
 public interface Evaluator {
 
-    void evaluate(Trainer model);
+    void evaluate(Model model);
 
-    void print(PrintWriter pw);
+    void print();
 
 }

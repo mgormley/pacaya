@@ -8,7 +8,7 @@ public class SentenceCollection extends ArrayList<Sentence> {
         super();
     }
     
-    public SentenceCollection(DepTreebank treebank) {
+    SentenceCollection(DepTreebank treebank) {
         super();
         for (DepTree tree : treebank) {
             Sentence sentence = new Sentence(tree);

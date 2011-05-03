@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
@@ -77,6 +78,14 @@ public class IlpViterbiParser implements ViterbiParser {
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
         workspace = Command.createTempDir("workspace", new File("."));
+    }
+    
+    public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
+        DepTreebank depTreebank = new DepTreebank();
+        for (Sentence sentence : sentences) {
+            depTreebank.add(getViterbiParse(sentence, model));
+        }
+        return depTreebank;
     }
     
     @Override

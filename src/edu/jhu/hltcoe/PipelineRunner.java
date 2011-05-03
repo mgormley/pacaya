@@ -1,7 +1,5 @@
 package edu.jhu.hltcoe;
 
-import java.io.PrintWriter;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -16,8 +14,11 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
+import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
+import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.HeadFinder;
@@ -61,7 +62,7 @@ public class PipelineRunner {
                 maxNumSentences = Integer.valueOf(cmd.getOptionValue("maxNumSentences"));
             }
             for (DepTree tree : depTreebankTmp) {
-                if (depTreebank.size() > maxNumSentences) {
+                if (depTreebank.size() >= maxNumSentences) {
                     break;
                 }
                 int len = tree.getNodes().size();
@@ -74,21 +75,20 @@ public class PipelineRunner {
         }
         log.info("Number of sentences: " + depTreebank.size());
         
-        SentenceCollection sentences = new SentenceCollection(depTreebank);
+        SentenceCollection sentences = depTreebank.getSentences();
 
         // Train the model
         log.info("Training model");
-        Trainer model = TrainerFactory.getModel(cmd);
-        model.train(sentences);
-
+        Trainer trainer = TrainerFactory.getModel(cmd);
+        trainer.train(sentences);
+        ViterbiParser parser = ((ViterbiTrainer)trainer).getParser();
+        Model model = trainer.getModel();
+        
         // Evaluate the model
         log.info("Evaluating model");
-        PrintWriter pw = new PrintWriter(System.out);
-        if (cmd.hasOption("psuedo-word")) {
-            Evaluator pwEval = new DependencyParserEvaluator();
-            pwEval.evaluate(model);
-            pwEval.print(pw);
-        }
+        Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
+        pwEval.evaluate(model);
+        pwEval.print();
     }
 
     public static Options createOptions() {

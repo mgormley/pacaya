@@ -24,6 +24,11 @@ public class Triple<X,Y,Z> {
 	}
 	
 	@Override
+	public String toString() {
+	    return String.format("<%s, %s, %s>", x,y,z);
+	}
+	
+	@Override
 	public boolean equals(Object o) { 
 		if (o instanceof Triple<?,?,?>) {
 			Triple<?,?,?> p = (Triple<?,?,?>)o;

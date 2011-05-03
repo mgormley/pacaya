@@ -22,6 +22,7 @@ public class TrainerFactory {
         options.addOption("i", "iterations", true, "Number of iterations.");
         options.addOption("m", "model", true, "Model.");
         options.addOption("f", "formulation", true, "ILP formulation for parsing");
+        options.addOption("l", "lambda", true, "Value for add-lambda smoothing.");
     }
 
     public static Trainer getModel(CommandLine cmd) throws ParseException  {
@@ -34,6 +35,8 @@ public class TrainerFactory {
                 cmd.getOptionValue("model") : "dmv";
         final IlpFormulation formulation = cmd.hasOption("formulation") ? 
                 IlpFormulation.getById(cmd.getOptionValue("formulation")) : IlpFormulation.DP_PROJ;
+        final double lambda = cmd.hasOption("lambda") ?
+                Double.parseDouble(cmd.getOptionValue("lambda")) : 0.1;
                 
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -43,7 +46,7 @@ public class TrainerFactory {
             
             if (modelName.equals("dmv")) {
                 parser = new IlpViterbiParser(formulation);
-                mStep = new DmvMStep();
+                mStep = new DmvMStep(lambda);
                 modelFactory = new DmvModelFactory(new RandomWeightGenerator());
             } else {
                 throw new ParseException("Model not supported: " + modelName);

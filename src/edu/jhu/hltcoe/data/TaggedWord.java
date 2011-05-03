@@ -23,6 +23,11 @@ public class TaggedWord implements Label {
         // Must also update hashCode and equals if changing this
         return tag;
     }
+    
+    @Override
+    public String toString() {
+        return getLabel();
+    }
 
     @Override
     public int hashCode() {

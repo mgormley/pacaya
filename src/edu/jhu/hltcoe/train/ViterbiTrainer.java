@@ -9,7 +9,6 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 
 public class ViterbiTrainer implements Trainer {
@@ -46,6 +45,15 @@ public class ViterbiTrainer implements Trainer {
             return treebank;
         }
         
+    }
+    
+    @Override
+    public Model getModel() {
+        return emTrainer.getModel();
+    }
+    
+    public ViterbiParser getParser() {
+        return parser;
     }
     
 }

@@ -16,6 +16,7 @@ public class EMTrainer<C> implements Trainer {
     private MStep<C> mStep;
     private ModelFactory modelFactory;
     private int iterations;
+    private Model model;
     
     public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations) {
         this.eStep = eStep;
@@ -27,13 +28,18 @@ public class EMTrainer<C> implements Trainer {
     @Override
     public void train(SentenceCollection sentences) {
         // Initialize the parameters of the model
-        Model model = modelFactory.getInstance(sentences);
+        model = modelFactory.getInstance(sentences);
         
         // Run iterations of EM 
         for (int i=0; i<iterations; i++) {
             C counts = eStep.getCounts(sentences, model);
             model = mStep.getModel(counts);
         }
+    }
+
+    @Override
+    public Model getModel() {
+        return model;
     }
     
 }
