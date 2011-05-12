@@ -84,6 +84,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
     def get_experiments(self):
         all = DPExpParams()
         all.set("expname", self.expname, False, False)
+        all.update(threads=self.threads)
         all.update(formulation="deptree-flow-nonproj",
                    parser="ilp-corpus",
                    model="dmv",
