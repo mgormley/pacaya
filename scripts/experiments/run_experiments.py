@@ -110,12 +110,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiments.append(all + dataset + ilpform)
         elif self.expname == "corpus-size":
             if not self.fast:
-                all.update(iterations=2,
+                all.update(iterations=1,
                            maxSentenceLength=7)
             for dataset in datasets:
-                for maxNumSentences in range(10,110,10):
-                    mns = DPExpParams(maxNumSentences=maxNumSentences)
-                    experiments.append(all + dataset + mns)
+                for parser in ["ilp-corpus","ilp-sentence"]:
+                    par = DPExpParams(parser=parser)
+                    for maxNumSentences in range(10,110,10):
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        experiments.append(all + dataset + par + mns)
         else:
             raise Exception("Unknown expname: " + self.expname)
                 
