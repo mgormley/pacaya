@@ -65,7 +65,7 @@ public class PipelineRunner {
                 if (depTreebank.size() >= maxNumSentences) {
                     break;
                 }
-                int len = tree.getNodes().size();
+                int len = tree.getNumWords();
                 if (len <= maxSentenceLength) {
                     depTreebank.add(tree);
                 }
@@ -74,6 +74,7 @@ public class PipelineRunner {
             depTreebank = new DepTreebank(treebank);
         }
         log.info("Number of sentences: " + depTreebank.size());
+        log.info("Number of words: " + depTreebank.getNumWords());
         
         SentenceCollection sentences = depTreebank.getSentences();
 

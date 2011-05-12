@@ -97,6 +97,8 @@ public class IlpViterbiParser implements ViterbiParser {
                     Time.avgMs(stopwatch),
                     stopwatch.getCount()));
         }
+        log.debug(String.format("Tot parse time: %.3f", 
+                Time.totMs(stopwatch)));
         return treebank;
     }
     

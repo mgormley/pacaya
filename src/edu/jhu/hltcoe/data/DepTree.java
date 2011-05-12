@@ -250,5 +250,9 @@ public class DepTree implements Iterable<DepTreeNode> {
     public int[] getParents() {
         return parents;
     }
+    
+    public int getNumWords() {
+        return parents.length;
+    }
 
 }

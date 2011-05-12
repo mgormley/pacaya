@@ -45,12 +45,10 @@ public class IlpViterbiCorpusParser extends IlpViterbiParser {
         DepTreebank depTreebank = decode(sentences, result);
         
         stopwatch.stop();
-        log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
-                Time.totMs(stopwatch) / sentences.size(), 
-                sentences.size()));
-        log.debug(String.format("Tot parse time: %.3f Num sents: %d", 
-                Time.totMs(stopwatch), 
-                sentences.size()));
+        log.debug(String.format("Avg parse time: %.3f", 
+                Time.totMs(stopwatch) / sentences.size()));
+        log.debug(String.format("Tot parse time: %.3f", 
+                Time.totMs(stopwatch)));
         return depTreebank;
     }
     

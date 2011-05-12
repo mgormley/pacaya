@@ -92,11 +92,9 @@ public class IlpViterbiParserTest {
     }
     
     private DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
-        DepTreebank trees = new DepTreebank();
         IlpViterbiParser parser = new IlpViterbiParser(formulation);
-        for (Sentence sentence : sentences) {
-            DepTree depTree = parser.getViterbiParse(sentence, model);
-            trees.add(depTree);
+        DepTreebank trees = parser.getViterbiParse(sentences, model);
+        for (DepTree depTree : trees) {
             System.out.println(depTree);
         }
         return trees;

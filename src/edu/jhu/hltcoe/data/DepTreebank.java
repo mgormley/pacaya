@@ -26,4 +26,12 @@ public class DepTreebank extends ArrayList<DepTree> {
         return sentences;
     }
     
+    public int getNumWords() {
+        int numWords = 0;
+        for (DepTree tree : this) {
+            numWords += tree.getNumWords();
+        }
+        return numWords;
+    }
+    
 }

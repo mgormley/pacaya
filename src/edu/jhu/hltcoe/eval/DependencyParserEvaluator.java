@@ -9,7 +9,7 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 
 /**
  * Computes the directed score (as described in Spitkovsky, 2009). Directed score
- * is simply the overall fraction of cor- rectly guessed dependencies
+ * is simply the overall fraction of correctly guessed dependencies
  * 
  * @author mgormley
  */
