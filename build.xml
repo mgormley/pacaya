@@ -39,14 +39,12 @@
   </target>
 
   <target name="resources" description="Copy resources to build output directory">
-    <!-- 
-    <mkdir dir="${build.path}/coe/lang" />
-    <copy todir="${build.path}/coe/lang">
-      <fileset dir="${source.path}/coe/lang">
-    	<include name="*.txt"/>
+    <mkdir dir="${build.path}/edu/jhu/hltcoe/parse" />
+    <copy todir="${build.path}/edu/jhu/hltcoe/parse">
+      <fileset dir="${source.path}/edu/jhu/hltcoe/parse">
+    	<include name="*.xml"/>
       </fileset>
     </copy>
-    -->
   </target>
   
   <target name="compile" depends="classpath,build-dir,resources"
