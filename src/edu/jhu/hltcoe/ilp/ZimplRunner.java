@@ -7,7 +7,7 @@ import edu.jhu.hltcoe.util.Command;
 
 public class ZimplRunner {
     
-    private static final String zimplBinary = "/Users/mgormley/Documents/JHU4_S10/dep_parse/bin/zimpl-3.1.0.darwin.x86.gnu.opt";
+    private static final String zimplBinary = "zimpl"; //"/Users/mgormley/Documents/JHU4_S10/dep_parse/bin/zimpl-3.1.0.darwin.x86.gnu.opt";
     private String outputPrefix;
     private File zimplFile;
     private File tempDir;
