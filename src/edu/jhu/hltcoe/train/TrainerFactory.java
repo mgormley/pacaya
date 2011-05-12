@@ -59,7 +59,7 @@ public class TrainerFactory {
                     throw new ParseException("Parser not supported: " + parserName);
                 }
                 mStep = new DmvMStep(lambda);
-                modelFactory = new DmvModelFactory(new RandomWeightGenerator());
+                modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }

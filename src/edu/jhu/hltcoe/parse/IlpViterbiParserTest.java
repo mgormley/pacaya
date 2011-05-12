@@ -18,11 +18,13 @@ import edu.jhu.hltcoe.parse.IlpViterbiParser.IlpFormulation;
 
 public class IlpViterbiParserTest {
     
+    private final static double lambda = 0.1;
+    
     @Test
     public void testProjParses() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator());
+        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         
         // flow projective parsing
@@ -48,7 +50,7 @@ public class IlpViterbiParserTest {
         // just a part of it.
         //sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
         sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator());
+        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
 
         Stopwatch timer;
@@ -106,7 +108,7 @@ public class IlpViterbiParserTest {
         sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
 //        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
 //        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator());
+        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         
         // Single commodity flow non-projective parsing

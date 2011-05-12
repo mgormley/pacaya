@@ -92,14 +92,30 @@ public class DmvModelFactory implements ModelFactory {
     
     public static class RandomWeightGenerator implements WeightGenerator {
 
+        private double lambda;
+
+        public RandomWeightGenerator(double lambda) {
+            this.lambda = lambda;
+        }
+        
         @Override
         public double getStopWeight(Triple<Label, String, Boolean> triple) {
-            return Prng.random.nextDouble();
+            double stop = 0.0;
+            while (stop == 0.0) {
+                stop = Prng.random.nextDouble();
+            }
+            return stop;
         }
         
         @Override
         public double[] getChooseMulti(Pair<Label, String> pair, List<Label> children) {
-            return Multinomials.randomMultinomial(children.size());
+            // TODO: these should be randomly generated from a prior
+            double[] chooseMulti = Multinomials.randomMultinomial(children.size());
+            for (int i=0; i<chooseMulti.length; i++) {
+                chooseMulti[i] += lambda;
+            }
+            Multinomials.normalizeProps(chooseMulti);
+            return chooseMulti;
         }
         
     }

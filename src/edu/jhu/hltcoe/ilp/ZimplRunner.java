@@ -7,7 +7,15 @@ import edu.jhu.hltcoe.util.Command;
 
 public class ZimplRunner {
     
-    private static final String zimplBinary = "zimpl"; //"/Users/mgormley/Documents/JHU4_S10/dep_parse/bin/zimpl-3.1.0.darwin.x86.gnu.opt";
+    private static final String zimplBinary;
+    static {
+        File zb = new File("/Users/mgormley/Documents/JHU4_S10/dep_parse/bin/zimpl-3.1.0.darwin.x86.gnu.opt");
+        if (zb.exists()) {
+            zimplBinary = zb.getAbsolutePath();
+        } else {
+            zimplBinary = "zimpl";
+        }
+    }
     private String outputPrefix;
     private File zimplFile;
     private File tempDir;
