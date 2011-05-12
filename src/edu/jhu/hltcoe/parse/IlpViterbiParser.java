@@ -222,7 +222,7 @@ public class IlpViterbiParser implements ViterbiParser {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(sentence);
         DepTreebank depTreebank = decode(sentences, result);
-        assert(depTreebank.size() == 0);
+        assert(depTreebank.size() == 1);
         return depTreebank.get(0);
     }
     
