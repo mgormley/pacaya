@@ -37,6 +37,7 @@ public class ClGurobiIlpSolver implements IlpSolver {
         String[] cmdArray = new String[] {
                 gurobiBinary,
                 "ResultFile="+solFile.getAbsolutePath(),
+                "Threads=4",
                 lpFile.getAbsolutePath() };
         //TODO: handle infeasible case
         File gurobiLog = new File(tempDir, "gurobi.log");
