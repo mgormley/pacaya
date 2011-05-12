@@ -25,6 +25,7 @@ public class TrainerFactory {
         options.addOption("p", "parser", true, "Parser.");
         options.addOption("f", "formulation", true, "ILP formulation for parsing");
         options.addOption("l", "lambda", true, "Value for add-lambda smoothing.");
+        options.addOption("t", "threads", true, "Number of threads for parallel impl");
     }
 
     public static Trainer getModel(CommandLine cmd) throws ParseException  {
@@ -41,6 +42,7 @@ public class TrainerFactory {
                 IlpFormulation.getById(cmd.getOptionValue("formulation")) : IlpFormulation.DP_PROJ;
         final double lambda = cmd.hasOption("lambda") ?
                 Double.parseDouble(cmd.getOptionValue("lambda")) : 0.1;
+        final int numThreads = cmd.hasOption("threads") ? Integer.valueOf(cmd.getOptionValue("threads")) : 2;
                 
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -50,9 +52,9 @@ public class TrainerFactory {
             
             if (modelName.equals("dmv")) {
                 if (parserName.equals("ilp-sentence")) {
-                    parser = new IlpViterbiParser(formulation);
+                    parser = new IlpViterbiParser(formulation, numThreads);
                 } else if (parserName.equals("ilp-corpus")) {
-                    parser = new IlpViterbiCorpusParser(formulation);
+                    parser = new IlpViterbiCorpusParser(formulation, numThreads);
                 } else {
                     throw new ParseException("Parser not supported: " + parserName);
                 }

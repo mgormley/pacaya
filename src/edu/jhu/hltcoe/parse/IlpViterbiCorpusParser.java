@@ -21,8 +21,8 @@ public class IlpViterbiCorpusParser extends IlpViterbiParser {
 
     private static Logger log = Logger.getLogger(IlpViterbiCorpusParser.class);
     
-    public IlpViterbiCorpusParser(IlpFormulation formulation) {
-        super(formulation);
+    public IlpViterbiCorpusParser(IlpFormulation formulation, int numThreads) {
+        super(formulation, numThreads);
     }
     
     @Override
@@ -37,7 +37,7 @@ public class IlpViterbiCorpusParser extends IlpViterbiParser {
         File zimplFile = encode(tempDir, sentences, model);
         
         // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir));
+        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, numThreads));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
         

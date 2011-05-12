@@ -39,6 +39,8 @@ public class IlpViterbiParser implements ViterbiParser {
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
     private IlpFormulation formulation;
     protected File workspace;
+
+    protected int numThreads;
     
     public enum IlpFormulation {
         DP_PROJ("deptree-dp-proj", true),
@@ -75,8 +77,9 @@ public class IlpViterbiParser implements ViterbiParser {
         }
     }
     
-    public IlpViterbiParser(IlpFormulation formulation) {
+    public IlpViterbiParser(IlpFormulation formulation, int numThreads) {
         this.formulation = formulation;
+        this.numThreads = numThreads;
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
@@ -111,7 +114,7 @@ public class IlpViterbiParser implements ViterbiParser {
         File zimplFile = encode(tempDir, sentence, model);
         
         // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir));
+        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, numThreads));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
         
@@ -257,10 +260,6 @@ public class IlpViterbiParser implements ViterbiParser {
         return depTreebank;
     }
 
-    public static void main(String[] args) {
-        new IlpViterbiParser(IlpFormulation.DP_PROJ);
-    }
-    
     private static class WeightCopier implements WeightGenerator {
 
         private DmvModel dmv;

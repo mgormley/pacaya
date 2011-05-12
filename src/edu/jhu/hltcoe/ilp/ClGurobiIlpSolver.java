@@ -18,9 +18,11 @@ public class ClGurobiIlpSolver implements IlpSolver {
     
     private File tempDir;
     private Map<String, Double> result;
-
-    public ClGurobiIlpSolver(File tempDir) {
+    private int numThreads;
+    
+    public ClGurobiIlpSolver(File tempDir, int numThreads) {
         this.tempDir = tempDir;
+        this.numThreads = numThreads;
     }
 
     @Override
@@ -37,7 +39,7 @@ public class ClGurobiIlpSolver implements IlpSolver {
         String[] cmdArray = new String[] {
                 gurobiBinary,
                 "ResultFile="+solFile.getAbsolutePath(),
-                "Threads=4",
+                "Threads="+numThreads,
                 lpFile.getAbsolutePath() };
         //TODO: handle infeasible case
         File gurobiLog = new File(tempDir, "gurobi.log");
