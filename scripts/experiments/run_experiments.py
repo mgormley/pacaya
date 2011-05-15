@@ -98,9 +98,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
         wsj_00 = self.get_data(data_dir, "treebank_3/wsj/00")
+        wsj_full = self.get_data(data_dir, "treebank_3/wsj")
             
         if self.fast:       datasets = [wsj_00]
-        else:               datasets = [wsj_00]
+        else:               datasets = [wsj_full]
         
         experiments = []
         if self.expname == "formulations":
@@ -111,14 +112,23 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiments.append(all + dataset + ilpform)
         elif self.expname == "corpus-size":
             if not self.fast:
-                all.update(iterations=1,
-                           maxSentenceLength=7)
+                all.update(iterations=1)
             for dataset in datasets:
-                for parser in ["ilp-corpus","ilp-sentence"]:
-                    par = DPExpParams(parser=parser)
-                    for maxNumSentences in range(10,110,10):
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        experiments.append(all + dataset + par + mns)
+                for maxSentenceLength in [10,20]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for parser in ["ilp-corpus","ilp-sentence"]:
+                        par = DPExpParams(parser=parser)
+                        # Limiting to max  7 words/sent there are 2394 sentences
+                        # Limiting to max 10 words/sent there are 5040 sentences
+                        # Limiting to max 20 words/sent there are 20570 sentences
+                        if (maxSentenceLength == 10):
+                            mns_list = range(1000,5040,1000)
+                        else: # for 20
+                            mns_list = range(1000,20570,1000)
+                        for maxNumSentences in mns_list:
+                            mns = DPExpParams(maxNumSentences=maxNumSentences)
+                            experiments.append(all + dataset + msl + par + mns)
+                        
         else:
             raise Exception("Unknown expname: " + self.expname)
                 
