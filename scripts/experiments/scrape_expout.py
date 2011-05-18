@@ -28,7 +28,7 @@ def scrape(top_dir):
         
     # Read experiment directories
     exp_list = []
-    for exp_dir in exp_dirs:
+    for exp_dir in sorted(exp_dirs):
         try:
             # Read name
             name = os.path.basename(exp_dir)
@@ -73,12 +73,17 @@ def scrape(top_dir):
     key_order = exp_orderer.get_name_key_order()
 
     # Print exp_list
-    print sep.join(map(exp_orderer._get_as_str, key_order))
+    def csv_to_str(x):
+        x = exp_orderer._get_as_str(x)
+        if x.find(",") != -1:
+            x = '"%s"' % x
+        return x
+    print sep.join(map(csv_to_str, key_order))
     for exp in exp_list:
         values = []
         for key in key_order:
             values.append(exp.get(key))
-        print sep.join(map(exp_orderer._get_as_str, values))
+        print sep.join(map(csv_to_str, values))
     print ""
 
 if __name__ == "__main__":
