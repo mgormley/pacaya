@@ -90,8 +90,15 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    model="dmv",
                    algorithm="viterbi")
         
+        ilpCorpus = DPExpParams(parser="ilp-corpus")
+        ilpSentence = DPExpParams(parser="ilp-sentence")
+        ilpDeltas = DPExpParams(parser="ilp-deltas")
+        
+        dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
+        dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
+        
         if self.fast:       all.update(iterations=1,
-                                       maxSentenceLength=10,
+                                       maxSentenceLength=7,
                                        maxNumSentences=2)
         else:               all.update(iterations=10)
         
@@ -124,12 +131,23 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         if (maxSentenceLength == 7):
                             mns_list = range(200,2200,200)
                         elif (maxSentenceLength == 10):
-                            mns_list = range(1000,5040,1000)
+                            mns_list = range(100,5040,100)
                         else: # for 20
                             mns_list = range(1000,20570,1000)
                         for maxNumSentences in mns_list:
                             mns = DPExpParams(maxNumSentences=maxNumSentences)
                             experiments.append(all + dataset + msl + par + mns)
+        elif self.expname == "deltas":
+            if not self.fast:
+                all.update(iterations=1)
+            for dataset in datasets:
+                msl = DPExpParams(maxSentenceLength=5)
+                mns_list = range(10,100,10)
+                for maxNumSentences in mns_list:
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
+                    for dataGen in [dgFixedInterval, dgFactor]:
+                        experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas") + dataGen)
         else:
             raise Exception("Unknown expname: " + self.expname)
                 
