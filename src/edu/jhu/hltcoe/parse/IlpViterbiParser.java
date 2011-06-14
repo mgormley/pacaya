@@ -32,7 +32,7 @@ public class IlpViterbiParser implements ViterbiParser {
     private static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;
     private Map<String,String> codeMap;
-    private final Pattern zimplVarRegex = Pattern.compile("[#$]");
+    protected final Pattern zimplVarRegex = Pattern.compile("[#$]");
     protected IlpFormulation formulation;
     protected File workspace;
 

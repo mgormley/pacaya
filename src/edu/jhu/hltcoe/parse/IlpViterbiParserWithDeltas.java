@@ -3,16 +3,19 @@ package edu.jhu.hltcoe.parse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.Quadruple;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements ViterbiParser {
 
@@ -72,6 +75,40 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
             chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %g\n", parent.getLabel(), lr, child.getLabel(), deltaId, weight);
         }
         chooseWeightsWriter.close();
+    }
+    
+    @Override
+    protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
+        // Print stats about deltas used
+        Map<String, Integer> cwDeltaCounts = new HashMap<String, Integer>();
+
+        for (Entry<String,Double> entry : result.entrySet()) {
+            String zimplVar = entry.getKey();
+            Double value = entry.getValue();
+            String[] splits = zimplVarRegex.split(zimplVar);
+            String varType = splits[0];
+            if (varType.equals("cwDelta")) {
+                // cwDelta[parentw,lr,childw,d]
+                String parentWord = splits[1];
+                String lr = splits[2];
+                String childWord = splits[3];
+                String deltaId = splits[4];
+                //log.trace("zimplVar: " + zimplVar);
+                long longVal = Math.round(value);
+                if (longVal == 1) {
+                    Utilities.increment(cwDeltaCounts, deltaId, 1);
+                }
+            }
+        }
+        
+        log.debug("Delta Histogram:");
+        for (String deltaId : cwDeltaCounts.keySet()) {
+            // TODO: fix problem with $WALL$ which has the $ split character
+            log.debug("\t" + deltaId + " " + cwDeltaCounts.get(deltaId));
+        }
+        
+        // Decode
+        return super.decode(sentences, result);
     }
     
 }

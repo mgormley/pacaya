@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.parse;
 
 import static org.junit.Assert.assertArrayEquals;
 
+import org.apache.log4j.BasicConfigurator;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
@@ -15,6 +16,10 @@ import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
 
 public class IlpViterbiParserWithDeltasTest {
 
+    static {
+        BasicConfigurator.configure();
+    }
+    
     private final static double lambda = 0.1;
 
     @Test
@@ -25,10 +30,13 @@ public class IlpViterbiParserWithDeltasTest {
         ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         
-        // flow projective parsing
-        DeltaGenerator deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
+        DeltaGenerator deltaGen;
+        
+        deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
         DepTreebank npFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen);
-        //DepTreebank pFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen);
+        
+        deltaGen = new FactorDeltaGenerator(1.1, 2);
+        DepTreebank pFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen);
     }
     
     public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen) {
