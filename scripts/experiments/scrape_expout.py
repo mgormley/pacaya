@@ -56,6 +56,8 @@ def scrape(top_dir):
                 tot_parse_times = get_all_following(stdout_file, "Tot parse time: ")
                 tot_parse_times = map(float, tot_parse_times)
                 if len(tot_parse_times) > 1:
+                    exp.update(totalParseTimeFirst=tot_parse_times[0])
+                    exp.update(totalParseTimeLast=tot_parse_times[-1])
                     exp.update(avgPerWordParseTimeFirst=tot_parse_times[0]/numWords)
                     exp.update(avgPerWordParseTimeLast=tot_parse_times[-1]/numWords)
                 
