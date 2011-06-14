@@ -14,7 +14,6 @@ import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
-import edu.jhu.hltcoe.parse.IlpViterbiParser.IlpFormulation;
 
 public class IlpViterbiParserTest {
     
@@ -93,15 +92,6 @@ public class IlpViterbiParserTest {
         }
     }
     
-    private DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
-        IlpViterbiParser parser = new IlpViterbiParser(formulation,2);
-        DepTreebank trees = parser.getViterbiParse(sentences, model);
-        for (DepTree depTree : trees) {
-            System.out.println(depTree);
-        }
-        return trees;
-    }
-
     @Test
     public void testNonProj() {
         SentenceCollection sentences = new SentenceCollection();
@@ -122,11 +112,20 @@ public class IlpViterbiParserTest {
         }
     }
 
-    private Sentence getSentenceFromString(String string) {
+    public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
+        IlpViterbiParser parser = new IlpViterbiParser(formulation,2);
+        DepTreebank trees = parser.getViterbiParse(sentences, model);
+        for (DepTree depTree : trees) {
+            System.out.println(depTree);
+        }
+        return trees;
+    }
+    
+    public static Sentence getSentenceFromString(String string) {
         return new StringSentence(string);
     }
 
-    private class StringSentence extends Sentence {
+    private static class StringSentence extends Sentence {
 
         public StringSentence(String string) {
             super();

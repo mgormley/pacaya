@@ -3,7 +3,7 @@
 <root>
 	<code id="setup">
 	    <![CDATA[
-# ---------- Sets, Parameters, Weights ----------
+# ---------- Sets, Parameters ----------
 param InputSent := "input.sent";
 
 # input.sent contains "<sentence id, token id> word"
@@ -27,18 +27,6 @@ do forall <s,i> in AllTokens do print Word[s,i];
 #set WordPairs[<s> in Sents] := Words[s] * Words[s];
 #set AllWordPairs := union <s> in Sents: WordPairs;
 
-# input.chooseweights contains "<parent word, lr, child word> weight"
-param InputChooseWeights := "input.chooseweights";
-set AllWordPairs := { read InputChooseWeights as "<1s, 2s, 3s>" };
-param ChooseWeight[AllWordPairs] := read InputChooseWeights as "<1s, 2s, 3s> 4n";
-
-# input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
-param InputStopWeights := "input.stopweights";
-set LR := {"l","r"};
-#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
-set StopSet := { read InputStopWeights as "<1s,2s,3n>" };
-param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
-
 # The domain of Arcs is pairs of token indices
 set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
 set TempArcs := union <s> in Sents: Arcs[s];
@@ -52,6 +40,80 @@ subto one_child_for_wall:
     forall <s> in Sents:
        1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
        
+	    ]]>
+	</code>
+	<code id="weights">
+	    <![CDATA[
+# ---------- Weights ----------
+# input.chooseweights contains "<parent word, lr, child word> weight"
+param InputChooseWeights := "input.chooseweights";
+set ChooseWeightSet := { read InputChooseWeights as "<1s, 2s, 3s>" };
+param ChooseWeight[ChooseWeightSet] := read InputChooseWeights as "<1s, 2s, 3s> 4n";
+
+# input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
+param InputStopWeights := "input.stopweights";
+set LR := {"l","r"};
+#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
+set StopWeightSet := { read InputStopWeights as "<1s,2s,3n>" };
+param StopWeight[StopWeightSet] := read InputStopWeights as "<1s,2s,3n> 4n";
+
+	    ]]>
+	</code>
+	<code id="weights-delta">
+	    <![CDATA[
+# ---------- Weights ----------
+# input.chooseweights.delta contains "<parent word, lr, child word, delta id> weight"
+param InputChooseWeights := "input.chooseweights.delta";
+set ChooseWeightDeltaSet := { read InputChooseWeights as "<1s, 2s, 3s, 4s>" };
+param ChooseWeightDelta[ChooseWeightDeltaSet] := read InputChooseWeights as "<1s, 2s, 3s, 4s> 5n";
+
+#TODO: add deltas for stopweights
+# input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
+param InputStopWeights := "input.stopweights";
+set LR := {"l","r"};
+#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
+set StopSet := { read InputStopWeights as "<1s,2s,3n>" };
+param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
+
+
+# ---------- Sets for Deltas ----------
+set ChooseWeightSet := proj(ChooseWeightDeltaSet, <1,2,3>);
+set ParentWordsAndLR := proj(ChooseWeightDeltaSet, <1,2>);
+set AllChildWordsAndDeltas := proj(ChooseWeightDeltaSet, <3,4>);
+set ChildWordsAndDeltas[<parentw, lr> in ParentWordsAndLR] := {<childw,d> in AllChildWordsAndDeltas with <parentw, lr, childw, d> in ChooseWeightDeltaSet};
+set AllCWDeltas := proj(ChooseWeightDeltaSet, <4>);
+set CWDeltas[<parentw, lr, childw> in ChooseWeightSet] := {<d> in AllCWDeltas with <parentw, lr, childw, d> in ChooseWeightDeltaSet};
+
+set AllIJ := proj(AllArcs,<2,3>);
+param LRForIJ[<i,j> in AllIJ] := if i < j then "r" else "l" end;
+set AllArcsDelta := {<s,i,j,d> in {AllArcs * AllCWDeltas} with <Word[s,i],LRForIJ[i,j],Word[s,j],d> in ChooseWeightDeltaSet};
+
+# ---------- Variables for Deltas ----------
+var arcDelta[AllArcsDelta] binary;
+var cwDelta[ChooseWeightDeltaSet] binary;
+
+# ---------- Constraints for Deltas ----------
+# Only one delta is on:
+subto only_one_delta: 
+	forall <parentw,lr,childw> in ChooseWeightSet:
+		1 == (sum <d> in CWDeltas[parentw,lr,childw]: cwDelta[parentw,lr,childw,d]);
+
+# Debug printout:
+#do print ChooseWeightSet;
+#do forall <parentw,lr,childw> in ChooseWeightSet do print CWDeltas[parentw,lr,childw];
+	
+# TODO: encoding this as 1.000000001 is a HACK 
+# Ensure weights sum to less-than-or-equal 1.0:
+subto weights_sum_to_one: 
+	forall <parentw, lr> in ParentWordsAndLR: 
+		1.0000000001 >= sum <childw,d> in ChildWordsAndDeltas[parentw, lr]:
+ 				(cwDelta[parentw,lr,childw,d] * ChooseWeightDelta[parentw,lr,childw,d]);
+
+# Ensure that each arcDelta value is correct 
+subto arcDelta_correctness:
+	forall <s,i,j,d> in AllArcsDelta: 
+		arcDelta[s,i,j,d] >= arc[s,i,j] + cwDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d] - 1;
+
 	    ]]>
 	</code>
 	<code id="deptree-general">
@@ -296,11 +358,9 @@ subto complete_right_left:
 
     	]]>
 	</code>
-	<code id="dmv-objective">
+	<code id="dmv-objective-support">
     	<![CDATA[   
-# ---------- DMV log-likelihood ----------
-
-# Supporting variables for DMV log-likelihood
+# ---------- Supporting variables for DMV log-likelihood ----------
 
 set AllTokensLR := AllTokens * LR;
 # number of arcs from <s,i> to left/right children
@@ -325,20 +385,47 @@ subto genAdjLeftAndRight:
 subto numNALeftAndRight:
     forall <s,i,lr> in AllTokensLR:
         vif numToSide[s,i,lr] - 1 > 0 then numNA[s,i,lr] == numToSide[s,i,lr] - 1 else numNA[s,i,lr] == 0 end;
+   	
+    	]]>
+	</code>
+	<code id="dmv-objective">
+    	<![CDATA[   
+# ---------- DMV log-likelihood ----------
 
+# Prob for stop weights: 
+# 1. logprob of stopping adjacent without generating any children OR
+# 2. logprob of not stopping adjacent 
+#    + logprob of not stopping non-adjacent * number of times non-adjacent children were generated
+#    + logprob of stopping non-adajacent 
 maximize goal: 
     (sum <s,i,j> in AllArcs: 
         if i < j 
         then arc[s,i,j] * log(ChooseWeight[Word[s,i],"r",Word[s,j]]) 
         else arc[s,i,j] * log(ChooseWeight[Word[s,i],"l",Word[s,j]]) end) 
     + (sum <s,i,lr> in AllTokensLR: 
-          (genAdj[s,i,lr] * log(StopWeight[Word[s,i],lr,0])
-	   + (1 - genAdj[s,i,lr]) * log(StopWeight[Word[s,i],lr,1])
+      	 ((1 - genAdj[s,i,lr]) * log(StopWeight[Word[s,i],lr,1])
 	   + genAdj[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,1])
-	   + numNA[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,0]))
+	   + numNA[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,0])
+	   + genAdj[s,i,lr] * log(StopWeight[Word[s,i],lr,0]))
       );
-
     	
     	]]>
 	</code>
+	<code id="dmv-objective-delta">
+    	<![CDATA[   
+# ---------- DMV log-likelihood with Deltas ----------
+
+# TODO: add deltas to stopweights
+maximize goal: 
+    (sum <s,i,j,d> in AllArcsDelta: 
+        arcDelta[s,i,j,d] * log(ChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d])) 
+    + (sum <s,i,lr> in AllTokensLR: 
+      	 ((1 - genAdj[s,i,lr]) * log(StopWeight[Word[s,i],lr,1])
+	   + genAdj[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,1])
+	   + numNA[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,0])
+	   + genAdj[s,i,lr] * log(StopWeight[Word[s,i],lr,0]))
+      );
+    	
+    	]]>
+	</code> 
 </root>

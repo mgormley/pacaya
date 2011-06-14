@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
@@ -21,11 +20,8 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.ClGurobiIlpSolver;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
-import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.util.Command;
-import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Triple;
 
@@ -37,45 +33,10 @@ public class IlpViterbiParser implements ViterbiParser {
     private static final int ZIMPL_WALL_POSITION = 0;
     private Map<String,String> codeMap;
     private final Pattern zimplVarRegex = Pattern.compile("[#$]");
-    private IlpFormulation formulation;
+    protected IlpFormulation formulation;
     protected File workspace;
 
     protected int numThreads;
-    
-    public enum IlpFormulation {
-        DP_PROJ("deptree-dp-proj", true),
-        EXPLICIT_PROJ("deptree-explicit-proj", true),
-        FLOW_NONPROJ("deptree-flow-nonproj", false),
-        FLOW_PROJ("deptree-flow-proj", true),
-        MFLOW_NONPROJ("deptree-multiflow-nonproj", false),
-        MFLOW_PROJ("deptree-multiflow-proj", true);
-        
-        private String id;
-        private boolean isProjective;
-        
-        private IlpFormulation(String id, boolean isProjective) {
-            this.id = id;
-            this.isProjective = isProjective;
-        }
-        
-        @Override
-        public String toString() {
-            return id;
-        }
-        
-        public static IlpFormulation getById(String id) {
-            for (IlpFormulation f : values()) {
-                if (f.id.equals(id)) {
-                    return f;
-                }
-            }
-            throw new IllegalArgumentException("Unrecognized IlpFormulation id: " + id);
-        }
-        
-        public boolean isProjective() {
-            return isProjective;
-        }
-    }
     
     public IlpViterbiParser(IlpFormulation formulation, int numThreads) {
         this.formulation = formulation;
@@ -85,33 +46,18 @@ public class IlpViterbiParser implements ViterbiParser {
         codeMap = reader.getCodeMap();
         workspace = Command.createTempDir("workspace", new File("."));
     }
-    
-    public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
-        // TODO: could be a field
-        Stopwatch stopwatch = new Stopwatch();
 
-        DepTreebank treebank = new DepTreebank();
-        for (Sentence sentence: sentences) {
-            stopwatch.start();
-            DepTree tree = getViterbiParse(sentence, model);
-            stopwatch.stop();
-            treebank.add(tree);
-            log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
-                    Time.avgMs(stopwatch),
-                    stopwatch.getCount()));
-        }
-        log.debug(String.format("Tot parse time: %.3f", 
-                Time.totMs(stopwatch)));
-        return treebank;
-    }
     
     @Override
-    public DepTree getViterbiParse(Sentence sentence, Model model) {
+    public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        
         // Create workspace
         File tempDir = Command.createTempDir("ilp_parse", workspace);
         
         // Encode sentences and model
-        File zimplFile = encode(tempDir, sentence, model);
+        File zimplFile = encode(tempDir, sentences, model);
         
         // Run zimpl and then ILP solver
         ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, numThreads));
@@ -119,14 +65,14 @@ public class IlpViterbiParser implements ViterbiParser {
         Map<String,Double> result = solver.getResult();
         
         // Decode parses
-        DepTree tree = decode(sentence, result);
-        return tree;
-    }
-
-    private File encode(File tempDir, Sentence sentence, Model model) {
-        SentenceCollection sentences = new SentenceCollection();
-        sentences.add(sentence);
-        return encode(tempDir, sentences, model);
+        DepTreebank depTreebank = decode(sentences, result);
+        
+        stopwatch.stop();
+        log.debug(String.format("Avg parse time: %.3f", 
+                Time.totMs(stopwatch) / sentences.size()));
+        log.debug(String.format("Tot parse time: %.3f", 
+                Time.totMs(stopwatch)));
+        return depTreebank;
     }
 
     protected File encode(File tempDir, SentenceCollection sentences, Model model) {
@@ -135,11 +81,7 @@ public class IlpViterbiParser implements ViterbiParser {
             encodeSentences(tempDir, sentences);
             
             // Encode model 
-            //TODO: handle more than just the DMV
-            DmvModel dmv = (DmvModel)model;
-            WeightCopier weightCopier = new WeightCopier(dmv);
-            DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences);
-            encodeDmv(tempDir, filteredDmv);
+            encodeModel(tempDir, model, sentences);
             
             // Create .zpl file
             File zimplFile = createZimplFile(tempDir);
@@ -151,11 +93,12 @@ public class IlpViterbiParser implements ViterbiParser {
         }
     }
 
-    private File createZimplFile(File tempDir) throws FileNotFoundException {
+    protected File createZimplFile(File tempDir) throws FileNotFoundException {
         File zimplFile = new File(tempDir, "parse.zpl");
         PrintWriter zimplWriter;
         zimplWriter = new PrintWriter(zimplFile);
         zimplWriter.write(getCodeSnippet("setup"));
+        zimplWriter.write(getCodeSnippet("weights"));
         if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
             zimplWriter.write(getCodeSnippet("deptree-general"));
         }
@@ -165,12 +108,13 @@ public class IlpViterbiParser implements ViterbiParser {
             zimplWriter.write(getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
         }
         zimplWriter.write(getCodeSnippet(formulation));
+        zimplWriter.write(getCodeSnippet("dmv-objective-support"));
         zimplWriter.write(getCodeSnippet("dmv-objective"));
         zimplWriter.close();
         return zimplFile;
     }
     
-    private String getCodeSnippet(Object id) {
+    protected String getCodeSnippet(Object id) {
         if (id instanceof IlpFormulation) {
             return codeMap.get(id.toString());
         } 
@@ -192,7 +136,18 @@ public class IlpViterbiParser implements ViterbiParser {
         sentWriter.close();
     }
 
-    private void encodeDmv(File tempDir, DmvModel dmv) throws FileNotFoundException {
+    protected void encodeModel(File tempDir, Model model, SentenceCollection sentences) throws FileNotFoundException {
+        //TODO: handle more than just the DMV
+        DmvModel dmv = (DmvModel)model;
+        encodeDmv(tempDir, dmv);
+    }
+
+    protected void encodeDmv(File tempDir, DmvModel dmv) throws FileNotFoundException {
+        encodeStopWeights(tempDir, dmv);
+        encodeChooseWeights(tempDir, dmv);
+    }
+
+    protected void encodeStopWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File stopWeightsFile = new File(tempDir, "input.stopweights");
         PrintWriter stopWeightsWriter = new PrintWriter(stopWeightsFile);
         Map<Triple<Label,String,Boolean>,Double> stopWeights = dmv.getStopWeights();
@@ -201,10 +156,12 @@ public class IlpViterbiParser implements ViterbiParser {
             String leftRight = entry.getKey().get2();
             int adjacent = entry.getKey().get3() ? 1 : 0;
             double weight = entry.getValue();
-            stopWeightsWriter.format("\"%s\" %s %d %f\n", label.getLabel(), leftRight, adjacent, weight);
+            stopWeightsWriter.format("\"%s\" %s %d %g\n", label.getLabel(), leftRight, adjacent, weight);
         }
         stopWeightsWriter.close();
+    }
         
+    private void encodeChooseWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File chooseWeightsFile = new File(tempDir, "input.chooseweights");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
         Map<Triple<Label,String,Label>,Double> chooseWeights = dmv.getChooseWeights();
@@ -213,19 +170,11 @@ public class IlpViterbiParser implements ViterbiParser {
             String lr = entry.getKey().get2();
             Label child = entry.getKey().get3();
             double weight = entry.getValue();
-            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %f\n", parent.getLabel(), lr, child.getLabel(), weight);
+            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %g\n", parent.getLabel(), lr, child.getLabel(), weight);
         }
         chooseWeightsWriter.close();
     }
-    
-    private DepTree decode(Sentence sentence, Map<String,Double> result) {
-        SentenceCollection sentences = new SentenceCollection();
-        sentences.add(sentence);
-        DepTreebank depTreebank = decode(sentences, result);
-        assert(depTreebank.size() == 1);
-        return depTreebank.get(0);
-    }
-    
+
     protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
         DepTreebank depTreebank = new DepTreebank();
         
@@ -258,34 +207,5 @@ public class IlpViterbiParser implements ViterbiParser {
         }
         
         return depTreebank;
-    }
-
-    private static class WeightCopier implements WeightGenerator {
-
-        private DmvModel dmv;
-        
-        public WeightCopier(DmvModel dmv) {
-            this.dmv = dmv;
-        }
-
-        @Override
-        public double[] getChooseMulti(Pair<Label,String> pair, List<Label> children) {
-            Map<Triple<Label,String,Label>, Double> cw_map = dmv.getChooseWeights();
-            double[] mult = new double[children.size()];
-            
-            Label parent = pair.get1();
-            String lr = pair.get2();
-            for (int i=0; i<mult.length; i++) {
-                mult[i] = cw_map.get(new Triple<Label,String,Label>(parent, lr, children.get(i)));
-            }
-            // Do NOT normalize the multinomial
-            return mult;
-        }
-
-        @Override
-        public double getStopWeight(Triple<Label, String, Boolean> triple) {
-            return dmv.getStopWeights().get(triple);
-        }
-        
     }
 }
