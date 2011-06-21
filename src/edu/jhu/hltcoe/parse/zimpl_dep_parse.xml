@@ -88,12 +88,14 @@ set AllIJ := proj(AllArcs,<2,3>);
 param LRForIJ[<i,j> in AllIJ] := if i < j then "r" else "l" end;
 set AllArcsDelta := {<s,i,j,d> in {AllArcs * AllCWDeltas} with <Word[s,i],LRForIJ[i,j],Word[s,j],d> in ChooseWeightDeltaSet};
 
+set ArcsDelta[<s,i,j> in AllArcs] := {<d> in AllCWDeltas with <s,i,j,d> in AllArcsDelta};
+
 # ---------- Variables for Deltas ----------
 var arcDelta[AllArcsDelta] binary;
 var cwDelta[ChooseWeightDeltaSet] binary;
 
 # ---------- Constraints for Deltas ----------
-# Only one delta is on:
+# Only one delta is on per weight:
 subto only_one_delta: 
 	forall <parentw,lr,childw> in ChooseWeightSet:
 		1 == (sum <d> in CWDeltas[parentw,lr,childw]: cwDelta[parentw,lr,childw,d]);
@@ -114,7 +116,27 @@ subto arcDelta_correctness:
 	forall <s,i,j,d> in AllArcsDelta: 
 		arcDelta[s,i,j,d] >= arc[s,i,j] + cwDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d] - 1;
 
+# Unecessary (but maybe helpful) constraint: Only one arcDelta is on per arc:
+subto only_one_arc_delta:
+	forall <s,i,j> in AllArcs:
+		1 == sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
+
 	    ]]>
+	</code>
+	<code id="sos-delta">
+		<![CDATA[
+		
+# Only one delta is on per weight:
+sos only_one_delta_sos: 
+	forall <parentw,lr,childw> in ChooseWeightSet:
+		type1: sum <d> in CWDeltas[parentw,lr,childw]: ChooseWeightDelta[parentw,lr,childw,d] * cwDelta[parentw,lr,childw,d];
+
+# Only one arcDelta is on per arc:
+sos only_one_arc_delta_sos:
+	forall <s,i,j> in AllArcs:
+		type1: sum <d> in ArcsDelta[s,i,j]: ChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d] * arcDelta[s,i,j,d];
+
+		    ]]>
 	</code>
 	<code id="deptree-general">
 		<![CDATA[

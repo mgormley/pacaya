@@ -36,6 +36,7 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
         zimplWriter = new PrintWriter(zimplFile);
         zimplWriter.write(getCodeSnippet("setup"));
         zimplWriter.write(getCodeSnippet("weights-delta"));
+        zimplWriter.write(getCodeSnippet("sos-delta"));
         if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
             zimplWriter.write(getCodeSnippet("deptree-general"));
         }

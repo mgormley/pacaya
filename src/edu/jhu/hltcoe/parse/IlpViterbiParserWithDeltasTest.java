@@ -41,6 +41,20 @@ public class IlpViterbiParserWithDeltasTest {
         DepTreebank pFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen);
     }
     
+    @Test
+    public void testSos() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
+        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
+        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences);
+        
+        DeltaGenerator deltaGen;
+        
+        deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
+        DepTreebank npFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen);
+    }
+    
     public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, -1);
         IlpViterbiParserWithDeltas parser = new IlpViterbiParserWithDeltas(formulation, factory, deltaGen);
