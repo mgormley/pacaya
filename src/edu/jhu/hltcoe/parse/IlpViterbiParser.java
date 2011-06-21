@@ -18,6 +18,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.ClGurobiIlpSolver;
+import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
@@ -36,11 +37,11 @@ public class IlpViterbiParser implements ViterbiParser {
     protected IlpFormulation formulation;
     protected File workspace;
 
-    protected int numThreads;
+    protected IlpSolverFactory ilpSolverFactory;
     
-    public IlpViterbiParser(IlpFormulation formulation, int numThreads) {
+    public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
-        this.numThreads = numThreads;
+        this.ilpSolverFactory = ilpSolverFactory;
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
@@ -60,7 +61,7 @@ public class IlpViterbiParser implements ViterbiParser {
         File zimplFile = encode(tempDir, sentences, model);
         
         // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, numThreads));
+        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
         

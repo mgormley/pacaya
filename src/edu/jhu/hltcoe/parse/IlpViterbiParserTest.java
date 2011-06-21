@@ -10,6 +10,8 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.Word;
+import edu.jhu.hltcoe.ilp.IlpSolverFactory;
+import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
@@ -113,7 +115,8 @@ public class IlpViterbiParserTest {
     }
 
     public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
-        IlpViterbiParser parser = new IlpViterbiParser(formulation,2);
+        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, -1);
+        IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);

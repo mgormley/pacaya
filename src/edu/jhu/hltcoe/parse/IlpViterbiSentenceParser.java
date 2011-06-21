@@ -12,6 +12,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.ClGurobiIlpSolver;
+import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.DmvModelFactory;
@@ -28,8 +29,8 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
 
     private static Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
     
-    public IlpViterbiSentenceParser(IlpFormulation formulation, int numThreads) {
-        super(formulation, numThreads);
+    public IlpViterbiSentenceParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
+        super(formulation, ilpSolverFactory);
     }
     
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
@@ -60,7 +61,7 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
         File zimplFile = encode(tempDir, sentence, model);
         
         // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, numThreads));
+        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
         

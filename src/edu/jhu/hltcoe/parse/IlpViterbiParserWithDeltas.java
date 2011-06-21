@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.Quadruple;
@@ -22,8 +23,8 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
     private static Logger log = Logger.getLogger(IlpViterbiParserWithDeltas.class);
     private DeltaGenerator deltaGen;
         
-    public IlpViterbiParserWithDeltas(IlpFormulation formulation, int numThreads, DeltaGenerator deltaGen) {
-        super(formulation, numThreads);
+    public IlpViterbiParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory, DeltaGenerator deltaGen) {
+        super(formulation, ilpSolverFactory);
         this.deltaGen = deltaGen;
     }
 

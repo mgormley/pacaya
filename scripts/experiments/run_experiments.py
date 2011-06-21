@@ -68,6 +68,25 @@ class DPExpParams(experiment_runner.JavaExpParams):
         cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
+    
+    def get_java_args(self, eprunner):
+        # Allot the available memory to java and the ILP solver
+        java_mem = eprunner.work_mem_megs * 0.5
+        ilp_mem = eprunner.work_mem_megs - java_mem
+        # Subtract off some overhead for CPLEX
+        ilp_mem -= 128
+        self.update(ilpWorkMemMegs=ilp_mem)
+        
+        # Create the JVM args
+        java_args = self._get_java_args(java_mem)  
+        if self.get("ilpSolver") == "cplex":  
+            mac_jlp = "/Users/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_darwin9_gcc4.0"
+            coe_jlp = "/home/hltcoe/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_sles10_4.1"
+            if os.path.exists(mac_jlp): jlp = mac_jlp
+            elif os.path.exists(coe_jlp): jlp = coe_jlp
+            else: raise Exception("Could not find java.library.path for CPLEX")
+            java_args += " -Djava.library.path=%s " % (jlp)
+        return java_args
 
 class DepParseExpParamsRunner(ExpParamsRunner):
     
@@ -89,6 +108,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    parser="ilp-corpus",
                    model="dmv",
                    algorithm="viterbi")
+        all.update(ilpSolver="cplex")
         
         ilpCorpus = DPExpParams(parser="ilp-corpus")
         ilpSentence = DPExpParams(parser="ilp-sentence")
