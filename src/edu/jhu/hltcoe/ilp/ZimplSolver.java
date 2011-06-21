@@ -48,6 +48,10 @@ public class ZimplSolver  {
             for (Entry<String, Double> entry : solMap.entrySet()) {
                 String gurobiVar = entry.getKey();
                 Double value = entry.getValue();
+                
+                // Change negative zero to zero just for canonicalization
+                value = value == -0.0 ? 0.0 : value;
+                
                 String zimplVar = tblMap.get(gurobiVar);
                 // TODO: speedup: filter which vars are included in the result with an optional regex 
                 result.put(zimplVar, value);
