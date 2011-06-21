@@ -213,7 +213,7 @@ public class DepTree implements Iterable<DepTreeNode> {
             Tree hwt = node.headTerminal(hf);
             // System.err.println("have hf, found head preterm: " + hwt);
             if (hwt == null) {
-                throw new IllegalStateException("mapDependencies: headFinder failed!");
+                throw new HeadFinderException("mapDependencies: headFinder failed!");
             }
 
             for (Tree child : node.children()) {
@@ -221,7 +221,7 @@ public class DepTree implements Iterable<DepTreeNode> {
                 // Tree dwt = child.headPreTerminal(hf);
                 Tree dwt = child.headTerminal(hf);
                 if (dwt == null) {
-                    throw new IllegalStateException("mapDependencies: headFinder failed!");
+                    throw new HeadFinderException("mapDependencies: headFinder failed!");
                 }
                 // System.err.println("kid is " + dl);
                 // System.err.println("transformed to " +
@@ -255,4 +255,14 @@ public class DepTree implements Iterable<DepTreeNode> {
         return parents.length;
     }
 
+    public static class HeadFinderException extends RuntimeException {
+
+        public HeadFinderException(String string) {
+            super(string);
+        }
+
+        private static final long serialVersionUID = 1L;
+        
+    }
+    
 }

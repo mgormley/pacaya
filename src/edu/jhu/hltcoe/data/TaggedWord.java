@@ -7,8 +7,8 @@ public class TaggedWord implements Label {
     private String tag;
     
     public TaggedWord(String word, String tag) {
-        this.word = word;
-        this.tag = tag;
+        this.word = word.intern();
+        this.tag = tag.intern();
     }
 
     public String getWord() {

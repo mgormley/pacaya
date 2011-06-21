@@ -6,7 +6,7 @@ public class Word implements Label {
     private String word;
     
     public Word(String word) {
-        this.word = word;
+        this.word = word.intern();
     }
 
     public String getLabel() {
