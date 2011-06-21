@@ -22,6 +22,8 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 
 public class TrainerFactory {
 
+    private static ViterbiParser evalParser = null;
+    
     public static void addOptions(Options options) {
         options.addOption("a", "algorithm", true, "Inference algorithm.");
         options.addOption("i", "iterations", true, "Number of iterations.");
@@ -38,7 +40,7 @@ public class TrainerFactory {
         options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
     }
 
-    public static Trainer getModel(CommandLine cmd) throws ParseException {
+    public static Trainer getTrainer(CommandLine cmd) throws ParseException {
 
         final String algorithm = cmd.hasOption("algorithm") ? cmd.getOptionValue("algorithm") : "viterbi";
         final int iterations = cmd.hasOption("iterations") ? Integer.parseInt(cmd.getOptionValue("iterations")) : 10;
@@ -66,6 +68,7 @@ public class TrainerFactory {
                 if (parserName.equals("ilp-sentence") || parserName.equals("ilp-corpus")
                         || parserName.equals("ilp-deltas")) {
                     ilpSolverFactory = new IlpSolverFactory(IlpSolverId.getById(ilpSolver), numThreads, ilpWorkMemMegs);
+                    evalParser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
                 }
 
                 if (parserName.equals("ilp-sentence")) {
@@ -97,6 +100,13 @@ public class TrainerFactory {
         }
 
         return trainer;
+    }
+    
+    /** 
+     * TODO: This is a bit hacky, but convenient.
+     */
+    public static ViterbiParser getEvalParser() {
+        return evalParser;
     }
 
 }

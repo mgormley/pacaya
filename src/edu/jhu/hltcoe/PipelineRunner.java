@@ -15,6 +15,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
@@ -80,13 +81,13 @@ public class PipelineRunner {
 
         // Train the model
         log.info("Training model");
-        Trainer trainer = TrainerFactory.getModel(cmd);
+        Trainer trainer = TrainerFactory.getTrainer(cmd);
         trainer.train(sentences);
-        ViterbiParser parser = ((ViterbiTrainer)trainer).getParser();
         Model model = trainer.getModel();
         
         // Evaluate the model
         log.info("Evaluating model");
+        ViterbiParser parser = TrainerFactory.getEvalParser();
         Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
         pwEval.evaluate(model);
         pwEval.print();
