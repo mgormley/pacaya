@@ -39,7 +39,7 @@ def get_some_data(data_dir, file_prefix, name, test_suffix):
     #data.set("dev","%s/%s.%s" % (data_dir, file_prefix, test_suffix),False,True)
     return data
 
-class DPExpParams(experiment_runner.ExpParams):
+class DPExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
         experiment_runner.ExpParams.__init__(self,keywords)
@@ -65,7 +65,7 @@ class DPExpParams(experiment_runner.ExpParams):
     def create_experiment_script(self, exp_dir, eprunner):
         script = ""
         script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
-        cmd = "java -cp $CLASSPATH " + eprunner.java_args + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
+        cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
 
