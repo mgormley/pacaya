@@ -64,6 +64,8 @@ class DPExpParams(experiment_runner.JavaExpParams):
     
     def create_experiment_script(self, exp_dir, eprunner):
         script = ""
+        # TODO: ulimit doesn't seem to work on Mac OS X for some reason
+        script += "ulimit -v %d\n" % (1024 * eprunner.work_mem_megs)
         script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
         cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
@@ -71,7 +73,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
     
     def get_java_args(self, eprunner):
         # Allot the available memory to java and the ILP solver
-        java_mem = eprunner.work_mem_megs * 0.5
+        java_mem = int(eprunner.work_mem_megs * 0.5)
         ilp_mem = eprunner.work_mem_megs - java_mem
         # Subtract off some overhead for CPLEX
         ilp_mem -= 128
@@ -126,9 +128,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         data_dir = os.path.join(self.root_dir, "data")
         wsj_00 = self.get_data(data_dir, "treebank_3/wsj/00")
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
+        brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
+        brown_full = self.get_data(data_dir, "treebank_3/brown")
             
-        if self.fast:       datasets = [wsj_00]
-        else:               datasets = [wsj_full]
+        if self.fast:       datasets = [brown_cf]
+        else:               datasets = [brown_full]
         
         experiments = []
         if self.expname == "formulations":
