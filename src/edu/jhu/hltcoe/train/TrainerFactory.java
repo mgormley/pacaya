@@ -19,6 +19,7 @@ import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.util.Command;
 
 public class TrainerFactory {
 
@@ -42,20 +43,19 @@ public class TrainerFactory {
 
     public static Trainer getTrainer(CommandLine cmd) throws ParseException {
 
-        final String algorithm = getOptionValue(cmd, "algorithm", "viterbi");
-        final int iterations = cmd.hasOption("iterations") ? Integer.parseInt(cmd.getOptionValue("iterations")) : 10;
-        final String modelName = cmd.hasOption("model") ? cmd.getOptionValue("model") : "dmv";
-        final String parserName = cmd.hasOption("parser") ? cmd.getOptionValue("parser") : "ilp-sentence";
-        final String deltaGenerator = cmd.hasOption("deltaGenerator") ? cmd.getOptionValue("deltaGenerator") : "fixed";
-        final double interval = cmd.hasOption("interval") ? Double.parseDouble(cmd.getOptionValue("interval")) : 0.01;
-        final double factor = cmd.hasOption("factor") ? Double.parseDouble(cmd.getOptionValue("factor")) : 1.1;
-        final int numPerSide = cmd.hasOption("numPerSide") ? Integer.parseInt(cmd.getOptionValue("numPerSide")) : 2;
-        final IlpFormulation formulation = cmd.hasOption("formulation") ? IlpFormulation.getById(cmd
-                .getOptionValue("formulation")) : IlpFormulation.DP_PROJ;
-        final double lambda = cmd.hasOption("lambda") ? Double.parseDouble(cmd.getOptionValue("lambda")) : 0.1;
-        final int numThreads = cmd.hasOption("threads") ? Integer.parseInt(cmd.getOptionValue("threads")) : 2;
-        final String ilpSolver = cmd.hasOption("ilpSolver") ? cmd.getOptionValue("ilpSolver") : "cplex";
-        final int ilpWorkMemMegs = cmd.hasOption("ilpWorkMemMegs") ? Integer.parseInt(cmd.getOptionValue("ilpWorkMemMegs")) : 512;
+        final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
+        final int iterations = Command.getOptionValue(cmd, "iterations", 10);
+        final String modelName = Command.getOptionValue(cmd, "model", "dmv");
+        final String parserName = Command.getOptionValue(cmd, "parser", "ilp-sentence");
+        final String deltaGenerator = Command.getOptionValue(cmd, "deltaGenerator", "fixed");
+        final double interval = Command.getOptionValue(cmd, "interval", 0.01);
+        final double factor = Command.getOptionValue(cmd, "factor", 1.1);
+        final int numPerSide = Command.getOptionValue(cmd, "numPerSide", 2);
+        final IlpFormulation formulation = getOptionValue(cmd, "formulation", IlpFormulation.DP_PROJ); 
+        final double lambda = Command.getOptionValue(cmd, "lambda", 0.1);
+        final int numThreads = Command.getOptionValue(cmd, "threads", 2);
+        final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
+        final int ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512);
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -102,16 +102,8 @@ public class TrainerFactory {
         return trainer;
     }
 
-    private static String getOptionValue(CommandLine cmd, String name, String defaultValue) {
-        return cmd.hasOption(name) ? cmd.getOptionValue(name) : defaultValue;
-    }
-    
-    private static int getOptionValue(CommandLine cmd, String name, int defaultValue) {
-        return cmd.hasOption(name) ? Integer.parseInt(cmd.getOptionValue(name)) : defaultValue;
-    }
-    
-    private static double getOptionValue(CommandLine cmd, String name, double defaultValue) {
-        return cmd.hasOption(name) ? Double.parseDouble(cmd.getOptionValue(name)) : defaultValue;
+    public static IlpFormulation getOptionValue(CommandLine cmd, String name, IlpFormulation defaultValue) {
+        return cmd.hasOption(name) ? IlpFormulation.getById(cmd.getOptionValue(name)) : defaultValue;
     }
     
     /** 

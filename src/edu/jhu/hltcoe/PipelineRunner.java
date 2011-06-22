@@ -17,6 +17,7 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
+import edu.jhu.hltcoe.util.Command;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Treebank;
@@ -32,8 +33,8 @@ public class PipelineRunner {
         // Read the data and (maybe) Reduce size of treebank
         log.info("Reading data");
         String trainPath = cmd.getOptionValue("train");
-        int maxSentenceLength = cmd.hasOption("maxSentenceLength") ? Integer.parseInt(cmd.getOptionValue("maxSentenceLength")) : Integer.MAX_VALUE;
-        int maxNumSentences = cmd.hasOption("maxNumSentences") ? Integer.valueOf(cmd.getOptionValue("maxNumSentences")) : Integer.MAX_VALUE;
+        int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
+        int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
 
         DepTreebank depTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
         depTreebank.loadPath(trainPath);

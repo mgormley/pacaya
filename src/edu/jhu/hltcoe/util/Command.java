@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 
+import org.apache.commons.cli.CommandLine;
+
 public class Command {
 
     private static final int NUM_DIGITS = 3;
@@ -93,6 +95,18 @@ public class Command {
             throw new RuntimeException("Could not delete temp file as expected: " + path);
         }
         return path;
+    }
+
+    public static String getOptionValue(CommandLine cmd, String name, String defaultValue) {
+        return cmd.hasOption(name) ? cmd.getOptionValue(name) : defaultValue;
+    }
+
+    public static int getOptionValue(CommandLine cmd, String name, int defaultValue) {
+        return cmd.hasOption(name) ? Integer.parseInt(cmd.getOptionValue(name)) : defaultValue;
+    }
+
+    public static double getOptionValue(CommandLine cmd, String name, double defaultValue) {
+        return cmd.hasOption(name) ? Double.parseDouble(cmd.getOptionValue(name)) : defaultValue;
     }
    
 }
