@@ -34,10 +34,10 @@ public class DepTreebank extends ArrayList<DepTree> {
         stanfordTreebank.loadPath(trainPath);
         for (Tree stanfordTree : stanfordTreebank) {
             try {
-                DepTree tree = new DepTree(stanfordTree);
                 if (this.size() >= maxNumSentences) {
                     break;
                 }
+                DepTree tree = new DepTree(stanfordTree);
                 int len = tree.getNumWords();
                 if (len <= maxSentenceLength) {
                     this.add(tree);
