@@ -186,7 +186,7 @@ if __name__ == "__main__":
     usage = "%s " % (sys.argv[0])
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-q', '--queue', action="store_true", help="Which SGE queue to use")
+    parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
     parser.add_option('--test', action="store_true", help="Use test data")
     parser.add_option('--expname',  help="Experiment name")
