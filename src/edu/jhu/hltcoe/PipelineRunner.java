@@ -9,23 +9,16 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.stanford.nlp.ling.CategoryWordTag;
-import edu.stanford.nlp.trees.CollinsHeadFinder;
-import edu.stanford.nlp.trees.HeadFinder;
-import edu.stanford.nlp.trees.MemoryTreebank;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeVisitor;
+import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Treebank;
 
 public class PipelineRunner {
@@ -36,44 +29,15 @@ public class PipelineRunner {
     }
 
     public void run(CommandLine cmd) throws ParseException {        
-        // Read the data
+        // Read the data and (maybe) Reduce size of treebank
         log.info("Reading data");
         String trainPath = cmd.getOptionValue("train");
-        Treebank treebank = new MemoryTreebank();
-        CategoryWordTag.suppressTerminalDetails = true;
-        treebank.loadPath(trainPath);
-        final HeadFinder chf = new CollinsHeadFinder();
-        treebank.apply(new TreeVisitor() {
-          public void visitTree(Tree pt) {
-            pt.percolateHeads(chf);
-          }
-        });
+        int maxSentenceLength = cmd.hasOption("maxSentenceLength") ? Integer.parseInt(cmd.getOptionValue("maxSentenceLength")) : Integer.MAX_VALUE;
+        int maxNumSentences = cmd.hasOption("maxNumSentences") ? Integer.valueOf(cmd.getOptionValue("maxNumSentences")) : Integer.MAX_VALUE;
+
+        DepTreebank depTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
+        depTreebank.loadPath(trainPath);
         
-        // Reduce size of treebank
-        DepTreebank depTreebank;
-        if (cmd.hasOption("maxSentenceLength") || cmd.hasOption("maxNumSentences")) {
-            DepTreebank depTreebankTmp = new DepTreebank(treebank);
-            depTreebank = new DepTreebank();
-            int maxSentenceLength = Integer.MAX_VALUE;
-            if (cmd.hasOption("maxSentenceLength")) {
-                maxSentenceLength = Integer.valueOf(cmd.getOptionValue("maxSentenceLength"));
-            }
-            int maxNumSentences = Integer.MAX_VALUE;
-            if (cmd.hasOption("maxNumSentences")) {
-                maxNumSentences = Integer.valueOf(cmd.getOptionValue("maxNumSentences"));
-            }
-            for (DepTree tree : depTreebankTmp) {
-                if (depTreebank.size() >= maxNumSentences) {
-                    break;
-                }
-                int len = tree.getNumWords();
-                if (len <= maxSentenceLength) {
-                    depTreebank.add(tree);
-                }
-            }
-        } else {
-            depTreebank = new DepTreebank(treebank);
-        }
         log.info("Number of sentences: " + depTreebank.size());
         log.info("Number of words: " + depTreebank.getNumWords());
         

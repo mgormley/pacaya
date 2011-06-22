@@ -30,6 +30,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         Arrays.fill(parents, EMPTY_IDX);
         
         HeadFinder hf = new CollinsHeadFinder();
+        tree.percolateHeads(hf);
         Collection<Dependency<Tree, Tree, Object>> dependencies = mapDependencies(tree, hf);
         assert(dependencies.size() == leaves.size() - 1);
         for(Dependency<Tree, Tree, Object> dependency : dependencies) {

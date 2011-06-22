@@ -42,7 +42,7 @@ public class TrainerFactory {
 
     public static Trainer getTrainer(CommandLine cmd) throws ParseException {
 
-        final String algorithm = cmd.hasOption("algorithm") ? cmd.getOptionValue("algorithm") : "viterbi";
+        final String algorithm = getOptionValue(cmd, "algorithm", "viterbi");
         final int iterations = cmd.hasOption("iterations") ? Integer.parseInt(cmd.getOptionValue("iterations")) : 10;
         final String modelName = cmd.hasOption("model") ? cmd.getOptionValue("model") : "dmv";
         final String parserName = cmd.hasOption("parser") ? cmd.getOptionValue("parser") : "ilp-sentence";
@@ -53,9 +53,9 @@ public class TrainerFactory {
         final IlpFormulation formulation = cmd.hasOption("formulation") ? IlpFormulation.getById(cmd
                 .getOptionValue("formulation")) : IlpFormulation.DP_PROJ;
         final double lambda = cmd.hasOption("lambda") ? Double.parseDouble(cmd.getOptionValue("lambda")) : 0.1;
-        final int numThreads = cmd.hasOption("threads") ? Integer.valueOf(cmd.getOptionValue("threads")) : 2;
+        final int numThreads = cmd.hasOption("threads") ? Integer.parseInt(cmd.getOptionValue("threads")) : 2;
         final String ilpSolver = cmd.hasOption("ilpSolver") ? cmd.getOptionValue("ilpSolver") : "cplex";
-        final int ilpWorkMemMegs = cmd.hasOption("ilpWorkMemMegs") ? Integer.valueOf(cmd.getOptionValue("ilpWorkMemMegs")) : 512;
+        final int ilpWorkMemMegs = cmd.hasOption("ilpWorkMemMegs") ? Integer.parseInt(cmd.getOptionValue("ilpWorkMemMegs")) : 512;
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -100,6 +100,18 @@ public class TrainerFactory {
         }
 
         return trainer;
+    }
+
+    private static String getOptionValue(CommandLine cmd, String name, String defaultValue) {
+        return cmd.hasOption(name) ? cmd.getOptionValue(name) : defaultValue;
+    }
+    
+    private static int getOptionValue(CommandLine cmd, String name, int defaultValue) {
+        return cmd.hasOption(name) ? Integer.parseInt(cmd.getOptionValue(name)) : defaultValue;
+    }
+    
+    private static double getOptionValue(CommandLine cmd, String name, double defaultValue) {
+        return cmd.hasOption(name) ? Double.parseDouble(cmd.getOptionValue(name)) : defaultValue;
     }
     
     /** 

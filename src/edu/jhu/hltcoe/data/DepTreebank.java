@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
-import edu.jhu.hltcoe.parse.IlpViterbiParser;
+import edu.stanford.nlp.ling.CategoryWordTag;
+import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Treebank;
 
 public class DepTreebank extends ArrayList<DepTree> {
@@ -14,16 +16,33 @@ public class DepTreebank extends ArrayList<DepTree> {
     private static Logger log = Logger.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;
-    
+    private int maxSentenceLength;
+    private int maxNumSentences;
+
     public DepTreebank() {
-        // TODO Auto-generated constructor stub
+        this(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
-    
-    public DepTreebank(Treebank treebank) {
-        for (Tree tree : treebank) {
+
+    public DepTreebank(final int maxSentenceLength, final int maxNumSentences) {
+        this.maxSentenceLength = maxSentenceLength;
+        this.maxNumSentences = maxNumSentences;
+    }
+
+    public void loadPath(String trainPath) {
+        Treebank stanfordTreebank = new DiskTreebank();
+        CategoryWordTag.suppressTerminalDetails = true;
+        stanfordTreebank.loadPath(trainPath);
+        for (Tree stanfordTree : stanfordTreebank) {
             try {
-                add(new DepTree(tree));
-            } catch(HeadFinderException e) {
+                DepTree tree = new DepTree(stanfordTree);
+                if (this.size() >= maxNumSentences) {
+                    break;
+                }
+                int len = tree.getNumWords();
+                if (len <= maxSentenceLength) {
+                    this.add(tree);
+                }
+            } catch (HeadFinderException e) {
                 log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
             }
         }
@@ -35,7 +54,7 @@ public class DepTreebank extends ArrayList<DepTree> {
         }
         return sentences;
     }
-    
+
     public int getNumWords() {
         int numWords = 0;
         for (DepTree tree : this) {
@@ -43,5 +62,5 @@ public class DepTreebank extends ArrayList<DepTree> {
         }
         return numWords;
     }
-    
+
 }
