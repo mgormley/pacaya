@@ -163,7 +163,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             experiments.append(all + dataset + msl + par + mns)
         elif self.expname == "deltas":
             if not self.fast:
-                all.update(iterations=1)
+                all.update(iterations=10)
             for dataset in datasets:
                 msl = DPExpParams(maxSentenceLength=5)
                 mns_list = range(10,100,10)
