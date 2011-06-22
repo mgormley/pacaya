@@ -166,7 +166,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 all.update(iterations=10)
             for dataset in datasets:
                 msl = DPExpParams(maxSentenceLength=5)
-                mns_list = range(10,100,10)
+                mns_list = range(10,200,10)
                 for maxNumSentences in mns_list:
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
