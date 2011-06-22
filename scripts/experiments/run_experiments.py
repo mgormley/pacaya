@@ -74,7 +74,10 @@ class DPExpParams(experiment_runner.JavaExpParams):
     def get_java_args(self, eprunner):
         # Allot the available memory to the JVM, ILP solver, and ZIMPL
         total_work_mem_megs = eprunner.work_mem_megs
-        zimpl_mem = int(total_work_mem_megs * 0.5)
+        if (eprunner.queue != None):
+            zimpl_mem = int(total_work_mem_megs * 0.5)
+        else:
+            zimpl_mem = 0
         java_mem = int((total_work_mem_megs - zimpl_mem) * 0.5)
         ilp_mem = total_work_mem_megs - java_mem - zimpl_mem
         # Subtract off some overhead for CPLEX
