@@ -72,11 +72,15 @@ class DPExpParams(experiment_runner.JavaExpParams):
         return script
     
     def get_java_args(self, eprunner):
-        # Allot the available memory to java and the ILP solver
-        java_mem = int(eprunner.work_mem_megs * 0.5)
-        ilp_mem = eprunner.work_mem_megs - java_mem
+        # Allot the available memory to the JVM, ILP solver, and ZIMPL
+        total_work_mem_megs = eprunner.work_mem_megs
+        zimpl_mem = int(total_work_mem_megs * 0.5)
+        java_mem = int((total_work_mem_megs - zimpl_mem) * 0.5)
+        ilp_mem = total_work_mem_megs - java_mem - zimpl_mem
         # Subtract off some overhead for CPLEX
         ilp_mem -= 128
+        assert (zimpl_mem + java_mem + ilp_mem <= total_work_mem_megs)
+
         self.update(ilpWorkMemMegs=ilp_mem)
         
         # Create the JVM args
