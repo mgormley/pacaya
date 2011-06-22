@@ -17,10 +17,14 @@
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
+      <pathelement path="/home/hltcoe/mgormley/working/tagging/bin/gurobi301/linux64/lib/gurobi.jar" />
+      <pathelement path="/home/hltcoe/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/lib/cplex.jar" />
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
       </fileset>
     </path>
+    <property name="myclasspath" refid="classpath"/>
+    <echo message="Classpath = ${myclasspath}"/>
     <path id="classes">
       <pathelement location="${build.path}" />
     </path>
