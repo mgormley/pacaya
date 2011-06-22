@@ -165,13 +165,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             if not self.fast:
                 all.update(iterations=10)
             for dataset in datasets:
-                msl = DPExpParams(maxSentenceLength=5)
-                mns_list = range(10,200,10)
-                for maxNumSentences in mns_list:
-                    mns = DPExpParams(maxNumSentences=maxNumSentences)
-                    experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
-                    for dataGen in [dgFixedInterval, dgFactor]:
-                        experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas") + dataGen)
+                for maxSentenceLength in [5,7]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    if (maxSentenceLength == 5):
+                        mns_list = range(100,1500,100)
+                    elif (maxSentenceLength == 7):
+                        mns_list = range(100,2200,100)
+                    for maxNumSentences in mns_list:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
+                        for dataGen in [dgFixedInterval, dgFactor]:
+                            experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas") + dataGen)
         else:
             raise Exception("Unknown expname: " + self.expname)
                 
