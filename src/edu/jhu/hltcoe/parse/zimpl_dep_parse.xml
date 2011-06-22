@@ -16,10 +16,11 @@ param Word[AllTokens] := read InputSent as "<1n,2n> 3s";
 set AllWords := { read InputSent as "<3s>" }; 
 # This gives an error: set AllWords := {union <s,i> in AllTokens: Word[s,i]};
 
-do print AllTokens;
-do print Sents;
-do forall <s> in Sents do print Tokens[s];
-do forall <s,i> in AllTokens do print Word[s,i];
+# Some debug printouts
+#do print AllTokens;
+#do print Sents;
+#do forall <s> in Sents do print Tokens[s];
+#do forall <s,i> in AllTokens do print Word[s,i];
 
 # The following 4 lines don't work
 # The domain of WordPairs is pairs of words
