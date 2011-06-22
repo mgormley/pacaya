@@ -8,9 +8,9 @@ public class IlpSolverFactory {
     
     private IlpSolverId ilpSolver;
     private int numThreads;
-    private int workMemMegs;
+    private double workMemMegs;
 
-    public IlpSolverFactory(IlpSolverId ilpSolver, int numThreads, int workMemMegs) {
+    public IlpSolverFactory(IlpSolverId ilpSolver, int numThreads, double workMemMegs) {
         this.ilpSolver = ilpSolver;
         this.numThreads = numThreads;
         this.workMemMegs = workMemMegs;

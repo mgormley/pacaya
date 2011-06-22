@@ -55,7 +55,7 @@ public class TrainerFactory {
         final double lambda = Command.getOptionValue(cmd, "lambda", 0.1);
         final int numThreads = Command.getOptionValue(cmd, "threads", 2);
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
-        final int ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512);
+        final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {

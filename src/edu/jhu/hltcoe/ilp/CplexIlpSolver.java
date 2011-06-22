@@ -6,6 +6,7 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
+import ilog.cplex.IloCplex.StringParam;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -19,10 +20,12 @@ public class CplexIlpSolver implements IlpSolver {
     
     private File tempDir;
     private int numThreads;
+    private double workMemMegs;
     
-    public CplexIlpSolver(File tempDir, int numThreads, int workMemMegs) {
+    public CplexIlpSolver(File tempDir, int numThreads, double workMemMegs) {
         this.tempDir = tempDir;
         this.numThreads = numThreads;
+        this.workMemMegs = workMemMegs;
     }
 
     private Map<String,Double> result;
@@ -45,7 +48,9 @@ public class CplexIlpSolver implements IlpSolver {
             // before swapping to disk files, compressing memory, or taking
             // other actions.
             // Values: Any nonnegative number, in megabytes; default: 128.0
-            cplex.setParam(DoubleParam.WorkMem, 128);
+            cplex.setParam(DoubleParam.WorkMem, workMemMegs);
+            cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
+            cplex.setParam(DoubleParam.TreLim, 5000.0);
 
             cplex.setParam(IntParam.Threads, numThreads);
 
@@ -54,7 +59,7 @@ public class CplexIlpSolver implements IlpSolver {
             // same model at the same parameter settings on the same platform
             // will reproduce the same solution path and results.
             cplex.setParam(IntParam.ParallelMode, 1);
-            
+                        
             OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
             cplex.setOut(out);
             cplex.setWarning(out);
