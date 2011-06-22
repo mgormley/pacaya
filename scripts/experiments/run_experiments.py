@@ -66,7 +66,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
         script = ""
         # TODO: ulimit doesn't seem to work on Mac OS X for some reason
         script += "ulimit -v %d\n" % (1024 * eprunner.work_mem_megs)
-        script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
+        #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
         cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
