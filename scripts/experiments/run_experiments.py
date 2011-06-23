@@ -17,6 +17,7 @@ import platform
 from glob import glob
 from experiments.core.experiment_runner import ExpParamsRunner
 from experiments.core import experiment_runner
+import re
 
 def get_root_dir():
     scripts_dir =  os.path.abspath(sys.path[0])
@@ -64,8 +65,6 @@ class DPExpParams(experiment_runner.JavaExpParams):
     
     def create_experiment_script(self, exp_dir, eprunner):
         script = ""
-        # TODO: ulimit doesn't seem to work on Mac OS X for some reason
-        script += "ulimit -v %d\n" % (1024 * eprunner.work_mem_megs)
         #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
         script += "echo 'CLASSPATH=$CLASSPATH'\n"
         cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
@@ -109,6 +108,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             self.get_data = get_test_data
         else:
             self.get_data = get_dev_data
+            
+        if self.queue == "mem":
+            # Override qsub_args to exclude "-l h_vmem=%dM"
+            self.qsub_args = re.sub("-l h_vmem\d+M", "", self.qsub_args)
             
     def get_experiments(self):
         all = DPExpParams()
