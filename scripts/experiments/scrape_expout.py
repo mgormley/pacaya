@@ -21,7 +21,9 @@ class DPScraper(Scraper):
         return DPExpParams()
     
     def get_column_order(self):
-        hs = "dataset parser model formulation accuracy elapsed iterations timeRemaining"
+        hs = "dataset maxNumSentences maxSentenceLength parser model formulation"
+        hs += " deltaGenerator factor interval numPerSide"
+        hs += " accuracy elapsed iterations timeRemaining"
         return hs.split()
     
     def scrape_exp(self, exp, exp_dir, stdout_file):
