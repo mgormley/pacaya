@@ -29,21 +29,21 @@ class DPScraper(Scraper):
             return
         
         _, _, elapsed = get_time(stdout_file)
-        exp.update(elapsed=elapsed)
+        exp.update(elapsed = elapsed)
         
         numWords = int(get_following(stdout_file, "Number of words: ", -1))
-        exp.update(numWords=numWords)
-        exp.update(accuracy=get_following(stdout_file, "Accuracy: ", -1))
-        exp.update(timeRemaining=get_following(stdout_file, "Time remaining: ", -1))
+        exp.update(numWords = numWords)
+        exp.update(accuracy = get_following(stdout_file, "Accuracy: ", -1))
+        exp.update(timeRemaining = get_following(stdout_file, "Time remaining: ", -1))
         
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_file, "Tot parse time: ")
             tot_parse_times = map(float, tot_parse_times)
             if len(tot_parse_times) > 1:
-                exp.update(totalParseTimeFirst=tot_parse_times[0])
-                exp.update(totalParseTimeLast=tot_parse_times[-1])
-                exp.update(avgPerWordParseTimeFirst=tot_parse_times[0]/numWords)
-                exp.update(avgPerWordParseTimeLast=tot_parse_times[-1]/numWords)
+                exp.update(totalParseTimeFirst = tot_parse_times[0])
+                exp.update(totalParseTimeLast = tot_parse_times[-1])
+                exp.update(avgPerWordParseTimeFirst = tot_parse_times[0]/numWords)
+                exp.update(avgPerWordParseTimeLast = tot_parse_times[-1]/numWords)
          
 if __name__ == "__main__":
     usage = "%s [top_dir...]" % (sys.argv[0])
