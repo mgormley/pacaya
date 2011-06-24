@@ -23,7 +23,7 @@ class DPScraper(Scraper):
     def get_column_order(self):
         hs = "dataset maxNumSentences maxSentenceLength parser model formulation"
         hs += " deltaGenerator factor interval numPerSide"
-        hs += " accuracy elapsed iterations timeRemaining"
+        hs += " accuracy elapsed error iterations timeRemaining"
         return hs.split()
     
     def scrape_exp(self, exp, exp_dir, stdout_file):
@@ -37,7 +37,7 @@ class DPScraper(Scraper):
         exp.update(numWords = numWords)
         exp.update(accuracy = get_following(stdout_file, "Accuracy: ", -1))
         exp.update(timeRemaining = get_following(stdout_file, "Time remaining: ", -1))
-        
+                
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_file, "Tot parse time: ")
             tot_parse_times = map(float, tot_parse_times)
