@@ -9,11 +9,11 @@ import tempfile
 import stat
 import subprocess
 from optparse import OptionParser
-from experiments.run_experiments import DPExpParams
+from run_experiments import DPExpParams
 from glob import glob
-from experiments.core.util import get_all_following, get_following, get_time,\
+from core.util import get_all_following, get_following, get_time,\
     to_str
-from experiments.core.scrape import Scraper
+from core.scrape import Scraper
 
 class DPScraper(Scraper):
     
