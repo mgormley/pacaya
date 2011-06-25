@@ -10,13 +10,13 @@ import shlex
 import subprocess
 from subprocess import Popen
 from optparse import OptionParser
-from experiments.core.pipeline import ExperimentRunner
-from experiments.core.util import get_new_file, sweep_mult, fancify_cmd
-from experiments.core.util import head_sentences
+from core.pipeline import ExperimentRunner
+from core.util import get_new_file, sweep_mult, fancify_cmd
+from core.util import head_sentences
 import platform
 from glob import glob
-from experiments.core.experiment_runner import ExpParamsRunner
-from experiments.core import experiment_runner
+from core.experiment_runner import ExpParamsRunner
+from core import experiment_runner
 import re
 
 def get_root_dir():
