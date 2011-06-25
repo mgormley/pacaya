@@ -17,6 +17,9 @@ from experiments.core.scrape import Scraper
 
 class DPScraper(Scraper):
     
+    def __init__(self, print_csv, write_google):
+        Scraper.__init__(self, print_csv, write_google)
+    
     def get_exp_params_instance(self):
         return DPExpParams()
     
@@ -51,13 +54,13 @@ if __name__ == "__main__":
     usage = "%s [top_dir...]" % (sys.argv[0])
 
     parser = OptionParser(usage=usage)
-    #parser.add_option('-s', '--speedup', action="store_true", help="Scrape for speedup plot")
+    parser.add_option('-s', '--google', action="store_true", help="Write spreadsheet to Google")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) < 2:
         print usage
         sys.exit(1)
     
-    scraper = DPScraper()
+    scraper = DPScraper(True, options.google)
     for top_dir in args[1:]:
         scraper.scrape(top_dir)
