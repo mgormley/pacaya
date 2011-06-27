@@ -50,7 +50,7 @@ public class CplexIlpSolver implements IlpSolver {
             // Values: Any nonnegative number, in megabytes; default: 128.0
             cplex.setParam(DoubleParam.WorkMem, workMemMegs);
             cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-            cplex.setParam(DoubleParam.TreLim, 5000.0);
+            cplex.setParam(DoubleParam.TreLim, 32000.0);
 
             cplex.setParam(IntParam.Threads, numThreads);
 
