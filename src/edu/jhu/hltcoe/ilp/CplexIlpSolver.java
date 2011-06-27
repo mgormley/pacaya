@@ -16,8 +16,14 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
+import edu.jhu.hltcoe.parse.IlpViterbiParser;
+
 public class CplexIlpSolver implements IlpSolver {
     
+    private static Logger log = Logger.getLogger(CplexIlpSolver.class);
+
     private File tempDir;
     private int numThreads;
     private double workMemMegs;
@@ -42,7 +48,17 @@ public class CplexIlpSolver implements IlpSolver {
         try {
             IloCplex cplex = new IloCplex();
             cplex.importModel(lpFile.getAbsolutePath());
-
+            File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
+            if (ordFile.exists()) {
+                log.debug("Reading ORD file: " + ordFile.getPath());
+                cplex.readOrder(ordFile.getAbsolutePath());
+            }
+            File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
+            if (mstFile.exists()) {
+                log.debug("Reading MST file: " + mstFile.getPath());
+                cplex.readMIPStart(mstFile.getAbsolutePath());
+            }
+            
             // Specifies an upper limit on the amount of central memory, in
             // megabytes, that CPLEX is permitted to use for working memory
             // before swapping to disk files, compressing memory, or taking
@@ -59,7 +75,7 @@ public class CplexIlpSolver implements IlpSolver {
             // same model at the same parameter settings on the same platform
             // will reproduce the same solution path and results.
             cplex.setParam(IntParam.ParallelMode, 1);
-                        
+                                    
             OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
             cplex.setOut(out);
             cplex.setWarning(out);

@@ -41,6 +41,8 @@ public class ZimplRunner {
     private void runZimpl(String type, int verbosity) {
         String[] cmdArray = new String[] { 
                 zimplBinary, 
+                "-r", // Write ORD file
+                "-m", // Write MST file
                 "-o", outputPrefix,
                 "-t", type, 
                 "-v"+String.valueOf(verbosity), 
