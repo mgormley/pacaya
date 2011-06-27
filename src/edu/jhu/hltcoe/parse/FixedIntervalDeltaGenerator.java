@@ -10,6 +10,7 @@ import edu.jhu.hltcoe.util.Triple;
 
 public class FixedIntervalDeltaGenerator implements DeltaGenerator {
 
+    public static final String IDENTITY_DELTA_ID = "identity";
     private double interval;
     private int numPerSide;
     
@@ -30,6 +31,9 @@ public class FixedIntervalDeltaGenerator implements DeltaGenerator {
             
             for (int i = -numPerSide; i<=numPerSide; i++) {
                 String deltaId = "add" + interval * i;
+                if (i == 0) {
+                    deltaId = IDENTITY_DELTA_ID;
+                }
                 Quadruple<Label, String, Label, String> key = new Quadruple<Label, String, Label, String>(parent,lr,child,deltaId);
                 double newWeight = weight + interval * i;
                 // Only keep valid probabilities

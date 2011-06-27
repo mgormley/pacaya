@@ -79,6 +79,7 @@ set ChooseWeightSet := proj(ChooseWeightDeltaSet, <1,2,3>);
 set ParentWordsAndLR := proj(ChooseWeightDeltaSet, <1,2>);
 set AllChildWordsAndDeltas := proj(ChooseWeightDeltaSet, <3,4>);
 set ChildWordsAndDeltas[<parentw, lr> in ParentWordsAndLR] := {<childw,d> in AllChildWordsAndDeltas with <parentw, lr, childw, d> in ChooseWeightDeltaSet};
+set ChildWords[<parentw, lr> in ParentWordsAndLR] := {<childw> in proj(ChooseWeightDeltaSet, <3>) with <parentw, lr, childw> in ChooseWeightSet};
 set AllCWDeltas := proj(ChooseWeightDeltaSet, <4>);
 set CWDeltas[<parentw, lr, childw> in ChooseWeightSet] := {<d> in AllCWDeltas with <parentw, lr, childw, d> in ChooseWeightDeltaSet};
 
@@ -102,11 +103,12 @@ subto only_one_delta:
 #do print ChooseWeightSet;
 #do forall <parentw,lr,childw> in ChooseWeightSet do print CWDeltas[parentw,lr,childw];
 	
-# TODO: encoding this as 1.000000001 is a HACK 
 # Ensure weights sum to less-than-or-equal 1.0:
+param IdentityDeltaId := 'identity';
 subto weights_sum_to_one: 
-	forall <parentw, lr> in ParentWordsAndLR: 
-		1.0000000001 >= sum <childw,d> in ChildWordsAndDeltas[parentw, lr]:
+	forall <parentw, lr> in ParentWordsAndLR:
+	    (sum <childw> in ChildWords[parentw, lr]: ChooseWeightDelta[parentw,lr,childw,IdentityDeltaId])  
+		    == sum <childw,d> in ChildWordsAndDeltas[parentw, lr]:
  				(cwDelta[parentw,lr,childw,d] * ChooseWeightDelta[parentw,lr,childw,d]);
 
 # Ensure that each arcDelta value is correct 

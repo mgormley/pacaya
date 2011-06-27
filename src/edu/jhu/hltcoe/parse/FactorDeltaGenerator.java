@@ -30,6 +30,9 @@ public class FactorDeltaGenerator implements DeltaGenerator {
             
             for (int i = -numPerSide; i<=numPerSide; i++) {
                 String deltaId = "mult" + Math.pow(factor, i);
+                if (i == 1) {
+                    deltaId = FixedIntervalDeltaGenerator.IDENTITY_DELTA_ID;
+                }
                 Quadruple<Label, String, Label, String> key = new Quadruple<Label, String, Label, String>(parent,lr,child,deltaId);
                 double newWeight = weight * Math.pow(factor, i);
                 // Only keep valid probabilities
