@@ -41,41 +41,38 @@ subto one_child_for_wall:
     forall <s> in Sents:
        1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
        
-	    ]]>
-	</code>
-	<code id="weights">
-	    <![CDATA[
-# ---------- Weights ----------
-# input.chooseweights contains "<parent word, lr, child word> weight"
-param InputChooseWeights := "input.chooseweights";
-set ChooseWeightSet := { read InputChooseWeights as "<1s, 2s, 3s>" };
-param ChooseWeight[ChooseWeightSet] := read InputChooseWeights as "<1s, 2s, 3s> 4n";
-
+# ---------- Stop Weights ----------
 # input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
 param InputStopWeights := "input.stopweights";
 set LR := {"l","r"};
 #Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
 set StopWeightSet := { read InputStopWeights as "<1s,2s,3n>" };
 param StopWeight[StopWeightSet] := read InputStopWeights as "<1s,2s,3n> 4n";
+param LogStopWeight[StopWeightSet] := read InputStopWeights as "<1s,2s,3n> 5n";
+param LogNotStopWeight[StopWeightSet] := read InputStopWeights as "<1s,2s,3n> 6n";
+#TODO: add deltas for stopweights
+
+	    ]]>
+	</code>
+	<code id="weights">
+	    <![CDATA[
+# ---------- Choose Weights ----------
+# input.chooseweights contains "<parent word, lr, child word> weight"
+param InputChooseWeights := "input.chooseweights";
+set ChooseWeightSet := { read InputChooseWeights as "<1s, 2s, 3s>" };
+param ChooseWeight[ChooseWeightSet] := read InputChooseWeights as "<1s, 2s, 3s> 4n";
+param LogChooseWeight[ChooseWeightSet] := read InputChooseWeights as "<1s, 2s, 3s> 5n";
 
 	    ]]>
 	</code>
 	<code id="weights-delta">
 	    <![CDATA[
-# ---------- Weights ----------
+# ---------- Choose Weights with Deltas ----------
 # input.chooseweights.delta contains "<parent word, lr, child word, delta id> weight"
 param InputChooseWeights := "input.chooseweights.delta";
 set ChooseWeightDeltaSet := { read InputChooseWeights as "<1s, 2s, 3s, 4s>" };
 param ChooseWeightDelta[ChooseWeightDeltaSet] := read InputChooseWeights as "<1s, 2s, 3s, 4s> 5n";
-
-#TODO: add deltas for stopweights
-# input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
-param InputStopWeights := "input.stopweights";
-set LR := {"l","r"};
-#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
-set StopSet := { read InputStopWeights as "<1s,2s,3n>" };
-param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
-
+param LogChooseWeightDelta[ChooseWeightDeltaSet] := read InputChooseWeights as "<1s, 2s, 3s, 4s> 6n";
 
 # ---------- Sets for Deltas ----------
 set ChooseWeightSet := proj(ChooseWeightDeltaSet, <1,2,3>);
@@ -423,13 +420,13 @@ subto numNALeftAndRight:
 maximize goal: 
     (sum <s,i,j> in AllArcs: 
         if i < j 
-        then arc[s,i,j] * ln(ChooseWeight[Word[s,i],"r",Word[s,j]]) 
-        else arc[s,i,j] * ln(ChooseWeight[Word[s,i],"l",Word[s,j]]) end) 
+        then arc[s,i,j] * LogChooseWeight[Word[s,i],"r",Word[s,j]] 
+        else arc[s,i,j] * LogChooseWeight[Word[s,i],"l",Word[s,j]] end) 
     + (sum <s,i,lr> in AllTokensLR: 
-      	 ((1 - genAdj[s,i,lr]) * ln(StopWeight[Word[s,i],lr,1])
-	   + genAdj[s,i,lr] * ln(1 - StopWeight[Word[s,i],lr,1])
-	   + numNA[s,i,lr] * ln(1 - StopWeight[Word[s,i],lr,0])
-	   + genAdj[s,i,lr] * ln(StopWeight[Word[s,i],lr,0]))
+      	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
+	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
+	   + numNA[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + genAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
       );
     	
     	]]>
@@ -441,12 +438,12 @@ maximize goal:
 # TODO: add deltas to stopweights
 maximize goal: 
     (sum <s,i,j,d> in AllArcsDelta: 
-        arcDelta[s,i,j,d] * ln(ChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d])) 
+        arcDelta[s,i,j,d] * LogChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d]) 
     + (sum <s,i,lr> in AllTokensLR: 
-      	 ((1 - genAdj[s,i,lr]) * ln(StopWeight[Word[s,i],lr,1])
-	   + genAdj[s,i,lr] * ln(1 - StopWeight[Word[s,i],lr,1])
-	   + numNA[s,i,lr] * ln(1 - StopWeight[Word[s,i],lr,0])
-	   + genAdj[s,i,lr] * ln(StopWeight[Word[s,i],lr,0]))
+      	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
+	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
+	   + numNA[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + genAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
       );
     	
     	]]>
