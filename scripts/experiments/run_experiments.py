@@ -133,7 +133,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         if self.fast:       all.update(iterations=1,
                                        maxSentenceLength=7,
                                        maxNumSentences=2)
-        else:               all.update(iterations=10)
+        else:               all.update(iterations=25)
         
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
@@ -173,8 +173,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             mns = DPExpParams(maxNumSentences=maxNumSentences)
                             experiments.append(all + dataset + msl + par + mns)
         elif self.expname == "deltas":
-            if not self.fast:
-                all.update(iterations=10)
             for dataset in datasets:
                 for maxSentenceLength in [5,7]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
