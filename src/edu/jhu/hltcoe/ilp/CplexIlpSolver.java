@@ -43,6 +43,10 @@ public class CplexIlpSolver implements IlpSolver {
 
     @Override
     public void solve(File lpFile) {
+        if (!lpFile.getPath().endsWith(".lp")) {
+            throw new IllegalStateException("Expecting lpFile to end with .lp: " + lpFile.getPath());
+        }
+        
         result = new HashMap<String,Double>();
 
         try {
@@ -94,6 +98,8 @@ public class CplexIlpSolver implements IlpSolver {
                     //System.out.println(vars[i].getName() + " " + vals[i]);
                     result.put(vars[i].getName(), vals[i]);
                 }
+                
+                cplex.writeSolution(lpFile.getAbsolutePath().replace(".lp", ".sol"));
             }
             cplex.end();
             out.close();
