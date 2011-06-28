@@ -79,6 +79,9 @@ public class CplexIlpSolver implements IlpSolver {
             // same model at the same parameter settings on the same platform
             // will reproduce the same solution path and results.
             cplex.setParam(IntParam.ParallelMode, 1);
+            
+            // TODO: this was chosen arbitrarily to try to fix the problem with priority order
+            cplex.setParam(IntParam.MIPOrdType, 1);
                                     
             OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
             cplex.setOut(out);
