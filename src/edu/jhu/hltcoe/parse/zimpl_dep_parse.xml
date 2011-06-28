@@ -107,8 +107,8 @@ subto only_one_delta:
 # Ensure weights sum to less-than-or-equal 1.0:
 subto weights_sum_to_one: 
 	forall <parentw, lr> in ParentWordsAndLR:
-	    (sum <childw> in ChildWords[parentw, lr]: ChooseWeightDelta[parentw,lr,childw,IdentityDeltaId])  
-		    == sum <childw,d> in ChildWordsAndDeltas[parentw, lr]:
+	    (sum <childw> in ChildWords[parentw, lr]: ChooseWeightDelta[parentw,lr,childw,IdentityDeltaId]) + 1.0E-13
+		    >= sum <childw,d> in ChildWordsAndDeltas[parentw, lr]:
  				(cwDelta[parentw,lr,childw,d] * ChooseWeightDelta[parentw,lr,childw,d]);
 
 # Ensure that each arcDelta value is correct 
