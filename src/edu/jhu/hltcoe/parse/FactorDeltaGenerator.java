@@ -27,7 +27,7 @@ public class FactorDeltaGenerator extends IdentityDeltaGenerator implements Delt
         for (Entry<Triple<Label,String,Label>,Double> entry : chooseWeights.entrySet()) {
             double weight = entry.getValue();            
             for (int i = -numPerSide; i<=numPerSide; i++) {
-                if (i == 1) {
+                if (i == 0) {
                     // Don't generate the identity delta
                     continue;
                 }
