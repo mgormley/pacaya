@@ -21,7 +21,7 @@ public class IlpSolverFactory {
             return new CplexIlpSolver(tempDir, numThreads, workMemMegs);
         } else if (ilpSolver == IlpSolverId.GUROBI_CL) {
             // TODO: use workMemMegs
-            return new ClGurobiIlpSolver(tempDir, numThreads);
+            return new ClGurobiIlpSolver(tempDir, numThreads, workMemMegs);
         } else if (ilpSolver == IlpSolverId.GUROBI_JAVA) {
             // TODO: use numThreads, workMemMegs
             return new JavaGurobiIlpSolver(tempDir);
