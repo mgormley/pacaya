@@ -3,7 +3,6 @@ package edu.jhu.hltcoe.util;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,8 +25,8 @@ public class Command {
     public static void runCommand(String[] cmdArray, File logFile, File dir) {
         Process proc = runProcess(cmdArray, logFile, dir);
         if (proc.exitValue() != 0) {
-            throw new RuntimeException("Command " + cmdToString(cmdArray) + " failed with exit code: "
-                    + proc.exitValue() + "\n" + tail(logFile));
+            throw new RuntimeException("Command failed with exit code "
+                    + proc.exitValue() + ": " + cmdToString(cmdArray) + "\n" + tail(logFile));
         }
     }
 
@@ -72,6 +71,7 @@ public class Command {
         StringBuilder sb = new StringBuilder();
         for (String s : cmdArray) {
             sb.append(s);
+            sb.append(" ");
         }
         return sb.toString();
     }
