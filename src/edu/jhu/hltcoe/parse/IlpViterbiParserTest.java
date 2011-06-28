@@ -115,7 +115,7 @@ public class IlpViterbiParserTest {
     }
 
     public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
-        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, -1);
+        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, 128);
         IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
