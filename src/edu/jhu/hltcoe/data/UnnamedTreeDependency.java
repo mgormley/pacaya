@@ -1,12 +1,9 @@
 package edu.jhu.hltcoe.data;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import edu.stanford.nlp.ling.Label;
-import edu.stanford.nlp.ling.StringLabel;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.DependencyFactory;
-import edu.stanford.nlp.trees.LabeledConstituent;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.ErasureUtils;
@@ -22,9 +19,9 @@ import edu.stanford.nlp.util.XMLUtils;
  */
 public class UnnamedTreeDependency implements Dependency<Tree, Tree, Object> {
 
-    @SuppressWarnings( { "NonSerializableFieldInSerializableClass" })
+    //@SuppressWarnings( { "NonSerializableFieldInSerializableClass" })
     private Tree regent;
-    @SuppressWarnings( { "NonSerializableFieldInSerializableClass" })
+    //@SuppressWarnings( { "NonSerializableFieldInSerializableClass" })
     private Tree dependent;
 
     @Override
@@ -112,7 +109,7 @@ public class UnnamedTreeDependency implements Dependency<Tree, Tree, Object> {
     }
 
     public DependencyFactory dependencyFactory() {
-        throw new NotImplementedException();
+        throw new RuntimeException("not implemented");
     }
     
     private static final long serialVersionUID = 5;
