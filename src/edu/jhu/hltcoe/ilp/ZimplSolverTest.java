@@ -34,7 +34,7 @@ public class ZimplSolverTest {
 
     @Test
     public void testClGurobiIlpSolver() throws IOException {
-        runZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, 2));
+        runZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
     }
     
     @Test

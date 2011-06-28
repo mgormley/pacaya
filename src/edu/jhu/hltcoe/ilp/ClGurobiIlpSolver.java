@@ -19,10 +19,12 @@ public class ClGurobiIlpSolver implements IlpSolver {
     private File tempDir;
     private Map<String, Double> result;
     private int numThreads;
-    
-    public ClGurobiIlpSolver(File tempDir, int numThreads) {
+    private double workMemMegs;
+
+    public ClGurobiIlpSolver(File tempDir, int numThreads, double workMemMegs) {
         this.tempDir = tempDir;
         this.numThreads = numThreads;
+        this.workMemMegs = workMemMegs;
     }
 
     @Override
@@ -40,6 +42,8 @@ public class ClGurobiIlpSolver implements IlpSolver {
                 gurobiBinary,
                 "ResultFile="+solFile.getAbsolutePath(),
                 "Threads="+numThreads,
+                "NodefileDir="+tempDir.getAbsolutePath(),
+                "NodefileStart="+workMemMegs/1024.0,
                 lpFile.getAbsolutePath() };
         //TODO: handle infeasible case
         File gurobiLog = new File(tempDir, "gurobi.log");
