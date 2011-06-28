@@ -9,11 +9,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
-import edu.jhu.hltcoe.util.Command;
-
 public class ZimplSolver  {
 
-    private final Pattern tabRegex = Pattern.compile("\\s+");
+    private static final Pattern tabRegex = Pattern.compile("\\s+");
     
     private File tempDir;
     private Map<String,Double> result;
@@ -61,7 +59,7 @@ public class ZimplSolver  {
         }
     }
         
-    private Map<String,String> readTblMap(File tblFile) throws IOException {
+    private static Map<String,String> readTblMap(File tblFile) throws IOException {
         Map<String,String> tblMap = new HashMap<String,String>();
         
         BufferedReader reader = new BufferedReader(new FileReader(tblFile));
