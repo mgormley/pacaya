@@ -16,9 +16,16 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.parse.IlpViterbiParser;
+import edu.jhu.hltcoe.util.Command;
 
 public class CplexIlpSolver implements IlpSolver {
     
@@ -51,62 +58,68 @@ public class CplexIlpSolver implements IlpSolver {
 
         try {
             IloCplex cplex = new IloCplex();
-            cplex.importModel(lpFile.getAbsolutePath());
-            File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
-            if (ordFile.exists()) {
-                log.debug("Reading ORD file: " + ordFile.getPath());
-                cplex.readOrder(ordFile.getAbsolutePath());
-            }
-            File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
-            if (mstFile.exists()) {
-                log.debug("Reading MST file: " + mstFile.getPath());
-                cplex.readMIPStart(mstFile.getAbsolutePath());
-            }
-            
-            // Specifies an upper limit on the amount of central memory, in
-            // megabytes, that CPLEX is permitted to use for working memory
-            // before swapping to disk files, compressing memory, or taking
-            // other actions.
-            // Values: Any nonnegative number, in megabytes; default: 128.0
-            cplex.setParam(DoubleParam.WorkMem, workMemMegs);
-            cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-            cplex.setParam(DoubleParam.TreLim, 32000.0);
-
-            cplex.setParam(IntParam.Threads, numThreads);
-
-            // -1 = oportunistic, 0 = auto (default), 1 = deterministic
-            // In this context, deterministic means that multiple runs with the
-            // same model at the same parameter settings on the same platform
-            // will reproduce the same solution path and results.
-            cplex.setParam(IntParam.ParallelMode, 1);
-            
-            // TODO: this was chosen arbitrarily to try to fix the problem with priority order
-            cplex.setParam(IntParam.MIPOrdType, 1);
-                                    
             OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
-            cplex.setOut(out);
-            cplex.setWarning(out);
-
-            if (cplex.solve()) {
-                cplex.output().println("Solution status = " + cplex.getStatus());
-                cplex.output().println("Solution value = " + cplex.getObjValue());
-                
-                // The use of importModel guarantees exactly one LP matrix object.
-                IloLPMatrix lp = (IloLPMatrix)cplex.LPMatrixIterator().next();
-                IloNumVar[] vars = lp.getNumVars();
-                double[] vals = cplex.getValues(lp);
-                
-                assert(vars.length == vals.length);
-                for (int i=0; i<vars.length; i++) {
-                    //System.out.println(vars[i].getName() + " " + vals[i]);
-                    result.put(vars[i].getName(), vals[i]);
+            try {
+                cplex.importModel(lpFile.getAbsolutePath());
+                File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
+                if (ordFile.exists()) {
+                    log.warn("NOT Reading ORD file: " + ordFile.getPath());
+                    //log.debug("Reading ORD file: " + ordFile.getPath());
+                    //cplex.readOrder(ordFile.getAbsolutePath());
+                }
+                File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
+                if (mstFile.exists()) {
+                    log.debug("Reading MST file: " + mstFile.getPath());
+                    cplex.readMIPStart(mstFile.getAbsolutePath());
                 }
                 
-                cplex.writeSolution(lpFile.getAbsolutePath().replace(".lp", ".sol"));
+                // Specifies an upper limit on the amount of central memory, in
+                // megabytes, that CPLEX is permitted to use for working memory
+                // before swapping to disk files, compressing memory, or taking
+                // other actions.
+                // Values: Any nonnegative number, in megabytes; default: 128.0
+                cplex.setParam(DoubleParam.WorkMem, workMemMegs);
+                cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
+                cplex.setParam(DoubleParam.TreLim, 32000.0);
+    
+                cplex.setParam(IntParam.Threads, numThreads);
+    
+                // -1 = oportunistic, 0 = auto (default), 1 = deterministic
+                // In this context, deterministic means that multiple runs with the
+                // same model at the same parameter settings on the same platform
+                // will reproduce the same solution path and results.
+                cplex.setParam(IntParam.ParallelMode, 1);
+                
+                // TODO: this was chosen arbitrarily to try to fix the problem with priority order
+                //cplex.setParam(IntParam.MIPOrdType, 1);
+                
+                cplex.setOut(out);
+                cplex.setWarning(out);
+    
+                cplex.exportModel(new File(tempDir, "model.sav").getAbsolutePath());
+                cplex.writeParam(new File(tempDir, "model.prm").getAbsolutePath());
+                
+                if (cplex.solve()) {
+                    cplex.output().println("Solution status = " + cplex.getStatus());
+                    cplex.output().println("Solution value = " + cplex.getObjValue());
+                    
+                    // The use of importModel guarantees exactly one LP matrix object.
+                    IloLPMatrix lp = (IloLPMatrix)cplex.LPMatrixIterator().next();
+                    IloNumVar[] vars = lp.getNumVars();
+                    double[] vals = cplex.getValues(lp);
+                    
+                    assert(vars.length == vals.length);
+                    for (int i=0; i<vars.length; i++) {
+                        //System.out.println(vars[i].getName() + " " + vals[i]);
+                        result.put(vars[i].getName(), vals[i]);
+                    }
+                    
+                    cplex.writeSolution(lpFile.getAbsolutePath().replace(".lp", ".sol"));
+                }
+            } finally {
+                cplex.end();
+                out.close();
             }
-            cplex.end();
-            out.close();
-
         } catch (IloException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -114,4 +127,37 @@ public class CplexIlpSolver implements IlpSolver {
         }
 
     }
+    
+    public static void main(String[] args) {
+        BasicConfigurator.configure();
+        
+        String usage = "java " + CplexIlpSolver.class.getName();
+        CommandLineParser parser = new PosixParser();
+        Options options = new Options();
+        options.addOption("l", "lpFile", true, "[Required] LP problem file");
+        options.addOption("t", "threads", true, "Number of threads.");
+        options.addOption("w", "workMemMegs", true, "Megabytes for CPLEX working memory.");
+        String[] requiredOptions = new String[] { "lpFile" };
+        CommandLine cmd = null;
+        final HelpFormatter formatter = new HelpFormatter();
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e1) {
+            formatter.printHelp(usage, options, true);
+            System.exit(1);
+        }
+        for (String requiredOption : requiredOptions) {
+            if (!cmd.hasOption(requiredOption)) {
+                formatter.printHelp(usage, options, true);
+                System.exit(1);
+            }
+        }
+        
+        String lpFile = cmd.getOptionValue("lpFile");
+        int numThreads = Command.getOptionValue(cmd, "threads", 2);
+        int workMemMegs = Command.getOptionValue(cmd, "workMemMegs", 128);
+        CplexIlpSolver solver = new CplexIlpSolver(new File("."), numThreads, workMemMegs);
+        solver.solve(new File(lpFile));
+    }
+    
 }
