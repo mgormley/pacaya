@@ -10,7 +10,10 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.model.Model;
@@ -18,9 +21,6 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.util.Command;
-import edu.stanford.nlp.ling.CategoryWordTag;
-import edu.stanford.nlp.trees.DiskTreebank;
-import edu.stanford.nlp.trees.Treebank;
 
 public class PipelineRunner {
 
@@ -43,7 +43,23 @@ public class PipelineRunner {
         log.info("Number of words: " + depTreebank.getNumWords());
         
         SentenceCollection sentences = depTreebank.getSentences();
-
+        if (cmd.hasOption("printSentences")) {
+            // TODO: improve this
+            log.debug("Printing sentences...");
+            for (Sentence sent : sentences) {
+                StringBuilder sb = new StringBuilder();
+                for (Label label : sent) {
+                    if (label instanceof TaggedWord) {
+                        sb.append(((TaggedWord)label).getWord());
+                    } else {
+                        sb.append(label.getLabel());
+                    }
+                    sb.append(" ");
+                }
+                log.debug(sb.toString());
+            }
+        }
+        
         // Train the model
         log.info("Training model");
         Trainer trainer = TrainerFactory.getTrainer(cmd);
@@ -65,7 +81,8 @@ public class PipelineRunner {
         options.addOption("tr", "train", true, "Training data.");
         options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
         options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training.");
-
+        options.addOption("ps", "printSentences", false, "Whether to print sentences to logger.");
+        
         TrainerFactory.addOptions(options);
         return options;
     }
