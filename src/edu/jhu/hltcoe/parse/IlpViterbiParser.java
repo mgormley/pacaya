@@ -16,6 +16,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
@@ -131,7 +132,12 @@ public class IlpViterbiParser implements ViterbiParser {
             for (int i=0; i<sentence.size(); i++) {
                 Label label = sentence.get(i); 
                 // Must add one to each word position
-                sentWriter.format("%d %d \"%s\"\n", s, i+1, label.getLabel());
+                if (label instanceof TaggedWord) {
+                    // Here we print out the word only for debugging purposes
+                    sentWriter.format("%d %d \"%s\" \"%s\"\n", s, i+1, label.getLabel(), ((TaggedWord)label).getWord());
+                } else {
+                    sentWriter.format("%d %d \"%s\"\n", s, i+1, label.getLabel());
+                }
             }
         }
         sentWriter.close();
