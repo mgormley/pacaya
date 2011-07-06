@@ -31,7 +31,10 @@ public class ViterbiTrainer implements Trainer {
 
         @Override
         public DepTreebank getCounts(SentenceCollection sentences, Model model) {
-            return parser.getViterbiParse(sentences, model);
+            DepTreebank depTreebank = parser.getViterbiParse(sentences, model);
+            log.info("iteration = " + emTrainer.getCurrentIteration());
+            log.info("logLikelihood = " + parser.getLastParseWeight());
+            return depTreebank;
         }
         
     }

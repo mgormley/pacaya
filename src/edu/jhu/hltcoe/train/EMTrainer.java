@@ -23,6 +23,7 @@ public class EMTrainer<C> implements Trainer {
     private ModelFactory modelFactory;
     private int iterations;
     private Model model;
+    private int iterCount;
     
     public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations) {
         this.eStep = eStep;
@@ -38,13 +39,17 @@ public class EMTrainer<C> implements Trainer {
         
         // Run iterations of EM
         Stopwatch iterTimer = new Stopwatch();
-        for (int i=0; i<iterations; i++) {
+        for (iterCount=0; iterCount<iterations; iterCount++) {
             iterTimer.start();
             C counts = eStep.getCounts(sentences, model);
             model = mStep.getModel(counts);
             iterTimer.stop();
-            log.debug("Time remaining: " + Time.durAsStr(Time.avgMs(iterTimer)*(iterations - i)));
+            log.debug("Time remaining: " + Time.durAsStr(Time.avgMs(iterTimer)*(iterations - iterCount)));
         }
+    }
+    
+    public int getCurrentIteration() {
+        return iterCount;
     }
 
     @Override
