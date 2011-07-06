@@ -402,12 +402,12 @@ subto numToSideRight:
 
 subto genAdjLeftAndRight:
     forall <s,i,lr> in AllTokensLR: 
-        vif numToSide[s,i,lr] >= 1 then genAdj[s,i,lr] == 1 else genAdj[s,i,lr] == 0 end;
+    	genAdj[s,i,lr] >= numToSide[s,i,lr]/Length[s];
 
 subto numNALeftAndRight:
     forall <s,i,lr> in AllTokensLR:
-        vif numToSide[s,i,lr] - 1 > 0 then numNA[s,i,lr] == numToSide[s,i,lr] - 1 else numNA[s,i,lr] == 0 end;
-   	
+    	numNA[s,i,lr] == numToSide[s,i,lr] - genAdj[s,i,lr];
+    	
     	]]>
 	</code>
 	<code id="dmv-objective">
