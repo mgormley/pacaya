@@ -17,7 +17,7 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 
 /**
@@ -55,7 +55,7 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     @Override
     public DepTree getViterbiParse(Sentence sentence, Model model) {
         // Create workspace
-        File tempDir = Command.createTempDir("ilp_parse", workspace);
+        File tempDir = Files.createTempDir("ilp_parse", workspace);
         
         // Encode sentences and model
         File zimplFile = encode(tempDir, sentence, model);

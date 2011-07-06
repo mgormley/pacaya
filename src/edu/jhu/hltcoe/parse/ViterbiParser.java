@@ -8,4 +8,6 @@ public interface ViterbiParser {
 
     DepTreebank getViterbiParse(SentenceCollection sentences, Model model);
     
+    double getLastParseWeight();
+    
 }

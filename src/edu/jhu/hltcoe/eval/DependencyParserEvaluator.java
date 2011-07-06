@@ -20,6 +20,7 @@ public class DependencyParserEvaluator implements Evaluator {
     private DepTreebank depTreebank;
     private ViterbiParser parser;
     private double accuracy;
+    private double logLikelihood;
 
     public DependencyParserEvaluator(ViterbiParser parser, DepTreebank depTreebank) {
         this.parser = parser;
@@ -32,6 +33,7 @@ public class DependencyParserEvaluator implements Evaluator {
         int total = 0;
         SentenceCollection sentences = depTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
+        logLikelihood = parser.getLastParseWeight();
         for (int i = 0; i < depTreebank.size(); i++) {
             int[] goldParents = depTreebank.get(i).getParents();
             int[] parseParents = parses.get(i).getParents();
@@ -48,6 +50,7 @@ public class DependencyParserEvaluator implements Evaluator {
     @Override
     public void print() {
         log.info(String.format("Accuracy: %.2f", accuracy));
+        log.info(String.format("LogLikelihood: %.2f", logLikelihood));
     }
 
 }

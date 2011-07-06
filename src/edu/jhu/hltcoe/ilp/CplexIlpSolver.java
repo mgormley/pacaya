@@ -34,18 +34,13 @@ public class CplexIlpSolver implements IlpSolver {
     private File tempDir;
     private int numThreads;
     private double workMemMegs;
+    private Map<String,Double> result;
+    private double objective;
     
     public CplexIlpSolver(File tempDir, int numThreads, double workMemMegs) {
         this.tempDir = tempDir;
         this.numThreads = numThreads;
         this.workMemMegs = workMemMegs;
-    }
-
-    private Map<String,Double> result;
-
-    @Override
-    public Map<String, Double> getResult() {
-        return result;
     }
 
     @Override
@@ -102,6 +97,7 @@ public class CplexIlpSolver implements IlpSolver {
                 if (cplex.solve()) {
                     cplex.output().println("Solution status = " + cplex.getStatus());
                     cplex.output().println("Solution value = " + cplex.getObjValue());
+                    objective = cplex.getObjValue();
                     
                     // The use of importModel guarantees exactly one LP matrix object.
                     IloLPMatrix lp = (IloLPMatrix)cplex.LPMatrixIterator().next();
@@ -126,6 +122,15 @@ public class CplexIlpSolver implements IlpSolver {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public Map<String, Double> getResult() {
+        return result;
+    }
+    
+    public double getObjective() {
+        return objective;
     }
     
     public static void main(String[] args) {

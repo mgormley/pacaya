@@ -16,13 +16,12 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
@@ -39,6 +38,8 @@ public class IlpViterbiParser implements ViterbiParser {
     protected File workspace;
 
     protected IlpSolverFactory ilpSolverFactory;
+
+    private double parseWeight;
     
     public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
@@ -46,7 +47,7 @@ public class IlpViterbiParser implements ViterbiParser {
         XmlCodeContainerReader reader = new XmlCodeContainerReader();
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
-        workspace = Command.createTempDir("workspace", new File("."));
+        workspace = Files.createTempDir("workspace", new File("."));
     }
 
     
@@ -56,7 +57,7 @@ public class IlpViterbiParser implements ViterbiParser {
         stopwatch.start();
         
         // Create workspace
-        File tempDir = Command.createTempDir("ilp_parse", workspace);
+        File tempDir = Files.createTempDir("ilp_parse", workspace);
         
         // Encode sentences and model
         File zimplFile = encode(tempDir, sentences, model);
@@ -65,6 +66,7 @@ public class IlpViterbiParser implements ViterbiParser {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
+        parseWeight = solver.getObjective();
         
         // Decode parses
         DepTreebank depTreebank = decode(sentences, result);
@@ -76,6 +78,11 @@ public class IlpViterbiParser implements ViterbiParser {
                 Time.totMs(stopwatch)));
         return depTreebank;
     }
+    
+    public double getLastParseWeight() {
+        return parseWeight;
+    }
+    
 
     protected File encode(File tempDir, SentenceCollection sentences, Model model) {
         try {
@@ -132,12 +139,7 @@ public class IlpViterbiParser implements ViterbiParser {
             for (int i=0; i<sentence.size(); i++) {
                 Label label = sentence.get(i); 
                 // Must add one to each word position
-                if (label instanceof TaggedWord) {
-                    // Here we print out the word only for debugging purposes
-                    sentWriter.format("%d %d \"%s\" \"%s\"\n", s, i+1, label.getLabel(), ((TaggedWord)label).getWord());
-                } else {
-                    sentWriter.format("%d %d \"%s\"\n", s, i+1, label.getLabel());
-                }
+                sentWriter.format("%d %d \"%s\"\n", s, i+1, label.getLabel());
             }
         }
         sentWriter.close();

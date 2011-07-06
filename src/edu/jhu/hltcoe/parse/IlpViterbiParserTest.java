@@ -1,8 +1,10 @@
 package edu.jhu.hltcoe.parse;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import junit.framework.Assert;
 
 import org.jboss.dna.common.statistic.Stopwatch;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
@@ -16,10 +18,16 @@ import edu.jhu.hltcoe.model.DmvModelFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
+import edu.jhu.hltcoe.util.Prng;
 
 public class IlpViterbiParserTest {
     
     private final static double lambda = 0.1;
+
+    @Before
+    public void setUp() {
+        Prng.setSeed(1234567890);
+    }
     
     @Test
     public void testProjParses() {
@@ -27,15 +35,16 @@ public class IlpViterbiParserTest {
         sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
         ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
+        double expectedParseWeight = -29.21248981;
         
         // flow projective parsing
-        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ);
+        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
         // multi flow projective parsing
-        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_PROJ);
+        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_PROJ, expectedParseWeight);
         // explicit projective parsing
-        DepTreebank expTrees = getParses(model, sentences, IlpFormulation.EXPLICIT_PROJ);
+        DepTreebank expTrees = getParses(model, sentences, IlpFormulation.EXPLICIT_PROJ, expectedParseWeight);
         // DP projective parsing
-        DepTreebank dpTrees = getParses(model, sentences, IlpFormulation.DP_PROJ);
+        DepTreebank dpTrees = getParses(model, sentences, IlpFormulation.DP_PROJ, expectedParseWeight);
         
         for (int i=0; i<dpTrees.size(); i++) {
             assertArrayEquals(expTrees.get(i).getParents(), dpTrees.get(i).getParents());
@@ -53,27 +62,29 @@ public class IlpViterbiParserTest {
         sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
         ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
+        double expectedParseWeight = -57.26457638;
 
         Stopwatch timer;
+
 
         // flow projective parsing
         timer = new Stopwatch();
         timer.start();
-        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ);
+        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
         timer.stop();
         System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
         
         // multi-c flow projective parsing
         timer = new Stopwatch();
         timer.start();
-        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ);
+        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
         timer.stop();
         System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
         
         // explicit projective parsing
         timer = new Stopwatch();
         timer.start();
-        DepTreebank expTrees = getParses(model, sentences, IlpFormulation.EXPLICIT_PROJ);
+        DepTreebank expTrees = getParses(model, sentences, IlpFormulation.EXPLICIT_PROJ, expectedParseWeight);
         timer.stop();
         System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
         
@@ -85,7 +96,7 @@ public class IlpViterbiParserTest {
         // DP projective parsing        
         timer = new Stopwatch();
         timer.start();
-        DepTreebank dpTrees = getParses(model, sentences, IlpFormulation.DP_PROJ);
+        DepTreebank dpTrees = getParses(model, sentences, IlpFormulation.DP_PROJ, expectedParseWeight);
         timer.stop();
         System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
         
@@ -102,25 +113,27 @@ public class IlpViterbiParserTest {
 //        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
         ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        
+        double expectedParseWeight = -26.67243737;
+
         // Single commodity flow non-projective parsing
-        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ);
+        DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
 
         // Multi-commmidity flow non-projective parsing
-        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_NONPROJ);
+        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_NONPROJ, expectedParseWeight);
 
         for (int i=0; i<flowTrees.size(); i++) {
             assertArrayEquals(flowTrees.get(i).getParents(), mflowTrees.get(i).getParents());
         }
     }
 
-    public DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation) {
+    public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, 128);
         IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
         }
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-13);
         return trees;
     }
     

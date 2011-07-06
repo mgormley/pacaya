@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 
 
 public class ZimplSolverTest {
@@ -29,7 +29,7 @@ public class ZimplSolverTest {
     
     @Before
     public void setUp() {
-        tempDir = Command.createTempDir("workspace", new File("."));
+        tempDir = Files.createTempDir("workspace", new File("."));
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ZimplSolverTest {
     }
     
     @Test
-    public void testCplexGurobiIlpSolver() throws IOException {
+    public void testCplexIlpSolver() throws IOException {
         runZimplSolver(tempDir, new CplexIlpSolver(tempDir, 2, 128));
     }
 
@@ -63,6 +63,8 @@ public class ZimplSolverTest {
         gold.put("x$Pork", 0.0);
         
         Assert.assertEquals(gold, sol);
+        
+        Assert.assertEquals(97.0, solver.getObjective(), 1E-13);
     }
     
 }

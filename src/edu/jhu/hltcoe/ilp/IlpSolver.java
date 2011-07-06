@@ -9,4 +9,5 @@ public interface IlpSolver {
 
     Map<String, Double> getResult();
 
+    double getObjective();
 }

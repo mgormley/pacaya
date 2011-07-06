@@ -11,6 +11,10 @@ public class Prng {
         DEFAULT_SEED = System.currentTimeMillis();
         System.out.println("DEFAULT_SEED="+DEFAULT_SEED);
     }
-        
+    
     public static final Random random = new Random(DEFAULT_SEED);
+    
+    public static void setSeed(long seed) {
+        random.setSeed(seed);
+    }
 }

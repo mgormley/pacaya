@@ -68,6 +68,7 @@ public class PipelineRunner {
         
         // Evaluate the model
         log.info("Evaluating model");
+        // Note: this parser must return the log-likelihood from parser.getParseWeight()
         ViterbiParser parser = TrainerFactory.getEvalParser();
         Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
         pwEval.evaluate(model);

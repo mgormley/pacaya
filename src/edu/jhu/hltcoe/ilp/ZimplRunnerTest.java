@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 
 
 public class ZimplRunnerTest {
@@ -17,18 +17,17 @@ public class ZimplRunnerTest {
         
     @Before
     public void setUp() {
-        tempDir = Command.createTempDir("workspace", new File("."));
+        tempDir = Files.createTempDir("workspace", new File("."));
     }
-
 
     @Test
     public void testFixMstFile() throws IOException {
         runZimplSolver(tempDir, new CplexIlpSolver(tempDir, 2, 128));
         File mstFile = new File(tempDir, "startvals.mst");
-        Assert.assertTrue(fileContains(mstFile, "xvar"));
-        Assert.assertTrue(fileContains(mstFile, "foodVals"));
-        Assert.assertTrue(!fileContains(mstFile, "yvar"));
-        Assert.assertTrue(!fileContains(mstFile, "otherVals"));
+        Assert.assertTrue(Files.fileContains(mstFile, "xvar"));
+        Assert.assertTrue(Files.fileContains(mstFile, "foodVals"));
+        Assert.assertTrue(!Files.fileContains(mstFile, "yvar"));
+        Assert.assertTrue(!Files.fileContains(mstFile, "otherVals"));
     }
 
     private static void runZimplSolver(File tempDir, IlpSolver ilpSolver) {
@@ -36,15 +35,6 @@ public class ZimplRunnerTest {
         URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/startvals.zpl");
         File zimplFile = new File(url.getFile());
         solver.solve(zimplFile);
-    }
-    
-    private static boolean fileContains(File file, String text) {
-        Process proc = Command.runProcess(new String[]{"grep", "-r", text, file.getAbsolutePath()}, null, new File("."));
-        if (proc.exitValue() == 0) {
-            return true;
-        } else {
-            return false;
-        }
     }
     
 }

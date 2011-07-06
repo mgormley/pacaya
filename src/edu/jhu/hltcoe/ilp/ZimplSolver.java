@@ -17,13 +17,11 @@ public class ZimplSolver  {
     private Map<String,Double> result;
     private IlpSolver ilpSolver;
 
+    private double objective;
+
     public ZimplSolver(File tempDir, IlpSolver ilpSolver) {
         this.tempDir = tempDir;
         this.ilpSolver = ilpSolver;
-    }
-
-    public Map<String,Double> getResult() {
-        return result;
     }
 
     public void solve(File zimplFile) {
@@ -37,6 +35,7 @@ public class ZimplSolver  {
         
         // Run ILP Solver
         ilpSolver.solve(lpFile);
+        objective = ilpSolver.getObjective();
         Map<String,Double> solMap = ilpSolver.getResult();
 
         // Read tbl file and map variable values to original names
@@ -57,6 +56,14 @@ public class ZimplSolver  {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public Map<String,Double> getResult() {
+        return result;
+    }
+    
+    public double getObjective() {
+        return objective;
     }
         
     private static Map<String,String> readTblMap(File tblFile) throws IOException {

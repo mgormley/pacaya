@@ -6,10 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 
 public class ClGurobiIlpSolver implements IlpSolver {
 
@@ -20,16 +21,12 @@ public class ClGurobiIlpSolver implements IlpSolver {
     private Map<String, Double> result;
     private int numThreads;
     private double workMemMegs;
+    private double objective;
 
     public ClGurobiIlpSolver(File tempDir, int numThreads, double workMemMegs) {
         this.tempDir = tempDir;
         this.numThreads = numThreads;
         this.workMemMegs = workMemMegs;
-    }
-
-    @Override
-    public Map<String, Double> getResult() {
-        return result;
     }
 
     @Override
@@ -49,12 +46,26 @@ public class ClGurobiIlpSolver implements IlpSolver {
         File gurobiLog = new File(tempDir, "gurobi.log");
         Command.runCommand(cmdArray, gurobiLog, tempDir);
 
+        // Read objective from log file
+        Matcher objValMatcher = Files.getFirstMatch(gurobiLog, Pattern.compile("Best objective (.*?),"));
+        objective = Double.parseDouble(objValMatcher.group(1));
+        
         // Read .sol file into result map
         try {
             result = readGurobiSol(solFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<String, Double> getResult() {
+        return result;
+    }
+
+    @Override
+    public double getObjective() {
+        return objective;
     }
     
     private Map<String,Double> readGurobiSol(File solFile) throws IOException {

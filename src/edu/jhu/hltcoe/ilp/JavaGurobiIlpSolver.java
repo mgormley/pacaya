@@ -14,14 +14,10 @@ public class JavaGurobiIlpSolver implements IlpSolver {
 
     private File tempDir;
     private Map<String, Double> result;
+    private double objective;
 
     public JavaGurobiIlpSolver(File tempDir) {
         this.tempDir = tempDir;
-    }
-
-    @Override
-    public Map<String, Double> getResult() {
-        return result;
     }
 
     @Override
@@ -35,6 +31,7 @@ public class JavaGurobiIlpSolver implements IlpSolver {
             GRBEnv env = new GRBEnv(gurobiLog.getAbsolutePath());
             GRBModel  model = new GRBModel(env, lpFile.getAbsolutePath());
             model.optimize();
+            objective = model.get(GRB.DoubleAttr.ObjVal);
             for (GRBVar var : model.getVars()) {
                 String gurobiVar = var.get(GRB.StringAttr.VarName);
                 double value = var.get(GRB.DoubleAttr.X);
@@ -44,6 +41,16 @@ public class JavaGurobiIlpSolver implements IlpSolver {
             throw new RuntimeException(e);
         }
         
+    }
+
+    @Override
+    public Map<String, Double> getResult() {
+        return result;
+    }
+
+    @Override
+    public double getObjective() {
+        return objective;
     }
     
 }
