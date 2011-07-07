@@ -91,12 +91,18 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
             String[] splits = zimplVarRegex.split(zimplVar);
             String varType = splits[0];
             if (varType.equals("cwDelta")) {
+                // Note: splitting to get the parent/child words with the 
+                // above regex doesn't work because some of the POS tags
+                // contain the $. Currently, this doesn't matter because we
+                // don't need the words, but if that changes then we'll need
+                // a better solution here.
+                
                 // cwDelta[parentw,lr,childw,d]
-                String parentWord = splits[1];
-                String lr = splits[2];
-                String childWord = splits[3];
-                String deltaId = splits[4];
-                //log.trace("zimplVar: " + zimplVar);
+                //String parentWord = splits[1];
+                //String lr = splits[2];
+                //String childWord = splits[3];
+                
+                String deltaId = splits[splits.length-1];
                 long longVal = Math.round(value);
                 if (longVal == 1) {
                     Utilities.increment(cwDeltaCounts, deltaId, 1);
