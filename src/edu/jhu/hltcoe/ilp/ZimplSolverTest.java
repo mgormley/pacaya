@@ -46,7 +46,25 @@ public class ZimplSolverTest {
     public void testCplexIlpSolver() throws IOException {
         runZimplSolver(tempDir, new CplexIlpSolver(tempDir, 2, 128));
     }
+    
+    @Test
+    public void testInfeasible() {
+        runZimplInfeasible(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
+        runZimplInfeasible(tempDir, new JavaGurobiIlpSolver(tempDir));
+        runZimplInfeasible(tempDir, new CplexIlpSolver(tempDir, 2, 128));
+    }
 
+    private static void runZimplInfeasible(File tempDir, IlpSolver ilpSolver) {
+        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
+        URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/infeasible.zpl");
+        File zimplFile = new File(url.getFile());
+        try {
+            solver.solve(zimplFile);
+        } catch(RuntimeException e) {
+            Assert.assertTrue(e.getMessage().contains("no optimal solution found"));
+        }
+    }
+    
     private static void runZimplSolver(File tempDir, IlpSolver ilpSolver) {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
         URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/chvatal_diet.zpl");
