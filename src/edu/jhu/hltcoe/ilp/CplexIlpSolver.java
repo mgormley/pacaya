@@ -6,6 +6,7 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
+import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.StringParam;
 
 import java.io.BufferedOutputStream;
@@ -44,7 +45,7 @@ public class CplexIlpSolver implements IlpSolver {
     }
 
     @Override
-    public void solve(File lpFile) {
+    public boolean solve(File lpFile) {
         if (!lpFile.getPath().endsWith(".lp")) {
             throw new IllegalStateException("Expecting lpFile to end with .lp: " + lpFile.getPath());
         }
@@ -94,24 +95,27 @@ public class CplexIlpSolver implements IlpSolver {
                 cplex.exportModel(new File(tempDir, "model.sav").getAbsolutePath());
                 cplex.writeParam(new File(tempDir, "model.prm").getAbsolutePath());
                 
-                if (cplex.solve()) {
-                    cplex.output().println("Solution status = " + cplex.getStatus());
-                    cplex.output().println("Solution value = " + cplex.getObjValue());
-                    objective = cplex.getObjValue();
-                    
-                    // The use of importModel guarantees exactly one LP matrix object.
-                    IloLPMatrix lp = (IloLPMatrix)cplex.LPMatrixIterator().next();
-                    IloNumVar[] vars = lp.getNumVars();
-                    double[] vals = cplex.getValues(lp);
-                    
-                    assert(vars.length == vals.length);
-                    for (int i=0; i<vars.length; i++) {
-                        //System.out.println(vars[i].getName() + " " + vals[i]);
-                        result.put(vars[i].getName(), vals[i]);
-                    }
-                    
-                    cplex.writeSolution(lpFile.getAbsolutePath().replace(".lp", ".sol"));
+                cplex.solve();
+                if (cplex.getStatus() != Status.Optimal) {
+                    return false;
                 }
+                cplex.output().println("Solution status = " + cplex.getStatus());
+                cplex.output().println("Solution value = " + cplex.getObjValue());
+                objective = cplex.getObjValue();
+                
+                // The use of importModel guarantees exactly one LP matrix object.
+                IloLPMatrix lp = (IloLPMatrix)cplex.LPMatrixIterator().next();
+                IloNumVar[] vars = lp.getNumVars();
+                double[] vals = cplex.getValues(lp);
+                
+                assert(vars.length == vals.length);
+                for (int i=0; i<vars.length; i++) {
+                    //System.out.println(vars[i].getName() + " " + vals[i]);
+                    result.put(vars[i].getName(), vals[i]);
+                }
+                
+                cplex.writeSolution(lpFile.getAbsolutePath().replace(".lp", ".sol"));
+                return true;
             } finally {
                 cplex.end();
                 out.close();

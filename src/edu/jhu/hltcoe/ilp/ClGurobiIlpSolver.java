@@ -30,7 +30,7 @@ public class ClGurobiIlpSolver implements IlpSolver {
     }
 
     @Override
-    public void solve(File lpFile) {
+    public boolean solve(File lpFile) {
         result = null;
         
         // Run Gurobi
@@ -46,6 +46,11 @@ public class ClGurobiIlpSolver implements IlpSolver {
         File gurobiLog = new File(tempDir, "gurobi.log");
         Command.runCommand(cmdArray, gurobiLog, tempDir);
 
+        // Throw exception if optimal solution not found
+        if (!Files.fileContains(gurobiLog, "Optimal solution found")) {
+            return false;
+        }
+        
         // Read objective from log file
         Matcher objValMatcher = Files.getFirstMatch(gurobiLog, Pattern.compile("Best objective (.*?),"));
         objective = Double.parseDouble(objValMatcher.group(1));
@@ -56,6 +61,8 @@ public class ClGurobiIlpSolver implements IlpSolver {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        
+        return true;
     }
 
     @Override

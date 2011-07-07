@@ -5,7 +5,7 @@ import java.util.Map;
 
 public interface IlpSolver {
 
-    void solve(File lpFile);
+    boolean solve(File lpFile);
 
     Map<String, Double> getResult();
 

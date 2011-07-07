@@ -21,7 +21,7 @@ public class JavaGurobiIlpSolver implements IlpSolver {
     }
 
     @Override
-    public void solve(File lpFile) {
+    public boolean solve(File lpFile) {
         result = new HashMap<String, Double>();
         
         // Run Gurobi
@@ -31,12 +31,16 @@ public class JavaGurobiIlpSolver implements IlpSolver {
             GRBEnv env = new GRBEnv(gurobiLog.getAbsolutePath());
             GRBModel  model = new GRBModel(env, lpFile.getAbsolutePath());
             model.optimize();
+            if (model.get(GRB.IntAttr.Status) != GRB.OPTIMAL) {
+                return false;
+            }
             objective = model.get(GRB.DoubleAttr.ObjVal);
             for (GRBVar var : model.getVars()) {
                 String gurobiVar = var.get(GRB.StringAttr.VarName);
                 double value = var.get(GRB.DoubleAttr.X);
                 result.put(gurobiVar, value);
             }
+            return true;
         } catch (GRBException e) {
             throw new RuntimeException(e);
         }

@@ -33,6 +33,9 @@ set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
 set TempArcs := union <s> in Sents: Arcs[s];
 set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
 
+set AllIJ := proj(AllArcs,<2,3>);
+param LRForIJ[<i,j> in AllIJ] := if i < j then "r" else "l" end;
+
 var arc[AllArcs] binary priority 70;
        
 # This constraint is optional, but we include it for all formulations    
@@ -83,8 +86,6 @@ set ChildWords[<parentw, lr> in ParentWordsAndLR] := {<childw> in proj(ChooseWei
 set AllCWDeltas := proj(ChooseWeightDeltaSet, <4>);
 set CWDeltas[<parentw, lr, childw> in ChooseWeightSet] := {<d> in AllCWDeltas with <parentw, lr, childw, d> in ChooseWeightDeltaSet};
 
-set AllIJ := proj(AllArcs,<2,3>);
-param LRForIJ[<i,j> in AllIJ] := if i < j then "r" else "l" end;
 set AllArcsDelta := {<s,i,j,d> in {AllArcs * AllCWDeltas} with <Word[s,i],LRForIJ[i,j],Word[s,j],d> in ChooseWeightDeltaSet};
 
 set ArcsDelta[<s,i,j> in AllArcs] := {<d> in AllCWDeltas with <s,i,j,d> in AllArcsDelta};
@@ -114,12 +115,12 @@ subto weights_sum_to_one:
 # Ensure that each arcDelta value is correct 
 subto arcDelta_correctness:
 	forall <s,i,j,d> in AllArcsDelta: 
-		arcDelta[s,i,j,d] >= arc[s,i,j] + cwDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d] - 1;
+		arcDelta[s,i,j,d] >= (arc[s,i,j] + cwDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d]) - 1;
 
-# Unecessary (but maybe helpful) constraint: Only one arcDelta is on per arc:
-subto only_one_arc_delta:
+# Unecessary (but maybe helpful) constraint: At most one arcDelta is on per arc:
+subto at_most_one_arc_delta:
 	forall <s,i,j> in AllArcs:
-		1 == sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
+		1 >= sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
 
 	    ]]>
 	</code>
@@ -421,9 +422,7 @@ subto numNALeftAndRight:
 #    + logprob of stopping non-adajacent 
 maximize goal: 
     (sum <s,i,j> in AllArcs: 
-        if i < j 
-        then arc[s,i,j] * LogChooseWeight[Word[s,i],"r",Word[s,j]] 
-        else arc[s,i,j] * LogChooseWeight[Word[s,i],"l",Word[s,j]] end) 
+        arc[s,i,j] * LogChooseWeight[Word[s,i],LRForIJ[i,j],Word[s,j]]) 
     + (sum <s,i,lr> in AllTokensLR: 
       	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
