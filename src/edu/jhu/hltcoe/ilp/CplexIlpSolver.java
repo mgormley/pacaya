@@ -59,9 +59,8 @@ public class CplexIlpSolver implements IlpSolver {
                 cplex.importModel(lpFile.getAbsolutePath());
                 File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
                 if (ordFile.exists()) {
-                    log.warn("NOT Reading ORD file: " + ordFile.getPath());
-                    //log.debug("Reading ORD file: " + ordFile.getPath());
-                    //cplex.readOrder(ordFile.getAbsolutePath());
+                    log.debug("Reading ORD file: " + ordFile.getPath());
+                    cplex.readOrder(ordFile.getAbsolutePath());
                 }
                 File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
                 if (mstFile.exists()) {
@@ -87,7 +86,7 @@ public class CplexIlpSolver implements IlpSolver {
                 cplex.setParam(IntParam.ParallelMode, 1);
                 
                 // TODO: this was chosen arbitrarily to try to fix the problem with priority order
-                //cplex.setParam(IntParam.MIPOrdType, 1);
+                cplex.setParam(IntParam.MIPOrdType, 1);
                 
                 cplex.setOut(out);
                 cplex.setWarning(out);
