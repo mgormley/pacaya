@@ -14,6 +14,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.TaggedWord;
+import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.model.Model;
@@ -37,6 +38,9 @@ public class PipelineRunner {
         int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
 
         DepTreebank depTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
+        if (cmd.hasOption("mustContainVerb")) {
+            depTreebank.setTreeFilter(new VerbTreeFilter());
+        }
         depTreebank.loadPath(trainPath);
         
         log.info("Number of sentences: " + depTreebank.size());
@@ -55,6 +59,13 @@ public class PipelineRunner {
                         sb.append(label.getLabel());
                     }
                     sb.append(" ");
+                }
+                sb.append("\t");
+                for (Label label : sent) {
+                    if (label instanceof TaggedWord) {
+                        sb.append(((TaggedWord)label).getTag());
+                        sb.append(" ");
+                    }
                 }
                 log.debug(sb.toString());
             }
@@ -81,7 +92,8 @@ public class PipelineRunner {
         // Options not specific to the model
         options.addOption("tr", "train", true, "Training data.");
         options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
-        options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training.");
+        options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training."); 
+        options.addOption("vb", "mustContainVerb", false, "Filter down to sentences that contain certain verbs."); 
         options.addOption("ps", "printSentences", false, "Whether to print sentences to logger.");
         
         TrainerFactory.addOptions(options);

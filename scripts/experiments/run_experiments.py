@@ -122,6 +122,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    model="dmv",
                    algorithm="viterbi")
         all.update(ilpSolver="cplex")
+        all.update(mustContainVerb=None)
         
         ilpCorpus = DPExpParams(parser="ilp-corpus")
         ilpSentence = DPExpParams(parser="ilp-sentence")

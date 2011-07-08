@@ -18,16 +18,26 @@ public class DepTreebank extends ArrayList<DepTree> {
     private SentenceCollection sentences = null;
     private int maxSentenceLength;
     private int maxNumSentences;
+    private TreeFilter filter = null;
 
     public DepTreebank() {
         this(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     public DepTreebank(final int maxSentenceLength, final int maxNumSentences) {
+        this(maxSentenceLength, maxNumSentences, null);
+    }
+    
+    public DepTreebank(final int maxSentenceLength, final int maxNumSentences, TreeFilter filter) {
         this.maxSentenceLength = maxSentenceLength;
         this.maxNumSentences = maxNumSentences;
+        this.filter = filter;
     }
-
+    
+    public void setTreeFilter(TreeFilter filter) {
+        this.filter = filter;
+    }
+    
     public void loadPath(String trainPath) {
         Treebank stanfordTreebank = new DiskTreebank();
         CategoryWordTag.suppressTerminalDetails = true;
@@ -40,7 +50,9 @@ public class DepTreebank extends ArrayList<DepTree> {
                 DepTree tree = new DepTree(stanfordTree);
                 int len = tree.getNumWords();
                 if (len <= maxSentenceLength) {
-                    this.add(tree);
+                    if (filter == null || filter.accept(tree)) {
+                        this.add(tree);
+                    }
                 }
             } catch (HeadFinderException e) {
                 log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
