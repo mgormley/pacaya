@@ -39,6 +39,7 @@ class DPScraper(Scraper):
         numWords = int(get_following(stdout_file, "Number of words: ", -1))
         exp.update(numWords = numWords)
         exp.update(accuracy = get_following(stdout_file, "Accuracy: ", -1))
+        exp.update(logLikelihood = get_following(stdout_file, "LogLikelihood: ", -1))
         exp.update(timeRemaining = get_following(stdout_file, "Time remaining: ", -1))
                 
         if exp.get("expname") == "corpus-size":
