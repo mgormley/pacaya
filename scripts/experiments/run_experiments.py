@@ -109,7 +109,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         else:
             self.get_data = get_dev_data
             
-        if self.queue == "mem":
+        if self.queue == "mem" or self.queue == "himem":
             # Override qsub_args to exclude "-l h_vmem=%dM"
             self.qsub_args = re.sub("-l h_vmem=", "-l virtual_free=", self.qsub_args)
             
