@@ -13,6 +13,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.TagReducer;
 import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
@@ -43,8 +44,12 @@ public class PipelineRunner {
         }
         depTreebank.loadPath(trainPath);
         
+        // TODO: make this optional...
+        TagReducer.reduceTags(depTreebank);
+        
         log.info("Number of sentences: " + depTreebank.size());
-        log.info("Number of words: " + depTreebank.getNumWords());
+        log.info("Number of tokens: " + depTreebank.getNumTokens());
+        log.info("Number of types: " + depTreebank.getNumTypes());
         
         SentenceCollection sentences = depTreebank.getSentences();
         if (cmd.hasOption("printSentences")) {

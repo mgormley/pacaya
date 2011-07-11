@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.data;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -8,7 +10,6 @@ import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeVisitor;
 import edu.stanford.nlp.trees.Treebank;
 
 public class DepTreebank extends ArrayList<DepTree> {
@@ -48,7 +49,7 @@ public class DepTreebank extends ArrayList<DepTree> {
                     break;
                 }
                 DepTree tree = new DepTree(stanfordTree);
-                int len = tree.getNumWords();
+                int len = tree.getNumTokens();
                 if (len <= maxSentenceLength) {
                     if (filter == null || filter.accept(tree)) {
                         this.add(tree);
@@ -67,12 +68,22 @@ public class DepTreebank extends ArrayList<DepTree> {
         return sentences;
     }
 
-    public int getNumWords() {
+    public int getNumTokens() {
         int numWords = 0;
         for (DepTree tree : this) {
-            numWords += tree.getNumWords();
+            numWords += tree.getNumTokens();
         }
         return numWords;
+    }
+
+    public int getNumTypes() {
+        Set<Label> types = new HashSet<Label>();
+        for (DepTree tree : this) {
+            for (DepTreeNode node : tree) {
+                types.add(node.getLabel());
+            }
+        }
+        return types.size();
     }
 
 }

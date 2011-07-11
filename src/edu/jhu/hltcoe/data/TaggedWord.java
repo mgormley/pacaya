@@ -18,6 +18,13 @@ public class TaggedWord implements Label {
     public String getTag() {
         return tag;
     }
+
+    /**
+     * For reducing from 45 to 17 tags.
+     */
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
     
     public String getLabel() {
         // Must also update hashCode and equals if changing this
