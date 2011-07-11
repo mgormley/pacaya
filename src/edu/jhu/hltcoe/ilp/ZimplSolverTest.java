@@ -54,6 +54,23 @@ public class ZimplSolverTest {
         runZimplInfeasible(tempDir, new CplexIlpSolver(tempDir, 2, 128));
     }
 
+    @Test
+    public void testFixMstFile() throws IOException {
+        runZimplSolverStartvals(tempDir, new CplexIlpSolver(tempDir, 2, 128));
+        File mstFile = new File(tempDir, "startvals.mst");
+        Assert.assertTrue(Files.fileContains(mstFile, "xvar"));
+        Assert.assertTrue(Files.fileContains(mstFile, "foodVals"));
+        Assert.assertTrue(!Files.fileContains(mstFile, "yvar"));
+        Assert.assertTrue(!Files.fileContains(mstFile, "otherVals"));
+    }
+
+    private static void runZimplSolverStartvals(File tempDir, IlpSolver ilpSolver) {
+        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
+        URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/startvals.zpl");
+        File zimplFile = new File(url.getFile());
+        solver.solve(zimplFile);
+    }
+
     private static void runZimplInfeasible(File tempDir, IlpSolver ilpSolver) {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
         URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/infeasible.zpl");

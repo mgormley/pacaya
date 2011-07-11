@@ -56,17 +56,8 @@ public class IlpViterbiParser implements ViterbiParser {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         
-        // Create workspace
-        File tempDir = Files.createTempDir("ilp_parse", workspace);
-        
-        // Encode sentences and model
-        File zimplFile = encode(tempDir, sentences, model);
-        
-        // Run zimpl and then ILP solver
-        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
-        solver.solve(zimplFile);
-        Map<String,Double> result = solver.getResult();
-        parseWeight = solver.getObjective();
+        // Encode the model/sentences as an ILP and solve
+        Map<String, Double> result = solve(sentences, model);
         
         // Decode parses
         DepTreebank depTreebank = decode(sentences, result);
@@ -78,11 +69,45 @@ public class IlpViterbiParser implements ViterbiParser {
                 Time.totMs(stopwatch)));
         return depTreebank;
     }
+
+    /**
+     * Encode the model/sentences as an ILP and solve.
+     * 
+     * Side effect: stores the parseWeight
+     * 
+     * @return an optimal ILP solution
+     */
+    protected Map<String, Double> solve(SentenceCollection sentences, Model model) {
+        // Create workspace
+        File tempDir = Files.createTempDir("ilp_parse", workspace);
+        
+        // Encode sentences and model
+        File zimplFile = encode(tempDir, sentences, model);
+        
+        // Run zimpl and then ILP solver
+        ZimplSolver solver = getZimplSolver(tempDir);
+        solver.solve(zimplFile);
+        Map<String,Double> result = solver.getResult();
+        parseWeight = solver.getObjective();
+        
+        return result;
+    }
+
+    /**
+     * Extracted method for override in InitializedIlpViterbiParserWithDeltas
+     */
+    protected ZimplSolver getZimplSolver(File tempDir) {
+        ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
+        return solver;
+    }
     
     public double getLastParseWeight() {
         return parseWeight;
     }
     
+    public File getWorkspace() {
+        return workspace;
+    }
 
     protected File encode(File tempDir, SentenceCollection sentences, Model model) {
         try {

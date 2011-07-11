@@ -72,9 +72,9 @@ public class Files {
         }
     }
 
-    public static Matcher getFirstMatch(File gurobiLog, Pattern pattern) {
+    public static Matcher getFirstMatch(File logFile, Pattern pattern) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(gurobiLog));
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
             String line;
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = pattern.matcher(line);

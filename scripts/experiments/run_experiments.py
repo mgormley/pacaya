@@ -123,11 +123,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    algorithm="viterbi")
         all.update(ilpSolver="cplex")
         all.update(mustContainVerb=None)
-        
-        ilpCorpus = DPExpParams(parser="ilp-corpus")
-        ilpSentence = DPExpParams(parser="ilp-sentence")
-        ilpDeltas = DPExpParams(parser="ilp-deltas")
-        
+                
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
         
@@ -185,7 +181,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
                         for dataGen in [dgFixedInterval, dgFactor]:
-                            experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas") + dataGen)
+                            experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init") + dataGen)
         else:
             raise Exception("Unknown expname: " + self.expname)
                 
