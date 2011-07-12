@@ -36,7 +36,7 @@ class DPScraper(Scraper):
         _, _, elapsed = get_time(stdout_file)
         exp.update(elapsed = elapsed)
         
-        numWords = int(get_following(stdout_file, "Number of words: ", -1))
+        numWords = int(get_following(stdout_file, "Number of tokens: ", -1))
         exp.update(numWords = numWords)
         exp.update(accuracy = get_following(stdout_file, "Accuracy: ", -1))
         exp.update(logLikelihood = get_following(stdout_file, "LogLikelihood: ", -1))
