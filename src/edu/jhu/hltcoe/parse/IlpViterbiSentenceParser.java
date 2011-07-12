@@ -11,7 +11,6 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.ilp.ClGurobiIlpSolver;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
@@ -28,7 +27,7 @@ import edu.jhu.hltcoe.util.Time;
 public class IlpViterbiSentenceParser extends IlpViterbiParser implements ViterbiSentenceParser {
 
     private static Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
-    
+        
     public IlpViterbiSentenceParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         super(formulation, ilpSolverFactory);
     }
@@ -36,11 +35,13 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
         // TODO: could be a field
         Stopwatch stopwatch = new Stopwatch();
-
+        
         DepTreebank treebank = new DepTreebank();
+        double totalParseWeight = 0.0;
         for (Sentence sentence: sentences) {
             stopwatch.start();
             DepTree tree = getViterbiParse(sentence, model);
+            totalParseWeight += parseWeight;
             stopwatch.stop();
             treebank.add(tree);
             log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
@@ -49,6 +50,8 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
         }
         log.debug(String.format("Tot parse time: %.3f", 
                 Time.totMs(stopwatch)));
+        
+        parseWeight = totalParseWeight;
         return treebank;
     }
     
@@ -64,7 +67,8 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolverFactory.getInstance(tempDir));
         solver.solve(zimplFile);
         Map<String,Double> result = solver.getResult();
-        
+        parseWeight = solver.getObjective();
+
         // Decode parses
         DepTree tree = decode(sentence, result);
         return tree;

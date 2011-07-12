@@ -39,7 +39,7 @@ public class IlpViterbiParser implements ViterbiParser {
 
     protected IlpSolverFactory ilpSolverFactory;
 
-    private double parseWeight;
+    protected double parseWeight;
     
     public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
