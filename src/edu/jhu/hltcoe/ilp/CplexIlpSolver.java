@@ -77,7 +77,8 @@ public class CplexIlpSolver implements IlpSolver {
                 cplex.setParam(DoubleParam.WorkMem, workMemMegs);
                 cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
                 cplex.setParam(DoubleParam.TreLim, 32000.0);
-    
+                cplex.setParam(IntParam.NodeFileInd, 3);
+
                 cplex.setParam(IntParam.Threads, numThreads);
     
                 // -1 = oportunistic, 0 = auto (default), 1 = deterministic
@@ -128,6 +129,11 @@ public class CplexIlpSolver implements IlpSolver {
                 out.close();
             }
         } catch (IloException e) {
+            if (e instanceof ilog.cplex.CpxException) {
+                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
+                System.err.println("STATUS CODE: " + cpxe.getStatus());
+                System.err.println("ERROR MSG:   " + cpxe.getMessage());
+            }
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
