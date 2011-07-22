@@ -111,7 +111,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             
         if self.queue == "mem" or self.queue == "himem":
             # Override qsub_args to exclude "-l h_vmem=%dM"
-            self.qsub_args = re.sub("-l h_vmem=", "-l virtual_free=", self.qsub_args)
+            # Old way: self.qsub_args = re.sub("-l h_vmem=", "-l virtual_free=", self.qsub_args)
+            self.qsub_args = re.sub("-l h_vmem=\S+", "", self.qsub_args)
             
     def get_experiments(self):
         all = DPExpParams()
