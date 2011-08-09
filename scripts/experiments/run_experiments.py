@@ -195,7 +195,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
 
   
 if __name__ == "__main__":
-    usage = "%s " % (sys.argv[0])
+    usage = "%prog "
 
     parser = OptionParser(usage=usage)
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
@@ -205,7 +205,7 @@ if __name__ == "__main__":
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) != 1:
-        print usage
+        parser.print_help()
         sys.exit(1)
     
     runner = DepParseExpParamsRunner(options)

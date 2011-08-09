@@ -37,13 +37,13 @@ def get_zimpl_varmap(gurobi_file, tbl_file):
     return zimpl_varmap
 
 if __name__ == "__main__":
-    usage = "%s [gurobi sol] [zimpl tbl]" % (sys.argv[0])
+    usage = "%prog [gurobi sol] [zimpl tbl]"
 
     parser = OptionParser(usage=usage)
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) != 3:
-        print usage
+        parser.print_help()
         sys.exit(1)
 
     gurobi_file = args[1]

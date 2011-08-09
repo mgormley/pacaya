@@ -52,14 +52,14 @@ class DPScraper(Scraper):
                 exp.update(avgPerWordParseTimeLast = tot_parse_times[-1]/numWords)
          
 if __name__ == "__main__":
-    usage = "%s [top_dir...]" % (sys.argv[0])
+    usage = "%prog [top_dir...]"
 
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--google', action="store_true", help="Write spreadsheet to Google")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) < 2:
-        print usage
+        parser.print_help()
         sys.exit(1)
     
     scraper = DPScraper(True, options.google)
