@@ -10,7 +10,6 @@ import shlex
 import subprocess
 from subprocess import Popen
 from optparse import OptionParser
-from experiments.core.pipeline import ExperimentRunner
 from experiments.core.util import get_new_file, sweep_mult, fancify_cmd
 from experiments.core.util import head_sentences
 import platform
