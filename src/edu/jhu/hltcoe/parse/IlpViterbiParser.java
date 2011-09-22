@@ -21,6 +21,7 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Triple;
@@ -36,7 +37,7 @@ public class IlpViterbiParser implements ViterbiParser {
     protected final Pattern zimplVarRegex = Pattern.compile("[#$]");
     protected IlpFormulation formulation;
     protected File workspace;
-
+    private DelayedDeleter deleter;
     protected IlpSolverFactory ilpSolverFactory;
 
     protected double parseWeight;
@@ -48,6 +49,7 @@ public class IlpViterbiParser implements ViterbiParser {
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
         workspace = Files.createTempDir("workspace", new File("."));
+        deleter = new DelayedDeleter(2);
     }
 
     
@@ -90,6 +92,7 @@ public class IlpViterbiParser implements ViterbiParser {
         Map<String,Double> result = solver.getResult();
         parseWeight = solver.getObjective();
         
+        deleter.delayedDelete(tempDir);
         return result;
     }
 
