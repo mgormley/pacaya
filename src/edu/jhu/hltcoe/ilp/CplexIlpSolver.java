@@ -87,16 +87,23 @@ public class CplexIlpSolver implements IlpSolver {
                 // will reproduce the same solution path and results.
                 cplex.setParam(IntParam.ParallelMode, 1);
                 
+                // 1 - Apply traditional branch and cut strategy; disable dynamic search
+                // This ensures that the branching variable shows up in the node log.
+                cplex.setParam(IntParam.MIPSearch, 1);  
+                
                 // TODO: this was chosen arbitrarily to try to fix the problem with priority order
                 cplex.setParam(IntParam.MIPOrdType, 1);
                 
                 // TODO: add a flag to allow this heavy logging
-//                cplex.setParam(IntParam.MIPDisplay, 5);
-//                cplex.setParam(IntParam.MIPInterval, 1);
+                // See "Progress reports: interpreting the node log" for more info about the log contents
+                cplex.setParam(IntParam.MIPDisplay, 2);
+                cplex.setParam(IntParam.MIPInterval, 1);
 //                cplex.setParam(IntParam.BarDisplay, 2);
 //                cplex.setParam(IntParam.SiftDisplay, 2);
 //                cplex.setParam(IntParam.SimDisplay, 2);
                 
+                
+                //TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
                 cplex.setOut(out);
                 cplex.setWarning(out);
     
