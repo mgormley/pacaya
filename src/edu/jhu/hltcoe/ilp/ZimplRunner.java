@@ -64,7 +64,7 @@ public class ZimplRunner {
                 "-m", // Write MST file
                 "-o", outputPrefix,
                 "-t", type, 
-                "-l","20",
+                "-l","14", // Maximum length of names in output file. 
                 "-v"+String.valueOf(verbosity), 
                 zimplFile.getAbsolutePath() };
         File zimplLog = new File(tempDir, "zimpl.log");
