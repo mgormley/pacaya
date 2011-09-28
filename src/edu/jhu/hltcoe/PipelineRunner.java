@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -10,10 +12,11 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.data.FileMapTagReducer;
 import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Ptb45To17TagReducer;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.TagReducer;
 import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
@@ -44,8 +47,14 @@ public class PipelineRunner {
         }
         depTreebank.loadPath(trainPath);
         
-        // TODO: make this optional...
-        TagReducer.reduceTags(depTreebank);
+        String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
+        if ("45to17".equals(reduceTags)) {
+            log.info("Reducing PTB from 45 to 17 tags");
+            (new Ptb45To17TagReducer()).reduceTags(depTreebank);
+        } else if (!"none".equals(reduceTags)) {
+            log.info("Reducing tags with file map: " + reduceTags);
+            (new FileMapTagReducer(new File(reduceTags))).reduceTags(depTreebank);
+        }
         
         log.info("Number of sentences: " + depTreebank.size());
         log.info("Number of tokens: " + depTreebank.getNumTokens());
@@ -99,6 +108,7 @@ public class PipelineRunner {
         options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
         options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training."); 
         options.addOption("vb", "mustContainVerb", false, "Filter down to sentences that contain certain verbs."); 
+        options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
         options.addOption("ps", "printSentences", false, "Whether to print sentences to logger.");
         
         TrainerFactory.addOptions(options);

@@ -138,7 +138,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
-            
+        
+        # Reducing tagset explicitly
+        for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
+            ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
+        
         if self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
         
@@ -184,7 +188,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for dataGen in [dgFixedInterval, dgFactor]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init") + dataGen)
         else:
-            raise Exception("Unknown expname: " + self.expname)
+            raise Exception("Unknown expname: " + str(self.expname))
                 
         return experiments
 
