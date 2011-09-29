@@ -17,9 +17,9 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.DmvModelFactory;
+import edu.jhu.hltcoe.model.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -42,7 +42,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
         sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         double expectedParseWeight = -40.56204981;
 
@@ -63,7 +63,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
         sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         
         double expectedInitParseWeight;

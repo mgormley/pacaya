@@ -15,6 +15,7 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.DmvModelFactory;
+import edu.jhu.hltcoe.model.DmvWeightCopier;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
@@ -83,7 +84,7 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     protected void encodeModel(File tempDir, Model model, SentenceCollection sentences) throws FileNotFoundException {
         DmvModel dmv = (DmvModel)model;
         // Keep only the weights relevant to the single sentence in the SentenceCollection
-        WeightCopier weightCopier = new WeightCopier(dmv);
+        DmvWeightCopier weightCopier = new DmvWeightCopier(dmv);
         DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences);
         encodeDmv(tempDir, filteredDmv);
     }

@@ -1,22 +1,20 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.parse;
+package edu.jhu.hltcoe.model;
 
 import java.util.List;
 import java.util.Map;
 
 import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.model.DmvModel;
-import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
 
-class WeightCopier implements WeightGenerator {
+public class DmvWeightCopier implements DmvWeightGenerator {
 
     private DmvModel dmv;
     
-    public WeightCopier(DmvModel dmv) {
+    public DmvWeightCopier(DmvModel dmv) {
         this.dmv = dmv;
     }
 

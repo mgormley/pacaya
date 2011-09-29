@@ -10,7 +10,6 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Multinomials;
-import edu.jhu.hltcoe.model.DmvModelFactory.WeightGenerator;
 import edu.jhu.hltcoe.train.MStep;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
@@ -26,7 +25,7 @@ public class DmvMStep implements MStep<DepTreebank> {
 
     @Override
     public Model getModel(DepTreebank treebank) {
-        WeightGenerator weightGen = new MLWeightGenerator(getChooseCounts(treebank), getStopCounts(treebank), lambda);
+        DmvWeightGenerator weightGen = new MLDmvWeightGenerator(getChooseCounts(treebank), getStopCounts(treebank), lambda);
         DmvModelFactory dmvFactory = new DmvModelFactory(weightGen);
 
         // TODO: this is a huge waste of computation, since treebank is new each time (but kind of convenient)
@@ -79,13 +78,13 @@ public class DmvMStep implements MStep<DepTreebank> {
         return chooseCounts;
     }
 
-    public static class MLWeightGenerator implements WeightGenerator {
+    public static class MLDmvWeightGenerator implements DmvWeightGenerator {
         
         private Map<Pair<Label, String>,Map<Label,Integer>> chooseCounts;
         private Map<Triple<Label,String,Boolean>,Map<Boolean,Integer>> stopCounts;
         private double lambda;
         
-        public MLWeightGenerator(Map<Pair<Label, String>, Map<Label, Integer>> chooseCounts,
+        public MLDmvWeightGenerator(Map<Pair<Label, String>, Map<Label, Integer>> chooseCounts,
                 Map<Triple<Label, String, Boolean>, Map<Boolean, Integer>> stopCounts, double lambda) {
             this.chooseCounts = chooseCounts;
             this.stopCounts = stopCounts;

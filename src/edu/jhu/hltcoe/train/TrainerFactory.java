@@ -9,8 +9,8 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.DmvMStep;
 import edu.jhu.hltcoe.model.DmvModelFactory;
+import edu.jhu.hltcoe.model.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
@@ -96,7 +96,7 @@ public class TrainerFactory {
                     throw new ParseException("Parser not supported: " + parserName);
                 }
                 mStep = new DmvMStep(lambda);
-                modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+                modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }

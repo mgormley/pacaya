@@ -15,9 +15,9 @@ import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.DmvModelFactory;
+import edu.jhu.hltcoe.model.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.DmvModelFactory.RandomWeightGenerator;
 import edu.jhu.hltcoe.util.Prng;
 
 public class IlpViterbiParserTest {
@@ -33,7 +33,7 @@ public class IlpViterbiParserTest {
     public void testProjParses() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         double expectedParseWeight = -29.21248981;
         
@@ -60,7 +60,7 @@ public class IlpViterbiParserTest {
         // just a part of it.
         //sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
         sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         double expectedParseWeight = -57.26457638;
 
@@ -111,7 +111,7 @@ public class IlpViterbiParserTest {
         sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
 //        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
 //        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
-        ModelFactory modelFactory = new DmvModelFactory(new RandomWeightGenerator(lambda));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         double expectedParseWeight = -26.67243737;
 

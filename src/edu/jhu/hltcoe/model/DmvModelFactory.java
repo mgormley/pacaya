@@ -10,9 +10,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -20,19 +18,22 @@ public class DmvModelFactory implements ModelFactory {
 
     public static final String[] leftRight = new String[] { "l", "r" };
     private static final boolean[] adjacent = new boolean[] { true, false };
-    private WeightGenerator weightGen;
+    private DmvWeightGenerator weightGen;
     
-    public DmvModelFactory(WeightGenerator weightGen) {
+    public DmvModelFactory(DmvWeightGenerator weightGen) {
         this.weightGen = weightGen;
     }
 
     @Override
     public Model getInstance(SentenceCollection sentences) {
+        return getInstance(sentences.getVocab());
+    }
+    
+    public Model getInstance(Set<Label> vocab) {
         // TODO: we waste effort on parameters that cannot ever appear
         // in the corpus.
         
         DmvModel dmv = new DmvModel();
-        Set<Label> vocab = sentences.getVocab();
         for (Label label : vocab) {
             for (String lr : leftRight) {
                 for (boolean adj : adjacent) {
@@ -81,41 +82,6 @@ public class DmvModelFactory implements ModelFactory {
             }
         }
         return map;
-    }
-        
-    public interface WeightGenerator {
-        double getStopWeight(Triple<Label, String, Boolean> triple);
-        double[] getChooseMulti(Pair<Label, String> pair, List<Label> children);
-    }
-    
-    public static class RandomWeightGenerator implements WeightGenerator {
-
-        private double lambda;
-
-        public RandomWeightGenerator(double lambda) {
-            this.lambda = lambda;
-        }
-        
-        @Override
-        public double getStopWeight(Triple<Label, String, Boolean> triple) {
-            double stop = 0.0;
-            while (stop == 0.0) {
-                stop = Prng.random.nextDouble();
-            }
-            return stop;
-        }
-        
-        @Override
-        public double[] getChooseMulti(Pair<Label, String> pair, List<Label> children) {
-            // TODO: these should be randomly generated from a prior
-            double[] chooseMulti = Multinomials.randomMultinomial(children.size());
-            for (int i=0; i<chooseMulti.length; i++) {
-                chooseMulti[i] += lambda;
-            }
-            Multinomials.normalizeProps(chooseMulti);
-            return chooseMulti;
-        }
-        
     }
     
 }
