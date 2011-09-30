@@ -22,8 +22,15 @@ class CplexStatus:
         splits = line.split()
         if splits[0] == "*":
             splits = splits[1:]
-        if splits[2] == "infeasible":
-            splits.insert(2, "infeasible")
+            
+        # Check whether the node was fathomed     
+        try:
+            float(splits[2])
+            self.is_fathomed = False
+        except ValueError:
+            splits.insert(2, splits[2])
+            self.is_fathomed = True
+            
         if len(splits) < 13:
             self.is_branching_node = False
             return
