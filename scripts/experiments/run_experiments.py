@@ -148,7 +148,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         if self.data == "synthetic": 
             datasets = [synthetic]
-            all.update(printSentences="./data.txt")
+            all.update(printSentences="./data.txt",
+                       seed=1234321234)
         elif self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
         

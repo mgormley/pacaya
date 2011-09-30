@@ -1,3 +1,4 @@
+
 # ---------- Sets, Parameters, Weights ----------
 param InputSent := "input.sent";
 
@@ -30,7 +31,8 @@ param ChooseWeight[AllWordPairs] := read InputChooseWeights as "<1s, 2s> 3n";
 # input.stopweights contains "<word, l/r, 0/1> weight" where 0/1 is for adjacency
 param InputStopWeights := "input.stopweights";
 set LR := {"l","r"};
-set StopSet := AllWords * LR * {0, 1};
+#Note: faster, but not right for one sentence only: set StopSet := AllWords * LR * {0, 1};
+set StopSet := { read InputStopWeights as "<1s,2s,3n>" };
 param StopWeight[StopSet] := read InputStopWeights as "<1s,2s,3n> 4n";
 
 # The domain of Arcs is pairs of token indices
@@ -40,6 +42,7 @@ set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this
 
 var arc[AllArcs] binary;
 
+	    
 # ---------- Dependency Tree Constraints ----------
 
 # Other tree constraints
@@ -54,56 +57,14 @@ subto no_parent_for_wall:
     forall <s> in Sents:
        forall <i> in { 1 to Length[s] }: 
            arc[s,i,0] == 0;
-        
+           
 # The wall has one outgoing arc
 subto one_child_for_wall:
     forall <s> in Sents:
        1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
 
-# # ==================================================
-# # ==== Option 1: Projective parsing ====
-# # O(n^2) constraints 
-# # If arc[s,i,j] == 1, then Word[s,i] must dominate all the children under that arc.
-# # 
-# # This constraint ensures that Word[s,i] is an ancestor of each of the nodes under the arc.
-# subto proj_parse_dominate:
-#     forall <s,i,j> in AllArcs with abs(i-j) > 1:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k,l> in {min(i,j) to max(i,j)}*{min(i,j) to max(i,j)} with k != l and i != l: arc[s,k,l]) == abs(i-j) 
-#         end;
-
-# # This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
-# subto proj_parse_no_illegal_parents:
-#     forall <s,i,j> in AllArcs with abs(i-j) > 1:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l <= min(i,j) or l >= max(i,j)): arc[s,k,l]) == 0 
-#         end;
-
-# # This constraint ensures that Word[s,i]'s parent is not among the nodes under the arc.
-# subto proj_parse_parent:
-#     forall <s,i,j> in AllArcs:
-#         vif arc[s,i,j] == 1 then 
-#             (sum <k> in {min(i,j) to max(i,j)} with i != k: arc[s,k,i]) == 0 
-#         end;
-
-# ==== Option 2: Non-projective parsing ====
-# Flow Constraints for: B is connected
-# var flow[AllArcs] real >= 0;
-
-# subto flow_sum: 
-#     forall <s> in Sents:
-#         Length[s] == sum <j> in { 1 to Length[s] }: flow[s,0,j];
-
-# subto flow_diff: 
-#     forall <s> in Sents:
-#         forall <i> in { 1 to Length[s] }:
-# 	    1 == (sum <j> in {0 to Length[s] } with i != j: flow[s,j,i])
-# 	         - (sum <j> in { 0 to Length[s] } with i != j: flow[s,i,j]);
-
-# subto flow_bound:
-#     forall <s,i,j> in AllArcs:
-#         flow[s,i,j] <= Length[s] * arc[s,i,j];
-
+    	   
+# ==================================================
 # ==== Option 5: Multi-commodity flow non-projective parsing ====
 # The domain of Arcs is pairs of token indices
 set MFlowArcs[<s> in Sents] := {<i,j,k> in Tokens[s] * Tokens[s] * Tokens[s] with i != j and k != 0};
@@ -117,7 +78,7 @@ var mflow[AllMFlowArcs] real >= 0 <= 1;
 subto mflow_one_unit: 
     forall <s> in Sents:
        	forall <k> in { 1 to Length[s] }:
-       		(sum <j,0,k> in MFlowArcs[s]: mflow[s,j,0,k]) - (sum <0,j,k> in MFlowArcs[s]: mflow[s,0,j,k])
+       		(sum <j,0,k> in MFlowArcs[s]: mflow[s,0,j,k]) - (sum <0,j,k> in MFlowArcs[s]: mflow[s,0,j,k])
        			== -1;
 
 # Any node consumes its own commodity and no other
@@ -125,7 +86,7 @@ subto mflow_self_consumption:
     forall <s> in Sents:
         forall <i> in { 1 to Length[s] }:
         	forall <k> in { 1 to Length[s] }:
-        		(sum <j,i,k> in MFlowArcs[s]: mflow[s,j,i,k]) - (sum <i,j,k> in MFlowArcs[s]: mflow[s,i,j,k])
+        		(sum <j,i,k> in MFlowArcs[s]: mflow[s,i,j,k]) - (sum <i,j,k> in MFlowArcs[s]: mflow[s,i,j,k])
         			== (if i == k then 1 else 0 end);
         			
 # Disabled arcs do not carry any flow
@@ -167,6 +128,7 @@ subto nparc_three:
 	
 # ==================================================
 
+    	   
 # ---------- DMV log-likelihood ----------
 
 # Supporting variables for DMV log-likelihood
@@ -204,3 +166,5 @@ maximize goal:
 	   + numNA[s,i,lr] * log(1 - StopWeight[Word[s,i],lr,0]))
       );
 
+    	
+    	

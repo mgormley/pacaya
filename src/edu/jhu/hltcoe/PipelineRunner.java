@@ -32,6 +32,7 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Prng;
 
 public class PipelineRunner {
 
@@ -150,6 +151,7 @@ public class PipelineRunner {
         options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
         options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
         options.addOption("pm", "printModel", true, "File to which we should print the model.");
+        options.addOption("s", "seed", true, "Pseudo random number generator seed.");
         
         TrainerFactory.addOptions(options);
         return options;
@@ -182,6 +184,11 @@ public class PipelineRunner {
             }
         }
 
+        // Optionally seed the PRNG
+        if (cmd.hasOption("seed")) {
+            Prng.seed(Long.parseLong(cmd.getOptionValue("seed")));
+        }
+        
         PipelineRunner pipeline = new PipelineRunner();
         try {
             pipeline.run(cmd);
