@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.model;
 
+import java.util.Random;
+
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreeNode;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -7,14 +9,15 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.ProjDepTreeNode;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.util.Prng;
 
 public class DmvDepTreeGenerator {
     
     private DmvModel model;
+    private Random random;
 
-    public DmvDepTreeGenerator(DmvModel model) {
+    public DmvDepTreeGenerator(DmvModel model, long seed) {
         this.model = model;
+        random = new Random(seed);
     }
     
     public DepTreebank getTreebank(int numTrees) {
@@ -41,14 +44,14 @@ public class DmvDepTreeGenerator {
     }
 
     private void sampleChildren(ProjDepTreeNode parent, String lr) {
-        if (Prng.random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, true)) {
+        if (random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, true)) {
             // Generate adjacent
             LabeledMultinomial<Label> parameters = model.getChooseWeights(parent.getLabel(), lr);
-            Label childLabel = parameters.sampleFromMultinomial();
+            Label childLabel = parameters.sampleFromMultinomial(random);
             parent.addChildToOutside(new ProjDepTreeNode(childLabel), lr);
-            while (Prng.random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, false)) {
+            while (random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, false)) {
                 // Generate non-adjacent
-                childLabel = parameters.sampleFromMultinomial();
+                childLabel = parameters.sampleFromMultinomial(random);
                 parent.addChildToOutside(new ProjDepTreeNode(childLabel), lr);
             }
         }

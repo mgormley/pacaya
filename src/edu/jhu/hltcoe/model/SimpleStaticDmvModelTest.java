@@ -8,7 +8,7 @@ public class SimpleStaticDmvModelTest {
     public void testSimplestDmvModel() {
         DmvModel dmvModel = SimpleStaticDmvModel.getSimplestInstance();
 
-        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel);
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, System.currentTimeMillis());
         System.out.println(generator.getTreebank(10));
         System.out.println(dmvModel);
     }

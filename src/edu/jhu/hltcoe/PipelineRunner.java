@@ -66,7 +66,11 @@ public class PipelineRunner {
             }
         } else if (cmd.hasOption("synthetic")) {
             DmvModel trueModel = SimpleStaticDmvModel.getSimplestInstance();
-            DmvDepTreeGenerator generator = new DmvDepTreeGenerator(trueModel);
+            long syntheticSeed = 123454321;
+            if (cmd.hasOption("syntheticSeed")) {
+                syntheticSeed = Long.parseLong(cmd.getOptionValue("syntheticSeed"));
+            }
+            DmvDepTreeGenerator generator = new DmvDepTreeGenerator(trueModel, syntheticSeed);
             int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", 100); 
             depTreebank = generator.getTreebank(maxNumSentences);
         } else {
@@ -151,7 +155,7 @@ public class PipelineRunner {
         options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
         options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
         options.addOption("pm", "printModel", true, "File to which we should print the model.");
-        options.addOption("s", "seed", true, "Pseudo random number generator seed.");
+        options.addOption("s", "syntheticSeed", true, "Pseudo random number generator seed for synthetic data generation only.");
         
         TrainerFactory.addOptions(options);
         return options;
@@ -182,11 +186,6 @@ public class PipelineRunner {
                 formatter.printHelp(usage, options, true);
                 System.exit(1);
             }
-        }
-
-        // Optionally seed the PRNG
-        if (cmd.hasOption("seed")) {
-            Prng.seed(Long.parseLong(cmd.getOptionValue("seed")));
         }
         
         PipelineRunner pipeline = new PipelineRunner();

@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.math;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import edu.jhu.hltcoe.util.Prng;
@@ -33,7 +34,11 @@ public class LabeledMultinomial<T> extends TreeMap<T, Double> implements Map<T, 
     }
 
     public T sampleFromMultinomial() {
-        double rand = Prng.random.nextDouble();
+        return sampleFromMultinomial(Prng.random);
+    }
+
+    public T sampleFromMultinomial(Random random) {
+        double rand = random.nextDouble();
         double sum = 0.0;
         for (Entry<T, Double> entry : this.entrySet()) {
             sum += entry.getValue();
