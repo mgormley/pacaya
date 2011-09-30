@@ -36,7 +36,7 @@ public class ZimplSolver  {
         
         // Run ILP Solver
         if (!ilpSolver.solve(lpFile)) {
-            throw new RuntimeException("no optimal solution found");
+            throw new RuntimeException("no solution found");
         }
         objective = ilpSolver.getObjective();
         Map<String,Double> solMap = ilpSolver.getResult();

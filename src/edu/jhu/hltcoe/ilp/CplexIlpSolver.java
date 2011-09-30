@@ -76,7 +76,7 @@ public class CplexIlpSolver implements IlpSolver {
                 // Values: Any nonnegative number, in megabytes; default: 128.0
                 cplex.setParam(DoubleParam.WorkMem, workMemMegs);
                 cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-                cplex.setParam(DoubleParam.TreLim, 32000.0);
+                cplex.setParam(DoubleParam.TreLim, 8000.0);
                 cplex.setParam(IntParam.NodeFileInd, 3);
 
                 cplex.setParam(IntParam.Threads, numThreads);
@@ -110,8 +110,7 @@ public class CplexIlpSolver implements IlpSolver {
                 cplex.exportModel(new File(tempDir, "model.sav").getAbsolutePath());
                 cplex.writeParam(new File(tempDir, "model.prm").getAbsolutePath());
                 
-                cplex.solve();
-                if (cplex.getStatus() != Status.Optimal) {
+                if (!cplex.solve()) {
                     return false;
                 }
                 cplex.output().println("Solution status = " + cplex.getStatus());
@@ -125,7 +124,6 @@ public class CplexIlpSolver implements IlpSolver {
                 
                 assert(vars.length == vals.length);
                 for (int i=0; i<vars.length; i++) {
-                    //System.out.println(vars[i].getName() + " " + vals[i]);
                     result.put(vars[i].getName(), vals[i]);
                 }
                 
