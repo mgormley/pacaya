@@ -51,7 +51,7 @@ public class IlpViterbiParser implements ViterbiParser {
         reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         codeMap = reader.getCodeMap();
         workspace = Files.createTempDir("workspace", new File("."));
-        deleter = new DelayedDeleter(2);
+        deleter = new DelayedDeleter(Integer.MAX_VALUE);
     }
 
     
