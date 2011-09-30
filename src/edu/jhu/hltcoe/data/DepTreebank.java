@@ -14,6 +14,8 @@ import edu.stanford.nlp.trees.Treebank;
 
 public class DepTreebank extends ArrayList<DepTree> {
 
+    private static final long serialVersionUID = 1L;
+
     private static Logger log = Logger.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;

@@ -143,6 +143,8 @@ public class IlpViterbiParserTest {
 
     private static class StringSentence extends Sentence {
 
+        private static final long serialVersionUID = 1L;
+
         public StringSentence(String string) {
             super();
             String[] splits = string.split("\\s");

@@ -3,8 +3,6 @@ package edu.jhu.hltcoe.parse;
 import java.io.File;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
-
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.CopyingMstFileUpdater;
@@ -13,8 +11,6 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 
 public class InitializedIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas implements ViterbiParser {
-
-    private static Logger log = Logger.getLogger(InitializedIlpViterbiParserWithDeltas.class);
     
     private IlpViterbiParserWithDeltas initParser;
     private Map<String,Double> mipStart;

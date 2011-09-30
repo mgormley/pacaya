@@ -6,6 +6,8 @@ import java.util.Set;
 
 public class SentenceCollection extends ArrayList<Sentence> {
 
+    private static final long serialVersionUID = 1L;
+
     public SentenceCollection() {
         super();
     }

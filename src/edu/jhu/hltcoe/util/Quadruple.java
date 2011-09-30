@@ -45,6 +45,7 @@ public class Quadruple<X,Y,Z,A> {
         return result;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

@@ -71,11 +71,11 @@ public class IlpViterbiParserWithDeltasTest {
 
         expectedParseWeight = -35.35388011;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
-        DepTreebank npFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
+        getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
 
         expectedParseWeight = -39.12828011;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
-        DepTreebank pFlowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
+        getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
     }
         
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {

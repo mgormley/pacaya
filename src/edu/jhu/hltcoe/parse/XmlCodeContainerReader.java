@@ -70,7 +70,7 @@ public class XmlCodeContainerReader {
             NodeList codeChildren = codeNode.getChildNodes();
             for (int j=0; j<codeChildren.getLength(); j++) {
                 Node codeChild = codeChildren.item(j);
-                if (codeChild.getNodeType() == codeChild.CDATA_SECTION_NODE) {
+                if (codeChild.getNodeType() == Node.CDATA_SECTION_NODE) {
                     String zimplCode = codeChild.getNodeValue();
                     
                     // Put the <id, zimplCode> pair into the codeMap
