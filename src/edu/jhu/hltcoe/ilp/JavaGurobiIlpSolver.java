@@ -21,6 +21,9 @@ public class JavaGurobiIlpSolver implements IlpSolver {
     }
 
     @Override
+    /**
+     * TODO: currently returns only optimal solution, but should also return feasible solutions.
+     */
     public boolean solve(File lpFile) {
         result = new HashMap<String, Double>();
         

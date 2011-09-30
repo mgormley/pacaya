@@ -30,6 +30,9 @@ public class ClGurobiIlpSolver implements IlpSolver {
     }
 
     @Override
+    /**
+     * TODO: currently returns only optimal solution, but should also return feasible solutions.
+     */
     public boolean solve(File lpFile) {
         result = null;
         
