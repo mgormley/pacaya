@@ -19,10 +19,12 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
+import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
@@ -203,14 +205,16 @@ public class IlpViterbiParser implements ViterbiParser {
     private void encodeChooseWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File chooseWeightsFile = new File(tempDir, "input.chooseweights");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<Triple<Label,String,Label>,Double> chooseWeights = dmv.getChooseWeights();
-        for (Entry<Triple<Label,String,Label>,Double> entry : chooseWeights.entrySet()) {
+        Map<Pair<Label, String>, LabeledMultinomial<Label>> chooseWeights = dmv.getChooseWeights();
+        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : chooseWeights.entrySet()) {
             Label parent = entry.getKey().get1();
             String lr = entry.getKey().get2();
-            Label child = entry.getKey().get3();
-            double weight = entry.getValue();
-            double logWeight = logForIlp(weight);
-            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %E %E\n", parent.getLabel(), lr, child.getLabel(), weight, logWeight);
+            for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
+                Label child = subEntry.getKey();
+                double weight = subEntry.getValue();
+                double logWeight = logForIlp(weight);
+                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %E %E\n", parent.getLabel(), lr, child.getLabel(), weight, logWeight);
+            }
         }
         chooseWeightsWriter.close();
     }
@@ -233,7 +237,7 @@ public class IlpViterbiParser implements ViterbiParser {
         int[][] parents = new int[sentences.size()][];
         for (int i=0; i<sentences.size(); i++) {
             parents[i] = new int[sentences.get(i).size()];
-            Arrays.fill(parents[i], DepTree.EMPTY_IDX);
+            Arrays.fill(parents[i], DepTree.EMPTY_POSITION);
         }
         
         for (Entry<String,Double> entry : result.entrySet()) {

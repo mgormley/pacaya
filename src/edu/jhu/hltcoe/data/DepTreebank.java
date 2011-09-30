@@ -86,4 +86,13 @@ public class DepTreebank extends ArrayList<DepTree> {
         return types.size();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (DepTree tree : this) {
+            sb.append(tree);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
 }

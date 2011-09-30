@@ -54,11 +54,7 @@ public class DmvModelFactory implements ModelFactory {
         for (Label parent : vocabList) {
             for (String lr : leftRight) {
                 Pair<Label,String> pair = new Pair<Label,String>(parent, lr);
-                double[] multinomial = weightGen.getChooseMulti(pair, vocabList);
-                for (int i = 0; i < multinomial.length; i++) {
-                    Triple<Label, String, Label> triple = new Triple<Label, String, Label>(parent, lr, vocabList.get(i));
-                    dmv.putChooseWeight(triple, multinomial[i]);
-                }
+                dmv.setChooseWeights(parent, lr, weightGen.getChooseMulti(pair, vocabList));
             }
         }
 

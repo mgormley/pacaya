@@ -67,7 +67,7 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
     private void encodeChooseWeightsWithDeltas(File tempDir, DmvModel dmv) throws FileNotFoundException {        
         File chooseWeightsFile = new File(tempDir, "input.chooseweights.delta");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<Quadruple<Label,String,Label,String>,Double> chooseWeights = deltaGen.getCWDeltas(dmv.getChooseWeights());
+        Map<Quadruple<Label,String,Label,String>,Double> chooseWeights = deltaGen.getCWDeltas(dmv);
         for (Entry<Quadruple<Label,String,Label,String>,Double> entry : chooseWeights.entrySet()) {
             Label parent = entry.getKey().get1();
             String lr = entry.getKey().get2();

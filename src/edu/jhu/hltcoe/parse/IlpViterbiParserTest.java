@@ -26,7 +26,7 @@ public class IlpViterbiParserTest {
 
     @Before
     public void setUp() {
-        Prng.setSeed(1234567890);
+        Prng.seed(1234567890);
     }
     
     @Test

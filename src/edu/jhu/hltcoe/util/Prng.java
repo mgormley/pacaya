@@ -14,7 +14,7 @@ public class Prng {
     
     public static final Random random = new Random(DEFAULT_SEED);
     
-    public static void setSeed(long seed) {
+    public static void seed(long seed) {
         random.setSeed(seed);
     }
 }

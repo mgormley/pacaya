@@ -36,5 +36,10 @@ public class Pair<X,Y> {
 		result = 37*result + (y == null ? 0 : y.hashCode());
 		return result;
 	}
+
+    @Override
+    public String toString() {
+        return String.format("<%s, %s>", x,y);
+    }
 	
 }

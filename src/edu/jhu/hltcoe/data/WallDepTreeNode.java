@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.data;
 
 
-public class WallDepTreeNode extends DepTreeNode {
+public class WallDepTreeNode extends NonprojDepTreeNode {
 
     public static final String WALL_ID = "__WALL__";
     public static final Label WALL_LABEL = new TaggedWord(WALL_ID, WALL_ID);

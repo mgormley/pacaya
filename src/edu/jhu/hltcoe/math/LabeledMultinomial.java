@@ -1,0 +1,47 @@
+package edu.jhu.hltcoe.math;
+
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import edu.jhu.hltcoe.util.Prng;
+
+public class LabeledMultinomial<T> extends TreeMap<T, Double> implements Map<T, Double> {
+
+    private static final long serialVersionUID = 7106636199881587459L;
+
+    public LabeledMultinomial() {
+        super();
+    }
+
+    public LabeledMultinomial(LabeledMultinomial<T> multi) {
+        super(multi);
+    }
+
+    public LabeledMultinomial(List<T> children, double[] chooseMulti) {
+        this();
+        put(children, chooseMulti);
+    }
+
+    public void put(List<T> vocabList, double[] multinomial) {
+        if (vocabList.size() != multinomial.length) {
+            throw new IllegalArgumentException("vocabList.size() != multinomial.length");
+        }
+        for (int i = 0; i < multinomial.length; i++) {
+            this.put(vocabList.get(i), multinomial[i]);
+        }
+    }
+
+    public T sampleFromMultinomial() {
+        double rand = Prng.random.nextDouble();
+        double sum = 0.0;
+        for (Entry<T, Double> entry : this.entrySet()) {
+            sum += entry.getValue();
+            if (rand <= sum) {
+                return entry.getKey();
+            }
+        }
+        throw new RuntimeException("Multinomial doesn't sum to 1.0: " + this);
+    }
+
+}

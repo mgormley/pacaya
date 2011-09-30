@@ -10,6 +10,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Multinomials;
+import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.train.MStep;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
@@ -41,7 +42,7 @@ public class DmvMStep implements MStep<DepTreebank> {
             for (DepTreeNode parentNode : tree) {
                 Label parent = parentNode.getLabel();
                 for (String lr : DmvModelFactory.leftRight) {
-                    List<DepTreeNode> sideChildren = parentNode.getChildrenToSide(lr);
+                    List<? extends DepTreeNode> sideChildren = parentNode.getChildrenToSide(lr);
                     Triple<Label, String, Boolean> triple;
                     if (sideChildren.size() == 0) {
                         triple = new Triple<Label, String, Boolean>(parent, lr, true); // Adjacent
@@ -66,7 +67,7 @@ public class DmvMStep implements MStep<DepTreebank> {
             for (DepTreeNode parentNode : tree) {
                 Label parent = parentNode.getLabel();
                 for (String lr : DmvModelFactory.leftRight) {
-                    List<DepTreeNode> sideChildren = parentNode.getChildrenToSide(lr);
+                    List<? extends DepTreeNode> sideChildren = parentNode.getChildrenToSide(lr);
                     Pair<Label, String> pair = new Pair<Label, String>(parent, lr);
                     for (DepTreeNode childNode : sideChildren) {
                         Label child = childNode.getLabel();
@@ -92,7 +93,7 @@ public class DmvMStep implements MStep<DepTreebank> {
         }
 
         @Override
-        public double[] getChooseMulti(Pair<Label, String> pair, List<Label> children) {
+        public LabeledMultinomial<Label> getChooseMulti(Pair<Label, String> pair, List<Label> children) {
             Map<Label,Integer> childCounts = chooseCounts.get(pair);
             double[] mult = new double[children.size()];
             for (int i=0; i<mult.length; i++) {
@@ -106,7 +107,7 @@ public class DmvMStep implements MStep<DepTreebank> {
                 mult[i] = childCount + lambda;
             }
             Multinomials.normalizeProps(mult);
-            return mult;
+            return new LabeledMultinomial<Label>(children, mult);
         }
 
         @Override

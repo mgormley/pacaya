@@ -15,8 +15,7 @@ import edu.stanford.nlp.trees.Tree;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
-    public static final int EMPTY_IDX = -2;
-    static final int WALL_IDX = -1;
+    public static final int EMPTY_POSITION = -2;
     
     private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
     private int[] parents;
@@ -27,7 +26,7 @@ public class DepTree implements Iterable<DepTreeNode> {
 
         // Create parents array
         parents = new int[leaves.size()];
-        Arrays.fill(parents, EMPTY_IDX);
+        Arrays.fill(parents, EMPTY_POSITION);
         
         HeadFinder hf = new CollinsHeadFinder();
         tree.percolateHeads(hf);
@@ -42,15 +41,15 @@ public class DepTree implements Iterable<DepTreeNode> {
             
             if (childIdx < 0) {
                 throw new IllegalStateException("Child not found in leaves: " + child);
-            } else if (parents[childIdx] != EMPTY_IDX) {
+            } else if (parents[childIdx] != EMPTY_POSITION) {
                 throw new IllegalStateException("Multiple parents for the same node: " + child);
             }
             
             parents[childIdx] = parentIdx;
         }
         for (int i=0; i<parents.length; i++) {
-            if (parents[i] == EMPTY_IDX) {
-                parents[i] = WALL_IDX;
+            if (parents[i] == EMPTY_POSITION) {
+                parents[i] = WallDepTreeNode.WALL_POSITION;
             }
         }
         
@@ -69,7 +68,7 @@ public class DepTree implements Iterable<DepTreeNode> {
                 tag = ((HasTag)label).tag();
             }
             assert(word != null || tag != null);
-            nodes.add(new DepTreeNode(word, tag, position));            
+            nodes.add(new NonprojDepTreeNode(word, tag, position));            
             position++;
         }
         
@@ -85,12 +84,36 @@ public class DepTree implements Iterable<DepTreeNode> {
         nodes.add(new WallDepTreeNode());
         for (int i=0; i<sentence.size(); i++) {
             Label label = sentence.get(i);
-            nodes.add(new DepTreeNode(label, i));
+            nodes.add(new NonprojDepTreeNode(label, i));
         }
         // Add parent/child links to DepTreeNodes
         addParentChildLinksToNodes();
     }
     
+    @SuppressWarnings("unchecked")
+    public DepTree(ProjDepTreeNode wall) {
+        isProjective = true;
+        nodes = (List<DepTreeNode>)wall.getInorderTraversal();
+        // Set all the positions on the nodes
+        int position;
+        position=WallDepTreeNode.WALL_POSITION;
+        for (DepTreeNode node : nodes) {
+            ((ProjDepTreeNode)node).setPosition(position);
+            position++;
+        }
+        // Set all the parent positions
+        parents = new int[nodes.size()-1];
+        for (int i=0; i<parents.length; i++) {
+            ProjDepTreeNode parent = (ProjDepTreeNode)nodes.get(i+1).getParent();
+            if (parent == null) {
+                parents[i] = EMPTY_POSITION;
+            } else {
+                parents[i] = parent.getPosition();
+            }
+        }
+        checkTree();
+    }
+
     private DepTreeNode getNodeByPosition(int position) {
         return nodes.get(position+1);
     }
@@ -98,24 +121,23 @@ public class DepTree implements Iterable<DepTreeNode> {
     private void addParentChildLinksToNodes() {
         checkTree();
         for (int i=0; i<parents.length; i++) {
-            DepTreeNode node = getNodeByPosition(i);
-            node.setParent(getNodeByPosition(parents[i]));
+            NonprojDepTreeNode node = (NonprojDepTreeNode)getNodeByPosition(i);
+            node.setParent((NonprojDepTreeNode)getNodeByPosition(parents[i]));
             for (int j=0; j<parents.length; j++) {
                 if (parents[j] == i) {
-                    node.addChild(getNodeByPosition(j));
+                    node.addChild((NonprojDepTreeNode)getNodeByPosition(j));
                 }
             }
         }
     }
 
-    // TODO: add check for projectivity (when appropriate)
     private void checkTree() {
         // Check that there is exactly one node with the WALL as its parent
-        int emptyCount = countChildrenOf(EMPTY_IDX);
+        int emptyCount = countChildrenOf(EMPTY_POSITION);
         if (emptyCount != 0) {
             throw new IllegalStateException("Found an empty parent cell. emptyCount=" + emptyCount);
         }
-        int wallCount = countChildrenOf(WALL_IDX);
+        int wallCount = countChildrenOf(WallDepTreeNode.WALL_POSITION);
         if (wallCount != 1) {
             throw new IllegalStateException("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
         }
@@ -124,7 +146,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         for (int i=0; i<parents.length; i++) {
             int numAncestors = 0;
             int parent = parents[i];
-            while(parent != WALL_IDX) {
+            while(parent != WallDepTreeNode.WALL_POSITION) {
                 numAncestors += 1;
                 if (numAncestors > parents.length - 1) {
                     throw new IllegalStateException("Found cycle in parents array");
@@ -148,7 +170,7 @@ public class DepTree implements Iterable<DepTreeNode> {
     
     private boolean checkIsProjective() {
         for (int i=0; i<parents.length; i++) {
-            int pari = parents[i] == WALL_IDX ? parents.length : parents[i];
+            int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
             int minI = i < pari ? i : pari;
             int maxI = i > pari ? i : pari;
             for (int j=0; j<parents.length; j++) {

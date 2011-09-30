@@ -37,5 +37,10 @@ public class Word implements Label {
             return false;
         return true;
     }
+    
+    @Override
+    public int compareTo(Label arg0) {
+        return getLabel().compareTo(arg0.getLabel());
+    }
 
 }

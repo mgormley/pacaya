@@ -1,6 +1,9 @@
 package edu.jhu.hltcoe;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -21,7 +24,10 @@ import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
+import edu.jhu.hltcoe.model.DmvDepTreeGenerator;
+import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
@@ -34,26 +40,36 @@ public class PipelineRunner {
     public PipelineRunner() {
     }
 
-    public void run(CommandLine cmd) throws ParseException {        
-        // Read the data and (maybe) Reduce size of treebank
-        log.info("Reading data");
-        String trainPath = cmd.getOptionValue("train");
-        int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
-        int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
-
-        DepTreebank depTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
-        if (cmd.hasOption("mustContainVerb")) {
-            depTreebank.setTreeFilter(new VerbTreeFilter());
-        }
-        depTreebank.loadPath(trainPath);
-        
-        String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
-        if ("45to17".equals(reduceTags)) {
-            log.info("Reducing PTB from 45 to 17 tags");
-            (new Ptb45To17TagReducer()).reduceTags(depTreebank);
-        } else if (!"none".equals(reduceTags)) {
-            log.info("Reducing tags with file map: " + reduceTags);
-            (new FileMapTagReducer(new File(reduceTags))).reduceTags(depTreebank);
+    public void run(CommandLine cmd) throws ParseException, IOException {  
+        DepTreebank depTreebank;
+        if (cmd.hasOption("train")) {
+            // Read the data and (maybe) reduce size of treebank
+            log.info("Reading data");
+            String trainPath = cmd.getOptionValue("train");
+            int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
+            int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
+    
+            depTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
+            if (cmd.hasOption("mustContainVerb")) {
+                depTreebank.setTreeFilter(new VerbTreeFilter());
+            }
+            depTreebank.loadPath(trainPath);
+            
+            String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
+            if ("45to17".equals(reduceTags)) {
+                log.info("Reducing PTB from 45 to 17 tags");
+                (new Ptb45To17TagReducer()).reduceTags(depTreebank);
+            } else if (!"none".equals(reduceTags)) {
+                log.info("Reducing tags with file map: " + reduceTags);
+                (new FileMapTagReducer(new File(reduceTags))).reduceTags(depTreebank);
+            }
+        } else if (cmd.hasOption("synthetic")) {
+            DmvModel trueModel = SimpleStaticDmvModel.getSimplestInstance();
+            DmvDepTreeGenerator generator = new DmvDepTreeGenerator(trueModel);
+            int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", 100); 
+            depTreebank = generator.getTreebank(maxNumSentences);
+        } else {
+            throw new ParseException("Either the option --train or --synthetic must be specific");
         }
         
         log.info("Number of sentences: " + depTreebank.size());
@@ -61,9 +77,14 @@ public class PipelineRunner {
         log.info("Number of types: " + depTreebank.getNumTypes());
         
         SentenceCollection sentences = depTreebank.getSentences();
-        if (cmd.hasOption("printSentences")) {
+        
+        // Print sentences to a file
+        String printSentences = Command.getOptionValue(cmd, "printSentences", null);
+        if (printSentences != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(printSentences));
             // TODO: improve this
-            log.debug("Printing sentences...");
+            log.info("Printing sentences...");
+            writer.write("Sentences:\n");
             for (Sentence sent : sentences) {
                 StringBuilder sb = new StringBuilder();
                 for (Label label : sent) {
@@ -81,8 +102,16 @@ public class PipelineRunner {
                         sb.append(" ");
                     }
                 }
-                log.debug(sb.toString());
+                sb.append("\n");
+                writer.write(sb.toString());
             }
+            if (cmd.hasOption("synthetic")) {
+                log.info("Print trees...");
+                // Also print the synthetic trees
+                writer.write("Trees:\n");
+                writer.write(depTreebank.toString());
+            }
+            writer.close();
         }
         
         // Train the model
@@ -98,6 +127,15 @@ public class PipelineRunner {
         Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
         pwEval.evaluate(model);
         pwEval.print();
+        
+        // Print learned model to a file
+        String printModel = Command.getOptionValue(cmd, "printModel", null);
+        if (printModel != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(printModel));
+            writer.write("Learned Model:\n");
+            writer.write(model.toString());
+            writer.close();
+        }
     }
 
     public static Options createOptions() {
@@ -105,11 +143,13 @@ public class PipelineRunner {
         
         // Options not specific to the model
         options.addOption("tr", "train", true, "Training data.");
+        options.addOption("tr", "synthetic", true, "Generate synthetic training data.");
         options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
         options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training."); 
         options.addOption("vb", "mustContainVerb", false, "Filter down to sentences that contain certain verbs."); 
         options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
-        options.addOption("ps", "printSentences", false, "Whether to print sentences to logger.");
+        options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
+        options.addOption("pm", "printModel", true, "File to which we should print the model.");
         
         TrainerFactory.addOptions(options);
         return options;
@@ -119,13 +159,13 @@ public class PipelineRunner {
         BasicConfigurator.configure();
     }
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         configureLogging();
         
         String usage = "java " + PipelineRunner.class.getName() + " [OPTIONS]";
         CommandLineParser parser = new PosixParser();
         Options options = createOptions();
-        String[] requiredOptions = new String[] { "train" };
+        String[] requiredOptions = new String[] { };
 
         CommandLine cmd = null;
         final HelpFormatter formatter = new HelpFormatter();

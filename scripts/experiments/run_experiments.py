@@ -103,6 +103,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
+        self.data = options.data
         if options.test:
             self.get_data = get_test_data
         else:
@@ -120,8 +121,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         all.update(formulation="deptree-flow-nonproj",
                    parser="ilp-corpus",
                    model="dmv",
-                   algorithm="viterbi")
-        all.update(ilpSolver="cplex")
+                   algorithm="viterbi",
+                   ilpSolver="cplex")
+        all.update(printModel="./model.txt")
         all.update(mustContainVerb=None)
                 
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -138,12 +140,16 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
+        synthetic = DPExpParams(synthetic="simplest")
         
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
             ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
         
-        if self.fast:       datasets = [brown_cf]
+        if self.data == "synthetic": 
+            datasets = [synthetic]
+            all.update(printSentences="./data.txt")
+        elif self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
         
         experiments = []
@@ -205,6 +211,7 @@ if __name__ == "__main__":
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
     parser.add_option('--test', action="store_true", help="Use test data")
     parser.add_option('--expname',  help="Experiment name")
+    parser.add_option('--data',  help="Dataset to use")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) != 1:

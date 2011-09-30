@@ -34,7 +34,7 @@ public class IlpViterbiParserWithDeltasTest {
 
     @Before
     public void setUp() {
-        Prng.setSeed(1234567890);
+        Prng.seed(1234567890);
     }
     
     @Test
@@ -103,7 +103,7 @@ public class IlpViterbiParserWithDeltasTest {
             int[][] parents = new int[sentences.size()][];
             for (int i=0; i<sentences.size(); i++) {
                 parents[i] = new int[sentences.get(i).size()];
-                Arrays.fill(parents[i], DepTree.EMPTY_IDX);
+                Arrays.fill(parents[i], DepTree.EMPTY_POSITION);
             }
             
             for (Entry<String,Double> entry : result.entrySet()) {
@@ -118,7 +118,7 @@ public class IlpViterbiParserWithDeltasTest {
                     // String deltaId = splits[4];
                     long longVal = Math.round(value);
                     if (longVal == 1) {
-                        assert(parents[sentId][child-1] == DepTree.EMPTY_IDX);
+                        assert(parents[sentId][child-1] == DepTree.EMPTY_POSITION);
                         // Must subtract one from each position
                         parents[sentId][child-1] = parent-1;
                     }
