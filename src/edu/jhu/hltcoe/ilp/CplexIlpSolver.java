@@ -113,6 +113,7 @@ public class CplexIlpSolver implements IlpSolver {
                 if (!cplex.solve()) {
                     return false;
                 }
+                log.info("Solution status: " + cplex.getStatus());
                 cplex.output().println("Solution status = " + cplex.getStatus());
                 cplex.output().println("Solution value = " + cplex.getObjValue());
                 objective = cplex.getObjValue();
