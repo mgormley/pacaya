@@ -6,7 +6,9 @@ import org.jboss.dna.common.statistic.Stopwatch;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
+import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * 
@@ -22,14 +24,16 @@ public class EMTrainer<C> implements Trainer {
     private MStep<C> mStep;
     private ModelFactory modelFactory;
     private int iterations;
+    private double convergenceRatio;
     private Model model;
     private int iterCount;
     
-    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations) {
+    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
         this.eStep = eStep;
         this.mStep = mStep;
         this.modelFactory = modelFactory;
         this.iterations = iterations;
+        this.convergenceRatio = convergenceRatio;
     }
     
     @Override
@@ -39,16 +43,27 @@ public class EMTrainer<C> implements Trainer {
         
         // Run iterations of EM
         Stopwatch iterTimer = new Stopwatch();
+        double prevLogLikelihood = Double.NEGATIVE_INFINITY;
         for (iterCount=0; iterCount<iterations; iterCount++) {
             iterTimer.start();
-            C counts = eStep.getCounts(sentences, model);
+            log.info("iteration = " + getIterationsCompleted());
+            Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(sentences, model);
+            C counts = pair.get1();
+            double logLikelihood = pair.get2();
+            log.info("logLikelihood = " + logLikelihood);
+            log.info("likelihood ratio = " + Utilities.exp(prevLogLikelihood - logLikelihood));
+            if (prevLogLikelihood - logLikelihood > Utilities.log(convergenceRatio)) {
+                log.info("Stopping training due to convergence");
+                break;
+            }
+            prevLogLikelihood = logLikelihood;
             model = mStep.getModel(counts);
-            iterTimer.stop();
             log.debug("Time remaining: " + Time.durAsStr(Time.avgMs(iterTimer)*(iterations - iterCount)));
+            iterTimer.stop();
         }
     }
     
-    public int getCurrentIteration() {
+    public int getIterationsCompleted() {
         return iterCount;
     }
 

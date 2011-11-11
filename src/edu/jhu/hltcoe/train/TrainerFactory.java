@@ -29,6 +29,7 @@ public class TrainerFactory {
     public static void addOptions(Options options) {
         options.addOption("a", "algorithm", true, "Inference algorithm.");
         options.addOption("i", "iterations", true, "Number of iterations.");
+        options.addOption("i", "convergenceRatio", true, "Convergence ratio.");
         options.addOption("m", "model", true, "Model.");
         options.addOption("p", "parser", true, "Parser.");
         options.addOption("d", "deltaGenerator", true, "Delta generator.");
@@ -46,6 +47,7 @@ public class TrainerFactory {
 
         final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
         final int iterations = Command.getOptionValue(cmd, "iterations", 10);
+        final double convergenceRatio = Command.getOptionValue(cmd, "convergenceRatio", 0.99999);
         final String modelName = Command.getOptionValue(cmd, "model", "dmv");
         final String parserName = Command.getOptionValue(cmd, "parser", "ilp-sentence");
         final String deltaGenerator = Command.getOptionValue(cmd, "deltaGenerator", "fixed");
@@ -101,7 +103,7 @@ public class TrainerFactory {
                 throw new ParseException("Model not supported: " + modelName);
             }
 
-            trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations);
+            trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio);
         } else {
             throw new ParseException("Algorithm not supported: " + algorithm);
         }

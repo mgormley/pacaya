@@ -7,6 +7,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.util.Pair;
 
 public class ViterbiTrainer implements Trainer {
 
@@ -14,9 +15,9 @@ public class ViterbiTrainer implements Trainer {
     private ViterbiParser parser;
     private EMTrainer<DepTreebank> emTrainer;
     
-    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations) {
+    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
         this.parser = parser;
-        emTrainer = new EMTrainer<DepTreebank>(new ViterbiEStep(), mStep, modelFactory, iterations);
+        emTrainer = new EMTrainer<DepTreebank>(new ViterbiEStep(), mStep, modelFactory, iterations, convergenceRatio);
     }
     
     @Override
@@ -27,11 +28,9 @@ public class ViterbiTrainer implements Trainer {
     private class ViterbiEStep implements EStep<DepTreebank> {
 
         @Override
-        public DepTreebank getCounts(SentenceCollection sentences, Model model) {
+        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(SentenceCollection sentences, Model model) {
             DepTreebank depTreebank = parser.getViterbiParse(sentences, model);
-            log.info("iteration = " + emTrainer.getCurrentIteration());
-            log.info("logLikelihood = " + parser.getLastParseWeight());
-            return depTreebank;
+            return new Pair<DepTreebank,Double>(depTreebank, parser.getLastParseWeight());
         }
         
     }
@@ -43,6 +42,10 @@ public class ViterbiTrainer implements Trainer {
     
     public ViterbiParser getParser() {
         return parser;
+    }
+    
+    public int getIterationsCompleted() {
+        return emTrainer.getIterationsCompleted();
     }
     
 }
