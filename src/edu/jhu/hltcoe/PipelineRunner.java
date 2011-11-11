@@ -65,7 +65,7 @@ public class PipelineRunner {
                 (new FileMapTagReducer(new File(reduceTags))).reduceTags(depTreebank);
             }
         } else if (cmd.hasOption("synthetic")) {
-            DmvModel trueModel = SimpleStaticDmvModel.getSimplestInstance();
+            DmvModel trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
             long syntheticSeed = 123454321;
             if (cmd.hasOption("syntheticSeed")) {
                 syntheticSeed = Long.parseLong(cmd.getOptionValue("syntheticSeed"));

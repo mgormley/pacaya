@@ -79,7 +79,7 @@ public class IlpViterbiParserWithDeltasTest {
     }
         
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
-        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.GUROBI_CL, 2, 128);
+        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 2, 128);
         IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {

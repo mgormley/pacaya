@@ -57,16 +57,18 @@ public class CplexIlpSolver implements IlpSolver {
             OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
             try {
                 cplex.importModel(lpFile.getAbsolutePath());
-                File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
-                if (ordFile.exists()) {
-                    //log.warn("NOT reading ORD file: " + ordFile.getPath());
-                    log.debug("Reading ORD file: " + ordFile.getPath());
-                    cplex.readOrder(ordFile.getAbsolutePath());
-                }
-                File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
-                if (mstFile.exists()) {
-                    log.debug("Reading MST file: " + mstFile.getPath());
-                    cplex.readMIPStart(mstFile.getAbsolutePath());
+                if (cplex.isMIP()) {
+                    File ordFile = new File(lpFile.getAbsolutePath().replace(".lp", ".ord"));
+                    if (ordFile.exists()) {
+                        //log.warn("NOT reading ORD file: " + ordFile.getPath());
+                        log.debug("Reading ORD file: " + ordFile.getPath());
+                        cplex.readOrder(ordFile.getAbsolutePath());
+                    }
+                    File mstFile = new File(lpFile.getAbsolutePath().replace(".lp", ".mst"));
+                    if (mstFile.exists()) {
+                        log.debug("Reading MST file: " + mstFile.getPath());
+                        cplex.readMIPStart(mstFile.getAbsolutePath());
+                    }
                 }
                 
                 // Specifies an upper limit on the amount of central memory, in
@@ -102,6 +104,8 @@ public class CplexIlpSolver implements IlpSolver {
 //                cplex.setParam(IntParam.SiftDisplay, 2);
 //                cplex.setParam(IntParam.SimDisplay, 2);
                 
+                // TODO: remove this hack for the LP relaxation tests
+                //cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
                 
                 //TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
                 cplex.setOut(out);

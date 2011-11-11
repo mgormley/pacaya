@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.parse;
 import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;
 
+import org.apache.log4j.BasicConfigurator;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,10 @@ import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.util.Prng;
 
 public class IlpViterbiParserTest {
+
+    static {
+        BasicConfigurator.configure();
+    }
     
     private final static double lambda = 0.1;
 
@@ -117,13 +122,29 @@ public class IlpViterbiParserTest {
 
         // Single commodity flow non-projective parsing
         DepTreebank flowTrees = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
-
+        
         // Multi-commmidity flow non-projective parsing
         DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_NONPROJ, expectedParseWeight);
 
         for (int i=0; i<flowTrees.size(); i++) {
             assertArrayEquals(flowTrees.get(i).getParents(), mflowTrees.get(i).getParents());
         }
+    }
+    
+    @Test
+    public void testLpRelaxations() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.add(getSentenceFromString("the cat ate the hat with the mouse"));
+//        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT"));
+//        sentences.add(getSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD ."));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences);
+        
+        // Single commodity flow non-projective parsing LP Relaxation
+        // This is conveniently an integer solution
+        getParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, -24.879331719999996);
+        
+        getParses(model, sentences, IlpFormulation.DP_PROJ_LPRELAX, -24.879331719999996);
     }
 
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {

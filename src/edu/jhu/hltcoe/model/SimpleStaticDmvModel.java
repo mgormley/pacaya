@@ -13,7 +13,39 @@ import edu.jhu.hltcoe.util.Triple;
 
 public class SimpleStaticDmvModel {
 
-    public static DmvModel getSimplestInstance() {
+    public static DmvModel getTwoPosTagInstance() {
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(0.1));
+        Set<Label> vocab = new HashSet<Label>();
+        final TaggedWord twA = new TaggedWord("Noun", "A");
+        final TaggedWord twB = new TaggedWord("Verb", "B");
+        vocab.add(WallDepTreeNode.WALL_LABEL);
+        vocab.add(twA);
+        vocab.add(twB);
+        DmvModel dmvModel = (DmvModel) modelFactory.getInstance(vocab);
+
+        setAllChooseWeights(dmvModel, 0.0);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "l", twB, 1.0);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", twA, 0.5);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", twB, 0.5);
+        dmvModel.putChooseWeight(twA, "l", twA, 0.5);
+        dmvModel.putChooseWeight(twA, "l", twB, 0.5);
+        dmvModel.putChooseWeight(twA, "r", twA, 1.0); // dummy param
+        dmvModel.putChooseWeight(twB, "l", twA, 0.5);
+        dmvModel.putChooseWeight(twB, "l", twB, 0.5);
+        dmvModel.putChooseWeight(twB, "r", twB, 1.0);
+        
+        setAllStopWeights(dmvModel, 1.0);
+        dmvModel.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", true, 0.0);
+        dmvModel.putStopWeight(twA, "l", true, 0.6);
+        dmvModel.putStopWeight(twA, "r", true, 0.6); 
+        dmvModel.putStopWeight(twB, "l", true, 0.6); 
+        dmvModel.putStopWeight(twB, "r", true, 0.6);
+        
+        return dmvModel;
+    }
+
+    
+    public static DmvModel getThreePosTagInstance() {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(0.1));
         Set<Label> vocab = new HashSet<Label>();
         final TaggedWord noun = new TaggedWord("Noun", "N");

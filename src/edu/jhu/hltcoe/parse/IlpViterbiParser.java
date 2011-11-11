@@ -43,6 +43,8 @@ public class IlpViterbiParser implements ViterbiParser {
     protected IlpSolverFactory ilpSolverFactory;
 
     protected double parseWeight;
+
+    private static Pattern priorityPattern = Pattern.compile("priority \\d+");;
     
     public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
@@ -71,6 +73,7 @@ public class IlpViterbiParser implements ViterbiParser {
                 Time.totMs(stopwatch) / sentences.size()));
         log.debug(String.format("Tot parse time: %.3f", 
                 Time.totMs(stopwatch)));
+        
         return depTreebank;
     }
 
@@ -146,7 +149,8 @@ public class IlpViterbiParser implements ViterbiParser {
         } else if (formulation == IlpFormulation.MFLOW_PROJ) {
             zimplWriter.write(getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
         }
-        zimplWriter.write(getCodeSnippet(formulation));
+        String formulationId = formulation.toString().replace("-lprelax","");
+        zimplWriter.write(getCodeSnippet(formulationId));
         zimplWriter.write(getCodeSnippet("dmv-objective-support"));
         zimplWriter.write(getCodeSnippet("dmv-objective"));
         zimplWriter.close();
@@ -154,10 +158,21 @@ public class IlpViterbiParser implements ViterbiParser {
     }
     
     protected String getCodeSnippet(Object id) {
+        String codeSnippet;
         if (id instanceof IlpFormulation) {
-            return codeMap.get(id.toString());
-        } 
-        return codeMap.get(id);
+            codeSnippet = codeMap.get(id.toString());
+        } else {
+            codeSnippet = codeMap.get(id);
+        }
+        
+        // Convert to the LP Relaxation automatically
+        if (formulation.isLpRelaxation()) {
+            codeSnippet = codeSnippet.replace(" binary", " real >= 0 <= 1");
+            codeSnippet = codeSnippet.replace(" integer", " real");
+            codeSnippet = priorityPattern.matcher(codeSnippet).replaceAll("");
+        }
+        
+        return codeSnippet;
     }
 
     private void encodeSentences(File tempDir, SentenceCollection sentences) throws FileNotFoundException {
