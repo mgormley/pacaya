@@ -161,8 +161,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     ilpform = DPExpParams(formulation=formulation)
                     experiments.append(all + dataset + ilpform)
         elif self.expname == "corpus-size":
-            if not self.fast:
-                all.update(iterations=1)
+            all.update(iterations=1)
+            # For SIMPLEX testing
+            #all.update(formulation="deptree-flow-nonproj-lprelax")
             for parser in ["ilp-corpus","ilp-sentence"]:
                 par = DPExpParams(parser=parser)
                 for dataset in datasets:
