@@ -50,6 +50,9 @@ class DPScraper(Scraper):
                 exp.update(totalParseTimeLast = tot_parse_times[-1])
                 exp.update(avgPerWordParseTimeFirst = tot_parse_times[0]/numWords)
                 exp.update(avgPerWordParseTimeLast = tot_parse_times[-1]/numWords)
+            else:
+                exp.update(totalParseTime = tot_parse_times[0])
+                exp.update(avgPerWordParseTime = tot_parse_times[0]/numWords)
          
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
