@@ -63,9 +63,6 @@ public class TrainerFactory {
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
             ViterbiParser parser;
-            MStep<DepTreebank> mStep;
-            ModelFactory modelFactory;
-
             if (modelName.equals("dmv")) {
                 IlpSolverFactory ilpSolverFactory = null;
                 if (parserName.equals("ilp-sentence") || parserName.equals("ilp-corpus")
@@ -97,6 +94,13 @@ public class TrainerFactory {
                 } else {
                     throw new ParseException("Parser not supported: " + parserName);
                 }
+            } else {
+                throw new ParseException("Model not supported: " + modelName);
+            }
+            
+            MStep<DepTreebank> mStep;
+            ModelFactory modelFactory;
+            if (modelName.equals("dmv")) {
                 mStep = new DmvMStep(lambda);
                 modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
             } else {

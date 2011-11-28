@@ -9,23 +9,26 @@ import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
-public class ViterbiTrainer implements Trainer {
+public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
 
     private static Logger log = Logger.getLogger(ViterbiTrainer.class);
-    private ViterbiParser parser;
-    private EMTrainer<DepTreebank> emTrainer;
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
-        this.parser = parser;
-        emTrainer = new EMTrainer<DepTreebank>(new ViterbiEStep(), mStep, modelFactory, iterations, convergenceRatio);
+        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio);
     }
     
-    @Override
-    public void train(SentenceCollection sentences) {
-        emTrainer.train(sentences);
+    public ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
+        super(eStep, mStep, modelFactory, iterations, convergenceRatio);
     }
 
-    private class ViterbiEStep implements EStep<DepTreebank> {
+    private static class ViterbiEStep implements EStep<DepTreebank> {
+
+        private ViterbiParser parser;
+
+        
+        public ViterbiEStep(ViterbiParser parser) {
+            this.parser = parser;
+        }
 
         @Override
         public Pair<DepTreebank,Double> getCountsAndLogLikelihood(SentenceCollection sentences, Model model) {
@@ -33,19 +36,6 @@ public class ViterbiTrainer implements Trainer {
             return new Pair<DepTreebank,Double>(depTreebank, parser.getLastParseWeight());
         }
         
-    }
-    
-    @Override
-    public Model getModel() {
-        return emTrainer.getModel();
-    }
-    
-    public ViterbiParser getParser() {
-        return parser;
-    }
-    
-    public int getIterationsCompleted() {
-        return emTrainer.getIterationsCompleted();
     }
     
 }
