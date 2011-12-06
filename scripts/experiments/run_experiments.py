@@ -185,7 +185,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
                         for dataGen in [dgFixedInterval, dgFactor]:
                             for ilpSolver in ["cplex","dip-milpblock-cpm","dip-milpblock-pc"]:
-                                experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init", ilpSolver=ilpSolver) + dataGen)
+                                experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas", ilpSolver=ilpSolver) + dataGen)
+                                if ilpSolver == "cplex":
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init", ilpSolver=ilpSolver) + dataGen)
+
         else:
             raise Exception("Unknown expname: " + str(self.expname))
                 
