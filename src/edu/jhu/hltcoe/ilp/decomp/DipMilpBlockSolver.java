@@ -20,6 +20,14 @@ import edu.jhu.hltcoe.ilp.IlpSolver;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Files;
 
+/**
+ * TODO: add handling of initial solution
+ * 
+ * TODO: use numThreads and workMemMegs. Check log (with high log level to
+ * see if the parameters are listed there)
+ *
+ * @author mgormley
+ */
 public class DipMilpBlockSolver implements IlpSolver {
 
     private static Logger log = Logger.getLogger(DipMilpBlockSolver.class);
@@ -52,8 +60,6 @@ public class DipMilpBlockSolver implements IlpSolver {
     private int doCut;
     private int doPriceAndCut;
 
-    // TODO: use numThreads and workMemMegs. Check log (with high log level to
-    // see if the parameters are listed there)
     public DipMilpBlockSolver(File tempDir, int numThreads, double workMemMegs, BlockFileWriter bfw, int doCut, int doPriceAndCut) {
         this.tempDir = tempDir;
         this.numThreads = numThreads;

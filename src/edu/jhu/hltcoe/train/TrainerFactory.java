@@ -66,18 +66,21 @@ public class TrainerFactory {
             ViterbiParser parser;
             if (modelName.equals("dmv")) {
                 IlpSolverFactory ilpSolverFactory = null;
+                IlpSolverFactory evalIlpSolverFactory = null;
                 if (parserName.equals("ilp-sentence") || parserName.equals("ilp-corpus")
                         || parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
                     IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
                     ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
                     // TODO: make this an option
                     ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+                    
                     if (ilpSolverId == IlpSolverId.DIP_MILPBLOCK_PC || ilpSolverId == IlpSolverId.DIP_MILPBLOCK_CPM) {
                         // Don't use this for evaluation
-                        evalParser = new IlpViterbiSentenceParser(formulation, new IlpSolverFactory(IlpSolverId.CPLEX, numThreads, ilpWorkMemMegs));
+                        evalIlpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, numThreads, ilpWorkMemMegs);
                     } else {
-                        evalParser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
+                        evalIlpSolverFactory = ilpSolverFactory;
                     }
+                    evalParser = new IlpViterbiSentenceParser(formulation, evalIlpSolverFactory);
                 }
 
                 if (parserName.equals("ilp-sentence")) {
@@ -96,7 +99,7 @@ public class TrainerFactory {
                     if (parserName.equals("ilp-deltas")) {
                         parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
                     } else if (parserName.equals("ilp-deltas-init")) {
-                        parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
+                        parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen, evalIlpSolverFactory);
                     } else {
                         throw new ParseException("Parser not supported: " + parserName);
                     }

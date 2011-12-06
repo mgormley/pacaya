@@ -84,7 +84,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight, double expectedInitParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 2, 128);
-        InitializedIlpViterbiParserWithDeltas parser = new InitializedIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        InitializedIlpViterbiParserWithDeltas parser = new InitializedIlpViterbiParserWithDeltas(formulation, factory, deltaGen, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
