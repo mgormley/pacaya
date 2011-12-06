@@ -90,7 +90,7 @@ public class DipMilpBlockSolver implements IlpSolver {
             paramStr = paramStr.replace("MPS_PREFIX_HERE", mpsFile.getName().replace(".mps", ""));
             paramStr = paramStr.replace("LOG_LEVEL_HERE", "5");
             paramStr = paramStr.replace("DO_CUT_HERE", String.valueOf(doCut));
-            paramStr = paramStr.replace("DO_PRICE_AND_CUT_HERE", String.valueOf(doPriceAndCut));
+            paramStr = paramStr.replace("DO_PRICE_CUT_HERE", String.valueOf(doPriceAndCut));
             FileWriter paramWriter = new FileWriter(paramFile);
             paramWriter.write(paramStr);
             paramWriter.close();
