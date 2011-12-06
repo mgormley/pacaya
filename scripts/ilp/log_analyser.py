@@ -28,7 +28,9 @@ class CplexStatus:
             float(splits[2])
             self.is_fathomed = False
         except ValueError:
-            splits.insert(2, splits[2])
+            if (splits[2] != "integral"):
+                splits.insert(2, splits[2])
+            self.fathomtype = splits[2]
             self.is_fathomed = True
             
         if len(splits) < 13:
@@ -39,7 +41,7 @@ class CplexStatus:
         self.bdirection = splits[9]
         self.nodeid = splits[10]
         self.parent = splits[11]
-        self.depth = splits[12]
+        self.depth = int(splits[12])
         
 def get_cplex_status_list(cplex_log_file):
     status_list = []
@@ -71,29 +73,41 @@ def parse_cplex_log(cplex_log_file, zimpl_tbl_file):
     for status in status_list:
         if status.is_branching_node:
             status.variable = var_map[status.variable]
-    for status in status_list:
-        if status.is_branching_node:
-            print status.variable
     
+    # Print counts of each branching variable type
+    print "Fathoming histogram: (var fathomtype depth-rounded-to-nearest-10)"
+    type_count_map = {}
+    for status in status_list:
+        if status.is_branching_node and status.is_fathomed:
+            type = re.split("[#$]", status.variable)[0]
+            type += " %s %d" % (status.fathomtype, int(round(status.depth / 10.0) * 10))
+            count = type_count_map.get(type,0)
+            type_count_map[type] = count+1
+    histogram = []
+    for type,count in type_count_map.items():
+        histogram.append((count,type))
+    for count,type in reversed(sorted(histogram)):
+        print "%s\t%d" % (type,count)
+        
     # Print counts of each branching variable type
     print "Branching var histogram:"
     type_count_map = {}
     for status in status_list:
         if status.is_branching_node:
-            type = status.variable.split("#")[0]
+            type = re.split("[#$]", status.variable)[0]
             count = type_count_map.get(type,0)
             type_count_map[type] = count+1
     histogram = []
     for type,count in type_count_map.items():
         histogram.append((count,type))
     for count,type in sorted(histogram):
-        print type,count
+        print "%s\t%d" % (type,count)
         
     # Print counts of each zimpl var
     print "Zimpl var histogram:"
     type_count_map = {}
     for short_var,zimpl_var in var_map.items():
-        type = zimpl_var.split("#    ")[0]
+        type = re.split("[#$]", zimpl_var)[0]
         count = type_count_map.get(type,0)
         type_count_map[type] = count+1
     histogram = []
@@ -101,7 +115,7 @@ def parse_cplex_log(cplex_log_file, zimpl_tbl_file):
         histogram.append((count,type))
     for count,type in sorted(histogram):
         print type,count
-        
+            
 if __name__ == "__main__":
     usage = "%prog "
 
