@@ -43,19 +43,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
         experiment_runner.ExpParams.__init__(self,keywords)
-        
-    def get_name_key_order(self):
-        key_order = []
-        initial_keys = self.get_initial_keys()
-        all_keys = sorted(self.params.keys())
-        for key in initial_keys:
-            if key in all_keys:
-                key_order.append(key)
-        for key in all_keys:
-            if key not in initial_keys:
-                key_order.append(key)
-        return key_order
-    
+            
     def get_initial_keys(self):
         return "dataSet model k s".split()
     
@@ -87,7 +75,8 @@ class DPExpParams(experiment_runner.JavaExpParams):
         
         # Create the JVM args
         java_args = self._get_java_args(java_mem)  
-        if self.get("ilpSolver") == "cplex":  
+        if True: 
+            # HACK: revert back to this if-clause after adding real parser for eval: self.get("ilpSolver") == "cplex":  
             mac_jlp = "/Users/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_darwin9_gcc4.0"
             coe_jlp = "/home/hltcoe/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_sles10_4.1"
             if os.path.exists(mac_jlp): jlp = mac_jlp
@@ -189,12 +178,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
 #                        mns_list = range(100,1500,100)
 #                    elif (maxSentenceLength == 7):
 #                        mns_list = range(100,2200,100)
-                    mns_list = [1,2,4,8,16,32,64,128,256,512,1024]
+                    mns_list = [2,4,8,16,32,64,128,256,512,1024]
                     for maxNumSentences in mns_list:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        # It doesn't make sense to do D-W for ilp-corpus, because there are no coupling constraints
                         experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-corpus"))
                         for dataGen in [dgFixedInterval, dgFactor]:
-                            experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init") + dataGen)
+                            for ilpSolver in ["cplex","dip-milpblock-cpm","dip-milpblock-pc"]:
+                                experiments.append(all + dataset + msl + mns + DPExpParams(parser="ilp-deltas-init", ilpSolver=ilpSolver) + dataGen)
         else:
             raise Exception("Unknown expname: " + str(self.expname))
                 

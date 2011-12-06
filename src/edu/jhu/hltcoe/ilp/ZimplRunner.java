@@ -26,19 +26,21 @@ public class ZimplRunner {
     private String outputPrefix;
     private File zimplFile;
     private File tempDir;
+    private String type;
     
-    public ZimplRunner(File zimplFile, File tempDir) {
+    public ZimplRunner(File zimplFile, File tempDir, String type) {
         this.zimplFile = zimplFile;
         this.tempDir = tempDir;
         this.outputPrefix = new File(tempDir, zimplFile.getName().replace(".zpl", "")).getAbsolutePath();
+        this.type = type;
     }
 
     public File getZimplFile() {
         return zimplFile;
     }
     
-    public File getLpFile() {
-        return new File(outputPrefix + ".lp");
+    public File getIlpFile() {
+        return new File(outputPrefix + "." + type);
     }
     
     public File getTblFile() {
@@ -54,17 +56,24 @@ public class ZimplRunner {
     }
     
     public void runZimpl() {
-        runZimpl("lp", 1);
+        runZimpl(1);
     }
 
-    private void runZimpl(String type, int verbosity) {
+    private void runZimpl(int verbosity) {
+        int maxLength;
+        if (type.equals("mps")) {
+            maxLength = 8;
+        } else {
+            maxLength = 14;
+        }
+        
         String[] cmdArray = new String[] { 
                 zimplBinary, 
                 "-r", // Write ORD file
                 "-m", // Write MST file
                 "-o", outputPrefix,
-                "-t", type, 
-                "-l","14", // Maximum length of names in output file. 
+                "-t", type, // e.g. lp, mps
+                "-l", String.valueOf(maxLength), // Maximum length of names in output file. 
                 "-v"+String.valueOf(verbosity), 
                 zimplFile.getAbsolutePath() };
         File zimplLog = new File(tempDir, "zimpl.log");
@@ -72,15 +81,39 @@ public class ZimplRunner {
     }
 
     /**
+     * Tries to map to the zimpl variable name, but returns the original if it can't be found.
+     */
+    public static String safeMap(Map<String, String> tblMap, String key) {
+        String value = tblMap.get(key);
+        if (value != null) {
+            return value;
+        } else {
+            return key;
+        }
+    }
+
+    /**
      * Reads in the tbl file as a map from the Zimpl var names to Solver var names.
      */
+
     public static Map<String,String> readTblMapFromZimpl(File tblFile) throws IOException {
+        return readTblMapFromZimpl(tblFile, "v");
+    }
+    
+    /**
+     * @param mapType v for variables and c for constraints
+     */
+    public static Map<String,String> readTblMapFromZimpl(File tblFile, String mapType) throws IOException {
         Map<String,String> tblMap = new HashMap<String,String>();
         
         BufferedReader reader = new BufferedReader(new FileReader(tblFile));
         String line;
         while((line = reader.readLine()) != null) {
             String[] splits = tabRegex.split(line);
+            String type = splits[1];
+            if (!type.equals(mapType)) {
+                continue;
+            }
             String gurobiVar = splits[3];
             String zimplVar = splits[4];
             // Remove double quotes
@@ -94,12 +127,23 @@ public class ZimplRunner {
      * Reads in the tbl file as a map from the Solver var names to Zimpl var names.
      */
     public static Map<String,String> readTblMapToZimpl(File tblFile) throws IOException {
+        return readTblMapToZimpl(tblFile, "v");
+    }
+    
+    /**
+     * @param mapType v for variables and c for constraints
+     */
+    public static Map<String,String> readTblMapToZimpl(File tblFile, String mapType) throws IOException {
         Map<String,String> tblMap = new HashMap<String,String>();
         
         BufferedReader reader = new BufferedReader(new FileReader(tblFile));
         String line;
         while((line = reader.readLine()) != null) {
             String[] splits = tabRegex.split(line);
+            String type = splits[1];
+            if (!type.equals(mapType)) {
+                continue;
+            }
             String gurobiVar = splits[3];
             String zimplVar = splits[4];
             // Remove double quotes

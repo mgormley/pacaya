@@ -5,9 +5,11 @@ import java.util.Map;
 
 public interface IlpSolver {
 
-    boolean solve(File lpFile);
+    boolean solve(File ilpFile);
 
     Map<String, Double> getResult();
 
     double getObjective();
+
+    String getType();
 }

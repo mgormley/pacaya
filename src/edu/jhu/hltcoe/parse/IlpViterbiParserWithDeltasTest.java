@@ -89,7 +89,7 @@ public class IlpViterbiParserWithDeltasTest {
         return trees;
     }
     
-    private static class MockIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas {
+    public static class MockIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas {
         
         public MockIlpViterbiParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory,
                 DeltaGenerator deltaGen) {

@@ -46,7 +46,7 @@ public class CplexIlpSolver implements IlpSolver {
 
     @Override
     public boolean solve(File lpFile) {
-        if (!lpFile.getPath().endsWith(".lp")) {
+        if (!lpFile.getPath().endsWith("." + getType())) {
             throw new IllegalStateException("Expecting lpFile to end with .lp: " + lpFile.getPath());
         }
         
@@ -190,6 +190,10 @@ public class CplexIlpSolver implements IlpSolver {
         int workMemMegs = Command.getOptionValue(cmd, "workMemMegs", 128);
         CplexIlpSolver solver = new CplexIlpSolver(new File("."), numThreads, workMemMegs);
         solver.solve(new File(lpFile));
+    }
+    
+    public String getType() {
+        return "lp";
     }
     
 }

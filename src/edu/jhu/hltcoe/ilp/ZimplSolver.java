@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.jhu.hltcoe.ilp.decomp.DipMilpBlockSolver;
+
 public class ZimplSolver  {
     
     private File tempDir;
@@ -26,16 +28,20 @@ public class ZimplSolver  {
         result = new HashMap<String,Double>();
         
         // Run Zimpl
-        ZimplRunner zimplRunner = new ZimplRunner(zimplFile, tempDir);
+        ZimplRunner zimplRunner = new ZimplRunner(zimplFile, tempDir, ilpSolver.getType());
         zimplRunner.runZimpl();
         if (mstFileUpdater != null) {
             mstFileUpdater.updateMstFile(zimplRunner);
         }
-        File lpFile = zimplRunner.getLpFile();
+        File ilpFile = zimplRunner.getIlpFile();
         File tblFile = zimplRunner.getTblFile();
         
+        if (ilpSolver instanceof DipMilpBlockSolver) {
+            ((DipMilpBlockSolver)ilpSolver).setTblFile(tblFile);
+        }
+        
         // Run ILP Solver
-        if (!ilpSolver.solve(lpFile)) {
+        if (!ilpSolver.solve(ilpFile)) {
             throw new RuntimeException("no solution found");
         }
         objective = ilpSolver.getObjective();

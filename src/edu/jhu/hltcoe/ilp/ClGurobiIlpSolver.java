@@ -92,4 +92,8 @@ public class ClGurobiIlpSolver implements IlpSolver {
         return solMap;
     }
 
+    public String getType() {
+        return "lp";
+    }
+
 }

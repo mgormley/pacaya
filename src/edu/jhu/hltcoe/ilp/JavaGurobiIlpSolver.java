@@ -59,5 +59,9 @@ public class JavaGurobiIlpSolver implements IlpSolver {
     public double getObjective() {
         return objective;
     }
-    
+
+    public String getType() {
+        return "lp";
+    }
+        
 }

@@ -87,5 +87,17 @@ public class Files {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Read until the current line equals the breakpoint string.
+     */
+    public static void readUntil(BufferedReader reader, String breakpoint) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.equals(breakpoint)) {
+                return;
+            }
+        }
+    }
     
 }

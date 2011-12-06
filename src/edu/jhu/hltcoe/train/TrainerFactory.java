@@ -20,6 +20,7 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.decomp.DeltaParseBlockFileWriter;
 import edu.jhu.hltcoe.util.Command;
 
 public class TrainerFactory {
@@ -67,8 +68,16 @@ public class TrainerFactory {
                 IlpSolverFactory ilpSolverFactory = null;
                 if (parserName.equals("ilp-sentence") || parserName.equals("ilp-corpus")
                         || parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
-                    ilpSolverFactory = new IlpSolverFactory(IlpSolverId.getById(ilpSolver), numThreads, ilpWorkMemMegs);
-                    evalParser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
+                    IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
+                    ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
+                    // TODO: make this an option
+                    ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+                    if (ilpSolverId == IlpSolverId.DIP_MILPBLOCK_PC || ilpSolverId == IlpSolverId.DIP_MILPBLOCK_CPM) {
+                        // Don't use this for evaluation
+                        evalParser = new IlpViterbiSentenceParser(formulation, new IlpSolverFactory(IlpSolverId.CPLEX, numThreads, ilpWorkMemMegs));
+                    } else {
+                        evalParser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
+                    }
                 }
 
                 if (parserName.equals("ilp-sentence")) {

@@ -122,6 +122,11 @@ subto at_most_one_arc_delta:
 	forall <s,i,j> in AllArcs:
 		1 >= sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
 
+# Redundant constraint for D-W decomposition in MILPBlock
+subto redundant_arc_eq_arc_delta:
+	forall <s,i,j> in AllArcs:
+		arc[s,i,j] == sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
+
 	    ]]>
 	</code>
 	<code id="sos-delta">
