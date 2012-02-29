@@ -396,7 +396,7 @@ var numToSide[<s,i,lr> in AllTokensLR] integer >= 0 <= Length[s] priority 50;
 # whether a child was generate adjacent to the left/right
 var genAdj[AllTokensLR] binary priority 45;
 # number of non-adjacent arcs from <s,i> to left/right children
-var numNA[<s,i,lr> in AllTokensLR] integer >= 0 <= Length[s] - 1 priority 45;
+var numNonAdj[<s,i,lr> in AllTokensLR] integer >= 0 <= Length[s] - 1 priority 45;
 
 subto numToSideLeft:
     forall <s,i> in AllTokens:
@@ -410,9 +410,9 @@ subto genAdjLeftAndRight:
     forall <s,i,lr> in AllTokensLR: 
     	genAdj[s,i,lr] >= numToSide[s,i,lr]/Length[s];
 
-subto numNALeftAndRight:
+subto numNonAdjLeftAndRight:
     forall <s,i,lr> in AllTokensLR:
-    	numNA[s,i,lr] == numToSide[s,i,lr] - genAdj[s,i,lr];
+    	numNonAdj[s,i,lr] == numToSide[s,i,lr] - genAdj[s,i,lr];
     	
     	]]>
 	</code>
@@ -431,7 +431,7 @@ maximize goal:
     + (sum <s,i,lr> in AllTokensLR: 
       	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
-	   + numNA[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
 	   + genAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
       );
     	
@@ -448,7 +448,7 @@ maximize goal:
     + (sum <s,i,lr> in AllTokensLR: 
       	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
-	   + numNA[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
 	   + genAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
       );
     	
@@ -477,7 +477,7 @@ maximize goal:
     + (sum <s,i,lr> in AllTokensLR: 
       	 (stopAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
-	   + numNA[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
 	   + stopNonAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
       );
     	
