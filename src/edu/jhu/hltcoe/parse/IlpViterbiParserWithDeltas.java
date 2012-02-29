@@ -47,7 +47,9 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
         }
         zimplWriter.write(getCodeSnippet(formulation));
         zimplWriter.write(getCodeSnippet("dmv-objective-support"));
-        zimplWriter.write(getCodeSnippet("dmv-objective-delta"));
+        // Here we use the -modelparam version of the objective so that DIP has
+        // one variable per model parameter in the objective.
+        zimplWriter.write(getCodeSnippet("dmv-objective-delta-modelparam"));
         zimplWriter.close();
         return zimplFile;
     }
