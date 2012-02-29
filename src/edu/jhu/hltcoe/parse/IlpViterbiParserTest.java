@@ -82,7 +82,7 @@ public class IlpViterbiParserTest {
         // multi-c flow projective parsing
         timer = new Stopwatch();
         timer.start();
-        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
+        DepTreebank mflowTrees = getParses(model, sentences, IlpFormulation.MFLOW_PROJ, expectedParseWeight);
         timer.stop();
         System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
         
