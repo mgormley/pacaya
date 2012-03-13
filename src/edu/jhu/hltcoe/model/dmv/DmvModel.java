@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.model;
+package edu.jhu.hltcoe.model.dmv;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
+import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.ComparablePair;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.model;
+package edu.jhu.hltcoe.model.dmv;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
+import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.MStep;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;

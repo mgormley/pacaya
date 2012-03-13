@@ -13,10 +13,10 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
-import edu.jhu.hltcoe.model.DmvModel;
-import edu.jhu.hltcoe.model.DmvModelFactory;
-import edu.jhu.hltcoe.model.DmvWeightCopier;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvWeightCopier;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.model;
+package edu.jhu.hltcoe.model.dmv;
 
 import org.junit.Test;
 

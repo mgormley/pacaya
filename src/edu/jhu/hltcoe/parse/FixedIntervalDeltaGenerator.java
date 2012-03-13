@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.model.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Quadruple;
 

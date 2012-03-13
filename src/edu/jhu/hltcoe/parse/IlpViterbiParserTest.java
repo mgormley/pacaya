@@ -15,10 +15,10 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
-import edu.jhu.hltcoe.model.DmvModelFactory;
-import edu.jhu.hltcoe.model.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.util.Prng;
 
 public class IlpViterbiParserTest {

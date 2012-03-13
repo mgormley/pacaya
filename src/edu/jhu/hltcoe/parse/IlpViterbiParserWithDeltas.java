@@ -13,8 +13,8 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.model.DmvModel;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.util.Quadruple;
 import edu.jhu.hltcoe.util.Utilities;
 
