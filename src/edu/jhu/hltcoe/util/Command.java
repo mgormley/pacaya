@@ -59,8 +59,14 @@ public class Command {
             return proc;
 
         } catch (Exception e) {
+            String tail = "";
+            try { 
+                tail = Files.tail(logFile);
+            } catch (Throwable t) {
+                // Ignore new exceptions
+            }
             throw new RuntimeException("Exception thrown while trying to exec command " + cmdToString(cmdArray) + "\n"
-                    + Files.tail(logFile), e);
+                    + tail, e);
         }
     }
 
