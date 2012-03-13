@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import edu.jhu.hltcoe.ilp.decomp.AbstractDipSolver;
 import edu.jhu.hltcoe.ilp.decomp.DipMilpBlockSolver;
 
 public class ZimplSolver  {
@@ -36,8 +37,9 @@ public class ZimplSolver  {
         File ilpFile = zimplRunner.getIlpFile();
         File tblFile = zimplRunner.getTblFile();
         
-        if (ilpSolver instanceof DipMilpBlockSolver) {
-            ((DipMilpBlockSolver)ilpSolver).setTblFile(tblFile);
+        // TODO: this is a hack
+        if (ilpSolver instanceof AbstractDipSolver) {
+            ((AbstractDipSolver)ilpSolver).setTblFile(tblFile);
         }
         
         // Run ILP Solver

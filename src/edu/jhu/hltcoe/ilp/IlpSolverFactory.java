@@ -6,6 +6,7 @@ import java.util.List;
 
 import edu.jhu.hltcoe.ilp.decomp.BlockFileWriter;
 import edu.jhu.hltcoe.ilp.decomp.DipMilpBlockSolver;
+import edu.jhu.hltcoe.ilp.decomp.DipParseSolver;
 
 public class IlpSolverFactory {
     
@@ -39,7 +40,13 @@ public class IlpSolverFactory {
                 throw new IllegalStateException("Block file writer must be set");
             }
             // TODO: use numThreads, workMemMegs
-            return new DipMilpBlockSolver(tempDir, numThreads, workMemMegs, blockFileWriter, 0, 1);                
+            return new DipMilpBlockSolver(tempDir, numThreads, workMemMegs, blockFileWriter, 0, 1);          
+        } else if (ilpSolver == IlpSolverId.DIP_PARSE_PC) {
+            if (blockFileWriter == null) {
+                throw new IllegalStateException("Block file writer must be set");
+            }
+            // TODO: use numThreads, workMemMegs
+            return new DipParseSolver(tempDir, numThreads, workMemMegs, blockFileWriter, 0, 1);     
         } else {
             throw new RuntimeException("unsupported IlpSolverId: " + ilpSolver);
         }
@@ -54,7 +61,8 @@ public class IlpSolverFactory {
         GUROBI_CL("gurobi-cl"),
         GUROBI_JAVA("gurobi-java"),
         DIP_MILPBLOCK_CPM("dip-milpblock-cpm"),
-        DIP_MILPBLOCK_PC("dip-milpblock-pc");
+        DIP_MILPBLOCK_PC("dip-milpblock-pc"),
+        DIP_PARSE_PC("dip-parse-pc");
         
         private String id;
         

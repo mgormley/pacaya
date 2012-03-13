@@ -46,15 +46,48 @@ public class DeltaParseBlockFileWriterTest {
 
         expectedParseWeight = -35.353843;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
-        getParsesPc(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
+        getParsesMilpBlockPc(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
 
         expectedParseWeight = -39.128243;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
-        getParsesPc(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
+        getParsesMilpBlockPc(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
     }    
     
-    public static DepTreebank getParsesPc(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
+    public static DepTreebank getParsesMilpBlockPc(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.DIP_MILPBLOCK_PC, 2, 128);
+        factory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+        IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        DepTreebank trees = parser.getViterbiParse(sentences, model);
+        for (DepTree depTree : trees) {
+            System.out.println(depTree);
+        }
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-13);
+        return trees;
+    }
+    
+    @Test
+    public void testBranchPriceAndCutParsePC() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
+        sentences.add(IlpViterbiParserTest.getSentenceFromString("mouse ate cat"));
+        //sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
+        Model model = modelFactory.getInstance(sentences);
+        double expectedParseWeight;
+
+        DeltaGenerator deltaGen;
+
+        expectedParseWeight = -35.353843;
+        deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
+        getParsesParsePc(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
+
+        expectedParseWeight = -39.128243;
+        deltaGen = new FactorDeltaGenerator(1.1, 2);
+        getParsesParsePc(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
+    }    
+    
+    public static DepTreebank getParsesParsePc(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
+        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.DIP_PARSE_PC, 2, 128);
         factory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
         IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
@@ -69,7 +102,7 @@ public class DeltaParseBlockFileWriterTest {
     public void testBranchAndCutCPM() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
+        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate"));
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
         Model model = modelFactory.getInstance(sentences);
         double expectedParseWeight;

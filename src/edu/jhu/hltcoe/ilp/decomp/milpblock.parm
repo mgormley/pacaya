@@ -39,10 +39,10 @@ Settings for ALPS framework.
 [ALPS]
 
 #############################################################################
-Settings for MILPBlock application.
-  section=MILPBlock
+Settings for SECTION_HERE application.
+  section=SECTION_HERE
 #############################################################################
-[MILPBlock]
+[SECTION_HERE]
 # Log level for messages from application.
 LogLevel       = LOG_LEVEL_HERE
 
@@ -58,3 +58,5 @@ BlockFile       = BLOCK_FILE_HERE
 
 # Name of MPS file for instance (assumed to be in DataDir).
 Instance        = MPS_PREFIX_HERE
+
+ZimplTblFile    = ZIMPL_TBL_FILE_HERE
