@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.parse.pr;
 
 import util.CountAlphabet;
-import depparsing.data.DepCorpus;
 import edu.jhu.hltcoe.data.Label;
 
 public class DepInstance {
@@ -32,14 +31,5 @@ public class DepInstance {
         return util.ArrayPrinting.intArrayToString(postags, getTagStrings(tagAlphabet, postags), "sentence tags")
                 + "\n";
     }
-
-    public String getTagsStrings(DepCorpus c) {
-        String tagsS[] = c.getTagStrings(postags);
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < tagsS.length; i++) {
-            sb.append(tagsS[i] + " ");
-        }
-        sb.append("\n");
-        return sb.toString();
-    }
+    
 }

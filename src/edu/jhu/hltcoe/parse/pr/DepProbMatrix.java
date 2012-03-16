@@ -16,7 +16,6 @@ import java.util.Random;
 import model.AbstractCountTable;
 import util.Alphabet;
 import util.ArrayMath;
-import util.CountAlphabet;
 import util.LogSummer;
 import depparsing.model.NonterminalMap;
 import depparsing.util.Lambda;
