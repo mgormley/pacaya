@@ -48,10 +48,17 @@ public class ZimplSolverTest {
     }
     
     @Test
-    public void testInfeasible() {
-        runZimplInfeasible(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
-        runZimplInfeasible(tempDir, new JavaGurobiIlpSolver(tempDir));
+    public void testCplexInfeasible() {
         runZimplInfeasible(tempDir, new CplexIlpSolver(tempDir, 2, 128));
+    }
+    
+    @Test
+    public void testJavaGurobiInfeasible() {
+        runZimplInfeasible(tempDir, new JavaGurobiIlpSolver(tempDir));
+    }
+    @Test
+    public void testClGurobiInfeasible() {
+        runZimplInfeasible(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
     }
 
     @Test
@@ -78,7 +85,7 @@ public class ZimplSolverTest {
         try {
             solver.solve(zimplFile);
         } catch(RuntimeException e) {
-            Assert.assertTrue(e.getMessage().contains("no optimal solution found"));
+            Assert.assertTrue(e.getMessage().contains("no solution found"));
         }
     }
     
