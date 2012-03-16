@@ -12,6 +12,7 @@ import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -65,25 +66,20 @@ public class TrainerFactory {
         if (algorithm.equals("viterbi")) {
             ViterbiParser parser;
             if (modelName.equals("dmv")) {
+                evalParser = new DmvCkyParser();
+                
                 IlpSolverFactory ilpSolverFactory = null;
-                IlpSolverFactory evalIlpSolverFactory = null;
-                if (parserName.equals("ilp-sentence") || parserName.equals("ilp-corpus")
-                        || parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
+                if (parserName.startsWith("ilp-")) {
                     IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
                     ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
                     // TODO: make this an option
                     ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
                     
-                    if (ilpSolverId == IlpSolverId.DIP_MILPBLOCK_PC || ilpSolverId == IlpSolverId.DIP_MILPBLOCK_CPM) {
-                        // Don't use this for evaluation
-                        evalIlpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, numThreads, ilpWorkMemMegs);
-                    } else {
-                        evalIlpSolverFactory = ilpSolverFactory;
-                    }
-                    evalParser = new IlpViterbiSentenceParser(formulation, evalIlpSolverFactory);
                 }
 
-                if (parserName.equals("ilp-sentence")) {
+                if (parserName.equals("cky")) {
+                    parser = new DmvCkyParser();
+                }else if (parserName.equals("ilp-sentence")) {
                     parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
                 } else if (parserName.equals("ilp-corpus")) {
                     parser = new IlpViterbiParser(formulation, ilpSolverFactory);
@@ -99,7 +95,7 @@ public class TrainerFactory {
                     if (parserName.equals("ilp-deltas")) {
                         parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
                     } else if (parserName.equals("ilp-deltas-init")) {
-                        parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen, evalIlpSolverFactory);
+                        parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen, ilpSolverFactory);
                     } else {
                         throw new ParseException("Parser not supported: " + parserName);
                     }
