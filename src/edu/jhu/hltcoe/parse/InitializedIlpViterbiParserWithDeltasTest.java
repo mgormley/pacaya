@@ -40,15 +40,15 @@ public class InitializedIlpViterbiParserWithDeltasTest {
     @Test
     public void testIdentityDeltaGen() {
         SentenceCollection sentences = new SentenceCollection();
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
+        sentences.addSentenceFromString("cat ate mouse");
+        sentences.addSentenceFromString("the cat ate the mouse with the hat");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -40.56204981;
+        double expectedParseWeight = -36.79711971052844;
 
         DeltaGenerator deltaGen;
 
-        DepTreebank treesStandard = IlpViterbiParserTest.getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
+        DepTreebank treesStandard = IlpViterbiParserTest.getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
 
         deltaGen = new IdentityDeltaGenerator();
         DepTreebank treesDelta = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight, expectedParseWeight);
@@ -61,8 +61,8 @@ public class InitializedIlpViterbiParserWithDeltasTest {
     @Test
     public void testProjAndNonprojDeltaParsers() {
         SentenceCollection sentences = new SentenceCollection();
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("cat ate mouse"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
+        sentences.addSentenceFromString("cat ate mouse");
+        sentences.addSentenceFromString("the cat ate the mouse with the hat");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
         
@@ -71,13 +71,13 @@ public class InitializedIlpViterbiParserWithDeltasTest {
 
         DeltaGenerator deltaGen;
 
-        expectedInitParseWeight = -40.56204981;
-        expectedParseWeight = -35.35388011;
+        expectedInitParseWeight = -36.79711971052844;
+        expectedParseWeight = -31.588949617488566;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
         getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight, expectedInitParseWeight);
-
-        expectedInitParseWeight = -41.12979411;
-        expectedParseWeight = -39.12828011;
+        
+        expectedInitParseWeight = -37.364863915263356;
+        expectedParseWeight = -35.363350139372564;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
         getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight, expectedInitParseWeight);
     }
@@ -93,11 +93,11 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         
         File initCplexLog = new File(new File(parser.getInitWorkspace(), "ilp_parse_000"), "cplex.log");
         Matcher initMatch = Files.getFirstMatch(initCplexLog, Pattern.compile("Solution value = (.+)"));
-        Assert.assertEquals(Double.parseDouble(initMatch.group(1)), expectedInitParseWeight, 1E-13);
+        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(initMatch.group(1)), 1E-13);
         
         File cplexLog = new File(new File(parser.getWorkspace(), "ilp_parse_000"), "cplex.log");
         Matcher match = Files.getFirstMatch(cplexLog, Pattern.compile("defined initial solution with objective (.+)\\."));
-        Assert.assertEquals(Double.parseDouble(match.group(1)), expectedInitParseWeight, 1E-4);
+        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(match.group(1)), 1E-4);
         
         return trees;
     }

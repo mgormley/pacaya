@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.train;
 
 import junit.framework.Assert;
 
+import org.apache.log4j.BasicConfigurator;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
@@ -20,6 +21,10 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 
 public class DeltaViterbiTrainerTest {
 
+    static {
+        BasicConfigurator.configure();
+    }
+    
     @Test
     public void testConvergence() {
         double lambda = 0.1;
@@ -37,10 +42,10 @@ public class DeltaViterbiTrainerTest {
                 convergenceRatio);
 
         SentenceCollection sentences = new SentenceCollection();
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the man ate the pizza with a fork"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the man ate the pizza"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the man ate with a fork the pizza"));
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the man ate with a fork"));
+        sentences.addSentenceFromString("the man ate the pizza with a fork");
+        sentences.addSentenceFromString("the man ate the pizza");
+        sentences.addSentenceFromString("the man ate with a fork the pizza");
+        sentences.addSentenceFromString("the man ate with a fork");
         trainer.train(sentences);
 
         Assert.assertEquals(3, trainer.getIterationsCompleted());

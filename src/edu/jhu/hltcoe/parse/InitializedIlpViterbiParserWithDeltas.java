@@ -16,6 +16,7 @@ public class InitializedIlpViterbiParserWithDeltas extends IlpViterbiParserWithD
     private Map<String,Double> mipStart;
     
     public InitializedIlpViterbiParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory, DeltaGenerator deltaGen, IlpSolverFactory initIlpSolverFactory) {
+        // TODO: this should be initialized by a fast dynamic programming parser 
         super(formulation, ilpSolverFactory, deltaGen);
         initParser = new IlpViterbiParserWithDeltas(formulation, initIlpSolverFactory, new IdentityDeltaGenerator());
     }

@@ -18,6 +18,10 @@ public class DmvModel implements Model {
     private Map<Triple<Label, String, Boolean>, Double> swMap = new HashMap<Triple<Label, String, Boolean>, Double>();
     private Map<Pair<Label, String>, LabeledMultinomial<Label>> cwMap = new HashMap<Pair<Label, String>, LabeledMultinomial<Label>>();
 
+    public DmvModel() {
+        
+    }
+    
     public Map<Triple<Label, String, Boolean>, Double> getStopWeights() {
         return swMap;
     }
@@ -123,6 +127,21 @@ public class DmvModel implements Model {
             sb.append("\n");
         }
         return sb;
+    }
+    
+
+    public void setAllChooseWeights(double value) {
+        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : getChooseWeights().entrySet()) {
+            for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
+                subEntry.setValue(value);                
+            }
+        }
+    }
+
+    public void setAllStopWeights(double value) {
+        for (Entry<Triple<Label, String, Boolean>, Double> entry : getStopWeights().entrySet()) {
+            entry.setValue(value);
+        }
     }
 
 }

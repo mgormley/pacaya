@@ -32,6 +32,10 @@ public class DmvModelFactory implements ModelFactory {
     }
     
     public Model getInstance(Set<Label> vocab) {
+        return getInstance(vocab, true);
+    }
+    
+    public Model getInstance(Set<Label> vocab, boolean oneRoot) {
         // TODO: we waste effort on parameters that cannot ever appear
         // in the corpus.
         
@@ -60,6 +64,14 @@ public class DmvModelFactory implements ModelFactory {
             }
         }
 
+        if (oneRoot) {
+            // Fix the Wall probabilities to disallow vine parsing
+            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "l", true, 1.0);
+            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "l", false, 1.0);
+            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", true, 0.0);
+            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", false, 1.0);
+        }
+        
         return dmv;
     }
 

@@ -76,8 +76,8 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
             Label child = entry.getKey().get3();
             String deltaId = entry.getKey().get4();
             double weight = entry.getValue();
-            double logWeight = logForIlp(weight);
-            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %E %E\n", parent.getLabel(), lr, child.getLabel(), deltaId, weight, logWeight);
+            double logWeight = Utilities.logForIlp(weight);
+            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", parent.getLabel(), lr, child.getLabel(), deltaId, weight, logWeight);
         }
         chooseWeightsWriter.close();
     }

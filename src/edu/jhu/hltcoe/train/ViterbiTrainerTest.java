@@ -29,7 +29,7 @@ public class ViterbiTrainerTest {
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999);
         
         SentenceCollection sentences = new SentenceCollection();
-        sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the hat with the mouse"));
+        sentences.addSentenceFromString("the cat ate the hat with the mouse");
         trainer.train(sentences);
         
         Assert.assertEquals(2, trainer.getIterationsCompleted());

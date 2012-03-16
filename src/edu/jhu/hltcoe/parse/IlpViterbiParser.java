@@ -152,7 +152,8 @@ public class IlpViterbiParser implements ViterbiParser {
         String formulationId = formulation.toString().replace("-lprelax","");
         zimplWriter.write(getCodeSnippet(formulationId));
         zimplWriter.write(getCodeSnippet("dmv-objective-support"));
-        zimplWriter.write(getCodeSnippet("dmv-objective"));
+        // The -modelparam version is slightly slower but is correct on zero stop probabilities
+        zimplWriter.write(getCodeSnippet("dmv-objective-modelparam"));
         zimplWriter.close();
         return zimplFile;
     }
@@ -210,9 +211,9 @@ public class IlpViterbiParser implements ViterbiParser {
             String leftRight = entry.getKey().get2();
             int adjacent = entry.getKey().get3() ? 1 : 0;
             double weight = entry.getValue();
-            double logWeightStop = logForIlp(weight);
-            double logWeightNotStop = logForIlp(1.0 - weight);
-            stopWeightsWriter.format("\"%s\" %s %d %E %E %E\n", label.getLabel(), leftRight, adjacent, weight, logWeightStop, logWeightNotStop);
+            double logWeightStop = Utilities.logForIlp(weight);
+            double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
+            stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", label.getLabel(), leftRight, adjacent, weight, logWeightStop, logWeightNotStop);
         }
         stopWeightsWriter.close();
     }
@@ -227,24 +228,12 @@ public class IlpViterbiParser implements ViterbiParser {
             for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
                 Label child = subEntry.getKey();
                 double weight = subEntry.getValue();
-                double logWeight = logForIlp(weight);
-                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %E %E\n", parent.getLabel(), lr, child.getLabel(), weight, logWeight);
+                double logWeight = Utilities.logForIlp(weight);
+                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", parent.getLabel(), lr, child.getLabel(), weight, logWeight);
             }
         }
         chooseWeightsWriter.close();
     }
-
-    protected static double logForIlp(double weight) {
-        if (weight == 0.0 || weight == -0.0) {
-            // CPLEX doesn't accept exponents larger than 37 -- it seems to be
-            // cutting off at something close to the 32-bit float limit of 3.4E38.
-            // We use -1E25 since we can add 1 trillion of these together and stay in 
-            // in the coefficient limit.
-            return -1E25;
-        }
-        return Utilities.log(weight);
-    }
-
 
     protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
         DepTreebank depTreebank = new DepTreebank();

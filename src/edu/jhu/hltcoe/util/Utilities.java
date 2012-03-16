@@ -163,5 +163,16 @@ public class Utilities {
     public static double log2(double d) {
         return log(d) / LOG2;
     }
+
+    public static double logForIlp(double weight) {
+        if (weight == 0.0 || weight == -0.0) {
+            // CPLEX doesn't accept exponents larger than 37 -- it seems to be
+            // cutting off at something close to the 32-bit float limit of 3.4E38.
+            // We use -1E25 since we can add 1 trillion of these together and stay in 
+            // in the coefficient limit.
+            return -1E25;
+        }
+        return log(weight);
+    }
     
 }

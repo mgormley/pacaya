@@ -13,51 +13,52 @@ import edu.jhu.hltcoe.util.Triple;
 
 public class SimpleStaticDmvModel {
 
+    public static final TaggedWord TW_A = new TaggedWord("a", "A");
+    public static final TaggedWord TW_B = new TaggedWord("b", "B");
+
     public static DmvModel getTwoPosTagInstance() {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(0.1));
         Set<Label> vocab = new HashSet<Label>();
-        final TaggedWord twA = new TaggedWord("Noun", "A");
-        final TaggedWord twB = new TaggedWord("Verb", "B");
         vocab.add(WallDepTreeNode.WALL_LABEL);
-        vocab.add(twA);
-        vocab.add(twB);
+        vocab.add(TW_A);
+        vocab.add(TW_B);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(vocab);
 
-        setAllChooseWeights(dmvModel, 0.0);
-        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "l", twB, 1.0);
-        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", twA, 0.5);
-        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", twB, 0.5);
-        dmvModel.putChooseWeight(twA, "l", twA, 0.5);
-        dmvModel.putChooseWeight(twA, "l", twB, 0.5);
-        dmvModel.putChooseWeight(twA, "r", twA, 1.0); // dummy param
-        dmvModel.putChooseWeight(twB, "l", twA, 0.5);
-        dmvModel.putChooseWeight(twB, "l", twB, 0.5);
-        dmvModel.putChooseWeight(twB, "r", twB, 1.0);
+        dmvModel.setAllChooseWeights(0.0);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "l", TW_B, 1.0);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", TW_A, 0.5);
+        dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", TW_B, 0.5);
+        dmvModel.putChooseWeight(TW_A, "l", TW_A, 0.5);
+        dmvModel.putChooseWeight(TW_A, "l", TW_B, 0.5);
+        dmvModel.putChooseWeight(TW_A, "r", TW_A, 1.0); // dummy param
+        dmvModel.putChooseWeight(TW_B, "l", TW_A, 0.5);
+        dmvModel.putChooseWeight(TW_B, "l", TW_B, 0.5);
+        dmvModel.putChooseWeight(TW_B, "r", TW_B, 1.0);
         
-        setAllStopWeights(dmvModel, 1.0);
+        dmvModel.setAllStopWeights(1.0);
         dmvModel.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", true, 0.0);
-        dmvModel.putStopWeight(twA, "l", true, 0.6);
-        dmvModel.putStopWeight(twA, "r", true, 0.6); 
-        dmvModel.putStopWeight(twB, "l", true, 0.6); 
-        dmvModel.putStopWeight(twB, "r", true, 0.6);
+        dmvModel.putStopWeight(TW_A, "l", true, 0.6);
+        dmvModel.putStopWeight(TW_A, "r", true, 0.6); 
+        dmvModel.putStopWeight(TW_B, "l", true, 0.6); 
+        dmvModel.putStopWeight(TW_B, "r", true, 0.6);
         
         return dmvModel;
     }
 
+    public static final TaggedWord noun = new TaggedWord("Noun", "N");
+    public static final TaggedWord adj = new TaggedWord("Adj", "Adj");
+    public static final TaggedWord verb = new TaggedWord("Verb", "V");
     
     public static DmvModel getThreePosTagInstance() {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(0.1));
         Set<Label> vocab = new HashSet<Label>();
-        final TaggedWord noun = new TaggedWord("Noun", "N");
-        final TaggedWord adj = new TaggedWord("Adj", "Adj");
-        final TaggedWord verb = new TaggedWord("Verb", "V");
         vocab.add(WallDepTreeNode.WALL_LABEL);
         vocab.add(noun);
         vocab.add(adj);
         vocab.add(verb);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(vocab);
 
-        setAllChooseWeights(dmvModel, 0.0);
+        dmvModel.setAllChooseWeights(0.0);
         dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "l", verb, 1.0);
         dmvModel.putChooseWeight(WallDepTreeNode.WALL_LABEL, "r", verb, 1.0);
         dmvModel.putChooseWeight(noun, "l", adj, 1.0);
@@ -67,7 +68,7 @@ public class SimpleStaticDmvModel {
         dmvModel.putChooseWeight(verb, "l", noun, 1.0);
         dmvModel.putChooseWeight(verb, "r", noun, 1.0);
         
-        setAllStopWeights(dmvModel, 1.0);
+        dmvModel.setAllStopWeights(1.0);
         dmvModel.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", true, 0.0); // Always generate a verb
         dmvModel.putStopWeight(noun, "l", true, 0.6);
         //dmvModel.putStopWeight(noun, "l", false, 0.8);
@@ -77,20 +78,6 @@ public class SimpleStaticDmvModel {
         dmvModel.putStopWeight(verb, "r", true, 0.0);
         
         return dmvModel;
-    }
-
-    private static void setAllChooseWeights(DmvModel dmvModel, double value) {
-        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : dmvModel.getChooseWeights().entrySet()) {
-            for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
-                subEntry.setValue(value);                
-            }
-        }
-    }
-
-    private static void setAllStopWeights(DmvModel dmvModel, double value) {
-        for (Entry<Triple<Label, String, Boolean>, Double> entry : dmvModel.getStopWeights().entrySet()) {
-            entry.setValue(value);
-        }
     }
     
 }

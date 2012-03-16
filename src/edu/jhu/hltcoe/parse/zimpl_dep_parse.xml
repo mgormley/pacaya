@@ -437,6 +437,35 @@ maximize goal:
     	
     	]]>
 	</code>
+	<code id="dmv-objective-modelparam">
+    	<![CDATA[   
+# ---------- DMV log-likelihood with Deltas ----------
+
+# Adding these variables allows us to have one variable for each stop weight parameter in the model
+var stopAdj[AllTokensLR] binary priority 45;
+var stopNonAdj[AllTokensLR] binary priority 45;
+
+subto stopAdjLeftAndRight:
+    forall <s,i,lr> in AllTokensLR: 
+    	stopAdj[s,i,lr] == 1 - genAdj[s,i,lr];
+    	
+subto stopNonAdjLeftAndRight:
+    forall <s,i,lr> in AllTokensLR: 
+    	stopNonAdj[s,i,lr] == genAdj[s,i,lr];
+
+# TODO: add deltas to stopweights
+maximize goal: 
+    (sum <s,i,j> in AllArcs: 
+        arc[s,i,j] * LogChooseWeight[Word[s,i],LRForIJ[i,j],Word[s,j]]) 
+    + (sum <s,i,lr> in AllTokensLR: 
+      	 (stopAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,1]
+	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
+	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+	   + stopNonAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
+      );
+    	
+    	]]>
+	</code>  
 	<code id="dmv-objective-delta">
     	<![CDATA[   
 # ---------- DMV log-likelihood with Deltas ----------
@@ -453,8 +482,8 @@ maximize goal:
       );
     	
     	]]>
-	</code> 
-		<code id="dmv-objective-delta-modelparam">
+	</code>
+	<code id="dmv-objective-delta-modelparam">
     	<![CDATA[   
 # ---------- DMV log-likelihood with Deltas ----------
 
