@@ -11,6 +11,13 @@ public class DmvSolution implements Solution {
     private DmvModel model;
     private DepTreebank treebank;
     
+    public DmvSolution(DmvModel model, DepTreebank treebank, double score) {
+        super();
+        this.score = score;
+        this.model = model;
+        this.treebank = treebank;
+    }
+
     @Override
     public double getScore() {
         return score;

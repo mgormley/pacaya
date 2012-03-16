@@ -20,7 +20,7 @@ public class BnBDmvTrainer implements Trainer {
     public void train(SentenceCollection sentences) {
         DmvBounds rootBounds = new DmvBounds();
         DmvBoundsFactory boundsFactory = new FixedDmvBoundsFactory(sentences);
-        DmvProblemNode rootNode = new DmvProblemNode(rootBounds, boundsFactory);
+        DmvProblemNode rootNode = new DmvProblemNode(sentences, rootBounds, boundsFactory);
         bnbSolver.runBranchAndBound(rootNode, epsilon, new DfsBfcComparator());
     }
     
