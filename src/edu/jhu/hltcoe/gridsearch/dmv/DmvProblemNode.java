@@ -10,6 +10,7 @@ import edu.jhu.hltcoe.gridsearch.EagerBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 
 public class DmvProblemNode implements ProblemNode {
 
@@ -27,27 +28,24 @@ public class DmvProblemNode implements ProblemNode {
     private boolean isOptimisticBoundCached;
     private double optimisticBound;
     private SentenceCollection sentences;
-    
+
     /**
      * Root node constructor
-     * @param sentences 
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBounds bounds, DmvBoundsFactory boundsFactory) {
-        this.sentences = sentences;
+    public DmvProblemNode(SentenceCollection sentences, DmvBounds bounds, DmvBoundsFactory boundsFactory, DmvModelFactory modelFactory) {
         this.bounds = bounds;
         this.boundsFactory = boundsFactory;
         id = 0;
         parentId = NO_PARENT;
         depth = 0;
-        dwRelax = new DmvDantzigWolfeRelaxation(bounds);
+        dwRelax = new DmvDantzigWolfeRelaxation(bounds, modelFactory, sentences);
         isOptimisticBoundCached = false;
     }
 
     /**
      * Non-root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBounds bounds, DmvBoundsFactory boundsFactory, int id, DmvProblemNode parent) {
-        this.sentences = sentences;
+    public DmvProblemNode(DmvBounds bounds, DmvBoundsFactory boundsFactory, int id, DmvProblemNode parent) {
         this.bounds = bounds;
         this.boundsFactory = boundsFactory;
         this.id = id;
@@ -67,7 +65,7 @@ public class DmvProblemNode implements ProblemNode {
         if (!isOptimisticBoundCached) {
             // Run the Dantzig-Wolfe algorithm on the relaxation of the main problem
             dwRelax.updateBounds(bounds);
-            optimisticBound = dwRelax.solve();
+            optimisticBound = dwRelax.solveRelaxation();
             isOptimisticBoundCached = true;
         }
         return optimisticBound;
@@ -104,7 +102,7 @@ public class DmvProblemNode implements ProblemNode {
         List<DmvBounds> boundsForChildren = boundsFactory.getDmvBounds(this);
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(boundsForChildren.size());
         for (DmvBounds boundsForChild : boundsForChildren) {
-            children.add(new DmvProblemNode(sentences, boundsForChild, boundsFactory, getNextId(), this));
+            children.add(new DmvProblemNode(boundsForChild, boundsFactory, getNextId(), this));
         }
         return children;
     }
