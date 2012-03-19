@@ -1,15 +1,15 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import ilog.concert.IloException;
-import ilog.cplex.IloCplex.UnknownObjectException;
-
 import java.util.Arrays;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
+import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.JUnitUtils;
 
 
 public class ProjectionsTest {
@@ -48,5 +48,17 @@ public class ProjectionsTest {
             Assert.assertTrue(x[m] <= ubs[m]);
         }
     }
+    
+    @Test
+    public void testProjectiveParse() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("cat ate hat");
+        double[] fracRoot = new double[]{0.3, 0.6, 0.1};
+        double[][] fracChild = new double[][]{{0.0, 0.3, 0.25},{0.5, 0.0, 0.5}, {0.25, 0.1, 0.0}};
+        DepTree t = Projections.getProjectiveParse(sentences.get(0), fracRoot, fracChild);
+        System.out.println(t);
+        JUnitUtils.assertArrayEquals(new int[]{1,-1,1}, t.getParents());
+    }
+    
     
 }

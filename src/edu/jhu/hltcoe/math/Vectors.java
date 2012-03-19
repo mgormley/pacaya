@@ -58,4 +58,15 @@ public class Vectors {
     		logPhi[t] = Utilities.log(phi[t]);
     	}
     }
+
+    /**
+     * TODO: This should live in a matrix class
+     */
+    public static double sum(double[][] matrix) {
+        double sum = 0.0; 
+        for (int i=0; i<matrix.length; i++) {
+            sum += Vectors.sum(matrix[i]);
+        }
+        return sum;
+    }
 }

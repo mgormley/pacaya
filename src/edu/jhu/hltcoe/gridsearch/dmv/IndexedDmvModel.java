@@ -56,9 +56,13 @@ public class IndexedDmvModel {
     public DepSentenceDist getDepSentenceDist(Sentence sentence, double[] sentParams) {
         int[] tags = new int[sentence.size()];
         DepInstance depInstance = new DepInstance(tags);
-        DepSentenceDist sd = new DepSentenceDist();
-        
+        DepSentenceDist sd = null; //new DepSentenceDist();
         return sd;
+    }
+
+    public DmvModel getDmvModel(double[][] modelParams) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

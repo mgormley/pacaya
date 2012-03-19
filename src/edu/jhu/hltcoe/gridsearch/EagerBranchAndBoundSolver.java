@@ -56,7 +56,7 @@ public class EagerBranchAndBoundSolver {
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
                 if (worseThan(childNode.getOptimisticBound(), incumbentScore)) {
-                    // fathom / prune this child node
+                    // fathom (i.e. prune) this child node
                 }
 
                 // Check if the child node offers a better feasible solution

@@ -8,6 +8,14 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.util.Arrays;
 
+import depparsing.model.NonterminalMap;
+import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.pr.DepInstance;
+import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.util.Pair;
+
 public class Projections {
 
     /**
@@ -86,6 +94,16 @@ public class Projections {
         }
 
         return cplex.getValues(newParamVars);
+    }
+
+    public static DepTree getProjectiveParse(Sentence sentence, double[] fracRoot, double[][] fracChild) {
+        DmvCkyParser parser = new DmvCkyParser();
+        int[] tags = new int[sentence.size()];
+        DepInstance depInstance = new DepInstance(tags);
+        DepSentenceDist sd = new DepSentenceDist(depInstance, new NonterminalMap(2, 1), fracRoot, fracChild);
+        Pair<DepTree, Double> pair = parser.parse(sentence, sd);
+        DepTree tree = pair.get1();
+        return tree;
     }
 
 }
