@@ -1,8 +1,13 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.parse.pr.DepInstance;
+import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.util.Pair;
 
-public class IndexedDmvModel extends DmvModel {
+public class IndexedDmvModel {
 
     public String getName(int c, int m) {
         // TODO Auto-generated method stub
@@ -43,9 +48,17 @@ public class IndexedDmvModel extends DmvModel {
     /**
      * TODO: Maybe this is in the wrong place?
      */
-    public int getSolValue(DmvSolution initFeasSol, int s, int i) {
+    public int[] getSentSol(DepTree depTree) {
         // TODO Auto-generated method stub
-        return 0;
+        return null;
+    }
+
+    public DepSentenceDist getDepSentenceDist(Sentence sentence, double[] sentParams) {
+        int[] tags = new int[sentence.size()];
+        DepInstance depInstance = new DepInstance(tags);
+        DepSentenceDist sd = new DepSentenceDist();
+        
+        return sd;
     }
 
 }

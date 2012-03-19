@@ -32,37 +32,44 @@ public class DmvCkyParser implements ViterbiParser {
 
     @Override
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model genericModel) {
-        DmvModel model = (DmvModel)genericModel;
+        DmvModel model = (DmvModel) genericModel;
 
         DepProbMatrix depProbMatrix = modelToDepProbMatrix(model, sentences.getLabelAlphabet());
         DepTreebank treebank = new DepTreebank();
-        
+
         parseWeight = 0.0;
         for (Sentence sentence : sentences) {
             int[] tags = sentence.getLabelIds();
             DepInstance depInstance = new DepInstance(tags);
-            DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix.nontermMap);
-            sd.cacheModel(depProbMatrix);
+            DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix);
 
-            int numWords = sd.depInst.postags.length;
-            int[] parents = new int[numWords];
-
-            parseWeight += CKYParser.parseSentence(sd, parents);
-
-            // Must decrement parents array by one
-            for (int i=0; i<parents.length; i++) {
-                parents[i]--;
-            }
+            Pair<DepTree, Double> pair = parse(sentence, sd);
+            DepTree tree = pair.get1();
+            parseWeight += pair.get2();
             
-            DepTree tree = new DepTree(sentence, parents, true);
             treebank.add(tree);
         }
         return treebank;
     }
-    
+
+    public Pair<DepTree, Double> parse(Sentence sentence, DepSentenceDist sd) {
+        int numWords = sd.depInst.postags.length;
+        int[] parents = new int[numWords];
+
+        double parseWeight = CKYParser.parseSentence(sd, parents);
+
+        // Must decrement parents array by one
+        for (int i = 0; i < parents.length; i++) {
+            parents[i]--;
+        }
+        DepTree tree = new DepTree(sentence, parents, true);
+
+        return new Pair<DepTree, Double>(tree, parseWeight);
+    }
+
     /**
-     * TODO: This is an expensive conversion, and DmvModel should be rewritten so that it's just
-     * some double arrays. 
+     * TODO: This is an expensive conversion, and DmvModel should be rewritten
+     * so that it's just some double arrays.
      */
     private DepProbMatrix modelToDepProbMatrix(DmvModel model, Alphabet<Label> tagAlphabet) {
         DepProbMatrix depProbMatrix = new DepProbMatrix(tagAlphabet, 2, 1);
@@ -75,10 +82,11 @@ public class DmvCkyParser implements ViterbiParser {
             for (Entry<Label, Double> cEntry : mult.entrySet()) {
                 Label child = cEntry.getKey();
                 double prob = cEntry.getValue();
-                
-                // We use logForIlp so that our solutions are analogous to IlpViterbiParser
+
+                // We use logForIlp so that our solutions are analogous to
+                // IlpViterbiParser
                 double logProb = Utilities.logForIlp(prob);
-                
+
                 if (child.equals(WallDepTreeNode.WALL_LABEL)) {
                     // Skip these
                     continue;
@@ -89,36 +97,36 @@ public class DmvCkyParser implements ViterbiParser {
                     int pid = tagAlphabet.lookupObject(parent);
                     int dir = lr.equals("l") ? Constants.LEFT : Constants.RIGHT;
                     int cid = tagAlphabet.lookupObject(child);
-                    int v = 0;  
+                    int v = 0;
                     depProbMatrix.child[cid][pid][dir][v] = logProb;
                 }
             }
         }
-        
+
         for (Entry<Triple<Label, String, Boolean>, Double> entry : model.getStopWeights().entrySet()) {
             Triple<Label, String, Boolean> key = entry.getKey();
             double stopProb = entry.getValue();
             Label parent = key.get1();
             String lr = key.get2();
             boolean adjacent = key.get3();
-            
 
             int pid = tagAlphabet.lookupObject(parent);
             int dir = lr.equals("l") ? Constants.LEFT : Constants.RIGHT;
             // Note this is backwards from how adjacency is encoded for the ILPs
             int kids = adjacent ? 0 : 1;
-            
-            // We use logForIlp so that our solutions are analogous to IlpViterbiParser
+
+            // We use logForIlp so that our solutions are analogous to
+            // IlpViterbiParser
             double stopLogProb = Utilities.logForIlp(stopProb);
             double contLogProb = Utilities.logForIlp(1.0 - stopProb);
-            
+
             if (!parent.equals(WallDepTreeNode.WALL_LABEL)) {
                 depProbMatrix.decision[pid][dir][kids][Constants.END] = stopLogProb;
                 depProbMatrix.decision[pid][dir][kids][Constants.CONT] = contLogProb;
             }
         }
-        
+
         return depProbMatrix;
     }
-    
+
 }

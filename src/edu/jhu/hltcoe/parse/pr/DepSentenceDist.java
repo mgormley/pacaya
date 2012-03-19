@@ -25,9 +25,10 @@ public class DepSentenceDist  {
 	
 	public final NonterminalMap nontermMap;
 	
-	public DepSentenceDist(DepInstance depInst, NonterminalMap ntMap) {
+	public DepSentenceDist(DepInstance depInst, DepProbMatrix depProbMatrix) {
 		this.depInst = depInst;
-		nontermMap = ntMap;
+		nontermMap = depProbMatrix.nontermMap;
+		cacheModel(depProbMatrix);
 	}
 	
 	/**
@@ -39,7 +40,7 @@ public class DepSentenceDist  {
 	 * in the sentence and their corresponding POS numbers
 	 * when computing the posteriors and running inside outside.
 	 */
-	public void cacheModel(DepProbMatrix model) {
+	private void cacheModel(DepProbMatrix model) {
 		// FIXME -- is this necessary
 		initSentenceDist();
 		int[] i2tag = depInst.postags;
