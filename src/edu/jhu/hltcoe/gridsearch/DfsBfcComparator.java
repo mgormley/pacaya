@@ -6,6 +6,7 @@ import java.util.Comparator;
  * This compartor will sort the elements so that a depth first search is
  * performed and among the children of maximal depth, the best first child will
  * be chosen.
+ * TODO: this doesn't make sense if we never bottom out!
  */
 public class DfsBfcComparator implements Comparator<ProblemNode> {
 

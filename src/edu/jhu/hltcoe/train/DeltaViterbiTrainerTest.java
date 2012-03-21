@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.train;
 import junit.framework.Assert;
 
 import org.apache.log4j.BasicConfigurator;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
@@ -14,15 +15,20 @@ import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpViterbiParserTest;
 import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.util.Prng;
 
 public class DeltaViterbiTrainerTest {
 
     static {
         BasicConfigurator.configure();
+    }
+
+    @Before
+    public void setUp() {
+        Prng.seed(12345678);
     }
     
     @Test
@@ -48,7 +54,7 @@ public class DeltaViterbiTrainerTest {
         sentences.addSentenceFromString("the man ate with a fork");
         trainer.train(sentences);
 
-        Assert.assertEquals(3, trainer.getIterationsCompleted());
+        Assert.assertEquals(2, trainer.getIterationsCompleted());
     }
 
 }

@@ -10,8 +10,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.math.Vectors;
 
 public class DmvProblemNode implements ProblemNode {
 
@@ -33,15 +32,13 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory deltasFactory,
-            DmvModelFactory modelFactory) {
-        this.deltasFactory = deltasFactory;
+    public DmvProblemNode(SentenceCollection sentences, DepTreebank initFeasSol) {
         this.sentences = sentences;
         id = 0;
         parent = null;
         depth = 0;
-        // TODO: decide how to get the initial feasible solution
-        dwRelax = new DmvDantzigWolfeRelaxation(modelFactory, sentences);
+        dwRelax = new DmvDantzigWolfeRelaxation(sentences, initFeasSol);
+        this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
         isOptimisticBoundCached = false;
     }
 
@@ -78,49 +75,48 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public Solution getFeasibleSolution() {
-        // Project the Dantzig-Wolfe model parameters back into the bounded
-        // sum-to-exactly-one space
-        // TODO: must use bounds here
-        DmvModel model = getProjectedModel(relaxSol.getDmvModel());
-
-        // Project the fractional parse back to the feasible region
-        // where the weight of each edge is given by the indicator variable
-        // TODO: How would we do randomized rounding on the Dantzig-Wolfe parse
-        // solution?
-        DepTreebank treebank = getProjectedParses(relaxSol.getFracRoots(), relaxSol.getFracChildren());
-
-        // TODO: write a new DmvMStep that stays in the bounded parameter space
-        double score = dwRelax.computeTrueObjective(model, treebank);
-
-        // Note: these approaches might be wrong if our objective function
-        // includes posterior constraints
-        // PrCkyParser parser = new PrCkyParser();
-        // DepTreebank viterbiTreebank = parser.getViterbiParse(sentences,
-        // model);
-        // double score = parser.getLastParseWeight();
-        // 
-        // Then run Viterbi EM starting from the randomly rounded solution
-        // and respecting the bounds.
-
-        // Throw away the relaxed solution
-        relaxSol = null;
-
-        return new DmvSolution(model, treebank, score);
-    }
-
-    public DmvModel getProjectedModel(double[][] modelParams) {
-        // Project the model parameters back onto the feasible (sum-to-one)
-        // region
-        // ignoring the model parameter bounds (we just want a good solution)
-        // there's
-        // no reason to constrain it.
-        for (int c = 0; c < modelParams.length; c++) {
-            modelParams[c] = Projections.getProjectedParams(modelParams[c]);
+        if (relaxSol != null) {
+            // Project the Dantzig-Wolfe model parameters back into the bounded
+            // sum-to-exactly-one space
+            // TODO: must use bounds here?
+    
+            double[][] logProbs = relaxSol.getLogProbs();
+            // Project the model parameters back onto the feasible (sum-to-one)
+            // region ignoring the model parameter bounds (we just want a good solution)
+            // there's no reason to constrain it.
+            for (int c = 0; c < logProbs.length; c++) {
+                double[] probs = Vectors.getExp(logProbs[c]);
+                probs = Projections.getProjectedParams(probs);
+                logProbs[c] = Vectors.getLog(probs); 
+            }
+            // Create a new DmvModel from these model parameters
+            IndexedDmvModel idm = dwRelax.getIdm();
+    
+            // Project the fractional parse back to the feasible region
+            // where the weight of each edge is given by the indicator variable
+            // TODO: How would we do randomized rounding on the Dantzig-Wolfe parse
+            // solution?
+            DepTreebank treebank = getProjectedParses(relaxSol.getFracRoots(), relaxSol.getFracChildren());
+    
+            // TODO: write a new DmvMStep that stays in the bounded parameter space
+            double score = dwRelax.computeTrueObjective(logProbs, treebank);
+    
+            // Note: these approaches might be wrong if our objective function
+            // includes posterior constraints
+            // PrCkyParser parser = new PrCkyParser();
+            // DepTreebank viterbiTreebank = parser.getViterbiParse(sentences,
+            // model);
+            // double score = parser.getLastParseWeight();
+            // 
+            // Then run Viterbi EM starting from the randomly rounded solution
+            // and respecting the bounds.
+    
+            // Throw away the relaxed solution
+            relaxSol = null;
+            return new DmvSolution(logProbs, idm, treebank, score);
+        } else {
+            throw new IllegalStateException("This method should only be called once");
         }
-
-        // Create a new DmvModel from these model parameters
-        IndexedDmvModel idm = dwRelax.getIdm();
-        return idm.getDmvModel(modelParams);
     }
 
     public DepTreebank getProjectedParses(double[][] fracRoots, double[][][] fracChildren) {

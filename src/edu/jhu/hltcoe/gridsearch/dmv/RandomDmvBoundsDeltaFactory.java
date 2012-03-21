@@ -10,12 +10,16 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
 
-    private IndexedDmvModel idm;
     private double[] freqs;
     private CM[] cms;
 
+    public RandomDmvBoundsDeltaFactory(SentenceCollection sentences) {
+        // We could share this IDM computation with Dantzig-Wolfe if desired
+        this(sentences, new IndexedDmvModel(sentences));
+        
+    }
+    
     public RandomDmvBoundsDeltaFactory(SentenceCollection sentences, IndexedDmvModel idm) {
-        this.idm = idm;
         int[][] sentMaxFreqCm = idm.getSentMaxFreqCm();
 
         // Restructure the max freqs for efficient sampling

@@ -13,12 +13,9 @@ import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.StringParam;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,14 +28,10 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.CplexIlpSolver;
 import edu.jhu.hltcoe.math.Vectors;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Triple;
-import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation {
 
@@ -59,7 +52,7 @@ public class DmvDantzigWolfeRelaxation {
 
     private MasterProblem mp;
 
-    public DmvDantzigWolfeRelaxation(DmvSolution initFeasSol, SentenceCollection sentences) {
+    public DmvDantzigWolfeRelaxation(SentenceCollection sentences, DepTreebank initFeasSol) {
         this.sentences = sentences;
         this.idm = new IndexedDmvModel(sentences);
         this.bounds = new DmvBounds(this.idm);
@@ -95,9 +88,9 @@ public class DmvDantzigWolfeRelaxation {
             double objective = cplex.getObjValue();
 
             // Store optimal model parameters
-            double[][] modelParams = new double[idm.getNumConds()][];
+            double[][] logProbs = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
-                modelParams[c] = cplex.getValues(mp.modelParamVars[c]);
+                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
             }
 
             // Store fractional corpus parse
@@ -128,7 +121,7 @@ public class DmvDantzigWolfeRelaxation {
             }
 
             cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
-            return new RelaxedDmvSolution(modelParams, fracRoots, fracParses, objective);
+            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -160,7 +153,17 @@ public class DmvDantzigWolfeRelaxation {
 
         // TODO: can we use Dual instead of Primal? what advantage would
         // this give?
+        // From the CPLEX documentation: the Dual algorithm can take better advantage of a previous solve. 
+        // http://ibm.co/GHorLT
         // cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+        
+        // Note: we'd like to reuse basis information by explicitly storing it
+        // with the Fork nodes as in SCIP. However, this is only possible if the
+        // number of rows/columns in the problem remains the same, which it will
+        // not for our master problem.
+        // http://ibm.co/GCQ709
+        // By default, the solver will make use of basis information internally 
+        // even when we update the problem. This is (hopefully) good enough.
 
         // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
         
@@ -207,7 +210,7 @@ public class DmvDantzigWolfeRelaxation {
         
     }
 
-    private MasterProblem buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
+    private MasterProblem buildModel(IloMPModeler cplex, DepTreebank initFeasSol) throws IloException {
 
         // ----- row-wise modeling -----
         // Add x_0 constraints in the original model space first
@@ -263,7 +266,7 @@ public class DmvDantzigWolfeRelaxation {
 
         // Add the initial feasible parse as the first lambda columns
         for (int s = 0; s < couplCons.length; s++) {
-            DepTree tree = initFeasSol.getDepTreebank().get(s);
+            DepTree tree = initFeasSol.get(s);
             addLambdaVar(cplex, objective, couplCons, lambdaSumCons, lambdaVars, s, tree);
         }
 
@@ -475,9 +478,19 @@ public class DmvDantzigWolfeRelaxation {
         return idm;
     }
     
-    public double computeTrueObjective(DmvModel model, DepTreebank treebank) {
-        // TODO Auto-generated method stub
-        return 0;
+    public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
+        double score = 0.0;
+        for (int s = 0; s < sentences.size(); s++) {
+            Sentence sentence = sentences.get(s);
+            DepTree tree = treebank.get(s);
+            int[] sentSol = idm.getSentSol(sentence, s, tree);
+            for (int i=0; i<sentSol.length; i++) {
+                int c = idm.getC(s, i);
+                int m = idm.getM(s, i);
+                score += sentSol[i] * logProbs[c][m];
+            }
+        }
+        return score;
     }
     
 }

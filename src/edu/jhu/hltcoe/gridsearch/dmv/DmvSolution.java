@@ -2,19 +2,18 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
 
 public class DmvSolution implements Solution {
 
     private double score;
-    private DmvModel model;
     private DepTreebank treebank;
-    
-    public DmvSolution(DmvModel model, DepTreebank treebank, double score) {
-        super();
+    private double[][] logProbs;
+    private IndexedDmvModel idm;
+
+    public DmvSolution(double[][] logProbs, IndexedDmvModel idm, DepTreebank treebank, double score) {
         this.score = score;
-        this.model = model;
+        this.logProbs = logProbs;
+        this.idm = idm;
         this.treebank = treebank;
     }
 
@@ -22,11 +21,15 @@ public class DmvSolution implements Solution {
     public double getScore() {
         return score;
     }
-
-    public Model getDmvModel() {
-        return model;
-    }
     
+    public double[][] getLogProbs() {
+        return logProbs;
+    }
+
+    public IndexedDmvModel getIdm() {
+        return idm;
+    }
+
     public DepTreebank getDepTreebank() {
         return treebank;
     }

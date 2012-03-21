@@ -28,7 +28,8 @@ public class EMTrainer<C> implements Trainer {
     private Model model;
     private int iterCount;
     private Double logLikelihood;
-    
+    private C counts;
+
     public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
         this.eStep = eStep;
         this.mStep = mStep;
@@ -53,7 +54,7 @@ public class EMTrainer<C> implements Trainer {
             
             // E-step 
             Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(sentences, model);
-            C counts = pair.get1();
+            counts = pair.get1();
             
             // Check for convergence or iteration limit
             logLikelihood = pair.get2();
@@ -90,6 +91,10 @@ public class EMTrainer<C> implements Trainer {
         return model;
     }
     
+    public C getCounts() {
+        return counts;
+    }
+            
     public void setLogger(Logger logger) {
         this.log = logger;
     }

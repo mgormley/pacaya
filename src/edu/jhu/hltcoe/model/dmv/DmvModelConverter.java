@@ -40,7 +40,7 @@ public class DmvModelConverter {
             int p = tagAlphabet.lookupObject(triple.get1());
             int dir = triple.get2().equals("l") ? Constants.LEFT : Constants.RIGHT;
             int dv = triple.get3() ? 0 : 1; 
-            return dpm.decision[p][dir][dv][Constants.END];
+            return Utilities.exp(dpm.decision[p][dir][dv][Constants.END]);
         }
 
         @Override
@@ -49,12 +49,12 @@ public class DmvModelConverter {
             for (Label child : children) {
                 int c = tagAlphabet.lookupObject(child);
                 if (pair.get1().equals(WallDepTreeNode.WALL_LABEL)) {
-                    mult.put(child, dpm.root[c]);
+                    mult.put(child, Utilities.exp(dpm.root[c]));
                 } else {
                     int p = tagAlphabet.lookupObject(pair.get1());
                     int dir = pair.get2().equals("l") ? Constants.LEFT : Constants.RIGHT;
                     int cv = 0;
-                    mult.put(child, dpm.child[c][p][dir][cv]);
+                    mult.put(child, Utilities.exp(dpm.child[c][p][dir][cv]));
                 }
             }
             return mult;

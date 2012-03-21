@@ -5,14 +5,14 @@ import edu.jhu.hltcoe.gridsearch.Solution;
 public class RelaxedDmvSolution implements Solution {
 
     private double score;
-    private double[][] model;
+    private double[][] logProbs;
     private double[][] fracRoots;
     private double[][][] fracChildren;
     
-    public RelaxedDmvSolution(double[][] model, double[][] fracRoots, double[][][] fracChildren, double score) {
+    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score) {
         super();
         this.score = score;
-        this.model = model;
+        this.logProbs = logProbs;
         this.fracRoots = fracRoots;
         this.fracChildren = fracChildren;
     }
@@ -22,8 +22,8 @@ public class RelaxedDmvSolution implements Solution {
         return score;
     }
 
-    public double[][] getDmvModel() {
-        return model;
+    public double[][] getLogProbs() {
+        return logProbs;
     }
     
     public double[][] getFracRoots() {
