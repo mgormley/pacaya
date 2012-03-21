@@ -151,11 +151,9 @@ public class DmvDantzigWolfeRelaxation {
         // will reproduce the same solution path and results.
         cplex.setParam(IntParam.ParallelMode, 1);
 
-        // TODO: can we use Dual instead of Primal? what advantage would
-        // this give?
         // From the CPLEX documentation: the Dual algorithm can take better advantage of a previous solve. 
         // http://ibm.co/GHorLT
-        // cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Dual);
         
         // Note: we'd like to reuse basis information by explicitly storing it
         // with the Fork nodes as in SCIP. However, this is only possible if the
