@@ -317,6 +317,15 @@ public class IndexedDmvModel {
         return sentMaxFreqSi[s][i];
     }
 
+    /** 
+     * @return Sentence index i for sentence s corresponding to parameter c,m
+     * or -1 if c,m is never used in sentence s.
+     */
+    public int getSi(int s, int c, int m) {
+        return sentCmToI.get(s).lookupObject(new CM(c,m));
+    }
+
+
     /**
      * Returns the frequency counts for each parameter 
      * indexed by the sentence variable indices
@@ -426,5 +435,5 @@ public class IndexedDmvModel {
     public DmvModel getDmvModel(double[][] modelParams) {
         return DmvModelConverter.getDmvModel(getDepProbMatrix(modelParams), sentences);
     }
-
+    
 }

@@ -16,4 +16,6 @@ public interface ProblemNode {
 
     void setAsActiveNode(ProblemNode prevNode);
 
+    void end();
+
 }

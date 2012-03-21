@@ -15,6 +15,7 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -47,84 +48,27 @@ public class DmvDantzigWolfeRelaxation {
     private File tempDir;
     private double workMemMegs;
     private int numThreads;
-    private DmvModelFactory modelFactory;
     private SentenceCollection sentences;
-    private IndexedDmvModel model;
+    private IndexedDmvModel idm;
 
     private int numLambdas;
 
     private int cutCount;
 
-    public DmvDantzigWolfeRelaxation(DmvModelFactory modelFactory, SentenceCollection sentences) {
-        this.bounds = new DmvBounds();
-        this.modelFactory = modelFactory;
+    private IloCplex cplex;
+
+    private MasterProblem mp;
+
+    public DmvDantzigWolfeRelaxation(DmvSolution initFeasSol, SentenceCollection sentences) {
         this.sentences = sentences;
-        this.model = new IndexedDmvModel(sentences);
-        // TODO: do we need this model factory?
-        // modelFactory.getInstance(sentences, bounds);
-    }
-
-    public RelaxedDmvSolution solveRelaxation() {
+        this.idm = new IndexedDmvModel(sentences);
+        this.bounds = new DmvBounds(this.idm);
+        
         try {
-            // TODO: reuse cplex object? This might be complicated with all the
-            // upper lower bound usage
-            IloCplex cplex = new IloCplex();
-            OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
-            try {
-
-                // TODO: decide how to get the initial feasible solution
-                DmvSolution initFeasSol = new DmvSolution(null, null, 0.0);
-                MasterProblem mp = buildModel(cplex, initFeasSol);
-                // TODO: add the initial feasible solution to cplex object
-
-                setCplexParams(cplex, out);
-
-                runDWAlgo(cplex, mp);
-
-                log.info("Solution status: " + cplex.getStatus());
-                cplex.output().println("Solution status = " + cplex.getStatus());
-                cplex.output().println("Solution value = " + cplex.getObjValue());
-                double objective = cplex.getObjValue();
-
-                // Store optimal model parameters
-                double[][] modelParams = new double[model.getNumConds()][];
-                for (int c = 0; c < model.getNumConds(); c++) {
-                    modelParams[c] = cplex.getValues(mp.modelParamVars[c]);
-                }
-
-                // Store fractional corpus parse
-                double[][] fracRoots = new double[sentences.size()][];
-                double[][][] fracParses = new double[sentences.size()][][];
-                for (int s = 0; s < sentences.size(); s++) {
-                    Sentence sentence = sentences.get(s);
-                    fracParses[s] = new double[sentence.size()][sentence.size()];
-                }
-                for (LambdaVar triple : mp.lambdaVars) {
-                    double frac = cplex.getValue(triple.lambdaVar);
-                    int s = triple.s;
-                    int[] parents = triple.parents;
-
-                    double[] fracRoot = fracRoots[s];
-                    double[][] fracParse = fracParses[s];
-                    for (int child = 0; child < parents.length; child++) {
-                        int parent = parents[child];
-                        if (parent == WallDepTreeNode.WALL_POSITION) {
-                            fracRoot[child] += frac;
-                        } else {
-                            fracParse[parent][child] += frac;
-                        }
-                    }
-                }
-                for (int s = 0; s < sentences.size(); s++) {
-                    assert (Math.abs(Vectors.sum(fracParses[s]) + Vectors.sum(fracRoots[s]) - sentences.get(s).size()) < 1e-13);
-                }
-
-                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
-                return new RelaxedDmvSolution(modelParams, fracRoots, fracParses, objective);
-            } finally {
-                cplex.end();
-                out.close();
-            }
+            cplex = new IloCplex();
+            mp = buildModel(cplex, initFeasSol);
+            // TODO: add the initial feasible solution to cplex object? Does this even make sense?
+            setCplexParams(cplex);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -136,8 +80,66 @@ public class DmvDantzigWolfeRelaxation {
             throw new RuntimeException(e);
         }
     }
+        
+    public void end() {
+        cplex.end();
+    }
 
-    private void setCplexParams(IloCplex cplex, OutputStream out) throws IloException {
+    public RelaxedDmvSolution solveRelaxation() {
+        try {
+            runDWAlgo(cplex, mp);
+
+            log.info("Solution status: " + cplex.getStatus());
+            cplex.output().println("Solution status = " + cplex.getStatus());
+            cplex.output().println("Solution value = " + cplex.getObjValue());
+            double objective = cplex.getObjValue();
+
+            // Store optimal model parameters
+            double[][] modelParams = new double[idm.getNumConds()][];
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                modelParams[c] = cplex.getValues(mp.modelParamVars[c]);
+            }
+
+            // Store fractional corpus parse
+            double[][] fracRoots = new double[sentences.size()][];
+            double[][][] fracParses = new double[sentences.size()][][];
+            for (int s = 0; s < sentences.size(); s++) {
+                Sentence sentence = sentences.get(s);
+                fracParses[s] = new double[sentence.size()][sentence.size()];
+            }
+            for (LambdaVar triple : mp.lambdaVars) {
+                double frac = cplex.getValue(triple.lambdaVar);
+                int s = triple.s;
+                int[] parents = triple.parents;
+
+                double[] fracRoot = fracRoots[s];
+                double[][] fracParse = fracParses[s];
+                for (int child = 0; child < parents.length; child++) {
+                    int parent = parents[child];
+                    if (parent == WallDepTreeNode.WALL_POSITION) {
+                        fracRoot[child] += frac;
+                    } else {
+                        fracParse[parent][child] += frac;
+                    }
+                }
+            }
+            for (int s = 0; s < sentences.size(); s++) {
+                assert (Math.abs(Vectors.sum(fracParses[s]) + Vectors.sum(fracRoots[s]) - sentences.get(s).size()) < 1e-13);
+            }
+
+            cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
+            return new RelaxedDmvSolution(modelParams, fracRoots, fracParses, objective);
+        } catch (IloException e) {
+            if (e instanceof ilog.cplex.CpxException) {
+                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
+                System.err.println("STATUS CODE: " + cpxe.getStatus());
+                System.err.println("ERROR MSG:   " + cpxe.getMessage());
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void setCplexParams(IloCplex cplex) throws IloException, FileNotFoundException {
         // Specifies an upper limit on the amount of central memory, in
         // megabytes, that CPLEX is permitted to use for working memory
         // before swapping to disk files, compressing memory, or taking
@@ -161,8 +163,10 @@ public class DmvDantzigWolfeRelaxation {
         // cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
 
         // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
-        cplex.setOut(out);
-        cplex.setWarning(out);
+        
+//        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
+//        cplex.setOut(out);
+//        cplex.setWarning(out);
     }
 
     /**
@@ -186,12 +190,19 @@ public class DmvDantzigWolfeRelaxation {
         public IloNumVar lambdaVar;
         public int s;
         public int[] parents;
+        private int[] sentSol;
+        private double objCoef;
         
-        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents) {
+        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol, double objCoef) {
             super();
             this.lambdaVar = lambdaVar;
             this.s = s;
             this.parents = parents;
+            this.sentSol = sentSol;
+            // Note: if we stored the objective as an IloLinearNumExpr, we would be
+            // able to iterate through the objective coefficients when updating lambda variables
+            // but this would likely be slow for when there are a large number of columns.
+            this.objCoef = objCoef;
         }
         
     }
@@ -204,12 +215,12 @@ public class DmvDantzigWolfeRelaxation {
         // No contribution is made to the objective except by the slave problems
         IloObjective objective = cplex.addMaximize();
 
-        int numConds = model.getNumConds();
+        int numConds = idm.getNumConds();
         IloNumVar[][] modelParamVars = new IloNumVar[numConds][];
         for (int c = 0; c < numConds; c++) {
-            modelParamVars[c] = new IloNumVar[model.getNumParams(c)];
+            modelParamVars[c] = new IloNumVar[idm.getNumParams(c)];
             for (int m = 0; m < modelParamVars[c].length; m++) {
-                modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), model.getName(c, m));
+                modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), idm.getName(c, m));
             }
         }
         
@@ -233,13 +244,13 @@ public class DmvDantzigWolfeRelaxation {
         // aka. the relaxed-objective-coupling-constraint
         IloRange[][] couplCons = new IloRange[sentences.size()][];
         for (int s = 0; s < sentences.size(); s++) {
-            int numSentVars = model.getNumSentVars(s);
+            int numSentVars = idm.getNumSentVars(s);
             couplCons[s] = new IloRange[numSentVars];
             for (int i = 0; i < numSentVars; i++) {
-                int c = model.getC(s, i);
-                int m = model.getM(s, i);
+                int c = idm.getC(s, i);
+                int m = idm.getM(s, i);
                 String name = String.format("minVar(%d,%d)", s, i);
-                double maxFreqScm = model.getMaxFreq(s,i);
+                double maxFreqScm = idm.getMaxFreq(s,i);
                 cplex.addLe(maxFreqScm * bounds.getLb(c, m), cplex.prod(maxFreqScm, modelParamVars[c][m]), name);
             }
         }
@@ -250,7 +261,7 @@ public class DmvDantzigWolfeRelaxation {
         IloRange[] lambdaSumCons = new IloRange[sentences.size()];
         List<LambdaVar> lambdaVars = new ArrayList<LambdaVar>();
 
-        // Add the initial feasible parse as a the first lambda column
+        // Add the initial feasible parse as the first lambda columns
         for (int s = 0; s < couplCons.length; s++) {
             DepTree tree = initFeasSol.getDepTreebank().get(s);
             addLambdaVar(cplex, objective, couplCons, lambdaSumCons, lambdaVars, s, tree);
@@ -268,11 +279,11 @@ public class DmvDantzigWolfeRelaxation {
     }
 
     private double[][][] getInitialPoints() throws IloException {
-        int numConds = model.getNumConds();
+        int numConds = idm.getNumConds();
         double[][][] vectors = new double[numConds][][];
 
         for (int c = 0; c < numConds; c++) {
-            int numParams = model.getNumParams(c);
+            int numParams = idm.getNumParams(c);
             // Create numParams^2 vectors
             int numVectors = (int) Math.pow(numParams, 2.0);
             vectors[c] = new double[numVectors][];
@@ -309,23 +320,22 @@ public class DmvDantzigWolfeRelaxation {
             IloRange[] lambdaSumCons, List<LambdaVar> lambdaVars, int s, DepTree tree)
             throws IloException {
 
-        int[] sentSol = model.getSentSol(sentences.get(s), s, tree);
+        int[] sentSol = idm.getSentSol(sentences.get(s), s, tree);
         int numSentVars = couplCons[s].length;
-        double sentScore = 0.0;
+        double objCoef = 0.0;
         for (int i = 0; i < numSentVars; i++) {
-            int c = model.getC(s, i);
-            int m = model.getM(s, i);
-            sentScore += sentSol[i] * bounds.getUb(c, m);
+            int c = idm.getC(s, i);
+            int m = idm.getM(s, i);
+            objCoef += sentSol[i] * bounds.getUb(c, m);
         }
-        IloColumn lambdaCol = cplex.column(objective, sentScore);
+        IloColumn lambdaCol = cplex.column(objective, objCoef);
 
         // Add the lambda var to the relaxed-objective-coupling-constraint
         for (int i = 0; i < couplCons[s].length; i++) {
-            int c = model.getC(s, i);
-            int m = model.getM(s, i);
-            int freqScmVal = sentSol[i];
+            int c = idm.getC(s, i);
+            int m = idm.getM(s, i);
             // bounds.getLb(c, m) * freqScmVal - zScmVal
-            double value = (bounds.getLb(c, m) - bounds.getUb(c, m)) * freqScmVal;
+            double value = (bounds.getLb(c, m) - bounds.getUb(c, m)) * sentSol[i];
             lambdaCol = lambdaCol.and(cplex.column(couplCons[s][i], value));
         }
 
@@ -338,7 +348,7 @@ public class DmvDantzigWolfeRelaxation {
             lambdaCol = lambdaCol.and(cplex.column(lambdaSumCons[s], 1.0));
             lambdaVar = cplex.numVar(lambdaCol, 0.0, 1.0, String.format("lambda_{%d}^{%d}", s, numLambdas++));
         }
-        lambdaVars.add(new LambdaVar(lambdaVar, s, tree.getParents()));
+        lambdaVars.add(new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, objCoef));
     }
 
     public void runDWAlgo(IloCplex cplex, MasterProblem mp) throws UnknownObjectException, IloException {
@@ -371,8 +381,8 @@ public class DmvDantzigWolfeRelaxation {
                     int numSentVars = couplCons[s].length;
                     double[] sentParams = new double[numSentVars];
                     for (int i = 0; i < numSentVars; i++) {
-                        int c = model.getC(s, i);
-                        int m = model.getM(s, i);
+                        int c = idm.getC(s, i);
+                        int m = idm.getM(s, i);
     
                         // zValue = 1.0 - (-1.0 * sentPrices[i]);
                         // eValue = 0.0 - (bounds.getLb(c, m) * sentPrices[i])
@@ -401,7 +411,7 @@ public class DmvDantzigWolfeRelaxation {
             
             // Add a cut for each distribution by projecting the model parameters
             // back onto the simplex.
-            for (int c = 0; c < model.getNumConds(); c++) {
+            for (int c = 0; c < idm.getNumConds(); c++) {
                 double[] params = cplex.getValues(mp.modelParamVars[c]);
                 Vectors.exp(params);
                 addSumToOneConstraint(cplex, modelParamVars, sumVars, cut, params);
@@ -413,23 +423,48 @@ public class DmvDantzigWolfeRelaxation {
     private Pair<DepTree, Double> solveSlaveProblem(int s, double[] sentParams) {
         DmvCkyParser parser = new DmvCkyParser();
         Sentence sentence = sentences.get(s);
-        DepSentenceDist sd = model.getDepSentenceDist(sentence, s, sentParams);
+        DepSentenceDist sd = idm.getDepSentenceDist(sentence, s, sentParams);
         return parser.parse(sentence, sd);
     }
-    
-    public double computeTrueObjective(DmvModel model, DepTreebank treebank) {
-        // TODO Auto-generated method stub
-        return 0;
+
+    public void reverseApply(DmvBoundsDelta deltas) {
+        double lbDelt = - deltas.getLbDelta();
+        double ubDelt = - deltas.getUbDelta();
+        applyDelta(deltas.getC(), deltas.getM(), lbDelt, ubDelt);
     }
 
-    public void reverseApply(DmvBoundsDelta bounds2) {
-        // TODO Auto-generated method stub
-        
+    public void forwardApply(DmvBoundsDelta deltas) {
+        double lbDelt = deltas.getLbDelta();
+        double ubDelt = deltas.getUbDelta();
+        applyDelta(deltas.getC(), deltas.getM(), lbDelt, ubDelt);
     }
 
-    public void forwardApply(DmvBoundsDelta bounds2) {
-        // TODO Auto-generated method stub
-        
+    private void applyDelta(int c, int m, double lbDelt, double ubDelt) {
+        try {
+            double newLb = mp.modelParamVars[c][m].getLB() + lbDelt;
+            double newUb = mp.modelParamVars[c][m].getUB() + ubDelt;
+
+            // Updates the bounds of the model parameters
+            bounds.set(c, m, newLb, newUb);
+            mp.modelParamVars[c][m].setLB(newLb);
+            mp.modelParamVars[c][m].setUB(newUb);
+
+            // Update lambda column if it uses parameter c,m
+            for (LambdaVar lv : mp.lambdaVars) {
+                int i = idm.getSi(lv.s, c, m);
+                if (i != -1) {
+                    // Update the objective coefficient
+                    lv.objCoef += lv.sentSol[i] * ubDelt;
+                    cplex.setLinearCoef(mp.objective, lv.objCoef, lv.lambdaVar);
+
+                    // Update the coupling constraint coefficient
+                    double value = (bounds.getLb(c, m) - bounds.getUb(c, m)) * lv.sentSol[i];
+                    cplex.setLinearCoef(mp.couplCons[lv.s][i], value, lv.lambdaVar);
+                }
+            }
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public DmvBounds getBounds() {
@@ -437,7 +472,12 @@ public class DmvDantzigWolfeRelaxation {
     }
 
     public IndexedDmvModel getIdm() {
-        return model;
+        return idm;
     }
-
+    
+    public double computeTrueObjective(DmvModel model, DepTreebank treebank) {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+    
 }

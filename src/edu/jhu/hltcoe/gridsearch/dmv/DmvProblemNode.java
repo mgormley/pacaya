@@ -40,6 +40,7 @@ public class DmvProblemNode implements ProblemNode {
         id = 0;
         parent = null;
         depth = 0;
+        // TODO: decide how to get the initial feasible solution
         dwRelax = new DmvDantzigWolfeRelaxation(modelFactory, sentences);
         isOptimisticBoundCached = false;
     }
@@ -220,6 +221,11 @@ public class DmvProblemNode implements ProblemNode {
 
     public DmvBounds getBounds() {
         return dwRelax.getBounds();
+    }
+
+    @Override
+    public void end() {
+        dwRelax.end();
     }
 
 }

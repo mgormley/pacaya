@@ -27,7 +27,8 @@ public class EagerBranchAndBoundSolver {
     private SearchStatus status;
 
     // Storage of active nodes
-    private PriorityQueue<ProblemNode> activeNodePQ;
+    private PriorityQueue<ProblemNode> leafNodePQ;
+    private ProblemNode activeNode;
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, double epsilon, Comparator<ProblemNode> comparator) {
         // Initialize
@@ -35,7 +36,7 @@ public class EagerBranchAndBoundSolver {
         this.incumbentScore = WORST_SCORE;
         optimisticBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
-        activeNodePQ = new PriorityQueue<ProblemNode>(11, comparator);
+        leafNodePQ = new PriorityQueue<ProblemNode>(11, comparator);
 
         optimisticBound = rootNode.getOptimisticBound();
         incumbentSolution = rootNode.getFeasibleSolution();
@@ -43,26 +44,21 @@ public class EagerBranchAndBoundSolver {
             incumbentScore = incumbentSolution.getScore();
         }
 
-        addToActiveNodes(rootNode);
+        addToLeafNodes(rootNode);
 
-        ProblemNode prevNode = null;
-        while (hasNextActiveNode()) {
+        while (hasNextLeafNode()) {
             if (positiveDiff(optimisticBound, incumbentScore) <= epsilon) {
                 status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
                 break;
             }
             // TODO: else if, ran out of memory or disk space, break
 
-            ProblemNode curNode = getNextActiveNode();
-            
-            // TODO: setAsActiveNode could be cleaned up, this feels a bit awkward
-            curNode.setAsActiveNode(prevNode);
-            prevNode = curNode;
+            ProblemNode curNode = getNextLeafNode();
+            setActiveNode(curNode);
             
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
-                childNode.setAsActiveNode(curNode);
-                prevNode = childNode;
+                setActiveNode(childNode);
                 
                 if (worseThan(childNode.getOptimisticBound(), incumbentScore)) {
                     // fathom (i.e. prune) this child node
@@ -81,26 +77,32 @@ public class EagerBranchAndBoundSolver {
                     // new incumbentScore.
                 }
 
-                addToActiveNodes(childNode);
+                addToLeafNodes(childNode);
             }
         }
 
         log.info("B&B search status: " + status);
         
+        activeNode.end();
         // Return epsilon optimal solution
         return status;
     }
 
-    private boolean hasNextActiveNode() {
-        return !activeNodePQ.isEmpty();
+    private void setActiveNode(ProblemNode nextActive) {
+        nextActive.setAsActiveNode(activeNode);
+        activeNode = nextActive;
     }
 
-    private ProblemNode getNextActiveNode() {
-        return activeNodePQ.remove();
+    private boolean hasNextLeafNode() {
+        return !leafNodePQ.isEmpty();
     }
 
-    private void addToActiveNodes(ProblemNode rootNode) {
-        activeNodePQ.add(rootNode);
+    private ProblemNode getNextLeafNode() {
+        return leafNodePQ.remove();
+    }
+
+    private void addToLeafNodes(ProblemNode rootNode) {
+        leafNodePQ.add(rootNode);
     }
 
     private static double positiveDiff(double optimisticBound, double incumbentScore) {
