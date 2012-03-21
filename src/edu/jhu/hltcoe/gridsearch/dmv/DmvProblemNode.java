@@ -15,17 +15,16 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 
 public class DmvProblemNode implements ProblemNode {
 
-    private static final int NO_PARENT = -1;
-
     private static AtomicInteger atomicIntId = new AtomicInteger(0);
 
     private int id;
-    private int parentId;
+    private DmvProblemNode parent;
     private int depth;
-    private DmvBounds bounds;
-    private DmvBoundsFactory boundsFactory;
+    private DmvBoundsDelta deltas;
+    
+    // For active node only:
+    private DmvBoundsDeltaFactory deltasFactory;
     private DmvDantzigWolfeRelaxation dwRelax;
-
     private boolean isOptimisticBoundCached;
     private double optimisticBound;
     private SentenceCollection sentences;
@@ -34,30 +33,30 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBounds bounds, DmvBoundsFactory boundsFactory,
+    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory deltasFactory,
             DmvModelFactory modelFactory) {
-        this.bounds = bounds;
-        this.boundsFactory = boundsFactory;
+        this.deltasFactory = deltasFactory;
+        this.sentences = sentences;
         id = 0;
-        parentId = NO_PARENT;
+        parent = null;
         depth = 0;
-        dwRelax = new DmvDantzigWolfeRelaxation(bounds, modelFactory, sentences);
+        dwRelax = new DmvDantzigWolfeRelaxation(modelFactory, sentences);
         isOptimisticBoundCached = false;
     }
 
     /**
      * Non-root node constructor
      */
-    public DmvProblemNode(DmvBounds bounds, DmvBoundsFactory boundsFactory, int id, DmvProblemNode parent) {
-        this.bounds = bounds;
-        this.boundsFactory = boundsFactory;
+    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, int id, DmvProblemNode parent) {
+        this.deltas = deltas;
+        this.deltasFactory = deltasFactory;
         this.id = id;
-        this.parentId = parent.id;
+        this.parent = parent;
         this.depth = parent.depth + 1;
-        // TODO: This seems sensible for a DFS, but we might want to do
-        // something different if we're not doing DFS
-        this.dwRelax = parent.dwRelax;
         isOptimisticBoundCached = false;
+        // The relaxation is set only when this node is set to be the active one
+        this.dwRelax = null;
+        this.sentences = parent.sentences;
     }
 
     /**
@@ -69,7 +68,6 @@ public class DmvProblemNode implements ProblemNode {
         if (!isOptimisticBoundCached) {
             // Run the Dantzig-Wolfe algorithm on the relaxation of the main
             // problem
-            dwRelax.updateBounds(bounds);
             relaxSol = dwRelax.solveRelaxation();
             optimisticBound = relaxSol.getScore();
             isOptimisticBoundCached = true;
@@ -120,7 +118,7 @@ public class DmvProblemNode implements ProblemNode {
         }
 
         // Create a new DmvModel from these model parameters
-        IndexedDmvModel idm = new IndexedDmvModel();
+        IndexedDmvModel idm = dwRelax.getIdm();
         return idm.getDmvModel(modelParams);
     }
 
@@ -146,10 +144,10 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public List<ProblemNode> branch() {
-        List<DmvBounds> boundsForChildren = boundsFactory.getDmvBounds(this);
-        ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(boundsForChildren.size());
-        for (DmvBounds boundsForChild : boundsForChildren) {
-            children.add(new DmvProblemNode(boundsForChild, boundsFactory, getNextId(), this));
+        List<DmvBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
+        ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
+        for (DmvBoundsDelta deltasForChild : deltasForChildren) {
+            children.add(new DmvProblemNode(deltasForChild, deltasFactory, getNextId(), this));
         }
         return children;
     }
@@ -158,10 +156,9 @@ public class DmvProblemNode implements ProblemNode {
     public int getId() {
         return id;
     }
-
-    @Override
-    public int getParentId() {
-        return parentId;
+    
+    public DmvProblemNode getParent() {
+        return parent;
     }
 
     @Override
@@ -171,6 +168,58 @@ public class DmvProblemNode implements ProblemNode {
 
     private static int getNextId() {
         return atomicIntId.getAndIncrement();
+    }
+
+    @Override
+    public void setAsActiveNode(ProblemNode prevNode0) {
+        if (prevNode0 == null) {
+            return;
+        }
+        DmvProblemNode prevNode = (DmvProblemNode) prevNode0;
+        
+        // Switch the relaxation over to the new node
+        this.dwRelax = prevNode.dwRelax;
+        // Deactivate the previous node
+        prevNode.dwRelax = null;
+        prevNode.relaxSol = null;
+        
+        // Find the least common ancestor
+        DmvProblemNode lca = findLeastCommonAncestor(prevNode);
+        // Reverse apply changes to the bounds moving from prevNode to the LCA
+        for (DmvProblemNode node = prevNode; node != lca; node = node.parent) { 
+            dwRelax.reverseApply(node.deltas);
+        }
+        // Create a list of the ancestors of the current node up to, but not including the LCA
+        List<DmvProblemNode> ancestors = new ArrayList<DmvProblemNode>(depth - lca.depth);
+        for (DmvProblemNode node = this; node != lca; node = node.parent) { 
+            ancestors.add(node);
+        }
+        // Forward apply the bounds moving from the LCA to this
+        for (int i=ancestors.size()-1; i>=0; i--) {
+            dwRelax.forwardApply(ancestors.get(i).deltas);
+        }
+    }
+
+    private DmvProblemNode findLeastCommonAncestor(DmvProblemNode prevNode) {
+        DmvProblemNode tmp1 = this;
+        DmvProblemNode tmp2 = prevNode;
+        // Move tmp nodes to same depth
+        while (tmp1.depth > tmp2.depth) {
+            tmp1 = tmp1.parent;
+        }
+        while (tmp2.depth > tmp1.depth) {
+            tmp2 = tmp2.parent;
+        }
+        // Move up by one node until least common ancestor is reached
+        while (tmp1 != tmp2) {
+            tmp2 = tmp2.parent;
+            tmp1 = tmp1.parent;
+        }
+        return tmp1;
+    }
+
+    public DmvBounds getBounds() {
+        return dwRelax.getBounds();
     }
 
 }

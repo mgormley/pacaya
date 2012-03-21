@@ -12,8 +12,8 @@ public interface ProblemNode {
     
     int getId();
     
-    int getParentId();
-    
     int getDepth();
+
+    void setAsActiveNode(ProblemNode prevNode);
 
 }

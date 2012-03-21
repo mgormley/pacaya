@@ -15,6 +15,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class Projections {
 
@@ -59,17 +60,27 @@ public class Projections {
         return newParams;
     }
 
-    public static double[] getProjectedParams(DmvBounds bounds, int c, double[] params) throws IloException {
+    /**
+     * @param logBounds Bounds for log probabilities
+     * @param c Index of distribution which has bounds
+     * @param params Vector to project onto (param.length - 1)-simplex in probability space
+     */
+    public static double[] getProjectedParams(DmvBounds logBounds, int c, double[] params) throws IloException {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
-            lbs[m] = bounds.getLb(c, m);
-            ubs[m] = bounds.getUb(c, m);
+            lbs[m] = Utilities.exp(logBounds.getLb(c, m));
+            ubs[m] = Utilities.exp(logBounds.getUb(c, m));
         }
-
+        
         return getProjectedParams(params, lbs, ubs);
     }
 
+    /**
+     * @param params Vector to project onto (param.length - 1)-simplex in probability space
+     * @param lbs Lower bounds in probability space
+     * @param ubs Upper bounds in probability space
+     */
     public static double[] getProjectedParams(double[] params, double[] lbs, double[] ubs) throws IloException,
             UnknownObjectException {
         IloCplex cplex = new IloCplex();

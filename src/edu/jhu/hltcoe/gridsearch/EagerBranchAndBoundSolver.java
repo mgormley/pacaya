@@ -45,6 +45,7 @@ public class EagerBranchAndBoundSolver {
 
         addToActiveNodes(rootNode);
 
+        ProblemNode prevNode = null;
         while (hasNextActiveNode()) {
             if (positiveDiff(optimisticBound, incumbentScore) <= epsilon) {
                 status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
@@ -53,8 +54,16 @@ public class EagerBranchAndBoundSolver {
             // TODO: else if, ran out of memory or disk space, break
 
             ProblemNode curNode = getNextActiveNode();
+            
+            // TODO: setAsActiveNode could be cleaned up, this feels a bit awkward
+            curNode.setAsActiveNode(prevNode);
+            prevNode = curNode;
+            
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
+                childNode.setAsActiveNode(curNode);
+                prevNode = childNode;
+                
                 if (worseThan(childNode.getOptimisticBound(), incumbentScore)) {
                     // fathom (i.e. prune) this child node
                 }

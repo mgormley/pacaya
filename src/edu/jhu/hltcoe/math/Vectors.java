@@ -37,21 +37,45 @@ public class Vectors {
         }
     }
     
-    public static double[] getExpLogPhi(double[] logPhi) {
+    public static double[] getExp(double[] logPhi) {
         double[] phi = new double[logPhi.length];
         for (int i=0; i<phi.length; i++) {
             phi[i] = Utilities.exp(logPhi[i]);
         }
         return phi;
     }
+    
+    public static void exp(double[] phi) {
+        for (int i=0; i<phi.length; i++) {
+            phi[i] = Utilities.exp(phi[i]);
+        }
+    }
+    
+    public static void log(double[] phi) {
+        for (int i=0; i<phi.length; i++) {
+            phi[i] = Utilities.log(phi[i]);
+        }
+    }
+    
+    public static void logForIlp(double[] phi) {
+        for (int i=0; i<phi.length; i++) {
+            phi[i] = Utilities.logForIlp(phi[i]);
+        }
+    }
 
-
-    public static double[] getLogPhi(double[] phi) {
+    public static double[] getLog(double[] phi) {
         double[] logPhi = new double[phi.length];
         Vectors.updateLogPhi(phi, logPhi);
         return logPhi;
     }
-
+    
+    public static double[] getLogForIlp(double[] phi) {
+        double[] logPhi = new double[phi.length];
+        for (int t=0; t<logPhi.length; t++) {
+            logPhi[t] = Utilities.logForIlp(phi[t]);
+        }
+        return logPhi;
+    }
 
     public static void updateLogPhi(double[] phi, double[] logPhi) {
     	for (int t=0; t<logPhi.length; t++) {
@@ -69,4 +93,5 @@ public class Vectors {
         }
         return sum;
     }
+
 }
