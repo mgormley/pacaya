@@ -3,7 +3,10 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import util.Alphabet;
+import util.SparseVector;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
@@ -18,6 +21,8 @@ import edu.jhu.hltcoe.util.Pair;
 import gnu.trove.TIntHashSet;
 
 public class IndexedDmvModel {
+    
+    private static Logger log = Logger.getLogger(IndexedDmvModel.class);
     
     private static class IntTuple {
         
@@ -60,6 +65,11 @@ public class IndexedDmvModel {
             return true;
         }
         
+        @Override
+        public String toString() {
+            return Arrays.toString(x);
+        }
+        
     }
     
     private class Rhs extends IntTuple {
@@ -95,10 +105,12 @@ public class IndexedDmvModel {
     private ArrayList<Alphabet<CM>> sentCmToI;
     private int[][] sentMaxFreqSi; 
     private SentenceCollection sentences;
-    private int[][] sentMaxFreqCm;
+    private int[][] totMaxFreqCm;
     
     public IndexedDmvModel(SentenceCollection sentences) {
         this.sentences = sentences;
+        numTags = sentences.getVocab().size() - 1;
+        log.trace("numTags: " + numTags);
         
         // Create map of DepProbMatrix right hand sides to integers
         rhsToC = new Alphabet<Rhs>();
@@ -114,41 +126,30 @@ public class IndexedDmvModel {
                 for(int dv = 0; dv < decisionValency; dv++)
                     rhsToC.lookupObject(new Rhs(DECISION, p, dir, dv));
         rhsToC.stopGrowth();
+        log.trace("rhsToC: size=" + rhsToC.size() + " alphabet=" + rhsToC);
+        
+        // Create the sentence max frequency counts for c,m
+        int[][][] sentMaxFreqCm = new int[sentences.size()][][];
+        for (int s=0; s<sentences.size(); s++) {
+            sentMaxFreqCm[s] = getSentMaxFreqCm(sentences.get(s), s); 
+        }
         
         // Create a map of individual parameters to sentence indices
         sentParamToI = new ArrayList<Alphabet<Param>>();
-        for (Sentence sent : sentences) {
-            // Create the set of tags contained in this sentence
-            int[] tags = sent.getLabelIds();
-            TIntHashSet tagSet = new TIntHashSet(tags);
-
+        for (int s=0; s<sentences.size(); s++) {
+            Sentence sent = sentences.get(s);
             Alphabet<Param> paramToI = new Alphabet<Param>();
             for (int c=0; c<getNumConds(); c++) {
                 Rhs rhs = rhsToC.lookupIndex(c);
                 for (int m=0; m<getNumParams(c); m++) {
-                    if (rhs.get(0) == ROOT) {
-                        if (!tagSet.contains(m)) {
-                            continue;
-                        }
-                    } else if (rhs.get(0) == CHILD) {
-                        if (!tagSet.contains(m)) {
-                            continue;
-                        }
-                        if (!tagSet.contains(rhs.get(1))) {
-                            continue;
-                        }
-                    } else if (rhs.get(0) == DECISION) {
-                        if (!tagSet.contains(rhs.get(1))) {
-                            continue;
-                        }
-                    } else {
-                        throw new IllegalStateException("Unsupported type");
+                    if (sentMaxFreqCm[s][c][m] > 0) {
+                        paramToI.lookupObject(new Param(rhs,m));
                     }
-                    paramToI.lookupObject(new Param(rhs,m));
                 }
             }
             paramToI.stopGrowth();
             sentParamToI.add(paramToI);
+            log.trace("paramToI: s=" + s + " size=" + paramToI.size() + " alphabet=" + paramToI);
         }
         
         // Create a map from c,m indices to sentence variable indices using the previous two maps
@@ -164,24 +165,32 @@ public class IndexedDmvModel {
             }
             cmToI.stopGrowth();
             sentCmToI.add(cmToI);
+            log.trace("cmToI: s=" + s + " size=" + cmToI.size() + " alphabet=" + cmToI);
         }
         
         // Create the count of max frequencies for each model parameter in term of sentence indices
         sentMaxFreqSi = new int[sentences.size()][];
         for (int s=0; s<sentences.size(); s++) {
-            sentMaxFreqSi[s] = getSentMaxFreq(sentences.get(s), s);
+            // Create the sentence solution 
+            sentMaxFreqSi[s] = new int[getNumSentVars(s)];
+            for (int c = 0; c < getNumConds(); c++) {
+                for (int m = 0; m < getNumParams(c); m++) {
+                    if (sentMaxFreqCm[s][c][m] > 0) {
+                        int i = getSi(s, c, m);
+                        sentMaxFreqSi[s][i] = sentMaxFreqCm[s][c][m];
+                    }
+                }
+            }
         }
 
-        // Create the count of max frequencies for each model parameter in term of c,m
-        sentMaxFreqCm = new int[getNumConds()][];
-        for (int c=0; c<sentMaxFreqCm.length; c++) {
-            sentMaxFreqCm[c] = new int[getNumParams(c)];
-        }
-        for (int s=0; s<sentMaxFreqSi.length; s++) {
-            Alphabet<CM> cmToI = sentCmToI.get(s);
-            for (int i=0; i<sentMaxFreqSi[s].length; i++) {
-                CM cm = cmToI.lookupIndex(i);
-                sentMaxFreqCm[cm.get1()][cm.get2()] += sentMaxFreqSi[s][i];
+        // Create the count of total max frequencies for each model parameter in term of c,m
+        totMaxFreqCm = new int[getNumConds()][];
+        for (int c = 0; c < getNumConds(); c++) {
+            totMaxFreqCm[c] = new int[getNumParams(c)];
+            for (int m = 0; m < getNumParams(c); m++) {
+                for (int s = 0; s < sentMaxFreqSi.length; s++) {
+                    totMaxFreqCm[c][m] += sentMaxFreqCm[s][c][m];
+                }
             }
         }
     }
@@ -189,22 +198,24 @@ public class IndexedDmvModel {
     /**
      * Used by DmvBoundsFactory
      */
-    public int[][] getSentMaxFreqCm() {
-        return sentMaxFreqCm;
+    public int[][] getTotalMaxFreqCm() {
+        return totMaxFreqCm;
     }
 
-    private int[] getSentMaxFreq(Sentence sentence, int s) {
+    private int[][] getSentMaxFreqCm(Sentence sentence, int s) {
         int[] tags = sentence.getLabelIds();
-        Alphabet<Param> paramToI = sentParamToI.get(s);
         
-        // Create the sentence solution 
-        int[] maxFreq = new int[getNumSentVars(s)];
+        // Create the sentence counts
+        int[][] maxFreq = new int[getNumConds()][];
+        for (int c=0; c<maxFreq.length; c++) {
+            maxFreq[c] = new int[getNumParams(c)];
+        }
         
         // Count the MAX number of times tree could contain each feature
         for (int cIdx=0; cIdx<tags.length; cIdx++) {
             int cTag = tags[cIdx];
             // The root parameter can appear once for each tag in the sentence
-            maxFreq[paramToI.lookupObject(new Param(new Rhs(ROOT), cTag))] = 1;
+            maxFreq[rhsToC.lookupObject(new Rhs(ROOT))][cTag] = 1;
             
             // Each edge has some child parameter and can appear once
             for (int pIdx=0; pIdx<tags.length; pIdx++) {
@@ -216,7 +227,7 @@ public class IndexedDmvModel {
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
-                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+                maxFreq[rhsToC.lookupObject(rhs)][m]++;
             }
             
             // For each direction (LEFT, RIGHT)
@@ -230,23 +241,80 @@ public class IndexedDmvModel {
                 // stopAdj
                 rhs = new Rhs(DECISION, cTag, lr, 0);
                 m = Constants.END;
-                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-                // contAdj
-                rhs = new Rhs(DECISION, cTag, lr, 0);
-                m = Constants.CONT;
-                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-                // contNonAdj
-                rhs = new Rhs(DECISION, cTag, lr, 1);
-                m = Constants.CONT;
-                maxFreq[paramToI.lookupObject(new Param(rhs, m))] += numOnSide-1;
-                // stopNonAdj
-                rhs = new Rhs(DECISION, cTag, lr, 1);
-                m = Constants.END;
-                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+                maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                if (numOnSide > 0) {
+                    // contAdj
+                    rhs = new Rhs(DECISION, cTag, lr, 0);
+                    m = Constants.CONT;
+                    maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                    // contNonAdj
+                    rhs = new Rhs(DECISION, cTag, lr, 1);
+                    m = Constants.CONT;
+                    maxFreq[rhsToC.lookupObject(rhs)][m] += numOnSide-1;
+                    // stopNonAdj
+                    rhs = new Rhs(DECISION, cTag, lr, 1);
+                    m = Constants.END;
+                    maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                }
             }
         }
         return maxFreq;
     }
+
+//    private int[] getSentMaxFreq(Sentence sentence, int s) {
+//        int[] tags = sentence.getLabelIds();
+//        Alphabet<Param> paramToI = sentParamToI.get(s);
+//        
+//        // Create the sentence solution 
+//        int[] maxFreq = new int[getNumSentVars(s)];
+//        
+//        // Count the MAX number of times tree could contain each feature
+//        for (int cIdx=0; cIdx<tags.length; cIdx++) {
+//            int cTag = tags[cIdx];
+//            // The root parameter can appear once for each tag in the sentence
+//            maxFreq[paramToI.lookupObject(new Param(new Rhs(ROOT), cTag))] = 1;
+//            
+//            // Each edge has some child parameter and can appear once
+//            for (int pIdx=0; pIdx<tags.length; pIdx++) {
+//                if (cIdx == pIdx) {
+//                    continue;
+//                }
+//                int pTag = tags[pIdx];
+//
+//                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+//                Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
+//                int m = cTag;
+//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+//            }
+//            
+//            // For each direction (LEFT, RIGHT)
+//            for (int lr=0; lr<2; lr++) {
+//                // Each decision can appear for each tag of that type in the sentence
+//                
+//                int numOnSide = (lr == 0) ? cIdx : tags.length - cIdx - 1;
+//
+//                Rhs rhs;
+//                int m;
+//                // stopAdj
+//                rhs = new Rhs(DECISION, cTag, lr, 0);
+//                m = Constants.END;
+//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+//                // contAdj
+//                rhs = new Rhs(DECISION, cTag, lr, 0);
+//                m = Constants.CONT;
+//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+//                // contNonAdj
+//                rhs = new Rhs(DECISION, cTag, lr, 1);
+//                m = Constants.CONT;
+//                maxFreq[paramToI.lookupObject(new Param(rhs, m))] += numOnSide-1;
+//                // stopNonAdj
+//                rhs = new Rhs(DECISION, cTag, lr, 1);
+//                m = Constants.END;
+//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
+//            }
+//        }
+//        return maxFreq;
+//    }
     
     public int getNumConds() {
         return rhsToC.size();
@@ -313,7 +381,7 @@ public class IndexedDmvModel {
     /**
      * 
      */
-    public double getMaxFreq(int s, int i) {
+    public int getMaxFreq(int s, int i) {
         return sentMaxFreqSi[s][i];
     }
 
@@ -343,12 +411,12 @@ public class IndexedDmvModel {
         for (int cIdx=0; cIdx<parents.length; cIdx++) {
             int pIdx = parents[cIdx];
             int cTag = tags[cIdx];
-            int pTag = tags[pIdx];
-            if (pTag == WallDepTreeNode.WALL_POSITION) {
+            if (pIdx == WallDepTreeNode.WALL_POSITION) {
                 Rhs rhs = new Rhs(ROOT);
                 int m = cTag;
                 sentSol[paramToI.lookupObject(new Param(rhs, m))]++;
             } else {
+                int pTag = tags[pIdx];
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
@@ -369,10 +437,12 @@ public class IndexedDmvModel {
                     rhs = new Rhs(DECISION, cTag, lr, 0);
                     m = Constants.CONT;
                     sentSol[paramToI.lookupObject(new Param(rhs, m))]++;
-                    // contNonAdj
-                    rhs = new Rhs(DECISION, cTag, lr, 1);
-                    m = Constants.CONT;
-                    sentSol[paramToI.lookupObject(new Param(rhs, m))] += numOnSide-1;
+                    if (numOnSide - 1 > 0) {
+                        // contNonAdj
+                        rhs = new Rhs(DECISION, cTag, lr, 1);
+                        m = Constants.CONT;
+                        sentSol[paramToI.lookupObject(new Param(rhs, m))] += numOnSide - 1;
+                    }
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
                     m = Constants.END;
@@ -383,35 +453,36 @@ public class IndexedDmvModel {
         return sentSol;
     }
 
-    public DepSentenceDist getDepSentenceDist(Sentence sentence, int s, double[] sentParams) {
+    public DepSentenceDist getDepSentenceDist(Sentence sentence, int s, double[] sentLogProbs) {
         DepProbMatrix depProbMatrix = new DepProbMatrix(sentences.getLabelAlphabet(), decisionValency, childValency);
         depProbMatrix.fill(Double.NEGATIVE_INFINITY);
         
         // Map the sentence variable indices --> indices of DepProbMatrix
         Alphabet<Param> paramToI = sentParamToI.get(s);
-        for (int i=0; i<sentParams.length; i++) {
+        for (int i=0; i<getNumSentVars(s); i++) {
             Param p = paramToI.lookupIndex(i);
             Rhs rhs = p.get1();
             int m = p.get2();
-            double logProb = sentParams[i];
+            double logProb = sentLogProbs[i];
             setDPMValue(depProbMatrix, rhs, m, logProb);
         }
         
+        log.trace("depProbMatrix: " + depProbMatrix);
         DepInstance depInst = new DepInstance(sentence.getLabelIds());
         DepSentenceDist sd = new DepSentenceDist(depInst, depProbMatrix);
         return sd;
     }
 
-    private DepProbMatrix getDepProbMatrix(double[][] modelParams) {
+    private DepProbMatrix getDepProbMatrix(double[][] logProbs) {
         DepProbMatrix depProbMatrix = new DepProbMatrix(sentences.getLabelAlphabet(), decisionValency, childValency);
         depProbMatrix.fill(Double.NEGATIVE_INFINITY);
         
         // Map the sentence variable indices --> indices of DepProbMatrix
-        for (int c=0; c<modelParams.length; c++) {
+        for (int c=0; c<logProbs.length; c++) {
             Rhs rhs = rhsToC.lookupIndex(c);
-            assert(modelParams[c].length == getNumParams(c));
-            for (int m=0; m<modelParams[c].length; m++) {
-                double logProb = modelParams[c][m];
+            assert(logProbs[c].length == getNumParams(c));
+            for (int m=0; m<logProbs[c].length; m++) {
+                double logProb = logProbs[c][m];
                 setDPMValue(depProbMatrix, rhs, m, logProb);
             }
         }
@@ -419,6 +490,7 @@ public class IndexedDmvModel {
     }
 
     private void setDPMValue(DepProbMatrix depProbMatrix, Rhs rhs, int m, double logProb) {
+        log.trace(String.format("setDPMValue: rhs=%s m=%d logProb=%f", rhs.toString(), m, logProb));
         if (rhs.get(0) == ROOT) {
             depProbMatrix.root[m] = logProb;
         } else if (rhs.get(0) == CHILD) {
@@ -432,8 +504,8 @@ public class IndexedDmvModel {
         }
     }
     
-    public DmvModel getDmvModel(double[][] modelParams) {
-        return DmvModelConverter.getDmvModel(getDepProbMatrix(modelParams), sentences);
+    public DmvModel getDmvModel(double[][] logProbs) {
+        return DmvModelConverter.getDmvModel(getDepProbMatrix(logProbs), sentences);
     }
     
 }

@@ -26,7 +26,6 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.ilp.CplexIlpSolver;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
@@ -35,7 +34,7 @@ import edu.jhu.hltcoe.util.Prng;
 
 public class DmvDantzigWolfeRelaxation {
 
-    private static Logger log = Logger.getLogger(CplexIlpSolver.class);
+    private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
 
     private DmvBounds bounds;
     private File tempDir;

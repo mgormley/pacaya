@@ -9,6 +9,9 @@ import org.apache.log4j.Logger;
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch
  * and bound.
+ * 
+ * The SCIP thesis section 6.3 notes that "Usually, the child nodes inherit the dual bound of their parent node", 
+ * so maybe we should switch to lazy branch and bound. 
  */
 public class EagerBranchAndBoundSolver {
     

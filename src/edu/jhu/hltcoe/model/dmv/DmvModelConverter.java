@@ -19,11 +19,11 @@ public class DmvModelConverter {
     private DmvModelConverter() {
         // private constructor
     }
-        
+
     public static DmvModel getDmvModel(DepProbMatrix dpm, SentenceCollection sentences) {
         DmvWeightGenerator dwg = new DpmDmvWeightGenerator(sentences.getLabelAlphabet(), dpm);
         DmvModelFactory factory = new DmvModelFactory(dwg);
-        return (DmvModel)factory.getInstance(sentences);
+        return (DmvModel) factory.getInstance(sentences);
     }
 
     private static final class DpmDmvWeightGenerator implements DmvWeightGenerator {
@@ -37,10 +37,14 @@ public class DmvModelConverter {
 
         @Override
         public double getStopWeight(Triple<Label, String, Boolean> triple) {
-            int p = tagAlphabet.lookupObject(triple.get1());
-            int dir = triple.get2().equals("l") ? Constants.LEFT : Constants.RIGHT;
-            int dv = triple.get3() ? 0 : 1; 
-            return Utilities.exp(dpm.decision[p][dir][dv][Constants.END]);
+            if (triple.get1().equals(WallDepTreeNode.WALL_LABEL)) {
+                return (triple.get2().equals("r") && triple.get3()) ? 0.0 : 1.0;
+            } else {
+                int p = tagAlphabet.lookupObject(triple.get1());
+                int dir = triple.get2().equals("l") ? Constants.LEFT : Constants.RIGHT;
+                int dv = triple.get3() ? 0 : 1;
+                return Utilities.exp(dpm.decision[p][dir][dv][Constants.END]);
+            }
         }
 
         @Override
@@ -48,7 +52,9 @@ public class DmvModelConverter {
             LabeledMultinomial<Label> mult = new LabeledMultinomial<Label>();
             for (Label child : children) {
                 int c = tagAlphabet.lookupObject(child);
-                if (pair.get1().equals(WallDepTreeNode.WALL_LABEL)) {
+                if (child.equals(WallDepTreeNode.WALL_LABEL)) {
+                    mult.put(child, 0.0);
+                } else if (pair.get1().equals(WallDepTreeNode.WALL_LABEL)) {
                     mult.put(child, Utilities.exp(dpm.root[c]));
                 } else {
                     int p = tagAlphabet.lookupObject(pair.get1());
@@ -60,7 +66,7 @@ public class DmvModelConverter {
             return mult;
         }
     }
-    
+
     /**
      * TODO: This is an expensive conversion, and DmvModel should be rewritten
      * so that it's just some double arrays.
@@ -76,11 +82,11 @@ public class DmvModelConverter {
             for (Entry<Label, Double> cEntry : mult.entrySet()) {
                 Label child = cEntry.getKey();
                 double prob = cEntry.getValue();
-    
+
                 // We use logForIlp so that our solutions are analogous to
                 // IlpViterbiParser
                 double logProb = Utilities.logForIlp(prob);
-    
+
                 if (child.equals(WallDepTreeNode.WALL_LABEL)) {
                     // Skip these
                     continue;
@@ -96,30 +102,30 @@ public class DmvModelConverter {
                 }
             }
         }
-    
+
         for (Entry<Triple<Label, String, Boolean>, Double> entry : model.getStopWeights().entrySet()) {
             Triple<Label, String, Boolean> key = entry.getKey();
             double stopProb = entry.getValue();
             Label parent = key.get1();
             String lr = key.get2();
             boolean adjacent = key.get3();
-    
+
             int pid = tagAlphabet.lookupObject(parent);
             int dir = lr.equals("l") ? Constants.LEFT : Constants.RIGHT;
             // Note this is backwards from how adjacency is encoded for the ILPs
             int kids = adjacent ? 0 : 1;
-    
+
             // We use logForIlp so that our solutions are analogous to
             // IlpViterbiParser
             double stopLogProb = Utilities.logForIlp(stopProb);
             double contLogProb = Utilities.logForIlp(1.0 - stopProb);
-    
+
             if (!parent.equals(WallDepTreeNode.WALL_LABEL)) {
                 depProbMatrix.decision[pid][dir][kids][Constants.END] = stopLogProb;
                 depProbMatrix.decision[pid][dir][kids][Constants.CONT] = contLogProb;
             }
         }
-    
+
         return depProbMatrix;
     }
 

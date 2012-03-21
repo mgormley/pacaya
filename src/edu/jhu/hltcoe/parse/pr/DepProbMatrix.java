@@ -572,7 +572,8 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 
 		// Sort tags in alphabetical order
         ArrayList<Label> allTags = getAllTagsStrings(tagAlphabet);
-        Label[] sortedTags = (Label[])allTags.toArray();
+        Label[] sortedTags = new Label[allTags.size()];
+        allTags.toArray(sortedTags);
         Arrays.sort(sortedTags);
 		
 		// Print log probability estimates to output file

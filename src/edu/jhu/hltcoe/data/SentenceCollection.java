@@ -24,6 +24,9 @@ public class SentenceCollection extends ArrayList<Sentence> {
         }
     }
     
+    /**
+     * Vocabulary of the sentences including WALL_LABEL
+     */
     public Set<Label> getVocab() {
         Set<Label> vocab = new HashSet<Label>();
         for (Sentence sent : this) {

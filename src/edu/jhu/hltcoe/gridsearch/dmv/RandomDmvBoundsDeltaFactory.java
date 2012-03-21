@@ -20,20 +20,20 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
     }
     
     public RandomDmvBoundsDeltaFactory(SentenceCollection sentences, IndexedDmvModel idm) {
-        int[][] sentMaxFreqCm = idm.getSentMaxFreqCm();
+        int[][] maxFreqCm = idm.getTotalMaxFreqCm();
 
         // Restructure the max freqs for efficient sampling
         int numCm = 0;
-        for (int c=0; c<sentMaxFreqCm.length; c++) {
-            numCm += sentMaxFreqCm[c].length;
+        for (int c=0; c<maxFreqCm.length; c++) {
+            numCm += maxFreqCm[c].length;
         }
         cms = new CM[numCm];
         freqs = new double[numCm];
         int i=0;
-        for (int c=0; c<sentMaxFreqCm.length; c++) {
-            for (int m=0; m<sentMaxFreqCm[c].length; m++) {
+        for (int c=0; c<maxFreqCm.length; c++) {
+            for (int m=0; m<maxFreqCm[c].length; m++) {
                 cms[i] = new CM(c,m);
-                freqs[i] = sentMaxFreqCm[c][m]; 
+                freqs[i] = maxFreqCm[c][m]; 
                 i++;
             }
         }
