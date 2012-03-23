@@ -12,7 +12,7 @@ public class Multinomials {
     public static double[] randomMultinomial(int length) {
         double[] props = new double[length];
         for (int i=0; i<props.length; i++) {
-            props[i] = Prng.random.nextDouble();
+            props[i] = Prng.nextDouble();
         }
         normalizeProps(props);
         return props;
@@ -52,7 +52,7 @@ public class Multinomials {
             dPropSum += dProp[d];
         }
         int d;
-        double rand = Prng.random.nextDouble() * dPropSum;
+        double rand = Prng.nextDouble() * dPropSum;
         double partialSum = 0;
         for (d = 0; d < dProp.length; d++) {
             partialSum += dProp[d];

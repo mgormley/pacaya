@@ -36,7 +36,7 @@ public class DmvProblemNode implements ProblemNode {
         this.sentences = sentences;
         id = 0;
         parent = null;
-        depth = 0;
+        depth = getNextId();
         dwRelax = new DmvDantzigWolfeRelaxation(sentences, initFeasSol);
         this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
         isOptimisticBoundCached = false;
@@ -173,6 +173,13 @@ public class DmvProblemNode implements ProblemNode {
             return;
         }
         DmvProblemNode prevNode = (DmvProblemNode) prevNode0;
+        
+        if (prevNode.dwRelax == null) {
+            throw new IllegalStateException("prevNode is not active");
+        }
+        if (this.dwRelax != null) {
+            throw new IllegalStateException("this node is already active");
+        }
         
         // Switch the relaxation over to the new node
         this.dwRelax = prevNode.dwRelax;

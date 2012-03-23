@@ -6,7 +6,6 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import util.Alphabet;
-import util.SparseVector;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
@@ -18,7 +17,6 @@ import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.util.Pair;
-import gnu.trove.TIntHashSet;
 
 public class IndexedDmvModel {
     
@@ -195,13 +193,6 @@ public class IndexedDmvModel {
         }
     }
 
-    /**
-     * Used by DmvBoundsFactory
-     */
-    public int[][] getTotalMaxFreqCm() {
-        return totMaxFreqCm;
-    }
-
     private int[][] getSentMaxFreqCm(Sentence sentence, int s) {
         int[] tags = sentence.getLabelIds();
         
@@ -356,6 +347,17 @@ public class IndexedDmvModel {
         return rhsToC.lookupObject(new Rhs(DECISION, parent, lr, dv));
     }
 
+    /**
+     * Used by DmvBoundsFactory
+     */
+    public int[][] getTotalMaxFreqCm() {
+        return totMaxFreqCm;
+    }
+
+    public int getTotalMaxFreqCm(int c, int m) {
+        return totMaxFreqCm[c][m];
+    }
+    
     public int getNumSentVars(int s) {        
         return sentParamToI.get(s).size();
     }
@@ -473,7 +475,7 @@ public class IndexedDmvModel {
         return sd;
     }
 
-    private DepProbMatrix getDepProbMatrix(double[][] logProbs) {
+    public DepProbMatrix getDepProbMatrix(double[][] logProbs) {
         DepProbMatrix depProbMatrix = new DepProbMatrix(sentences.getLabelAlphabet(), decisionValency, childValency);
         depProbMatrix.fill(Double.NEGATIVE_INFINITY);
         

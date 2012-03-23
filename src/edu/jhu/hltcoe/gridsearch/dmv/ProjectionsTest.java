@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import junit.framework.Assert;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
@@ -14,6 +15,13 @@ import edu.jhu.hltcoe.util.JUnitUtils;
 
 public class ProjectionsTest {
 
+    private Projections projections;
+
+    @Before
+    public void setUp() {
+        projections = new Projections();
+    }
+    
     @Test
     public void testProjsplx() {
         testParams(new double[]{0.1, 1.7, 0.3});
@@ -39,7 +47,7 @@ public class ProjectionsTest {
     }
 
     private void testParams2(double[] y, double[] lbs, double[] ubs) throws Exception {
-        double[] x = Projections.getProjectedParams(y, lbs, ubs);        
+        double[] x = projections.getProjectedParams(y, lbs, ubs);        
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         

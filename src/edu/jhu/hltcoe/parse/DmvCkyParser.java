@@ -32,17 +32,22 @@ public class DmvCkyParser implements ViterbiParser {
 
         parseWeight = 0.0;
         for (Sentence sentence : sentences) {
-            int[] tags = sentence.getLabelIds();
-            DepInstance depInstance = new DepInstance(tags);
-            DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix);
-
-            Pair<DepTree, Double> pair = parse(sentence, sd);
+            Pair<DepTree, Double> pair = parse(sentence, depProbMatrix);
             DepTree tree = pair.get1();
             parseWeight += pair.get2();
             
             treebank.add(tree);
         }
         return treebank;
+    }
+
+    public Pair<DepTree, Double> parse(Sentence sentence, DepProbMatrix depProbMatrix) {
+        int[] tags = sentence.getLabelIds();
+        DepInstance depInstance = new DepInstance(tags);
+        DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix);
+
+        Pair<DepTree, Double> pair = parse(sentence, sd);
+        return pair;
     }
 
     public Pair<DepTree, Double> parse(Sentence sentence, DepSentenceDist sd) {

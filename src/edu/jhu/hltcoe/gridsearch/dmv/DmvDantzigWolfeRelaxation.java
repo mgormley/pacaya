@@ -4,13 +4,14 @@ import ilog.concert.IloColumn;
 import ilog.concert.IloException;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloMPModeler;
+import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloObjective;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
-import ilog.cplex.IloCplex.StringParam;
+import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
@@ -26,11 +27,16 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.gridsearch.EagerBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation {
 
@@ -42,19 +48,34 @@ public class DmvDantzigWolfeRelaxation {
     private int numThreads;
     private SentenceCollection sentences;
     private IndexedDmvModel idm;
-
     private int numLambdas;
-
-    private int cutCount;
-
+    private int cutCounter;
     private IloCplex cplex;
-
     private MasterProblem mp;
+    private Projections projections;
+    private int numCutRounds;
+    private CutCountComputer initCutCountComp;
 
     public DmvDantzigWolfeRelaxation(SentenceCollection sentences, DepTreebank initFeasSol) {
+        this(sentences, initFeasSol, null, 20, new CutCountComputer());
+    }
+    
+    public DmvDantzigWolfeRelaxation(SentenceCollection sentences, DepTreebank initFeasSol, File tempDir,
+            int numCutRounds, CutCountComputer initCutCountComp) {
         this.sentences = sentences;
+        this.tempDir = tempDir;
+
         this.idm = new IndexedDmvModel(sentences);
         this.bounds = new DmvBounds(this.idm);
+        this.projections = new Projections(tempDir);
+        
+        // TODO: pass these through
+        this.numThreads = 1;
+        this.workMemMegs = 128;
+        this.numCutRounds = numCutRounds;
+        this.initCutCountComp = initCutCountComp;
+        // Counter for printing 
+        this.cutCounter = 0;
         
         try {
             cplex = new IloCplex();
@@ -72,17 +93,21 @@ public class DmvDantzigWolfeRelaxation {
             throw new RuntimeException(e);
         }
     }
-        
-    public void end() {
-        cplex.end();
-    }
 
     public RelaxedDmvSolution solveRelaxation() {
-        try {
+        try {            
             runDWAlgo(cplex, mp);
-
+            
+            if (tempDir != null) {
+                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
+            }
+            
             log.info("Solution status: " + cplex.getStatus());
             cplex.output().println("Solution status = " + cplex.getStatus());
+            if (cplex.getStatus() != Status.Optimal) {
+                return new RelaxedDmvSolution(null, null, null, EagerBranchAndBoundSolver.WORST_SCORE);
+            }
+            log.info("Solution value: " + cplex.getObjValue());
             cplex.output().println("Solution value = " + cplex.getObjValue());
             double objective = cplex.getObjValue();
 
@@ -97,6 +122,7 @@ public class DmvDantzigWolfeRelaxation {
             double[][][] fracParses = new double[sentences.size()][][];
             for (int s = 0; s < sentences.size(); s++) {
                 Sentence sentence = sentences.get(s);
+                fracRoots[s] = new double[sentence.size()];
                 fracParses[s] = new double[sentence.size()][sentence.size()];
             }
             for (LambdaVar triple : mp.lambdaVars) {
@@ -115,11 +141,11 @@ public class DmvDantzigWolfeRelaxation {
                     }
                 }
             }
-            for (int s = 0; s < sentences.size(); s++) {
-                assert (Math.abs(Vectors.sum(fracParses[s]) + Vectors.sum(fracRoots[s]) - sentences.get(s).size()) < 1e-13);
+            
+            if (tempDir != null) {
+                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
             }
-
-            cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
+            
             return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
@@ -138,7 +164,7 @@ public class DmvDantzigWolfeRelaxation {
         // other actions.
         // Values: Any nonnegative number, in megabytes; default: 128.0
         cplex.setParam(DoubleParam.WorkMem, workMemMegs);
-        cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
+        //cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
 
         cplex.setParam(IntParam.Threads, numThreads);
 
@@ -174,11 +200,12 @@ public class DmvDantzigWolfeRelaxation {
      */
     private static class MasterProblem {
         public IloObjective objective;
-        public IloRange[][] couplCons;
         public IloRange[] lambdaSumCons;
         public List<LambdaVar> lambdaVars;
         public IloNumVar[][] modelParamVars;
         public IloNumVar[] sumVars;
+        public IloRange[][] couplConsLower;
+        public IloRange[][] couplConsUpper;
     }
     
     /**
@@ -191,18 +218,13 @@ public class DmvDantzigWolfeRelaxation {
         public int s;
         public int[] parents;
         private int[] sentSol;
-        private double objCoef;
         
-        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol, double objCoef) {
+        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol) {
             super();
             this.lambdaVar = lambdaVar;
             this.s = s;
             this.parents = parents;
             this.sentSol = sentSol;
-            // Note: if we stored the objective as an IloLinearNumExpr, we would be
-            // able to iterate through the objective coefficients when updating lambda variables
-            // but this would likely be slow for when there are a large number of columns.
-            this.objCoef = objCoef;
         }
         
     }
@@ -212,9 +234,7 @@ public class DmvDantzigWolfeRelaxation {
         // ----- row-wise modeling -----
         // Add x_0 constraints in the original model space first
 
-        // No contribution is made to the objective except by the slave problems
-        IloObjective objective = cplex.addMaximize();
-
+        // Create the model parameter variables
         int numConds = idm.getNumConds();
         IloNumVar[][] modelParamVars = new IloNumVar[numConds][];
         for (int c = 0; c < numConds; c++) {
@@ -224,14 +244,14 @@ public class DmvDantzigWolfeRelaxation {
             }
         }
         
+        // Create sum-to-one constraint helper variables        
         IloNumVar[] sumVars = new IloNumVar[numConds];
         for (int c = 0; c < numConds; c++) {
-            sumVars[c] = cplex.numVar(Double.MIN_VALUE, 1.0, "w_{" + c + "}");
+            sumVars[c] = cplex.numVar(-Double.MAX_VALUE, 1.0, "w_{" + c + "}");
         }
 
         // Create the cut vectors for sum-to-one constraints
         double[][][] pointsArray = getInitialPoints();
-        cutCount = 0;
         // Add the initial cuts
         for (int c = 0; c < numConds; c++) {
             for (int i = 0; i < pointsArray[c].length; i++) {
@@ -240,18 +260,41 @@ public class DmvDantzigWolfeRelaxation {
             }
         }
 
+        // Create the objective
+        IloObjective objective = cplex.addMaximize();
+        // Create the objective variables, adding them to the objective
+        IloNumVar[][] objVars = new IloNumVar[numConds][];
+        IloLinearNumExpr objExpr = cplex.linearNumExpr();
+        for (int c = 0; c < numConds; c++) {
+            int numParams = idm.getNumParams(c);
+            objVars[c] = new IloNumVar[numParams];
+            for (int m=0; m<numParams; m++) {
+                objVars[c][m] = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE, String.format("z_{%d,%d}",c,m));
+                cplex.setLinearCoef(objective, 1.0, objVars[c][m]);
+            }
+        }
+        
         // Add the coupling constraints considering only the model parameters
-        // aka. the relaxed-objective-coupling-constraint
-        IloRange[][] couplCons = new IloRange[sentences.size()][];
-        for (int s = 0; s < sentences.size(); s++) {
-            int numSentVars = idm.getNumSentVars(s);
-            couplCons[s] = new IloRange[numSentVars];
-            for (int i = 0; i < numSentVars; i++) {
-                int c = idm.getC(s, i);
-                int m = idm.getM(s, i);
-                String name = String.format("minVar(%d,%d)", s, i);
-                double maxFreqScm = idm.getMaxFreq(s,i);
-                cplex.addLe(maxFreqScm * bounds.getLb(c, m), cplex.prod(maxFreqScm, modelParamVars[c][m]), name);
+        // aka. the relaxed-objective-coupling-constraints
+        IloRange[][] couplConsLower = new IloRange[numConds][];
+        IloRange[][] couplConsUpper = new IloRange[numConds][];
+        for (int c = 0; c < numConds; c++) {
+            int numParams = idm.getNumParams(c);
+            couplConsLower[c] = new IloRange[numParams];
+            couplConsUpper[c] = new IloRange[numParams];
+            for (int m=0; m<numParams; m++) {
+                String name;
+                
+                // Add the lower coupling constraint
+                name = String.format("ccLb(%d,%d)", c, m);   
+                double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
+                IloNumExpr rhs = cplex.sum(cplex.prod(-1.0, objVars[c][m]), 
+                                            cplex.prod(maxFreqCm, modelParamVars[c][m]));
+                couplConsLower[c][m] = cplex.addLe(maxFreqCm * bounds.getLb(c,m), rhs, name);
+                
+                // Add the upper coupling constraint
+                name = String.format("ccUb(%d,%d)", c, m);
+                couplConsUpper[c][m] = cplex.addLe(0.0, cplex.prod(-1.0, objVars[c][m]), name);
             }
         }
 
@@ -262,22 +305,29 @@ public class DmvDantzigWolfeRelaxation {
         List<LambdaVar> lambdaVars = new ArrayList<LambdaVar>();
 
         // Add the initial feasible parse as the first lambda columns
-        for (int s = 0; s < couplCons.length; s++) {
+        for (int s = 0; s < sentences.size(); s++) {
             DepTree tree = initFeasSol.get(s);
-            addLambdaVar(cplex, objective, couplCons, lambdaSumCons, lambdaVars, s, tree);
+            addLambdaVar(cplex, objective, couplConsLower, couplConsUpper, lambdaSumCons, lambdaVars, s, tree);
         }
 
         MasterProblem mp = new MasterProblem();
         mp.objective = objective;
         mp.modelParamVars = modelParamVars;
         mp.sumVars = sumVars;
-        mp.couplCons = couplCons;
+        mp.couplConsLower = couplConsLower;
+        mp.couplConsUpper = couplConsUpper;
         mp.lambdaSumCons = lambdaSumCons;
         mp.lambdaVars = lambdaVars;
 
         return mp;
     }
 
+    public static class CutCountComputer {
+        public int getNumCuts(int numParams) {
+            return (int)Math.pow(numParams, 2.0);
+        }
+    }
+    
     private double[][][] getInitialPoints() throws IloException {
         int numConds = idm.getNumConds();
         double[][][] vectors = new double[numConds][][];
@@ -285,13 +335,13 @@ public class DmvDantzigWolfeRelaxation {
         for (int c = 0; c < numConds; c++) {
             int numParams = idm.getNumParams(c);
             // Create numParams^2 vectors
-            int numVectors = (int) Math.pow(numParams, 2.0);
+            int numVectors = initCutCountComp.getNumCuts(numParams); 
             vectors[c] = new double[numVectors][];
             for (int i = 0; i < vectors[c].length; i++) {
                 double[] vector = new double[numParams];
                 // Randomly initialize the parameters
                 for (int m = 0; m < numParams; m++) {
-                    vector[m] = Prng.random.nextDouble();
+                    vector[m] = Prng.nextDouble();
                 }
                 vectors[c][i] = vector;
             }
@@ -303,8 +353,8 @@ public class DmvDantzigWolfeRelaxation {
             double[] point) throws IloException {
         
         // TODO: should this respect the bounds?
-        double[] probs = Projections.getProjectedParams(bounds, c, point);
-        double[] logProbs = Vectors.getLogForIlp(probs);
+        double[] probs = projections.getProjectedParams(bounds, c, point);
+        double[] logProbs = Vectors.getLog(probs);
         
         double vectorSum = 0.0;
         for (int m = 0; m < logProbs.length; m++) {
@@ -313,94 +363,112 @@ public class DmvDantzigWolfeRelaxation {
 
         IloLinearNumExpr vectorExpr = cplex.scalProd(probs, modelParamVars[c]);
         vectorExpr.addTerm(-1.0, sumVars[c]);
-        cplex.addLe(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCount++));
+        cplex.addLe(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
     }
 
-    private void addLambdaVar(IloMPModeler cplex, IloObjective objective, IloRange[][] couplCons,
+    private void addLambdaVar(IloMPModeler cplex, IloObjective objective, IloRange[][] couplConsLower, IloRange[][] couplConsUpper,
             IloRange[] lambdaSumCons, List<LambdaVar> lambdaVars, int s, DepTree tree)
             throws IloException {
 
         int[] sentSol = idm.getSentSol(sentences.get(s), s, tree);
-        int numSentVars = couplCons[s].length;
-        double objCoef = 0.0;
+        int numSentVars = idm.getNumSentVars(s);
+        
+        IloColumn lambdaCol = cplex.column(objective, 0.0);
+
+        // Add the lambda var to the relaxed-objective-coupling-constraints
         for (int i = 0; i < numSentVars; i++) {
             int c = idm.getC(s, i);
             int m = idm.getM(s, i);
-            objCoef += sentSol[i] * bounds.getUb(c, m);
-        }
-        IloColumn lambdaCol = cplex.column(objective, objCoef);
-
-        // Add the lambda var to the relaxed-objective-coupling-constraint
-        for (int i = 0; i < couplCons[s].length; i++) {
-            int c = idm.getC(s, i);
-            int m = idm.getM(s, i);
-            // bounds.getLb(c, m) * freqScmVal - zScmVal
-            double value = (bounds.getLb(c, m) - bounds.getUb(c, m)) * sentSol[i];
-            lambdaCol = lambdaCol.and(cplex.column(couplCons[s][i], value));
+            
+            double value;
+            // Add to the lower coupling constraint
+            // TODO: this used to cause numerical precision errors close to zero
+            value = bounds.getLb(c, m) * sentSol[i];
+            lambdaCol = lambdaCol.and(cplex.column(couplConsLower[c][m], value));
+            
+            // Add to the upper coupling constraint
+            value = bounds.getUb(c, m) * sentSol[i];
+            lambdaCol = lambdaCol.and(cplex.column(couplConsUpper[c][m], value));
         }
 
         // Add the lambda var to its sum to one constraint
         IloNumVar lambdaVar;
         if (lambdaSumCons[s] == null) {
             lambdaVar = cplex.numVar(lambdaCol, 0.0, 1.0, String.format("lambda_{%d}^{%d}", s, numLambdas++));
-            lambdaSumCons[s] = cplex.addLe(lambdaVar, 1.0);
+            lambdaSumCons[s] = cplex.addEq(lambdaVar, 1.0, "lambdaSum");
         } else {
             lambdaCol = lambdaCol.and(cplex.column(lambdaSumCons[s], 1.0));
             lambdaVar = cplex.numVar(lambdaCol, 0.0, 1.0, String.format("lambda_{%d}^{%d}", s, numLambdas++));
         }
-        lambdaVars.add(new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, objCoef));
+        lambdaVars.add(new LambdaVar(lambdaVar, s, tree.getParents(), sentSol));
+        
+//        // TODO: remove
+//        for (int i = 0; i < couplCons[s].length; i++) {
+//            log.trace(couplCons[s][i]);
+//        }
     }
 
     public void runDWAlgo(IloCplex cplex, MasterProblem mp) throws UnknownObjectException, IloException {
         IloObjective objective = mp.objective;
         IloNumVar[][] modelParamVars = mp.modelParamVars;
         IloNumVar[] sumVars = mp.sumVars;
-        IloRange[][] couplCons = mp.couplCons;
+        IloRange[][] couplConsLower = mp.couplConsLower;
+        IloRange[][] couplConsUpper = mp.couplConsUpper;
         IloRange[] lambdaSumCons = mp.lambdaSumCons;
         List<LambdaVar> lambdaVars = mp.lambdaVars;
-
-        int numCuts = 10;
+        
+        DmvCkyParser parser = new DmvCkyParser();
         
         // Outer loop runs D-W and then adds cuts for sum-to-one constraints
-        for (int cut=0; cut<numCuts; cut++) {
+        for (int cut=0; cut<numCutRounds; cut++) {
         
             // Solve the full D-W problem
             while (true) {
                 // Solve the master problem
                 cplex.solve();
-    
+
+                log.info("Master solution status: " + cplex.getStatus());
+                if (cplex.getStatus() == Status.Infeasible) {
+                    return;
+                }
+                log.info("Master solution value: " + cplex.getObjValue());
+                
+                // Get the simplex multipliers (shadow prices).
+                // These are shared across all slaves, since each slave
+                // has the same D_s matrix. 
+                int numConds = idm.getNumConds();
+                double[][] prices = new double[numConds][];
+                for (int c = 0; c < numConds; c++) {
+                    int numParams = idm.getNumParams(c);
+                    prices[c] = new double[numParams];
+                    double[] pricesLower = cplex.getDuals(couplConsLower[c]);
+                    double[] pricesUpper = cplex.getDuals(couplConsUpper[c]);
+                    
+                    for (int m=0; m<numParams; m++) {
+                        // Calculate new model parameter values for parser
+                        // based on the relaxed-objective-coupling-constraints
+                        prices[c][m] = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m));
+                    }
+                }
+
+                DepProbMatrix dpm = idm.getDepProbMatrix(prices);
+
+                // Get the simplex multipliers (shadow prices) for the lambda sentence constraints
+                double[] convexPrices = cplex.getDuals(lambdaSumCons);
+                
                 // Solve each slave problem
                 int numPositiveRedCosts = 0;
                 for (int s = 0; s < sentences.size(); s++) {
-                    // Get the simplex multipliers (shadow prices)
-                    double[] sentPrices = cplex.getDuals(couplCons[s]);
-                    double convexPrice = cplex.getDual(lambdaSumCons[s]);
-    
-                    // Calculate new model parameter values for parser
-                    // based on the relaxed-objective-coupling-constraint
-                    int numSentVars = couplCons[s].length;
-                    double[] sentParams = new double[numSentVars];
-                    for (int i = 0; i < numSentVars; i++) {
-                        int c = idm.getC(s, i);
-                        int m = idm.getM(s, i);
-    
-                        // zValue = 1.0 - (-1.0 * sentPrices[i]);
-                        // eValue = 0.0 - (bounds.getLb(c, m) * sentPrices[i])
-                        double zValue = 1.0 + sentPrices[i];
-                        double eValue = -(bounds.getLb(c, m) * sentPrices[i]);
-    
-                        sentParams[i] = zValue * bounds.getUb(c, m) + eValue;
-                    }
-    
-                    Pair<DepTree, Double> pair = solveSlaveProblem(s, sentParams);
+        
+                    Pair<DepTree, Double> pair = parser.parse(sentences.get(s), dpm);
                     DepTree tree = pair.get1();
-                    double reducedCost = pair.get2() - convexPrice;
+                    double reducedCost = pair.get2() - convexPrices[s];
     
                     // TODO: double check that this if-statement is correct
                     if (reducedCost > 0.0) {
                         numPositiveRedCosts++;
                         // Introduce a new lambda variable
-                        addLambdaVar(cplex, objective, couplCons, lambdaSumCons, lambdaVars, s, tree);
+                        addLambdaVar(cplex, objective, couplConsLower, couplConsUpper, lambdaSumCons, lambdaVars, s, tree);
                     } // else: do nothing
                 }
                 if (numPositiveRedCosts == 0) {
@@ -409,40 +477,56 @@ public class DmvDantzigWolfeRelaxation {
                 }
             }
             
+            // Don't add more cuts after the final solution is found
+            if (cut == numCutRounds -1) {
+                break;
+            }
+
             // Add a cut for each distribution by projecting the model parameters
             // back onto the simplex.
+            log.debug("Adding cuts, round " + cut);
+            double[][] logProbs = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
-                double[] params = cplex.getValues(mp.modelParamVars[c]);
-                Vectors.exp(params);
-                addSumToOneConstraint(cplex, modelParamVars, sumVars, cut, params);
+                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
+            }
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                Vectors.exp(logProbs[c]);
+                addSumToOneConstraint(cplex, modelParamVars, sumVars, c, logProbs[c]);
             }
         }
 
     }
 
-    private Pair<DepTree, Double> solveSlaveProblem(int s, double[] sentParams) {
-        DmvCkyParser parser = new DmvCkyParser();
-        Sentence sentence = sentences.get(s);
-        DepSentenceDist sd = idm.getDepSentenceDist(sentence, s, sentParams);
-        return parser.parse(sentence, sd);
+    public void reverseApply(DmvBoundsDelta delta) {
+        applyDelta(DmvBoundsDelta.getReverse(delta));
     }
 
-    public void reverseApply(DmvBoundsDelta deltas) {
-        double lbDelt = - deltas.getLbDelta();
-        double ubDelt = - deltas.getUbDelta();
-        applyDelta(deltas.getC(), deltas.getM(), lbDelt, ubDelt);
+    public void forwardApply(DmvBoundsDelta delta) {
+        applyDelta(delta);
     }
 
-    public void forwardApply(DmvBoundsDelta deltas) {
-        double lbDelt = deltas.getLbDelta();
-        double ubDelt = deltas.getUbDelta();
-        applyDelta(deltas.getC(), deltas.getM(), lbDelt, ubDelt);
-    }
-
-    private void applyDelta(int c, int m, double lbDelt, double ubDelt) {
+    private void applyDelta(DmvBoundsDelta delta) {
         try {
-            double newLb = mp.modelParamVars[c][m].getLB() + lbDelt;
-            double newUb = mp.modelParamVars[c][m].getUB() + ubDelt;
+            int c = delta.getC();
+            int m = delta.getM();
+            
+            double origLb = mp.modelParamVars[c][m].getLB();
+            double origUb = mp.modelParamVars[c][m].getUB();
+            double newLb = origLb;
+            double newUb = origUb;
+            
+            // TODO: all the logAdds should be relegated to the Bounds Delta Factory
+            if (delta.getLu() == Lu.LOWER && delta.getDir() == Dir.ADD) {
+                newLb = Utilities.logAdd(origLb, delta.getDelta());
+            } else if (delta.getLu() == Lu.LOWER && delta.getDir() == Dir.SUBTRACT) {
+                newLb = Utilities.logSubtract(origLb, delta.getDelta());
+            } else if (delta.getLu() == Lu.UPPER && delta.getDir() == Dir.ADD) {
+                newUb = Utilities.logAdd(origUb, delta.getDelta());
+            } else if (delta.getLu() == Lu.UPPER && delta.getDir() == Dir.SUBTRACT) {
+                newUb = Utilities.logSubtract(origUb, delta.getDelta());
+            } else {
+                throw new IllegalStateException();
+            }
 
             // Updates the bounds of the model parameters
             bounds.set(c, m, newLb, newUb);
@@ -453,26 +537,18 @@ public class DmvDantzigWolfeRelaxation {
             for (LambdaVar lv : mp.lambdaVars) {
                 int i = idm.getSi(lv.s, c, m);
                 if (i != -1) {
-                    // Update the objective coefficient
-                    lv.objCoef += lv.sentSol[i] * ubDelt;
-                    cplex.setLinearCoef(mp.objective, lv.objCoef, lv.lambdaVar);
-
-                    // Update the coupling constraint coefficient
-                    double value = (bounds.getLb(c, m) - bounds.getUb(c, m)) * lv.sentSol[i];
-                    cplex.setLinearCoef(mp.couplCons[lv.s][i], value, lv.lambdaVar);
+                    double value;
+                    // Update the lower coupling constraint coefficient
+                    value = bounds.getLb(c, m) * lv.sentSol[i];
+                    cplex.setLinearCoef(mp.couplConsLower[c][m], value, lv.lambdaVar);
+                    // Update the upper coupling constraint coefficient
+                    value = bounds.getUb(c, m) * lv.sentSol[i];
+                    cplex.setLinearCoef(mp.couplConsUpper[c][m], value, lv.lambdaVar);
                 }
             }
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public DmvBounds getBounds() {
-        return bounds;
-    }
-
-    public IndexedDmvModel getIdm() {
-        return idm;
     }
     
     public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
@@ -488,6 +564,18 @@ public class DmvDantzigWolfeRelaxation {
             }
         }
         return score;
+    }
+
+    public DmvBounds getBounds() {
+        return bounds;
+    }
+
+    public IndexedDmvModel getIdm() {
+        return idm;
+    }
+        
+    public void end() {
+        cplex.end();
     }
     
 }

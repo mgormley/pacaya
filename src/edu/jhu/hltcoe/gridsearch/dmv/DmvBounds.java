@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.Arrays;
 
+import edu.jhu.hltcoe.util.Utilities;
+
 public class DmvBounds {
     
     private double[][] lbs;
@@ -13,7 +15,8 @@ public class DmvBounds {
         for (int c=0; c<lbs.length; c++) {
             lbs[c] = new double[idm.getNumParams(c)];
             ubs[c] = new double[lbs[c].length];
-            Arrays.fill(lbs[c], Double.NEGATIVE_INFINITY);
+            // Lower bound by log(1 / (one trillion)) ~= -27 
+            Arrays.fill(lbs[c], Utilities.log(Math.pow(10,-12)));
             Arrays.fill(ubs[c], 0.0);
         }
     }

@@ -30,7 +30,10 @@ public class BnBDmvTrainer implements Trainer {
         bnbSolver.runBranchAndBound(rootNode, epsilon, new DfsBfcComparator());
     }
     
-    private DepTreebank getInitFeasSol(SentenceCollection sentences) {
+    /**
+     * package private for testing
+     */
+    DepTreebank getInitFeasSol(SentenceCollection sentences) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         double lambda = 0.1;
         int iterations = 25;

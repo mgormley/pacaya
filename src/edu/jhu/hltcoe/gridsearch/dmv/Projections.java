@@ -6,6 +6,7 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
+import java.io.File;
 import java.util.Arrays;
 
 import depparsing.model.NonterminalMap;
@@ -18,6 +19,23 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class Projections {
+
+    private IloCplex cplex;
+    private File tempDir;
+
+    public Projections() {
+        this(null);
+    }
+    
+    public Projections(File tempDir) {
+        this.tempDir = tempDir;
+        try {
+            cplex = new IloCplex();
+            // Turn off stdout but not stderr
+            cplex.setOut(null);
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }    }
 
     /**
      * Implementation of Algorithm 1 (projsplx) from "Projection Onto A Simplex"
@@ -65,7 +83,7 @@ public class Projections {
      * @param c Index of distribution which has bounds
      * @param params Vector to project onto (param.length - 1)-simplex in probability space
      */
-    public static double[] getProjectedParams(DmvBounds logBounds, int c, double[] params) throws IloException {
+    public double[] getProjectedParams(DmvBounds logBounds, int c, double[] params) throws IloException {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
@@ -81,10 +99,10 @@ public class Projections {
      * @param lbs Lower bounds in probability space
      * @param ubs Upper bounds in probability space
      */
-    public static double[] getProjectedParams(double[] params, double[] lbs, double[] ubs) throws IloException,
+    public double[] getProjectedParams(double[] params, double[] lbs, double[] ubs) throws IloException,
             UnknownObjectException {
-        IloCplex cplex = new IloCplex();
-
+        cplex.clearModel();
+        
         IloNumVar[] newParamVars = new IloNumVar[params.length];
         for (int m = 0; m < newParamVars.length; m++) {
             newParamVars[m] = cplex.numVar(lbs[m], ubs[m], String.format("p_{%d}", m));
@@ -100,6 +118,11 @@ public class Projections {
 
         cplex.addMinimize(cplex.sum(squaredDiffs), "obj");
 
+
+        if (tempDir != null) {
+            cplex.exportModel(new File(tempDir, "proj.lp").getAbsolutePath());
+        }
+        
         if (!cplex.solve()) {
             throw new RuntimeException("projection infeasible");
         }
@@ -115,6 +138,10 @@ public class Projections {
         Pair<DepTree, Double> pair = parser.parse(sentence, sd);
         DepTree tree = pair.get1();
         return tree;
+    }
+
+    public void setTempDir(File tempDir) {
+        this.tempDir = tempDir;
     }
 
 }

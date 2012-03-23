@@ -24,7 +24,7 @@ public class DmvRandomWeightGenerator implements DmvWeightGenerator {
     public double getStopWeight(Triple<Label, String, Boolean> triple) {
         double stop = 0.0;
         while (stop == 0.0) {
-            stop = Prng.random.nextDouble();
+            stop = Prng.nextDouble();
         }
         return stop;
     }

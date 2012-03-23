@@ -21,8 +21,8 @@ public class EagerBranchAndBoundSolver {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND
     }
 
-    private static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
-    private static final double BEST_SCORE = Double.POSITIVE_INFINITY;
+    public static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
+    public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
     private double incumbentScore;
     private Solution incumbentSolution;
     private double optimisticBound;

@@ -83,9 +83,7 @@ public class DmvModelConverter {
                 Label child = cEntry.getKey();
                 double prob = cEntry.getValue();
 
-                // We use logForIlp so that our solutions are analogous to
-                // IlpViterbiParser
-                double logProb = Utilities.logForIlp(prob);
+                double logProb = Utilities.log(prob);
 
                 if (child.equals(WallDepTreeNode.WALL_LABEL)) {
                     // Skip these
@@ -117,8 +115,8 @@ public class DmvModelConverter {
 
             // We use logForIlp so that our solutions are analogous to
             // IlpViterbiParser
-            double stopLogProb = Utilities.logForIlp(stopProb);
-            double contLogProb = Utilities.logForIlp(1.0 - stopProb);
+            double stopLogProb = Utilities.log(stopProb);
+            double contLogProb = Utilities.log(1.0 - stopProb);
 
             if (!parent.equals(WallDepTreeNode.WALL_LABEL)) {
                 depProbMatrix.decision[pid][dir][kids][Constants.END] = stopLogProb;

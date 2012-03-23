@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
@@ -57,10 +59,10 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         double lb = origBounds.getLb(c, m);
         double ub = origBounds.getUb(c, m);
         double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-        DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, 0.0, mid-ub);
-        assert(mid-ub < 0);
-        DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, mid-lb, 0.0);
-        assert(mid-lb > 0);
+        // e.g. [0.0, 0.5]
+        DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, Dir.SUBTRACT, Utilities.logSubtract(ub, mid));
+        // e.g. [0.5, 1.0]
+        DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, Dir.ADD, Utilities.logSubtract(mid, lb));
 
         List<DmvBoundsDelta> deltasList = new ArrayList<DmvBoundsDelta>();
         deltasList.add(deltas1);

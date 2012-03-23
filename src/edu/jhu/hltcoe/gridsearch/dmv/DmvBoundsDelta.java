@@ -2,17 +2,22 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 public class DmvBoundsDelta {
 
+    public enum Lu { LOWER, UPPER }
+    public enum Dir { ADD, SUBTRACT }  
+    
     private int c;
     private int m; 
-    private double lbDelta; 
-    private double ubDelta;
-    
-    public DmvBoundsDelta(int c, int m, double lbDelta, double ubDelta) {
+    private Lu lu;
+    private Dir dir;
+    private double delta;
+
+    public DmvBoundsDelta(int c, int m, Lu lu, Dir dir, double delta) {
         super();
         this.c = c;
         this.m = m;
-        this.lbDelta = lbDelta;
-        this.ubDelta = ubDelta;
+        this.lu = lu;
+        this.dir = dir;
+        this.delta = delta;
     }
 
     public int getC() {
@@ -23,12 +28,20 @@ public class DmvBoundsDelta {
         return m;
     }
 
-    public double getLbDelta() {
-        return lbDelta;
+    public double getDelta() {
+        return delta;
     }
 
-    public double getUbDelta() {
-        return ubDelta;
+    public Lu getLu() {
+        return lu;
+    }
+
+    public Dir getDir() {
+        return dir;
     }
     
+    public static DmvBoundsDelta getReverse(DmvBoundsDelta delta) {
+        Dir dir = (delta.dir == Dir.ADD) ? Dir.SUBTRACT : Dir.ADD;
+        return new DmvBoundsDelta(delta.c, delta.m, delta.lu, dir, delta.delta);
+    }
 }
