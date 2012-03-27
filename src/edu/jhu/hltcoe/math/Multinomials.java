@@ -23,16 +23,16 @@ public class Multinomials {
         for (int d = 0; d < props.length; d++) {
             propSum += props[d];
         }
-        for (int d = 0; d < props.length; d++) {
-            props[d] /= propSum;
-            assert(!Double.isNaN(props[d]));
+        if (propSum != 0) {
+            for (int d = 0; d < props.length; d++) {
+                props[d] /= propSum;
+                assert(!Double.isNaN(props[d]));
+            }
+        } else {
+            for (int d = 0; d < props.length; d++) {
+                props[d] = 1.0 / (double)props.length;
+            }
         }
-        //TODO: remove 
-//        dPropSum = 0;
-//        for (int d = 0; d < dProp.length; d++) {
-//            dPropSum += dProp[d];
-//        }
-//        assert(dPropSum - 1.0 < 0.000000000001);
     }
     
     public static void normalizeLogProps(double[] logProps) {
