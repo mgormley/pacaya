@@ -18,7 +18,7 @@ public class BfsComparator implements Comparator<ProblemNode> {
         // a negative integer, zero, or a positive integer as the first
         // argument is less than, equal to, or greater than the second.
 
-        // If the depths are equal, compare the optimistic bounds
+        // Compare the optimistic bounds
         if (node1.getOptimisticBound() > node2.getOptimisticBound()) {
             return -1;
         } else if (node1.getOptimisticBound() < node2.getOptimisticBound()) {
