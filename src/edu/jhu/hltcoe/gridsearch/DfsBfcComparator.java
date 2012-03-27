@@ -10,6 +10,10 @@ import java.util.Comparator;
  */
 public class DfsBfcComparator implements Comparator<ProblemNode> {
 
+    public DfsBfcComparator() {
+        throw new RuntimeException("This comparator is currently not setup to work correctly with optimistic bounds");
+    }
+    
     @Override
     /** 
      * Head in the PQ will be the least element. In this case, that is the latest node put on the 
