@@ -43,18 +43,21 @@ public class EMTrainer<C> implements Trainer {
     
     @Override
     public void train(SentenceCollection sentences) {
-        Model bestModel = null;
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
+        Model bestModel = null;
+        C bestCounts = null;
         for (int r=0; r<numRestarts; r++) {
             trainOnce(sentences);
             if (logLikelihood > bestLogLikelihood) {
                 bestLogLikelihood = logLikelihood;
                 bestModel = model;
+                bestCounts = counts;
             }
         }
         log.info("bestLogLikelihood: " + bestLogLikelihood);
-        model = bestModel;
         logLikelihood = bestLogLikelihood;
+        model = bestModel;
+        counts = bestCounts;
     }
     
     public void trainOnce(SentenceCollection sentences) {
