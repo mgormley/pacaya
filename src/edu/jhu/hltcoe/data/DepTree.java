@@ -121,13 +121,10 @@ public class DepTree implements Iterable<DepTreeNode> {
     private void addParentChildLinksToNodes() {
         checkTree();
         for (int i=0; i<parents.length; i++) {
-            NonprojDepTreeNode node = (NonprojDepTreeNode)getNodeByPosition(i);
-            node.setParent((NonprojDepTreeNode)getNodeByPosition(parents[i]));
-            for (int j=0; j<parents.length; j++) {
-                if (parents[j] == i) {
-                    node.addChild((NonprojDepTreeNode)getNodeByPosition(j));
-                }
-            }
+            NonprojDepTreeNode child = (NonprojDepTreeNode)getNodeByPosition(i);
+            NonprojDepTreeNode parent = (NonprojDepTreeNode)getNodeByPosition(parents[i]);
+            child.setParent(parent);
+            parent.addChild(child);
         }
     }
 
