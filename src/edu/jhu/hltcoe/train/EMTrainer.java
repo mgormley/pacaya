@@ -29,17 +29,35 @@ public class EMTrainer<C> implements Trainer {
     private int iterCount;
     private Double logLikelihood;
     private C counts;
+    private int numRestarts;
 
-    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
+    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, 
+            double convergenceRatio, int numRestarts) {
         this.eStep = eStep;
         this.mStep = mStep;
         this.modelFactory = modelFactory;
         this.iterations = iterations;
         this.convergenceRatio = convergenceRatio;
+        this.numRestarts = numRestarts;
     }
     
     @Override
     public void train(SentenceCollection sentences) {
+        Model bestModel = null;
+        double bestLogLikelihood = Double.NEGATIVE_INFINITY;
+        for (int r=0; r<numRestarts; r++) {
+            trainOnce(sentences);
+            if (logLikelihood > bestLogLikelihood) {
+                bestLogLikelihood = logLikelihood;
+                bestModel = model;
+            }
+        }
+        log.info("bestLogLikelihood: " + bestLogLikelihood);
+        model = bestModel;
+        logLikelihood = bestLogLikelihood;
+    }
+    
+    public void trainOnce(SentenceCollection sentences) {
         // Initialize the parameters of the model
         model = modelFactory.getInstance(sentences);
         

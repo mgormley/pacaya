@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.train;
 
 import junit.framework.Assert;
 
+import org.apache.log4j.BasicConfigurator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,6 +21,11 @@ import edu.jhu.hltcoe.util.Prng;
 
 public class ViterbiTrainerTest {
 
+    static {
+        BasicConfigurator.configure();
+        //Logger.getRootLogger().setLevel(Level.TRACE);
+    }
+    
     @Before
     public void setUp() {
         Prng.seed(1234567890);
@@ -57,6 +63,25 @@ public class ViterbiTrainerTest {
         trainer.train(sentences);
         
         Assert.assertEquals(2, trainer.getIterationsCompleted());
+    }
+    
+
+    @Test
+    public void testRestarts() {
+        double lambda = 0.1;
+        int iterations = 5;
+        ViterbiParser parser = new DmvCkyParser();
+        DmvMStep mStep = new DmvMStep(lambda);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 10);
+        
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("the cat");
+        sentences.addSentenceFromString("the hat");
+        trainer.train(sentences);
+        
+        System.out.println("logLikelihood: " + trainer.getLogLikelihood());
+        Assert.assertEquals(2, trainer.getLogLikelihood());
     }
     
 }

@@ -13,12 +13,19 @@ public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
 
     private static Logger log = Logger.getLogger(ViterbiTrainer.class);
     
-    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
-        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio);
+    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
+            int iterations, double convergenceRatio) {
+        this(parser, mStep, modelFactory, iterations, convergenceRatio, 1);
     }
     
-    public ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
-        super(eStep, mStep, modelFactory, iterations, convergenceRatio);
+    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
+            int iterations, double convergenceRatio, int numRestarts) {
+        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+    }
+    
+    protected ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
+            int iterations, double convergenceRatio, int numRestarts) {
+        super(eStep, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
     }
 
     private static class ViterbiEStep implements EStep<DepTreebank> {

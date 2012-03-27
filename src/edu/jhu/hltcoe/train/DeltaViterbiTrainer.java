@@ -17,7 +17,7 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
     
     public DeltaViterbiTrainer(ViterbiParser deltaParser, ViterbiParser fastParser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
         super(new ViterbiEStepForDeltas(deltaParser, fastParser, mStep, modelFactory, iterations, convergenceRatio), 
-                mStep, modelFactory, iterations, convergenceRatio);
+                mStep, modelFactory, iterations, convergenceRatio, 1);
     }
 
     private static class ViterbiEStepForDeltas implements EStep<DepTreebank> {
