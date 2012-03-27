@@ -8,15 +8,28 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.data.Word;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.util.Prng;
 
 
 public class IndexedDmvModelTest {
@@ -24,6 +37,11 @@ public class IndexedDmvModelTest {
     static {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.TRACE);
+    }
+
+    @Before
+    public void setUp() {
+        Prng.seed(1234567890);
     }
     
     @Test
@@ -183,6 +201,51 @@ public class IndexedDmvModelTest {
         assertEquals(1, sentSol[9]); 
         // cont left noun non-adj
         assertEquals(1, sentSol[11]); 
+    }
+    
+    /**
+     * Tests getCmLogProbs() and also (indirectly) dwRelax.computeTrueObjective()
+     */
+    @Test
+    public void testGetCmLogProbs() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("the cat");
+        sentences.addSentenceFromString("the hat");
+        
+        double lambda = 0.0;
+        int iterations = 25;
+        ViterbiParser parser = new DmvCkyParser();
+        DmvMStep mStep = new DmvMStep(lambda);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 10);
+        // TODO: use random restarts
+        trainer.train(sentences);
+        double trainerLogLikelihood = trainer.getLogLikelihood();
+        
+        DepTreebank treebank = trainer.getCounts();
+        
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(sentences, treebank, null, 2, new CutCountComputer());
+
+        IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        double[][] logProbs = idm.getCmLogProbs(dpm);
+        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, Double.NaN);
+        
+        // Compute the score for the initial solution
+        assert(Double.isNaN(sol.getScore()));
+        sol.setScore(dwRelax.computeTrueObjective(sol.getLogProbs(), sol.getTreebank()));
+        
+        System.out.println(treebank);
+        System.out.println(trainer.getModel());
+        System.out.println(dpm);
+        
+        System.out.println("logProbs: ");
+        for (int c=0; c<logProbs.length; c++) {
+            System.out.println(Arrays.toString(Vectors.getExp(logProbs[c])));
+        }
+        
+        // The weights after running Viterbi EM are just wrong
+        assertEquals(trainerLogLikelihood, sol.getScore(), 1e-13);
     }
     
 }
