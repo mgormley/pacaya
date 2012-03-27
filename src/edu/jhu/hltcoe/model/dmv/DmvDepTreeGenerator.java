@@ -7,7 +7,7 @@ import edu.jhu.hltcoe.data.DepTreeNode;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.ProjDepTreeNode;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.data.ProjWallDepTreeNode;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 
 public class DmvDepTreeGenerator {
@@ -24,7 +24,7 @@ public class DmvDepTreeGenerator {
         DepTreebank treebank = new DepTreebank();
         
         for (int i=0; i<numTrees; i++) {
-            ProjDepTreeNode wall = new ProjDepTreeNode(WallDepTreeNode.WALL_LABEL);
+            ProjDepTreeNode wall = new ProjWallDepTreeNode();
             recursivelyGenerate(wall);
             
             treebank.add(new DepTree(wall));
