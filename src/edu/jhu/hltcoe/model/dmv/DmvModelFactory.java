@@ -42,6 +42,10 @@ public class DmvModelFactory implements ModelFactory {
         DmvModel dmv = new DmvModel();
         for (Label label : vocab) {
             for (String lr : leftRight) {
+                if (label.equals(WallDepTreeNode.WALL_LABEL) && lr.equals("l")) {
+                    // This will never be used
+                    continue;
+                }
                 for (boolean adj : adjacent) {
                     Triple<Label, String, Boolean> triple = new Triple<Label, String, Boolean>(label, lr, adj);
                     double weight;
@@ -57,17 +61,22 @@ public class DmvModelFactory implements ModelFactory {
         // List<Label> children = new ArrayList<Label>(entry.getValue());
         // TODO: This is slow making a list like this
         List<Label> vocabList = new ArrayList<Label>(vocab);
+        List<Label> childList = new ArrayList<Label>(vocabList);
+        boolean containedWall = childList.remove(WallDepTreeNode.WALL_LABEL);
+        assert(containedWall);
         for (Label parent : vocabList) {
             for (String lr : leftRight) {
+                if (parent.equals(WallDepTreeNode.WALL_LABEL) && lr.equals("l")) {
+                    // This will never be used
+                    continue;
+                }
                 Pair<Label, String> pair = new Pair<Label, String>(parent, lr);
-                dmv.setChooseWeights(parent, lr, weightGen.getChooseMulti(pair, vocabList));
+                dmv.setChooseWeights(parent, lr, weightGen.getChooseMulti(pair, childList));
             }
         }
 
         if (oneRoot) {
             // Fix the Wall probabilities to disallow vine parsing
-            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "l", true, 1.0);
-            dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "l", false, 1.0);
             dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", true, 0.0);
             dmv.putStopWeight(WallDepTreeNode.WALL_LABEL, "r", false, 1.0);
         }

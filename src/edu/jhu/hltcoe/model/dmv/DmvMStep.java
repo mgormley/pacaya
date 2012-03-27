@@ -123,6 +123,10 @@ public class DmvMStep implements MStep<DepTreebank> {
                 // Sometimes we won't have observed this particular triple, so rely on smoothing.
                 numStop = 0;
                 numNotStop = 0;
+                // Unless lambda equals zero
+                if (lambda == 0) {
+                    return 0.5;
+                }
             }
             double weight = (numStop + lambda) / (numStop + numNotStop + 2*lambda);
             return weight;

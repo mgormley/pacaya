@@ -52,9 +52,7 @@ public class DmvModelConverter {
             LabeledMultinomial<Label> mult = new LabeledMultinomial<Label>();
             for (Label child : children) {
                 int c = tagAlphabet.lookupObject(child);
-                if (child.equals(WallDepTreeNode.WALL_LABEL)) {
-                    mult.put(child, 0.0);
-                } else if (pair.get1().equals(WallDepTreeNode.WALL_LABEL)) {
+                if (pair.get1().equals(WallDepTreeNode.WALL_LABEL)) {
                     mult.put(child, Utilities.exp(dpm.root[c]));
                 } else {
                     int p = tagAlphabet.lookupObject(pair.get1());
