@@ -506,8 +506,35 @@ public class IndexedDmvModel {
         }
     }
     
+    private double getDPMValue(DepProbMatrix depProbMatrix, Rhs rhs, int m) {
+        //log.trace(String.format("getDPMValue: rhs=%s m=%d logProb=%f", rhs.toString(), m));
+        if (rhs.get(0) == ROOT) {
+            return depProbMatrix.root[m];
+        } else if (rhs.get(0) == CHILD) {
+            // For reference: child[cTag][pTag][lr][childValency];
+            return depProbMatrix.child[m][rhs.get(1)][rhs.get(2)][rhs.get(3)];
+        } else if (rhs.get(0) == DECISION) {
+            // For reference: decision[pTag][lr][decisionValency][m];
+            return depProbMatrix.decision[rhs.get(1)][rhs.get(2)][rhs.get(3)][m];
+        } else {
+            throw new IllegalStateException("Unsupported type");
+        }
+    }
+    
     public DmvModel getDmvModel(double[][] logProbs) {
         return DmvModelConverter.getDmvModel(getDepProbMatrix(logProbs), sentences);
+    }
+
+    public double[][] getCmLogProbs(DepProbMatrix dpm) {
+        double[][] logProbs = new double[getNumConds()][];
+        for (int c=0; c<logProbs.length; c++) {
+            Rhs rhs = rhsToC.lookupIndex(c);
+            logProbs[c] = new double[getNumParams(c)];
+            for (int m=0; m<logProbs[c].length; m++) {
+                logProbs[c][m] = getDPMValue(dpm, rhs, m);
+            }
+        }
+        return logProbs;
     }
     
 }

@@ -30,8 +30,12 @@ public class DmvSolution implements Solution {
         return idm;
     }
 
-    public DepTreebank getDepTreebank() {
+    public DepTreebank getTreebank() {
         return treebank;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
     }
 
 }

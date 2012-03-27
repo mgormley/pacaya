@@ -1,8 +1,11 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -10,9 +13,12 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 
 public class DmvProblemNode implements ProblemNode {
+
+    private static Logger log = Logger.getLogger(DmvProblemNode.class);
 
     private static AtomicInteger atomicIntId = new AtomicInteger(0);
 
@@ -24,20 +30,27 @@ public class DmvProblemNode implements ProblemNode {
     // For active node only:
     private DmvBoundsDeltaFactory deltasFactory;
     private DmvDantzigWolfeRelaxation dwRelax;
-    private boolean isOptimisticBoundCached;
-    private double optimisticBound;
+    protected boolean isOptimisticBoundCached;
+    protected double optimisticBound;
     private SentenceCollection sentences;
     private RelaxedDmvSolution relaxSol;
 
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DepTreebank initFeasSol) {
+    public DmvProblemNode(SentenceCollection sentences, DmvSolution initFeasSol, File tempDir) {
         this.sentences = sentences;
-        id = 0;
+        id = getNextId();
         parent = null;
-        depth = getNextId();
-        dwRelax = new DmvDantzigWolfeRelaxation(sentences, initFeasSol);
+        depth = 0;
+        dwRelax = new DmvDantzigWolfeRelaxation(sentences, initFeasSol.getTreebank(), tempDir, 2, new CutCountComputer());
+
+        // Compute the score for the initial solution
+        assert(Double.isNaN(initFeasSol.getScore()));
+        initFeasSol.setScore(dwRelax.computeTrueObjective(initFeasSol.getLogProbs(), initFeasSol.getTreebank()));
+        // TODO: save and use this solution
+        log.info("Initial solution score: " + initFeasSol.getScore());
+        
         this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
         isOptimisticBoundCached = false;
     }
@@ -45,16 +58,24 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Non-root node constructor
      */
-    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, int id, DmvProblemNode parent) {
+    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, DmvProblemNode parent) {
         this.deltas = deltas;
         this.deltasFactory = deltasFactory;
-        this.id = id;
+        this.id = getNextId();
         this.parent = parent;
         this.depth = parent.depth + 1;
         isOptimisticBoundCached = false;
         // The relaxation is set only when this node is set to be the active one
         this.dwRelax = null;
         this.sentences = parent.sentences;
+    }
+    
+
+    /**
+     * For testing only
+     */
+    protected DmvProblemNode() {
+        
     }
 
     /**
@@ -64,11 +85,15 @@ public class DmvProblemNode implements ProblemNode {
     @Override
     public double getOptimisticBound() {
         if (!isOptimisticBoundCached) {
-            // Run the Dantzig-Wolfe algorithm on the relaxation of the main
-            // problem
-            relaxSol = dwRelax.solveRelaxation();
-            optimisticBound = relaxSol.getScore();
-            isOptimisticBoundCached = true;
+            if (dwRelax != null) {
+                // Run the Dantzig-Wolfe algorithm on the relaxation of the main
+                // problem
+                relaxSol = dwRelax.solveRelaxation();
+                optimisticBound = relaxSol.getScore();
+                isOptimisticBoundCached = true;
+            } else {
+                return parent.getOptimisticBound();
+            }
         }
         return optimisticBound;
     }
@@ -76,6 +101,10 @@ public class DmvProblemNode implements ProblemNode {
     @Override
     public Solution getFeasibleSolution() {
         if (relaxSol != null) {
+            if (relaxSol.getScore() == Double.NEGATIVE_INFINITY) {
+                relaxSol = null;
+                return null;
+            }
             // Project the Dantzig-Wolfe model parameters back into the bounded
             // sum-to-exactly-one space
             // TODO: must use bounds here?
@@ -144,7 +173,7 @@ public class DmvProblemNode implements ProblemNode {
         List<DmvBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
         for (DmvBoundsDelta deltasForChild : deltasForChildren) {
-            children.add(new DmvProblemNode(deltasForChild, deltasFactory, getNextId(), this));
+            children.add(new DmvProblemNode(deltasForChild, deltasFactory, this));
         }
         return children;
     }
@@ -229,6 +258,15 @@ public class DmvProblemNode implements ProblemNode {
     @Override
     public void end() {
         dwRelax.end();
+    }
+    
+    @Override
+    public String toString() {
+        if (isOptimisticBoundCached) {
+            return String.format("DmvProblemNode[upperBound=%f]", optimisticBound);
+        } else {
+            return String.format("DmvProblemNode[upperBound=?]");
+        }
     }
 
 }

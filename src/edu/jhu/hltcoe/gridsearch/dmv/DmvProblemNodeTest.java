@@ -2,11 +2,10 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static junit.framework.Assert.assertEquals;
 
+import java.io.File;
 import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,8 +36,8 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
         
-        DepTreebank treebank = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
-        DmvProblemNode node = new DmvProblemNode(sentences, treebank);
+        DmvSolution initSol = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
+        DmvProblemNode node = new DmvProblemNode(sentences, initSol, new File("."));
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);
@@ -65,19 +64,21 @@ public class DmvProblemNodeTest {
         
         checkedSetActive(c1, node);
         for (int c=0; c<idm.getNumConds(); c++) {
-            for (int m=0; m<idm.getNumParams(c); m++) {
-                DmvBounds b = c1.getBounds();                
+            DmvBounds b = c1.getBounds();                
+             for (int m=0; m<idm.getNumParams(c); m++) {
                 Assert.assertTrue(bounds[c][m][0] <= b.getLb(c, m));
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(c, m));
             }
         }
-
+        assertEquals(Math.log(0.5), c1.getBounds().getUb(0, 1), 1e-7);
+        
         DmvProblemNode c3 = (DmvProblemNode)c1.branch().get(0);
         
         checkedSetActive(c3, c1);
         
         checkedSetActive(c2, c3);
-
+        assertEquals(Math.log(0.5), c2.getBounds().getLb(0, 1), 1e-7);
+        
         DmvProblemNode c4 = (DmvProblemNode)c2.branch().get(1);
         checkedSetActive(c4, c2);
         for (int c=0; c<idm.getNumConds(); c++) {
