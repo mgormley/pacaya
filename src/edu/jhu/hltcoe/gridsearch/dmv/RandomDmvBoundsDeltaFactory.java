@@ -31,13 +31,24 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         }
         cms = new CM[numCm];
         freqs = new double[numCm];
-        int i=0;
-        for (int c=0; c<maxFreqCm.length; c++) {
+        
+        for (int c=0, i=0; c<maxFreqCm.length; c++) {
             for (int m=0; m<maxFreqCm[c].length; m++) {
                 cms[i] = new CM(c,m);
                 freqs[i] = maxFreqCm[c][m]; 
                 i++;
             }
+        }
+
+        // Smooth this distribution by adding on the maximum possible frequency
+        double maxFreq = 0;
+        for (int i=0; i<freqs.length; i++) {
+            if (freqs[i] > maxFreq) {
+                maxFreq = freqs[i];
+            }
+        }
+        for (int i=0; i<freqs.length; i++) {
+            freqs[i] += maxFreq;
         }
     }
 
