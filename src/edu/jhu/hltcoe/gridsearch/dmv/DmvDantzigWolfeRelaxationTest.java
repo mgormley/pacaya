@@ -254,15 +254,15 @@ public class DmvDantzigWolfeRelaxationTest {
      * @return DW relaxation with 1 round of cuts, and 1 initial cut per parameter
      */
     public static DmvDantzigWolfeRelaxation getDw(SentenceCollection sentences, final int numCuts) {
-        DepTreebank treebank = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
-        System.out.println(treebank);
+        DmvSolution initSol = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
+        System.out.println(initSol);
         CutCountComputer ccc = new CutCountComputer(){ 
             @Override
             public int getNumCuts(int numParams) {
                 return numCuts;
             }
         };
-        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(sentences, treebank, new File("."), numCuts, ccc);
+        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(sentences, initSol.getTreebank(), new File("."), numCuts, ccc);
         return dw;
     }
         
