@@ -314,5 +314,9 @@ public class Utilities {
         }
         return log(weight);
     }
+
+    public static boolean equals(double a, double b, double delta) {
+        return Math.abs(a - b) < delta;
+    }
     
 }

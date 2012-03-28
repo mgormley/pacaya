@@ -29,7 +29,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.EagerBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
@@ -57,7 +57,7 @@ public class DmvDantzigWolfeRelaxation {
     private int numCutRounds;
     private CutCountComputer initCutCountComp;
     
-    public DmvDantzigWolfeRelaxation(SentenceCollection sentences, DepTreebank initFeasSol, File tempDir,
+    public DmvDantzigWolfeRelaxation(SentenceCollection sentences, File tempDir,
             int numCutRounds, CutCountComputer initCutCountComp) {
         this.sentences = sentences;
         this.tempDir = tempDir;
@@ -73,7 +73,9 @@ public class DmvDantzigWolfeRelaxation {
         this.initCutCountComp = initCutCountComp;
         // Counter for printing 
         this.cutCounter = 0;
-        
+    }
+
+    public void init(DepTreebank initFeasSol) {
         try {
             cplex = new IloCplex();
             mp = buildModel(cplex, initFeasSol);
@@ -102,7 +104,7 @@ public class DmvDantzigWolfeRelaxation {
             
             log.info("Solution status: " + cplex.getStatus());
             if (cplex.getStatus() != Status.Optimal) {
-                return new RelaxedDmvSolution(null, null, null, EagerBranchAndBoundSolver.WORST_SCORE);
+                return new RelaxedDmvSolution(null, null, null, LazyBranchAndBoundSolver.WORST_SCORE, cplex.getStatus());
             }
             log.info("Solution value: " + cplex.getObjValue());
             // Negate the objective since we were minimizing 
@@ -139,7 +141,7 @@ public class DmvDantzigWolfeRelaxation {
                 }
             }
             
-            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective);
+            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective, cplex.getStatus());
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;

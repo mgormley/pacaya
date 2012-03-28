@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import ilog.cplex.IloCplex.Status;
 import edu.jhu.hltcoe.gridsearch.Solution;
 
 public class RelaxedDmvSolution implements Solution {
@@ -8,13 +9,15 @@ public class RelaxedDmvSolution implements Solution {
     private double[][] logProbs;
     private double[][] fracRoots;
     private double[][][] fracChildren;
+    private Status status;
     
-    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score) {
+    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score, Status status) {
         super();
         this.score = score;
         this.logProbs = logProbs;
         this.fracRoots = fracRoots;
         this.fracChildren = fracChildren;
+        this.status = status;
     }
 
     @Override
@@ -32,6 +35,10 @@ public class RelaxedDmvSolution implements Solution {
     
     public double[][][] getFracChildren() {
         return fracChildren;
+    }
+
+    public Status getStatus() {
+        return status;
     }
 
 }

@@ -36,8 +36,7 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
         
-        DmvSolution initSol = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
-        DmvProblemNode node = new DmvProblemNode(sentences, initSol, new File("."));
+        DmvProblemNode node = new DmvProblemNode(sentences, new File("."));
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);

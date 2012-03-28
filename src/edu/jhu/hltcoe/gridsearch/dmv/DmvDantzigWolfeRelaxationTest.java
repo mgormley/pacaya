@@ -21,6 +21,15 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -254,7 +263,7 @@ public class DmvDantzigWolfeRelaxationTest {
      * @return DW relaxation with 1 round of cuts, and 1 initial cut per parameter
      */
     public static DmvDantzigWolfeRelaxation getDw(SentenceCollection sentences, final int numCuts) {
-        DmvSolution initSol = new BnBDmvTrainer(0.0).getInitFeasSol(sentences);
+        DmvSolution initSol = getInitFeasSol(sentences);
         System.out.println(initSol);
         CutCountComputer ccc = new CutCountComputer(){ 
             @Override
@@ -262,8 +271,33 @@ public class DmvDantzigWolfeRelaxationTest {
                 return numCuts;
             }
         };
-        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(sentences, initSol.getTreebank(), new File("."), numCuts, ccc);
+        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(sentences, new File("."), numCuts, ccc);
+        dw.init(initSol.getTreebank());
         return dw;
+    }
+    
+    public static DmvSolution getInitFeasSol(SentenceCollection sentences) {
+        // Run Viterbi EM to get a reasonable starting incumbent solution
+        int iterations = 25;        
+        double lambda = 0.1;
+        double convergenceRatio = 0.99999;
+        int numRestarts = 10;
+
+        ViterbiParser parser = new DmvCkyParser();
+        DmvMStep mStep = new DmvMStep(lambda);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+        // TODO: use random restarts
+        trainer.train(sentences);
+        
+        DepTreebank treebank = trainer.getCounts();
+        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        double[][] logProbs = idm.getCmLogProbs(dpm);
+        
+        // We let the DmvProblemNode compute the score
+        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, trainer.getLogLikelihood());
+        return sol;
     }
         
 }

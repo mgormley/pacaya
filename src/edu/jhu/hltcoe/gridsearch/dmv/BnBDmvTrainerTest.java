@@ -27,17 +27,16 @@ public class BnBDmvTrainerTest {
     }
 
     
-    //@Test
+    @Test
     public void testTwo() {
         double epsilon = 0.1;
         BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);
-        //trainer.setTempDir(new File("."));
+        trainer.setTempDir(new File("."));
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
         trainer.train(sentences);
-        
     }
     
     //@Test
@@ -53,7 +52,7 @@ public class BnBDmvTrainerTest {
         
     }
     
-    @Test
+    //@Test
     public void testSynthetic() {
         double epsilon = 0.1;
         BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);

@@ -1,7 +1,11 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import ilog.cplex.IloCplex.Status;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,6 +19,17 @@ import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvWeightCopier;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
 
@@ -34,25 +49,26 @@ public class DmvProblemNode implements ProblemNode {
     protected double optimisticBound;
     private SentenceCollection sentences;
     private RelaxedDmvSolution relaxSol;
+    
+    // For root node only
+    private DmvSolution initFeasSol;
 
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvSolution initFeasSol, File tempDir) {
-        this.sentences = sentences;
+    public DmvProblemNode(SentenceCollection sentences, File tempDir) {
+        this.sentences = sentences;        
+        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 2, new CutCountComputer());
+        // Save and use this solution as the first incumbent
+        this.initFeasSol = getInitFeasSol(sentences);
+        log.info("Initial solution score: " + initFeasSol.getScore());
         id = getNextId();
         parent = null;
         depth = 0;
-        dwRelax = new DmvDantzigWolfeRelaxation(sentences, initFeasSol.getTreebank(), tempDir, 2, new CutCountComputer());
-
-        // Compute the score for the initial solution
-        assert(Double.isNaN(initFeasSol.getScore()));
-        initFeasSol.setScore(dwRelax.computeTrueObjective(initFeasSol.getLogProbs(), initFeasSol.getTreebank()));
-        // TODO: save and use this solution
-        log.info("Initial solution score: " + initFeasSol.getScore());
-        
         this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
         isOptimisticBoundCached = false;
+        
+        dwRelax.init(initFeasSol.getTreebank());
     }
 
     /**
@@ -100,52 +116,75 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public Solution getFeasibleSolution() {
-        if (relaxSol != null) {
-            if (relaxSol.getScore() == Double.NEGATIVE_INFINITY) {
-                relaxSol = null;
-                return null;
-            }
-            // Project the Dantzig-Wolfe model parameters back into the bounded
-            // sum-to-exactly-one space
-            // TODO: must use bounds here?
-    
-            double[][] logProbs = relaxSol.getLogProbs();
-            // Project the model parameters back onto the feasible (sum-to-one)
-            // region ignoring the model parameter bounds (we just want a good solution)
-            // there's no reason to constrain it.
-            for (int c = 0; c < logProbs.length; c++) {
-                double[] probs = Vectors.getExp(logProbs[c]);
-                probs = Projections.getProjectedParams(probs);
-                logProbs[c] = Vectors.getLog(probs); 
-            }
-            // Create a new DmvModel from these model parameters
-            IndexedDmvModel idm = dwRelax.getIdm();
-    
-            // Project the fractional parse back to the feasible region
-            // where the weight of each edge is given by the indicator variable
-            // TODO: How would we do randomized rounding on the Dantzig-Wolfe parse
-            // solution?
-            DepTreebank treebank = getProjectedParses(relaxSol.getFracRoots(), relaxSol.getFracChildren());
-    
-            // TODO: write a new DmvMStep that stays in the bounded parameter space
-            double score = dwRelax.computeTrueObjective(logProbs, treebank);
-    
-            // Note: these approaches might be wrong if our objective function
-            // includes posterior constraints
-            // PrCkyParser parser = new PrCkyParser();
-            // DepTreebank viterbiTreebank = parser.getViterbiParse(sentences,
-            // model);
-            // double score = parser.getLastParseWeight();
-            // 
-            // Then run Viterbi EM starting from the randomly rounded solution
-            // and respecting the bounds.
-    
-            // Throw away the relaxed solution
-            relaxSol = null;
-            return new DmvSolution(logProbs, idm, treebank, score);
-        } else {
+        if (relaxSol == null) {
             throw new IllegalStateException("This method should only be called once");
         }
+        List<DmvSolution> solutions = new ArrayList<DmvSolution>();
+        DmvSolution projectedSol = getProjectedSolution();
+        solutions.add(projectedSol);
+        solutions.add(initFeasSol);
+        
+        // Then run Viterbi EM starting from the randomly rounded solution
+        solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
+        solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
+
+        // Throw away the relaxed solution
+        relaxSol = null;
+        // Throw away the initial feasible solution
+        initFeasSol = null;
+
+        return Collections.max(solutions, new Comparator<DmvSolution>() {
+
+            /**
+             * This will only return nulls if there are no non-null entries
+             */
+            @Override
+            public int compare(DmvSolution sol1, DmvSolution sol2) {
+                if (sol1 == null && sol2 == null) {
+                    return 0;
+                } else if (sol1 == null) {
+                    return -1;
+                } else if (sol2 == null) {
+                    return -1;
+                } else {
+                    return Double.compare(sol1.getScore(), sol2.getScore());
+                }
+            }
+            
+        });
+    }
+
+    private DmvSolution getProjectedSolution() {
+        if (relaxSol.getStatus() != Status.Optimal) {
+            return null;
+        }
+        // Project the Dantzig-Wolfe model parameters back into the bounded
+        // sum-to-exactly-one space
+        // TODO: must use bounds here?
+   
+        double[][] logProbs = relaxSol.getLogProbs();
+        // Project the model parameters back onto the feasible (sum-to-one)
+        // region ignoring the model parameter bounds (we just want a good solution)
+        // there's no reason to constrain it.
+        for (int c = 0; c < logProbs.length; c++) {
+            double[] probs = Vectors.getExp(logProbs[c]);
+            probs = Projections.getProjectedParams(probs);
+            logProbs[c] = Vectors.getLog(probs); 
+        }
+        // Create a new DmvModel from these model parameters
+        IndexedDmvModel idm = dwRelax.getIdm();
+   
+        // Project the fractional parse back to the feasible region
+        // where the weight of each edge is given by the indicator variable
+        // TODO: How would we do randomized rounding on the Dantzig-Wolfe parse
+        // solution?
+        DepTreebank treebank = getProjectedParses(relaxSol.getFracRoots(), relaxSol.getFracChildren());
+   
+        // TODO: write a new DmvMStep that stays in the bounded parameter space
+        double score = dwRelax.computeTrueObjective(logProbs, treebank);
+        
+        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
+        return sol;
     }
 
     public DepTreebank getProjectedParses(double[][] fracRoots, double[][][] fracChildren) {
@@ -267,6 +306,56 @@ public class DmvProblemNode implements ProblemNode {
         } else {
             return String.format("DmvProblemNode[upperBound=?]");
         }
+    }
+
+    private DmvSolution getImprovedSol(SentenceCollection sentences, double[][] logProbs, IndexedDmvModel idm) {
+        // TODO: this is a slow conversion
+        DmvModel model = idm.getDmvModel(logProbs);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
+        return runViterbiEmHelper(sentences, modelFactory, 1);
+    }
+    
+    private DmvSolution getImprovedSol(SentenceCollection sentences, DepTreebank treebank) {  
+        double lambda = 0.1;
+        // Do one M-step to create a model
+        DmvMStep mStep = new DmvMStep(lambda);
+        DmvModel model = (DmvModel) mStep.getModel(treebank);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
+        // Then run Viterbi EM
+        return runViterbiEmHelper(sentences, modelFactory, 1);
+    }
+    
+    private DmvSolution getInitFeasSol(SentenceCollection sentences) {        
+        double lambda = 0.1;
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        return runViterbiEmHelper(sentences, modelFactory, 10);
+    }
+
+    private DmvSolution runViterbiEmHelper(SentenceCollection sentences, 
+            DmvModelFactory modelFactory, int numRestarts) {
+        // Run Viterbi EM to get a reasonable starting incumbent solution
+        int iterations = 25;        
+        double lambda = 0.1;
+        double convergenceRatio = 0.99999;
+
+        ViterbiParser parser = new DmvCkyParser();
+        DmvMStep mStep = new DmvMStep(lambda);
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+        // TODO: use random restarts
+        trainer.train(sentences);
+        
+        DepTreebank treebank = trainer.getCounts();
+        IndexedDmvModel idm = dwRelax.getIdm(); //new IndexedDmvModel(sentences);
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        double[][] logProbs = idm.getCmLogProbs(dpm);
+        
+        // Compute the score for the solution
+        double score = dwRelax.computeTrueObjective(logProbs, treebank);
+        assert(Utilities.equals(score, trainer.getLogLikelihood(), 1e-13));
+                
+        // We let the DmvProblemNode compute the score
+        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
+        return sol;
     }
 
 }

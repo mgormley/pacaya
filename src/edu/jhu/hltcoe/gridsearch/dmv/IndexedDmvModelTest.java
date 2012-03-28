@@ -221,10 +221,9 @@ public class IndexedDmvModelTest {
         // TODO: use random restarts
         trainer.train(sentences);
         double trainerLogLikelihood = trainer.getLogLikelihood();
-        
         DepTreebank treebank = trainer.getCounts();
         
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(sentences, treebank, null, 2, new CutCountComputer());
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(sentences, null, 2, new CutCountComputer());
 
         IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);
         DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
