@@ -34,7 +34,9 @@ public class DmvDepTreeGenerator {
     }
 
     private void recursivelyGenerate(ProjDepTreeNode parent) {
-        sampleChildren(parent, "l");
+        if (!parent.isWall()) {
+            sampleChildren(parent, "l");
+        }
         sampleChildren(parent, "r");
         
         // Recurse on each child
