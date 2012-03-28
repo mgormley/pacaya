@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
  * The SCIP thesis section 6.3 notes that "Usually, the child nodes inherit the dual bound of their parent node", 
  * so maybe we should switch to lazy branch and bound. 
  */
+@Deprecated
 public class EagerBranchAndBoundSolver {
     
     private static Logger log = Logger.getLogger(EagerBranchAndBoundSolver.class);
