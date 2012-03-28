@@ -50,8 +50,12 @@ public class LazyBranchAndBoundSolver {
             ProblemNode curNode = getNextLeafNode();
             
             // TODO: this should really be a max over all the leaf nodes 
-            // The hack below only works with the BfsComparator
-            upperBound = curNode.getOptimisticBound();
+            // The hack below only works with the BfsComparator because its returning the 
+            // current max of the leaf nodes.
+            if (curNode.getOptimisticBound() < upperBound) {
+                // The upper bound can only decrease
+                upperBound = curNode.getOptimisticBound();
+            }
             assert(!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore); 
             log.info(String.format("upBound: %f lowBound: %f relativeDiff: %f ", upperBound, incumbentScore, relativeDiff));
