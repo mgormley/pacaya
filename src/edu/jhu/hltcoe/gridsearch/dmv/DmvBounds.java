@@ -17,7 +17,17 @@ public class DmvBounds {
             ubs[c] = new double[lbs[c].length];
             // Lower bound by log(1 / (one trillion)) ~= -27 
             Arrays.fill(lbs[c], Utilities.log(Math.pow(10,-12)));
+            // Upper bound by log(1.0)
             Arrays.fill(ubs[c], 0.0);
+            
+            for (int m=0; m<lbs[c].length; m++) {
+                int totMaxFreqCm = idm.getTotalMaxFreqCm(c, m);
+                if (totMaxFreqCm == 0) {
+                    // Upper bound by zero(ish) if this parameter 
+                    // can't be used in the corpus
+                    ubs[c][m] = lbs[c][m];
+                }
+            }
         }
     }
 
