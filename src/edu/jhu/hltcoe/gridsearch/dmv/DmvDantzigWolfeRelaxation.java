@@ -675,7 +675,9 @@ public class DmvDantzigWolfeRelaxation {
                     val.add(bounds.getUb(c, m) * lv.sentSol[i]);
                 }
             }
-            mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+            if (rowind.size() > 0) {
+                mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+            }
         } catch (IloException e) {
             throw new RuntimeException(e);
         }

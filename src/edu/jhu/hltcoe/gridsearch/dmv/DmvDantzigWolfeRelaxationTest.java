@@ -259,7 +259,7 @@ public class DmvDantzigWolfeRelaxationTest {
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
 
-        int maxCuts = 7;
+        int maxCuts = 5;
         double[] maxSums = new double[maxCuts];
         double prevSum = Double.POSITIVE_INFINITY;
         for (int numCuts=1; numCuts<maxCuts; numCuts++) {

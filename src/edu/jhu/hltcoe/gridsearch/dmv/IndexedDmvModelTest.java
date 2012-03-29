@@ -166,7 +166,7 @@ public class IndexedDmvModelTest {
         
         DmvModel model = idm.getDmvModel(logProbs);
         
-        assertEquals(0.2, model.getChooseWeights(WallDepTreeNode.WALL_LABEL, "l").get(new Word("V")), 1e-13);
+        assertEquals(0.2, model.getChooseWeights(WallDepTreeNode.WALL_LABEL, "r").get(new Word("V")), 1e-13);
         assertEquals(0.4, model.getChooseWeights(new Word("N"), "l").get(new Word("V")), 1e-13);
         assertEquals(0.6, model.getChooseWeights(new Word("V"), "l").get(new Word("N")), 1e-13);
     }

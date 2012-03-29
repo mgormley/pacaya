@@ -32,6 +32,7 @@ set AllWords := { read InputSent as "<3s>" };
 set Arcs[<s> in Sents] := {<i,j> in Tokens[s] * Tokens[s] with i != j};
 set TempArcs := union <s> in Sents: Arcs[s];
 set AllArcs := { <s,i,j> in Sents*TempArcs with <i,j> in Arcs[s] }; # TODO: this should be horribly slow
+set AllArcsObj := { <s,i,j> in AllArcs with j != 0 };
 
 set AllIJ := proj(AllArcs,<2,3>);
 param LRForIJ[<i,j> in AllIJ] := if i < j then "r" else "l" end;
@@ -127,6 +128,8 @@ subto redundant_arc_eq_arc_delta:
 	forall <s,i,j> in AllArcs:
 		arc[s,i,j] == sum <d> in ArcsDelta[s,i,j]: arcDelta[s,i,j,d];
 
+set AllArcsDeltaObj := { <s,i,j,d> in AllArcsDelta with j != 0 };
+
 	    ]]>
 	</code>
 	<code id="sos-delta">
@@ -139,7 +142,7 @@ sos only_one_delta_sos:
 
 # Only one arcDelta is on per arc:
 sos only_one_arc_delta_sos:
-	forall <s,i,j> in AllArcs:
+	forall <s,i,j> in AllArcsObj:
 		type1 priority 50: sum <d> in ArcsDelta[s,i,j]: ChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d] * arcDelta[s,i,j,d];
 
 		    ]]>
@@ -414,10 +417,13 @@ subto numNonAdjLeftAndRight:
     forall <s,i,lr> in AllTokensLR:
     	numNonAdj[s,i,lr] == numToSide[s,i,lr] - genAdj[s,i,lr];
     	
+set AllTokensLRObj := { <s,i,lr> in AllTokensLR with not (i==0 and lr=="l") };
+
     	]]>
 	</code>
 	<code id="dmv-objective">
     	<![CDATA[   
+    	
 # ---------- DMV log-likelihood ----------
 
 # Prob for stop weights: 
@@ -426,9 +432,9 @@ subto numNonAdjLeftAndRight:
 #    + logprob of not stopping non-adjacent * number of times non-adjacent children were generated
 #    + logprob of stopping non-adajacent 
 maximize goal: 
-    (sum <s,i,j> in AllArcs: 
+    (sum <s,i,j> in AllArcsObj: 
         arc[s,i,j] * LogChooseWeight[Word[s,i],LRForIJ[i,j],Word[s,j]]) 
-    + (sum <s,i,lr> in AllTokensLR: 
+    + (sum <s,i,lr> in AllTokensLRObj: 
       	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
 	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
@@ -439,7 +445,7 @@ maximize goal:
 	</code>
 	<code id="dmv-objective-modelparam">
     	<![CDATA[   
-# ---------- DMV log-likelihood with Deltas ----------
+# ---------- DMV log-likelihood ----------
 
 # Adding these variables allows us to have one variable for each stop weight parameter in the model
 var stopAdj[AllTokensLR] binary priority 45;
@@ -455,9 +461,9 @@ subto stopNonAdjLeftAndRight:
 
 # TODO: add deltas to stopweights
 maximize goal: 
-    (sum <s,i,j> in AllArcs: 
+    (sum <s,i,j> in AllArcsObj: 
         arc[s,i,j] * LogChooseWeight[Word[s,i],LRForIJ[i,j],Word[s,j]]) 
-    + (sum <s,i,lr> in AllTokensLR: 
+    + (sum <s,i,lr> in AllTokensLRObj: 
       	 (stopAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
 	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
@@ -472,9 +478,9 @@ maximize goal:
 
 # TODO: add deltas to stopweights
 maximize goal: 
-    (sum <s,i,j,d> in AllArcsDelta: 
+    (sum <s,i,j,d> in AllArcsDeltaObj: 
         arcDelta[s,i,j,d] * LogChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d]) 
-    + (sum <s,i,lr> in AllTokensLR: 
+    + (sum <s,i,lr> in AllTokensLRObj: 
       	 ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
 	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
@@ -501,9 +507,9 @@ subto stopNonAdjLeftAndRight:
 
 # TODO: add deltas to stopweights
 maximize goal: 
-    (sum <s,i,j,d> in AllArcsDelta: 
+    (sum <s,i,j,d> in AllArcsDeltaObj: 
         arcDelta[s,i,j,d] * LogChooseWeightDelta[Word[s,i],LRForIJ[i,j],Word[s,j],d]) 
-    + (sum <s,i,lr> in AllTokensLR: 
+    + (sum <s,i,lr> in AllTokensLRObj: 
       	 (stopAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,1]
 	   + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
 	   + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]

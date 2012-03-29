@@ -36,7 +36,7 @@ public class BnBDmvTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        trainer.train(sentences);
+        //trainer.train(sentences);
     }
     
     //@Test

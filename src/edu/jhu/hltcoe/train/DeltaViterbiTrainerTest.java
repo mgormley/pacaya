@@ -33,7 +33,7 @@ public class DeltaViterbiTrainerTest {
     
     @Test
     public void testConvergence() {
-        double lambda = 0.1;
+        double lambda = 0.01;
         int iterations = 25;
         double convergenceRatio = 0.99999;
 
@@ -51,10 +51,10 @@ public class DeltaViterbiTrainerTest {
         sentences.addSentenceFromString("the man ate the pizza with a fork");
         sentences.addSentenceFromString("the man ate the pizza");
         sentences.addSentenceFromString("the man ate with a fork the pizza");
-        sentences.addSentenceFromString("the man ate with a fork");
+        sentences.addSentenceFromString("with a fork the man ate");
         trainer.train(sentences);
 
-        Assert.assertEquals(2, trainer.getIterationsCompleted());
+        Assert.assertEquals(1, trainer.getIterationsCompleted());
     }
 
 }

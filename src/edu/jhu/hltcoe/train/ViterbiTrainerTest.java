@@ -45,7 +45,7 @@ public class ViterbiTrainerTest {
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");
         trainer.train(sentences);
 
-        Assert.assertEquals(-34.988779014553344, trainer.getLogLikelihood(), 1e-13);
+        Assert.assertEquals(-22.907744712211247, trainer.getLogLikelihood(), 1e-13);
     }
     
     @Test
@@ -81,7 +81,7 @@ public class ViterbiTrainerTest {
         trainer.train(sentences);
         
         System.out.println("logLikelihood: " + trainer.getLogLikelihood());
-        Assert.assertEquals(2, trainer.getLogLikelihood());
+        Assert.assertEquals(-2.284307044440888, trainer.getLogLikelihood());
     }
     
 }

@@ -44,7 +44,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -36.79711971052844;
+        double expectedParseWeight = -35.73038369611892;
 
         DeltaGenerator deltaGen;
 
@@ -59,7 +59,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
     }
     
     @Test
-    public void testProjAndNonprojDeltaParsers() {
+    public void testNonprojDeltaParsers() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
@@ -70,12 +70,25 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
-
-        expectedInitParseWeight = -36.79711971052844;
-        expectedParseWeight = -31.588949617488566;
+        expectedInitParseWeight = -35.73038369611892;
+        expectedParseWeight = -31.297298374152405;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
         getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight, expectedInitParseWeight);
+    }
+    
+    @Test
+    public void testProjDeltaParsers() {
+        Assert.fail("This test is too slow");
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("cat ate mouse");
+        sentences.addSentenceFromString("the cat ate the mouse with the hat");
+        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences);
         
+        double expectedInitParseWeight;
+        double expectedParseWeight;
+
+        DeltaGenerator deltaGen;
         expectedInitParseWeight = -37.364863915263356;
         expectedParseWeight = -35.363350139372564;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
