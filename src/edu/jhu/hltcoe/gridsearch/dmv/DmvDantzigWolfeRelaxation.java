@@ -1,7 +1,10 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import gnu.trove.TDoubleArrayList;
+import gnu.trove.TIntArrayList;
 import ilog.concert.IloColumn;
 import ilog.concert.IloException;
+import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloMPModeler;
 import ilog.concert.IloNumExpr;
@@ -30,14 +33,12 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation {
 
@@ -253,6 +254,7 @@ public class DmvDantzigWolfeRelaxation {
         public IloNumVar[][] objVars;
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
+        public IloLPMatrix couplMatrix;
     }
     
     /**
@@ -265,13 +267,15 @@ public class DmvDantzigWolfeRelaxation {
         public int s;
         public int[] parents;
         private int[] sentSol;
+        public int colind;
         
-        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol) {
+        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol, int colind) {
             super();
             this.lambdaVar = lambdaVar;
             this.s = s;
             this.parents = parents;
             this.sentSol = sentSol;
+            this.colind = colind;
         }
 
         @Override
@@ -347,7 +351,6 @@ public class DmvDantzigWolfeRelaxation {
         
         // Add the coupling constraints considering only the model parameters
         // aka. the relaxed-objective-coupling-constraints
-        //mp.couplMatrix = cplex.addLPMatrix("couplingMatrix");
         mp.couplConsLower = new IloRange[numConds][];
         mp.couplConsUpper = new IloRange[numConds][];
         for (int c = 0; c < numConds; c++) {
@@ -363,14 +366,24 @@ public class DmvDantzigWolfeRelaxation {
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
                                         cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
-                mp.couplConsLower[c][m] = cplex.addEq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
+                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
                 
                 // Add the upper coupling constraint
                 IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, "slackVarUpper");
                 name = String.format("ccUb(%d,%d)", c, m);
                 IloNumExpr rhsUpper = cplex.sum(cplex.prod(-1.0, mp.objVars[c][m]), slackVarUpper);
-                mp.couplConsUpper[c][m] = cplex.addEq(0.0, rhsUpper, name);
+                mp.couplConsUpper[c][m] = cplex.eq(0.0, rhsUpper, name);
             }
+        }        
+        // We need the lower coupling constraints (and the upper) to each 
+        // be added in sequence to the master problem. So we add all the upper
+        // constraints afterwards
+        mp.couplMatrix = cplex.addLPMatrix("couplingMatrix");
+        for (int c = 0; c < numConds; c++) {
+            mp.couplMatrix.addRows(mp.couplConsLower[c]);
+        }
+        for (int c = 0; c < numConds; c++) {
+            mp.couplMatrix.addRows(mp.couplConsUpper[c]);
         }
 
         // ----- column-wise modeling -----
@@ -439,7 +452,7 @@ public class DmvDantzigWolfeRelaxation {
     private boolean addLambdaVar(IloMPModeler cplex, int s, DepTree tree)
             throws IloException {
 
-        LambdaVar lvTemp = new LambdaVar(null, s, tree.getParents(), null);
+        LambdaVar lvTemp = new LambdaVar(null, s, tree.getParents(), null, -1);
         if (mp.lambdaVarSet.contains(lvTemp)) {
             //int lvIdx = mp.lambdaVars.lastIndexOf(lvTemp);
             //log.error("Duplicate Lambda Var: " + lvTemp);
@@ -455,22 +468,6 @@ public class DmvDantzigWolfeRelaxation {
         
         IloColumn lambdaCol = cplex.column(mp.objective, 0.0);
 
-        // Add the lambda var to the relaxed-objective-coupling-constraints
-        for (int i = 0; i < numSentVars; i++) {
-            int c = idm.getC(s, i);
-            int m = idm.getM(s, i);
-            
-            double value;
-            // Add to the lower coupling constraint
-            // TODO: this used to cause numerical precision errors close to zero
-            value = bounds.getLb(c, m) * sentSol[i];
-            lambdaCol = lambdaCol.and(cplex.column(mp.couplConsLower[c][m], value));
-            
-            // Add to the upper coupling constraint
-            value = bounds.getUb(c, m) * sentSol[i];
-            lambdaCol = lambdaCol.and(cplex.column(mp.couplConsUpper[c][m], value));
-        }
-
         // Add the lambda var to its sum to one constraint
         IloNumVar lambdaVar;
         if (mp.lambdaSumCons[s] == null) {
@@ -482,7 +479,27 @@ public class DmvDantzigWolfeRelaxation {
             //TODO:lambdaVar = cplex.numVar(lambdaCol, 0.0, 1.0, String.format("lambda_{%d}^{%d}", s, numLambdas++));
             lambdaVar = cplex.numVar(lambdaCol, 0.0, Double.MAX_VALUE, String.format("lambda_{%d}^{%d}", s, numLambdas++));
         }
-        LambdaVar lv = new LambdaVar(lambdaVar, s, tree.getParents(), sentSol);
+        
+        // Add the lambda var to the relaxed-objective-coupling-constraints matrix
+        int[] ind = new int[numSentVars*2];
+        double[] val = new double[numSentVars*2];
+        int j=0;
+        for (int i = 0; i < numSentVars; i++) {
+            int c = idm.getC(s, i);
+            int m = idm.getM(s, i);
+            
+            // Add to the lower coupling constraint
+            ind[j] = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
+            val[j] = bounds.getLb(c, m) * sentSol[i];
+            j++;
+            
+            // Add to the upper coupling constraint
+            ind[j] = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
+            val[j] = bounds.getUb(c, m) * sentSol[i];
+        }
+        int colind = mp.couplMatrix.addColumn(lambdaVar, ind, val);
+        
+        LambdaVar lv = new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, colind);
         
         mp.lambdaVars.add(lv);
         mp.lambdaVarSet.add(lv);
@@ -526,18 +543,20 @@ public class DmvDantzigWolfeRelaxation {
                 // Get the simplex multipliers (shadow prices).
                 // These are shared across all slaves, since each slave
                 // has the same D_s matrix. 
+                double[] pricesLower = cplex.getDuals(mp.couplMatrix, 0, idm.getNumTotalParams());
+                double[] pricesUpper = cplex.getDuals(mp.couplMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
                 int numConds = idm.getNumConds();
                 double[][] weights = new double[numConds][];
+                int j = 0;
                 for (int c = 0; c < numConds; c++) {
                     int numParams = idm.getNumParams(c);
                     weights[c] = new double[numParams];
-                    double[] pricesLower = cplex.getDuals(mp.couplConsLower[c]);
-                    double[] pricesUpper = cplex.getDuals(mp.couplConsUpper[c]);
                     
                     for (int m=0; m<numParams; m++) {
                         // Calculate new model parameter values for parser
                         // based on the relaxed-objective-coupling-constraints
-                        weights[c][m] = (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m));
+                        weights[c][m] = (pricesLower[j]*bounds.getLb(c,m) + pricesUpper[j]*bounds.getUb(c,m));
+                        j++;
                         // We want to minimize the following:
                         // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
                         // but we negate this since the parser will try to maximize. In other words:
@@ -634,21 +653,29 @@ public class DmvDantzigWolfeRelaxation {
             mp.modelParamVars[c][m].setUB(newUb);
 
             // Update lambda column if it uses parameter c,m
+            TIntArrayList rowind = new TIntArrayList();
+            TIntArrayList colind = new TIntArrayList();
+            TDoubleArrayList val = new TDoubleArrayList();
+            int lowCmInd = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
+            int upCmInd = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
             for (LambdaVar lv : mp.lambdaVars) {
                 int i = idm.getSi(lv.s, c, m);
                 if (i != -1) {
-                    // This is horridly slow. Some suggestions for how to make modification 
+                    // Using cplex.setLinearCoef() is horridly slow. Some suggestions for how to make modification 
                     // of the problem faster here:
                     // https://www.ibm.com/developerworks/forums/thread.jspa?threadID=324926
-                    double value;
+
                     // Update the lower coupling constraint coefficient
-                    value = bounds.getLb(c, m) * lv.sentSol[i];
-                    cplex.setLinearCoef(mp.couplConsLower[c][m], value, lv.lambdaVar);
+                    rowind.add(lowCmInd);
+                    colind.add(lv.colind);
+                    val.add(bounds.getLb(c, m) * lv.sentSol[i]);
                     // Update the upper coupling constraint coefficient
-                    value = bounds.getUb(c, m) * lv.sentSol[i];
-                    cplex.setLinearCoef(mp.couplConsUpper[c][m], value, lv.lambdaVar);
+                    rowind.add(upCmInd);
+                    colind.add(lv.colind);
+                    val.add(bounds.getUb(c, m) * lv.sentSol[i]);
                 }
             }
+            mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
