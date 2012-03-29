@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
@@ -16,59 +15,12 @@ import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Pair;
 
 public class IndexedDmvModel {
     
     private static Logger log = Logger.getLogger(IndexedDmvModel.class);
-    
-    private static class IntTuple {
-        
-        private final int[] x;
-        
-        public IntTuple(int... args) {
-            x = new int[args.length];
-            for (int i=0; i<args.length; i++) {
-                x[i] = args[i];
-            }
-        }
-        
-        public int size() {
-            return x.length;
-        }
-        
-        public int get(int i) {
-            return x[i];
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + Arrays.hashCode(x);
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            IntTuple other = (IntTuple) obj;
-            if (!Arrays.equals(x, other.x))
-                return false;
-            return true;
-        }
-        
-        @Override
-        public String toString() {
-            return Arrays.toString(x);
-        }
-        
-    }
     
     private class Rhs extends IntTuple {
         public Rhs(int... args) {
@@ -104,6 +56,7 @@ public class IndexedDmvModel {
     private int[][] sentMaxFreqSi; 
     private SentenceCollection sentences;
     private int[][] totMaxFreqCm;
+    private int numTotalParams; 
     
     public IndexedDmvModel(SentenceCollection sentences) {
         this.sentences = sentences;
@@ -182,10 +135,13 @@ public class IndexedDmvModel {
         }
 
         // Create the count of total max frequencies for each model parameter in term of c,m
+        // Also count total number of parameters
+        numTotalParams = 0;
         totMaxFreqCm = new int[getNumConds()][];
         for (int c = 0; c < getNumConds(); c++) {
             totMaxFreqCm[c] = new int[getNumParams(c)];
             for (int m = 0; m < getNumParams(c); m++) {
+                numTotalParams++;
                 for (int s = 0; s < sentMaxFreqSi.length; s++) {
                     totMaxFreqCm[c][m] += sentMaxFreqCm[s][c][m];
                 }
@@ -251,66 +207,15 @@ public class IndexedDmvModel {
         }
         return maxFreq;
     }
-
-//    private int[] getSentMaxFreq(Sentence sentence, int s) {
-//        int[] tags = sentence.getLabelIds();
-//        Alphabet<Param> paramToI = sentParamToI.get(s);
-//        
-//        // Create the sentence solution 
-//        int[] maxFreq = new int[getNumSentVars(s)];
-//        
-//        // Count the MAX number of times tree could contain each feature
-//        for (int cIdx=0; cIdx<tags.length; cIdx++) {
-//            int cTag = tags[cIdx];
-//            // The root parameter can appear once for each tag in the sentence
-//            maxFreq[paramToI.lookupObject(new Param(new Rhs(ROOT), cTag))] = 1;
-//            
-//            // Each edge has some child parameter and can appear once
-//            for (int pIdx=0; pIdx<tags.length; pIdx++) {
-//                if (cIdx == pIdx) {
-//                    continue;
-//                }
-//                int pTag = tags[pIdx];
-//
-//                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
-//                Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
-//                int m = cTag;
-//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-//            }
-//            
-//            // For each direction (LEFT, RIGHT)
-//            for (int lr=0; lr<2; lr++) {
-//                // Each decision can appear for each tag of that type in the sentence
-//                
-//                int numOnSide = (lr == 0) ? cIdx : tags.length - cIdx - 1;
-//
-//                Rhs rhs;
-//                int m;
-//                // stopAdj
-//                rhs = new Rhs(DECISION, cTag, lr, 0);
-//                m = Constants.END;
-//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-//                // contAdj
-//                rhs = new Rhs(DECISION, cTag, lr, 0);
-//                m = Constants.CONT;
-//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-//                // contNonAdj
-//                rhs = new Rhs(DECISION, cTag, lr, 1);
-//                m = Constants.CONT;
-//                maxFreq[paramToI.lookupObject(new Param(rhs, m))] += numOnSide-1;
-//                // stopNonAdj
-//                rhs = new Rhs(DECISION, cTag, lr, 1);
-//                m = Constants.END;
-//                maxFreq[paramToI.lookupObject(new Param(rhs, m))]++;
-//            }
-//        }
-//        return maxFreq;
-//    }
     
     public int getNumConds() {
         return rhsToC.size();
     }
 
+    public int getNumTotalParams() {
+        return numTotalParams;
+    }
+    
     public int getNumParams(int c) { 
         Rhs rhs = rhsToC.lookupIndex(c);
         if (rhs.get(0) == ROOT || rhs.get(0) == CHILD) {

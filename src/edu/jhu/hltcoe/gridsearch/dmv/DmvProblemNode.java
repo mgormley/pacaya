@@ -40,6 +40,7 @@ public class DmvProblemNode implements ProblemNode {
     private int id;
     private DmvProblemNode parent;
     private int depth;
+    private int side;
     private DmvBoundsDelta deltas;
     
     // For active node only:
@@ -65,7 +66,9 @@ public class DmvProblemNode implements ProblemNode {
         id = getNextId();
         parent = null;
         depth = 0;
-        this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
+        side = 0;
+        //this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
+        this.deltasFactory = new RegretDmvBoundsDeltaFactory();
         isOptimisticBoundCached = false;
         
         dwRelax.init(initFeasSol.getTreebank());
@@ -74,12 +77,13 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Non-root node constructor
      */
-    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, DmvProblemNode parent) {
+    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, DmvProblemNode parent, int side) {
         this.deltas = deltas;
         this.deltasFactory = deltasFactory;
         this.id = getNextId();
         this.parent = parent;
         this.depth = parent.depth + 1;
+        this.side = side;
         isOptimisticBoundCached = false;
         // The relaxation is set only when this node is set to be the active one
         this.dwRelax = null;
@@ -94,6 +98,10 @@ public class DmvProblemNode implements ProblemNode {
         
     }
 
+    public RelaxedDmvSolution getRelaxedSolution() {
+        return relaxSol;
+    }
+    
     /**
      * @return negative infinity if the problem is infeasible, and an upper
      *         bound otherwise
@@ -116,22 +124,16 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public Solution getFeasibleSolution() {
-        if (relaxSol == null) {
-            throw new IllegalStateException("This method should only be called once");
-        }
         List<DmvSolution> solutions = new ArrayList<DmvSolution>();
         DmvSolution projectedSol = getProjectedSolution();
         solutions.add(projectedSol);
         solutions.add(initFeasSol);
         
-        // Then run Viterbi EM starting from the randomly rounded solution
-        solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
-        solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
-
-        // Throw away the relaxed solution
-        relaxSol = null;
-        // Throw away the initial feasible solution
-        initFeasSol = null;
+        if (depth > dwRelax.getIdm().getNumTotalParams()) {
+            // Then run Viterbi EM starting from the randomly rounded solution
+            solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
+            solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
+        }
 
         return Collections.max(solutions, new Comparator<DmvSolution>() {
 
@@ -211,8 +213,9 @@ public class DmvProblemNode implements ProblemNode {
     public List<ProblemNode> branch() {
         List<DmvBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
-        for (DmvBoundsDelta deltasForChild : deltasForChildren) {
-            children.add(new DmvProblemNode(deltasForChild, deltasFactory, this));
+        for (int i=0; i<deltasForChildren.size(); i++) {
+            DmvBoundsDelta deltasForChild = deltasForChildren.get(i);
+            children.add(new DmvProblemNode(deltasForChild, deltasFactory, this, i));
         }
         return children;
     }
@@ -229,6 +232,11 @@ public class DmvProblemNode implements ProblemNode {
     @Override
     public int getDepth() {
         return depth;
+    }
+
+    @Override
+    public int getSide() {
+        return side;
     }
 
     private static int getNextId() {
@@ -254,6 +262,8 @@ public class DmvProblemNode implements ProblemNode {
         // Deactivate the previous node
         prevNode.dwRelax = null;
         prevNode.relaxSol = null;
+        prevNode.initFeasSol = null;
+        prevNode.deltasFactory = null;
         
         // Find the least common ancestor
         DmvProblemNode lca = findLeastCommonAncestor(prevNode);
@@ -351,11 +361,22 @@ public class DmvProblemNode implements ProblemNode {
         
         // Compute the score for the solution
         double score = dwRelax.computeTrueObjective(logProbs, treebank);
-        assert(Utilities.equals(score, trainer.getLogLikelihood(), 1e-13));
+        log.debug("Computed true objective: " + score);
+        assert(Utilities.equals(score, trainer.getLogLikelihood(), 1e-10));
                 
         // We let the DmvProblemNode compute the score
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
         return sol;
+    }
+
+    public double[][] getRegretCm() {
+        // TODO: we could store this in the relaxed solution if 
+        // we start using it regularly.
+        return dwRelax.getRegretCm();
+    }
+
+    public IndexedDmvModel getIdm() {
+        return dwRelax.getIdm();
     }
 
 }

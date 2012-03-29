@@ -14,6 +14,8 @@ public interface ProblemNode {
     
     int getDepth();
 
+    int getSide();
+
     void setAsActiveNode(ProblemNode prevNode);
 
     void end();

@@ -41,6 +41,8 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation {
 
+    static final double MIN_SUM_FOR_CUT = 1.01;
+
     private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
 
     private DmvBounds bounds;
@@ -152,6 +154,55 @@ public class DmvDantzigWolfeRelaxation {
         }
     }
 
+    public double[][] getRegretCm() {
+        try {
+            // TODO: getting the model parameters in this way is redundant
+            // Store optimal model parameters \theta_{c,m}
+            double[][] logProbs = new double[idm.getNumConds()][];
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
+            }
+
+            // Store feature counts \bar{f}_{c,m} (i.e. number of times each
+            // model parameter was used)
+            double[][] featCounts = new double[idm.getNumConds()][];
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                featCounts[c] = new double[idm.getNumParams(c)];
+            }
+
+            for (LambdaVar triple : mp.lambdaVars) {
+                double frac = cplex.getValue(triple.lambdaVar);
+                int s = triple.s;
+                int[] sentSol = triple.sentSol;
+                for (int i = 0; i < sentSol.length; i++) {
+                    int c = idm.getC(s, i);
+                    int m = idm.getM(s, i);
+                    featCounts[c][m] = sentSol[i] * frac;
+                }
+            }
+
+            // Store objective values z_{c,m}
+            double[][] objVals = new double[idm.getNumConds()][];
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                objVals[c] = cplex.getValues(mp.objVars[c]);
+            }
+
+            // Compute the regret as the difference between the
+            // objective value and true objective value
+            double[][] regret = new double[idm.getNumConds()][];
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                regret[c] = new double[idm.getNumParams(c)];
+                for (int m = 0; m < idm.getNumParams(c); m++) {
+                    regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
+                }
+            }
+
+            return regret;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void setCplexParams(IloCplex cplex) throws IloException, FileNotFoundException {
         // Specifies an upper limit on the amount of central memory, in
         // megabytes, that CPLEX is permitted to use for working memory
@@ -199,7 +250,7 @@ public class DmvDantzigWolfeRelaxation {
         public List<LambdaVar> lambdaVars;
         public HashSet<LambdaVar> lambdaVarSet;
         public IloNumVar[][] modelParamVars;
-        public IloNumVar[] sumVars;
+        public IloNumVar[][] objVars;
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
     }
@@ -269,12 +320,6 @@ public class DmvDantzigWolfeRelaxation {
                 mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), idm.getName(c, m));
             }
         }
-        
-        // Create sum-to-one constraint helper variables        
-        mp.sumVars = new IloNumVar[numConds];
-        for (int c = 0; c < numConds; c++) {
-            mp.sumVars[c] = cplex.numVar(-Double.MAX_VALUE, 1.0, "w_{" + c + "}");
-        }
 
         // Create the cut vectors for sum-to-one constraints
         double[][][] pointsArray = getInitialPoints();
@@ -289,20 +334,20 @@ public class DmvDantzigWolfeRelaxation {
         // Create the objective
         mp.objective = cplex.addMinimize();
         // Create the objective variables, adding them to the objective
-        IloNumVar[][] objVars = new IloNumVar[numConds][];
-        IloLinearNumExpr objExpr = cplex.linearNumExpr();
+        mp.objVars = new IloNumVar[numConds][];
         for (int c = 0; c < numConds; c++) {
             int numParams = idm.getNumParams(c);
-            objVars[c] = new IloNumVar[numParams];
+            mp.objVars[c] = new IloNumVar[numParams];
             for (int m=0; m<numParams; m++) {
-                objVars[c][m] = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE, String.format("z_{%d,%d}",c,m));
+                mp.objVars[c][m] = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE, String.format("z_{%d,%d}",c,m));
                 // Negate the objVars since we are minimizing
-                cplex.setLinearCoef(mp.objective, -1.0, objVars[c][m]);
+                cplex.setLinearCoef(mp.objective, -1.0, mp.objVars[c][m]);
             }
         }
         
         // Add the coupling constraints considering only the model parameters
         // aka. the relaxed-objective-coupling-constraints
+        //mp.couplMatrix = cplex.addLPMatrix("couplingMatrix");
         mp.couplConsLower = new IloRange[numConds][];
         mp.couplConsUpper = new IloRange[numConds][];
         for (int c = 0; c < numConds; c++) {
@@ -317,13 +362,13 @@ public class DmvDantzigWolfeRelaxation {
                 name = String.format("ccLb(%d,%d)", c, m);   
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
-                                        cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), objVars[c][m]));
+                                        cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
                 mp.couplConsLower[c][m] = cplex.addEq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
                 
                 // Add the upper coupling constraint
                 IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, "slackVarUpper");
                 name = String.format("ccUb(%d,%d)", c, m);
-                IloNumExpr rhsUpper = cplex.sum(cplex.prod(-1.0, objVars[c][m]), slackVarUpper);
+                IloNumExpr rhsUpper = cplex.sum(cplex.prod(-1.0, mp.objVars[c][m]), slackVarUpper);
                 mp.couplConsUpper[c][m] = cplex.addEq(0.0, rhsUpper, name);
             }
         }
@@ -379,7 +424,7 @@ public class DmvDantzigWolfeRelaxation {
         double[] probs = projections.getProjectedParams(point);
         double[] logProbs = Vectors.getLog(probs);
         
-        double vectorSum = 0.0;
+        double vectorSum = 1.0;
         for (int m = 0; m < logProbs.length; m++) {
             if (probs[m] > 0.0) {
                 // Otherwise we'd get a NaN
@@ -388,7 +433,6 @@ public class DmvDantzigWolfeRelaxation {
         }
 
         IloLinearNumExpr vectorExpr = cplex.scalProd(probs, mp.modelParamVars[c]);
-        vectorExpr.addTerm(-1.0, mp.sumVars[c]);
         cplex.addLe(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
     }
 
@@ -541,13 +585,17 @@ public class DmvDantzigWolfeRelaxation {
             // Add a cut for each distribution by projecting the model parameters
             // back onto the simplex.
             log.debug("Adding cuts, round " + cut);
-            double[][] logProbs = new double[idm.getNumConds()][];
+            double[][] params = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
-                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
+                // Here the params are log probs
+                params[c] = cplex.getValues(mp.modelParamVars[c]);
             }
             for (int c = 0; c < idm.getNumConds(); c++) {
-                Vectors.exp(logProbs[c]);
-                addSumToOneConstraint(cplex, c, logProbs[c]);
+                Vectors.exp(params[c]);
+                // Here the params are probs
+                if (Vectors.sum(params[c]) > MIN_SUM_FOR_CUT) {
+                    addSumToOneConstraint(cplex, c, params[c]);
+                }
             }
         }
 
@@ -572,14 +620,10 @@ public class DmvDantzigWolfeRelaxation {
             double newUb = origUb;
             
             // TODO: all the logAdds should be relegated to the Bounds Delta Factory
-            if (delta.getLu() == Lu.LOWER && delta.getDir() == Dir.ADD) {
-                newLb = Utilities.logAdd(origLb, delta.getDelta());
-            } else if (delta.getLu() == Lu.LOWER && delta.getDir() == Dir.SUBTRACT) {
-                newLb = Utilities.logSubtract(origLb, delta.getDelta());
-            } else if (delta.getLu() == Lu.UPPER && delta.getDir() == Dir.ADD) {
-                newUb = Utilities.logAdd(origUb, delta.getDelta());
-            } else if (delta.getLu() == Lu.UPPER && delta.getDir() == Dir.SUBTRACT) {
-                newUb = Utilities.logSubtract(origUb, delta.getDelta());
+            if (delta.getLu() == Lu.LOWER) {
+                newLb = origLb + delta.getDelta();
+            } else if (delta.getLu() == Lu.UPPER) {
+                newUb = origUb + delta.getDelta();
             } else {
                 throw new IllegalStateException();
             }
@@ -593,6 +637,9 @@ public class DmvDantzigWolfeRelaxation {
             for (LambdaVar lv : mp.lambdaVars) {
                 int i = idm.getSi(lv.s, c, m);
                 if (i != -1) {
+                    // This is horridly slow. Some suggestions for how to make modification 
+                    // of the problem faster here:
+                    // https://www.ibm.com/developerworks/forums/thread.jspa?threadID=324926
                     double value;
                     // Update the lower coupling constraint coefficient
                     value = bounds.getLb(c, m) * lv.sentSol[i];

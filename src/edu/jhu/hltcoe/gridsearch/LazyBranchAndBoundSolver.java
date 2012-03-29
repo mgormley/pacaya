@@ -58,15 +58,18 @@ public class LazyBranchAndBoundSolver {
             }
             assert(!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore); 
-            log.info(String.format("upBound: %f lowBound: %f relativeDiff: %f ", upperBound, incumbentScore, relativeDiff));
+            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
+                    upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
             if (relativeDiff <= epsilon) {
                 status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
                 break;
             }
             // TODO: else if, ran out of memory or disk space, break
-                        
+            
             // The active node can compute a tighter upper bound instead of using its parents bound
             setActiveNode(curNode);
+            log.info(String.format("CurrentNode: id=%d depth=%d side=%d", curNode.getId(), curNode.getDepth(), curNode.getSide()));
+            
             if (worseThan(curNode.getOptimisticBound(), incumbentScore)) {
                 // fathom (i.e. prune) this child node
                 numFathomed++;
@@ -87,7 +90,6 @@ public class LazyBranchAndBoundSolver {
                 // new incumbentScore.
             }
 
-            log.info(String.format("Branching on node: id=%d depth=%d #leaves=%d #fathom=%d", curNode.getId(), curNode.getDepth(), leafNodePQ.size(), numFathomed));
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
                 addToLeafNodes(childNode);

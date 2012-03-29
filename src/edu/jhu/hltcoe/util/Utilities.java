@@ -318,5 +318,21 @@ public class Utilities {
     public static boolean equals(double a, double b, double delta) {
         return Math.abs(a - b) < delta;
     }
+
+    public static IntTuple getArgmax(double[][] array) {
+        double maxValue = Double.NEGATIVE_INFINITY;
+        int maxX = -1;
+        int maxY = -1;
+        for (int x=0; x<array.length; x++) {
+            for (int y=0; y<array[x].length; y++) {
+                if (array[x][y] > maxValue) {
+                    maxValue = array[x][y];
+                    maxX = x;
+                    maxY = y;
+                }
+            }
+        }
+        return new IntTuple(maxX, maxY);
+    }
     
 }

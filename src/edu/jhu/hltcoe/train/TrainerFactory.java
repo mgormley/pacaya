@@ -5,12 +5,13 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
@@ -29,20 +30,21 @@ public class TrainerFactory {
     private static ViterbiParser evalParser = null;
     
     public static void addOptions(Options options) {
-        options.addOption("a", "algorithm", true, "Inference algorithm.");
-        options.addOption("i", "iterations", true, "Number of iterations.");
-        options.addOption("i", "convergenceRatio", true, "Convergence ratio.");
-        options.addOption("m", "model", true, "Model.");
-        options.addOption("p", "parser", true, "Parser.");
-        options.addOption("d", "deltaGenerator", true, "Delta generator.");
-        options.addOption("in", "interval", true, "Only for fixed-interval delta generator.");
-        options.addOption("fa", "factor", true, "Only for factor delta generator.");
-        options.addOption("nps", "numPerSide", true, "For symmetric delta generators.");
+        options.addOption("a", "algorithm", true, "Inference algorithm");
+        options.addOption("i", "iterations", true, "Number of iterations");
+        options.addOption("i", "convergenceRatio", true, "Convergence ratio");
+        options.addOption("m", "model", true, "Model");
+        options.addOption("p", "parser", true, "Parser");
+        options.addOption("d", "deltaGenerator", true, "Delta generator");
+        options.addOption("in", "interval", true, "Only for fixed-interval delta generator");
+        options.addOption("fa", "factor", true, "Only for factor delta generator");
+        options.addOption("nps", "numPerSide", true, "For symmetric delta generators");
         options.addOption("f", "formulation", true, "ILP formulation for parsing");
-        options.addOption("l", "lambda", true, "Value for add-lambda smoothing.");
+        options.addOption("l", "lambda", true, "Value for add-lambda smoothing");
         options.addOption("t", "threads", true, "Number of threads for parallel impl");
         options.addOption("ilp", "ilpSolver", true, "The ILP solver to use " + IlpSolverId.getIdList());
         options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
+        options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
     }
 
     public static Trainer getTrainer(CommandLine cmd) throws ParseException {
@@ -61,6 +63,7 @@ public class TrainerFactory {
         final int numThreads = Command.getOptionValue(cmd, "threads", 2);
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
         final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
+        final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -110,12 +113,18 @@ public class TrainerFactory {
             ModelFactory modelFactory;
             if (modelName.equals("dmv")) {
                 mStep = new DmvMStep(lambda);
-                modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+                modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }
 
             trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio);
+        } else if (algorithm.equals("bnb")) {
+            if (modelName.equals("dmv")) {
+                trainer = new BnBDmvTrainer(epsilon);
+            } else {
+                throw new ParseException("Model not supported: " + modelName);
+            }
         } else {
             throw new ParseException("Algorithm not supported: " + algorithm);
         }

@@ -123,6 +123,30 @@ public class DmvDantzigWolfeRelaxationTest {
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
         }
     }
+
+    @Test
+    public void testCutsOnManyPosTags() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("Det N");
+        sentences.addSentenceFromString("Adj N");
+        sentences.addSentenceFromString("Adj N a b c d e f g");
+        sentences.addSentenceFromString("Adj N a c d f e b g");
+        sentences.addSentenceFromString("Adj N a c d f e b g");
+        sentences.addSentenceFromString("Adj N g f e d c b a");
+
+        DmvDantzigWolfeRelaxation dw = getDw(sentences, 15);
+
+        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
+        assertEquals(0.0, relaxSol.getScore(), 1e-13);
+
+        double[][] logProbs = relaxSol.getLogProbs();
+        for (int c=0; c<logProbs.length; c++) {
+            Vectors.exp(logProbs[c]);
+            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
+            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.MIN_SUM_FOR_CUT);
+        }
+    }
+    
     
     @Test
     public void testBounds() {
@@ -139,22 +163,19 @@ public class DmvDantzigWolfeRelaxationTest {
         double origLower = bds.getLb(0, 0);
         double origUpper = bds.getUb(0, 0);
         
-        Dir dirU;
-        double deltU;
-        Dir dirL;
-        double deltL;
-        
-        dirU = Dir.SUBTRACT;
-        deltU = Utilities.log(0.1);
-        dirL = Dir.ADD;
-        deltL =  Utilities.log(0.09);
+        double newL, newU;
+
+        newL = Utilities.log(0.11);
+        newU = Utilities.log(0.90);
         
         RelaxedDmvSolution relaxSol;
         
-        relaxSol = testBoundsHelper(dw, dirU, deltU, dirL, deltL, true);
+        relaxSol = testBoundsHelper(dw, newL, newU, true);
         assertEquals(-1.4750472192095685, relaxSol.getScore(), 1e-13);
 
-        relaxSol = testBoundsHelper(dw, dirU, deltU, dirL, deltL, false);
+        newL = origLower;
+        newU = origUpper;
+        relaxSol = testBoundsHelper(dw, newL, newU, true);
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
         
         assertEquals(origLower, bds.getLb(0, 0), 1e-7);
@@ -162,17 +183,42 @@ public class DmvDantzigWolfeRelaxationTest {
         
     }
 
-    private RelaxedDmvSolution testBoundsHelper(DmvDantzigWolfeRelaxation dw, Dir dirU, double deltU, Dir dirL, double deltL, boolean forward) {
+    private RelaxedDmvSolution testBoundsHelper(DmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
         
+        adjustBounds(dw, newL, newU, forward);
+        
+        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
+
+        System.out.println("Printing probabilities");
+        double[][] logProbs = relaxSol.getLogProbs();
+        for (int c=0; c<logProbs.length; c++) {
+            double[] probs = Vectors.getExp(logProbs[c]);
+            //System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
+            for (int m=0; m<logProbs[c].length; m++) {
+                System.out.println(dw.getIdm().getName(c, m) + "=" + probs[m]);
+                // TODO: remove
+                // We don't bound the probabilities
+                //                Assert.assertTrue(dw.getBounds().getLb(c,m) <= logProbs[c][m]);
+                //                Assert.assertTrue(dw.getBounds().getUb(c,m) >= logProbs[c][m]);
+            }
+            System.out.println("");
+        }
+        return relaxSol;
+    }
+
+    private void adjustBounds(DmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
                 DmvBounds origBounds = dw.getBounds();
                 double lb = origBounds.getLb(c, m);
                 double ub = origBounds.getUb(c, m);
+
+                double deltU = newU - ub;
+                double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, dirU, deltU);
-                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, dirL, deltL);
+                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
+                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
                 if (forward) {
                     dw.forwardApply(deltas1);
                     dw.forwardApply(deltas2);
@@ -183,22 +229,6 @@ public class DmvDantzigWolfeRelaxationTest {
                 System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
             }
         }
-        
-        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-
-        System.out.println("Printing bounded probabilities");
-        double[][] logProbs = relaxSol.getLogProbs();
-        for (int c=0; c<logProbs.length; c++) {
-            double[] probs = Vectors.getExp(logProbs[c]);
-            //System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            for (int m=0; m<logProbs[c].length; m++) {
-                System.out.println(dw.getIdm().getName(c, m) + "=" + probs[m]);
-                Assert.assertTrue(dw.getBounds().getLb(c,m) <= logProbs[c][m]);
-                Assert.assertTrue(dw.getBounds().getUb(c,m) >= logProbs[c][m]);
-            }
-            System.out.println("");
-        }
-        return relaxSol;
     }
     
     @Test 

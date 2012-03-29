@@ -8,15 +8,13 @@ public class DmvBoundsDelta {
     private int c;
     private int m; 
     private Lu lu;
-    private Dir dir;
     private double delta;
 
-    public DmvBoundsDelta(int c, int m, Lu lu, Dir dir, double delta) {
+    public DmvBoundsDelta(int c, int m, Lu lu, double delta) {
         super();
         this.c = c;
         this.m = m;
         this.lu = lu;
-        this.dir = dir;
         this.delta = delta;
     }
 
@@ -35,13 +33,8 @@ public class DmvBoundsDelta {
     public Lu getLu() {
         return lu;
     }
-
-    public Dir getDir() {
-        return dir;
-    }
     
     public static DmvBoundsDelta getReverse(DmvBoundsDelta delta) {
-        Dir dir = (delta.dir == Dir.ADD) ? Dir.SUBTRACT : Dir.ADD;
-        return new DmvBoundsDelta(delta.c, delta.m, delta.lu, dir, delta.delta);
+        return new DmvBoundsDelta(delta.c, delta.m, delta.lu, -delta.delta);
     }
 }
