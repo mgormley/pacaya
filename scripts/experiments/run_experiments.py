@@ -111,8 +111,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    parser="ilp-corpus",
                    model="dmv",
                    algorithm="viterbi",
-                   ilpSolver="cplex")
+                   ilpSolver="cplex",
+                   convergenceRatio=0.99999,
+                   epsilon=0.1)
+        all.set("lambda",0.1)
         all.update(printModel="./model.txt")
+        # Only keeping sentences that contain a verb
         all.update(mustContainVerb=None)
                 
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -144,16 +148,27 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         experiments = []
         if self.expname == "formulations":
+            all.update(parser="ilp-corpus")
             for dataset in datasets:
                 formulations = ["deptree-dp-proj", "deptree-explicit-proj", "deptree-flow-nonproj", "deptree-flow-proj", "deptree-multiflow-nonproj", "deptree-multiflow-proj" ]
                 for formulation in formulations:
                     ilpform = DPExpParams(formulation=formulation)
                     experiments.append(all + dataset + ilpform)
+        elif self.expname == "bnb":
+            all.update(algorithm="bnb")
+            for dataset in datasets:
+                for maxSentenceLength in [3,5]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [10,100]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                experiments.append(all + dataset + msl + mns)
         elif self.expname == "corpus-size":
-            all.update(iterations=1)
+            # For ilp-corpus testing:
+            #  all.update(iterations=1)
+            all.set("lambda",0.0)
             # For SIMPLEX testing
-            #all.update(formulation="deptree-flow-nonproj-lprelax")
-            for parser in ["ilp-corpus","ilp-sentence"]:
+            #  all.update(formulation="deptree-flow-nonproj-lprelax")
+            for parser in ["cky"]: #["ilp-corpus","ilp-sentence"]:
                 par = DPExpParams(parser=parser)
                 for dataset in datasets:
                     for maxSentenceLength in [7,10,20]:
