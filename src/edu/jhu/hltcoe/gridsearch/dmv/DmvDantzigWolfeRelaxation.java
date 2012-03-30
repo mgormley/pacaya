@@ -361,7 +361,7 @@ public class DmvDantzigWolfeRelaxation {
                 String name;
                 
                 // Add the lower coupling constraint
-                IloNumVar slackVarLower = cplex.numVar(-Double.MAX_VALUE, 0.0, "slackVarLower");
+                IloNumVar slackVarLower = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarLower_{%d,%d}",c,m));
                 name = String.format("ccLb(%d,%d)", c, m);   
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
@@ -369,7 +369,7 @@ public class DmvDantzigWolfeRelaxation {
                 mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
                 
                 // Add the upper coupling constraint
-                IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, "slackVarUpper");
+                IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarUpper_{%d,%d}",c,m));
                 name = String.format("ccUb(%d,%d)", c, m);
                 IloNumExpr rhsUpper = cplex.sum(cplex.prod(-1.0, mp.objVars[c][m]), slackVarUpper);
                 mp.couplConsUpper[c][m] = cplex.eq(0.0, rhsUpper, name);

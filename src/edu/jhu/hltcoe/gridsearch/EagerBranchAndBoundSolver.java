@@ -32,7 +32,6 @@ public class EagerBranchAndBoundSolver {
 
     // Storage of active nodes
     private PriorityQueue<ProblemNode> leafNodePQ;
-    private ProblemNode activeNode;
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, double epsilon, Comparator<ProblemNode> comparator) {
         // Initialize
@@ -52,7 +51,7 @@ public class EagerBranchAndBoundSolver {
 
         while (hasNextLeafNode()) {
             ProblemNode curNode = getNextLeafNode();
-            setActiveNode(curNode);
+            curNode.setAsActiveNode();
             upperBound = curNode.getOptimisticBound();
             assert(!Double.isNaN(upperBound));
 
@@ -60,6 +59,7 @@ public class EagerBranchAndBoundSolver {
             log.info(String.format("upBound: %f lowBound: %f relativeDiff: %f ", upperBound, incumbentScore, relativeDiff));
             if (relativeDiff <= epsilon) {
                 status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
+                curNode.end();
                 break;
             }
 
@@ -68,7 +68,7 @@ public class EagerBranchAndBoundSolver {
             log.info("Branching on node: " + curNode.getId());
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
-                setActiveNode(childNode);
+                childNode.setAsActiveNode();
                 
                 if (worseThan(childNode.getOptimisticBound(), incumbentScore)) {
                     // fathom (i.e. prune) this child node
@@ -95,18 +95,8 @@ public class EagerBranchAndBoundSolver {
 
         log.info("B&B search status: " + status);
         
-        activeNode.end();
         // Return epsilon optimal solution
         return status;
-    }
-
-    private void setActiveNode(ProblemNode nextActive) {
-        // It is possible to have the child node processed with eager
-        // B&B be the current active node
-        if (activeNode != nextActive) {
-            nextActive.setAsActiveNode(activeNode);
-            activeNode = nextActive;
-        }
     }
 
     private boolean hasNextLeafNode() {

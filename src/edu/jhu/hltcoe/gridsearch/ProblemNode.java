@@ -16,7 +16,7 @@ public interface ProblemNode {
 
     int getSide();
 
-    void setAsActiveNode(ProblemNode prevNode);
+    void setAsActiveNode();
 
     void end();
 

@@ -54,6 +54,8 @@ public class DmvProblemNode implements ProblemNode {
     // For root node only
     private DmvSolution initFeasSol;
 
+    private static DmvProblemNode activeNode;
+
     /**
      * Root node constructor
      */
@@ -68,10 +70,15 @@ public class DmvProblemNode implements ProblemNode {
         depth = 0;
         side = 0;
         //this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
-        this.deltasFactory = new RegretDmvBoundsDeltaFactory();
+        this.deltasFactory = new FullStrongBranchingDeltaFactory();
         isOptimisticBoundCached = false;
         
         dwRelax.init(initFeasSol.getTreebank());
+        
+        if (activeNode != null) {
+            throw new IllegalStateException("Multiple trees not allowed");
+        }
+        setAsActiveNode();
     }
 
     /**
@@ -212,6 +219,13 @@ public class DmvProblemNode implements ProblemNode {
     @Override
     public List<ProblemNode> branch() {
         List<DmvBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
+        return branch(deltasForChildren);
+    }
+
+    /** 
+     * For use in strong branching
+     */
+    List<ProblemNode> branch(List<DmvBoundsDelta> deltasForChildren) {
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
         for (int i=0; i<deltasForChildren.size(); i++) {
             DmvBoundsDelta deltasForChild = deltasForChildren.get(i);
@@ -244,11 +258,13 @@ public class DmvProblemNode implements ProblemNode {
     }
 
     @Override
-    public void setAsActiveNode(ProblemNode prevNode0) {
-        if (prevNode0 == null) {
+    public void setAsActiveNode() {
+        if (activeNode == null || activeNode == this) {
+            activeNode = this;
             return;
-        }
-        DmvProblemNode prevNode = (DmvProblemNode) prevNode0;
+        } 
+        DmvProblemNode prevNode = activeNode;
+        activeNode = this;
         
         if (prevNode.dwRelax == null) {
             throw new IllegalStateException("prevNode is not active");
@@ -259,6 +275,7 @@ public class DmvProblemNode implements ProblemNode {
         
         // Switch the relaxation over to the new node
         this.dwRelax = prevNode.dwRelax;
+        this.deltasFactory = prevNode.deltasFactory;
         // Deactivate the previous node
         prevNode.dwRelax = null;
         prevNode.relaxSol = null;

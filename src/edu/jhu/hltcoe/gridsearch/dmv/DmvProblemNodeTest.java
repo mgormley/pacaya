@@ -101,10 +101,10 @@ public class DmvProblemNodeTest {
 
     private void checkedSetActive(DmvProblemNode nextNode, DmvProblemNode prevNode) {
         if (nextNode.getParent() != prevNode) {
-            nextNode.setAsActiveNode(prevNode);
+            nextNode.setAsActiveNode();
         } else {
             double prevBound = prevNode.getOptimisticBound();
-            nextNode.setAsActiveNode(prevNode);
+            nextNode.setAsActiveNode();
             double nextBound = nextNode.getOptimisticBound();
             System.out.println("parent: " + prevBound + " child: " + nextBound);
             Assert.assertTrue(prevBound >= nextBound);

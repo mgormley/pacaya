@@ -94,4 +94,25 @@ public class Vectors {
         return sum;
     }
 
+
+    public static double max(double[] array) {
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i=0; i<array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+            }
+        }
+        return max;
+    }
+    
+    public static double min(double[] array) {
+        double min = Double.POSITIVE_INFINITY;
+        for (int i=0; i<array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
+            }
+        }
+        return min;
+    }
+
 }
