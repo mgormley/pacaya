@@ -25,6 +25,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvWeightCopier;
+import edu.jhu.hltcoe.model.dmv.SmoothedDmvWeightCopier;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
@@ -336,9 +337,11 @@ public class DmvProblemNode implements ProblemNode {
     }
 
     private DmvSolution getImprovedSol(SentenceCollection sentences, double[][] logProbs, IndexedDmvModel idm) {
+        double lambda = 1e-6;
         // TODO: this is a slow conversion
         DmvModel model = idm.getDmvModel(logProbs);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
+        // We must smooth the weights so that there exists some valid parse
+        DmvModelFactory modelFactory = new DmvModelFactory(new SmoothedDmvWeightCopier(model, lambda));
         return runViterbiEmHelper(sentences, modelFactory, 1);
     }
     
