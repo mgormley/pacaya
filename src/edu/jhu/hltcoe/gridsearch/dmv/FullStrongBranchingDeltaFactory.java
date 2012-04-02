@@ -5,35 +5,44 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.util.IntTuple;
 
 public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
 
     private static Logger log = Logger.getLogger(FullStrongBranchingDeltaFactory.class);
 
     // This is the epsilon specified in Tobias Achterberg's thesis for the product score
-    private static final double EPSILON = 1e-6; 
+    private static final double EPSILON = 1e-6;
+
+    private RegretDmvBoundsDeltaFactory regretFactory; 
     
     public FullStrongBranchingDeltaFactory() {
-        
+        regretFactory = new RegretDmvBoundsDeltaFactory();
     }
 
     @Override
     public List<DmvBoundsDelta> getDmvBounds(DmvProblemNode node) {
+        // Cache the regret based deltas in case we need them as a fallback
+        List<DmvBoundsDelta> regretDeltas = regretFactory.getDmvBounds(node);
+        
         IndexedDmvModel idm = node.getIdm();
+        int[][] maxFreqCm = idm.getTotalMaxFreqCm();
         DmvBounds origBounds = node.getBounds();
         //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
 
         // TODO: consider using regret to filter this down
         double parentBound = node.getOptimisticBound();
         
-        double maxScore = Double.NEGATIVE_INFINITY;
+        double maxScore = EPSILON * EPSILON;
         int maxC = -1;
         int maxM = -1;
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
+                if (maxFreqCm[c][m] == 0) {
+                    continue;
+                }
+                
                 node.setAsActiveNode();
-                List<DmvBoundsDelta> deltas = RegretDmvBoundsDeltaFactory.splitHalfProbSpace(origBounds, c, m);
+                List<DmvBoundsDelta> deltas = split(origBounds, c, m);
                 List<ProblemNode> children = node.branch(deltas);
                 assert(children.size() == 2);
                 
@@ -62,13 +71,21 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
                 String name = idm.getName(c, m);
                 log.trace(String.format("Probing: c=%d m=%d name=%s score=%f", c, m, name, score));
             }
+        }        
+        node.setAsActiveNode();
+        
+        if (maxC == -1 || maxM == -1) {
+            return regretDeltas;
         }
         
-        node.setAsActiveNode();
         String name = idm.getName(maxC, maxM);
         log.info(String.format("Branching: c=%d m=%d name=%s score=%f", maxC, maxM, name, maxScore));
 
-        return RegretDmvBoundsDeltaFactory.splitHalfProbSpace(origBounds, maxC, maxM);
+        return split(origBounds, maxC, maxM);
+    }
+    
+    private List<DmvBoundsDelta> split(DmvBounds bounds, int c, int m) {
+        return RegretDmvBoundsDeltaFactory.splitHalfProbSpace(bounds, c, m);
     }
 
 
