@@ -6,39 +6,44 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Dir;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.rproj.RDataFrame;
+import edu.jhu.hltcoe.util.rproj.RRow;
 
 
 public class DmvDantzigWolfeRelaxationTest {
 
     static {
         BasicConfigurator.configure();
-        Logger.getRootLogger().setLevel(Level.TRACE);
+        //Logger.getRootLogger().setLevel(Level.TRACE);
     }
 
     @Before
@@ -282,7 +287,124 @@ public class DmvDantzigWolfeRelaxationTest {
             prevSum = maxSum;
         }
         System.out.println("maxSums=" + Arrays.toString(maxSums));
-   }
+    }
+    
+    @Test
+    public void testQualityOfRelaxation() throws IOException {
+        // TODO: use real model and real trees to compute a better
+        // lower bound
+        
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(10);
+        System.out.println(treebank);
+        System.out.println(dmvModel);
+        SentenceCollection sentences = treebank.getSentences();
+        
+        DmvSolution initSol = getInitFeasSol(sentences);
+        DmvDantzigWolfeRelaxation dw = getDw(sentences, 100);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("init score: " + initSol.getScore());
+        sb.append("\n");
+                        
+//        for (double offsetProb = 0.0; offsetProb < 0.5; offsetProb += 0.01) {
+//            double probOfSkipCm = 0.00;
+//            setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
+//            RelaxedDmvSolution relaxSol = dw.solveRelaxation();
+//            
+//            sb.append(String.format("offset: +/-%.2f", offsetProb));
+//            sb.append(String.format(" skip: %.2f%%", probOfSkipCm*100));
+//            sb.append(String.format(" relax bound: %7.2f", relaxSol.getScore()));
+//            sb.append(String.format(" relative: %.2f", Math.abs(relaxSol.getScore() - initSol.getScore()) / Math.abs(initSol.getScore())));
+//            sb.append("\n");
+//        }
+//        sb.append("\n");
+
+        RDataFrame df = new RDataFrame();
+        Stopwatch timer = new Stopwatch();
+        for (double offsetProb = 0.0; offsetProb < 0.5; offsetProb += 0.01) {
+            for (double probOfSkipCm = 0.0; probOfSkipCm < 1.0; probOfSkipCm += 0.1) {
+                int numTimes = 2;
+                double avgScore = 0.0;
+                for (int i=0; i<numTimes; i++) {
+                    timer.start();
+                    setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
+                    RelaxedDmvSolution relaxSol = dw.solveRelaxation();
+                    avgScore += relaxSol.getScore();
+                    timer.stop();
+                    System.out.println("Time remaining: " + Time.avgMs(timer)*(numTimes*0.5/0.01*1.0/0.1 - i*offsetProb/0.01*probOfSkipCm/0.1)/1000);
+                }
+                avgScore /= (double)numTimes;
+                
+                RRow row = new RRow();
+                row.put("offset", offsetProb);
+                row.put("skip", probOfSkipCm*100);
+                row.put("relaxBound", avgScore);
+                row.put("relative", Math.abs(avgScore - initSol.getScore()) / Math.abs(initSol.getScore()));
+                df.add(row);
+//                sb.append(String.format("offset: +/-%.2f", offsetProb));
+//                sb.append(String.format(" skip: %.2f%%", probOfSkipCm*100));
+//                sb.append(String.format(" relax bound: %7.2f", avgScore));
+//                sb.append(String.format(" relative: %.2f", Math.abs(avgScore - initSol.getScore()) / Math.abs(initSol.getScore())));
+//                sb.append("\n");
+            }
+        }
+//        System.out.println(sb);
+        System.out.println(df);
+        FileWriter writer = new FileWriter("relax-quality.data");
+        df.write(writer);
+        writer.close();
+    }
+
+    private void setBoundsFromInitSol(DmvDantzigWolfeRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
+        boolean forward = true;
+        double offsetLogProb = Utilities.log(offsetProb);
+        double[][] logProbs = initSol.getLogProbs();
+        
+        // Adjust bounds
+        for (int c=0; c<dw.getIdm().getNumConds(); c++) {
+            for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
+
+                double newL, newU;
+                DmvBounds origBounds = dw.getBounds();
+                double lb = origBounds.getLb(c, m);
+                double ub = origBounds.getUb(c, m);
+                
+                if (Prng.nextDouble() < probOfSkipCm) {
+                    // Don't constrain this variable
+                    newL = DmvBounds.DEFAULT_LOWER_BOUND;
+                    newU = DmvBounds.DEFAULT_UPPER_BOUND;
+                } else {
+                    // Constrain the bounds to be +/- offsetLogProb from logProbs[c][m]
+                    newU = Utilities.logAdd(logProbs[c][m], offsetLogProb);
+                    if (newU > DmvBounds.DEFAULT_UPPER_BOUND) {
+                        newU = DmvBounds.DEFAULT_UPPER_BOUND;
+                    }
+    
+                    if (logProbs[c][m] > offsetLogProb) {
+                        newL = Utilities.logSubtract(logProbs[c][m], offsetLogProb);                    
+                    } else {
+                        newL = DmvBounds.DEFAULT_LOWER_BOUND;
+                    }
+                }
+                
+                double deltU = newU - ub;
+                double deltL = newL - lb;
+                //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
+                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
+                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
+                if (forward) {
+                    dw.forwardApply(deltas1);
+                    dw.forwardApply(deltas2);
+                } else {
+                    dw.reverseApply(deltas1);
+                    dw.reverseApply(deltas2);
+                }
+                System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
+            }
+        }
+    }
 
     private DmvDantzigWolfeRelaxation getDw(SentenceCollection sentences) {
         return getDw(sentences, 1);
