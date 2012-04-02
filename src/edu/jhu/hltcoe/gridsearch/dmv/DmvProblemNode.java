@@ -62,7 +62,7 @@ public class DmvProblemNode implements ProblemNode {
      */
     public DmvProblemNode(SentenceCollection sentences, File tempDir) {
         this.sentences = sentences;        
-        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 2, new CutCountComputer());
+        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 100, new CutCountComputer());
         // Save and use this solution as the first incumbent
         this.initFeasSol = getInitFeasSol(sentences);
         log.info("Initial solution score: " + initFeasSol.getScore());
