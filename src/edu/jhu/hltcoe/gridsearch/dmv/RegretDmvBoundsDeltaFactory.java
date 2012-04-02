@@ -30,7 +30,7 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         String name = node.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));
         
-        return splitHalfProbSpace(origBounds, c, m);
+        return splitAtMidPoint(origBounds, c, m, relaxSol.getLogProbs()[c][m]);
     }
 
     static List<DmvBoundsDelta> splitHalfProbSpace(DmvBounds origBounds, int c, int m) {
