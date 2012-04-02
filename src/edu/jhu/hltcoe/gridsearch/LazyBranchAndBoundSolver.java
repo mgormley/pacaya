@@ -137,7 +137,7 @@ public class LazyBranchAndBoundSolver {
         }
         
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("histogram: min=%f max%f", min, max));
+        sb.append(String.format("histogram: min=%f max%f\n", min, max));
         for (int i=0; i<hist.length; i++) {
             sb.append(String.format("\t[%.3f, %.3f) : %d\n", binWidth*i + min, binWidth*(i+1) + min, hist[i]));
         }
