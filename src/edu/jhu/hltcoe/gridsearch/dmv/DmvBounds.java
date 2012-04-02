@@ -6,6 +6,16 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvBounds {
     
+    /** 
+     * Upper bound by log(1.0)
+     */
+    static final double DEFAULT_UPPER_BOUND = 0.0;
+    
+    /**
+     *  Lower bound by log(1 / (one trillion)) ~= -27 
+     */
+    static final double DEFAULT_LOWER_BOUND = Utilities.log(Math.pow(10,-12));
+    
     private double[][] lbs;
     private double[][] ubs;
 
@@ -15,10 +25,8 @@ public class DmvBounds {
         for (int c=0; c<lbs.length; c++) {
             lbs[c] = new double[idm.getNumParams(c)];
             ubs[c] = new double[lbs[c].length];
-            // Lower bound by log(1 / (one trillion)) ~= -27 
-            Arrays.fill(lbs[c], Utilities.log(Math.pow(10,-12)));
-            // Upper bound by log(1.0)
-            Arrays.fill(ubs[c], 0.0);
+            Arrays.fill(lbs[c], DEFAULT_LOWER_BOUND);
+            Arrays.fill(ubs[c], DEFAULT_UPPER_BOUND);
             
             for (int m=0; m<lbs[c].length; m++) {
                 int totMaxFreqCm = idm.getTotalMaxFreqCm(c, m);
