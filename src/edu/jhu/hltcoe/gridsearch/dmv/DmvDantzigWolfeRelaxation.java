@@ -496,6 +496,7 @@ public class DmvDantzigWolfeRelaxation {
             // Add to the upper coupling constraint
             ind[j] = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
             val[j] = bounds.getUb(c, m) * sentSol[i];
+            j++;
         }
         int colind = mp.couplMatrix.addColumn(lambdaVar, ind, val);
         
@@ -593,6 +594,8 @@ public class DmvDantzigWolfeRelaxation {
                 if (numPositiveRedCosts == 0) {
                     // Optimal solution found
                     break;
+                } else {
+                    log.debug("Added " + numPositiveRedCosts + " new trees");
                 }
             }
             
@@ -603,18 +606,25 @@ public class DmvDantzigWolfeRelaxation {
 
             // Add a cut for each distribution by projecting the model parameters
             // back onto the simplex.
-            log.debug("Adding cuts, round " + cut);
             double[][] params = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
                 // Here the params are log probs
                 params[c] = cplex.getValues(mp.modelParamVars[c]);
             }
+            int numNewStoConstraints = 0;
             for (int c = 0; c < idm.getNumConds(); c++) {
                 Vectors.exp(params[c]);
                 // Here the params are probs
                 if (Vectors.sum(params[c]) > MIN_SUM_FOR_CUT) {
+                    numNewStoConstraints++;
                     addSumToOneConstraint(cplex, c, params[c]);
                 }
+            }
+            if (numNewStoConstraints == 0) {
+                log.debug("No more cut rounds needed after " + cut + " rounds");
+                break;
+            } else {
+                log.debug("Adding cuts " + numNewStoConstraints + ", round " + cut);
             }
         }
 
