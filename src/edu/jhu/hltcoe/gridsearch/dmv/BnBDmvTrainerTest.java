@@ -27,7 +27,7 @@ public class BnBDmvTrainerTest {
     }
 
     
-    @Test
+    //@Test
     public void testTwo() {
         double epsilon = 0.1;
         BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);

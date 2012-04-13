@@ -71,7 +71,7 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
                 String name = idm.getName(c, m);
                 log.trace(String.format("Probing: c=%d m=%d name=%s score=%f", c, m, name, score));
             }
-        }        
+        }
         node.setAsActiveNode();
         
         if (maxC == -1 || maxM == -1) {

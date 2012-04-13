@@ -20,7 +20,6 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
     @Override
     public List<DmvBoundsDelta> getDmvBounds(DmvProblemNode node) {
         DmvBounds origBounds = node.getBounds();
-        RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
         double[][] regret = node.getRegretCm();
 
         IntTuple max = Utilities.getArgmax(regret);
@@ -30,7 +29,12 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         String name = node.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));
         
-        return splitAtMidPoint(origBounds, c, m, relaxSol.getLogProbs()[c][m]);
+        // TODO: make this an option: split at current value
+        // TODO: as is, this is buggy: it will sometimes set the ub to -inf which is lower than the lb
+        //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
+        //return splitAtMidPoint(origBounds, c, m, relaxSol.getLogProbs()[c][m]);
+        
+        return splitHalfProbSpace(origBounds, c, m);
     }
 
     static List<DmvBoundsDelta> splitHalfProbSpace(DmvBounds origBounds, int c, int m) {

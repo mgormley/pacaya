@@ -114,6 +114,7 @@ public class DmvDantzigWolfeRelaxation {
             
             // Negate the objective since we were minimizing 
             double objective = -cplex.getObjValue();
+            assert(!Double.isNaN(objective));
 
             // Store optimal model parameters
             double[][] logProbs = new double[idm.getNumConds()][];
@@ -661,6 +662,8 @@ public class DmvDantzigWolfeRelaxation {
                 throw new IllegalStateException();
             }
 
+            assert(newLb <= newUb);
+            
             // Updates the bounds of the model parameters
             bounds.set(c, m, newLb, newUb);
             mp.modelParamVars[c][m].setLB(newLb);
