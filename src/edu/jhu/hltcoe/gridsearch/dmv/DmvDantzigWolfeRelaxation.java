@@ -110,6 +110,8 @@ public class DmvDantzigWolfeRelaxation {
                 return new RelaxedDmvSolution(null, null, null, LazyBranchAndBoundSolver.WORST_SCORE, cplex.getStatus());
             }
             log.info("Solution value: " + cplex.getObjValue());
+            log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), mp.numStoCons));
+            
             // Negate the objective since we were minimizing 
             double objective = -cplex.getObjValue();
 
@@ -255,6 +257,7 @@ public class DmvDantzigWolfeRelaxation {
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
         public IloLPMatrix couplMatrix;
+        public int numStoCons = 0;
     }
     
     /**
@@ -434,7 +437,7 @@ public class DmvDantzigWolfeRelaxation {
         
         // TODO: should this respect the bounds?
         //double[] probs = projections.getProjectedParams(bounds, c, point);
-        double[] probs = projections.getProjectedParams(point);
+        double[] probs = Projections.getProjectedParams(point);
         double[] logProbs = Vectors.getLog(probs);
         
         double vectorSum = 1.0;
@@ -447,6 +450,7 @@ public class DmvDantzigWolfeRelaxation {
 
         IloLinearNumExpr vectorExpr = cplex.scalProd(probs, mp.modelParamVars[c]);
         cplex.addLe(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
+        mp.numStoCons++;
     }
 
     private boolean addLambdaVar(IloMPModeler cplex, int s, DepTree tree)
