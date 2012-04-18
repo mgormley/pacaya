@@ -22,12 +22,22 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         DmvBounds origBounds = node.getBounds();
         double[][] regret = node.getRegretCm();
 
+        // Don't branch on variables that have bottomed out
+        for (int c=0; c<regret.length; c++) {
+            for (int m=0; m<regret[c].length; m++) {
+                if (!origBounds.canBranch(c,m)) {
+                    regret[c][m] = Double.NEGATIVE_INFINITY;
+                }
+            }
+        }
+        
         IntTuple max = Utilities.getArgmax(regret);
         int c = max.get(0);
         int m = max.get(1);
         
         String name = node.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));
+        assert(regret[c][m] != Double.NEGATIVE_INFINITY);
         
         // TODO: make this an option: split at current value
         // TODO: as is, this is buggy: it will sometimes set the ub to -inf which is lower than the lb

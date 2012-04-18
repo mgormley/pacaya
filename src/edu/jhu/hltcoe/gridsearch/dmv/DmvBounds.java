@@ -16,6 +16,8 @@ public class DmvBounds {
      */
     static final double DEFAULT_LOWER_BOUND = Utilities.log(Math.pow(10,-12));
     
+    private static final double MIN_BOUND_DIFF = 1.0 / Math.pow(2, 6);
+    
     private double[][] lbs;
     private double[][] ubs;
 
@@ -50,6 +52,10 @@ public class DmvBounds {
     public void set(int c, int m, double newLb, double newUb) {
         lbs[c][m] = newLb;
         ubs[c][m] = newUb;
+    }
+    
+    public boolean canBranch(int c, int m) {
+        return ! Utilities.lte(ubs[c][m] - lbs[c][m],  MIN_BOUND_DIFF);
     }
 
 }

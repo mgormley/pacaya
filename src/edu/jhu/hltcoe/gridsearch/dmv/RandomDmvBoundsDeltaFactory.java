@@ -11,7 +11,10 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
     private double[] freqs;
     private CM[] cms;
     
-    public RandomDmvBoundsDeltaFactory(SentenceCollection sentences, IndexedDmvModel idm) {
+    /**
+     * @param uniform If true, the sampling will be uniform over the used parameters
+     */
+    public RandomDmvBoundsDeltaFactory(SentenceCollection sentences, IndexedDmvModel idm, boolean uniform) {
         int[][] maxFreqCm = idm.getTotalMaxFreqCm();
 
         // Restructure the max freqs for efficient sampling
@@ -25,7 +28,7 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         for (int c=0, i=0; c<maxFreqCm.length; c++) {
             for (int m=0; m<maxFreqCm[c].length; m++) {
                 cms[i] = new CM(c,m);
-                freqs[i] = maxFreqCm[c][m]; 
+                freqs[i] = uniform && maxFreqCm[c][m] > 0 ? 1.0 : maxFreqCm[c][m]; 
                 i++;
             }
         }
@@ -49,15 +52,19 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         DmvBounds origBounds = dmvProblemNode.getBounds();
 
         // Choose a model parameter with probability proportional to its 
-        // possible occurence in the corpus
+        // possible occurrence in the corpus
         // TODO: it might be better to consider the current frequency of use in
         // the parent node's feasible solution
         // TODO: this could be more efficient if we kept cumulative frequencies
         // and did binary search for the sampling value.
-        int cmId = Multinomials.sampleFromProportions(freqs);
-        int c = cms[cmId].get1();
-        int m = cms[cmId].get2();
-
+        // TODO: this is also horribly inefficient as we get deeper into the tree
+        int c;
+        int m;
+        do {
+            int cmId = Multinomials.sampleFromProportions(freqs);
+            c = cms[cmId].get1();
+            m = cms[cmId].get2();
+        } while(!origBounds.canBranch(c, m));
 
         return RegretDmvBoundsDeltaFactory.splitHalfProbSpace(origBounds, c, m);
     }

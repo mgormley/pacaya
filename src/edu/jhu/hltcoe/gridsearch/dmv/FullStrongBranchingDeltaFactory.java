@@ -25,7 +25,6 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
         List<DmvBoundsDelta> regretDeltas = regretFactory.getDmvBounds(node);
         
         IndexedDmvModel idm = node.getIdm();
-        int[][] maxFreqCm = idm.getTotalMaxFreqCm();
         DmvBounds origBounds = node.getBounds();
         //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
 
@@ -37,7 +36,7 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
         int maxM = -1;
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
-                if (maxFreqCm[c][m] == 0) {
+                if (!origBounds.canBranch(c, m)) {
                     continue;
                 }
                 
