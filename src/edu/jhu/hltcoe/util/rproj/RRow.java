@@ -11,6 +11,14 @@ public class RRow {
         map.put(rowName, value);
     }
 
+    public void put(String rowName, boolean value) {
+        put(rowName, value ? "TRUE" : "FALSE");
+    }
+
+    public void put(String rowName, String value) {
+        map.put(rowName, value);
+    }
+
     public Object get(String colName) {
         Object val = map.get(colName);
         if (val == null) {

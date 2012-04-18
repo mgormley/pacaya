@@ -27,6 +27,8 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
@@ -289,22 +291,56 @@ public class DmvDantzigWolfeRelaxationTest {
         System.out.println("maxSums=" + Arrays.toString(maxSums));
     }
     
+    private enum InitSol {
+        VITERBI_EM, GOLD, RANDOM, UNIFORM
+    }
+    
     @Test
     public void testQualityOfRelaxation() throws IOException {
+        
+        
         // TODO: use real model and real trees to compute a better
         // lower bound
         
-        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
-        DepTreebank treebank = generator.getTreebank(10);
-        System.out.println(treebank);
-        System.out.println(dmvModel);
-        SentenceCollection sentences = treebank.getSentences();
-        
-        DmvSolution initSol = getInitFeasSol(sentences);
+        DmvModel goldModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, Prng.nextInt(1000000));
+        DepTreebank goldTreebank = generator.getTreebank(100);
+        System.out.println(goldTreebank);
+        System.out.println(goldModel);
+        SentenceCollection sentences = goldTreebank.getSentences();
+                
         DmvDantzigWolfeRelaxation dw = getDw(sentences, 100);
+        IndexedDmvModel idm = dw.getIdm();
 
-        StringBuilder sb = new StringBuilder();
+        double[][] goldLogProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(goldModel, sentences.getLabelAlphabet()));
+        DmvSolution goldSol = new DmvSolution(goldLogProbs, idm, goldTreebank, dw.computeTrueObjective(goldLogProbs, goldTreebank));            
+        
+        InitSol opt = InitSol.GOLD;
+        DmvSolution initSol;
+        if (opt == InitSol.VITERBI_EM) {
+            initSol = getInitFeasSol(sentences);
+        } else if (opt == InitSol.GOLD) {
+            initSol = goldSol;
+        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM){
+            DmvWeightGenerator weightGen;
+            if (opt == InitSol.RANDOM) {
+                Prng.seed(System.currentTimeMillis());
+                weightGen = new DmvRandomWeightGenerator(0.00001);
+            } else {
+                weightGen = new DmvUniformWeightGenerator();
+            }
+            DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
+            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences);
+            double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
+            ViterbiParser parser = new DmvCkyParser();
+            DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
+            initSol = new DmvSolution(logProbs, idm, treebank, dw.computeTrueObjective(logProbs, treebank));            
+        } else {
+            throw new IllegalStateException("unsupported initialization: " + opt);
+        }
+
+        StringBuilder sb = new StringBuilder();        
+        sb.append("gold score: " + goldSol.getScore() + "\n");
         sb.append("init score: " + initSol.getScore());
         sb.append("\n");
                         
@@ -323,9 +359,9 @@ public class DmvDantzigWolfeRelaxationTest {
 
         RDataFrame df = new RDataFrame();
         Stopwatch timer = new Stopwatch();
-        for (double offsetProb = 0.0; offsetProb < 0.5; offsetProb += 0.01) {
-            for (double probOfSkipCm = 0.0; probOfSkipCm < 1.0; probOfSkipCm += 0.1) {
-                int numTimes = 2;
+        for (double offsetProb = 10e-13; offsetProb <= 1.001; offsetProb += 0.05) {
+            for (double probOfSkipCm = 0.0; probOfSkipCm <= 0.2; probOfSkipCm += 0.1) {
+                int numTimes = 1; // TODO: revert 2
                 double avgScore = 0.0;
                 for (int i=0; i<numTimes; i++) {
                     timer.start();
@@ -342,6 +378,7 @@ public class DmvDantzigWolfeRelaxationTest {
                 row.put("skip", probOfSkipCm*100);
                 row.put("relaxBound", avgScore);
                 row.put("relative", Math.abs(avgScore - initSol.getScore()) / Math.abs(initSol.getScore()));
+                row.put("containsGoldSol", containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
                 df.add(row);
 //                sb.append(String.format("offset: +/-%.2f", offsetProb));
 //                sb.append(String.format(" skip: %.2f%%", probOfSkipCm*100));
@@ -350,11 +387,26 @@ public class DmvDantzigWolfeRelaxationTest {
 //                sb.append("\n");
             }
         }
-//        System.out.println(sb);
         System.out.println(df);
+        System.out.println(sb);
         FileWriter writer = new FileWriter("relax-quality.data");
         df.write(writer);
         writer.close();
+    }
+
+    private boolean containsInitSol(DmvBounds bounds, double[][] logProbs) {
+        for (int c=0; c<logProbs.length; c++) {
+            for (int m=0; m<logProbs[c].length; m++) {
+                double logProb = logProbs[c][m];
+                if (logProb < DmvBounds.DEFAULT_LOWER_BOUND) {
+                    logProb = DmvBounds.DEFAULT_LOWER_BOUND;
+                }
+                if (bounds.getLb(c, m) > logProb || bounds.getUb(c, m) < logProb) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void setBoundsFromInitSol(DmvDantzigWolfeRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
