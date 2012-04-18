@@ -30,8 +30,7 @@ public class BnBDmvTrainerTest {
     //@Test
     public void testTwo() {
         double epsilon = 0.1;
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);
-        trainer.setTempDir(new File("."));
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, new File("."));
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");

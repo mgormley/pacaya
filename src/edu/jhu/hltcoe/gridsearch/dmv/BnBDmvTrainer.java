@@ -15,8 +15,13 @@ public class BnBDmvTrainer implements Trainer {
     private File tempDir;
     
     public BnBDmvTrainer(double epsilon) {
+        this(epsilon, null);
+    }
+    
+    public BnBDmvTrainer(double epsilon, File tempDir) {
         this.epsilon = epsilon; 
         bnbSolver = new LazyBranchAndBoundSolver();
+        this.tempDir = tempDir;
     }
     
     @Override
@@ -30,10 +35,6 @@ public class BnBDmvTrainer implements Trainer {
         DmvSolution solution = (DmvSolution) bnbSolver.getIncumbentSolution();
         // Create a new DmvModel from these model parameters
         return solution.getIdm().getDmvModel(solution.getLogProbs());
-    }
-
-    public void setTempDir(File tempDir) {
-        this.tempDir = tempDir;
     }
 
 }
