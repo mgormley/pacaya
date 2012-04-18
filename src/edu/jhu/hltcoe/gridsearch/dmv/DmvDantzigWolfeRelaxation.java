@@ -39,6 +39,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation {
 
@@ -115,6 +116,7 @@ public class DmvDantzigWolfeRelaxation {
             // Negate the objective since we were minimizing 
             double objective = -cplex.getObjValue();
             assert(!Double.isNaN(objective));
+            assert(Utilities.lte(objective, 0.0));
 
             // Store optimal model parameters
             double[][] logProbs = new double[idm.getNumConds()][];
@@ -181,7 +183,7 @@ public class DmvDantzigWolfeRelaxation {
                 for (int i = 0; i < sentSol.length; i++) {
                     int c = idm.getC(s, i);
                     int m = idm.getM(s, i);
-                    featCounts[c][m] = sentSol[i] * frac;
+                    featCounts[c][m] += sentSol[i] * frac;
                 }
             }
 
@@ -198,6 +200,7 @@ public class DmvDantzigWolfeRelaxation {
                 regret[c] = new double[idm.getNumParams(c)];
                 for (int m = 0; m < idm.getNumParams(c); m++) {
                     regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
+                    assert(Utilities.gte(regret[c][m], 0.0));
                 }
             }
 

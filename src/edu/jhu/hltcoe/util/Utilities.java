@@ -334,5 +334,13 @@ public class Utilities {
         }
         return new IntTuple(maxX, maxY);
     }
+
+    public static boolean lte(double a, double b) {
+        return a <= b + 1e-13;
+    }
+
+    public static boolean gte(double a, double b) {
+        return a + 1e-13 >= b;
+    }
     
 }
