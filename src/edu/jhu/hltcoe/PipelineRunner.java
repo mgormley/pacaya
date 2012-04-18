@@ -84,6 +84,34 @@ public class PipelineRunner {
         SentenceCollection sentences = depTreebank.getSentences();
         
         // Print sentences to a file
+        printSentences(cmd, depTreebank, sentences);
+        
+        // Train the model
+        log.info("Training model");
+        Trainer trainer = TrainerFactory.getTrainer(cmd);
+        trainer.train(sentences);
+        Model model = trainer.getModel();
+        
+        // Evaluate the model
+        log.info("Evaluating model");
+        // Note: this parser must return the log-likelihood from parser.getParseWeight()
+        ViterbiParser parser = TrainerFactory.getEvalParser();
+        Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
+        pwEval.evaluate(model);
+        pwEval.print();
+        
+        // Print learned model to a file
+        String printModel = Command.getOptionValue(cmd, "printModel", null);
+        if (printModel != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(printModel));
+            writer.write("Learned Model:\n");
+            writer.write(model.toString());
+            writer.close();
+        }
+    }
+
+    private void printSentences(CommandLine cmd, DepTreebank depTreebank, SentenceCollection sentences)
+            throws IOException {
         String printSentences = Command.getOptionValue(cmd, "printSentences", null);
         if (printSentences != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(printSentences));
@@ -116,29 +144,6 @@ public class PipelineRunner {
                 writer.write("Trees:\n");
                 writer.write(depTreebank.toString());
             }
-            writer.close();
-        }
-        
-        // Train the model
-        log.info("Training model");
-        Trainer trainer = TrainerFactory.getTrainer(cmd);
-        trainer.train(sentences);
-        Model model = trainer.getModel();
-        
-        // Evaluate the model
-        log.info("Evaluating model");
-        // Note: this parser must return the log-likelihood from parser.getParseWeight()
-        ViterbiParser parser = TrainerFactory.getEvalParser();
-        Evaluator pwEval = new DependencyParserEvaluator(parser, depTreebank);
-        pwEval.evaluate(model);
-        pwEval.print();
-        
-        // Print learned model to a file
-        String printModel = Command.getOptionValue(cmd, "printModel", null);
-        if (printModel != null) {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(printModel));
-            writer.write("Learned Model:\n");
-            writer.write(model.toString());
             writer.close();
         }
     }
