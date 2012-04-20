@@ -116,7 +116,7 @@ public class DmvDantzigWolfeRelaxation {
             // Negate the objective since we were minimizing 
             double objective = -cplex.getObjValue();
             assert(!Double.isNaN(objective));
-            assert(Utilities.lte(objective, 0.0));
+            assert(Utilities.lte(objective, 0.0, 1e-7));
 
             // Store optimal model parameters
             double[][] logProbs = new double[idm.getNumConds()][];
@@ -200,7 +200,7 @@ public class DmvDantzigWolfeRelaxation {
                 regret[c] = new double[idm.getNumParams(c)];
                 for (int m = 0; m < idm.getNumParams(c); m++) {
                     regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
-                    assert(Utilities.gte(regret[c][m], 0.0));
+                    assert(Utilities.gte(regret[c][m], 0.0, 1e-7));
                 }
             }
 

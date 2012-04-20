@@ -338,9 +338,16 @@ public class Utilities {
     public static boolean lte(double a, double b) {
         return a <= b + 1e-13;
     }
+    
+    public static boolean lte(double a, double b, double delta) {
+        return a <= b + delta;
+    }
 
     public static boolean gte(double a, double b) {
         return a + 1e-13 >= b;
     }
     
+    public static boolean gte(double a, double b, double delta) {
+        return a + delta >= b;
+    }    
 }
