@@ -162,7 +162,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [10,100]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for branch in ["regret", "random-uniform", "random-weighted", "full"]:
+                        for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch))
         elif self.expname == "corpus-size":
             # For ilp-corpus testing:
