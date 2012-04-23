@@ -6,6 +6,10 @@ import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.FullStrongBranchingDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.RandomDmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.RegretDmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
@@ -45,6 +49,7 @@ public class TrainerFactory {
         options.addOption("ilp", "ilpSolver", true, "The ILP solver to use " + IlpSolverId.getIdList());
         options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
         options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
+        options.addOption("b", "branch", true, "Branching strategy [full,regret,rand-uniform,rand-weighted]");
     }
 
     public static Trainer getTrainer(CommandLine cmd) throws ParseException {
@@ -64,6 +69,7 @@ public class TrainerFactory {
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
         final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
         final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
+        final String branch = Command.getOptionValue(cmd, "branch", "full");
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -121,7 +127,19 @@ public class TrainerFactory {
             trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio);
         } else if (algorithm.equals("bnb")) {
             if (modelName.equals("dmv")) {
-                trainer = new BnBDmvTrainer(epsilon);
+                DmvBoundsDeltaFactory brancher;
+                if (branch.equals("full")) {
+                    brancher = new FullStrongBranchingDeltaFactory();
+                } else if (branch.equals("regret")) {
+                    brancher = new RegretDmvBoundsDeltaFactory();
+                } else if (branch.equals("rand-uniform")) {
+                    brancher = new RandomDmvBoundsDeltaFactory(true);
+                } else if (branch.equals("rand-weighted")) {
+                    brancher = new RandomDmvBoundsDeltaFactory(false);
+                } else {
+                    throw new ParseException("Branching strategy not supported: " + branch);
+                }
+                trainer = new BnBDmvTrainer(epsilon, brancher);
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }

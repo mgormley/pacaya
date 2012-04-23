@@ -13,20 +13,22 @@ public class BnBDmvTrainer implements Trainer {
     private LazyBranchAndBoundSolver bnbSolver;
     private double epsilon;
     private File tempDir;
-    
-    public BnBDmvTrainer(double epsilon) {
-        this(epsilon, null);
+    private DmvBoundsDeltaFactory brancher;
+        
+    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher) {
+        this(epsilon, brancher, null);
     }
     
-    public BnBDmvTrainer(double epsilon, File tempDir) {
+    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, File tempDir) {
         this.epsilon = epsilon; 
-        bnbSolver = new LazyBranchAndBoundSolver();
+        this.bnbSolver = new LazyBranchAndBoundSolver();
         this.tempDir = tempDir;
+        this.brancher = brancher;
     }
     
     @Override
     public void train(SentenceCollection sentences) {
-        DmvProblemNode rootNode = new DmvProblemNode(sentences, tempDir);
+        DmvProblemNode rootNode = new DmvProblemNode(sentences, brancher, tempDir);
         bnbSolver.runBranchAndBound(rootNode, epsilon, new BfsComparator());
     }
     

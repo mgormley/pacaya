@@ -113,7 +113,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    algorithm="viterbi",
                    ilpSolver="cplex",
                    convergenceRatio=0.99999,
-                   epsilon=0.1)
+                   epsilon=0.1,
+                   branch="full")
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
         # Only keeping sentences that contain a verb
@@ -161,7 +162,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [10,100]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        experiments.append(all + dataset + msl + mns)
+                        for branch in ["regret", "random-uniform", "random-weighted", "full"]:
+                            experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch))
         elif self.expname == "corpus-size":
             # For ilp-corpus testing:
             #  all.update(iterations=1)

@@ -30,7 +30,7 @@ public class BnBDmvTrainerTest {
     //@Test
     public void testTwo() {
         double epsilon = 0.1;
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, new File("."));
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), new File("."));
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -41,20 +41,19 @@ public class BnBDmvTrainerTest {
     //@Test
     public void testOne() {
         double epsilon = 0.5;
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher());
         //trainer.setTempDir(new File("."));
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");
         trainer.train(sentences);
-        
     }
     
     @Test
     public void testSynthetic() {
         double epsilon = 0.1;
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher());
         //trainer.setTempDir(new File("."));
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
@@ -67,5 +66,15 @@ public class BnBDmvTrainerTest {
         
         trainer.train(sentences);
     }
-    
+
+
+    private DmvBoundsDeltaFactory getDefaultBrancher() {
+        return FullStrongBranchingDeltaFactory();
+    }
+
+
+    private DmvBoundsDeltaFactory FullStrongBranchingDeltaFactory() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

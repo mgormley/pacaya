@@ -2,19 +2,23 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.List;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 
 public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
 
+    private boolean uniform; 
     private double[] freqs;
     private CM[] cms;
     
     /**
      * @param uniform If true, the sampling will be uniform over the used parameters
      */
-    public RandomDmvBoundsDeltaFactory(SentenceCollection sentences, IndexedDmvModel idm, boolean uniform) {
+    public RandomDmvBoundsDeltaFactory(boolean uniform) {
+        this.uniform = uniform;        
+    }
+
+    private void init(IndexedDmvModel idm) {
         int[][] maxFreqCm = idm.getTotalMaxFreqCm();
 
         // Restructure the max freqs for efficient sampling
@@ -49,6 +53,10 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
 
     @Override
     public List<DmvBoundsDelta> getDmvBounds(DmvProblemNode dmvProblemNode) {
+        if (freqs == null) {
+            init(dmvProblemNode.getIdm());
+        }
+        
         DmvBounds origBounds = dmvProblemNode.getBounds();
 
         // Choose a model parameter with probability proportional to its 

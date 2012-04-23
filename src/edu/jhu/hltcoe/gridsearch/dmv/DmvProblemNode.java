@@ -60,7 +60,7 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, File tempDir) {
+    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, File tempDir) {
         this.sentences = sentences;        
         dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 100, new CutCountComputer());
         // Save and use this solution as the first incumbent
@@ -70,8 +70,7 @@ public class DmvProblemNode implements ProblemNode {
         parent = null;
         depth = 0;
         side = 0;
-        //this.deltasFactory = new RandomDmvBoundsDeltaFactory(sentences, dwRelax.getIdm());
-        this.deltasFactory = new FullStrongBranchingDeltaFactory();
+        this.deltasFactory = brancher;
         isOptimisticBoundCached = false;
         
         dwRelax.init(initFeasSol.getTreebank());
@@ -398,5 +397,5 @@ public class DmvProblemNode implements ProblemNode {
     public IndexedDmvModel getIdm() {
         return dwRelax.getIdm();
     }
-
+    
 }

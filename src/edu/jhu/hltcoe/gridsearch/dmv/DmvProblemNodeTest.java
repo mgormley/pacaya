@@ -36,7 +36,7 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
         
-        DmvProblemNode node = new DmvProblemNode(sentences, new File("."));
+        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), new File("."));
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);
