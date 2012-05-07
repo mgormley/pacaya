@@ -89,7 +89,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        ExpParamsRunner.__init__(self, "dp", options.queue)
+        ExpParamsRunner.__init__(self, "bnb", options.queue)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname

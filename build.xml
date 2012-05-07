@@ -49,6 +49,12 @@
     	<include name="*.xml"/>
       </fileset>
     </copy>
+    <mkdir dir="${build.path}/edu/jhu/hltcoe/ilp/decomp" />
+    <copy todir="${build.path}/edu/jhu/hltcoe/ilp/decomp">
+      <fileset dir="${source.path}/edu/jhu/hltcoe/ilp/decomp">
+    	<include name="*.parm"/>
+      </fileset>
+    </copy>
   </target>
   
   <target name="compile" depends="classpath,build-dir,resources"
