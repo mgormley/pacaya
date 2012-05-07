@@ -40,9 +40,14 @@ class DPScraper(Scraper):
         
         numWords = to_int(get_following(stdout_lines, "Number of tokens: ", -1))
         exp.update(numWords = numWords)
-        exp.update(accuracy = get_following(stdout_lines, "Accuracy: ", -1))
-        exp.update(logLikelihood = get_following(stdout_lines, "LogLikelihood: ", -1))
-        exp.update(timeRemaining = get_following(stdout_lines, "Time remaining: ", -1))
+        
+        if "relaxOnly" in exp.keys():
+            exp.update(accuracy = get_following(stdout_lines, "relaxBound: ", -1))
+            exp.update(accuracy = get_following(stdout_lines, "relative: ", -1))
+        else:
+            exp.update(accuracy = get_following(stdout_lines, "Accuracy: ", -1))
+            exp.update(logLikelihood = get_following(stdout_lines, "LogLikelihood: ", -1))
+            exp.update(timeRemaining = get_following(stdout_lines, "Time remaining: ", -1))
         
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
