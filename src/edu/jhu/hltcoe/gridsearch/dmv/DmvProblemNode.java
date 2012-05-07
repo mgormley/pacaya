@@ -398,4 +398,8 @@ public class DmvProblemNode implements ProblemNode {
         return dwRelax.getIdm();
     }
     
+    public DmvDantzigWolfeRelaxation getRelaxation() {
+        return dwRelax;
+    }
+    
 }

@@ -14,6 +14,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -43,7 +44,8 @@ import edu.jhu.hltcoe.util.rproj.RRow;
 
 public class DmvDantzigWolfeRelaxationTest {
 
-    static {
+    @BeforeClass
+    public void classSetUp() {
         BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
@@ -291,8 +293,32 @@ public class DmvDantzigWolfeRelaxationTest {
         System.out.println("maxSums=" + Arrays.toString(maxSums));
     }
     
-    private enum InitSol {
-        VITERBI_EM, GOLD, RANDOM, UNIFORM
+    public enum InitSol {
+        VITERBI_EM("viterbi-em"), 
+        GOLD("gold"), 
+        RANDOM("random"), 
+        UNIFORM("uniform"),
+        NONE("none");
+        
+        private String id;
+
+        InitSol(String id) {
+          this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return id;
+        }
+        
+        public static InitSol getById(String id) {
+            for (InitSol is : values()) {
+                if (is.id.equals(id)) {
+                    return is;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognized InitSol id: " + id);
+        }
     }
     
     @Test
@@ -409,7 +435,7 @@ public class DmvDantzigWolfeRelaxationTest {
         return true;
     }
 
-    private void setBoundsFromInitSol(DmvDantzigWolfeRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
+    public static void setBoundsFromInitSol(DmvDantzigWolfeRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
         boolean forward = true;
         double offsetLogProb = Utilities.log(offsetProb);
         double[][] logProbs = initSol.getLogProbs();

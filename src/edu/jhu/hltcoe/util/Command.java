@@ -78,13 +78,17 @@ public class Command {
         }
         return sb.toString();
     }
-
+    
     public static String getOptionValue(CommandLine cmd, String name, String defaultValue) {
         return cmd.hasOption(name) ? cmd.getOptionValue(name) : defaultValue;
     }
 
     public static int getOptionValue(CommandLine cmd, String name, int defaultValue) {
         return cmd.hasOption(name) ? Integer.parseInt(cmd.getOptionValue(name)) : defaultValue;
+    }
+    
+    public static long getOptionValue(CommandLine cmd, String name, long defaultValue) {
+        return cmd.hasOption(name) ? Long.parseLong(cmd.getOptionValue(name)) : defaultValue;
     }
 
     public static double getOptionValue(CommandLine cmd, String name, double defaultValue) {

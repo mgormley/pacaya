@@ -61,8 +61,8 @@ public class LazyBranchAndBoundSolver {
             }
             assert (!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
-            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", upperBound,
-                    incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
+            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
+                    upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
             if (log.isDebugEnabled()) {
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;

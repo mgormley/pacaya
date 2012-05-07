@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -34,6 +35,11 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         IntTuple max = Utilities.getArgmax(regret);
         int c = max.get(0);
         int m = max.get(1);
+
+        if (c == -1 || m == -1 || regret[c][m] == Double.NEGATIVE_INFINITY) {
+            log.warn("Branching bottomed-out at node " + node.getId());
+            return Collections.emptyList();
+        }
         
         String name = node.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));

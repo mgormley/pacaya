@@ -14,7 +14,8 @@ public class BnBDmvTrainer implements Trainer {
     private double epsilon;
     private File tempDir;
     private DmvBoundsDeltaFactory brancher;
-        
+    private DmvProblemNode rootNode;
+    
     public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher) {
         this(epsilon, brancher, null);
     }
@@ -25,10 +26,18 @@ public class BnBDmvTrainer implements Trainer {
         this.tempDir = tempDir;
         this.brancher = brancher;
     }
-    
+
     @Override
     public void train(SentenceCollection sentences) {
-        DmvProblemNode rootNode = new DmvProblemNode(sentences, brancher, tempDir);
+        init(sentences);
+        train();
+    }
+    
+    public void init(SentenceCollection sentences) {
+        rootNode = new DmvProblemNode(sentences, brancher, tempDir);
+    }
+    
+    public void train() {
         bnbSolver.runBranchAndBound(rootNode, epsilon, new BfsComparator());
     }
     
@@ -37,6 +46,10 @@ public class BnBDmvTrainer implements Trainer {
         DmvSolution solution = (DmvSolution) bnbSolver.getIncumbentSolution();
         // Create a new DmvModel from these model parameters
         return solution.getIdm().getDmvModel(solution.getLogProbs());
+    }
+
+    public DmvDantzigWolfeRelaxation getRootRelaxation() {
+        return rootNode.getRelaxation();
     }
 
 }

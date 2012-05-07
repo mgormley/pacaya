@@ -29,6 +29,13 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.decomp.DeltaParseBlockFileWriter;
 import edu.jhu.hltcoe.util.Command;
 
+/**
+ * TODO: Consider switching to annotations
+ * http://docs.oracle.com/javase/tutorial/java/javaOO/annotations.html
+ * http://tutorials.jenkov.com/java-reflection/annotations.html
+ * @author mgormley
+ *
+ */
 public class TrainerFactory {
 
     private static ViterbiParser evalParser = null;

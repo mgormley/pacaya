@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
 
@@ -66,8 +67,19 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         // TODO: this could be more efficient if we kept cumulative frequencies
         // and did binary search for the sampling value.
         // TODO: this is also horribly inefficient as we get deeper into the tree
+        
         int c;
         int m;
+
+        double[] adjusted = Utilities.copyOf(freqs);
+        for (int i=0; i<adjusted.length; i++) {
+            c = cms[i].get1();
+            m = cms[i].get2();
+            if (!origBounds.canBranch(c, m)) {
+                
+            }
+        }
+        
         do {
             int cmId = Multinomials.sampleFromProportions(freqs);
             c = cms[cmId].get1();
