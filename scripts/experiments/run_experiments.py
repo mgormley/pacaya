@@ -86,6 +86,33 @@ class DPExpParams(experiment_runner.JavaExpParams):
             java_args += " -Djava.library.path=%s " % (jlp)
         return java_args
 
+
+class HProfCpuExpParams(DPExpParams):
+
+    def __init__(self):
+        DPExpParams.__init__(self)
+        self.set("hprof","cpu-samples",True,False)
+        
+    def get_instance(self):
+        return HProfCpuExpParams()
+    
+    def get_java_args(self, eprunner):
+        # Default interval is 10ms
+        return DPExpParams.get_java_args(self, eprunner) + " -agentlib:hprof=cpu=samples,depth=7,interval=2 "
+    
+class HProfHeapExpParams(DPExpParams):
+
+    def __init__(self):
+        DPExpParams.__init__(self)
+        self.set("hprof","heap-sites",True,False)
+        
+    def get_instance(self):
+        return HProfHeapExpParams()
+    
+    def get_java_args(self, eprunner):
+        return DPExpParams.get_java_args(self, eprunner) + " -agentlib:hprof=heap=sites "
+    
+
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
