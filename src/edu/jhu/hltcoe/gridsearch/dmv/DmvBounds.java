@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.Arrays;
 
+import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvBounds {
@@ -22,6 +23,8 @@ public class DmvBounds {
     private double[][] ubs;
 
     public DmvBounds(IndexedDmvModel idm) {
+        int[][] totMaxFreqCm = idm.getTotalMaxFreqCm();
+        
         lbs = new double[idm.getNumConds()][];
         ubs = new double[idm.getNumConds()][];
         for (int c=0; c<lbs.length; c++) {
@@ -30,11 +33,13 @@ public class DmvBounds {
             Arrays.fill(lbs[c], DEFAULT_LOWER_BOUND);
             Arrays.fill(ubs[c], DEFAULT_UPPER_BOUND);
             
+            double totMaxFreqC = Vectors.sum(totMaxFreqCm[c]);
             for (int m=0; m<lbs[c].length; m++) {
-                int totMaxFreqCm = idm.getTotalMaxFreqCm(c, m);
-                if (totMaxFreqCm == 0) {
+                if (totMaxFreqCm[c][m] == 0 && totMaxFreqC > 0) {
                     // Upper bound by zero(ish) if this parameter 
-                    // can't be used in the corpus
+                    // can't be used in the corpus AND if there are
+                    // other parameters in its conditional probability table that
+                    // won't be forced to zero.
                     ubs[c][m] = lbs[c][m];
                 }
             }
