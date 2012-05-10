@@ -65,4 +65,8 @@ public class RDataFrame {
         return new String(bytes);
     }
 
+    public int getNumRows() {
+        return rows.size();
+    }
+
 }

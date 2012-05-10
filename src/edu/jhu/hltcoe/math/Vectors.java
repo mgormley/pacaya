@@ -17,6 +17,14 @@ public class Vectors {
         return sum;
     }
 
+    public static double sum(int[] vector) {
+        int sum = 0;
+        for(int i=0; i<vector.length; i++) {
+            sum += vector[i];
+        }
+        return sum;
+    }
+
 
     public static void assertNoZeroes(double[] draw, double[] logDraw) {
         assertNoZeros(draw);
@@ -113,6 +121,25 @@ public class Vectors {
             }
         }
         return min;
+    }
+
+
+    public static double dotProduct(double[] array1, double[] array2) {
+        if (array1.length != array2.length) {
+            throw new IllegalStateException("array1.length != array2.length");
+        }
+        double dotProduct = 0.0;
+        for (int i=0; i<array1.length; i++) {
+            dotProduct += array1[i] * array2[i];
+        }
+        return dotProduct;
+    }
+
+
+    public static void scale(double[] array, double alpha) {
+        for (int i=0; i<array.length; i++) {
+            array[i] *= alpha;
+        }
     }
 
 }

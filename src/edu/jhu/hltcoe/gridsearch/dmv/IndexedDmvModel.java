@@ -56,7 +56,8 @@ public class IndexedDmvModel {
     private int[][] sentMaxFreqSi; 
     private SentenceCollection sentences;
     private int[][] totMaxFreqCm;
-    private int numTotalParams; 
+    private int numTotalParams;
+    private int numNZMaxFreqCms; 
     
     public IndexedDmvModel(SentenceCollection sentences) {
         this.sentences = sentences;
@@ -137,6 +138,7 @@ public class IndexedDmvModel {
         // Create the count of total max frequencies for each model parameter in term of c,m
         // Also count total number of parameters
         numTotalParams = 0;
+        numNZMaxFreqCms = 0;
         totMaxFreqCm = new int[getNumConds()][];
         for (int c = 0; c < getNumConds(); c++) {
             totMaxFreqCm[c] = new int[getNumParams(c)];
@@ -145,6 +147,9 @@ public class IndexedDmvModel {
                 for (int s = 0; s < sentMaxFreqSi.length; s++) {
                     totMaxFreqCm[c][m] += sentMaxFreqCm[s][c][m];
                 }
+                if (totMaxFreqCm[c][m] > 0) {
+                    numNZMaxFreqCms++;
+                }                    
             }
         }
     }
@@ -261,6 +266,10 @@ public class IndexedDmvModel {
 
     public int getTotalMaxFreqCm(int c, int m) {
         return totMaxFreqCm[c][m];
+    }
+    
+    public int getNumNonZeroMaxFreqCms() {
+        return numNZMaxFreqCms;
     }
     
     public int getNumSentVars(int s) {        
