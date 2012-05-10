@@ -9,6 +9,8 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 import java.io.File;
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
@@ -19,6 +21,8 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class Projections {
+
+    private static Logger log = Logger.getLogger(Projections.class);
 
     private IloCplex cplex;
     private File tempDir;
@@ -35,7 +39,8 @@ public class Projections {
             cplex.setOut(null);
         } catch (IloException e) {
             throw new RuntimeException(e);
-        }    }
+        }    
+    }
 
     /**
      * Implementation of Algorithm 1 (projsplx) from "Projection Onto A Simplex"
@@ -77,11 +82,12 @@ public class Projections {
 
         return newParams;
     }
-
+    
     /**
      * @param logBounds Bounds for log probabilities
      * @param c Index of distribution which has bounds
      * @param params Vector to project onto (param.length - 1)-simplex in probability space
+     * @return The projected parameters or null if infeasible
      */
     public double[] getProjectedParams(DmvBounds logBounds, int c, double[] params) throws IloException {
         double[] lbs = new double[params.length];
@@ -98,6 +104,7 @@ public class Projections {
      * @param params Vector to project onto (param.length - 1)-simplex in probability space
      * @param lbs Lower bounds in probability space
      * @param ubs Upper bounds in probability space
+     * @return The projected parameters or null if infeasible
      */
     public double[] getProjectedParams(double[] params, double[] lbs, double[] ubs) throws IloException,
             UnknownObjectException {
@@ -124,10 +131,20 @@ public class Projections {
         }
         
         if (!cplex.solve()) {
-            throw new RuntimeException("projection infeasible");
+            // throw new RuntimeException("projection infeasible");
+            return null;
         }
 
-        return cplex.getValues(newParamVars);
+        double[] values = cplex.getValues(newParamVars);
+        for (int m=0; m<values.length; m++) {
+            if (values[m] < -1e-8) {
+                log.warn("Oddly low value after projection: values[m] = " + values[m]);
+            }
+            if (values[m] < 0.0) {
+                values[m] = 0.0;
+            }
+        }
+        return values;
     }
 
     public static DepTree getProjectiveParse(Sentence sentence, double[] fracRoot, double[][] fracChild) {
