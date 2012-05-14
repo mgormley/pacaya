@@ -182,7 +182,11 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 GammaVar gv = mp.gammaVars.get(i);
                 double gammaValue = cplex.getValue(gv.gammaVar);
                 for (int c = 0; c < idm.getNumConds(); c++) {
-                    for (int m = 0; m < idm.getNumParams(c); m++) {
+                    int numParams = idm.getNumParams(c);
+                    if (logProbs[c] == null) {
+                        logProbs[c] = new double[numParams];
+                    }
+                    for (int m = 0; m < numParams; m++) {
                         logProbs[c][m] += gammaValue * gv.logProbs[c][m];
                     }
                 }
