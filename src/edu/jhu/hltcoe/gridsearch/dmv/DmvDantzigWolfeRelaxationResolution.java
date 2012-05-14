@@ -175,6 +175,27 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         }
     }
 
+    public WarmStart getWarmStart() {
+        try {
+            WarmStart warmStart = new WarmStart();
+            warmStart.numVars = mp.lpMatrix.getNumVars();
+            warmStart.ranges = mp.lpMatrix.getRanges();
+            warmStart.numVarStatuses = cplex.getBasisStatuses(warmStart.numVars);
+            warmStart.rangeStatuses = cplex.getBasisStatuses(warmStart.ranges);
+            return warmStart;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setWarmStart(WarmStart warmStart) {
+        try {
+            cplex.setBasisStatuses(warmStart.numVars, warmStart.numVarStatuses, warmStart.ranges, warmStart.rangeStatuses);
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public double[][] getRegretCm() {
         try {
             // Optimal model parameters \theta_{c,m} are stored in this.logProbs
@@ -275,7 +296,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         public IloNumVar[][] objVars;
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
-        public IloLPMatrix couplMatrix;
+        public IloLPMatrix lpMatrix;
     }
     
     /**
@@ -497,12 +518,12 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         // We need the lower coupling constraints (and the upper) to each 
         // be added in sequence to the master problem. So we add all the upper
         // constraints afterwards
-        mp.couplMatrix = cplex.addLPMatrix("couplingMatrix");
+        mp.lpMatrix = cplex.addLPMatrix("couplingMatrix");
         for (int c = 0; c < numConds; c++) {
-            mp.couplMatrix.addRows(mp.couplConsLower[c]);
+            mp.lpMatrix.addRows(mp.couplConsLower[c]);
         }
         for (int c = 0; c < numConds; c++) {
-            mp.couplMatrix.addRows(mp.couplConsUpper[c]);
+            mp.lpMatrix.addRows(mp.couplConsUpper[c]);
         }
 
         // ----- column-wise modeling -----
@@ -557,22 +578,22 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 int totMaxFreqCm = idm.getTotalMaxFreqCm(c, m);
                 if (totMaxFreqCm > 0) {
                     // Add to the lower coupling constraint
-                    ind[j] = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
+                    ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
                     val[j] = totMaxFreqCm * logProbs[c][m];
                     j++;
                 }
             }
         }
-        int colind = mp.couplMatrix.addColumn(gammaVar, ind, val);
+        int colind = mp.lpMatrix.addColumn(gammaVar, ind, val);
 
 
         // Add the gamma var to its sum to one constraint
         if (mp.gammaSumCons == null) {
             mp.gammaSumCons = cplex.eq(gammaVar, 1.0, "gammaSum");
-            mp.couplMatrix.addRow(mp.gammaSumCons);
+            mp.lpMatrix.addRow(mp.gammaSumCons);
         } else {
-            int rowind = mp.couplMatrix.getIndex(mp.gammaSumCons);
-            mp.couplMatrix.setNZ(rowind, colind, 1.0);
+            int rowind = mp.lpMatrix.getIndex(mp.gammaSumCons);
+            mp.lpMatrix.setNZ(rowind, colind, 1.0);
         }
         
         GammaVar gv = new GammaVar(gammaVar, logProbs);
@@ -589,7 +610,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         }        
         
         //TODO: this might be wrong
-        mp.couplMatrix.removeColumn(mp.couplMatrix.getIndex(gv.gammaVar));
+        mp.lpMatrix.removeColumn(mp.lpMatrix.getIndex(gv.gammaVar));
        
         if (tempDir != null) {
             // TODO: remove this or add a debug flag to the if
@@ -626,25 +647,25 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             int m = idm.getM(s, i);
             
             // Add to the lower coupling constraint
-            ind[j] = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
+            ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
             val[j] = bounds.getLb(c, m) * sentSol[i];
             j++;
             
             // Add to the upper coupling constraint
-            ind[j] = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
+            ind[j] = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             val[j] = bounds.getUb(c, m) * sentSol[i];
             j++;
         }
-        int colind = mp.couplMatrix.addColumn(lambdaVar, ind, val);
+        int colind = mp.lpMatrix.addColumn(lambdaVar, ind, val);
         
 
         // Add the lambda var to its sum to one constraint
         if (mp.lambdaSumCons[s] == null) {
             mp.lambdaSumCons[s] = cplex.eq(lambdaVar, 1.0, "lambdaSum");
-            mp.couplMatrix.addRow(mp.lambdaSumCons[s]);
+            mp.lpMatrix.addRow(mp.lambdaSumCons[s]);
         } else {
-            int rowind = mp.couplMatrix.getIndex(mp.lambdaSumCons[s]);
-            mp.couplMatrix.setNZ(rowind, colind, 1.0);
+            int rowind = mp.lpMatrix.getIndex(mp.lambdaSumCons[s]);
+            mp.lpMatrix.setNZ(rowind, colind, 1.0);
         }
         
         LambdaVar lv = new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, colind);
@@ -695,8 +716,8 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             // Get the simplex multipliers (shadow prices).
             // These are shared across all slaves, since each slave
             // has the same D_s matrix.
-            double[] pricesLower = cplex.getDuals(mp.couplMatrix, 0, idm.getNumTotalParams());
-            double[] pricesUpper = cplex.getDuals(mp.couplMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
+            double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
+            double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
             
             // Compute the parse weights, which will be shared across all subproblems
             int numConds = idm.getNumConds();
@@ -762,7 +783,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 if (addGammaVar(logProbs)) {
                     numPositiveGammaRedCosts++;
 
-                    if (mp.gammaVars.size() > mp.couplMatrix.getNrows()) {
+                    if (mp.gammaVars.size() > mp.lpMatrix.getNrows()) {
                         // Remove the non-basic gamma variables 
                         // TODO: remove the gamma variables that price out the highest
                         for (int i=0; i<mp.gammaVars.size(); i++) {
@@ -855,8 +876,8 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             TIntArrayList rowind = new TIntArrayList();
             TIntArrayList colind = new TIntArrayList();
             TDoubleArrayList val = new TDoubleArrayList();
-            int lowCmInd = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
-            int upCmInd = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
+            int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
+            int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             for (LambdaVar lv : mp.lambdaVars) {
                 int i = idm.getSi(lv.s, c, m);
                 if (i != -1) {
@@ -875,7 +896,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 }
             }
             if (rowind.size() > 0) {
-                mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+                mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
             }
             
             // Reset this flag
@@ -913,20 +934,20 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         TIntArrayList colind = new TIntArrayList();
         TDoubleArrayList val = new TDoubleArrayList();
 
-        int colindForGv = mp.couplMatrix.getIndex(gv.gammaVar);
+        int colindForGv = mp.lpMatrix.getIndex(gv.gammaVar);
 
         for (int m = 0; m < idm.getNumParams(c); m++) {
             // Only update non zero rows
             int totMaxFreqCm = idm.getTotalMaxFreqCm(c, m);
             if (totMaxFreqCm > 0) {
                 // Add to the lower coupling constraint
-                rowind.add(mp.couplMatrix.getIndex(mp.couplConsLower[c][m]));
+                rowind.add(mp.lpMatrix.getIndex(mp.couplConsLower[c][m]));
                 colind.add(colindForGv);
                 val.add(totMaxFreqCm * gv.logProbs[c][m]);
             }
         }
         if (rowind.size() > 0) {
-            mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+            mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
         }
     }
     

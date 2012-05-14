@@ -15,6 +15,7 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
@@ -52,6 +53,9 @@ public class DmvProblemNode implements ProblemNode {
     private SentenceCollection sentences;
     private RelaxedDmvSolution relaxSol;
     
+    // For "fork" nodes only (i.e. nodes that store warm-start information)
+    private WarmStart warmStart;
+    
     // For root node only
     private DmvSolution initFeasSol;
 
@@ -62,7 +66,7 @@ public class DmvProblemNode implements ProblemNode {
      */
     public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, File tempDir) {
         this.sentences = sentences;        
-        dwRelax = new DmvDantzigWolfeRelaxationResolution(sentences, tempDir);
+        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 100, new CutCountComputer());
         // Save and use this solution as the first incumbent
         this.initFeasSol = getInitFeasSol(sentences);
         log.info("Initial solution score: " + initFeasSol.getScore());
@@ -73,7 +77,7 @@ public class DmvProblemNode implements ProblemNode {
         this.deltasFactory = brancher;
         isOptimisticBoundCached = false;
         
-        ((DmvDantzigWolfeRelaxationResolution)dwRelax).init(initFeasSol);
+        dwRelax.init(initFeasSol);
         
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -92,6 +96,8 @@ public class DmvProblemNode implements ProblemNode {
         this.depth = parent.depth + 1;
         this.side = side;
         isOptimisticBoundCached = false;
+        // Take the warm start information from the parent
+        this.warmStart = parent.warmStart;
         // The relaxation is set only when this node is set to be the active one
         this.dwRelax = null;
         this.sentences = parent.sentences;
@@ -119,11 +125,17 @@ public class DmvProblemNode implements ProblemNode {
             if (dwRelax != null) {
                 // Run the Dantzig-Wolfe algorithm on the relaxation of the main
                 // problem
+                if (warmStart != null) {
+                    dwRelax.setWarmStart(warmStart);
+                }
                 relaxSol = dwRelax.solveRelaxation();
                 optimisticBound = relaxSol.getScore();
                 isOptimisticBoundCached = true;
-            } else {
+                warmStart = dwRelax.getWarmStart();
+            } else if (parent != null){
                 return parent.getOptimisticBound();
+            } else {
+                return LazyBranchAndBoundSolver.BEST_SCORE;
             }
         }
         return optimisticBound;
@@ -231,6 +243,7 @@ public class DmvProblemNode implements ProblemNode {
             DmvBoundsDelta deltasForChild = deltasForChildren.get(i);
             children.add(new DmvProblemNode(deltasForChild, deltasFactory, this, i));
         }
+        warmStart = null;
         return children;
     }
 

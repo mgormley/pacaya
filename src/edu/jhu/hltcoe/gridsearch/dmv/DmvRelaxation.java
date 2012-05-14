@@ -11,7 +11,6 @@ public interface DmvRelaxation {
     double[][] getRegretCm();
 
     void reverseApply(DmvBoundsDelta deltas);
-
     void forwardApply(DmvBoundsDelta deltas);
 
     DmvBounds getBounds();
@@ -19,5 +18,10 @@ public interface DmvRelaxation {
     void end();
 
     RelaxedDmvSolution solveRelaxation();
+
+    WarmStart getWarmStart();
+    void setWarmStart(WarmStart warmStart);
+
+    void init(DmvSolution initFeasSol);
 
 }

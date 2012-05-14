@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
-import ilog.concert.IloColumn;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
@@ -81,10 +80,10 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         this.cutCounter = 0;
     }
 
-    public void init(DepTreebank initFeasSol) {
+    public void init(DmvSolution initFeasSol) {
         try {
             cplex = new IloCplex();
-            mp = buildModel(cplex, initFeasSol);
+            mp = buildModel(cplex, initFeasSol.getTreebank());
             // TODO: add the initial feasible solution to cplex object? Does this even make sense?
             setCplexParams(cplex);
         } catch (IloException e) {
@@ -165,6 +164,27 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         }
     }
 
+    public WarmStart getWarmStart() {
+        try {
+            WarmStart warmStart = new WarmStart();
+            warmStart.numVars = mp.lpMatrix.getNumVars();
+            warmStart.ranges = mp.lpMatrix.getRanges();
+            warmStart.numVarStatuses = cplex.getBasisStatuses(warmStart.numVars);
+            warmStart.rangeStatuses = cplex.getBasisStatuses(warmStart.ranges);
+            return warmStart;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setWarmStart(WarmStart warmStart) {
+        try {
+            cplex.setBasisStatuses(warmStart.numVars, warmStart.numVarStatuses, warmStart.ranges, warmStart.rangeStatuses);
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public double[][] getRegretCm() {
         try {
             // Optimal model parameters \theta_{c,m} are stored in this.logProbs
@@ -264,7 +284,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         public IloNumVar[][] objVars;
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
-        public IloLPMatrix couplMatrix;
+        public IloLPMatrix lpMatrix;
         public int numStoCons = 0;
     }
     
@@ -327,8 +347,9 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         // ----- row-wise modeling -----
         // Add x_0 constraints in the original model space first
 
-        // Create the model parameter variables
         int numConds = idm.getNumConds();
+        
+        // Create the model parameter variables
         mp.modelParamVars = new IloNumVar[numConds][];
         for (int c = 0; c < numConds; c++) {
             mp.modelParamVars[c] = new IloNumVar[idm.getNumParams(c)];
@@ -336,17 +357,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), idm.getName(c, m));
             }
         }
-
-        // Create the cut vectors for sum-to-one constraints
-        double[][][] pointsArray = getInitialPoints();
-        // Add the initial cuts
-        for (int c = 0; c < numConds; c++) {
-            for (int i = 0; i < pointsArray[c].length; i++) {
-                double[] probs = pointsArray[c][i];
-                addSumToOneConstraint(cplex, c, probs);
-            }
-        }
-
+        
         // Create the objective
         mp.objective = cplex.addMinimize();
         // Create the objective variables, adding them to the objective
@@ -390,12 +401,12 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         // We need the lower coupling constraints (and the upper) to each 
         // be added in sequence to the master problem. So we add all the upper
         // constraints afterwards
-        mp.couplMatrix = cplex.addLPMatrix("couplingMatrix");
+        mp.lpMatrix = cplex.addLPMatrix("couplingMatrix");
         for (int c = 0; c < numConds; c++) {
-            mp.couplMatrix.addRows(mp.couplConsLower[c]);
+            mp.lpMatrix.addRows(mp.couplConsLower[c]);
         }
         for (int c = 0; c < numConds; c++) {
-            mp.couplMatrix.addRows(mp.couplConsUpper[c]);
+            mp.lpMatrix.addRows(mp.couplConsUpper[c]);
         }
 
         // ----- column-wise modeling -----
@@ -409,6 +420,16 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         for (int s = 0; s < sentences.size(); s++) {
             DepTree tree = initFeasSol.get(s);
             addLambdaVar(cplex, s, tree);
+        }
+
+        // Create the cut vectors for sum-to-one constraints
+        double[][][] pointsArray = getInitialPoints();
+        // Add the initial cuts
+        for (int c = 0; c < numConds; c++) {
+            for (int i = 0; i < pointsArray[c].length; i++) {
+                double[] probs = pointsArray[c][i];
+                addSumToOneConstraint(c, probs);
+            }
         }
         
         return mp;
@@ -441,8 +462,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         return vectors;
     }
 
-    private void addSumToOneConstraint(IloMPModeler cplex, int c,
-            double[] point) throws IloException {
+    private void addSumToOneConstraint(int c, double[] point) throws IloException {
         
         // TODO: should this respect the bounds?
         //double[] probs = projections.getProjectedParams(bounds, c, point);
@@ -458,7 +478,9 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         }
 
         IloLinearNumExpr vectorExpr = cplex.scalProd(probs, mp.modelParamVars[c]);
-        cplex.addLe(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
+        IloRange constraint = cplex.le(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
+        // TODO: double check that this doesn't slow us down (by growing the LP matrix)
+        mp.lpMatrix.addRow(constraint);
         mp.numStoCons++;
     }
 
@@ -489,25 +511,25 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             int m = idm.getM(s, i);
             
             // Add to the lower coupling constraint
-            ind[j] = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
+            ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
             val[j] = bounds.getLb(c, m) * sentSol[i];
             j++;
             
             // Add to the upper coupling constraint
-            ind[j] = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
+            ind[j] = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             val[j] = bounds.getUb(c, m) * sentSol[i];
             j++;
         }
-        int colind = mp.couplMatrix.addColumn(lambdaVar, ind, val);
+        int colind = mp.lpMatrix.addColumn(lambdaVar, ind, val);
         
 
         // Add the lambda var to its sum to one constraint
         if (mp.lambdaSumCons[s] == null) {
             mp.lambdaSumCons[s] = cplex.eq(lambdaVar, 1.0, "lambdaSum");
-            mp.couplMatrix.addRow(mp.lambdaSumCons[s]);
+            mp.lpMatrix.addRow(mp.lambdaSumCons[s]);
         } else {
-            int rowind = mp.couplMatrix.getIndex(mp.lambdaSumCons[s]);
-            mp.couplMatrix.setNZ(rowind, colind, 1.0);
+            int rowind = mp.lpMatrix.getIndex(mp.lambdaSumCons[s]);
+            mp.lpMatrix.setNZ(rowind, colind, 1.0);
         }
         
         LambdaVar lv = new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, colind);
@@ -560,8 +582,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 // Get the simplex multipliers (shadow prices).
                 // These are shared across all slaves, since each slave
                 // has the same D_s matrix. 
-                double[] pricesLower = cplex.getDuals(mp.couplMatrix, 0, idm.getNumTotalParams());
-                double[] pricesUpper = cplex.getDuals(mp.couplMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
+                double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
+                double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
             
                 // Compute the parse weights, which will be shared across all subproblems
                 int numConds = idm.getNumConds();
@@ -633,7 +655,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 // Here the params are probs
                 if (Vectors.sum(params[c]) > MIN_SUM_FOR_CUT) {
                     numNewStoConstraints++;
-                    addSumToOneConstraint(cplex, c, params[c]);
+                    addSumToOneConstraint(c, params[c]);
                 }
             }
             if (numNewStoConstraints == 0) {
@@ -684,8 +706,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             TIntArrayList rowind = new TIntArrayList();
             TIntArrayList colind = new TIntArrayList();
             TDoubleArrayList val = new TDoubleArrayList();
-            int lowCmInd = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
-            int upCmInd = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
+            int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
+            int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             for (LambdaVar lv : mp.lambdaVars) {
                 int i = idm.getSi(lv.s, c, m);
                 if (i != -1) {
@@ -704,7 +726,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 }
             }
             if (rowind.size() > 0) {
-                mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+                mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
             }
             
         } catch (IloException e) {
