@@ -29,40 +29,39 @@ public class LazyBranchAndBoundSolver {
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
     private double incumbentScore;
     private Solution incumbentSolution;
-    private double upperBound;
 
     private SearchStatus status;
 
     // Storage of active nodes
     private PriorityQueue<ProblemNode> leafNodePQ;
+    private PriorityQueue<ProblemNode> upperBoundPQ;
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, double epsilon, Comparator<ProblemNode> comparator) {
         // Initialize
         this.incumbentSolution = null;
         this.incumbentScore = WORST_SCORE;
-        upperBound = BEST_SCORE;
+        double upperBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
         leafNodePQ = new PriorityQueue<ProblemNode>(11, comparator);
+        upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
         int numFathomed = 0;
-        // TODO: remove this line after we fix the upperBound issue below
-        assert (comparator instanceof BfsComparator);
 
         addToLeafNodes(rootNode);
 
         while (hasNextLeafNode()) {
-            ProblemNode curNode = getNextLeafNode();
-
-            // TODO: this should really be a max over all the leaf nodes
-            // The hack below only works with the BfsComparator because its
-            // returning the current max of the leaf nodes.
-            if (curNode.getOptimisticBound() < upperBound) {
-                // The upper bound can only decrease
-                upperBound = curNode.getOptimisticBound();
+            // The upper bound can only decrease
+            if (upperBoundPQ.peek().getOptimisticBound() > upperBound + 1e-8) {
+                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", upperBoundPQ.peek().getOptimisticBound(), upperBound));
             }
+            upperBound = upperBoundPQ.peek().getOptimisticBound();
+            
+            ProblemNode curNode = getNextLeafNode();
+            
             assert (!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
             log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
                     upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
+            
             if (log.isDebugEnabled()) {
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;
@@ -83,10 +82,9 @@ public class LazyBranchAndBoundSolver {
             // TODO: else if, ran out of memory or disk space, break
 
             // The active node can compute a tighter upper bound instead of
-            // using its parents bound
+            // using its parent's bound
             log.info(String.format("CurrentNode: id=%d depth=%d side=%d", curNode.getId(), curNode.getDepth(), curNode
                     .getSide()));
-
             if (curNode.getOptimisticBound() <= incumbentScore) {
                 // fathom (i.e. prune) this child node
                 numFathomed++;
@@ -112,9 +110,15 @@ public class LazyBranchAndBoundSolver {
                 addToLeafNodes(childNode);
             }
         }
+        
+        // Print summary
+        double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
+        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
+                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
+        leafNodePQ = null;     
 
         log.info("B&B search status: " + status);
-
+        
         // Return epsilon optimal solution
         return status;
     }
@@ -148,11 +152,14 @@ public class LazyBranchAndBoundSolver {
     }
 
     private ProblemNode getNextLeafNode() {
-        return leafNodePQ.remove();
+        ProblemNode node = leafNodePQ.remove();
+        upperBoundPQ.remove(node);
+        return node;
     }
 
-    private void addToLeafNodes(ProblemNode rootNode) {
-        leafNodePQ.add(rootNode);
+    private void addToLeafNodes(ProblemNode node) {
+        leafNodePQ.add(node);
+        upperBoundPQ.add(node);
     }
 
     public Solution getIncumbentSolution() {
