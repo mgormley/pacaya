@@ -245,14 +245,14 @@ public class ModelParamSubproblem {
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = -1;
-            inequalities[1+m] = new LinearMultivariateRealFunction(F1.make(factors), bounds.getLb(c, m));
+            inequalities[1+m] = new LinearMultivariateRealFunction(F1.make(factors), bounds.getLb(c, m) - 1e-13);
         }
         
         // Upper bounds
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = 1;
-            inequalities[1+numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), -bounds.getUb(c, m));
+            inequalities[1+numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), -(bounds.getUb(c, m) + 1e-13));
         }
         
 
