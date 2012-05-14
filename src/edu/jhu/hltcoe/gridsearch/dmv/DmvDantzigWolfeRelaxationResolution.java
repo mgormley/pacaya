@@ -56,6 +56,8 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
     private MasterProblem mp;
     private Projections projections;
     private boolean hasInfeasibleBounds;
+    // Stored for re-use by getRegretCm()
+    private double[][] logProbs;
     
     public DmvDantzigWolfeRelaxationResolution(SentenceCollection sentences, File tempDir) {
         this.sentences = sentences;
@@ -114,7 +116,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             assert(Utilities.lte(objective, 0.0, 1e-7));
 
             // Store optimal model parameters
-            double[][] logProbs = new double[idm.getNumConds()][];
+            logProbs = new double[idm.getNumConds()][];
             for (int i = 0; i < mp.gammaVars.size(); i++) {
                 GammaVar gv = mp.gammaVars.get(i);
                 double gammaValue = cplex.getValue(gv.gammaVar);
@@ -175,22 +177,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
     public double[][] getRegretCm() {
         try {
-            // TODO: getting the model parameters in this way is redundant
-            // Store optimal model parameters \theta_{c,m}
-            double[][] logProbs = new double[idm.getNumConds()][];
-            for (int i = 0; i < mp.gammaVars.size(); i++) {
-                GammaVar gv = mp.gammaVars.get(i);
-                double gammaValue = cplex.getValue(gv.gammaVar);
-                for (int c = 0; c < idm.getNumConds(); c++) {
-                    int numParams = idm.getNumParams(c);
-                    if (logProbs[c] == null) {
-                        logProbs[c] = new double[numParams];
-                    }
-                    for (int m = 0; m < numParams; m++) {
-                        logProbs[c][m] += gammaValue * gv.logProbs[c][m];
-                    }
-                }
-            }
+            // Optimal model parameters \theta_{c,m} are stored in this.logProbs
 
             // Store feature counts \bar{f}_{c,m} (i.e. number of times each
             // model parameter was used)
@@ -425,7 +412,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             this.s = s;
             this.parents = parents;
             this.sentSol = sentSol;
-            // TODO: these colind will be wrong if we start removing lambdavars!!
+            // TODO: If we start removing LambdaVars, then these column indices are wrong!!
             this.colind = colind;
         }
 
@@ -669,7 +656,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
     }
 
     public Status runDWAlgo(IloCplex cplex, MasterProblem mp) throws UnknownObjectException, IloException {
-        if (hasInfeasibleBounds) {
+        if (hasInfeasibleBounds || !areFeasibleBounds(bounds)) {
             return Status.Infeasible;
         }
         
@@ -725,16 +712,18 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                     parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
                     j++;
                     // We want to minimize the following:
-                    // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) +
-                    // pricesUpper[m]*bounds.getUb(c,m))
-                    // but we negate this since the parser will try to maximize.
-                    // In other words:
+                    // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
+                    // but we negate this since the parser will try to maximize. In other words:
                     // minimize -q^T D_s = maximize q^T D_s
                     // 
                 }
             }
             DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
 
+            // Get the simplex multipliers (shadow prices) for the lambda
+            // sentence constraints
+            double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
+               
             // Compute the model parameter weights, used by the model parameters subproblem
             double[][] modelWeights = new double[numConds][];
             j = 0;
@@ -746,18 +735,14 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                     j++;
                 }
             }
-
-            // Get the simplex multipliers (shadow prices) for the lambda
-            // sentence constraints
-            double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
-                        
+                     
             // Get the simplex multipliers (shadow prices) for the gamma 
             double convexGammaPrice = cplex.getDual(mp.gammaSumCons);
             
             // Solve the model parameters subproblem
             int numPositiveGammaRedCosts = 0;
             ModelParamSubproblem mps = new ModelParamSubproblem();
-            Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeProb(modelWeights, bounds);
+            Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeLogProb(modelWeights, bounds);
             if (mPair == null) {
                 hasInfeasibleBounds = true;
                 return Status.Infeasible;
@@ -801,8 +786,6 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 // We must negate pair.get2() since we were just maximizing
                 double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
 
-                // TODO: double check that this if-statement is correct
-                // if (reducedCost < 0.0) {
                 if (pReducedCost < -5e-8) {
                     // Introduce a new lambda variable
                     if (addLambdaVar(cplex, s, tree)) {
@@ -920,34 +903,9 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                     updateGammaVar(gv, c);
                 }
             }
-            
-            if (!hasInfeasibleBounds) {
-                // Check that we can sum to at least one
-                if(!checkSumToAtLeastOne(bounds)) {
-                    hasInfeasibleBounds = true;
-                }
-            }
-
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private boolean checkSumToAtLeastOne(DmvBounds bounds) {
-        for (int c=0; c<idm.getNumConds(); c++) {
-            double logSum = Double.NEGATIVE_INFINITY;
-            int numParams = idm.getNumParams(c);
-            // Initialize each parameter to its lower bound
-            for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, bounds.getUb(c, m));
-            }
-            
-            if (logSum < -1e-10) {
-                // The problem is infeasible
-                return false;
-            }
-        }
-        return true;
     }
     
     private void updateGammaVar(GammaVar gv, int c) throws IloException {
@@ -970,6 +928,39 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         if (rowind.size() > 0) {
             mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
         }
+    }
+    
+    private boolean areFeasibleBounds(DmvBounds bounds) {
+        // Check that the upper bounds sum to at least 1.0
+        for (int c=0; c<idm.getNumConds(); c++) {
+            double logSum = Double.NEGATIVE_INFINITY;
+            int numParams = idm.getNumParams(c);
+            // Sum the upper bounds
+            for (int m = 0; m < numParams; m++) {
+                logSum = Utilities.logAdd(logSum, bounds.getUb(c, m));
+            }
+            
+            if (logSum < -1e-10) {
+                // The problem is infeasible
+                return false;
+            }
+        }
+        
+        // Check that the lower bounds sum to no more than 1.0
+        for (int c=0; c<idm.getNumConds(); c++) {
+            double logSum = Double.NEGATIVE_INFINITY;
+            int numParams = idm.getNumParams(c);
+            // Sum the lower bounds
+            for (int m = 0; m < numParams; m++) {
+                logSum = Utilities.logAdd(logSum, bounds.getLb(c, m));
+            }
+            
+            if (logSum > 1e-10) {
+                // The problem is infeasible
+                return false;
+            }
+        }
+        return true;
     }
 
     public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
