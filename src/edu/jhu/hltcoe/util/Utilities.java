@@ -350,4 +350,18 @@ public class Utilities {
     public static boolean gte(double a, double b, double delta) {
         return a + delta >= b;
     }    
+    
+    public static String deepToString(double[][] array) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (double[] arr : array) {
+            sb.append("[");
+            for (double a : arr) {
+                sb.append(String.format("%10.3g, ", a));
+            }
+            sb.append("], ");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }

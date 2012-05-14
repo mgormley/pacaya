@@ -46,7 +46,7 @@ public class DmvProblemNode implements ProblemNode {
     
     // For active node only:
     private DmvBoundsDeltaFactory deltasFactory;
-    private DmvDantzigWolfeRelaxation dwRelax;
+    private DmvRelaxation dwRelax;
     protected boolean isOptimisticBoundCached;
     protected double optimisticBound;
     private SentenceCollection sentences;
@@ -62,7 +62,7 @@ public class DmvProblemNode implements ProblemNode {
      */
     public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, File tempDir) {
         this.sentences = sentences;        
-        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 100, new CutCountComputer());
+        dwRelax = new DmvDantzigWolfeRelaxationResolution(sentences, tempDir);
         // Save and use this solution as the first incumbent
         this.initFeasSol = getInitFeasSol(sentences);
         log.info("Initial solution score: " + initFeasSol.getScore());
@@ -73,7 +73,7 @@ public class DmvProblemNode implements ProblemNode {
         this.deltasFactory = brancher;
         isOptimisticBoundCached = false;
         
-        dwRelax.init(initFeasSol.getTreebank());
+        ((DmvDantzigWolfeRelaxationResolution)dwRelax).init(initFeasSol);
         
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -398,7 +398,7 @@ public class DmvProblemNode implements ProblemNode {
         return dwRelax.getIdm();
     }
     
-    public DmvDantzigWolfeRelaxation getRelaxation() {
+    public DmvRelaxation getRelaxation() {
         return dwRelax;
     }
     

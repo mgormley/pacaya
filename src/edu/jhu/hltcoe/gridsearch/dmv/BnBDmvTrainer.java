@@ -48,7 +48,7 @@ public class BnBDmvTrainer implements Trainer {
         return solution.getIdm().getDmvModel(solution.getLogProbs());
     }
 
-    public DmvDantzigWolfeRelaxation getRootRelaxation() {
+    public DmvRelaxation getRootRelaxation() {
         return rootNode.getRelaxation();
     }
 

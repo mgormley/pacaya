@@ -215,7 +215,7 @@ public class DmvDantzigWolfeRelaxationTest {
         return relaxSol;
     }
 
-    private void adjustBounds(DmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
+    public static void adjustBounds(DmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
@@ -437,7 +437,7 @@ public class DmvDantzigWolfeRelaxationTest {
         return true;
     }
 
-    public static void setBoundsFromInitSol(DmvDantzigWolfeRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
+    public static void setBoundsFromInitSol(DmvRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
         boolean forward = true;
         double offsetLogProb = Utilities.log(offsetProb);
         double[][] logProbs = initSol.getLogProbs();

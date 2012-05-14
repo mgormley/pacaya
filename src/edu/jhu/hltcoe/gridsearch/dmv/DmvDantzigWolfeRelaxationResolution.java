@@ -31,14 +31,16 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvDantzigWolfeRelaxationResolution {
+public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
     private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
 
@@ -97,7 +99,8 @@ public class DmvDantzigWolfeRelaxationResolution {
             
             log.info("Solution status: " + status);
             if (status != Status.Optimal) {
-                return new RelaxedDmvSolution(null, null, null, Double.POSITIVE_INFINITY, status);
+                // Negate the objective since we were minimizing 
+                return new RelaxedDmvSolution(null, null, null, LazyBranchAndBoundSolver.WORST_SCORE, status);
             }
             if (tempDir != null) {
                 cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
@@ -128,7 +131,10 @@ public class DmvDantzigWolfeRelaxationResolution {
             // Assert that the model parameters sum to <= 1.0
             for (int c = 0; c < idm.getNumConds(); c++) {
                 double[] probs = Vectors.getExp(logProbs[c]);
-                assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
+                //assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
+                if (!Utilities.lte(Vectors.sum(probs), 1.0, 1e-8)) {
+                    log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
+                }
             }
 
             // Store fractional corpus parse
@@ -289,13 +295,11 @@ public class DmvDantzigWolfeRelaxationResolution {
         
         public IloNumVar gammaVar;
         public double[][] logProbs;
-        public int colind;
 
-        public GammaVar(IloNumVar gammaVar, double[][] logProbs, int colind) {
+        public GammaVar(IloNumVar gammaVar, double[][] logProbs) {
             super();
             this.gammaVar = gammaVar;
             this.logProbs = logProbs;
-            this.colind = colind;
         }
         
         @Override
@@ -346,7 +350,7 @@ public class DmvDantzigWolfeRelaxationResolution {
         protected double[][] logProbs;
         
         public GammaVarHashObj00(double[][] logProbs) {
-            super(null, logProbs, -1);
+            super(null, logProbs);
             this.logProbs = logProbs;            
         }
         
@@ -417,6 +421,7 @@ public class DmvDantzigWolfeRelaxationResolution {
             this.s = s;
             this.parents = parents;
             this.sentSol = sentSol;
+            // TODO: these colind will be wrong if we start removing lambdavars!!
             this.colind = colind;
         }
 
@@ -527,7 +532,7 @@ public class DmvDantzigWolfeRelaxationResolution {
         mp.gammaVars = new ArrayList<GammaVar>();
         // Add the initial feasible solution as the first gamma column
         double[][] initLogProbs = initFeasSol.getLogProbs();
-        for (int c=0; c<numConds; c++) {
+        for (int c=0; c<numConds; c++) {            
             // Project the initial solution onto the feasible region
             double[] params = Vectors.getExp(initLogProbs[c]);
             params = projections.getProjectedParams(bounds, c, params);
@@ -542,7 +547,7 @@ public class DmvDantzigWolfeRelaxationResolution {
     }
 
     private boolean addGammaVar(double[][] logProbs) throws IloException {
-        GammaVar gvTemp = new GammaVar(null, logProbs, -1);
+        GammaVar gvTemp = new GammaVar(null, logProbs);
         if (mp.gammaVars.contains(gvTemp)) {
             // Don't add the duplicate, since this probably just means its reduced cost is really close to zero
             return false;
@@ -579,7 +584,7 @@ public class DmvDantzigWolfeRelaxationResolution {
             mp.couplMatrix.setNZ(rowind, colind, 1.0);
         }
         
-        GammaVar gv = new GammaVar(gammaVar, logProbs, colind);
+        GammaVar gv = new GammaVar(gammaVar, logProbs);
         mp.gammaVars.add(gv);
         return true;
     }
@@ -593,7 +598,7 @@ public class DmvDantzigWolfeRelaxationResolution {
         }        
         
         //TODO: this might be wrong
-        mp.couplMatrix.removeColumn(gv.colind);
+        mp.couplMatrix.removeColumn(mp.couplMatrix.getIndex(gv.gammaVar));
        
         if (tempDir != null) {
             // TODO: remove this or add a debug flag to the if
@@ -747,7 +752,8 @@ public class DmvDantzigWolfeRelaxationResolution {
             
             // Solve the model parameters subproblem
             int numPositiveGammaRedCosts = 0;
-            Pair<double[][], Double> mPair = ModelParamSubproblem.solveModelParamSubproblem(modelWeights, bounds);
+            ModelParamSubproblem mps = new ModelParamSubproblem();
+            Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeProb(modelWeights, bounds);
             if (mPair == null) {
                 hasInfeasibleBounds = true;
                 return Status.Infeasible;
@@ -755,7 +761,7 @@ public class DmvDantzigWolfeRelaxationResolution {
             double[][] logProbs = mPair.get1();
             double mReducedCost = mPair.get2() - convexGammaPrice;
             if (log.isDebugEnabled()) {
-                int index = mp.gammaVars.indexOf(new GammaVar(null, logProbs, -1));
+                int index = mp.gammaVars.indexOf(new GammaVar(null, logProbs));
                 if (index != -1) {
                     GammaVar gv = mp.gammaVars.get(index);
                     log.debug(String.format("CPLEX redcost=%f, My redcost=%f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
@@ -807,6 +813,17 @@ public class DmvDantzigWolfeRelaxationResolution {
             // Check whether to continue
             if (numPositiveLambdaRedCosts + numPositiveGammaRedCosts == 0) {
                 // Optimal solution found
+//                //TODO: remove
+//                if (DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs != null) {
+//                    double redcost = ModelParamSubproblem.getReducedCost(modelWeights, DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs) - convexGammaPrice;
+//                    System.out.println("mReducedCost: " + mReducedCost);
+//                    System.out.println("convexGammaPrice: " + convexGammaPrice);
+//                    System.out.println("This should be greater than or equal to zero: " + redcost);
+//                    System.out.println("modelWeights: " + Arrays.deepToString(modelWeights));
+//                    System.out.println("betterLogProbs: " + Arrays.deepToString(DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs));
+//
+//                    assert(redcost >= 0.0);
+//                }
                 break;
             } else {
                 log.debug(String.format("Added %d new trees and %d new gammas", numPositiveLambdaRedCosts, numPositiveGammaRedCosts));
@@ -921,7 +938,7 @@ public class DmvDantzigWolfeRelaxationResolution {
                 logSum = Utilities.logAdd(logSum, bounds.getUb(c, m));
             }
             
-            if (logSum < -1e10) {
+            if (logSum < -1e-10) {
                 // The problem is infeasible
                 return false;
             }

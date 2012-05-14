@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,6 +50,8 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
+
+    public static double[][] tempStaticLogProbs;
 
     @Before
     public void setUp() {
@@ -185,13 +189,14 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         //adjustBounds(dw, DmvBounds.DEFAULT_LOWER_BOUND, DmvBounds.DEFAULT_UPPER_BOUND, true);
 
         relaxSol = testBoundsHelper(dw, origLower, origUpper, true);
+        tempStaticLogProbs = relaxSol.getLogProbs();
         assertEquals(0.0, relaxSol.getScore(), 1e-11);
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
         //TODO: assertEquals(-1.4750472192095685, relaxSol.getScore(), 1e-13);
 
         relaxSol = testBoundsHelper(dw, origLower, origUpper, true);
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), 1e-7);
         
         assertEquals(origLower, bds.getLb(0, 0), 1e-7);
         assertEquals(origUpper, bds.getUb(0, 0), 1e-13);

@@ -27,6 +27,7 @@ import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
@@ -142,7 +143,7 @@ public class PipelineRunner {
         }
     }
 
-    private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvDantzigWolfeRelaxation dw) {
+    private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
             IndexedDmvModel idm = dw.getIdm();

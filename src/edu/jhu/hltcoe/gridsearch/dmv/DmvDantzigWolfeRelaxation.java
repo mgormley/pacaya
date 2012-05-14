@@ -41,7 +41,7 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvDantzigWolfeRelaxation {
+public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
     static final double MIN_SUM_FOR_CUT = 1.01;
 
@@ -286,6 +286,7 @@ public class DmvDantzigWolfeRelaxation {
             this.s = s;
             this.parents = parents;
             this.sentSol = sentSol;
+            // TODO: If we start removing LambdaVars, then these column indices are wrong!!
             this.colind = colind;
         }
 
