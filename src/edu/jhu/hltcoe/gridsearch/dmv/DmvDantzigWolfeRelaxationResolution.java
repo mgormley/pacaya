@@ -57,7 +57,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
     private Projections projections;
     private boolean hasInfeasibleBounds;
     // Stored for re-use by getRegretCm()
-    private double[][] logProbs;
+    private double[][] optimalLogProbs;
     
     public DmvDantzigWolfeRelaxationResolution(SentenceCollection sentences, File tempDir) {
         this.sentences = sentences;
@@ -116,23 +116,23 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             assert(Utilities.lte(objective, 0.0, 1e-7));
 
             // Store optimal model parameters
-            logProbs = new double[idm.getNumConds()][];
+            optimalLogProbs = new double[idm.getNumConds()][];
             for (int i = 0; i < mp.gammaVars.size(); i++) {
                 GammaVar gv = mp.gammaVars.get(i);
                 double gammaValue = cplex.getValue(gv.gammaVar);
                 for (int c = 0; c < idm.getNumConds(); c++) {
                     int numParams = idm.getNumParams(c);
-                    if (logProbs[c] == null) {
-                        logProbs[c] = new double[numParams];
+                    if (optimalLogProbs[c] == null) {
+                        optimalLogProbs[c] = new double[numParams];
                     }
                     for (int m = 0; m < numParams; m++) {
-                        logProbs[c][m] += gammaValue * gv.logProbs[c][m];
+                        optimalLogProbs[c][m] += gammaValue * gv.logProbs[c][m];
                     }
                 }
             }
             // Assert that the model parameters sum to <= 1.0
             for (int c = 0; c < idm.getNumConds(); c++) {
-                double[] probs = Vectors.getExp(logProbs[c]);
+                double[] probs = Vectors.getExp(optimalLogProbs[c]);
                 //assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
                 if (!Utilities.lte(Vectors.sum(probs), 1.0, 1e-8)) {
                     log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
@@ -164,7 +164,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 }
             }
             
-            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective, status);
+            return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -230,7 +230,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             for (int c = 0; c < idm.getNumConds(); c++) {
                 regret[c] = new double[idm.getNumParams(c)];
                 for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
+                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * featCounts[c][m]);
                     //TODO: this seems to be too strong:
                     //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
                     if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {

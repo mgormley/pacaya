@@ -60,7 +60,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
     private int numCutRounds;
     private CutCountComputer initCutCountComp;
     // Stored for re-use by getRegretCm()
-    private double[][] logProbs;
+    private double[][] optimalLogProbs;
     
     public DmvDantzigWolfeRelaxation(SentenceCollection sentences, File tempDir,
             int numCutRounds, CutCountComputer initCutCountComp) {
@@ -123,9 +123,9 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             assert(Utilities.lte(objective, 0.0, 1e-7));
 
             // Store optimal model parameters
-            logProbs = new double[idm.getNumConds()][];
+            optimalLogProbs = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
-                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
+                optimalLogProbs[c] = cplex.getValues(mp.modelParamVars[c]);
             }
 
             // Store fractional corpus parse
@@ -153,7 +153,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 }
             }
             
-            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective, status);
+            return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -219,7 +219,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             for (int c = 0; c < idm.getNumConds(); c++) {
                 regret[c] = new double[idm.getNumParams(c)];
                 for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
+                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * featCounts[c][m]);
                     //TODO: this seems to be too strong:
                     //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
                     if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
