@@ -155,7 +155,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.MIN_SUM_FOR_CUT);
+            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.DEFAULT_MIN_SUM_FOR_CUTS);
         }
     }
     
@@ -511,8 +511,8 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
     public static DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences, final int numCuts) {
         DmvSolution initSol = getInitFeasSol(sentences);
         System.out.println(initSol);
-        DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(sentences, new File("."));
-        dw.init(initSol);
+        DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(new File("."));
+        dw.init(sentences, initSol);
         return dw;
     }
     

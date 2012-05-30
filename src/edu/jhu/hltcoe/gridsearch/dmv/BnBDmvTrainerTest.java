@@ -27,7 +27,7 @@ public class BnBDmvTrainerTest {
     }
 
     
-    //@Test
+    @Test
     public void testTwo() {
         double epsilon = 0.1;
         BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), new File("."));
@@ -69,12 +69,7 @@ public class BnBDmvTrainerTest {
 
 
     private DmvBoundsDeltaFactory getDefaultBrancher() {
-        return FullStrongBranchingDeltaFactory();
+        return new RegretDmvBoundsDeltaFactory();
     }
-
-
-    private DmvBoundsDeltaFactory FullStrongBranchingDeltaFactory() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    
 }

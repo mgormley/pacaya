@@ -10,9 +10,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -36,7 +36,8 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
         
-        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), new File("."));
+        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
+        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), relax, new File("."));
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);

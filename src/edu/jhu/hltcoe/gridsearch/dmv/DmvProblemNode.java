@@ -64,20 +64,20 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, File tempDir) {
-        this.sentences = sentences;        
-        dwRelax = new DmvDantzigWolfeRelaxation(sentences, tempDir, 100, new CutCountComputer());
+    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax, File tempDir) {
+        this.sentences = sentences;
+        this.dwRelax = dwRelax;
         // Save and use this solution as the first incumbent
         this.initFeasSol = getInitFeasSol(sentences);
         log.info("Initial solution score: " + initFeasSol.getScore());
-        id = getNextId();
-        parent = null;
-        depth = 0;
-        side = 0;
+        this.id = getNextId();
+        this.parent = null;
+        this.depth = 0;
+        this.side = 0;
         this.deltasFactory = brancher;
-        isOptimisticBoundCached = false;
+        this.isOptimisticBoundCached = false;
         
-        dwRelax.init(initFeasSol);
+        this.dwRelax.init(sentences, initFeasSol);
         
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -121,6 +121,16 @@ public class DmvProblemNode implements ProblemNode {
      */
     @Override
     public double getOptimisticBound() {
+        return getOptimisticBound(LazyBranchAndBoundSolver.WORST_SCORE);
+    }
+
+
+    /**
+     * @return negative infinity if the problem is infeasible, and an upper
+     *         bound otherwise
+     */
+    @Override
+    public double getOptimisticBound(double incumbentScore) {
         if (!isOptimisticBoundCached) {
             if (dwRelax != null) {
                 // Run the Dantzig-Wolfe algorithm on the relaxation of the main
@@ -128,7 +138,7 @@ public class DmvProblemNode implements ProblemNode {
                 if (warmStart != null) {
                     dwRelax.setWarmStart(warmStart);
                 }
-                relaxSol = dwRelax.solveRelaxation();
+                relaxSol = dwRelax.solveRelaxation(incumbentScore);
                 optimisticBound = relaxSol.getScore();
                 isOptimisticBoundCached = true;
                 warmStart = dwRelax.getWarmStart();

@@ -222,6 +222,30 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for offsetProb in frange(10e-13, 1.001,0.05):
                                 for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                     experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm))
+        elif self.expname == "relax-compare":
+            # Fixed seed
+            all.update(relaxOnly=None, seed=112233)
+            for dataset in datasets:
+                for maxSentenceLength in [10]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [300]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        for initBounds in ["viterbi-em", "random"]: # TODO: "gold"
+                            for offsetProb in frange(10e-13, 1.001,0.2):
+                                #for probOfSkipCm in frange(0.0, 0.2, 0.05):
+                                for relaxation in ["dw", "dw-res"]:
+                                    for maxDwIterations in [1,2,10,100]:
+                                        for maxSimplexIterations in [10,100,1000,10000]:
+                                            for maxSetSizeToConstrain in [0,2,3,4]:
+                                                for minSumForCuts in [1.001, 1.01, 1.1, 1.5]:
+                                                    p1 = DPExpParams(initBounds=initBounds,offsetProb=offsetProb)
+                                                    #p1.update(probOfSkipCm=probOfSkipCm)
+                                                    p1.update(relaxation=relaxation, maxDwIterations=maxDwIterations, maxSimplexIterations=maxSimplexIterations)
+                                                    p1.update(maxSetSizeToConstrain=maxSetSizeToConstrain, minSumForCuts=minSumForCuts)
+                                                    if (relaxation != "dw" and maxSetSizeToConstrain > 0 and minSumForCuts > 1.001):
+                                                        pass
+                                                    else:
+                                                        experiments.append(all + dataset + msl + mns + p1)
         elif self.expname == "formulations":
             all.update(parser="ilp-corpus")
             for dataset in datasets:
@@ -274,6 +298,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         else:
             raise Exception("Unknown expname: " + str(self.expname))
                 
+        print "Number of experiments:",len(experiments)
         return experiments
 
     def create_post_processing_script(self, top_dir, exp_tuples):

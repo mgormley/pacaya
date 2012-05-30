@@ -43,11 +43,17 @@ import edu.jhu.hltcoe.util.Utilities;
 public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
     private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
-
+    
+    // Note that these are for minimization whereas the constants in Lazy B&B solver are for maximization
+    private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
+    private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
+    
     private DmvBounds bounds;
     private File tempDir;
     private double workMemMegs;
     private int numThreads;
+    private int maxSimplexIterations;
+    private int maxDwIterations;
     private SentenceCollection sentences;
     private IndexedDmvModel idm;
     private int numLambdas;
@@ -59,24 +65,25 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
     // Stored for re-use by getRegretCm()
     private double[][] optimalLogProbs;
     
-    public DmvDantzigWolfeRelaxationResolution(SentenceCollection sentences, File tempDir) {
-        this.sentences = sentences;
+    public DmvDantzigWolfeRelaxationResolution(File tempDir) {
         this.tempDir = tempDir;
-
-        this.idm = new IndexedDmvModel(sentences);
-        this.bounds = new DmvBounds(this.idm);
         this.projections = new Projections(tempDir);
         
         // TODO: pass these through
         this.numThreads = 1;
         this.workMemMegs = 256;
+        this.maxSimplexIterations = 2100000000;
+        this.maxDwIterations = 1000;
         this.hasInfeasibleBounds = false;
     }
 
-    public void init(DmvSolution initFeasSol) {
+    public void init(SentenceCollection sentences, DmvSolution initFeasSol) {
         try {
-            cplex = new IloCplex();
-            mp = buildModel(cplex, initFeasSol);
+            this.sentences = sentences;
+            this.idm = new IndexedDmvModel(sentences);
+            this.bounds = new DmvBounds(this.idm);
+            this.cplex = new IloCplex();
+            this.mp = buildModel(cplex, initFeasSol);
             // TODO: add the initial feasible solution to cplex object? Does this even make sense?
             setCplexParams(cplex);
         } catch (IloException e) {
@@ -92,29 +99,37 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
     }
 
     public RelaxedDmvSolution solveRelaxation() {
+        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE);
+    }
+    
+    public RelaxedDmvSolution solveRelaxation(double incumbentScore) {
         try {            
-            Status status = runDWAlgo(cplex, mp);
+            // Negate since we're minimizing internally
+            double upperBound = -incumbentScore;
+            Pair<Status,Double> pair = runDWAlgo(cplex, mp, upperBound);
+            Status status = pair.get1();
+            double lowerBound = pair.get2();
             
+            // Negate the objective since we were minimizing 
+            double objective = -lowerBound;
+            assert(!Double.isNaN(objective));
+            // This won't always be true if we are stopping early: 
+            // assert(Utilities.lte(objective, 0.0, 1e-7));
+                        
             if (tempDir != null) {
                 cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
             }
             
             log.info("Solution status: " + status);
-            if (status != Status.Optimal) {
-                // Negate the objective since we were minimizing 
-                return new RelaxedDmvSolution(null, null, null, LazyBranchAndBoundSolver.WORST_SCORE, status);
-            }
+            if (status == Status.Infeasible) {
+                return new RelaxedDmvSolution(null, null, null, objective, status);
+            }            
             if (tempDir != null) {
                 cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
             }
-            log.info("Solution value: " + cplex.getObjValue());
+            log.info("Lower bound: " + lowerBound);
             log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mp.gammaVars.size()));
             
-            // Negate the objective since we were minimizing 
-            double objective = -cplex.getObjValue();
-            assert(!Double.isNaN(objective));
-            assert(Utilities.lte(objective, 0.0, 1e-7));
-
             // Store optimal model parameters
             optimalLogProbs = new double[idm.getNumConds()][];
             for (int i = 0; i < mp.gammaVars.size(); i++) {
@@ -195,7 +210,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             throw new RuntimeException(e);
         }
     }
-
+    
     public double[][] getRegretCm() {
         try {
             // Optimal model parameters \theta_{c,m} are stored in this.logProbs
@@ -277,6 +292,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         // even when we update the problem. This is (hopefully) good enough.
 
         // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
+        cplex.setParam(IntParam.ItLim, maxSimplexIterations);
         
 //        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
 //        cplex.setOut(out);
@@ -536,7 +552,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         // Add the initial feasible parse as the first lambda columns
         for (int s = 0; s < sentences.size(); s++) {
             DepTree tree = initFeasSol.getTreebank().get(s);
-            addLambdaVar(cplex, s, tree);
+            addLambdaVar(s, tree);
         }
         
         // Create the gamma sum to one constraints
@@ -620,7 +636,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
     }
 
-    private boolean addLambdaVar(IloMPModeler cplex, int s, DepTree tree) throws IloException {
+    private boolean addLambdaVar(int s, DepTree tree) throws IloException {
 
         LambdaVar lvTemp = new LambdaVar(null, s, tree.getParents(), null, -1);
         if (mp.lambdaVarSet.contains(lvTemp)) {
@@ -676,17 +692,21 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         return true;
     }
 
-    public Status runDWAlgo(IloCplex cplex, MasterProblem mp) throws UnknownObjectException, IloException {
+    public Pair<Status, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
         if (hasInfeasibleBounds || !areFeasibleBounds(bounds)) {
-            return Status.Infeasible;
+            return new Pair<Status,Double>(Status.Infeasible, INTERNAL_WORST_SCORE);
         }
         
+        Status status = Status.Feasible;
         DmvCkyParser parser = new DmvCkyParser();
-
-        double prevObjVal = Double.POSITIVE_INFINITY;
+        double lowerBound = INTERNAL_BEST_SCORE;
+        TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
+        
+        double prevObjVal = INTERNAL_WORST_SCORE;
+        int dwIter = 0;
 
         // Solve the full D-W problem
-        while (true) {
+        while (dwIter<maxDwIterations) {
             if (tempDir != null) {
                 // TODO: remove this or add a debug flag to the if
                 cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
@@ -694,10 +714,11 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             
             // Solve the master problem
             cplex.solve();
+            dwIter++;
 
             log.trace("Master solution status: " + cplex.getStatus());
             if (cplex.getStatus() == Status.Infeasible) {
-                return cplex.getStatus();
+                return new Pair<Status,Double>(Status.Infeasible, INTERNAL_WORST_SCORE);
             }
             if (tempDir != null) {
                 // TODO: remove this or add a debug flag to the if
@@ -705,11 +726,10 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             }
             double objVal = cplex.getObjValue();
             log.trace("Master solution value: " + objVal);
-            if (objVal > prevObjVal) {
+            if (objVal > prevObjVal + 1e-13) {
                 // throw new
                 // IllegalStateException("Master problem objective should monotonically decrease");
-                log.warn("Master problem objective should monotonically decrease: prev=" + prevObjVal + " cur="
-                        + objVal);
+                log.warn("Master problem objective should monotonically decrease: prev=" + prevObjVal + " cur=" + objVal);
             }
             prevObjVal = objVal;
 
@@ -760,13 +780,16 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             // Get the simplex multipliers (shadow prices) for the gamma 
             double convexGammaPrice = cplex.getDual(mp.gammaSumCons);
             
+            // Keep track of minimum subproblem reduced cost
+            double sumReducedCost = 0.0;
+            
             // Solve the model parameters subproblem
             int numPositiveGammaRedCosts = 0;
             ModelParamSubproblem mps = new ModelParamSubproblem();
             Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeLogProb(modelWeights, bounds);
             if (mPair == null) {
                 hasInfeasibleBounds = true;
-                return Status.Infeasible;
+                return new Pair<Status,Double>(Status.Infeasible, INTERNAL_WORST_SCORE);
             }
             double[][] logProbs = mPair.get1();
             double mReducedCost = mPair.get2() - convexGammaPrice;
@@ -797,6 +820,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                     }
                 }
             }
+            sumReducedCost += mReducedCost;
             
             // Solve each parsing subproblem
             int numPositiveLambdaRedCosts = 0;
@@ -809,13 +833,20 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
                 if (pReducedCost < -5e-8) {
                     // Introduce a new lambda variable
-                    if (addLambdaVar(cplex, s, tree)) {
+                    if (addLambdaVar(s, tree)) {
                         numPositiveLambdaRedCosts++;
                     } else {
                         log.warn(String.format("Duplicate Lambda Var: redCost=%f s=%d tree=%s ", pReducedCost, s, tree
                                 .getParents().toString()));
                     }
                 } // else: do nothing
+                    
+                sumReducedCost += pReducedCost;
+            }
+            lowerBound = objVal + sumReducedCost;
+            iterationLowerBounds.add(lowerBound);
+            if (numPositiveLambdaRedCosts > 0 && sumReducedCost > 1e-6) {
+                log.warn("The sum of the reduced costs should be negative: sumPReducedCost = " + sumReducedCost);
             }
             
             // Check whether to continue
@@ -832,12 +863,26 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 //
 //                    assert(redcost >= 0.0);
 //                }
+                status = Status.Optimal;
+                lowerBound = cplex.getObjValue();
+                break;
+            } else if (lowerBound >= upperBound) {
+                // We can fathom this node
                 break;
             } else {
                 log.debug(String.format("Added %d new trees and %d new gammas", numPositiveLambdaRedCosts, numPositiveGammaRedCosts));
             }
         }
-        return cplex.getStatus();
+
+        log.debug("Final lower bound: " + lowerBound);
+        log.debug("Iteration lower bounds: " + iterationLowerBounds);
+        if (!Utilities.lte(Vectors.max(iterationLowerBounds.toNativeArray()), lowerBound, 1e-6)) {
+            log.warn(String.format(
+                    "The final objective should be the highest lower bound: iterLower = %.13e objVal = %.13e", Vectors
+                            .max(iterationLowerBounds.toNativeArray()), lowerBound));
+        }
+
+        return new Pair<Status,Double>(status, lowerBound);
     }
 
     public void reverseApply(DmvBoundsDelta delta) {
@@ -1013,6 +1058,14 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         
     public void end() {
         cplex.end();
+    }
+
+    public void setMaxSimplexIterations(int maxSimplexIterations) {
+        this.maxSimplexIterations = maxSimplexIterations;
+    }
+
+    public void setMaxDwIterations(int maxDwIterations) {
+        this.maxDwIterations = maxDwIterations;
     }
     
 }

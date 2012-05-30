@@ -7,9 +7,13 @@ import org.apache.commons.cli.ParseException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.FullStrongBranchingDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.RandomDmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.RegretDmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
@@ -57,6 +61,12 @@ public class TrainerFactory {
         options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
         options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
         options.addOption("b", "branch", true, "Branching strategy [full,regret,rand-uniform,rand-weighted]");
+        options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,lp]");
+        options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
+        options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
+        options.addOption("rx", "maxSetSizeToConstrain", true, "(D-W only) The maximum size of sets to contrain to be <= 1.0");
+        options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
+        options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
     }
 
     public static Trainer getTrainer(CommandLine cmd) throws ParseException {
@@ -76,7 +86,13 @@ public class TrainerFactory {
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
         final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
         final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
-        final String branch = Command.getOptionValue(cmd, "branch", "full");
+        final String branch = Command.getOptionValue(cmd, "branch", "regret");
+        final String relaxation = Command.getOptionValue(cmd, "relaxation", "dw");
+        final int maxSimplexIterations = Command.getOptionValue(cmd, "maxSimplexIterations", 2100000000);
+        final int maxDwIterations = Command.getOptionValue(cmd, "maxDwIterations", 1000);
+        final int maxSetSizeToConstrain = Command.getOptionValue(cmd, "maxSetSizeToConstrain", 2);
+        final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
+        final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -146,7 +162,25 @@ public class TrainerFactory {
                 } else {
                     throw new ParseException("Branching strategy not supported: " + branch);
                 }
-                trainer = new BnBDmvTrainer(epsilon, brancher);
+                DmvRelaxation relax;
+                if (relaxation.equals("dw")) {
+                    DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(null, maxCutRounds, new CutCountComputer());
+                    dw.setMaxSimplexIterations(maxSimplexIterations);
+                    dw.setMaxDwIterations(maxDwIterations);
+                    dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
+                    dw.setMinSumForCuts(minSumForCuts);
+                    relax = dw;
+                } else if (relaxation.equals("dw-res")) {
+                    DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(null);
+                    dw.setMaxSimplexIterations(maxSimplexIterations);
+                    dw.setMaxDwIterations(maxDwIterations);
+                    relax = dw;
+                } else if (relaxation.equals("lp")) {
+                    throw new RuntimeException("LP relaxation not yet implemented");
+                } else {
+                    throw new ParseException("Relaxation not supported: " + relaxation);
+                }
+                trainer = new BnBDmvTrainer(epsilon, brancher, relax);
             } else {
                 throw new ParseException("Model not supported: " + modelName);
             }

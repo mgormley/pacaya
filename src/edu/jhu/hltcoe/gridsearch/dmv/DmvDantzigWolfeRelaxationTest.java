@@ -152,7 +152,7 @@ public class DmvDantzigWolfeRelaxationTest {
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.MIN_SUM_FOR_CUT);
+            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.DEFAULT_MIN_SUM_FOR_CUTS);
         }
     }
     
@@ -503,8 +503,8 @@ public class DmvDantzigWolfeRelaxationTest {
                 return numCuts;
             }
         };
-        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(sentences, new File("."), numCuts, ccc);
-        dw.init(initSol);
+        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(new File("."), numCuts, ccc);
+        dw.init(sentences, initSol);
         return dw;
     }
     

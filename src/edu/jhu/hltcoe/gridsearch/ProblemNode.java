@@ -6,6 +6,8 @@ public interface ProblemNode {
 
     double getOptimisticBound();
 
+    double getOptimisticBound(double incumbentScore);
+
     Solution getFeasibleSolution();
 
     List<ProblemNode> branch();

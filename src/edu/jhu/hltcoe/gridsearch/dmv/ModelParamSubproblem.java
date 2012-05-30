@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import cern.colt.matrix.DoubleFactory1D;
 import cern.colt.matrix.DoubleFactory2D;
 import cern.colt.matrix.DoubleMatrix1D;
@@ -24,7 +26,10 @@ import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class ModelParamSubproblem {
+    
+    private static Logger log = Logger.getLogger(ModelParamSubproblem.class);
 
+    
     // Allow for some floating point error in logadd
     static final double MAX_LOG_SUM = 1e-9;
     static final double MIN_MASS_REMAINING = -1e-10;
@@ -142,8 +147,8 @@ public class ModelParamSubproblem {
         // Sum to one constraints
         or.A = F2.make(1, numParams).assign(1.0);
         or.b = F1.make(new double[] { 1 });
-        
-        // optimization
+                
+        // Run optimization
         PrimalDualMethod opt = new PrimalDualMethod();
         opt.setOptimizationRequest(or);
         OptimizationResponse response;
@@ -255,7 +260,7 @@ public class ModelParamSubproblem {
             inequalities[1+numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), -(bounds.getUb(c, m) + 1e-13));
         }
         
-
+        // Run optimization
         OptimizationRequest or = new OptimizationRequest();
         or.f0 = objectiveFunction;
         // TODO: better initialization!!!
@@ -273,6 +278,9 @@ public class ModelParamSubproblem {
         try {
             response = opt.optimize();
         } catch (Exception e) {
+            if (e.getMessage().contains("initial")) {
+                log.error(String.format("sum(initLogProbs) = %e", Vectors.sum(initLogProbs)));
+            }
             throw new RuntimeException(e);
         }
         if(response.returnCode==OptimizationResponse.FAILED){
@@ -284,9 +292,11 @@ public class ModelParamSubproblem {
     }
     
     /**
+     * TODO: remove this is just wrong
      * Solve the minimization subproblem for the model parameters subject to the
      * sum-to-one constraints and the bounds on the variables.
      */
+    @Deprecated
     public static Pair<double[][], Double> solveModelParamSubproblem(double[][] weights, DmvBounds bounds) {
         int numConds = weights.length;
 

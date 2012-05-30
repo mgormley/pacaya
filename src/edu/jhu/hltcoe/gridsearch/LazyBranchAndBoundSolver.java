@@ -85,7 +85,7 @@ public class LazyBranchAndBoundSolver {
             // using its parent's bound
             log.info(String.format("CurrentNode: id=%d depth=%d side=%d", curNode.getId(), curNode.getDepth(), curNode
                     .getSide()));
-            if (curNode.getOptimisticBound() <= incumbentScore) {
+            if (curNode.getOptimisticBound(incumbentScore) <= incumbentScore) {
                 // fathom (i.e. prune) this child node
                 numFathomed++;
                 continue;
