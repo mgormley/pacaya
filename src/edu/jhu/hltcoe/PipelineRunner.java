@@ -103,7 +103,7 @@ public class PipelineRunner {
         printSentences(cmd, depTreebank, sentences);
           
         if (cmd.hasOption("relaxOnly")) {
-            DmvDantzigWolfeRelaxation dw = DmvDantzigWolfeRelaxationTest.getDw(sentences, 100);
+            DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd); 
             DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw);
             Stopwatch timer = new Stopwatch();
             timer.start();
@@ -118,7 +118,7 @@ public class PipelineRunner {
         } else {            
             // Train the model
             log.info("Training model");
-            Trainer trainer = TrainerFactory.getTrainer(cmd);
+            Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd);
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(sentences);

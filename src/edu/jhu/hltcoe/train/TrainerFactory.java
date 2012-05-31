@@ -69,7 +69,7 @@ public class TrainerFactory {
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
     }
 
-    public static Trainer getTrainer(CommandLine cmd) throws ParseException {
+    public static Object getTrainer(CommandLine cmd) throws ParseException {
 
         final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
         final int iterations = Command.getOptionValue(cmd, "iterations", 10);
@@ -93,6 +93,31 @@ public class TrainerFactory {
         final int maxSetSizeToConstrain = Command.getOptionValue(cmd, "maxSetSizeToConstrain", 2);
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
+        
+
+        DmvRelaxation relax = null;
+        if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb")) {
+            if (relaxation.equals("dw")) {
+                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(null, maxCutRounds, new CutCountComputer());
+                dw.setMaxSimplexIterations(maxSimplexIterations);
+                dw.setMaxDwIterations(maxDwIterations);
+                dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
+                dw.setMinSumForCuts(minSumForCuts);
+                relax = dw;
+            } else if (relaxation.equals("dw-res")) {
+                DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(null);
+                dw.setMaxSimplexIterations(maxSimplexIterations);
+                dw.setMaxDwIterations(maxDwIterations);
+                relax = dw;
+            } else if (relaxation.equals("lp")) {
+                throw new RuntimeException("LP relaxation not yet implemented");
+            } else {
+                throw new ParseException("Relaxation not supported: " + relaxation);
+            }
+            if (cmd.hasOption("relaxOnly")) {
+                return relax;
+            }
+        }
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
@@ -161,24 +186,6 @@ public class TrainerFactory {
                     brancher = new RandomDmvBoundsDeltaFactory(false);
                 } else {
                     throw new ParseException("Branching strategy not supported: " + branch);
-                }
-                DmvRelaxation relax;
-                if (relaxation.equals("dw")) {
-                    DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(null, maxCutRounds, new CutCountComputer());
-                    dw.setMaxSimplexIterations(maxSimplexIterations);
-                    dw.setMaxDwIterations(maxDwIterations);
-                    dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
-                    dw.setMinSumForCuts(minSumForCuts);
-                    relax = dw;
-                } else if (relaxation.equals("dw-res")) {
-                    DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(null);
-                    dw.setMaxSimplexIterations(maxSimplexIterations);
-                    dw.setMaxDwIterations(maxDwIterations);
-                    relax = dw;
-                } else if (relaxation.equals("lp")) {
-                    throw new RuntimeException("LP relaxation not yet implemented");
-                } else {
-                    throw new ParseException("Relaxation not supported: " + relaxation);
                 }
                 trainer = new BnBDmvTrainer(epsilon, brancher, relax);
             } else {

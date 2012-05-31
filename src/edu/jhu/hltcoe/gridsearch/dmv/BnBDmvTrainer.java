@@ -19,11 +19,11 @@ public class BnBDmvTrainer implements Trainer {
     private DmvRelaxation relax;
     
     public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher) {
-        this(epsilon, brancher, null, null);
+        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), null);
     }
     
     public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, File tempDir) {
-        this(epsilon, brancher, null, tempDir);
+        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), tempDir);
     }
     
     public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax) {
@@ -34,9 +34,6 @@ public class BnBDmvTrainer implements Trainer {
         this.epsilon = epsilon; 
         this.bnbSolver = new LazyBranchAndBoundSolver();
         this.brancher = brancher;
-        if (relax == null) {
-            relax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        }
         this.relax = relax;
         this.tempDir = tempDir;
     }
