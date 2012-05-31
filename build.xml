@@ -55,6 +55,11 @@
     	<include name="*.parm"/>
       </fileset>
     </copy>
+    <copy todir="${build.path}">
+      <fileset dir="${source.path}">
+    	<include name="*.properties"/>
+      </fileset>
+    </copy>
   </target>
   
   <target name="compile" depends="classpath,build-dir,resources"
