@@ -104,6 +104,7 @@ public class PipelineRunner {
           
         if (cmd.hasOption("relaxOnly")) {
             DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd); 
+            dw.init(sentences, DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences));
             DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw);
             Stopwatch timer = new Stopwatch();
             timer.start();
@@ -151,7 +152,7 @@ public class PipelineRunner {
     private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
-            IndexedDmvModel idm = new IndexedDmvModel(sentences);
+            IndexedDmvModel idm = dw.getIdm();
 
             DmvSolution initBoundsSol;
             if (opt == InitSol.VITERBI_EM) {
