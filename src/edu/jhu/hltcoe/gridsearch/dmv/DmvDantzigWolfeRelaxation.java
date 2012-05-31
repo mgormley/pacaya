@@ -604,9 +604,10 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
         
         double prevObjVal = INTERNAL_WORST_SCORE;
+        int cut;
         int dwIter = 0;
         // Outer loop runs D-W and then adds cuts for sum-to-one constraints
-        for (int cut=0; cut<maxCutRounds; cut++) {
+        for (cut=0; cut<maxCutRounds && dwIter<maxDwIterations; cut++) {
 
             // Solve the full D-W problem
             while (dwIter<maxDwIterations) {
@@ -712,7 +713,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
             // Don't add more cuts after the final solution is found.
             // If we don't break here, we would need to cache the solution first.
-            if (cut == maxCutRounds -1) {
+            if (cut >= maxCutRounds - 1 || dwIter >= maxDwIterations) {
                 break;
             }
 
@@ -740,6 +741,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             }
         }
 
+        log.debug("Number of cut rounds: " + cut);
+        log.debug("Number of DW iterations: " + dwIter);
         log.debug("Final lower bound: " + lowerBound);
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
         if (!Utilities.lte(Vectors.max(iterationLowerBounds.toNativeArray()), lowerBound, 1e-6)) {

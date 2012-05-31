@@ -136,7 +136,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         all.set("expname", self.expname, False, False)
         all.update(threads=self.threads)
         all.update(formulation="deptree-flow-nonproj",
-                   parser="ilp-corpus",
+                   parser="cky",
                    model="dmv",
                    algorithm="viterbi",
                    ilpSolver="cplex",
@@ -176,7 +176,16 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         else:               datasets = [brown_full]
         
         experiments = []
-        if self.expname == "bnb":
+        if self.expname == "nips12":
+            for dataset in datasets:
+                for maxSentenceLength in [3,5]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [10,100]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        for algorithm in ["viterbi", "bnb"]:
+                            for branch in ["regret"]:
+                                experiments.append(all + dataset + msl + mns + DPExpParams(algorithm=algorithm, branch=branch))
+        elif self.expname == "bnb":
             all.update(algorithm="bnb")
             for dataset in datasets:
                 for maxSentenceLength in [3,5]:
@@ -185,7 +194,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch))
-        if self.expname == "bnb-hprof":
+        elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
                 for maxSentenceLength in [3,5]:
@@ -238,22 +247,23 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [300]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for initBounds in ["viterbi-em", "random"]: # TODO: "gold"
+                        for initBounds in ["random"]: # TODO: "gold"
                             for offsetProb in frange(10e-13, 1.001,0.2):
                                 #for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                 for relaxation in ["dw", "dw-res"]:
-                                    for maxDwIterations in [1,2,10,100]:
-                                        for maxSimplexIterations in [10,100,1000,10000]:
-                                            for maxSetSizeToConstrain in [0,2,3,4]:
-                                                for minSumForCuts in [1.001, 1.01, 1.1, 1.5]:
-                                                    p1 = DPExpParams(initBounds=initBounds,offsetProb=offsetProb)
-                                                    #p1.update(probOfSkipCm=probOfSkipCm)
-                                                    p1.update(relaxation=relaxation, maxDwIterations=maxDwIterations, maxSimplexIterations=maxSimplexIterations)
-                                                    p1.update(maxSetSizeToConstrain=maxSetSizeToConstrain, minSumForCuts=minSumForCuts)
-                                                    if (relaxation != "dw" and maxSetSizeToConstrain > 0 and minSumForCuts > 1.001):
-                                                        pass
-                                                    else:
-                                                        experiments.append(all + dataset + msl + mns + p1)
+                                    for maxDwIterations in [1,10,100]:
+                                        for maxSimplexIterations in [10,100,1000]:
+                                            for maxSetSizeToConstrain in [0,2,3]:
+                                                for minSumForCuts in [1.001, 1.01, 1.1]:
+                                                    for maxCutRounds in [1,10,100]:
+                                                        p1 = DPExpParams(initBounds=initBounds,offsetProb=offsetProb)
+                                                        #p1.update(probOfSkipCm=probOfSkipCm)
+                                                        p1.update(relaxation=relaxation, maxDwIterations=maxDwIterations, maxSimplexIterations=maxSimplexIterations)
+                                                        p1.update(maxSetSizeToConstrain=maxSetSizeToConstrain, minSumForCuts=minSumForCuts, maxCutRounds=maxCutRounds)
+                                                        if (relaxation != "dw" and maxSetSizeToConstrain > 0 and minSumForCuts > 1.001 and maxCutRounds > 1):
+                                                            pass
+                                                        else:
+                                                            experiments.append(all + dataset + msl + mns + p1)
         elif self.expname == "formulations":
             all.update(parser="ilp-corpus")
             for dataset in datasets:

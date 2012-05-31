@@ -874,6 +874,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             }
         }
 
+        log.debug("Number of DW iterations: " + dwIter);
         log.debug("Final lower bound: " + lowerBound);
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
         if (!Utilities.lte(Vectors.max(iterationLowerBounds.toNativeArray()), lowerBound, 1e-6)) {
