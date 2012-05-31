@@ -109,7 +109,7 @@ public class PipelineRunner {
             timer.start();
             RelaxedDmvSolution relaxSol = dw.solveRelaxation();
             timer.stop();
-            log.info(Time.totMs(timer));
+            log.info("relaxTime(ms): " + Time.totMs(timer));
             log.info("relaxBound: " + relaxSol.getScore());
             if (initBoundsSol != null) {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
