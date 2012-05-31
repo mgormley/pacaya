@@ -185,6 +185,15 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch))
+        if self.expname == "bnb-hprof":
+            all.update(algorithm="bnb")
+            for dataset in datasets:
+                for maxSentenceLength in [3,5]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [10,100]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
+                            experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch) + HProfCpuExpParams())
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
@@ -199,7 +208,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                     for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                         experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
         elif self.expname == "relax-percent-pruned":
-            all.update(relaxOnly=None)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -209,10 +217,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for i in range(0,100):
                             for initBounds in ["random"]:
                                 for offsetProb in frange(10e-13, 1.001,0.05):
-                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(64)))
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=None))
         elif self.expname == "relax-quality":
             # Fixed seed
-            all.update(relaxOnly=None, seed=112233)
+            all.update(seed=112233)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -221,7 +229,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for initBounds in ["viterbi-em", "random", "uniform"]: # TODO: "gold"
                             for offsetProb in frange(10e-13, 1.001,0.05):
                                 for probOfSkipCm in frange(0.0, 0.2, 0.05):
-                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm))
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm, relaxOnly=None))
         elif self.expname == "relax-compare":
             # Fixed seed
             all.update(relaxOnly=None, seed=112233)

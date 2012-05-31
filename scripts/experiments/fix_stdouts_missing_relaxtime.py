@@ -8,6 +8,7 @@ import math
 import tempfile
 import stat
 import subprocess
+import string
 from optparse import OptionParser
 from experiments.run_experiments import DPExpParams
 from glob import glob
@@ -32,35 +33,24 @@ class DPScraper(Scraper):
     def scrape_exp(self, exp, exp_dir, stdout_file):
         if not os.path.exists(stdout_file):
             return
+
+        stdout_file_bak = stdout_file + ".bak"
+        os.system("cp %s %s" % (stdout_file, stdout_file_bak))
+        stdout_lines = self.read_stdout_lines(stdout_file_bak)
         
-        stdout_lines = self.read_stdout_lines(stdout_file)
-        
-        _, _, elapsed = get_time(stdout_lines)
-        exp.update(elapsed = elapsed)
-        
-        numWords = to_int(get_following(stdout_lines, "Number of tokens: ", -1))
-        exp.update(numWords = numWords)
-        
-        if "relaxOnly" in exp.keys():
-            exp.update(relaxBound = get_following(stdout_lines, "relaxTime(ms): ", -1))
-            exp.update(relaxBound = get_following(stdout_lines, "relaxBound: ", -1))
-            exp.update(relative = get_following(stdout_lines, "relative: ", -1))
-        else:
-            exp.update(accuracy = get_following(stdout_lines, "Accuracy: ", -1))
-            exp.update(logLikelihood = get_following(stdout_lines, "LogLikelihood: ", -1))
-            exp.update(timeRemaining = get_following(stdout_lines, "Time remaining: ", -1))
-        
-        if exp.get("expname") == "corpus-size":
-            tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
-            tot_parse_times = map(float, tot_parse_times)
-            if len(tot_parse_times) > 1:
-                exp.update(totalParseTimeFirst = tot_parse_times[0])
-                exp.update(totalParseTimeLast = tot_parse_times[-1])
-                exp.update(avgPerWordParseTimeFirst = tot_parse_times[0]/numWords)
-                exp.update(avgPerWordParseTimeLast = tot_parse_times[-1]/numWords)
-            elif len(tot_parse_times) > 0:
-                exp.update(totalParseTime = tot_parse_times[0])
-                exp.update(avgPerWordParseTime = tot_parse_times[0]/numWords)
+        ilist = range(0,len(stdout_lines))
+        ilist.reverse()
+        for i in ilist:
+            if stdout_lines[i].find("PipelineRunner  - relaxBound:") != -1:
+                line = stdout_lines[i-1]
+                line = line.replace("edu.jhu.hltcoe.PipelineRunner  - ", "edu.jhu.hltcoe.PipelineRunner  - relaxTime(ms): ")
+                stdout_lines[i-1] = line
+                break
+
+        out = open(stdout_file, "w")
+        for line in stdout_lines:
+            out.write(line)
+        out.close()
          
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
