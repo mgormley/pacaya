@@ -151,7 +151,7 @@ public class PipelineRunner {
     private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
-            IndexedDmvModel idm = dw.getIdm();
+            IndexedDmvModel idm = new IndexedDmvModel(sentences);
 
             DmvSolution initBoundsSol;
             if (opt == InitSol.VITERBI_EM) {
