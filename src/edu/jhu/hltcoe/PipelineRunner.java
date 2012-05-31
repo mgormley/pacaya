@@ -13,6 +13,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.FileMapTagReducer;
@@ -47,6 +48,7 @@ import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Time;
 
 public class PipelineRunner {
 
@@ -103,8 +105,11 @@ public class PipelineRunner {
         if (cmd.hasOption("relaxOnly")) {
             DmvDantzigWolfeRelaxation dw = DmvDantzigWolfeRelaxationTest.getDw(sentences, 100);
             DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw);
+            Stopwatch timer = new Stopwatch();
+            timer.start();
             RelaxedDmvSolution relaxSol = dw.solveRelaxation();
-            
+            timer.stop();
+            log.info(Time.totMs(timer));
             log.info("relaxBound: " + relaxSol.getScore());
             if (initBoundsSol != null) {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
