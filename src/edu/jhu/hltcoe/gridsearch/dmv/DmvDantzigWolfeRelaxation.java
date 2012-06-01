@@ -136,9 +136,10 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             }
             
             log.info("Solution status: " + status);
-            if (status == Status.Infeasible) {
+            if (!(status == Status.Optimal || status == Status.Feasible)) {
                 return new RelaxedDmvSolution(null, null, null, objective, status);
             }
+            
             if (tempDir != null) {
                 cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
             }
@@ -536,7 +537,6 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         }
     }
 
-
     private boolean addLambdaVar(int s, DepTree tree) throws IloException {
 
         LambdaVar lvTemp = new LambdaVar(null, s, tree.getParents(), null, -1);
@@ -598,146 +598,148 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             return new Pair<Status,Double>(Status.Infeasible, INTERNAL_WORST_SCORE);
         }
         
-        Status status = Status.Feasible;
+        Status status = Status.Unknown;
         DmvCkyParser parser = new DmvCkyParser();
         double lowerBound = INTERNAL_BEST_SCORE;
         TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
         
         double prevObjVal = INTERNAL_WORST_SCORE;
         int cut;
-        int dwIter = 0;
-        // Outer loop runs D-W and then adds cuts for sum-to-one constraints
-        for (cut=0; cut<maxCutRounds && dwIter<maxDwIterations; cut++) {
-
-            // Solve the full D-W problem
-            while (dwIter<maxDwIterations) {
-                if (tempDir != null) {
-                    // TODO: remove this or add a debug flag to the if
-                    cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
-                }
-                
-                // Solve the master problem
-                cplex.solve();
-                dwIter++;
-                
-                log.trace("Master solution status: " + cplex.getStatus());
-                if (cplex.getStatus() == Status.Infeasible) {
-                    return new Pair<Status,Double>(Status.Infeasible, INTERNAL_WORST_SCORE);
-                }
-                if (tempDir != null) {
-                    // TODO: remove this or add a debug flag to the if
-                    cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
-                }
-                double objVal = cplex.getObjValue();
-                log.trace("Master solution value: " + objVal);
-                if (objVal > prevObjVal + 1e-13) {
-                    // throw new
-                    // IllegalStateException("Master problem objective should monotonically decrease");
-                    log.warn("Master problem objective should monotonically decrease: prev=" + prevObjVal + " cur=" + objVal);
-                }
-                prevObjVal = objVal;
-                                
-                // Get the simplex multipliers (shadow prices).
-                // These are shared across all slaves, since each slave
-                // has the same D_s matrix. 
-                double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
-                double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
+        int dwIter;
+        // Solve the full D-W problem
+        for (dwIter = 0, cut = 0; ; dwIter++) {
+            if (tempDir != null) {
+                // TODO: remove this or add a debug flag to the if
+                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
+            }
             
-                // Compute the parse weights, which will be shared across all subproblems
-                int numConds = idm.getNumConds();
-                double[][] parseWeights = new double[numConds][];
-                int j = 0;
-                for (int c = 0; c < numConds; c++) {
-                    int numParams = idm.getNumParams(c);
-                    parseWeights[c] = new double[numParams];
-                    
-                    for (int m=0; m<numParams; m++) {
-                        // Calculate new model parameter values for parser
-                        // based on the relaxed-objective-coupling-constraints
-                        parseWeights[c][m] = (pricesLower[j]*bounds.getLb(c,m) + pricesUpper[j]*bounds.getUb(c,m));
-                        j++;
-                        // We want to minimize the following:
-                        // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
-                        // but we negate this since the parser will try to maximize. In other words:
-                        // minimize -q^T D_s = maximize q^T D_s
-                        // 
-                    }
-                }
-                DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
+            // Solve the master problem
+            cplex.solve();
+            status = cplex.getStatus(); 
+            
+            log.trace("Master solution status: " + cplex.getStatus());
+            if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded) {
+                lowerBound = INTERNAL_WORST_SCORE;
+                return new Pair<Status,Double>(status, lowerBound);
+            }
+            if (dwIter>=maxDwIterations) {
+                // TODO: this returns Optimal status in cases where it's not
+                break;
+            }
+            if (tempDir != null) {
+                // TODO: remove this or add a debug flag to the if
+                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
+            }
+            double objVal = cplex.getObjValue();
+            log.trace("Master solution value: " + objVal);
+            if (objVal > prevObjVal + 1e-13) {
+                // throw new
+                // IllegalStateException("Master problem objective should monotonically decrease");
+                log.warn("Master problem objective should monotonically decrease: prev=" + prevObjVal + " cur=" + objVal);
+            }
+            prevObjVal = objVal;
 
-                // Get the simplex multipliers (shadow prices) for the lambda sentence constraints
-                double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
-                
-                // Keep track of minimum subproblem reduced cost
-                double sumReducedCost = 0.0;
-                
-                // Solve each parsing subproblem
-                int numPositiveLambdaRedCosts = 0;
-                for (int s = 0; s < sentences.size(); s++) {
-        
-                    Pair<DepTree, Double> pPair = parser.parse(sentences.get(s), dpm);
-                    DepTree tree = pPair.get1();
-                    // We must negate pair.get2() since we were just maximizing
-                    double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
+            // Get the simplex multipliers (shadow prices).
+            // These are shared across all slaves, since each slave
+            // has the same D_s matrix.
+            double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
+            double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
+            
+            // Compute the parse weights, which will be shared across all subproblems
+            int numConds = idm.getNumConds();
+            double[][] parseWeights = new double[numConds][];
+            int j = 0;
+            for (int c = 0; c < numConds; c++) {
+                int numParams = idm.getNumParams(c);
+                parseWeights[c] = new double[numParams];
+
+                for (int m = 0; m < numParams; m++) {
+                    // Calculate new model parameter values for parser
+                    // based on the relaxed-objective-coupling-constraints
+                    parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
+                    j++;
+                    // We want to minimize the following:
+                    // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
+                    // but we negate this since the parser will try to maximize. In other words:
+                    // minimize -q^T D_s = maximize q^T D_s
+                    // 
+                }
+            }
+            DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
+
+            // Get the simplex multipliers (shadow prices) for the lambda sentence constraints
+            double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
+            
+            // Keep track of minimum subproblem reduced cost
+            double sumReducedCost = 0.0;
+            
+            // Solve each parsing subproblem
+            int numPositiveLambdaRedCosts = 0;
+            for (int s = 0; s < sentences.size(); s++) {
     
-                    if (pReducedCost < -5e-8) {
-                        // Introduce a new lambda variable
-                        if (addLambdaVar(s, tree)) {
-                            numPositiveLambdaRedCosts++;
-                        } else {
+                Pair<DepTree, Double> pPair = parser.parse(sentences.get(s), dpm);
+                DepTree tree = pPair.get1();
+                // We must negate pair.get2() since we were just maximizing
+                double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
+
+                if (pReducedCost < -5e-8) {
+                    // Introduce a new lambda variable
+                    if (addLambdaVar(s, tree)) {
+                        numPositiveLambdaRedCosts++;
+                    } else {
                         log.warn(String.format("Duplicate Lambda Var: redCost=%f s=%d tree=%s ", pReducedCost, s, tree
                                 .getParents().toString()));
-                        }
-                    } // else: do nothing
-                    
-                    sumReducedCost += pReducedCost;
-                }
-                lowerBound = objVal + sumReducedCost;
-                iterationLowerBounds.add(lowerBound);
-                if (numPositiveLambdaRedCosts > 0 && sumReducedCost > 1e-6) {
-                    log.warn("The sum of the reduced costs should be negative: sumPReducedCost = " + sumReducedCost);
-                }
+                    }
+                } // else: do nothing
                 
-                if (numPositiveLambdaRedCosts == 0) {
-                    // Optimal solution found
-                    status = Status.Optimal;
-                    lowerBound = cplex.getObjValue();
-                    break;
-                } else if (lowerBound >= upperBound) {
-                    // We can fathom this node
-                    break;
+                sumReducedCost += pReducedCost;
+            }
+            lowerBound = objVal + sumReducedCost;
+            iterationLowerBounds.add(lowerBound);
+            if (numPositiveLambdaRedCosts > 0 && sumReducedCost > 1e-6) {
+                log.warn("The sum of the reduced costs should be negative: sumPReducedCost = " + sumReducedCost);
+            }
+            
+            // Check whether to continue
+            if (lowerBound >= upperBound) {
+                // We can fathom this node
+                break;
+            } else if (numPositiveLambdaRedCosts == 0) {
+                // Optimal solution found
+                lowerBound = cplex.getObjValue();
+                
+                if (cut < maxCutRounds) {
+                    // Add a cut for each distribution by projecting the model
+                    // parameters
+                    // back onto the simplex.
+                    double[][] params = new double[idm.getNumConds()][];
+                    for (int c = 0; c < idm.getNumConds(); c++) {
+                        // Here the params are log probs
+                        params[c] = cplex.getValues(mp.modelParamVars[c]);
+                    }
+                    int numNewStoConstraints = 0;
+                    for (int c = 0; c < idm.getNumConds(); c++) {
+                        Vectors.exp(params[c]);
+                        // Here the params are probs
+                        if (Vectors.sum(params[c]) > minSumForCuts) {
+                            numNewStoConstraints++;
+                            addSumToOneConstraint(c, params[c]);
+                        }
+                    }
+                    if (numNewStoConstraints == 0) {
+                        // No new cuts are needed
+                        log.debug("No more cut rounds needed after " + cut + " rounds");
+                        break;
+                    }
+                    log.debug("Added cuts " + numNewStoConstraints + ", round " + cut);
+                    cut++;
                 } else {
-                    log.debug("Added " + numPositiveLambdaRedCosts + " new trees");
+                    // Optimal solution found and no more cut rounds left
+                    break;
                 }
-            }
-
-            // Don't add more cuts after the final solution is found.
-            // If we don't break here, we would need to cache the solution first.
-            if (cut >= maxCutRounds - 1 || dwIter >= maxDwIterations) {
-                break;
-            }
-
-            // Add a cut for each distribution by projecting the model parameters
-            // back onto the simplex.
-            double[][] params = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                // Here the params are log probs
-                params[c] = cplex.getValues(mp.modelParamVars[c]);
-            }
-            int numNewStoConstraints = 0;
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                Vectors.exp(params[c]);
-                // Here the params are probs
-                if (Vectors.sum(params[c]) > minSumForCuts) {
-                    numNewStoConstraints++;
-                    addSumToOneConstraint(c, params[c]);
-                }
-            }
-            if (numNewStoConstraints == 0) {
-                log.debug("No more cut rounds needed after " + cut + " rounds");
-                break;
             } else {
-                log.debug("Adding cuts " + numNewStoConstraints + ", round " + cut);
+                // Non-optimal solution, continuing
+                log.debug("Added " + numPositiveLambdaRedCosts + " new trees");
             }
         }
 
