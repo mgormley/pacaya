@@ -50,6 +50,9 @@ public class Sets {
     }
 
     public static List<int[]> getSets(int setSize, int numParams) {
+        if (setSize > numParams) {
+            throw new IllegalArgumentException("sizeSize must be <= numParams");
+        }
         List<HashSet<Integer>> hss = getSetsHelper(setSize, numParams);
         List<int[]> sets = new ArrayList<int[]>(hss.size());
         for (HashSet<Integer> set : hss) {

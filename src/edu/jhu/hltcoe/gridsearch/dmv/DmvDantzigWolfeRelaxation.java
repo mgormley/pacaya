@@ -523,6 +523,10 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         
         int numParams = idm.getNumParams(c);
         int counter = 0;
+        
+        // Make sure setSize isn't larger than numParams
+        setSize = Math.min(setSize,numParams);
+        
         for (int[] paramIndices : Sets.getSets(setSize, numParams)) {
             assert(paramIndices.length == setSize);
             IloNumVar[] paramVars = new IloNumVar[setSize]; 
