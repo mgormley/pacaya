@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.train;
 
+import java.io.File;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -67,6 +69,7 @@ public class TrainerFactory {
         options.addOption("rx", "maxSetSizeToConstrain", true, "(D-W only) The maximum size of sets to contrain to be <= 1.0");
         options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
+        options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
     }
 
     public static Object getTrainer(CommandLine cmd) throws ParseException {
@@ -93,19 +96,21 @@ public class TrainerFactory {
         final int maxSetSizeToConstrain = Command.getOptionValue(cmd, "maxSetSizeToConstrain", 2);
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
-        
+        final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
+
 
         DmvRelaxation relax = null;
         if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb")) {
+            File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
             if (relaxation.equals("dw")) {
-                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(null, maxCutRounds, new CutCountComputer());
+                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(dwTemp, maxCutRounds, new CutCountComputer());
                 dw.setMaxSimplexIterations(maxSimplexIterations);
                 dw.setMaxDwIterations(maxDwIterations);
                 dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
                 dw.setMinSumForCuts(minSumForCuts);
                 relax = dw;
             } else if (relaxation.equals("dw-res")) {
-                DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(null);
+                DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(dwTemp);
                 dw.setMaxSimplexIterations(maxSimplexIterations);
                 dw.setMaxDwIterations(maxDwIterations);
                 relax = dw;
