@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.hltcoe.util.Utilities;
 
 
 public class ProjectionsTest {
@@ -23,42 +24,122 @@ public class ProjectionsTest {
     }
     
     @Test
-    public void testProjsplx() {
-        testParams(new double[]{0.1, 1.7, 0.3});
-        testParams(new double[]{0.2, 0.1, 0.3});
-        testParams(new double[]{14.2, 10.1, 17.3});
+    public void testUnboundedProjection() {
+        validateUnboundedProjection(new double[]{0.1, 1.7, 0.3});
+        validateUnboundedProjection(new double[]{0.2, 0.1, 0.3});
+        validateUnboundedProjection(new double[]{14.2, 10.1, 17.3});
     }
 
-    private void testParams(double[] y) {
-        double[] x = Projections.getProjectedParams(y);        
+    private void validateUnboundedProjection(double[] params) {
+        double[] x = Projections.getProjectedParams(params);        
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
     }
     
     @Test
-    public void testCplexProjection() throws Exception {
-        testParams2(new double[][]{{0.1, 1.7, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
-        testParams2(new double[][]{{0.2, 0.1, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
-        testParams2(new double[][]{{14.2, 10.1, 17.3}, {0.1, 0.2, 0.3}, {0.8, 0.7, 0.6}});
+    public void testBoundedProjection() throws Exception {
+        validateBoundedProjection(new double[][]{{0.1, 1.7, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
+        validateBoundedProjection(new double[][]{{0.2, 0.1, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
+        validateBoundedProjection(new double[][]{{14.2, 10.1, 17.3}, {0.1, 0.2, 0.3}, {0.8, 0.7, 0.6}});
+        
+        // Test that equal upper/lower bounds work
+        validateBoundedProjection(new double[][]{{1.0, 1.0, 1.0}, {0.5, 0.5, 0.0}, {0.5, 0.5, 0.0}});
     }
     
-    public void testParams2(double[][] all) throws Exception {
-        testParams2(all[0], all[1], all[2]);
+    public void validateBoundedProjection(double[][] all) throws Exception {
+        validateBoundedProjection(all[0], all[1], all[2]);
     }
 
-    private void testParams2(double[] y, double[] lbs, double[] ubs) throws Exception {
-        double[] x = projections.getProjectedParams(y, lbs, ubs);        
+    private void validateBoundedProjection(double[] params, double[] lbs, double[] ubs) throws Exception {
+        double[] x = projections.getProjectedParams(params, lbs, ubs);        
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         
-        for (int m=0; m<y.length; m++) {
+        for (int m=0; m<params.length; m++) {
             Assert.assertTrue(lbs[m] <= x[m]);
             Assert.assertTrue(x[m] <= ubs[m]);
         }
     }
     
     @Test
-    public void testProjectiveParse() {
+    public void testLogBoundedProjection() throws Exception {
+        validateLogBoundedProjection(new double[][]{{0.1, 1.7, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
+        validateLogBoundedProjection(new double[][]{{0.2, 0.1, 0.3}, {0.2, 0.2, 0.2}, {0.8, 0.8, 0.8}});
+        validateLogBoundedProjection(new double[][]{{14.2, 10.1, 17.3}, {0.1, 0.2, 0.3}, {0.8, 0.7, 0.6}});
+        
+        // Test that equal upper/lower bounds work
+        validateLogBoundedProjection(new double[][]{{1.0, 1.0, 1.0}, {0.5, 0.5, 0.0}, {0.5, 0.5, 0.0}});
+    }
+
+    public void validateLogBoundedProjection(double[][] all) throws Exception {
+        validateLogBoundedProjection(all[0], all[1], all[2]);
+    }
+
+    private void validateLogBoundedProjection(double[] params, double[] lbs, double[] ubs) throws Exception {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("N V N Adj");
+        sentences.addSentenceFromString("N N V Adj");
+        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        DmvBounds logBounds = new DmvBounds(idm);
+        Assert.assertEquals(lbs.length, ubs.length);
+        int c = 0;
+        for (int m=0; m<lbs.length; m++) {
+            logBounds.set(c, m, Utilities.log(lbs[m]), Utilities.log(ubs[m]));
+        }
+        
+        double[] x = projections.getProjectedParams(logBounds, c, params);
+        System.out.println(Arrays.toString(x));
+        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        
+        for (int m=0; m<params.length; m++) {
+            Assert.assertTrue(lbs[m] <= x[m]);
+            Assert.assertTrue(x[m] <= ubs[m]);
+        }
+    }
+
+    @Test
+    public void testLogBoundedProjectionWithRealValues() throws Exception {
+        double[] params = new double[] { 0.9067065073041163, 3.3200531208499307E-4, 3.3200531208499307E-4,
+                3.3200531208499307E-4, 3.3200531208499307E-4, 3.3200531208499307E-4, 3.3200531208499307E-4,
+                3.3200531208499307E-4, 3.3200531208499307E-4, 3.3200531208499307E-4, 0.08997343957503312,
+                3.3200531208499307E-4 };
+
+        double[] lbs = new double[] { 1.000000000000001E-12, 1.000000000000001E-12, 1.000000000000001E-12,
+                1.000000000000001E-12, 1.000000000000001E-12, 1.000000000000001E-12, 1.000000000000001E-12,
+                1.000000000000001E-12, 1.000000000000001E-12, 1.000000000000001E-12, 1.000000000000001E-12,
+                1.000000000000001E-12 };
+        
+        double[] ubs = new double[] {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+
+        // Part 1
+        validateBoundedProjection(params, lbs, ubs);
+        
+        // Part 2
+        SentenceCollection sentences = new SentenceCollection();
+        StringBuilder fakeSentence = new StringBuilder();
+        for (int i = 0; i < params.length; i++) {
+            fakeSentence.append(String.valueOf(i));
+            if (i < params.length - 1) {
+                fakeSentence.append(" ");
+            }
+        }
+        sentences.addSentenceFromString(fakeSentence.toString());
+        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        DmvBounds logBounds = new DmvBounds(idm);
+        
+        int c = 0;
+        double[] x = projections.getProjectedParams(logBounds, c, params);
+        System.out.println(Arrays.toString(x));
+        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        
+        for (int m=0; m<params.length; m++) {
+            Assert.assertTrue(Utilities.exp(logBounds.getLb(c, m)) <= x[m]);
+            Assert.assertTrue(x[m] <= Utilities.exp(logBounds.getUb(c, m)));
+        }
+    }
+    
+    @Test
+    public void testGetProjectiveParse() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate hat");
         double[] fracRoot = new double[]{0.3, 0.6, 0.1};
@@ -67,6 +148,5 @@ public class ProjectionsTest {
         System.out.println(t);
         JUnitUtils.assertArrayEquals(new int[]{1,-1,1}, t.getParents());
     }
-    
     
 }
