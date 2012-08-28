@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
+import ilog.cplex.CpxException;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
@@ -129,10 +130,16 @@ public class Projections {
         if (tempDir != null) {
             cplex.exportModel(new File(tempDir, "proj.lp").getAbsolutePath());
         }
-        
-        if (!cplex.solve()) {
-            // throw new RuntimeException("projection infeasible");
-            return null;
+        try {
+            if (!cplex.solve()) {
+                // throw new RuntimeException("projection infeasible");
+                return null;
+            }
+        } catch (CpxException e) {
+            log.error("params: " + Arrays.toString(params));
+            log.error("lbs: " + Arrays.toString(lbs));
+            log.error("ubs: " + Arrays.toString(ubs));
+            throw e;
         }
 
         double[] values = cplex.getValues(newParamVars);
