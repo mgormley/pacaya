@@ -495,7 +495,6 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
     }
 
     private void addSumToOneConstraint(int c, double[] point) throws IloException {
-        
         // TODO: should this respect the bounds?
         //double[] probs = projections.getProjectedParams(bounds, c, point);
         double[] probs = Projections.getProjectedParams(point);
