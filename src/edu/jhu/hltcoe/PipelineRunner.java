@@ -116,7 +116,7 @@ public class PipelineRunner {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
             //TODO: log.info("containsGoldSol: " + containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
-        } else {            
+        } else {
             // Train the model
             log.info("Training model");
             Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd);
