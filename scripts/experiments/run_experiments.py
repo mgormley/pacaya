@@ -62,7 +62,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
     def get_java_args(self, eprunner):
         # Allot the available memory to the JVM, ILP solver, and ZIMPL
         total_work_mem_megs = eprunner.work_mem_megs
-        if (eprunner.queue != None):
+        if (self.get("parser").startswith("ilp-")):
             zimpl_mem = int(total_work_mem_megs * 0.5)
         else:
             zimpl_mem = 0
