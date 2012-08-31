@@ -224,7 +224,8 @@ public class IndexedDmvModelTest {
         DepTreebank treebank = trainer.getCounts();
         
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 2, new CutCountComputer());
-
+        dwRelax.setSentences(sentences);
+        
         IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);
         DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);

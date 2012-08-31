@@ -1,7 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import ilog.cplex.IloCplex.Status;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,7 +16,6 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -67,6 +64,7 @@ public class DmvProblemNode implements ProblemNode {
     public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax, File tempDir) {
         this.sentences = sentences;
         this.dwRelax = dwRelax;
+        this.dwRelax.setSentences(sentences);
         // Save and use this solution as the first incumbent
         this.initFeasSol = getInitFeasSol(sentences);
         log.info("Initial solution score: " + initFeasSol.getScore());
@@ -77,7 +75,7 @@ public class DmvProblemNode implements ProblemNode {
         this.deltasFactory = brancher;
         this.isOptimisticBoundCached = false;
         
-        this.dwRelax.init(sentences, initFeasSol);
+        this.dwRelax.init(initFeasSol);
         
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -186,7 +184,7 @@ public class DmvProblemNode implements ProblemNode {
     }
 
     private DmvSolution getProjectedSolution() {
-        if (relaxSol.getStatus() != Status.Optimal) {
+        if (!relaxSol.getStatus().hasSolution()) {
             return null;
         }
         // Project the Dantzig-Wolfe model parameters back into the bounded
@@ -396,11 +394,7 @@ public class DmvProblemNode implements ProblemNode {
         trainer.train(sentences);
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = dwRelax.getIdm(); 
-        if (idm == null) {
-            // TODO: The dependency on dwRelax should be fixed.
-            idm = new IndexedDmvModel(sentences);
-        }
+        IndexedDmvModel idm = dwRelax.getIdm();
         DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
@@ -426,6 +420,13 @@ public class DmvProblemNode implements ProblemNode {
     
     public DmvRelaxation getRelaxation() {
         return dwRelax;
+    }
+    
+    /**
+     * For testing only.
+     */
+    static void clearActiveNode() {
+        activeNode = null;
     }
     
 }

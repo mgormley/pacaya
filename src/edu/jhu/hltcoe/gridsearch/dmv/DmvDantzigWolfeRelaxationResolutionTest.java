@@ -45,6 +45,8 @@ import edu.jhu.hltcoe.util.rproj.RRow;
 
 public class DmvDantzigWolfeRelaxationResolutionTest {
 
+    private static final double DEFAULT_SOLUTION_TOLERANCE = 1e-8;
+
     @BeforeClass
     public static void classSetUp() {
         BasicConfigurator.configure();
@@ -86,7 +88,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
         
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -106,7 +108,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -127,7 +129,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -149,7 +151,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvDantzigWolfeRelaxationResolution dw = getDw(sentences, 15);
 
         RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -190,7 +192,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
 
         relaxSol = testBoundsHelper(dw, origLower, origUpper, true);
         tempStaticLogProbs = relaxSol.getLogProbs();
-        assertEquals(0.0, relaxSol.getScore(), 1e-11);
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
         //TODO: assertEquals(-1.4750472192095685, relaxSol.getScore(), 1e-13);
@@ -286,7 +288,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
             Prng.seed(12345);
             DmvDantzigWolfeRelaxationResolution dw = getDw(sentences, numCuts);
             RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-            assertEquals(0.0, relaxSol.getScore(), 1e-11);
+            assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
             double maxSum = 0.0;
             double[][] logProbs = relaxSol.getLogProbs();
             for (int c=0; c<logProbs.length; c++) {
@@ -512,7 +514,8 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvSolution initSol = getInitFeasSol(sentences);
         System.out.println(initSol);
         DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(new File("."));
-        dw.init(sentences, initSol);
+        dw.setSentences(sentences);
+        dw.init(initSol);
         return dw;
     }
     

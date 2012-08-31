@@ -24,6 +24,9 @@ public interface DmvRelaxation {
     WarmStart getWarmStart();
     void setWarmStart(WarmStart warmStart);
 
-    void init(SentenceCollection sentences, DmvSolution initFeasSol);
+    // TODO: Fix this initialization API.
+    // These two methods must be called in sequence to initialize.
+    void setSentences(SentenceCollection sentences);
+    void init(DmvSolution initFeasSol);
 
 }

@@ -504,7 +504,8 @@ public class DmvDantzigWolfeRelaxationTest {
             }
         };
         DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(new File("."), numCuts, ccc);
-        dw.init(sentences, initSol);
+        dw.setSentences(sentences);
+        dw.init(initSol);
         return dw;
     }
     

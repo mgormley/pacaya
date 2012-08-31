@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
@@ -24,12 +25,13 @@ public class BnBDmvTrainerTest {
     @Before
     public void setUp() {
         Prng.seed(1234567890);
+        DmvProblemNode.clearActiveNode();
     }
 
     
     @Test
     public void testTwo() {
-        double epsilon = 0.1;
+        double epsilon = 0.4;
         BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), new File("."));
         
         SentenceCollection sentences = new SentenceCollection();
@@ -50,10 +52,12 @@ public class BnBDmvTrainerTest {
         trainer.train(sentences);
     }
     
-    @Test
+    //@Test
     public void testSynthetic() {
-        double epsilon = 0.1;
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher());
+        double epsilon = 0.9;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
+        dwRelax.setMaxDwIterations(3);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax);
         //trainer.setTempDir(new File("."));
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
