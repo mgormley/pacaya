@@ -34,22 +34,22 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
         File zimplFile = new File(tempDir, "parse.zpl");
         PrintWriter zimplWriter;
         zimplWriter = new PrintWriter(zimplFile);
-        zimplWriter.write(getCodeSnippet("setup"));
-        zimplWriter.write(getCodeSnippet("weights-delta"));
-        zimplWriter.write(getCodeSnippet("sos-delta"));
+        zimplWriter.write(codeMap.getCodeSnippet("setup"));
+        zimplWriter.write(codeMap.getCodeSnippet("weights-delta"));
+        zimplWriter.write(codeMap.getCodeSnippet("sos-delta"));
         if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet("deptree-general"));
+            zimplWriter.write(codeMap.getCodeSnippet("deptree-general"));
         }
         if (formulation == IlpFormulation.FLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
+            zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
         } else if (formulation == IlpFormulation.MFLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
+            zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
         }
-        zimplWriter.write(getCodeSnippet(formulation));
-        zimplWriter.write(getCodeSnippet("dmv-objective-support"));
+        zimplWriter.write(codeMap.getCodeSnippet(formulation));
+        zimplWriter.write(codeMap.getCodeSnippet("dmv-objective-support"));
         // Here we use the -modelparam version of the objective so that DIP has
         // one variable per model parameter in the objective.
-        zimplWriter.write(getCodeSnippet("dmv-objective-delta-modelparam"));
+        zimplWriter.write(codeMap.getCodeSnippet("dmv-objective-delta-modelparam"));
         zimplWriter.close();
         return zimplFile;
     }

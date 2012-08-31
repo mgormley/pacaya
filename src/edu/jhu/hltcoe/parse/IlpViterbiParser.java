@@ -33,9 +33,9 @@ public class IlpViterbiParser implements ViterbiParser {
 
     private static Logger log = Logger.getLogger(IlpViterbiParser.class);
     
-    private static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
+    public static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;
-    private Map<String,String> codeMap;
+    protected ZimplXmlCodeContainerReader codeMap;
     public static final Pattern zimplVarRegex = Pattern.compile("[#$]");
     protected IlpFormulation formulation;
     protected File workspace;
@@ -43,15 +43,12 @@ public class IlpViterbiParser implements ViterbiParser {
     protected IlpSolverFactory ilpSolverFactory;
 
     protected double parseWeight;
-
-    private static Pattern priorityPattern = Pattern.compile("priority \\d+");;
     
     public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
         this.ilpSolverFactory = ilpSolverFactory;
-        XmlCodeContainerReader reader = new XmlCodeContainerReader();
-        reader.loadZimplCodeFromResource(ZIMPL_CODE_XML);
-        codeMap = reader.getCodeMap();
+        codeMap = new ZimplXmlCodeContainerReader(formulation);
+        codeMap.loadZimplCodeFromResource(ZIMPL_CODE_XML);
         workspace = Files.createTempDir("workspace", new File("."));
         deleter = new DelayedDeleter(Integer.MAX_VALUE);
     }
@@ -139,41 +136,23 @@ public class IlpViterbiParser implements ViterbiParser {
         File zimplFile = new File(tempDir, "parse.zpl");
         PrintWriter zimplWriter;
         zimplWriter = new PrintWriter(zimplFile);
-        zimplWriter.write(getCodeSnippet("setup"));
-        zimplWriter.write(getCodeSnippet("weights"));
+        zimplWriter.write(codeMap.getCodeSnippet("setup"));
+        zimplWriter.write(codeMap.getCodeSnippet("weights"));
         if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet("deptree-general"));
+            zimplWriter.write(codeMap.getCodeSnippet("deptree-general"));
         }
         if (formulation == IlpFormulation.FLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
+            zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
         } else if (formulation == IlpFormulation.MFLOW_PROJ) {
-            zimplWriter.write(getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
+            zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));
         }
         String formulationId = formulation.toString().replace("-lprelax","");
-        zimplWriter.write(getCodeSnippet(formulationId));
-        zimplWriter.write(getCodeSnippet("dmv-objective-support"));
+        zimplWriter.write(codeMap.getCodeSnippet(formulationId));
+        zimplWriter.write(codeMap.getCodeSnippet("dmv-objective-support"));
         // The -modelparam version is slightly slower but is correct on zero stop probabilities
-        zimplWriter.write(getCodeSnippet("dmv-objective-modelparam"));
+        zimplWriter.write(codeMap.getCodeSnippet("dmv-objective-modelparam"));
         zimplWriter.close();
         return zimplFile;
-    }
-    
-    protected String getCodeSnippet(Object id) {
-        String codeSnippet;
-        if (id instanceof IlpFormulation) {
-            codeSnippet = codeMap.get(id.toString());
-        } else {
-            codeSnippet = codeMap.get(id);
-        }
-        
-        // Convert to the LP Relaxation automatically
-        if (formulation.isLpRelaxation()) {
-            codeSnippet = codeSnippet.replace(" binary", " real >= 0 <= 1");
-            codeSnippet = codeSnippet.replace(" integer", " real");
-            codeSnippet = priorityPattern.matcher(codeSnippet).replaceAll("");
-        }
-        
-        return codeSnippet;
     }
 
     private void encodeSentences(File tempDir, SentenceCollection sentences) throws FileNotFoundException {

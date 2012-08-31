@@ -20,11 +20,14 @@ public class XmlCodeContainerReader {
     
     public XmlCodeContainerReader() {
     }
-    
-    public Map<String,String> getCodeMap() {
-        return codeMap;
-    }    
 
+    /**
+     * Gets a code snippet with the specified id
+     */
+    public String getCodeSnippet(Object id) {
+        return codeMap.get(id.toString());
+    }
+    
     public void loadZimplCodeFromResource(String resourceName) {
         InputStream inputStream = this.getClass().getResourceAsStream(resourceName);
         if (inputStream == null) {
