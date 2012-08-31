@@ -510,7 +510,7 @@ public class DmvDantzigWolfeRelaxationTest {
     }
     
     public static DmvSolution getInitFeasSol(SentenceCollection sentences) {
-        int numRestarts = 10;
+        int numRestarts = 9;
         return getInitFeasSol(sentences, numRestarts);
     }
     

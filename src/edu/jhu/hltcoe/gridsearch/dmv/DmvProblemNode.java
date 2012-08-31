@@ -28,6 +28,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
@@ -156,10 +157,15 @@ public class DmvProblemNode implements ProblemNode {
         solutions.add(projectedSol);
         solutions.add(initFeasSol);
         
-        if (depth > dwRelax.getIdm().getNumTotalParams()) {
-            // Then run Viterbi EM starting from the randomly rounded solution
-            solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
-            solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
+        // TODO: Decide on a better heuristic for when to do this (e.g. depth > dwRelax.getIdm().getNumTotalParams())
+        double random = Prng.nextDouble();
+        if (random < 0.1) {
+            // Run Viterbi EM starting from the randomly rounded solution.
+            if (random < 0.33 / 2.0) {
+                solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
+            } else {
+                solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
+            }
         }
 
         return Collections.max(solutions, new Comparator<DmvSolution>() {
@@ -362,7 +368,7 @@ public class DmvProblemNode implements ProblemNode {
         DmvModel model = idm.getDmvModel(logProbs);
         // We must smooth the weights so that there exists some valid parse
         DmvModelFactory modelFactory = new DmvModelFactory(new SmoothedDmvWeightCopier(model, lambda));
-        return runViterbiEmHelper(sentences, modelFactory, 1);
+        return runViterbiEmHelper(sentences, modelFactory, 0);
     }
     
     private DmvSolution getImprovedSol(SentenceCollection sentences, DepTreebank treebank) {  
@@ -372,13 +378,13 @@ public class DmvProblemNode implements ProblemNode {
         DmvModel model = (DmvModel) mStep.getModel(treebank);
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
         // Then run Viterbi EM
-        return runViterbiEmHelper(sentences, modelFactory, 1);
+        return runViterbiEmHelper(sentences, modelFactory, 0);
     }
     
     private DmvSolution getInitFeasSol(SentenceCollection sentences) {        
         double lambda = 0.1;
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        return runViterbiEmHelper(sentences, modelFactory, 10);
+        return runViterbiEmHelper(sentences, modelFactory, 9);
     }
 
     private DmvSolution runViterbiEmHelper(SentenceCollection sentences, 
@@ -401,7 +407,7 @@ public class DmvProblemNode implements ProblemNode {
         // Compute the score for the solution
         double score = dwRelax.computeTrueObjective(logProbs, treebank);
         log.debug("Computed true objective: " + score);
-        assert(Utilities.equals(score, trainer.getLogLikelihood(), 1e-10));
+        assert Utilities.equals(score, trainer.getLogLikelihood(), 1e-5) : "difference = " + (score - trainer.getLogLikelihood());
                 
         // We let the DmvProblemNode compute the score
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);

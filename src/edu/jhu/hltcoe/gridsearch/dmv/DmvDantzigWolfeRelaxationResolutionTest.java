@@ -524,7 +524,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         int iterations = 25;        
         double lambda = 0.1;
         double convergenceRatio = 0.99999;
-        int numRestarts = 10;
+        int numRestarts = 9;
 
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);

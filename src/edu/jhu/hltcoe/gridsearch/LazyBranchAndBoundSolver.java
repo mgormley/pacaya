@@ -1,13 +1,14 @@
 package edu.jhu.hltcoe.gridsearch;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
+import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.Time;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch
@@ -44,12 +45,23 @@ public class LazyBranchAndBoundSolver {
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
         leafNodePQ = new PriorityQueue<ProblemNode>(11, comparator);
         upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
+        int numProcessed = 0;
         int numFathomed = 0;
-
+        // Timers
+        Stopwatch nodeTimer = new Stopwatch();
+        Stopwatch switchTimer = new Stopwatch();
+        Stopwatch relaxTimer = new Stopwatch();
+        Stopwatch feasTimer = new Stopwatch();
+        Stopwatch branchTimer = new Stopwatch();
+        
         addToLeafNodes(rootNode);
 
         ProblemNode curNode = null;
         while (hasNextLeafNode()) {
+            if (nodeTimer.isRunning()) { nodeTimer.stop(); }
+            nodeTimer.start();
+            
+            switchTimer.start();
             // The upper bound can only decrease
             if (upperBoundPQ.peek().getOptimisticBound() > upperBound + 1e-8) {
                 log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", upperBoundPQ.peek().getOptimisticBound(), upperBound));
@@ -57,11 +69,12 @@ public class LazyBranchAndBoundSolver {
             upperBound = upperBoundPQ.peek().getOptimisticBound();
             
             curNode = getNextLeafNode();
-
+            numProcessed++;
+            
             assert (!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
-            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
-                    upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
+            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
+                    upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
             if (log.isDebugEnabled()) {
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;
@@ -70,9 +83,17 @@ public class LazyBranchAndBoundSolver {
                     i++;
                 }
                 log.debug(getHistogram(bounds));
+                
+                // Print timers
+                log.debug("Avg time(ms) per node: " + Time.avgMs(nodeTimer));
+                log.debug("Avg switch time(ms) per node: " + Time.avgMs(switchTimer));
+                log.debug("Avg relax time(ms) per node: " + Time.avgMs(relaxTimer));
+                log.debug("Avg project time(ms) per node: " + Time.avgMs(feasTimer));
+                log.debug("Avg branch time(ms) per node: " + Time.avgMs(branchTimer));
             }
             
             curNode.setAsActiveNode();
+            switchTimer.stop();
             if (relativeDiff <= epsilon) {
                 // Optimal solution found.
                 break;
@@ -83,13 +104,17 @@ public class LazyBranchAndBoundSolver {
             // using its parent's bound
             log.info(String.format("CurrentNode: id=%d depth=%d side=%d", curNode.getId(), curNode.getDepth(), curNode
                     .getSide()));
-            if (curNode.getOptimisticBound(incumbentScore) <= incumbentScore) {
+            relaxTimer.start();
+            double curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+            relaxTimer.stop();
+            if (curNodeLowerBound <= incumbentScore) {
                 // fathom (i.e. prune) this child node
                 numFathomed++;
                 continue;
             }
 
             // Check if the child node offers a better feasible solution
+            feasTimer.start();
             Solution sol = curNode.getFeasibleSolution();
             assert (sol == null || !Double.isNaN(sol.getScore()));
             if (sol != null && sol.getScore() > incumbentScore) {
@@ -102,11 +127,14 @@ public class LazyBranchAndBoundSolver {
                 // worse than the
                 // new incumbentScore.
             }
-
+            feasTimer.stop();
+            
+            branchTimer.start();
             List<ProblemNode> children = curNode.branch();
             for (ProblemNode childNode : children) {
                 addToLeafNodes(childNode);
             }
+            branchTimer.stop();
         }
         // Only the active node can be "ended"
         if (curNode != null) {
@@ -118,8 +146,8 @@ public class LazyBranchAndBoundSolver {
         if (relativeDiff <= epsilon) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
-        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
-                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
+        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
+                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
         leafNodePQ = null;     
 
         log.info("B&B search status: " + status);

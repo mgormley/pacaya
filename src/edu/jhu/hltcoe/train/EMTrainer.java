@@ -46,7 +46,7 @@ public class EMTrainer<C> implements Trainer {
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
         Model bestModel = null;
         C bestCounts = null;
-        for (int r=0; r<numRestarts; r++) {
+        for (int r=0; r<=numRestarts; r++) {
             trainOnce(sentences);
             if (logLikelihood > bestLogLikelihood) {
                 bestLogLikelihood = logLikelihood;

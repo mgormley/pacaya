@@ -15,7 +15,7 @@ public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
             int iterations, double convergenceRatio) {
-        this(parser, mStep, modelFactory, iterations, convergenceRatio, 1);
+        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0);
     }
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
