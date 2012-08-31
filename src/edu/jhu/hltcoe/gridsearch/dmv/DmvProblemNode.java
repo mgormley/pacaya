@@ -393,11 +393,14 @@ public class DmvProblemNode implements ProblemNode {
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
-        // TODO: use random restarts
         trainer.train(sentences);
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = dwRelax.getIdm(); //new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = dwRelax.getIdm(); 
+        if (idm == null) {
+            // TODO: The dependency on dwRelax should be fixed.
+            idm = new IndexedDmvModel(sentences);
+        }
         DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
