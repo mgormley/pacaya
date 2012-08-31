@@ -214,8 +214,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for branch in ["regret"]:
                             for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
-                                for offsetProb in frange(10e-13, 0.05, 0.1, 0.2):
-                                    for probOfSkipCm in frange(0.0, 0.05, 0.1, 0.2):
+                                for offsetProb in frange(10e-13, 0.21,0.05):
+                                    for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                         experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
