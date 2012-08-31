@@ -93,7 +93,7 @@ public class LazyBranchAndBoundSolver {
 
             // Check if the child node offers a better feasible solution
             Solution sol = curNode.getFeasibleSolution();
-            assert (!Double.isNaN(sol.getScore()));
+            assert (sol == null || !Double.isNaN(sol.getScore()));
             if (sol != null && sol.getScore() > incumbentScore) {
                 incumbentScore = sol.getScore();
                 incumbentSolution = sol;
