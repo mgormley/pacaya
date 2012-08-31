@@ -104,158 +104,18 @@ public class DmvLpRelaxation implements DmvRelaxation {
     }
 
     public RelaxedDmvSolution solveRelaxation() {
-        try {            
-            runDWAlgo(cplex, mp);
-            
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
-                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
-            }
-            
-            log.info("Solution status: " + cplex.getStatus());
-            if (cplex.getStatus() != Status.Optimal) {
-                return new RelaxedDmvSolution(null, null, null, LazyBranchAndBoundSolver.WORST_SCORE, cplex.getStatus());
-            }
-            log.info("Solution value: " + cplex.getObjValue());
-            log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), mp.numStoCons));
-            
-            // Negate the objective since we were minimizing 
-            double objective = -cplex.getObjValue();
-            assert(!Double.isNaN(objective));
-            assert(Utilities.lte(objective, 0.0, 1e-7));
-
-            // Store optimal model parameters
-            double[][] logProbs = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
-            }
-
-            // Store fractional corpus parse
-            double[][] fracRoots = new double[sentences.size()][];
-            double[][][] fracParses = new double[sentences.size()][][];
-            for (int s = 0; s < sentences.size(); s++) {
-                Sentence sentence = sentences.get(s);
-                fracRoots[s] = new double[sentence.size()];
-                fracParses[s] = new double[sentence.size()][sentence.size()];
-            }
-            for (LambdaVar triple : mp.lambdaVars) {
-                double frac = cplex.getValue(triple.lambdaVar);
-                int s = triple.s;
-                int[] parents = triple.parents;
-
-                double[] fracRoot = fracRoots[s];
-                double[][] fracParse = fracParses[s];
-                for (int child = 0; child < parents.length; child++) {
-                    int parent = parents[child];
-                    if (parent == WallDepTreeNode.WALL_POSITION) {
-                        fracRoot[child] += frac;
-                    } else {
-                        fracParse[parent][child] += frac;
-                    }
-                }
-            }
-            
-            return new RelaxedDmvSolution(logProbs, fracRoots, fracParses, objective, cplex.getStatus());
-        } catch (IloException e) {
-            if (e instanceof ilog.cplex.CpxException) {
-                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
-                System.err.println("STATUS CODE: " + cpxe.getStatus());
-                System.err.println("ERROR MSG:   " + cpxe.getMessage());
-            }
-            throw new RuntimeException(e);
-        }
+        // TODO: write this
+        throw new RuntimeException("not implemented");    
     }
 
     public double[][] getRegretCm() {
-        try {
-            // TODO: getting the model parameters in this way is redundant
-            // Store optimal model parameters \theta_{c,m}
-            double[][] logProbs = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                logProbs[c] = cplex.getValues(mp.modelParamVars[c]);
-            }
-
-            // Store feature counts \bar{f}_{c,m} (i.e. number of times each
-            // model parameter was used)
-            double[][] featCounts = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                featCounts[c] = new double[idm.getNumParams(c)];
-            }
-
-            for (LambdaVar triple : mp.lambdaVars) {
-                double frac = cplex.getValue(triple.lambdaVar);
-                int s = triple.s;
-                int[] sentSol = triple.sentSol;
-                for (int i = 0; i < sentSol.length; i++) {
-                    int c = idm.getC(s, i);
-                    int m = idm.getM(s, i);
-                    featCounts[c][m] += sentSol[i] * frac;
-                }
-            }
-
-            // Store objective values z_{c,m}
-            double[][] objVals = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                objVals[c] = cplex.getValues(mp.objVars[c]);
-            }
-
-            // Compute the regret as the difference between the
-            // objective value and true objective value
-            double[][] regret = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                regret[c] = new double[idm.getNumParams(c)];
-                for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
-                    //TODO: this seems to be too strong:
-                    //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
-                    if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
-                        log.warn(String.format("Invalid negative regret: regret[%d][%d] = %f", c, m, regret[c][m]));
-                    }
-                }
-            }
-
-            return regret;
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
+        // TODO: write this
+        throw new RuntimeException("not implemented");    
     }
 
     private void setCplexParams(IloCplex cplex) throws IloException, FileNotFoundException {
-        // Specifies an upper limit on the amount of central memory, in
-        // megabytes, that CPLEX is permitted to use for working memory
-        // before swapping to disk files, compressing memory, or taking
-        // other actions.
-        // Values: Any nonnegative number, in megabytes; default: 128.0
-        cplex.setParam(DoubleParam.WorkMem, workMemMegs);
-        //cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-
-        cplex.setParam(IntParam.Threads, numThreads);
-
-        // -1 = oportunistic, 0 = auto (default), 1 = deterministic
-        // In this context, deterministic means that multiple runs with
-        // the
-        // same model at the same parameter settings on the same
-        // platform
-        // will reproduce the same solution path and results.
-        cplex.setParam(IntParam.ParallelMode, 1);
-
-        // From the CPLEX documentation: the Dual algorithm can take better advantage of a previous solve. 
-        // http://ibm.co/GHorLT
-        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Dual);
-        
-        // Note: we'd like to reuse basis information by explicitly storing it
-        // with the Fork nodes as in SCIP. However, this is only possible if the
-        // number of rows/columns in the problem remains the same, which it will
-        // not for our master problem.
-        // http://ibm.co/GCQ709
-        // By default, the solver will make use of basis information internally 
-        // even when we update the problem. This is (hopefully) good enough.
-
-        // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
-        
-//        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
-//        cplex.setOut(out);
-//        cplex.setWarning(out);
+        // TODO: write this
+        throw new RuntimeException("not implemented");    
     }
 
     /**
@@ -311,7 +171,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         return zimplFile;
     }
     
-    private MasterProblem buildModel(IloCplex cplex, DepTreebank initFeasSol) throws IloException {
+    private MasterProblem buildModel(IloCplex cplex, DepTreebank initFeasSol) throws IloException, IOException {
         mp = new MasterProblem();
         
         // Add tree constraints
@@ -393,19 +253,6 @@ public class DmvLpRelaxation implements DmvRelaxation {
         }
         for (int c = 0; c < numConds; c++) {
             mp.couplMatrix.addRows(mp.couplConsUpper[c]);
-        }
-
-        // ----- column-wise modeling -----
-
-        // Create the lambda sum to one constraints
-        mp.lambdaSumCons = new IloRange[sentences.size()];
-        mp.lambdaVars = new ArrayList<LambdaVar>();
-        mp.lambdaVarSet = new HashSet<LambdaVar>();
-
-        // Add the initial feasible parse as the first lambda columns
-        for (int s = 0; s < sentences.size(); s++) {
-            DepTree tree = initFeasSol.get(s);
-            addLambdaVar(cplex, s, tree);
         }
         
         return mp;
@@ -525,60 +372,8 @@ public class DmvLpRelaxation implements DmvRelaxation {
     }
 
     private void applyDelta(DmvBoundsDelta delta) {
-        try {
-            int c = delta.getC();
-            int m = delta.getM();
-            
-            double origLb = mp.modelParamVars[c][m].getLB();
-            double origUb = mp.modelParamVars[c][m].getUB();
-            double newLb = origLb;
-            double newUb = origUb;
-            
-            // TODO: all the logAdds should be relegated to the Bounds Delta Factory
-            if (delta.getLu() == Lu.LOWER) {
-                newLb = origLb + delta.getDelta();
-            } else if (delta.getLu() == Lu.UPPER) {
-                newUb = origUb + delta.getDelta();
-            } else {
-                throw new IllegalStateException();
-            }
-
-            assert(newLb <= newUb);
-            
-            // Updates the bounds of the model parameters
-            bounds.set(c, m, newLb, newUb);
-            mp.modelParamVars[c][m].setLB(newLb);
-            mp.modelParamVars[c][m].setUB(newUb);
-
-            // Update lambda column if it uses parameter c,m
-            TIntArrayList rowind = new TIntArrayList();
-            TIntArrayList colind = new TIntArrayList();
-            TDoubleArrayList val = new TDoubleArrayList();
-            int lowCmInd = mp.couplMatrix.getIndex(mp.couplConsLower[c][m]);
-            int upCmInd = mp.couplMatrix.getIndex(mp.couplConsUpper[c][m]);
-            for (LambdaVar lv : mp.lambdaVars) {
-                int i = idm.getSi(lv.s, c, m);
-                if (i != -1) {
-                    // Using cplex.setLinearCoef() is horridly slow. Some suggestions for how to make modification 
-                    // of the problem faster here:
-                    // https://www.ibm.com/developerworks/forums/thread.jspa?threadID=324926
-
-                    // Update the lower coupling constraint coefficient
-                    rowind.add(lowCmInd);
-                    colind.add(lv.colind);
-                    val.add(bounds.getLb(c, m) * lv.sentSol[i]);
-                    // Update the upper coupling constraint coefficient
-                    rowind.add(upCmInd);
-                    colind.add(lv.colind);
-                    val.add(bounds.getUb(c, m) * lv.sentSol[i]);
-                }
-            }
-            if (rowind.size() > 0) {
-                mp.couplMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
-            }
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
+        // TODO: write this
+        throw new RuntimeException("not implemented");
     }
     
     public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
@@ -610,6 +405,36 @@ public class DmvLpRelaxation implements DmvRelaxation {
         
     public void end() {
         cplex.end();
+    }
+
+    @Override
+    public WarmStart getWarmStart() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void init(DmvSolution initFeasSol) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void setSentences(SentenceCollection sentences) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void setWarmStart(WarmStart warmStart) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public RelaxedDmvSolution solveRelaxation(double incumbentScore) {
+        // TODO Auto-generated method stub
+        return null;
     }
     
 }
