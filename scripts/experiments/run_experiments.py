@@ -206,15 +206,16 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
+            all.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCut=1.01)
             for dataset in datasets:
-                for maxSentenceLength in [5]:
+                for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [10,100]:
+                    for maxNumSentences in [300]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for branch in ["regret", "full"]:
-                            for initBounds in ["viterbi-em", "random", "uniform"]: # TODO: "gold"
-                                for offsetProb in frange(10e-13, 1.001,0.05):
-                                    for probOfSkipCm in frange(0.0, 0.2, 0.05):
+                        for branch in ["regret"]:
+                            for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
+                                for offsetProb in frange(10e-13, 0.05, 0.1, 0.2):
+                                    for probOfSkipCm in frange(0.0, 0.05, 0.1, 0.2):
                                         experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
@@ -251,7 +252,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for offsetProb in frange(10e-13, 1.001,0.2):
                                 #for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                 for relaxation in ["dw", "dw-res"]:
-                                    for maxDwIterations in [1,10,100]:
+                                    for maxDwIterations in [1,2,10,100]:
                                         for maxSimplexIterations in [10,100,1000]:
                                             for maxSetSizeToConstrain in [0,2,3]:
                                                 for minSumForCuts in [1.001, 1.01, 1.1]:
