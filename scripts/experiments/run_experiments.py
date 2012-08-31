@@ -206,7 +206,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
-            all.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCut=1.01)
+            all.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCuts=1.01)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
