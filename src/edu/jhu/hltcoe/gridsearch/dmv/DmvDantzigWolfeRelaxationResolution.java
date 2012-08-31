@@ -36,7 +36,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution.SimpleStatus;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution.RelaxStatus;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
@@ -119,8 +119,8 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         try {            
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<SimpleStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
-            SimpleStatus status = pair.get1();
+            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
+            RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
             // Negate the objective since we were minimizing 
@@ -756,12 +756,12 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         return true;
     }
 
-    public Pair<SimpleStatus, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
+    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
         if (hasInfeasibleBounds || !areFeasibleBounds(bounds)) {
-            return new Pair<SimpleStatus,Double>(SimpleStatus.Infeasible, INTERNAL_WORST_SCORE);
+            return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
         }
         
-        SimpleStatus status = SimpleStatus.Unknown;
+        RelaxStatus status = RelaxStatus.Unknown;
         DmvCkyParser parser = new DmvCkyParser();
         double lowerBound = INTERNAL_BEST_SCORE;
         TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
@@ -783,12 +783,12 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             cplex.solve();
             simplexTimer.stop();
             warmStart = getWarmStart();
-            status = SimpleStatus.get(cplex.getStatus()); 
+            status = RelaxStatus.get(cplex.getStatus()); 
             
             log.trace("Master solution status: " + cplex.getStatus());
-            if (status == SimpleStatus.Infeasible) {
+            if (status == RelaxStatus.Infeasible) {
                 lowerBound = INTERNAL_WORST_SCORE;
-                return new Pair<SimpleStatus,Double>(status, lowerBound);
+                return new Pair<RelaxStatus,Double>(status, lowerBound);
             }
             if (dwIter>=maxDwIterations) {
                 break;
@@ -864,7 +864,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             stoTimer.stop();
             if (mPair == null) {
                 hasInfeasibleBounds = true;
-                return new Pair<SimpleStatus,Double>(SimpleStatus.Infeasible, INTERNAL_WORST_SCORE);
+                return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
             }
             double[][] logProbs = mPair.get1();
             double mReducedCost = mPair.get2() - convexGammaPrice;
@@ -944,7 +944,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 //                    assert(redcost >= 0.0);
 //                }
                 lowerBound = cplex.getObjValue();
-                status = SimpleStatus.Optimal;
+                status = RelaxStatus.Optimal;
                 break;
             } else {
                 // Non-optimal solution, continuing
@@ -964,7 +964,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         log.debug("Total parsing time(ms): " + Time.totMs(parsingTimer));
         log.debug("Total sum-to-one time(ms): " + Time.totMs(stoTimer));
 
-        return new Pair<SimpleStatus,Double>(status, lowerBound);
+        return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
 
     public void reverseApply(DmvBoundsDelta delta) {

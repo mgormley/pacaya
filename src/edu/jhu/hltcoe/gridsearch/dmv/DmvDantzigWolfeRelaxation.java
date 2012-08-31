@@ -35,7 +35,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution.SimpleStatus;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution.RelaxStatus;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
@@ -134,8 +134,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         try {            
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<SimpleStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
-            SimpleStatus status = pair.get1();
+            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
+            RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
             // Negate the objective since we were minimizing 
@@ -653,12 +653,12 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         return true;
     }
 
-    public Pair<SimpleStatus, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
+    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
         if (!areFeasibleBounds(bounds)) {
-            return new Pair<SimpleStatus,Double>(SimpleStatus.Infeasible, INTERNAL_WORST_SCORE);
+            return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
         }
         
-        SimpleStatus status = SimpleStatus.Unknown;
+        RelaxStatus status = RelaxStatus.Unknown;
         DmvCkyParser parser = new DmvCkyParser();
         double lowerBound = INTERNAL_BEST_SCORE;
         TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
@@ -681,12 +681,12 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             cplex.solve();
             simplexTimer.stop();
             warmStart = getWarmStart();
-            status = SimpleStatus.get(cplex.getStatus()); 
+            status = RelaxStatus.get(cplex.getStatus()); 
             
             log.trace("Master solution status: " + cplex.getStatus());
-            if (status == SimpleStatus.Infeasible) {
+            if (status == RelaxStatus.Infeasible) {
                 lowerBound = INTERNAL_WORST_SCORE;
-                return new Pair<SimpleStatus,Double>(status, lowerBound);
+                return new Pair<RelaxStatus,Double>(status, lowerBound);
             }
             if (dwIter>=maxDwIterations) {
                 break;
@@ -774,7 +774,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             } else if (numPositiveLambdaRedCosts == 0) {
                 // Optimal solution found
                 lowerBound = cplex.getObjValue();
-                status = SimpleStatus.Optimal;
+                status = RelaxStatus.Optimal;
                 
                 if (cut < maxCutRounds) {
                     // Reset the objective values list, since we would expect the next iteration
@@ -828,7 +828,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         log.debug("Total simplex time(ms): " + Time.totMs(simplexTimer));
         log.debug("Total parsing time(ms): " + Time.totMs(parsingTimer));
 
-        return new Pair<SimpleStatus,Double>(status, lowerBound);
+        return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
 
     public void reverseApply(DmvBoundsDelta delta) {

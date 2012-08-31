@@ -9,16 +9,16 @@ public class RelaxedDmvSolution implements Solution {
     private double[][] logProbs;
     private double[][] fracRoots;
     private double[][][] fracChildren;
-    private SimpleStatus status;
+    private RelaxStatus status;
     
-    public enum SimpleStatus {
+    public enum RelaxStatus {
         Optimal, Feasible, Infeasible, Unknown;
 
         public boolean hasSolution() {
             return this == Optimal || this == Feasible;
         }
         
-        public static SimpleStatus get(Status status) {
+        public static RelaxStatus get(Status status) {
             if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded) {
                 return Infeasible;
             } else {
@@ -27,7 +27,7 @@ public class RelaxedDmvSolution implements Solution {
         }
     }
     
-    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score, SimpleStatus status) {
+    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score, RelaxStatus status) {
         super();
         this.score = score;
         this.logProbs = logProbs;
@@ -53,7 +53,7 @@ public class RelaxedDmvSolution implements Solution {
         return fracChildren;
     }
 
-    public SimpleStatus getStatus() {
+    public RelaxStatus getStatus() {
         return status;
     }
 
