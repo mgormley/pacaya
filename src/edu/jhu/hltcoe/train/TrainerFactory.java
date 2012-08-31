@@ -123,13 +123,15 @@ public class TrainerFactory {
                 return relax;
             }
         }
+
+        if (modelName.equals("dmv")) {
+            evalParser = new DmvCkyParser();
+        }
         
         Trainer trainer = null;
         if (algorithm.equals("viterbi")) {
             ViterbiParser parser;
             if (modelName.equals("dmv")) {
-                evalParser = new DmvCkyParser();
-                
                 IlpSolverFactory ilpSolverFactory = null;
                 if (parserName.startsWith("ilp-")) {
                     IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);

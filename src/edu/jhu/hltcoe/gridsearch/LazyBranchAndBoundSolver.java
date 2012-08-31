@@ -48,6 +48,7 @@ public class LazyBranchAndBoundSolver {
 
         addToLeafNodes(rootNode);
 
+        ProblemNode curNode = null;
         while (hasNextLeafNode()) {
             // The upper bound can only decrease
             if (upperBoundPQ.peek().getOptimisticBound() > upperBound + 1e-8) {
@@ -55,13 +56,12 @@ public class LazyBranchAndBoundSolver {
             }
             upperBound = upperBoundPQ.peek().getOptimisticBound();
             
-            ProblemNode curNode = getNextLeafNode();
-            
+            curNode = getNextLeafNode();
+
             assert (!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
             log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
                     upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
-            
             if (log.isDebugEnabled()) {
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;
@@ -74,9 +74,7 @@ public class LazyBranchAndBoundSolver {
             
             curNode.setAsActiveNode();
             if (relativeDiff <= epsilon) {
-                status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
-                // Only the active node can be "ended"
-                curNode.end();
+                // Optimal solution found.
                 break;
             }
             // TODO: else if, ran out of memory or disk space, break
@@ -110,9 +108,16 @@ public class LazyBranchAndBoundSolver {
                 addToLeafNodes(childNode);
             }
         }
+        // Only the active node can be "ended"
+        if (curNode != null) {
+            curNode.end();
+        }
         
         // Print summary
         double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
+        if (relativeDiff <= epsilon) {
+            status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
+        }
         log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d", 
                 upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed));
         leafNodePQ = null;     
