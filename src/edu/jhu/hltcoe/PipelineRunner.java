@@ -104,7 +104,7 @@ public class PipelineRunner {
           
         if (cmd.hasOption("relaxOnly")) {
             DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd); 
-            dw.init(sentences, DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences));
+            dw.init(sentences, DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences, 2));
             DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw);
             Stopwatch timer = new Stopwatch();
             timer.start();

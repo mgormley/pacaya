@@ -509,11 +509,15 @@ public class DmvDantzigWolfeRelaxationTest {
     }
     
     public static DmvSolution getInitFeasSol(SentenceCollection sentences) {
+        int numRestarts = 10;
+        return getInitFeasSol(sentences, numRestarts);
+    }
+    
+    public static DmvSolution getInitFeasSol(SentenceCollection sentences, int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         int iterations = 25;        
         double lambda = 0.1;
         double convergenceRatio = 0.99999;
-        int numRestarts = 10;
 
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
