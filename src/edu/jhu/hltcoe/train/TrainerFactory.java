@@ -39,13 +39,14 @@ import edu.jhu.hltcoe.util.Command;
  * TODO: Consider switching to annotations
  * http://docs.oracle.com/javase/tutorial/java/javaOO/annotations.html
  * http://tutorials.jenkov.com/java-reflection/annotations.html
+ * 
  * @author mgormley
- *
+ * 
  */
 public class TrainerFactory {
 
     private static ViterbiParser evalParser = null;
-    
+
     public static void addOptions(Options options) {
         options.addOption("a", "algorithm", true, "Inference algorithm");
         options.addOption("i", "iterations", true, "Number of iterations");
@@ -70,6 +71,11 @@ public class TrainerFactory {
         options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
         options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
+        options.addOption("nr", "numRestarts", true, "Number of random restarts");
+        options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
+        options.addOption("op", "numDoubledCms", true, "How many model parameters around which the bounds should be doubled");
+        options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
+        options.addOption("op", "bnbTimeoutSeconds", true, "The timeout in seconds for branch-and-bound");
     }
 
     public static Object getTrainer(CommandLine cmd) throws ParseException {
@@ -83,7 +89,7 @@ public class TrainerFactory {
         final double interval = Command.getOptionValue(cmd, "interval", 0.01);
         final double factor = Command.getOptionValue(cmd, "factor", 1.1);
         final int numPerSide = Command.getOptionValue(cmd, "numPerSide", 2);
-        final IlpFormulation formulation = getOptionValue(cmd, "formulation", IlpFormulation.DP_PROJ); 
+        final IlpFormulation formulation = getOptionValue(cmd, "formulation", IlpFormulation.DP_PROJ);
         final double lambda = Command.getOptionValue(cmd, "lambda", 0.1);
         final int numThreads = Command.getOptionValue(cmd, "threads", 2);
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
@@ -97,13 +103,22 @@ public class TrainerFactory {
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
+        final int numRestarts = Command.getOptionValue(cmd, "numRestarts", 0);
+        double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
+        double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
+        int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
+        double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", 0.0);
 
+        if (!modelName.equals("dmv")) {
+            throw new ParseException("Model not supported: " + modelName);
+        }
 
         DmvRelaxation relax = null;
-        if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb")) {
+        if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
             File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
             if (relaxation.equals("dw")) {
-                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(dwTemp, maxCutRounds, new CutCountComputer());
+                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(dwTemp, maxCutRounds,
+                        new CutCountComputer());
                 dw.setMaxSimplexIterations(maxSimplexIterations);
                 dw.setMaxDwIterations(maxDwIterations);
                 dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
@@ -124,81 +139,89 @@ public class TrainerFactory {
             }
         }
 
-        if (modelName.equals("dmv")) {
-            evalParser = new DmvCkyParser();
+        evalParser = new DmvCkyParser();
+
+        if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
+        
         }
         
         Trainer trainer = null;
-        if (algorithm.equals("viterbi")) {
+        ViterbiTrainer viterbiTrainer = null;
+        if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
             ViterbiParser parser;
-            if (modelName.equals("dmv")) {
-                IlpSolverFactory ilpSolverFactory = null;
-                if (parserName.startsWith("ilp-")) {
-                    IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
-                    ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
-                    // TODO: make this an option
-                    ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
-                    
-                }
+            IlpSolverFactory ilpSolverFactory = null;
+            if (parserName.startsWith("ilp-")) {
+                IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
+                ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
+                // TODO: make this an option
+                ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+            }
 
-                if (parserName.equals("cky")) {
-                    parser = new DmvCkyParser();
-                }else if (parserName.equals("ilp-sentence")) {
-                    parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
-                } else if (parserName.equals("ilp-corpus")) {
-                    parser = new IlpViterbiParser(formulation, ilpSolverFactory);
-                } else if (parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
-                    DeltaGenerator deltaGen;
-                    if (deltaGenerator.equals("fixed-interval")) {
-                        deltaGen = new FixedIntervalDeltaGenerator(interval, numPerSide);
-                    } else if (deltaGenerator.equals("factor")) {
-                        deltaGen = new FactorDeltaGenerator(factor, numPerSide);
-                    } else {
-                        throw new ParseException("Delta generator not supported: " + deltaGenerator);
-                    }
-                    if (parserName.equals("ilp-deltas")) {
-                        parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
-                    } else if (parserName.equals("ilp-deltas-init")) {
-                        parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen, ilpSolverFactory);
-                    } else {
-                        throw new ParseException("Parser not supported: " + parserName);
-                    }
+            if (parserName.equals("cky")) {
+                parser = new DmvCkyParser();
+            } else if (parserName.equals("ilp-sentence")) {
+                parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
+            } else if (parserName.equals("ilp-corpus")) {
+                parser = new IlpViterbiParser(formulation, ilpSolverFactory);
+            } else if (parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
+                DeltaGenerator deltaGen;
+                if (deltaGenerator.equals("fixed-interval")) {
+                    deltaGen = new FixedIntervalDeltaGenerator(interval, numPerSide);
+                } else if (deltaGenerator.equals("factor")) {
+                    deltaGen = new FactorDeltaGenerator(factor, numPerSide);
+                } else {
+                    throw new ParseException("Delta generator not supported: " + deltaGenerator);
+                }
+                if (parserName.equals("ilp-deltas")) {
+                    parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
+                } else if (parserName.equals("ilp-deltas-init")) {
+                    parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen,
+                            ilpSolverFactory);
                 } else {
                     throw new ParseException("Parser not supported: " + parserName);
                 }
             } else {
-                throw new ParseException("Model not supported: " + modelName);
-            }
-            
-            MStep<DepTreebank> mStep;
-            ModelFactory modelFactory;
-            if (modelName.equals("dmv")) {
-                mStep = new DmvMStep(lambda);
-                modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
-            } else {
-                throw new ParseException("Model not supported: " + modelName);
+                throw new ParseException("Parser not supported: " + parserName);
             }
 
-            trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio);
-        } else if (algorithm.equals("bnb")) {
-            if (modelName.equals("dmv")) {
-                DmvBoundsDeltaFactory brancher;
-                if (branch.equals("full")) {
-                    brancher = new FullStrongBranchingDeltaFactory();
-                } else if (branch.equals("regret")) {
-                    brancher = new RegretDmvBoundsDeltaFactory();
-                } else if (branch.equals("rand-uniform")) {
-                    brancher = new RandomDmvBoundsDeltaFactory(true);
-                } else if (branch.equals("rand-weighted")) {
-                    brancher = new RandomDmvBoundsDeltaFactory(false);
-                } else {
-                    throw new ParseException("Branching strategy not supported: " + branch);
-                }
-                trainer = new BnBDmvTrainer(epsilon, brancher, relax);
-            } else {
-                throw new ParseException("Model not supported: " + modelName);
+            MStep<DepTreebank> mStep;
+            ModelFactory modelFactory;
+            mStep = new DmvMStep(lambda);
+            modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
+
+            if (algorithm.equals("viterbi")) {
+                trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
             }
-        } else {
+            if (algorithm.equals("viterbi-bnb")) {
+                // Use zero random restarts for local search.
+                viterbiTrainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, 0);
+            }
+        }
+        
+
+        DmvBoundsDeltaFactory brancher = null;
+        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
+            if (branch.equals("full")) {
+                brancher = new FullStrongBranchingDeltaFactory();
+            } else if (branch.equals("regret")) {
+                brancher = new RegretDmvBoundsDeltaFactory();
+            } else if (branch.equals("rand-uniform")) {
+                brancher = new RandomDmvBoundsDeltaFactory(true);
+            } else if (branch.equals("rand-weighted")) {
+                brancher = new RandomDmvBoundsDeltaFactory(false);
+            } else {
+                throw new ParseException("Branching strategy not supported: " + branch);
+            }
+        }
+        
+        if (algorithm.equals("viterbi-bnb")) {
+            trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
+                    offsetProb, probOfSkipCm);
+        } else if (algorithm.equals("bnb")) {
+            trainer = new BnBDmvTrainer(epsilon, brancher, relax, bnbTimeoutSeconds);
+        }
+        
+        if (trainer == null) {
             throw new ParseException("Algorithm not supported: " + algorithm);
         }
 
@@ -208,8 +231,8 @@ public class TrainerFactory {
     public static IlpFormulation getOptionValue(CommandLine cmd, String name, IlpFormulation defaultValue) {
         return cmd.hasOption(name) ? IlpFormulation.getById(cmd.getOptionValue(name)) : defaultValue;
     }
-    
-    /** 
+
+    /**
      * TODO: This is a bit hacky, but convenient.
      */
     public static ViterbiParser getEvalParser() {

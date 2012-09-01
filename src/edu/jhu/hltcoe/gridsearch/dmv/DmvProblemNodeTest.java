@@ -36,8 +36,8 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
         
-        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), relax, new File("."));
+        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(new File("."), 100, new CutCountComputer());
+        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), relax);
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);

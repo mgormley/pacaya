@@ -10,12 +10,12 @@ public class DmvBounds {
     /** 
      * Upper bound by log(1.0)
      */
-    static final double DEFAULT_UPPER_BOUND = 0.0;
+    public static final double DEFAULT_UPPER_BOUND = 0.0;
     
     /**
      *  Lower bound by log(1 / (one trillion)) ~= -27 
      */
-    static final double DEFAULT_LOWER_BOUND = Utilities.log(Math.pow(10,-12));
+    public static final double DEFAULT_LOWER_BOUND = Utilities.log(Math.pow(10,-12));
     
     private static final double MIN_BOUND_DIFF = 1.0 / Math.pow(2, 6);
     

@@ -20,6 +20,4 @@ public interface ProblemNode {
 
     void setAsActiveNode();
 
-    void end();
-
 }

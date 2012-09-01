@@ -28,5 +28,7 @@ public interface DmvRelaxation {
     // These two methods must be called in sequence to initialize.
     void setSentences(SentenceCollection sentences);
     void init(DmvSolution initFeasSol);
+    
+    void addFeasibleSolution(DmvSolution initFeasSol);
 
 }

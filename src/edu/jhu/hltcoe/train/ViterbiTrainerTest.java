@@ -68,12 +68,7 @@ public class ViterbiTrainerTest {
 
     @Test
     public void testRestarts() {
-        double lambda = 0.1;
-        int iterations = 5;
-        ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9);
+        ViterbiTrainer trainer = getDefaultCkyViterbiTrainer();
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -82,6 +77,16 @@ public class ViterbiTrainerTest {
         
         System.out.println("logLikelihood: " + trainer.getLogLikelihood());
         Assert.assertEquals(-2.284307044440888, trainer.getLogLikelihood());
+    }
+
+    public static ViterbiTrainer getDefaultCkyViterbiTrainer() {
+        double lambda = 0.1;
+        int iterations = 5;
+        ViterbiParser parser = new DmvCkyParser();
+        DmvMStep mStep = new DmvMStep(lambda);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9);
+        return trainer;
     }
     
 }

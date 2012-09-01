@@ -59,7 +59,6 @@ public class EagerBranchAndBoundSolver {
             log.info(String.format("upBound: %f lowBound: %f relativeDiff: %f ", upperBound, incumbentScore, relativeDiff));
             if (relativeDiff <= epsilon) {
                 status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
-                curNode.end();
                 break;
             }
 

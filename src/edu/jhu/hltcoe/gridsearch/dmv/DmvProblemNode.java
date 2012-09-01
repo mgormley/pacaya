@@ -62,7 +62,7 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax, File tempDir) {
+    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
         this.sentences = sentences;
         this.dwRelax = dwRelax;
         this.dwRelax.setSentences(sentences);
@@ -123,7 +123,6 @@ public class DmvProblemNode implements ProblemNode {
         return getOptimisticBound(LazyBranchAndBoundSolver.WORST_SCORE);
     }
 
-
     /**
      * @return negative infinity if the problem is infeasible, and an upper
      *         bound otherwise
@@ -152,12 +151,19 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public Solution getFeasibleSolution() {
+        if (relaxSol == null) {
+            throw new IllegalStateException("No relaxed solution cached.");
+        }
         List<DmvSolution> solutions = new ArrayList<DmvSolution>();
+        if (initFeasSol != null) {
+            solutions.add(initFeasSol);
+        }
+        
         DmvSolution projectedSol = getProjectedSolution();
         solutions.add(projectedSol);
-        solutions.add(initFeasSol);
-        
-        // TODO: Decide on a better heuristic for when to do this (e.g. depth > dwRelax.getIdm().getNumTotalParams())
+        // TODO: These solutions might not be feasible according to the bounds.
+        // TODO: Decide on a better heuristic for when to do this (e.g. depth >
+        // dwRelax.getIdm().getNumTotalParams())
         double random = Prng.nextDouble();
         if (random < 0.1) {
             // Run Viterbi EM starting from the randomly rounded solution.
@@ -178,7 +184,7 @@ public class DmvProblemNode implements ProblemNode {
                 if (sol1 == null && sol2 == null) {
                     return 0;
                 } else if (sol1 == null) {
-                    return -1;
+                    return 1;
                 } else if (sol2 == null) {
                     return -1;
                 } else {
@@ -326,6 +332,11 @@ public class DmvProblemNode implements ProblemNode {
         }
     }
 
+    public void clear() {
+        this.isOptimisticBoundCached = false;
+        this.relaxSol = null;
+    }
+    
     private DmvProblemNode findLeastCommonAncestor(DmvProblemNode prevNode) {
         DmvProblemNode tmp1 = this;
         DmvProblemNode tmp2 = prevNode;
@@ -348,8 +359,8 @@ public class DmvProblemNode implements ProblemNode {
         return dwRelax.getBounds();
     }
 
-    @Override
     public void end() {
+        setAsActiveNode();
         dwRelax.end();
     }
     
@@ -431,7 +442,7 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * For testing only.
      */
-    static void clearActiveNode() {
+    public static void clearActiveNode() {
         activeNode = null;
     }
     

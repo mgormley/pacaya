@@ -26,26 +26,19 @@ import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest.InitSol;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
@@ -153,46 +146,11 @@ public class PipelineRunner {
     private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
-            IndexedDmvModel idm = dw.getIdm();
-
-            DmvSolution initBoundsSol;
-            if (opt == InitSol.VITERBI_EM) {
-                // TODO: hacky to call a test method and Trainer ignore parameters
-                initBoundsSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences);
-            } else if (opt == InitSol.GOLD) {
-                
-                // TODO initSol = goldSol;
-                throw new RuntimeException("not implemented");                
-                
-            } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM){
-                DmvWeightGenerator weightGen;
-                if (opt == InitSol.RANDOM) {
-                    Prng.seed(System.currentTimeMillis());
-                    weightGen = new DmvRandomWeightGenerator(0.00001);
-                } else {
-                    weightGen = new DmvUniformWeightGenerator();
-                }
-                DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
-                DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences);
-                double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
-                ViterbiParser parser = new DmvCkyParser();
-                DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
-                initBoundsSol = new DmvSolution(logProbs, idm, treebank, dw.computeTrueObjective(logProbs, treebank));            
-            } else {
-                throw new IllegalStateException("unsupported initialization: " + opt);
-            }
-
             double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
             double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
             int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
-            if (numDoubledCms > 0) {
-                // TODO:
-                throw new RuntimeException("not implemented");
-            }
             
-            DmvDantzigWolfeRelaxationTest.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
-            
-            return initBoundsSol;
+            return LocalBnBDmvTrainer.updateBounds(sentences, dw, opt, offsetProb, probOfSkipCm, numDoubledCms);
         }
         return null;
     }
@@ -256,9 +214,6 @@ public class PipelineRunner {
         
         // Options to restrict the initialization
         options.addOption("ib", "initBounds", true, "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]");
-        options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
-        options.addOption("op", "numDoubledCms", true, "How many model parameters around which the bounds should be doubled");
-        options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
         
         TrainerFactory.addOptions(options);
         return options;

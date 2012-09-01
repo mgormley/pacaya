@@ -153,8 +153,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         if self.fast:       all.update(iterations=1,
                                        maxSentenceLength=7,
-                                       maxNumSentences=2)
-        else:               all.update(iterations=25)
+                                       maxNumSentences=3,
+                                       numRestarts=1,
+                                       bnbTimeoutSeconds=3)
+        else:               all.update(iterations=25,
+                                       numRestarts=10,
+                                       bnbTimeoutSeconds=100)
         
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
@@ -217,6 +221,31 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 for offsetProb in frange(10e-13, 0.21,0.05):
                                     for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                         experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
+        elif self.expname == "viterbi-bnb":
+            for dataset in datasets:
+                for maxSentenceLength in [10]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [300, 3000]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        for algorithm in ["viterbi", "viterbi-bnb"]:
+                            algo = DPExpParams(algorithm=algorithm)
+                            if algorithm.find("bnb") != -1:
+                                algo.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCuts=1.01, 
+                                            branch="regret")
+                                if not self.fast:
+                                    algo.update(numRestarts=10, 
+                                                bnbTimeoutSeconds=maxNumSentences/3)
+                                for offsetProb in frange(10e-13, 0.21,0.05):
+                                    for probOfSkipCm in frange(0.0, 0.21, 0.05):
+                                        algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
+                                        experiments.append(all + dataset + msl + mns + algo)
+                            else:
+                                for numRestarts in [10, 100]:
+                                    if not self.fast:
+                                        algo.update(numRestarts=numRestarts)
+                                    else:
+                                        algo.update(numRestarts=numRestarts/10)
+                                    experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:

@@ -111,7 +111,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         try {
             this.bounds = new DmvBounds(this.idm);
             this.cplex = new IloCplex();
-            this.mp = buildModel(cplex, initFeasSol.getTreebank());
+            this.mp = buildModel(cplex, initFeasSol);
             // TODO: add the initial feasible solution to cplex object? Does this even make sense?
             setCplexParams(cplex);
         } catch (IloException e) {
@@ -424,7 +424,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 
     }
 
-    private MasterProblem buildModel(IloMPModeler cplex, DepTreebank initFeasSol) throws IloException {
+    private MasterProblem buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
         mp = new MasterProblem();
         
         // ----- row-wise modeling -----
@@ -500,11 +500,9 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         mp.lambdaVarSet = new HashSet<LambdaVar>();
 
         // Add the initial feasible parse as the first lambda columns
-        for (int s = 0; s < sentences.size(); s++) {
-            DepTree tree = initFeasSol.get(s);
-            addLambdaVar(s, tree);
-        }
-
+        addFeasibleSolution(initFeasSol);
+        
+        // TODO: Use the initial solution as the points here.
         // Create the cut vectors for sum-to-one constraints
         double[][][] pointsArray = getInitialPoints();
         // Add the initial cuts
@@ -522,6 +520,17 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         }
         
         return mp;
+    }
+
+    public void addFeasibleSolution(DmvSolution feasSol) {
+        try {
+            for (int s = 0; s < sentences.size(); s++) {
+                DepTree tree = feasSol.getTreebank().get(s);
+                addLambdaVar(s, tree);
+            }
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static class CutCountComputer {

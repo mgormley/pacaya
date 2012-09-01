@@ -34,7 +34,9 @@ import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
@@ -293,34 +295,6 @@ public class DmvDantzigWolfeRelaxationTest {
         System.out.println("maxSums=" + Arrays.toString(maxSums));
     }
     
-    public enum InitSol {
-        VITERBI_EM("viterbi-em"), 
-        GOLD("gold"), 
-        RANDOM("random"), 
-        UNIFORM("uniform"),
-        NONE("none");
-        
-        private String id;
-
-        InitSol(String id) {
-          this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            return id;
-        }
-        
-        public static InitSol getById(String id) {
-            for (InitSol is : values()) {
-                if (is.id.equals(id)) {
-                    return is;
-                }
-            }
-            throw new IllegalArgumentException("Unrecognized InitSol id: " + id);
-        }
-    }
-    
     @Test
     public void testQualityOfRelaxation() throws IOException {
         
@@ -391,7 +365,7 @@ public class DmvDantzigWolfeRelaxationTest {
                 double avgScore = 0.0;
                 for (int i=0; i<numTimes; i++) {
                     timer.start();
-                    setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
+                    LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
                     RelaxedDmvSolution relaxSol = dw.solveRelaxation();
                     avgScore += relaxSol.getScore();
                     timer.stop();
@@ -435,55 +409,6 @@ public class DmvDantzigWolfeRelaxationTest {
             }
         }
         return true;
-    }
-
-    public static void setBoundsFromInitSol(DmvRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
-        boolean forward = true;
-        double offsetLogProb = Utilities.log(offsetProb);
-        double[][] logProbs = initSol.getLogProbs();
-        
-        // Adjust bounds
-        for (int c=0; c<dw.getIdm().getNumConds(); c++) {
-            for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
-
-                double newL, newU;
-                DmvBounds origBounds = dw.getBounds();
-                double lb = origBounds.getLb(c, m);
-                double ub = origBounds.getUb(c, m);
-                
-                if (Prng.nextDouble() < probOfSkipCm) {
-                    // Don't constrain this variable
-                    newL = DmvBounds.DEFAULT_LOWER_BOUND;
-                    newU = DmvBounds.DEFAULT_UPPER_BOUND;
-                } else {
-                    // Constrain the bounds to be +/- offsetLogProb from logProbs[c][m]
-                    newU = Utilities.logAdd(logProbs[c][m], offsetLogProb);
-                    if (newU > DmvBounds.DEFAULT_UPPER_BOUND) {
-                        newU = DmvBounds.DEFAULT_UPPER_BOUND;
-                    }
-    
-                    if (logProbs[c][m] > offsetLogProb) {
-                        newL = Utilities.logSubtract(logProbs[c][m], offsetLogProb);                    
-                    } else {
-                        newL = DmvBounds.DEFAULT_LOWER_BOUND;
-                    }
-                }
-                
-                double deltU = newU - ub;
-                double deltL = newL - lb;
-                //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
-                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
-                if (forward) {
-                    dw.forwardApply(deltas1);
-                    dw.forwardApply(deltas2);
-                } else {
-                    dw.reverseApply(deltas1);
-                    dw.reverseApply(deltas2);
-                }
-                System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
-            }
-        }
     }
 
     private DmvDantzigWolfeRelaxation getDw(SentenceCollection sentences) {

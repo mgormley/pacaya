@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
@@ -36,6 +34,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
@@ -49,7 +48,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
+        //BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
 
@@ -304,34 +303,6 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
             prevSum = maxSum;
         }
         System.out.println("maxSums=" + Arrays.toString(maxSums));
-    }
-    
-    public enum InitSol {
-        VITERBI_EM("viterbi-em"), 
-        GOLD("gold"), 
-        RANDOM("random"), 
-        UNIFORM("uniform"),
-        NONE("none");
-        
-        private String id;
-
-        InitSol(String id) {
-          this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            return id;
-        }
-        
-        public static InitSol getById(String id) {
-            for (InitSol is : values()) {
-                if (is.id.equals(id)) {
-                    return is;
-                }
-            }
-            throw new IllegalArgumentException("Unrecognized InitSol id: " + id);
-        }
     }
     
     @Test

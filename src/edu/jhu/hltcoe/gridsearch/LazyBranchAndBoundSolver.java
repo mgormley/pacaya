@@ -36,14 +36,28 @@ public class LazyBranchAndBoundSolver {
     // Storage of active nodes
     private PriorityQueue<ProblemNode> leafNodePQ;
     private PriorityQueue<ProblemNode> upperBoundPQ;
+    
+    private final double epsilon;
+    private final Comparator<ProblemNode> leafComparator;
+    private final double timeoutSeconds;
+    
+    public LazyBranchAndBoundSolver(double epsilon, Comparator<ProblemNode> leafComparator, double timeoutSeconds) {
+        this.epsilon = epsilon;
+        this.leafComparator = leafComparator;
+        this.timeoutSeconds = timeoutSeconds;
+    }
 
-    public SearchStatus runBranchAndBound(ProblemNode rootNode, double epsilon, Comparator<ProblemNode> comparator) {
+    public SearchStatus runBranchAndBound(ProblemNode rootNode) {
+        return runBranchAndBound(rootNode, null, WORST_SCORE);
+    }    
+
+    public SearchStatus runBranchAndBound(ProblemNode rootNode, Solution initialSolution, double initialScore) {
         // Initialize
-        this.incumbentSolution = null;
-        this.incumbentScore = WORST_SCORE;
+        this.incumbentSolution = initialSolution;
+        this.incumbentScore = initialScore;
         double upperBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
-        leafNodePQ = new PriorityQueue<ProblemNode>(11, comparator);
+        leafNodePQ = new PriorityQueue<ProblemNode>(11, leafComparator);
         upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
         int numProcessed = 0;
         int numFathomed = 0;
@@ -97,6 +111,9 @@ public class LazyBranchAndBoundSolver {
             if (relativeDiff <= epsilon) {
                 // Optimal solution found.
                 break;
+            } else if (Time.totSec(nodeTimer) > timeoutSeconds) {
+                // Timeout reached.
+                break;
             }
             // TODO: else if, ran out of memory or disk space, break
 
@@ -135,10 +152,6 @@ public class LazyBranchAndBoundSolver {
                 addToLeafNodes(childNode);
             }
             branchTimer.stop();
-        }
-        // Only the active node can be "ended"
-        if (curNode != null) {
-            curNode.end();
         }
         
         // Print summary
@@ -197,6 +210,10 @@ public class LazyBranchAndBoundSolver {
 
     public Solution getIncumbentSolution() {
         return incumbentSolution;
+    }
+    
+    public double getIncumbentScore() {
+        return incumbentScore;
     }
 
 }

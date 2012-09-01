@@ -12,30 +12,18 @@ import edu.jhu.hltcoe.train.Trainer;
 public class BnBDmvTrainer implements Trainer {
 
     private LazyBranchAndBoundSolver bnbSolver;
-    private double epsilon;
-    private File tempDir;
     private DmvBoundsDeltaFactory brancher;
     private DmvProblemNode rootNode;
     private DmvRelaxation relax;
     
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher) {
-        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), null);
+    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, double timeoutSeconds) {
+        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), timeoutSeconds);
     }
     
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, File tempDir) {
-        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), tempDir);
-    }
-    
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax) {
-        this(epsilon, brancher, relax, null);
-    }
-    
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax, File tempDir) {
-        this.epsilon = epsilon; 
-        this.bnbSolver = new LazyBranchAndBoundSolver();
+    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds) {
+        this.bnbSolver = new LazyBranchAndBoundSolver(epsilon, new BfsComparator(), timeoutSeconds);
         this.brancher = brancher;
         this.relax = relax;
-        this.tempDir = tempDir;
     }
 
     @Override
@@ -45,11 +33,12 @@ public class BnBDmvTrainer implements Trainer {
     }
     
     public void init(SentenceCollection sentences) {
-        rootNode = new DmvProblemNode(sentences, brancher, relax, tempDir);
+        rootNode = new DmvProblemNode(sentences, brancher, relax);
     }
     
     public void train() {
-        bnbSolver.runBranchAndBound(rootNode, epsilon, new BfsComparator());
+        bnbSolver.runBranchAndBound(rootNode);
+        rootNode.end();
     }
     
     @Override
