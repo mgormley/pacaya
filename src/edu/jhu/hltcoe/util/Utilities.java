@@ -319,6 +319,13 @@ public class Utilities {
         return Math.abs(a - b) < delta;
     }
 
+    public static int compare(double a, double b, double delta) {
+        if (equals(a, b, delta)) {
+            return 0;
+        }
+        return Double.compare(a, b);
+    }
+
     public static IntTuple getArgmax(double[][] array) {
         double maxValue = Double.NEGATIVE_INFINITY;
         int maxX = -1;
