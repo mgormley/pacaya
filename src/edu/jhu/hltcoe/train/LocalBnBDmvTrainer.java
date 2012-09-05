@@ -152,9 +152,15 @@ public class LocalBnBDmvTrainer implements Trainer {
                 DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
                 DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
                 if (forward) {
-                    dw.forwardApply(deltas1);
-                    dw.forwardApply(deltas2);
+                    if (lb <= newU) {
+                        dw.forwardApply(deltas1);
+                        dw.forwardApply(deltas2);
+                    } else {
+                        dw.forwardApply(deltas2);
+                        dw.forwardApply(deltas1);
+                    }
                 } else {
+                    // TODO: Remove this case or at least handle the ordering properly.
                     dw.reverseApply(deltas1);
                     dw.reverseApply(deltas2);
                 }

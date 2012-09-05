@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.log4j.BasicConfigurator;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,6 +32,7 @@ import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
@@ -379,7 +379,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
                 double avgScore = 0.0;
                 for (int i=0; i<numTimes; i++) {
                     timer.start();
-                    setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
+                    LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
                     RelaxedDmvSolution relaxSol = dw.solveRelaxation();
                     avgScore += relaxSol.getScore();
                     timer.stop();
@@ -422,55 +422,6 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
             }
         }
         return true;
-    }
-
-    public static void setBoundsFromInitSol(DmvDantzigWolfeRelaxationResolution dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
-        boolean forward = true;
-        double offsetLogProb = Utilities.log(offsetProb);
-        double[][] logProbs = initSol.getLogProbs();
-        
-        // Adjust bounds
-        for (int c=0; c<dw.getIdm().getNumConds(); c++) {
-            for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
-
-                double newL, newU;
-                DmvBounds origBounds = dw.getBounds();
-                double lb = origBounds.getLb(c, m);
-                double ub = origBounds.getUb(c, m);
-                
-                if (Prng.nextDouble() < probOfSkipCm) {
-                    // Don't constrain this variable
-                    newL = DmvBounds.DEFAULT_LOWER_BOUND;
-                    newU = DmvBounds.DEFAULT_UPPER_BOUND;
-                } else {
-                    // Constrain the bounds to be +/- offsetLogProb from logProbs[c][m]
-                    newU = Utilities.logAdd(logProbs[c][m], offsetLogProb);
-                    if (newU > DmvBounds.DEFAULT_UPPER_BOUND) {
-                        newU = DmvBounds.DEFAULT_UPPER_BOUND;
-                    }
-    
-                    if (logProbs[c][m] > offsetLogProb) {
-                        newL = Utilities.logSubtract(logProbs[c][m], offsetLogProb);                    
-                    } else {
-                        newL = DmvBounds.DEFAULT_LOWER_BOUND;
-                    }
-                }
-                
-                double deltU = newU - ub;
-                double deltL = newL - lb;
-                //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
-                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
-                if (forward) {
-                    dw.forwardApply(deltas1);
-                    dw.forwardApply(deltas2);
-                } else {
-                    dw.reverseApply(deltas1);
-                    dw.reverseApply(deltas2);
-                }
-                System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
-            }
-        }
     }
 
     private DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences) {
