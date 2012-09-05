@@ -26,6 +26,10 @@ public class DmvModel implements Model {
         return swMap;
     }
 
+    public double getStopWeight(Triple<Label, String, Boolean> triple) {
+        return swMap.get(triple);
+    }
+
     public double getStopWeight(Label label, String leftRight, boolean adjacent) {
         return swMap.get(new Triple<Label, String, Boolean>(label, leftRight, adjacent));
     }

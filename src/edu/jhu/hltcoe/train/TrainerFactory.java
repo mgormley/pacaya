@@ -21,6 +21,8 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvSupervisedWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -51,8 +53,10 @@ public class TrainerFactory {
         options.addOption("a", "algorithm", true, "Inference algorithm");
         options.addOption("i", "iterations", true, "Number of iterations");
         options.addOption("i", "convergenceRatio", true, "Convergence ratio");
+        options.addOption("nr", "numRestarts", true, "Number of random restarts");
         options.addOption("m", "model", true, "Model");
         options.addOption("p", "parser", true, "Parser");
+        options.addOption("d", "initWeights", true, "Method for initializing the weights [uniform, random, supervised]");
         options.addOption("d", "deltaGenerator", true, "Delta generator");
         options.addOption("in", "interval", true, "Only for fixed-interval delta generator");
         options.addOption("fa", "factor", true, "Only for factor delta generator");
@@ -71,20 +75,21 @@ public class TrainerFactory {
         options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
         options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
-        options.addOption("nr", "numRestarts", true, "Number of random restarts");
         options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
         options.addOption("op", "numDoubledCms", true, "How many model parameters around which the bounds should be doubled");
         options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
         options.addOption("op", "bnbTimeoutSeconds", true, "The timeout in seconds for branch-and-bound");
     }
 
-    public static Object getTrainer(CommandLine cmd) throws ParseException {
+    public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank) throws ParseException {
 
         final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
         final int iterations = Command.getOptionValue(cmd, "iterations", 10);
         final double convergenceRatio = Command.getOptionValue(cmd, "convergenceRatio", 0.99999);
+        final int numRestarts = Command.getOptionValue(cmd, "numRestarts", 0);
         final String modelName = Command.getOptionValue(cmd, "model", "dmv");
         final String parserName = Command.getOptionValue(cmd, "parser", "ilp-sentence");
+        final String initWeights = Command.getOptionValue(cmd, "initWeights", "uniform");
         final String deltaGenerator = Command.getOptionValue(cmd, "deltaGenerator", "fixed");
         final double interval = Command.getOptionValue(cmd, "interval", 0.01);
         final double factor = Command.getOptionValue(cmd, "factor", 1.1);
@@ -103,7 +108,6 @@ public class TrainerFactory {
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
-        final int numRestarts = Command.getOptionValue(cmd, "numRestarts", 0);
         double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
         double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
         int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
@@ -154,7 +158,7 @@ public class TrainerFactory {
                 IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
                 ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
                 // TODO: make this an option
-                ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+                //ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
             }
 
             if (parserName.equals("cky")) {
@@ -185,10 +189,19 @@ public class TrainerFactory {
             }
 
             MStep<DepTreebank> mStep;
-            ModelFactory modelFactory;
             mStep = new DmvMStep(lambda);
-            modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
 
+            ModelFactory modelFactory;
+            if (initWeights.equals("uniform")) {
+                modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
+            } else if (initWeights.equals("random")) {
+                modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+            } else if (initWeights.equals("supervised")) {
+                modelFactory = new DmvModelFactory(new DmvSupervisedWeightGenerator(trainTreebank));
+            } else {
+                throw new ParseException("initWeights not supported: " + initWeights);
+            }
+            
             if (algorithm.equals("viterbi")) {
                 trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
             }

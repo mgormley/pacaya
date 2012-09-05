@@ -77,15 +77,20 @@ public class DepTreebank extends ArrayList<DepTree> {
         }
         return numWords;
     }
-
-    public int getNumTypes() {
+    
+    public Set<Label> getTypes() {
         Set<Label> types = new HashSet<Label>();
         for (DepTree tree : this) {
             for (DepTreeNode node : tree) {
                 types.add(node.getLabel());
             }
         }
-        return types.size();
+        types.remove(WallDepTreeNode.WALL_LABEL);
+        return types;
+    }
+    
+    public int getNumTypes() {
+        return getTypes().size();
     }
 
     @Override

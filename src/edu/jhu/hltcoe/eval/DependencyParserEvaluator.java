@@ -21,10 +21,12 @@ public class DependencyParserEvaluator implements Evaluator {
     private ViterbiParser parser;
     private double accuracy;
     private double logLikelihood;
+    private String dataName;
 
-    public DependencyParserEvaluator(ViterbiParser parser, DepTreebank depTreebank) {
+    public DependencyParserEvaluator(ViterbiParser parser, DepTreebank depTreebank, String dataName) {
         this.parser = parser;
         this.depTreebank = depTreebank;
+        this.dataName = dataName;
     }
 
     @Override
@@ -49,8 +51,8 @@ public class DependencyParserEvaluator implements Evaluator {
 
     @Override
     public void print() {
-        log.info(String.format("Accuracy: %.2f", accuracy));
-        log.info(String.format("LogLikelihood: %.2f", logLikelihood));
+        log.info(String.format("Accuracy on %s: %.2f", dataName, accuracy));
+        log.info(String.format("LogLikelihood on %s: %.2f", dataName, logLikelihood));
     }
 
 }
