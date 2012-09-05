@@ -119,8 +119,8 @@ public class LocalBnBDmvTrainer implements Trainer {
     }
 
     private void evalIncumbent() {
-        log.info("Incumbent logLikelihood: " + incumbentScore);
         if (evaluator != null) {
+            log.info("Incumbent logLikelihood: " + incumbentScore);
             log.info("Incumbent accuracy: " + evaluator.evaluate(incumbentSolution.getTreebank()));
         }
     }

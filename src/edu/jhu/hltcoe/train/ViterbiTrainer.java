@@ -33,8 +33,8 @@ public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
 
     @Override
     protected void evalIncumbent(Model bestModel, DepTreebank bestParses, double bestLogLikelihood) {
-        log.info("Incumbent logLikelihood: " + bestLogLikelihood);
         if (evaluator != null) {
+            log.info("Incumbent logLikelihood: " + bestLogLikelihood);
             log.info("Incumbent accuracy: " + evaluator.evaluate(bestParses));
         }
     }
