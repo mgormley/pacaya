@@ -81,6 +81,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
     private double[][] optimalLogProbs;
     private Stopwatch simplexTimer;
     private Stopwatch parsingTimer;
+
+    private int numSolves;
     
     public DmvDantzigWolfeRelaxation(File tempDir,
             int maxCutRounds, CutCountComputer initCutCountComp) {
@@ -100,6 +102,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         this.cutCounter = 0;
         this.simplexTimer = new Stopwatch();
         this.parsingTimer = new Stopwatch();
+        this.numSolves = 0;
     }
     
     public void setSentences(SentenceCollection sentences) {
@@ -131,6 +134,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
     
     public RelaxedDmvSolution solveRelaxation(double incumbentScore) {
         try {            
+            numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
             Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
@@ -834,8 +838,8 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
-        log.debug("Total simplex time(ms): " + Time.totMs(simplexTimer));
-        log.debug("Total parsing time(ms): " + Time.totMs(parsingTimer));
+        log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
+        log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / numSolves);
 
         return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
