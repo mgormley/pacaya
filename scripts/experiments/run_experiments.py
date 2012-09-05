@@ -223,7 +223,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
                         # Run for some fixed amount of time.                
-                        all.update(numRestarts=1e15)
+                        all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for branch in ["regret"]:
                         for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
@@ -240,7 +240,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
                         # Run for some fixed amount of time.           
-                        all.update(numRestarts=1e15)
+                        all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for algorithm in ["viterbi", "viterbi-bnb"]:
                         algo = DPExpParams(algorithm=algorithm)
