@@ -103,6 +103,7 @@ public class LocalBnBDmvTrainer implements Trainer {
             
             // Update the incumbent solution.
             if (bnbSolver.getIncumbentScore() > incumbentScore) {
+                log.info("New incumbent from B&B");
                 incumbentScore = bnbSolver.getIncumbentScore();
                 incumbentSolution = (DmvSolution) bnbSolver.getIncumbentSolution();
                 evalIncumbent();
