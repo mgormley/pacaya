@@ -17,10 +17,14 @@ import util.CountAlphabet;
 import depparsing.decoding.BinaryRhs;
 import depparsing.decoding.RuleRhs;
 import depparsing.decoding.UnaryRhs;
+import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class CKYParser {
 
-	/**
+	private static final double PROB_EQUALS_TOLERANCE = 1e-13;
+
+    /**
 	 * For use in ensuring code updates are backward compatible
 	 * (for comparison to Noah's original model A). 
 	 */
@@ -92,6 +96,8 @@ public class CKYParser {
 		// headed by a particular nonterminal and index in the sentence
 		double scores[][][][] = new double[numWords + 1][numWords + 1][sd.nontermMap.numNontermTypes][numWords];
 		RuleRhs back[][][][] = new RuleRhs[numWords + 1][numWords + 1][sd.nontermMap.numNontermTypes][numWords];
+		double jitter[][][][] = new double[numWords + 1][numWords + 1][sd.nontermMap.numNontermTypes][numWords];
+		boolean hasJitter[][][][] = new boolean[numWords + 1][numWords + 1][sd.nontermMap.numNontermTypes][numWords];
 		
 		// Set all scores to -Infinity initially
 		for(int i = 0; i <= numWords; i++)
@@ -138,10 +144,10 @@ public class CKYParser {
 				int end = begin + span;
 				for(int split = begin + 1; split <= end - 1; split++) {
 					// Take care of binary rules
-					addChildProbs(begin, end, split, sd, back, scores);
+					addChildProbs(begin, end, split, sd, back, scores, jitter, hasJitter);
 				}
 				// Take care of unary rules
-				addStopProbs(begin, end, sd, back, scores);
+				addStopProbs(begin, end, sd, back, scores, jitter, hasJitter);
 			}
 		}
 		
@@ -149,15 +155,35 @@ public class CKYParser {
 		int topWord = -1;
 		int rootLoc = -1;
 		double sentenceProb = Double.NEGATIVE_INFINITY;
+		double sentenceJitter = 0.0;
+		boolean sentenceHasJitter = false;
 		int startValency = sd.nontermMap.getNontermIndex(RIGHT, CHOICE);
 		for(int i = 0; i < numWords; i++) {
 			RuleRhs backLhs = back[0][numWords][startValency][i];
 			if(backLhs != null) {
 				double prob = sd.root[i] + scores[0][numWords][startValency][i];
-				if(Double.compare(sentenceProb, prob) < 0) {
+				double jit = 0.0;
+				boolean hasJit = false;
+				
+                // Compare sentenceProb and prob. If they are equal break the tie by 
+				// comparing the jitter.
+				int diff = Utilities.compare(sentenceProb, prob, PROB_EQUALS_TOLERANCE);
+				if (diff == 0) {
+				    jit = Prng.nextDouble();
+                    hasJit = true;
+				    if (!sentenceHasJitter) {
+				        // Lazily create the jitter.
+				        sentenceJitter = Prng.nextDouble();
+                        sentenceHasJitter = true;
+				    }
+				    diff = Double.compare(sentenceJitter, jit);
+				}
+                if(diff < 0) {
 					sentenceProb = prob;
 					rootLoc = backLhs.head;
 					topWord = i;
+                    sentenceJitter = jit;
+                    sentenceHasJitter = hasJit;
 				}
 			}
 		}
@@ -183,7 +209,8 @@ public class CKYParser {
 	}
 
 	private static void addStopProbs(int begin, int end, DepSentenceDist sd,
-			RuleRhs[][][][] back, double[][][][] score) {
+			RuleRhs[][][][] back, double[][][][] score, 
+			double[][][][] jitter, boolean[][][][] hasJitter) {
 		// A[begin, end) -> B[begin, end)
 		int A, B;
 		for(int i = begin; i < end; i++) {
@@ -209,11 +236,26 @@ public class CKYParser {
 					if(backLhs != null) {
 						double prob = sd.decision[i][dir][dv][choice] +
 						score[begin][end][B][i];
+						double jit = 0.0;
+						boolean hasJit = false;
 
-						double diff = Double.compare(score[begin][end][A][i], prob);
+		                // Compare the best prob to the current prob. If they are equal break the tie by 
+		                // comparing the jitter.
+						double diff = Utilities.compare(score[begin][end][A][i], prob, PROB_EQUALS_TOLERANCE);
+						if (diff == 0) {
+						    jit = Prng.nextDouble();
+						    hasJit = true;
+						    if (!hasJitter[begin][end][A][i]) {
+						        jitter[begin][end][A][i] = Prng.nextDouble();
+                                hasJitter[begin][end][A][i] = true;
+						    }
+						    diff = Double.compare(jitter[begin][end][A][i], jit);
+						}
 						if(diff < 0) {
 							score[begin][end][A][i] = prob;
 							back[begin][end][A][i] = new UnaryRhs(backLhs.head, B);
+							jitter[begin][end][A][i] = jit;
+                            hasJitter[begin][end][A][i] = hasJit;
 						}
 					}
 				}
@@ -222,7 +264,8 @@ public class CKYParser {
 	}
 
 	private static void addChildProbs(int begin, int end, int split, DepSentenceDist sd,
-							   RuleRhs[][][][] back, double[][][][] score) {
+							   RuleRhs[][][][] back, double[][][][] score, 
+							   double[][][][] jitter, boolean[][][][] hasJitter) {
 		
 		// A[begin, end) -> B[begin, split) C[split, end)
 		RuleRhs leftBack, rightBack, parentBack;
@@ -270,13 +313,28 @@ public class CKYParser {
 							double prob = sd.child[childIndex][parentIndex][cv] +
 							score[begin][split][nontermB][indexB] +
 							score[split][end][nontermC][indexC];
+							double jit = 0.0;
+							boolean hasJit = false;
+                            int lhsIndex = sd.nontermMap.getNontermIndex(dir,CHILD) + v;
 
-							int lhsIndex = sd.nontermMap.getNontermIndex(dir,CHILD) + v;
-							double diff = Double.compare(score[begin][end][lhsIndex][parentIndex], prob);
+	                        // Compare the best prob to the current prob. If they are equal break the tie by 
+	                        // comparing the jitter.
+							double diff = Utilities.compare(score[begin][end][lhsIndex][parentIndex], prob, PROB_EQUALS_TOLERANCE);
+							if (diff == 0) {
+							    jit = Prng.nextDouble();
+							    hasJit = true;
+							    if (!hasJitter[begin][end][lhsIndex][parentIndex]) {
+							        jitter[begin][end][lhsIndex][parentIndex] = Prng.nextDouble();
+							        hasJitter[begin][end][lhsIndex][parentIndex] = true;
+							    }
+							    diff = Double.compare(jitter[begin][end][lhsIndex][parentIndex], jit);
+							}
 							if(diff < 0) {
 								score[begin][end][lhsIndex][parentIndex] = prob;
 								back[begin][end][lhsIndex][parentIndex] =
 									new BinaryRhs(parentBack.head, split, nontermB, nontermC, childIndex);
+							    jitter[begin][end][lhsIndex][parentIndex] = jit;
+                                hasJitter[begin][end][lhsIndex][parentIndex] = hasJit;
 							}
 						}
 					}
