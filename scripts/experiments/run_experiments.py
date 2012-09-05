@@ -240,7 +240,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                             branch="regret")
                                 if not self.fast:
                                     algo.update(bnbTimeoutSeconds=maxNumSentences/3)
-                                for offsetProb in frange(10e-13, 0.21,0.05):
+                                for offsetProb in frange(0.05, 0.21, 0.05):
                                     for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                         algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
                                         experiments.append(all + dataset + msl + mns + algo)
