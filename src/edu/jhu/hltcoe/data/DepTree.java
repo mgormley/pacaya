@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import edu.stanford.nlp.trees.CollinsHeadFinder;
 import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.HeadFinder;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.util.Filter;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
@@ -21,21 +23,50 @@ public class DepTree implements Iterable<DepTreeNode> {
     private int[] parents;
     private boolean isProjective;
     
-    public DepTree(Tree tree) {
-        List<Tree> leaves = tree.getLeaves();
+    private static String[] ptbPunctTags = {"!", "#", "$", "''", "(", ")", ",", "-LRB-", "-RRB-", ".", ":", "?", "``"};
+    HashSet<String> punctTags = new HashSet<String>(Arrays.asList(ptbPunctTags));
+    
+    private class PunctuationFilter implements Filter<Tree> {
 
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public boolean accept(Tree node) {
+            if (node.isPreTerminal()) {
+                String tag = node.label().value();
+                if (punctTags.contains(tag)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+    }
+    
+    public DepTree(Tree tree) {
+        // Remove punctuation
+        tree = tree.prune(new PunctuationFilter());
+        
+        List<Tree> leaves = tree.getLeaves();
+        for (Tree leaf : leaves) {
+            if (punctTags.contains(getTag(leaf, tree))) {
+                throw new IllegalStateException("There shouldn't be any leaves that are considered punctuation!");
+            }
+        }
+        
         // Create parents array
         parents = new int[leaves.size()];
         Arrays.fill(parents, EMPTY_POSITION);
-        
+
+        // Percolate heads
         HeadFinder hf = new CollinsHeadFinder();
         tree.percolateHeads(hf);
         Collection<Dependency<Tree, Tree, Object>> dependencies = mapDependencies(tree, hf);
-        assert(dependencies.size() == leaves.size() - 1);
+
         for(Dependency<Tree, Tree, Object> dependency : dependencies) {
             Tree parent = dependency.governor();
             Tree child = dependency.dependent();
-            
+                        
             int parentIdx = indexOfInstance(leaves, parent);
             int childIdx = indexOfInstance(leaves, child);
             
@@ -58,24 +89,39 @@ public class DepTree implements Iterable<DepTreeNode> {
         int position = 0;
         for (Tree leaf : leaves) {
             // Note: it is the parent of the leaf that has the word AND the tag
-            edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
-            String word = null;
-            if (label instanceof HasWord) {
-                word = ((HasWord)label).word();
-            }
-            String tag = null;
-            if (label instanceof HasTag) {
-                tag = ((HasTag)label).tag();
-            }
+            String word = getWord(leaf, tree);
+            String tag = getTag(leaf, tree);
             assert(word != null || tag != null);
             nodes.add(new NonprojDepTreeNode(word, tag, position));            
             position++;
+        }
+        
+        if (true) {
+            
         }
         
         // Add parent/child links to DepTreeNodes
         addParentChildLinksToNodes();
         
         this.isProjective = checkIsProjective();
+    }
+
+    private String getWord(Tree leaf, Tree tree) {
+        edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
+        String word = null;
+        if (label instanceof HasWord) {
+            word = ((HasWord)label).word();
+        }
+        return word;
+    }
+
+    private String getTag(Tree leaf, Tree tree) {
+        edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
+        String tag = null;
+        if (label instanceof HasTag) {
+            tag = ((HasTag)label).tag();
+        }
+        return tag;
     }
 
     public DepTree(Sentence sentence, int[] parents, boolean isProjective) {
