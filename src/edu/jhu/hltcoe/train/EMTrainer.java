@@ -56,6 +56,7 @@ public class EMTrainer<C> implements Trainer {
                 bestLogLikelihood = logLikelihood;
                 bestModel = model;
                 bestCounts = counts;
+                log.info("Incumbent logLikelihood: " + bestLogLikelihood);
             }
             if (Time.totSec(roundTimer) > timeoutSeconds) {
                 // Timeout reached.
@@ -63,6 +64,7 @@ public class EMTrainer<C> implements Trainer {
             }
             roundTimer.stop();
         }
+        log.info("Incumbent logLikelihood: " + bestLogLikelihood);
         log.info("bestLogLikelihood: " + bestLogLikelihood);
         logLikelihood = bestLogLikelihood;
         model = bestModel;

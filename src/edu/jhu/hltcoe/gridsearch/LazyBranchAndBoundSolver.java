@@ -80,6 +80,8 @@ public class LazyBranchAndBoundSolver {
         double rootLogSpace = rootNode.getLogSpace();
         double logSpaceRemain = rootLogSpace;
         ProblemNode curNode = null;
+
+        log.info("Incumbent logLikelihood: " + incumbentScore);
         while (hasNextLeafNode()) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
             nodeTimer.start();
@@ -160,6 +162,7 @@ public class LazyBranchAndBoundSolver {
             if (sol != null && sol.getScore() > incumbentScore) {
                 incumbentScore = sol.getScore();
                 incumbentSolution = sol;
+                log.info("Incumbent logLikelihood: " + incumbentScore);
                 // TODO: pruneActiveNodes();
                 // We could store a priority queue in the opposite order (or
                 // just a sorted list)
@@ -178,6 +181,7 @@ public class LazyBranchAndBoundSolver {
         }
         
         // Print summary
+        log.info("Incumbent logLikelihood: " + incumbentScore);
         double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
         if (relativeDiff <= epsilon) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;

@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.train;
 
+import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -30,7 +31,9 @@ import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer {
-    
+
+    private Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
+
     ViterbiTrainer viterbiTrainer;
     private LazyBranchAndBoundSolver bnbSolver;
     private DmvBoundsDeltaFactory brancher;
@@ -81,6 +84,7 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (vemScore > incumbentScore) {
                 incumbentScore = vemScore;
                 incumbentSolution = vemSol;
+                log.info("Incumbent logLikelihood: " + incumbentScore);
             }
             
             // Set bounds on the root node from the resulting solution.
@@ -98,6 +102,7 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (bnbSolver.getIncumbentScore() > incumbentScore) {
                 incumbentScore = bnbSolver.getIncumbentScore();
                 incumbentSolution = (DmvSolution) bnbSolver.getIncumbentSolution();
+                log.info("Incumbent logLikelihood: " + incumbentScore);
             }
             
             if (Time.totSec(timer) > timeoutSeconds) {
@@ -105,6 +110,7 @@ public class LocalBnBDmvTrainer implements Trainer {
                 break;
             }
         }
+        log.info("Incumbent logLikelihood: " + incumbentScore);
         rootNode.end();
     }
     
