@@ -407,7 +407,7 @@ public class DmvProblemNode implements ProblemNode {
 
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, Double.POSITIVE_INFINITY);
         trainer.train(sentences);
         
         DepTreebank treebank = trainer.getCounts();

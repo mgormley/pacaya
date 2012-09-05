@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.train;
 
+import org.jboss.dna.common.statistic.Stopwatch;
+
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
@@ -24,6 +26,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer {
@@ -37,9 +40,11 @@ public class LocalBnBDmvTrainer implements Trainer {
     private double probOfSkipCm;
     private double incumbentScore;
     private DmvSolution incumbentSolution;
+    private double timeoutSeconds;
     
     public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, double epsilon, DmvBoundsDeltaFactory brancher,
-            DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm) {
+            DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm, 
+            double timeoutSeconds) {
         // TODO: Add a timeout to branch-and-bound.
         this.viterbiTrainer = viterbiTrainer;
         this.bnbSolver = new LazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds);
@@ -48,6 +53,7 @@ public class LocalBnBDmvTrainer implements Trainer {
         this.numRestarts = numRestarts;
         this.offsetProb = offsetProb;
         this.probOfSkipCm = probOfSkipCm;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     @Override
@@ -57,7 +63,9 @@ public class LocalBnBDmvTrainer implements Trainer {
         this.incumbentScore = LazyBranchAndBoundSolver.WORST_SCORE;
         IndexedDmvModel idm = new IndexedDmvModel(sentences);
         DmvProblemNode rootNode = new DmvProblemNode(sentences, brancher, relax);
-        
+
+        Stopwatch timer = new Stopwatch();
+        timer.start();
         for (int r=0; r<=numRestarts; r++) {
             // Run Viterbi EM with no random restarts.
             viterbiTrainer.train(sentences);
@@ -90,6 +98,11 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (bnbSolver.getIncumbentScore() > incumbentScore) {
                 incumbentScore = bnbSolver.getIncumbentScore();
                 incumbentSolution = (DmvSolution) bnbSolver.getIncumbentSolution();
+            }
+            
+            if (Time.totSec(timer) > timeoutSeconds) {
+                // Timeout reached.
+                break;
             }
         }
         rootNode.end();

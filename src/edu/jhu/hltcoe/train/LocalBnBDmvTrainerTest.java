@@ -33,12 +33,13 @@ public class LocalBnBDmvTrainerTest {
         int numRestarts = 1;
         double offsetProb = 0.1;
         double probOfSkipCm = 0.1;
-        double timeoutSeconds = 2;
+        double bnbTimeoutSeconds = 2;
+        double timeoutSeconds = 10;
         ViterbiTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
         DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
         DmvBoundsDeltaFactory brancher = getDefaultBrancher();
-        LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, timeoutSeconds, numRestarts,
-                offsetProb, probOfSkipCm);
+        LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
+                offsetProb, probOfSkipCm, timeoutSeconds);
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");

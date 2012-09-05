@@ -15,17 +15,17 @@ public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
             int iterations, double convergenceRatio) {
-        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0);
+        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY);
     }
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts) {
-        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds) {
+        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
     }
     
     protected ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts) {
-        super(eStep, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds) {
+        super(eStep, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
     }
 
     private static class ViterbiEStep implements EStep<DepTreebank> {

@@ -30,15 +30,17 @@ public class EMTrainer<C> implements Trainer {
     private Double logLikelihood;
     private C counts;
     private int numRestarts;
+    private double timeoutSeconds;
 
     public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, 
-            double convergenceRatio, int numRestarts) {
+            double convergenceRatio, int numRestarts, double timeoutSeconds) {
         this.eStep = eStep;
         this.mStep = mStep;
         this.modelFactory = modelFactory;
         this.iterations = iterations;
         this.convergenceRatio = convergenceRatio;
         this.numRestarts = numRestarts;
+        this.timeoutSeconds = timeoutSeconds;
     }
     
     @Override
@@ -46,13 +48,20 @@ public class EMTrainer<C> implements Trainer {
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
         Model bestModel = null;
         C bestCounts = null;
+        Stopwatch roundTimer = new Stopwatch();
         for (int r=0; r<=numRestarts; r++) {
+            roundTimer.start();
             trainOnce(sentences);
             if (logLikelihood > bestLogLikelihood) {
                 bestLogLikelihood = logLikelihood;
                 bestModel = model;
                 bestCounts = counts;
             }
+            if (Time.totSec(roundTimer) > timeoutSeconds) {
+                // Timeout reached.
+                break;
+            }
+            roundTimer.stop();
         }
         log.info("bestLogLikelihood: " + bestLogLikelihood);
         logLikelihood = bestLogLikelihood;

@@ -78,7 +78,8 @@ public class TrainerFactory {
         options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
         options.addOption("op", "numDoubledCms", true, "How many model parameters around which the bounds should be doubled");
         options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
-        options.addOption("op", "bnbTimeoutSeconds", true, "The timeout in seconds for branch-and-bound");
+        options.addOption("op", "timeoutSeconds", true, "The timeout in seconds for training run");
+        options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank) throws ParseException {
@@ -111,7 +112,8 @@ public class TrainerFactory {
         double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
         double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
         int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
-        double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", 0.0);
+        double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
+        double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
 
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -201,17 +203,18 @@ public class TrainerFactory {
             } else {
                 throw new ParseException("initWeights not supported: " + initWeights);
             }
-            
+
             if (algorithm.equals("viterbi")) {
-                trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts);
+                trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts,
+                        timeoutSeconds);
             }
             if (algorithm.equals("viterbi-bnb")) {
-                // Use zero random restarts for local search.
-                viterbiTrainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, 0);
+                // Use zero random restarts and no timeout for local search.
+                viterbiTrainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, 0,
+                        Double.POSITIVE_INFINITY);
             }
         }
         
-
         DmvBoundsDeltaFactory brancher = null;
         if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
             if (branch.equals("full")) {
@@ -229,9 +232,9 @@ public class TrainerFactory {
         
         if (algorithm.equals("viterbi-bnb")) {
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
-                    offsetProb, probOfSkipCm);
+                    offsetProb, probOfSkipCm, timeoutSeconds);
         } else if (algorithm.equals("bnb")) {
-            trainer = new BnBDmvTrainer(epsilon, brancher, relax, bnbTimeoutSeconds);
+            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds);
         }
         
         if (trainer == null) {

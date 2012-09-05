@@ -224,6 +224,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                     for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                         experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
         elif self.expname == "viterbi-bnb":
+            if not self.fast:
+                all.update(numRestarts=1e15)
+                # Run for 4 hours
+                all.update(timeoutSeconds=4*60*60)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -235,19 +239,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 algo.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCuts=1.01, 
                                             branch="regret")
                                 if not self.fast:
-                                    algo.update(numRestarts=10, 
-                                                bnbTimeoutSeconds=maxNumSentences/3)
+                                    algo.update(bnbTimeoutSeconds=maxNumSentences/3)
                                 for offsetProb in frange(10e-13, 0.21,0.05):
                                     for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                         algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
                                         experiments.append(all + dataset + msl + mns + algo)
                             else:
-                                for numRestarts in [10, 100]:
-                                    if not self.fast:
-                                        algo.update(numRestarts=numRestarts)
-                                    else:
-                                        algo.update(numRestarts=numRestarts/10)
-                                    experiments.append(all + dataset + msl + mns + algo)
+                                experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:
