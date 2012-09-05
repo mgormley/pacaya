@@ -1,12 +1,14 @@
 ## Setup
 library(ggplot2)
+library(plyr)
+library(stringr)
 
 stdwidth=10
 stdheight=8
 quartz(width=stdwidth,height=stdheight)
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/relax_compare/bnb_008.data"
+results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/relax_compare/bnb_007.data"
 
 df <- read.table(results.file, header=TRUE)
 
@@ -23,6 +25,9 @@ df <- subset(df, initBounds == "random")
 df$initBounds <- factor(df$initBounds)
 #df.viterbiEm <- subset(df, initBounds == "viterbi-em")
 
+columns <- c("relaxation", "maxDwIterations", "maxSimplexIterations", "maxSetSizeToConstrain", "minSumForCuts")
+base.col <- c("dw", max(df$maxDwIterations), max(df$maxSimplexIterations), max(df$maxSetSizeToConstrain), max(df$minSumForCuts))
+
 ##  ------- Not very interesting: plot of relaxBound vs. relaxSetup ---------
 for(mnsLevel in c(300)) {
   for(ibLevel in levels(df$initBounds)) {
@@ -31,10 +36,11 @@ for(mnsLevel in c(300)) {
     plotbox <- function(mydata, myxcolname) {
       myxcol <- mydata[,myxcolname]
       xlab = myxcolname
-      ylab = "relaxTime(ms)"
+      #ylab = "relaxTime(ms)"
+      ylab = "relaxBound"
 
       p <- qplot(myxcol,
-            relaxTime, data=mydata, group=myxcol, #color=offsetProb,
+            relaxBound, data=mydata, group=myxcol, #color=offsetProb,
             geom="boxplot", position = "identity",
                  xlab=xlab, ylab=ylab) +
               opts(axis.text.x=theme_text(angle=70, hjust=1.0))
@@ -52,6 +58,7 @@ for(mnsLevel in c(300)) {
     if (myxcolname == "maxSetSizeToConstrain" || myxcolname == "minSumForCuts") {
           dfsubset <- subset(df, relaxation == "dw")
     }
+    
     print(plotbox(dfsubset, myxcolname))
     ggsave(paste(c(results.file, ".", mnsLevel, ".", ibLevel, ".", myxcolname, ".pdf"), collapse = ""))
   }
@@ -61,22 +68,44 @@ for(mnsLevel in c(300)) {
 ##  ------- Not very interesting: plot of relaxBound vs. relaxSetup ---------
 for(mnsLevel in c(300)) {
   for(ibLevel in levels(df$initBounds)) {
+    for(myxcolname in c("relaxation", "maxDwIterations", "maxSimplexIterations", "maxSetSizeToConstrain", "minSumForCuts")) {
     ## Plot a box plot of all the data (cutting off the top outliers)
-    plotbox <- function(mydata) {
+    plotbox <- function(mydata, myxcolname) {
+      myxcol <- mydata[,myxcolname]
       xlab = "Offset from fixed parameters"
       ylab = "Bound given by relaxation"
-      qplot(offsetProb,
-            relaxBound, data=mydata, group=relaxSetup,
-            geom="point", color=relaxSetup, position = "identity",
-            xlab=xlab, ylab=ylab, size=3) +
-              opts(axis.text.x=theme_text(angle=70, hjust=1.0)) + geom_smooth(aes(color=relaxSetup), size=0.5, se=FALSE) 
+      qplot(factor(offsetProb),
+            relaxBound, data=mydata, fill=factor(myxcol),
+            #group=myxcol, color=myxcol,
+            geom="boxplot", 
+            xlab=xlab, ylab=ylab, alpha=0.7) +
+              opts(axis.text.x=theme_text(angle=70, hjust=1.0)) #+ geom_smooth(aes(color=myxcol), size=0.5, se=FALSE) 
+      ## TODO: + geom_abline(intercept = -283.80, slope=0)
+      ## TODO: shape=containsGoldSol
+    }
+
+    plotpoints <- function(mydata, myxcolname) {
+      myxcol <- mydata[,myxcolname]
+      xlab = "Offset from fixed parameters"
+      ylab = "Bound given by relaxation"
+      qplot(factor(offsetProb),
+            relaxBound, data=mydata, #fill=factor(myxcol),
+            #group=myxcol,
+            color=factor(myxcol),
+            geom="jitter", 
+            xlab=xlab, ylab=ylab, alpha=0.7) +
+              opts(axis.text.x=theme_text(angle=70, hjust=1.0)) #+ geom_smooth(aes(color=myxcol), size=0.5, se=FALSE) 
       ## TODO: + geom_abline(intercept = -283.80, slope=0)
       ## TODO: shape=containsGoldSol
     }
     
     dfsubset <- subset(df, initBounds == ibLevel & maxNumSentences == mnsLevel)
-    print(plotbox(dfsubset))
-    ggsave(paste(c(results.file, ".", mnsLevel, ".", ibLevel, ".relaxBound", ".pdf"), collapse = ""))
+    if (myxcolname == "maxSetSizeToConstrain" || myxcolname == "minSumForCuts") {
+          dfsubset <- subset(df, relaxation == "dw")
+    }
+    print(plotpoints(dfsubset, myxcolname))
+    ggsave(paste(c(results.file, ".", mnsLevel, ".", ibLevel, ".rb.", myxcolname, ".pdf"), collapse = ""))
+  }
   }
 }
 
