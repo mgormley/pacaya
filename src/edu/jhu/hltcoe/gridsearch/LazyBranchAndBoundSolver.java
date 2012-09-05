@@ -162,6 +162,7 @@ public class LazyBranchAndBoundSolver {
             if (sol != null && sol.getScore() > incumbentScore) {
                 incumbentScore = sol.getScore();
                 incumbentSolution = sol;
+                evalIncumbent(incumbentSolution, incumbentScore);
                 log.info("Incumbent logLikelihood: " + incumbentScore);
                 // TODO: pruneActiveNodes();
                 // We could store a priority queue in the opposite order (or
@@ -194,6 +195,13 @@ public class LazyBranchAndBoundSolver {
         
         // Return epsilon optimal solution
         return status;
+    }
+    
+    /**
+     * Override this method.
+     */
+    protected void evalIncumbent(Solution incumbentSolution, double incumbentScore) {
+        return;
     }
 
     /** 

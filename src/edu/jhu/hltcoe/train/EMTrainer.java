@@ -56,7 +56,7 @@ public class EMTrainer<C> implements Trainer {
                 bestLogLikelihood = logLikelihood;
                 bestModel = model;
                 bestCounts = counts;
-                log.info("Incumbent logLikelihood: " + bestLogLikelihood);
+                evalIncumbent(bestModel, bestCounts, bestLogLikelihood);
             }
             if (Time.totSec(roundTimer) > timeoutSeconds) {
                 // Timeout reached.
@@ -64,13 +64,20 @@ public class EMTrainer<C> implements Trainer {
             }
             roundTimer.stop();
         }
-        log.info("Incumbent logLikelihood: " + bestLogLikelihood);
+        evalIncumbent(bestModel, bestCounts, bestLogLikelihood);
         log.info("bestLogLikelihood: " + bestLogLikelihood);
         logLikelihood = bestLogLikelihood;
         model = bestModel;
         counts = bestCounts;
     }
     
+    /**
+     * Override this method.
+     */
+    protected void evalIncumbent(Model bestModel, C bestCounts, double bestLogLikelihood) {
+        return;
+    }
+
     public void trainOnce(SentenceCollection sentences) {
         // Initialize the parameters of the model
         model = modelFactory.getInstance(sentences);

@@ -1,11 +1,10 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.io.File;
-
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.Trainer;
 
@@ -15,13 +14,10 @@ public class BnBDmvTrainer implements Trainer {
     private DmvBoundsDeltaFactory brancher;
     private DmvProblemNode rootNode;
     private DmvRelaxation relax;
-    
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, double timeoutSeconds) {
-        this(epsilon, brancher, new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer()), timeoutSeconds);
-    }
-    
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds) {
-        this.bnbSolver = new LazyBranchAndBoundSolver(epsilon, new BfsComparator(), timeoutSeconds);
+
+    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds,
+            DependencyParserEvaluator evaluator) {
+        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new BfsComparator(), timeoutSeconds, evaluator);
         this.brancher = brancher;
         this.relax = relax;
     }

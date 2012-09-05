@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
@@ -12,20 +13,30 @@ import edu.jhu.hltcoe.util.Pair;
 public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
 
     private static Logger log = Logger.getLogger(ViterbiTrainer.class);
+    private DependencyParserEvaluator evaluator;
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
             int iterations, double convergenceRatio) {
-        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY);
+        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY, null);
     }
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds) {
-        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
+            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, DependencyParserEvaluator evaluator) {
+        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, evaluator);
     }
     
     protected ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds) {
+            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, DependencyParserEvaluator evaluator) {
         super(eStep, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
+        this.evaluator = evaluator;
+    }
+
+    @Override
+    protected void evalIncumbent(Model bestModel, DepTreebank bestParses, double bestLogLikelihood) {
+        log.info("Incumbent logLikelihood: " + bestLogLikelihood);
+        if (evaluator != null) {
+            log.info("Incumbent accuracy: " + evaluator.evaluate(bestParses));
+        }
     }
 
     private static class ViterbiEStep implements EStep<DepTreebank> {

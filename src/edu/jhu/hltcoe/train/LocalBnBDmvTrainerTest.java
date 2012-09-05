@@ -39,7 +39,7 @@ public class LocalBnBDmvTrainerTest {
         DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
         DmvBoundsDeltaFactory brancher = getDefaultBrancher();
         LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
-                offsetProb, probOfSkipCm, timeoutSeconds);
+                offsetProb, probOfSkipCm, timeoutSeconds, null);
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");

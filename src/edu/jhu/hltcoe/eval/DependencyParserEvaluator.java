@@ -31,14 +31,21 @@ public class DependencyParserEvaluator implements Evaluator {
 
     @Override
     public void evaluate(Model model) {
-        int correct = 0;
-        int total = 0;
         SentenceCollection sentences = depTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
         logLikelihood = parser.getLastParseWeight();
+
+        evaluate(parses);
+    }
+
+    public double evaluate(DepTreebank parses) {
+        int correct = 0;
+        int total = 0;
+        assert(parses.size() == depTreebank.size());
         for (int i = 0; i < depTreebank.size(); i++) {
             int[] goldParents = depTreebank.get(i).getParents();
             int[] parseParents = parses.get(i).getParents();
+            assert(parseParents.length == goldParents.length);
             for (int j = 0; j < goldParents.length; j++) {
                 if (goldParents[j] == parseParents[j]) {
                     correct++;
@@ -47,6 +54,7 @@ public class DependencyParserEvaluator implements Evaluator {
             }
         }
         accuracy = (double) correct / (double) total;
+        return accuracy;
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
@@ -146,10 +147,7 @@ public class TrainerFactory {
         }
 
         evalParser = new DmvCkyParser();
-
-        if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
-        
-        }
+        DependencyParserEvaluator parserEvaluator = new DependencyParserEvaluator(evalParser, trainTreebank, "train"); 
         
         Trainer trainer = null;
         ViterbiTrainer viterbiTrainer = null;
@@ -206,12 +204,12 @@ public class TrainerFactory {
 
             if (algorithm.equals("viterbi")) {
                 trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts,
-                        timeoutSeconds);
+                        timeoutSeconds, parserEvaluator);
             }
             if (algorithm.equals("viterbi-bnb")) {
                 // Use zero random restarts and no timeout for local search.
                 viterbiTrainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, 0,
-                        Double.POSITIVE_INFINITY);
+                        Double.POSITIVE_INFINITY, null);
             }
         }
         
@@ -232,9 +230,9 @@ public class TrainerFactory {
         
         if (algorithm.equals("viterbi-bnb")) {
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
-                    offsetProb, probOfSkipCm, timeoutSeconds);
+                    offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
         } else if (algorithm.equals("bnb")) {
-            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds);
+            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds, parserEvaluator);
         }
         
         if (trainer == null) {

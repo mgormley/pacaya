@@ -449,7 +449,7 @@ public class DmvDantzigWolfeRelaxationTest {
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
+        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, null);
         // TODO: use random restarts
         trainer.train(sentences);
         

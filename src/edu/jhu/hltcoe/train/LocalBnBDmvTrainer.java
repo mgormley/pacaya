@@ -5,7 +5,9 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBounds;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta;
@@ -44,19 +46,20 @@ public class LocalBnBDmvTrainer implements Trainer {
     private double incumbentScore;
     private DmvSolution incumbentSolution;
     private double timeoutSeconds;
+    private DependencyParserEvaluator evaluator;
     
     public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, double epsilon, DmvBoundsDeltaFactory brancher,
             DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm, 
-            double timeoutSeconds) {
-        // TODO: Add a timeout to branch-and-bound.
+            double timeoutSeconds, DependencyParserEvaluator evaluator) {
         this.viterbiTrainer = viterbiTrainer;
-        this.bnbSolver = new LazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds);
+        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds, null);
         this.brancher = brancher;
         this.relax = relax;
         this.numRestarts = numRestarts;
         this.offsetProb = offsetProb;
         this.probOfSkipCm = probOfSkipCm;
         this.timeoutSeconds = timeoutSeconds;
+        this.evaluator = evaluator;
     }
 
     @Override
@@ -84,7 +87,7 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (vemScore > incumbentScore) {
                 incumbentScore = vemScore;
                 incumbentSolution = vemSol;
-                log.info("Incumbent logLikelihood: " + incumbentScore);
+                evalIncumbent();
             }
             
             // Set bounds on the root node from the resulting solution.
@@ -102,7 +105,7 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (bnbSolver.getIncumbentScore() > incumbentScore) {
                 incumbentScore = bnbSolver.getIncumbentScore();
                 incumbentSolution = (DmvSolution) bnbSolver.getIncumbentSolution();
-                log.info("Incumbent logLikelihood: " + incumbentScore);
+                evalIncumbent();
             }
             
             if (Time.totSec(timer) > timeoutSeconds) {
@@ -110,8 +113,15 @@ public class LocalBnBDmvTrainer implements Trainer {
                 break;
             }
         }
-        log.info("Incumbent logLikelihood: " + incumbentScore);
+        evalIncumbent();
         rootNode.end();
+    }
+
+    private void evalIncumbent() {
+        log.info("Incumbent logLikelihood: " + incumbentScore);
+        if (evaluator != null) {
+            log.info("Incumbent accuracy: " + evaluator.evaluate(incumbentSolution.getTreebank()));
+        }
     }
     
     @Override
