@@ -23,7 +23,7 @@ public class DmvLazyBranchAndBoundSolver extends LazyBranchAndBoundSolver {
     @Override
     protected void evalIncumbent(Solution incumbentSolution, double incumbentScore) {
         log.info("Incumbent logLikelihood: " + incumbentScore);
-        if (evaluator != null) {
+        if (evaluator != null && incumbentSolution != null) {
             DmvSolution sol = (DmvSolution) incumbentSolution;
             log.info("Incumbent accuracy: " + evaluator.evaluate(sol.getTreebank()));
         }

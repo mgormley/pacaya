@@ -81,7 +81,7 @@ public class LazyBranchAndBoundSolver {
         double logSpaceRemain = rootLogSpace;
         ProblemNode curNode = null;
 
-        log.info("Incumbent logLikelihood: " + incumbentScore);
+        evalIncumbent(initialSolution, logSpaceRemain);
         while (hasNextLeafNode()) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
             nodeTimer.start();
@@ -111,11 +111,11 @@ public class LazyBranchAndBoundSolver {
                 log.debug(getHistogram(bounds));
                 
                 // Print timers.
-                log.debug("Avg time(ms) per node: " + Time.avgMs(nodeTimer));
-                log.debug("Avg switch time(ms) per node: " + Time.avgMs(switchTimer));
-                log.debug("Avg relax time(ms) per node: " + Time.avgMs(relaxTimer));
-                log.debug("Avg project time(ms) per node: " + Time.avgMs(feasTimer));
-                log.debug("Avg branch time(ms) per node: " + Time.avgMs(branchTimer));
+                log.debug("Avg time(ms) per node: " + Time.totMs(nodeTimer) / numProcessed);
+                log.debug("Avg switch time(ms) per node: " + Time.totMs(switchTimer) / numProcessed);
+                log.debug("Avg relax time(ms) per node: " + Time.totMs(relaxTimer) / numProcessed);
+                log.debug("Avg project time(ms) per node: " + Time.totMs(feasTimer) / numProcessed);
+                log.debug("Avg branch time(ms) per node: " + Time.totMs(branchTimer) / numProcessed);
                 
                 // Print stats about the space remaining.
                 log.info("Log space remaining (sub): " + logSpaceRemain);

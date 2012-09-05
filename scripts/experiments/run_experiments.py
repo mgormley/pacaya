@@ -126,6 +126,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         else:
             self.get_data = get_dev_data
             
+        if self.queue and not self.queue == "mem":
+            print "WARN: Are you sure you don't want the mem queue?"
+            
         if self.queue == "mem" or self.queue == "himem":
             # Override qsub_args to exclude "-l h_vmem=%dM"
             # Old way: self.qsub_args = re.sub("-l h_vmem=", "-l virtual_free=", self.qsub_args)
