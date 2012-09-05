@@ -436,5 +436,11 @@ public class DmvLpRelaxation implements DmvRelaxation {
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public void addFeasibleSolution(DmvSolution initFeasSol) {
+        // TODO Auto-generated method stub
+        
+    }
     
 }
