@@ -9,6 +9,7 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Time;
+import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch
@@ -40,11 +41,23 @@ public class LazyBranchAndBoundSolver {
     private final double epsilon;
     private final Comparator<ProblemNode> leafComparator;
     private final double timeoutSeconds;
+    private Stopwatch nodeTimer;
+    private Stopwatch switchTimer;
+    private Stopwatch relaxTimer;
+    private Stopwatch feasTimer;
+    private Stopwatch branchTimer;
     
     public LazyBranchAndBoundSolver(double epsilon, Comparator<ProblemNode> leafComparator, double timeoutSeconds) {
         this.epsilon = epsilon;
         this.leafComparator = leafComparator;
         this.timeoutSeconds = timeoutSeconds;
+
+        // Timers
+        nodeTimer = new Stopwatch();
+        switchTimer = new Stopwatch();
+        relaxTimer = new Stopwatch();
+        feasTimer = new Stopwatch();
+        branchTimer = new Stopwatch();
     }
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode) {
@@ -61,15 +74,11 @@ public class LazyBranchAndBoundSolver {
         upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
         int numProcessed = 0;
         int numFathomed = 0;
-        // Timers
-        Stopwatch nodeTimer = new Stopwatch();
-        Stopwatch switchTimer = new Stopwatch();
-        Stopwatch relaxTimer = new Stopwatch();
-        Stopwatch feasTimer = new Stopwatch();
-        Stopwatch branchTimer = new Stopwatch();
         
         addToLeafNodes(rootNode);
 
+        double rootLogSpace = rootNode.getLogSpace();
+        double logSpaceRemain = rootLogSpace;
         ProblemNode curNode = null;
         while (hasNextLeafNode()) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
@@ -90,6 +99,7 @@ public class LazyBranchAndBoundSolver {
             log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
                     upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
             if (log.isDebugEnabled()) {
+                // Print Histogram
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;
                 for (ProblemNode node : leafNodePQ) {
@@ -98,12 +108,24 @@ public class LazyBranchAndBoundSolver {
                 }
                 log.debug(getHistogram(bounds));
                 
-                // Print timers
+                // Print timers.
                 log.debug("Avg time(ms) per node: " + Time.avgMs(nodeTimer));
                 log.debug("Avg switch time(ms) per node: " + Time.avgMs(switchTimer));
                 log.debug("Avg relax time(ms) per node: " + Time.avgMs(relaxTimer));
                 log.debug("Avg project time(ms) per node: " + Time.avgMs(feasTimer));
                 log.debug("Avg branch time(ms) per node: " + Time.avgMs(branchTimer));
+                
+                // Print stats about the space remaining.
+                log.info("Log space remaining (sub): " + logSpaceRemain);
+                if (numProcessed % 10000 == 0) {
+                    double logSpaceRemainAdd = computeLogSpaceRemain();
+                    log.info("Log space remaining (add): " + logSpaceRemainAdd);
+                    if (!Utilities.equals(logSpaceRemain, logSpaceRemainAdd, 1e-4)) {
+                        log.warn("Log space remaining differs between subtraction and addition versions.");
+                    }
+                }
+                log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
+                log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
             }
             
             curNode.setAsActiveNode();
@@ -127,6 +149,7 @@ public class LazyBranchAndBoundSolver {
             if (curNodeLowerBound <= incumbentScore) {
                 // fathom (i.e. prune) this child node
                 numFathomed++;
+                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
                 continue;
             }
 
@@ -167,6 +190,19 @@ public class LazyBranchAndBoundSolver {
         
         // Return epsilon optimal solution
         return status;
+    }
+
+    /** 
+     * This VERY SLOWLY computes the log space remaining by 
+     * adding up all the bounds of the leaf nodes.
+     */
+    private double computeLogSpaceRemain() {
+        double logSpaceRemain = Double.NEGATIVE_INFINITY;
+        for (ProblemNode node : leafNodePQ) {
+            node.setAsActiveNode();
+            logSpaceRemain = Utilities.logAdd(logSpaceRemain, node.getLogSpace());
+        }
+        return logSpaceRemain;
     }
 
     private String getHistogram(double[] bounds) {

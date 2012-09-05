@@ -20,4 +20,6 @@ public interface ProblemNode {
 
     void setAsActiveNode();
 
+    double getLogSpace();
+
 }

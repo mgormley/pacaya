@@ -63,4 +63,14 @@ public class DmvBounds {
         return ! Utilities.lte(ubs[c][m] - lbs[c][m],  MIN_BOUND_DIFF);
     }
 
+    public double getLogSpace() {
+        double logSpace = 0.0;
+        for (int c=0; c<lbs.length; c++) {
+            for (int m=0; m<lbs[c].length; m++) {
+                logSpace += Utilities.logSubtractExact(ubs[c][m], lbs[c][m]);
+            }
+        }
+        return logSpace;
+    }
+
 }

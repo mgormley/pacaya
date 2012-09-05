@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.media.j3d.Bounds;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree;
@@ -425,6 +427,14 @@ public class DmvProblemNode implements ProblemNode {
         return sol;
     }
 
+    @Override
+    public double getLogSpace() {
+        if (dwRelax == null) {
+            throw new IllegalStateException("This is not the active node");
+        }
+        return dwRelax.getBounds().getLogSpace();
+    }
+    
     public double[][] getRegretCm() {
         // TODO: we could store this in the relaxed solution if 
         // we start using it regularly.
@@ -438,7 +448,7 @@ public class DmvProblemNode implements ProblemNode {
     public DmvRelaxation getRelaxation() {
         return dwRelax;
     }
-    
+
     /**
      * For testing only.
      */
