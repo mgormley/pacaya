@@ -100,7 +100,7 @@ public class LazyBranchAndBoundSolver {
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
             log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
                     upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
-            if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled() && numProcessed % 100 == 0) {
                 // Print Histogram
                 double[] bounds = new double[leafNodePQ.size()];
                 int i = 0;
