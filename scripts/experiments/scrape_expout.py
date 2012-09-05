@@ -38,7 +38,7 @@ class DPScraper(Scraper):
         _, _, elapsed = get_time(stdout_lines)
         exp.update(elapsed = elapsed)
         
-        numWords = to_int(get_following(stdout_lines, "Number of tokens: ", -1))
+        numWords = to_int(get_following(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
         
         if "relaxOnly" in exp.keys():
@@ -46,8 +46,10 @@ class DPScraper(Scraper):
             exp.update(relaxBound = get_following(stdout_lines, "relaxBound: ", -1))
             exp.update(relative = get_following(stdout_lines, "relative: ", -1))
         else:
-            exp.update(accuracy = get_following(stdout_lines, "Accuracy: ", -1))
-            exp.update(logLikelihood = get_following(stdout_lines, "LogLikelihood: ", -1))
+            exp.update(trainAccuracy = get_following(stdout_lines, "Accuracy on train: ", -1))
+            exp.update(trainLogLikelihood = get_following(stdout_lines, "LogLikelihood on train: ", -1))
+            exp.update(testAccuracy = get_following(stdout_lines, "Accuracy on test: ", -1))
+            exp.update(testLogLikelihood = get_following(stdout_lines, "LogLikelihood on test: ", -1))
             exp.update(timeRemaining = get_following(stdout_lines, "Time remaining: ", -1))
         
         if exp.get("expname") == "corpus-size":
