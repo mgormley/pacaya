@@ -14,6 +14,7 @@ public abstract class AbstractTagReducer {
         for (DepTree tree : trees) {
             reduceTags(tree);
         }
+        trees.rebuildAlphabet();
     }
 
     public void reduceTags(DepTree tree) {

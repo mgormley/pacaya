@@ -17,7 +17,8 @@ public class SentenceCollection extends ArrayList<Sentence> {
     }
     
     SentenceCollection(DepTreebank treebank) {
-        this();
+        super();
+        alphabet = treebank.getAlphabet();
         for (DepTree tree : treebank) {
             Sentence sentence = new Sentence(alphabet, tree);
             add(sentence);   

@@ -2,17 +2,19 @@ package edu.jhu.hltcoe.data;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.Treebank;
 
-public class DepTreebank extends ArrayList<DepTree> {
+public class DepTreebank implements Iterable<DepTree> {
 
     private static final long serialVersionUID = 1L;
 
@@ -22,7 +24,9 @@ public class DepTreebank extends ArrayList<DepTree> {
     private int maxSentenceLength;
     private int maxNumSentences;
     private TreeFilter filter = null;
-
+    private Alphabet<Label> alphabet;
+    private ArrayList<DepTree> trees;
+    
     public DepTreebank() {
         this(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
@@ -35,6 +39,8 @@ public class DepTreebank extends ArrayList<DepTree> {
         this.maxSentenceLength = maxSentenceLength;
         this.maxNumSentences = maxNumSentences;
         this.filter = filter;
+        this.alphabet = new Alphabet<Label>();
+        this.trees = new ArrayList<DepTree>();
     }
     
     public void setTreeFilter(TreeFilter filter) {
@@ -101,5 +107,48 @@ public class DepTreebank extends ArrayList<DepTree> {
             sb.append("\n");
         }
         return sb.toString();
+    }
+    
+    public void add(DepTree tree) {
+        addTreeToAlphabet(tree);
+        trees.add(tree);
+    }
+
+    private void addTreeToAlphabet(DepTree tree) {
+        for (DepTreeNode node : tree) {
+            if (node.getLabel() != WallDepTreeNode.WALL_LABEL) {
+                alphabet.lookupObject(node.getLabel());
+            }
+        }
+    }
+    
+    public void rebuildAlphabet() {
+        alphabet = new Alphabet<Label>();
+        for (DepTree tree : trees) {
+            addTreeToAlphabet(tree);
+        }
+    }
+    
+    public DepTree get(int i) {
+        return trees.get(i);
+    }
+    
+    public int size() {
+        return trees.size();
+    }
+    
+    public void addToAlphabet(Alphabet<Label> otherAlphabet) {
+        for (int i=0; i<otherAlphabet.size(); i++) {
+            alphabet.lookupObject(otherAlphabet.lookupIndex(i));
+        }
+    }
+
+    public Alphabet<Label> getAlphabet() {
+        return alphabet;
+    }
+
+    @Override
+    public Iterator<DepTree> iterator() {
+        return trees.iterator();
     }
 }

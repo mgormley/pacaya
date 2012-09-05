@@ -118,6 +118,8 @@ public class PipelineRunner {
             log.info("Number of test sentences: " + testTreebank.size());
             log.info("Number of test tokens: " + testTreebank.getNumTokens());
             log.info("Number of test types: " + testTreebank.getNumTypes());
+            
+            testTreebank.addToAlphabet(trainTreebank.getAlphabet());
         }
         
         if (cmd.hasOption("relaxOnly")) {
