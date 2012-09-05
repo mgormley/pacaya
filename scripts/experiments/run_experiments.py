@@ -142,7 +142,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    ilpSolver="cplex",
                    convergenceRatio=0.99999,
                    epsilon=0.1,
-                   branch="full")
+                   branch="regret",
+                   maxDwIterations=3, 
+                   maxSetSizeToConstrain=3, 
+                   maxCutRounds=1, 
+                   minSumForCuts=1.01)
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
         # Only keeping sentences that contain a verb
@@ -212,7 +216,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
-            all.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCuts=1.01)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -226,8 +229,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "viterbi-bnb":
             if not self.fast:
                 all.update(numRestarts=1e15)
-                # Run for 4 hours
-                all.update(timeoutSeconds=4*60*60)
+                # Run for some fixed amount of time.
+                all.update(timeoutSeconds=1*60*60)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -236,8 +239,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for algorithm in ["viterbi", "viterbi-bnb"]:
                             algo = DPExpParams(algorithm=algorithm)
                             if algorithm.find("bnb") != -1:
-                                algo.update(maxDwIterations=3, maxSetSizeToConstrain=3, maxCutRounds=1, minSumForCuts=1.01, 
-                                            branch="regret")
                                 if not self.fast:
                                     algo.update(bnbTimeoutSeconds=maxNumSentences/3)
                                 for offsetProb in frange(0.05, 0.21, 0.05):
