@@ -1,13 +1,10 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.media.j3d.Bounds;
 
 import org.apache.log4j.Logger;
 
