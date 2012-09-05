@@ -12,18 +12,21 @@ public class RelaxedDmvSolution implements Solution {
     private RelaxStatus status;
     
     public enum RelaxStatus {
-        Optimal, Feasible, Infeasible, Unknown;
+        Optimal, Feasible, Infeasible, Unknown, Fathomed;
 
         public boolean hasSolution() {
             return this == Optimal || this == Feasible;
         }
         
         public static RelaxStatus get(Status status) {
-            if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded) {
+            if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded
+                    || status == Status.Bounded) {
                 return Infeasible;
+            } else if (status == Status.Error || status == Status.Unknown) {
+                return Unknown;
             } else {
                 return Feasible;
-            }                
+            }
         }
     }
     

@@ -112,7 +112,6 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             this.bounds = new DmvBounds(this.idm);
             this.cplex = new IloCplex();
             this.mp = buildModel(cplex, initFeasSol);
-            // TODO: add the initial feasible solution to cplex object? Does this even make sense?
             setCplexParams(cplex);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
@@ -779,6 +778,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
             // Check whether to continue
             if (lowerBound >= upperBound) {
                 // We can fathom this node
+                status = RelaxStatus.Fathomed;
                 break;
             } else if (numPositiveLambdaRedCosts == 0) {
                 // Optimal solution found
@@ -867,7 +867,7 @@ public class DmvDantzigWolfeRelaxation implements DmvRelaxation {
                 throw new IllegalStateException();
             }
 
-            assert(newLb <= newUb);
+            assert newLb <= newUb : String.format("l,u = %f, %f", newLb, newUb);
             
             // Updates the bounds of the model parameters
             bounds.set(c, m, newLb, newUb);

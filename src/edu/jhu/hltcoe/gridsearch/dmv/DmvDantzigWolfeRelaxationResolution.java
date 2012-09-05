@@ -97,7 +97,6 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             this.bounds = new DmvBounds(this.idm);
             this.cplex = new IloCplex();
             this.mp = buildModel(cplex, initFeasSol);
-            // TODO: add the initial feasible solution to cplex object? Does this even make sense?
             setCplexParams(cplex);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
@@ -614,28 +613,40 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         mp.lambdaVars = new ArrayList<LambdaVar>();
         mp.lambdaVarSet = new HashSet<LambdaVar>();
 
-        // Add the initial feasible parse as the first lambda columns
-        for (int s = 0; s < sentences.size(); s++) {
-            DepTree tree = initFeasSol.getTreebank().get(s);
-            addLambdaVar(s, tree);
-        }
-        
-        // Create the gamma sum to one constraints
-        mp.gammaVars = new ArrayList<GammaVar>();
-        // Add the initial feasible solution as the first gamma column
-        double[][] initLogProbs = initFeasSol.getLogProbs();
-        for (int c=0; c<numConds; c++) {            
-            // Project the initial solution onto the feasible region
-            double[] params = Vectors.getExp(initLogProbs[c]);
-            params = projections.getProjectedParams(bounds, c, params);
-            if (params == null) {
-                throw new IllegalStateException("The initial bounds are infeasible");
-            }
-            initLogProbs[c] = Vectors.getLog(params);
-        }
-        addGammaVar(initLogProbs);
+        addFeasibleSolution(initFeasSol);
         
         return mp;
+    }
+
+    @Override
+    public void addFeasibleSolution(DmvSolution initFeasSol) {
+        try {
+            int numConds = idm.getNumConds();
+
+            // Add the initial feasible parse as the first lambda columns
+            for (int s = 0; s < sentences.size(); s++) {
+                DepTree tree = initFeasSol.getTreebank().get(s);
+                addLambdaVar(s, tree);
+            }
+
+            // Create the gamma sum to one constraints
+            mp.gammaVars = new ArrayList<GammaVar>();
+            // Add the initial feasible solution as the first gamma column
+            double[][] initLogProbs = initFeasSol.getLogProbs();
+            for (int c = 0; c < numConds; c++) {
+                // Project the initial solution onto the feasible region
+                double[] params = Vectors.getExp(initLogProbs[c]);
+                params = projections.getProjectedParams(bounds, c, params);
+                if (params == null) {
+                    throw new IllegalStateException("The initial bounds are infeasible");
+                }
+                initLogProbs[c] = Vectors.getLog(params);
+            }
+            addGammaVar(initLogProbs);
+
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private boolean addGammaVar(double[][] logProbs) throws IloException {
@@ -927,8 +938,9 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             }
             
             // Check whether to continue
-             if (lowerBound >= upperBound) {
+            if (lowerBound >= upperBound) {
                 // We can fathom this node
+                status = RelaxStatus.Fathomed;
                 break;
             } else if (numPositiveLambdaRedCosts + numPositiveGammaRedCosts == 0) {
                 // Optimal solution found
