@@ -245,9 +245,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         # Run for some fixed amount of time.           
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
-                    for algorithm in ["viterbi", "viterbi-bnb"]:
+                    for algorithm in ["viterbi", "viterbi-bnb", "bnb"]:
                         algo = DPExpParams(algorithm=algorithm)
-                        if algorithm.find("bnb") != -1:
+                        if algorithm == "viterbi-bnb":
                             if not self.fast:
                                 algo.update(bnbTimeoutSeconds=maxNumSentences/3)
                             for offsetProb in frange(0.05, 0.21, 0.05):
