@@ -146,7 +146,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxDwIterations=3, 
                    maxSetSizeToConstrain=3, 
                    maxCutRounds=1, 
-                   minSumForCuts=1.01)
+                   minSumForCuts=1.01, 
+                   initWeights="uniform")
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
         # Only keeping sentences that contain a verb
@@ -217,36 +218,41 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
             for dataset in datasets:
-                for maxSentenceLength in [10]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 50, 1*60*60), (10, 300, 4*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [300]:
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for branch in ["regret"]:
-                            for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
-                                for offsetProb in frange(10e-13, 0.21,0.05):
-                                    for probOfSkipCm in frange(0.0, 0.21, 0.05):
-                                        experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm))
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    if not self.fast:
+                        # Run for some fixed amount of time.                
+                        all.update(numRestarts=1e15)
+                        all.update(timeoutSeconds=timeoutSeconds)
+                    for branch in ["regret"]:
+                        for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
+                            for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
+                                for probOfSkipCm in [0.0]: #TODO: frange(0.0, 0.21, 0.05):
+                                    algo = DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
+                                    experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "viterbi-bnb":
-            if not self.fast:
-                all.update(numRestarts=1e15)
-                # Run for some fixed amount of time.
-                all.update(timeoutSeconds=1*60*60)
+            # Fixed seed
+            all.update(seed=112233)
             for dataset in datasets:
-                for maxSentenceLength in [10]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 300, 1*60*60), (10, 3000, 4*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [300, 3000]:
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for algorithm in ["viterbi", "viterbi-bnb"]:
-                            algo = DPExpParams(algorithm=algorithm)
-                            if algorithm.find("bnb") != -1:
-                                if not self.fast:
-                                    algo.update(bnbTimeoutSeconds=maxNumSentences/3)
-                                for offsetProb in frange(0.05, 0.21, 0.05):
-                                    for probOfSkipCm in frange(0.0, 0.21, 0.05):
-                                        algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
-                                        experiments.append(all + dataset + msl + mns + algo)
-                            else:
-                                experiments.append(all + dataset + msl + mns + algo)
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    if not self.fast:
+                        # Run for some fixed amount of time.           
+                        all.update(numRestarts=1e15)
+                        all.update(timeoutSeconds=timeoutSeconds)
+                    for algorithm in ["viterbi", "viterbi-bnb"]:
+                        algo = DPExpParams(algorithm=algorithm)
+                        if algorithm.find("bnb") != -1:
+                            if not self.fast:
+                                algo.update(bnbTimeoutSeconds=maxNumSentences/3)
+                            for offsetProb in frange(0.05, 0.21, 0.05):
+                                for probOfSkipCm in frange(0.0, 0.21, 0.05):
+                                    algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
+                                    experiments.append(all + dataset + msl + mns + algo)
+                        else:
+                            experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:
