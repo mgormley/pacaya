@@ -43,7 +43,7 @@ public class IlpViterbiParserTest {
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -25.275871598638336;
+        double expectedParseWeight = -33.006;
 
         // flow projective parsing
         DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
@@ -70,7 +70,7 @@ public class IlpViterbiParserTest {
         sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -56.53671268736091;
+        double expectedParseWeight = -50.398;
 
         Stopwatch timer;
 
@@ -127,7 +127,7 @@ public class IlpViterbiParserTest {
 //        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -23.135317127784305;
+        double expectedParseWeight = -29.319;
 
         // Single commodity flow non-projective parsing
         DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
@@ -164,7 +164,7 @@ public class IlpViterbiParserTest {
             System.out.println(depTree);
         }
         System.out.println("prob: " + Utilities.exp(parser.getLastParseWeight()));
-        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-13);
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
         return trees;
     }
     

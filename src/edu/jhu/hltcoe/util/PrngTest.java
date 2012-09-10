@@ -16,7 +16,7 @@ public class PrngTest {
         timer = new Stopwatch();
         timer.start();
         for (int i = 0; i < NUM_DOUBLES; i++) {
-            Prng.random.nextDouble();
+            Prng.javaRandom.nextDouble();
         }
         timer.stop();
         System.out.println(Time.totMs(timer));

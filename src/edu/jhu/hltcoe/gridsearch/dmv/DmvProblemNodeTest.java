@@ -25,6 +25,7 @@ public class DmvProblemNodeTest {
 
     @Before
     public void setUp() {
+        DmvProblemNode.clearActiveNode();
         Prng.seed(1234567890);
     }
     
@@ -81,7 +82,7 @@ public class DmvProblemNodeTest {
         checkedSetActive(c3, c1);
         
         checkedSetActive(c2, c3);
-        if (c1.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
+        if (c2.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
             assertEquals(Math.log(0.5), c2.getBounds().getLb(0, 1), 1e-7);
         } else {
             assertEquals(Math.log(0.5), c2.getBounds().getLb(2, 1), 1e-7);

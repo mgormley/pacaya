@@ -452,6 +452,7 @@ public class DmvProblemNode implements ProblemNode {
      */
     public static void clearActiveNode() {
         activeNode = null;
+        atomicIntId = new AtomicInteger(0);
     }
     
 }

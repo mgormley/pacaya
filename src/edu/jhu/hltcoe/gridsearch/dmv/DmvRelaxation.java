@@ -9,6 +9,10 @@ public interface DmvRelaxation {
 
     IndexedDmvModel getIdm();
 
+    /**
+     * @return A CxM array of doubles containing the regret of each model
+     *         parameter, or null if the regret is unavailable.
+     */
     double[][] getRegretCm();
 
     void reverseApply(DmvBoundsDelta deltas);
@@ -28,7 +32,7 @@ public interface DmvRelaxation {
     // These two methods must be called in sequence to initialize.
     void setSentences(SentenceCollection sentences);
     void init(DmvSolution initFeasSol);
-    
+
     void addFeasibleSolution(DmvSolution initFeasSol);
 
 }

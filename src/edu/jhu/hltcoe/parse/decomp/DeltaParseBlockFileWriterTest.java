@@ -30,8 +30,7 @@ public class DeltaParseBlockFileWriterTest {
     @Before
     public void setUp() {
         Prng.seed(1234567890);
-        // Turning these tests off for now. They are too slow to be useful.
-        Assert.fail();
+        Assert.fail("Turning these tests off for now. They are too slow to be useful.");
     }
     
     @Test

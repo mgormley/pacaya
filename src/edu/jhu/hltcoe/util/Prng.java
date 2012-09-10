@@ -28,13 +28,15 @@ public class Prng {
     public static final RandomStream stream = new MRG32k3a();
     public static UnlockedXORShiftRNG xorShift;
     public static UnlockedCMWC4096RNG mwc4096;
-    public static Random random;
+    public static Random javaRandom;
     public static MersenneTwisterFast mtf;
     public static ec.util.MersenneTwister mt;
     public static MersenneTwister mtColt;
     
+    public static Random curRandom;
+    
     public static void seed(long seed) {
-        random = new Random(seed);
+        javaRandom = new Random(seed);
         mtf = new MersenneTwisterFast(seed);
         mt = new ec.util.MersenneTwister(seed);
         mtColt = new MersenneTwister((int)seed);
@@ -49,6 +51,12 @@ public class Prng {
         } catch (SeedException e) {
             throw new RuntimeException(e);
         }
+        
+        setRandom(xorShift);
+    }
+
+    public static void setRandom(Random curRandom) {
+        Prng.curRandom = curRandom;
     }
 
     static {
@@ -61,15 +69,15 @@ public class Prng {
     
     
     public static double nextDouble() {
-        return xorShift.nextDouble();
+        return curRandom.nextDouble();
     }
     
     public static boolean nextBoolean() {
-        return xorShift.nextBoolean();
+        return curRandom.nextBoolean();
     }
     
     public static int nextInt(int n) {
-        return xorShift.nextInt(n);
+        return curRandom.nextInt(n);
     }
     
 }

@@ -359,7 +359,7 @@ public class DmvDantzigWolfeRelaxationTest {
 
         RDataFrame df = new RDataFrame();
         Stopwatch timer = new Stopwatch();
-        for (double offsetProb = 10e-13; offsetProb <= 1.001; offsetProb += 0.05) {
+        for (double offsetProb = 10e-13; offsetProb <= 1.001; offsetProb += 0.2) {
             for (double probOfSkipCm = 0.0; probOfSkipCm <= 0.2; probOfSkipCm += 0.1) {
                 int numTimes = 1; // TODO: revert 2
                 double avgScore = 0.0;

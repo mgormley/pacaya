@@ -44,7 +44,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
         ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         Model model = modelFactory.getInstance(sentences);
-        double expectedParseWeight = -35.73038369611892;
+        double expectedParseWeight = -43.684;
 
         DeltaGenerator deltaGen;
 
@@ -70,15 +70,14 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
-        expectedInitParseWeight = -35.73038369611892;
-        expectedParseWeight = -31.297298374152405;
+        expectedInitParseWeight = -43.684;
+        expectedParseWeight = -38.071;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
         getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight, expectedInitParseWeight);
     }
     
     @Test
     public void testProjDeltaParsers() {
-        Assert.fail("This test is too slow");
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
@@ -89,8 +88,8 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
-        expectedInitParseWeight = -37.364863915263356;
-        expectedParseWeight = -35.363350139372564;
+        expectedInitParseWeight = -45.080;
+        expectedParseWeight = -42.983;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
         getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight, expectedInitParseWeight);
     }
@@ -102,15 +101,15 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         for (DepTree depTree : trees) {
             System.out.println(depTree);
         }
-        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-13);
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
         
         File initCplexLog = new File(new File(parser.getInitWorkspace(), "ilp_parse_000"), "cplex.log");
         Matcher initMatch = Files.getFirstMatch(initCplexLog, Pattern.compile("Solution value = (.+)"));
-        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(initMatch.group(1)), 1E-13);
+        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(initMatch.group(1)), 1E-3);
         
         File cplexLog = new File(new File(parser.getWorkspace(), "ilp_parse_000"), "cplex.log");
         Matcher match = Files.getFirstMatch(cplexLog, Pattern.compile("defined initial solution with objective (.+)\\."));
-        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(match.group(1)), 1E-4);
+        Assert.assertEquals(expectedInitParseWeight, Double.parseDouble(match.group(1)), 1E-3);
         
         return trees;
     }
