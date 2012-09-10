@@ -65,7 +65,15 @@ public class PipelineRunner {
             int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
             trainTreebank = getTreebank(cmd, trainPath, maxSentenceLength);
         } else if (cmd.hasOption("synthetic")) {
-            DmvModel trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
+            String synthetic = cmd.getOptionValue("synthetic");
+            DmvModel trueModel;
+            if (synthetic == "two") {
+                trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
+            } else if (synthetic == "three") {
+                trueModel = SimpleStaticDmvModel.getThreePosTagInstance();
+            } else {
+                throw new ParseException("Unknown synthetic type: " + synthetic);
+            }
             long syntheticSeed = 123454321;
             if (cmd.hasOption("syntheticSeed")) {
                 syntheticSeed = Long.parseLong(cmd.getOptionValue("syntheticSeed"));

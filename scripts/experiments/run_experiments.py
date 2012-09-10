@@ -174,7 +174,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
-        synthetic = DPExpParams(synthetic="simplest")
+        synthetic = DPExpParams(synthetic="three")
         
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full]:
