@@ -23,7 +23,8 @@ import edu.jhu.hltcoe.util.Utilities;
 public class CKYParser {
 
 	private static final double PROB_EQUALS_TOLERANCE = 1e-13;
-
+	private static final boolean BREAK_TIES_RANDOMLY = true;
+	
     /**
 	 * For use in ensuring code updates are backward compatible
 	 * (for comparison to Noah's original model A). 
@@ -168,7 +169,7 @@ public class CKYParser {
                 // Compare sentenceProb and prob. If they are equal break the tie by 
 				// comparing the jitter.
 				int diff = Utilities.compare(sentenceProb, prob, PROB_EQUALS_TOLERANCE);
-				if (diff == 0) {
+				if (BREAK_TIES_RANDOMLY && diff == 0) {
 				    jit = Prng.nextDouble();
                     hasJit = true;
 				    if (!sentenceHasJitter) {
@@ -242,7 +243,7 @@ public class CKYParser {
 		                // Compare the best prob to the current prob. If they are equal break the tie by 
 		                // comparing the jitter.
 						double diff = Utilities.compare(score[begin][end][A][i], prob, PROB_EQUALS_TOLERANCE);
-						if (diff == 0) {
+						if (BREAK_TIES_RANDOMLY && diff == 0) {
 						    jit = Prng.nextDouble();
 						    hasJit = true;
 						    if (!hasJitter[begin][end][A][i]) {
@@ -320,7 +321,7 @@ public class CKYParser {
 	                        // Compare the best prob to the current prob. If they are equal break the tie by 
 	                        // comparing the jitter.
 							double diff = Utilities.compare(score[begin][end][lhsIndex][parentIndex], prob, PROB_EQUALS_TOLERANCE);
-							if (diff == 0) {
+							if (BREAK_TIES_RANDOMLY && diff == 0) {
 							    jit = Prng.nextDouble();
 							    hasJit = true;
 							    if (!hasJitter[begin][end][lhsIndex][parentIndex]) {
