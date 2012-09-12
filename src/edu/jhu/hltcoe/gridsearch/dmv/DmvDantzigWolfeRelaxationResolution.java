@@ -1,7 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import static edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.NEGATIVE_REDUCED_COST_TOLERANCE;
-import static edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.OBJ_VAL_DECREASE_TOLERANCE;
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
@@ -13,14 +11,10 @@ import ilog.concert.IloObjective;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.BasisStatus;
-import ilog.cplex.IloCplex.DoubleParam;
-import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -34,7 +28,6 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution.RelaxStatus;
 import edu.jhu.hltcoe.math.Vectors;
@@ -44,166 +37,87 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
+public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
     private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
     
-    // Note that these are for minimization whereas the constants in Lazy B&B solver are for maximization
-    private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
-    private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
-    
-    private DmvBounds bounds;
-    private File tempDir;
-    private double workMemMegs;
-    private int numThreads;
-    private int maxSimplexIterations;
-    private int maxDwIterations;
-    private SentenceCollection sentences;
-    private IndexedDmvModel idm;
-    private int numLambdas;
     private int numGammas;
-    private IloCplex cplex;
+    private boolean hasInfeasibleBounds;
+    private Stopwatch stoTimer;
     private MasterProblem mp;
     private Projections projections;
-    private boolean hasInfeasibleBounds;
-    // Stored for re-use by getRegretCm()
-    private double[][] optimalLogProbs;
-    private Stopwatch simplexTimer;
-    private Stopwatch parsingTimer;
-    private Stopwatch stoTimer;
-    private double numSolves;
     
     public DmvDantzigWolfeRelaxationResolution(File tempDir) {
-        this.tempDir = tempDir;
+        super(tempDir, 0, null);
         this.projections = new Projections(tempDir);
-        
-        // TODO: pass these through
-        this.numThreads = 1;
-        this.workMemMegs = 256;
-        this.maxSimplexIterations = 2100000000;
-        this.maxDwIterations = 1000;
         this.hasInfeasibleBounds = false;
-        this.simplexTimer = new Stopwatch();
         this.parsingTimer = new Stopwatch();
         this.stoTimer = new Stopwatch();
-        this.numSolves = 0;
     }
 
     public void setSentences(SentenceCollection sentences) {
         this.sentences = sentences;
         this.idm = new IndexedDmvModel(sentences);    
     }
-    
-    public void init(DmvSolution initFeasSol) {
-        try {
-            this.bounds = new DmvBounds(this.idm);
-            this.cplex = new IloCplex();
-            this.mp = buildModel(cplex, initFeasSol);
-            setCplexParams(cplex);
-        } catch (IloException e) {
-            if (e instanceof ilog.cplex.CpxException) {
-                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
-                System.err.println("STATUS CODE: " + cpxe.getStatus());
-                System.err.println("ERROR MSG:   " + cpxe.getMessage());
-            }
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+    protected void clearRelaxedSolution() {
+        optimalLogProbs = null;
     }
-    
-    public RelaxedDmvSolution solveRelaxation() {
-        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE);
-    }
-    
-    public RelaxedDmvSolution solveRelaxation(double incumbentScore) {
-        try {            
-            numSolves++;
-            // Negate since we're minimizing internally
-            double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, mp, upperBound);
-            RelaxStatus status = pair.get1();
-            double lowerBound = pair.get2();
-            
-            // Negate the objective since we were minimizing 
-            double objective = -lowerBound;
-            assert(!Double.isNaN(objective));
-            // This won't always be true if we are stopping early: 
-            // assert(Utilities.lte(objective, 0.0, 1e-7));
-            
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
-            }
-            
-            log.info("Solution status: " + status);
-            if (!status.hasSolution()) {
-                return new RelaxedDmvSolution(null, null, null, objective, status);
-            }
-            
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
-            }
-            log.info("Lower bound: " + lowerBound);
-            log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mp.gammaVars.size()));
-            
-            // Store optimal model parameters
-            optimalLogProbs = new double[idm.getNumConds()][];
-            for (int i = 0; i < mp.gammaVars.size(); i++) {
-                GammaVar gv = mp.gammaVars.get(i);
-                double gammaValue = cplex.getValue(gv.gammaVar);
-                for (int c = 0; c < idm.getNumConds(); c++) {
-                    int numParams = idm.getNumParams(c);
-                    if (optimalLogProbs[c] == null) {
-                        optimalLogProbs[c] = new double[numParams];
-                    }
-                    for (int m = 0; m < numParams; m++) {
-                        optimalLogProbs[c][m] += gammaValue * gv.logProbs[c][m];
-                    }
-                }
-            }
-            // Assert that the model parameters sum to <= 1.0
+        
+    protected RelaxedDmvSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException,
+            IloException {
+        log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mp.gammaVars.size()));
+        
+        // Store optimal model parameters
+        optimalLogProbs = new double[idm.getNumConds()][];
+        for (int i = 0; i < mp.gammaVars.size(); i++) {
+            GammaVar gv = mp.gammaVars.get(i);
+            double gammaValue = cplex.getValue(gv.gammaVar);
             for (int c = 0; c < idm.getNumConds(); c++) {
-                double[] probs = Vectors.getExp(optimalLogProbs[c]);
-                //assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
-                if (!Utilities.lte(Vectors.sum(probs), 1.0, 1e-8)) {
-                    log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
+                int numParams = idm.getNumParams(c);
+                if (optimalLogProbs[c] == null) {
+                    optimalLogProbs[c] = new double[numParams];
+                }
+                for (int m = 0; m < numParams; m++) {
+                    optimalLogProbs[c][m] += gammaValue * gv.logProbs[c][m];
                 }
             }
-
-            // Store fractional corpus parse
-            double[][] fracRoots = new double[sentences.size()][];
-            double[][][] fracParses = new double[sentences.size()][][];
-            for (int s = 0; s < sentences.size(); s++) {
-                Sentence sentence = sentences.get(s);
-                fracRoots[s] = new double[sentence.size()];
-                fracParses[s] = new double[sentence.size()][sentence.size()];
-            }
-            for (LambdaVar triple : mp.lambdaVars) {
-                double frac = cplex.getValue(triple.lambdaVar);
-                int s = triple.s;
-                int[] parents = triple.parents;
-
-                double[] fracRoot = fracRoots[s];
-                double[][] fracParse = fracParses[s];
-                for (int child = 0; child < parents.length; child++) {
-                    int parent = parents[child];
-                    if (parent == WallDepTreeNode.WALL_POSITION) {
-                        fracRoot[child] += frac;
-                    } else {
-                        fracParse[parent][child] += frac;
-                    }
-                }
-            }
-            
-            return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
-        } catch (IloException e) {
-            if (e instanceof ilog.cplex.CpxException) {
-                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
-                System.err.println("STATUS CODE: " + cpxe.getStatus());
-                System.err.println("ERROR MSG:   " + cpxe.getMessage());
-            }
-            throw new RuntimeException(e);
         }
+        // Assert that the model parameters sum to <= 1.0
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            double[] probs = Vectors.getExp(optimalLogProbs[c]);
+            //assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
+            if (!Utilities.lte(Vectors.sum(probs), 1.0, 1e-8)) {
+                log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
+            }
+        }
+
+        // Store fractional corpus parse
+        double[][] fracRoots = new double[sentences.size()][];
+        double[][][] fracParses = new double[sentences.size()][][];
+        for (int s = 0; s < sentences.size(); s++) {
+            Sentence sentence = sentences.get(s);
+            fracRoots[s] = new double[sentence.size()];
+            fracParses[s] = new double[sentence.size()][sentence.size()];
+        }
+        for (LambdaVar triple : mp.lambdaVars) {
+            double frac = cplex.getValue(triple.lambdaVar);
+            int s = triple.s;
+            int[] parents = triple.parents;
+
+            double[] fracRoot = fracRoots[s];
+            double[][] fracParse = fracParses[s];
+            for (int child = 0; child < parents.length; child++) {
+                int parent = parents[child];
+                if (parent == WallDepTreeNode.WALL_POSITION) {
+                    fracRoot[child] += frac;
+                } else {
+                    fracParse[parent][child] += frac;
+                }
+            }
+        }
+        
+        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
     }
 
     public WarmStart getWarmStart() {
@@ -218,57 +132,30 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
             throw new RuntimeException(e);
         }
     }
-
-    public void setWarmStart(WarmStart warmStart) {
-        try {
-//            // Initialize all the lambda variables to their lower bounds.
-//            IloNumVar[] lambdaVars = new IloNumVar[mp.lambdaVars.size()];
-//            for (int i=0; i<lambdaVars.length; i++) {
-//                lambdaVars[i] = mp.lambdaVars.get(i).lambdaVar;
-//            }
-//            BasisStatus[] lambdaStatuses = new BasisStatus[lambdaVars.length];
-//            Arrays.fill(lambdaStatuses, BasisStatus.AtLower);
-//            cplex.setBasisStatuses(lambdaVars, lambdaStatuses, new IloRange[0], new BasisStatus[0]);
-            
-            // TODO: this is painfully slow.
-            HashSet<IloNumVar> knownVars = new HashSet<IloNumVar>(Arrays.asList(warmStart.numVars));
-            ArrayList<IloNumVar> unknownVars = new ArrayList<IloNumVar>();
-            for (int i=0; i<mp.lambdaVars.size(); i++) {
-                IloNumVar lv = mp.lambdaVars.get(i).lambdaVar;
-                if (!knownVars.contains(lv)) {
-                    unknownVars.add(lv);
-                }
+    
+    protected ArrayList<IloNumVar> getUnknownVars(HashSet<IloNumVar> knownVars) {
+        ArrayList<IloNumVar> unknownVars = new ArrayList<IloNumVar>();
+        for (int i=0; i<mp.lambdaVars.size(); i++) {
+            IloNumVar lv = mp.lambdaVars.get(i).lambdaVar;
+            if (!knownVars.contains(lv)) {
+                unknownVars.add(lv);
             }
-            for (int i=0; i<mp.gammaVars.size(); i++) {
-                IloNumVar gv = mp.gammaVars.get(i).gammaVar;
-                if (!knownVars.contains(gv)) {
-                    unknownVars.add(gv);
-                }
-            }
-            
-            IloNumVar[] allVars = new IloNumVar[knownVars.size() + unknownVars.size()];
-            BasisStatus[] allStatuses = new BasisStatus[allVars.length];
-
-            // Fill the entire status array with AtLower.
-            Arrays.fill(allStatuses, BasisStatus.AtLower);
-            // Fill the beginning of the array with the known variables.
-            System.arraycopy(warmStart.numVars, 0, allVars, 0, warmStart.numVars.length);
-            System.arraycopy(warmStart.numVarStatuses, 0, allStatuses, 0, warmStart.numVarStatuses.length);
-            // Fill the rest of the array with the new variables.
-            System.arraycopy(unknownVars.toArray(), 0, allVars, warmStart.numVars.length, unknownVars.size());
-            
-            // Set the basis status of known and unknown variables
-            cplex.setBasisStatuses(allVars, allStatuses, warmStart.ranges, warmStart.rangeStatuses);            
-            
-            //TODO: remove: cplex.setBasisStatuses(warmStart.numVars, warmStart.numVarStatuses, warmStart.ranges, warmStart.rangeStatuses);
-        } catch (IloException e) {
-            throw new RuntimeException(e);
         }
+        for (int i=0; i<mp.gammaVars.size(); i++) {
+            IloNumVar gv = mp.gammaVars.get(i).gammaVar;
+            if (!knownVars.contains(gv)) {
+                unknownVars.add(gv);
+            }
+        }
+        return unknownVars;
     }
     
     public double[][] getRegretCm() {
         try {
-            // Optimal model parameters \theta_{c,m} are stored in this.logProbs
+            // If optimal model parameters \theta_{c,m} are not present, return null.
+            if (optimalLogProbs == null) {
+                return null;
+            }
 
             // Store feature counts \bar{f}_{c,m} (i.e. number of times each
             // model parameter was used)
@@ -313,57 +200,6 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void setCplexParams(IloCplex cplex) throws IloException, FileNotFoundException {
-        // Specifies an upper limit on the amount of central memory, in
-        // megabytes, that CPLEX is permitted to use for working memory
-        // before swapping to disk files, compressing memory, or taking
-        // other actions.
-        // Values: Any nonnegative number, in megabytes; default: 128.0
-        cplex.setParam(DoubleParam.WorkMem, workMemMegs);
-        //cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-
-        cplex.setParam(IntParam.Threads, numThreads);
-
-        // -1 = oportunistic, 0 = auto (default), 1 = deterministic
-        // In this context, deterministic means that multiple runs with
-        // the
-        // same model at the same parameter settings on the same
-        // platform
-        // will reproduce the same solution path and results.
-        cplex.setParam(IntParam.ParallelMode, 1);
-
-        // From the CPLEX documentation: the Dual algorithm can take better advantage of a previous basis
-        // after adding new constraints. 
-        // http://ibm.co/GHorLT
-        // However it may be that Primal can better take advantage of a feasible basis after adding 
-        // new variables.
-        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
-        
-        // Note: we'd like to reuse basis information by explicitly storing it
-        // with the Fork nodes as in SCIP. However, this is only possible if the
-        // number of rows/columns in the problem remains the same, which it will
-        // not for our master problem.
-        // http://ibm.co/GCQ709
-        // By default, the solver will make use of basis information internally 
-        // even when we update the problem. This is (hopefully) good enough.
-
-        // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
-        
-        cplex.setParam(IntParam.ItLim, maxSimplexIterations);
-        
-        // For continuous models solved with simplex, setting 1 (one) will use the 
-        // currently loaded basis. If a basis is available only for the original, unpresolved 
-        // model, or if CPLEX has a start vector rather than a simplex basis, then the 
-        // simplex algorithm will proceed on the unpresolved model. With setting 2, 
-        // CPLEX will first perform presolve on the model and on the basis or start vector, 
-        // and then proceed with optimization on the presolved problem.
-        cplex.setParam(IntParam.AdvInd, 1);
-        
-        //        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
-        //        cplex.setOut(out);
-        //         cplex.setWarning(out);
     }
 
     /**
@@ -551,7 +387,9 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 
     }
 
-    private MasterProblem buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
+    protected void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
+        this.bounds = new DmvBounds(this.idm);
+
         mp = new MasterProblem();
         
         // ----- row-wise modeling -----
@@ -617,25 +455,23 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         mp.lambdaVarSet = new HashSet<LambdaVar>();
 
         addFeasibleSolution(initFeasSol);
-        
-        return mp;
     }
 
     @Override
-    public void addFeasibleSolution(DmvSolution initFeasSol) {
+    public void addFeasibleSolution(DmvSolution feasSol) {
         try {
             int numConds = idm.getNumConds();
 
             // Add the initial feasible parse as the first lambda columns
             for (int s = 0; s < sentences.size(); s++) {
-                DepTree tree = initFeasSol.getTreebank().get(s);
+                DepTree tree = feasSol.getTreebank().get(s);
                 addLambdaVar(s, tree);
             }
 
             // Create the gamma sum to one constraints
             mp.gammaVars = new ArrayList<GammaVar>();
             // Add the initial feasible solution as the first gamma column
-            double[][] initLogProbs = initFeasSol.getLogProbs();
+            double[][] initLogProbs = feasSol.getLogProbs();
             for (int c = 0; c < numConds; c++) {
                 // Project the initial solution onto the feasible region
                 double[] params = Vectors.getExp(initLogProbs[c]);
@@ -770,216 +606,148 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
         return true;
     }
 
-    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, MasterProblem mp, double upperBound) throws UnknownObjectException, IloException {
-        if (hasInfeasibleBounds || !areFeasibleBounds(bounds)) {
-            return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
-        }
-        
-        RelaxStatus status = RelaxStatus.Unknown;
-        DmvCkyParser parser = new DmvCkyParser();
-        double lowerBound = INTERNAL_BEST_SCORE;
-        TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
-        TDoubleArrayList iterationObjVals = new TDoubleArrayList();
-        WarmStart warmStart = null;
-        
-        int dwIter;
-        // Solve the full D-W problem
-        for (dwIter = 0; ; dwIter++) {
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, String.format("dw.%d.lp", dwIter)).getAbsolutePath());
-            }
-            
-            // Solve the master problem
-            if (warmStart != null) {
-                setWarmStart(warmStart);
-            }
-            simplexTimer.start();
-            cplex.solve();
-            simplexTimer.stop();
-            warmStart = getWarmStart();
-            status = RelaxStatus.get(cplex.getStatus()); 
-            
-            log.trace("Master solution status: " + cplex.getStatus());
-            if (status == RelaxStatus.Infeasible) {
-                lowerBound = INTERNAL_WORST_SCORE;
-                return new Pair<RelaxStatus,Double>(status, lowerBound);
-            }
-            if (dwIter>=maxDwIterations) {
-                break;
-            }
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, String.format("dw.%d.sol", dwIter)).getAbsolutePath());
-            }
-            double objVal = cplex.getObjValue();
-            log.trace("Master solution value: " + objVal);
-            double prevObjVal = iterationObjVals.size() > 0 ? iterationObjVals.get(iterationObjVals.size() - 1)
-                    : INTERNAL_WORST_SCORE;
-            if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
-                log.warn("Master problem objective should monotonically decrease: prev=" + prevObjVal + " cur=" + objVal);
-                // throw new IllegalStateException("Master problem objective should monotonically decrease");
-            }
-            iterationObjVals.add(objVal);
-
-            // Get the simplex multipliers (shadow prices).
-            // These are shared across all slaves, since each slave
-            // has the same D_s matrix.
-            double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
-            double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
-            
-            // Compute the parse weights, which will be shared across all subproblems
-            int numConds = idm.getNumConds();
-            double[][] parseWeights = new double[numConds][];
-            int j = 0;
-            for (int c = 0; c < numConds; c++) {
-                int numParams = idm.getNumParams(c);
-                parseWeights[c] = new double[numParams];
-
-                for (int m = 0; m < numParams; m++) {
-                    // Calculate new model parameter values for parser
-                    // based on the relaxed-objective-coupling-constraints
-                    parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
-                    j++;
-                    // We want to minimize the following:
-                    // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
-                    // but we negate this since the parser will try to maximize. In other words:
-                    // minimize -q^T D_s = maximize q^T D_s
-                    // 
-                }
-            }
-            DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
-
-            // Get the simplex multipliers (shadow prices) for the lambda
-            // sentence constraints
-            double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
-               
-            // Compute the model parameter weights, used by the model parameters subproblem
-            double[][] modelWeights = new double[numConds][];
-            j = 0;
-            for (int c = 0; c < numConds; c++) {
-                int numParams = idm.getNumParams(c);
-                modelWeights[c] = new double[numParams];
-                for (int m = 0; m < numParams; m++) {
-                    modelWeights[c][m] = - pricesLower[j] * idm.getTotalMaxFreqCm(c, m);
-                    j++;
-                }
-            }
-                     
-            // Get the simplex multipliers (shadow prices) for the gamma 
-            double convexGammaPrice = cplex.getDual(mp.gammaSumCons);
-            
-            // Keep track of minimum subproblem reduced cost
-            double sumReducedCost = 0.0;
-            
-            // Solve the model parameters subproblem
-            int numPositiveGammaRedCosts = 0;
-            ModelParamSubproblem mps = new ModelParamSubproblem();
-            stoTimer.start();
-            Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeLogProb(modelWeights, bounds);
-            stoTimer.stop();
-            if (mPair == null) {
-                hasInfeasibleBounds = true;
-                return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
-            }
-            double[][] logProbs = mPair.get1();
-            double mReducedCost = mPair.get2() - convexGammaPrice;
-            if (log.isDebugEnabled()) {
-                int index = mp.gammaVars.indexOf(new GammaVar(null, logProbs));
-                if (index != -1) {
-                    GammaVar gv = mp.gammaVars.get(index);
-                    log.debug(String.format("CPLEX redcost=%f, My redcost=%f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
-                    assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-13));
-                }
-            }  
-            if (mReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
-                // Introduce a new gamma variable
-                if (addGammaVar(logProbs)) {
-                    numPositiveGammaRedCosts++;
-
-                    if (mp.gammaVars.size() > mp.lpMatrix.getNrows()) {
-                        // Remove the non-basic gamma variables 
-                        // TODO: remove the gamma variables that price out the highest
-                        for (int i=0; i<mp.gammaVars.size(); i++) {
-                            GammaVar gv = mp.gammaVars.get(i);
-                            BasisStatus bstatus = cplex.getBasisStatus(gv.gammaVar);
-                            if (bstatus != BasisStatus.Basic) {
-                                removeGammaVar(gv);
-                            }
-                        }
-                        assert(mp.gammaVars.size() > 0);
-                    }
-                }
-            }
-            sumReducedCost += mReducedCost;
-            
-            // Solve each parsing subproblem
-            int numPositiveLambdaRedCosts = 0;
-            for (int s = 0; s < sentences.size(); s++) {
     
-                parsingTimer.start();
-                Pair<DepTree, Double> pPair = parser.parse(sentences.get(s), dpm);
-                parsingTimer.stop();
-                DepTree tree = pPair.get1();
-                // We must negate pair.get2() since we were just maximizing
-                double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
 
-                if (pReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
-                    // Introduce a new lambda variable
-                    if (addLambdaVar(s, tree)) {
-                        numPositiveLambdaRedCosts++;
-                    } else {
-                        log.warn(String.format("Duplicate Lambda Var: redCost=%f s=%d tree=%s ", pReducedCost, s, tree
-                                .getParents().toString()));
-                    }
-                } // else: do nothing
-                
-                sumReducedCost += pReducedCost;
-            }
-            lowerBound = objVal + sumReducedCost;
-            iterationLowerBounds.add(lowerBound);
-            if (numPositiveLambdaRedCosts > 0 && sumReducedCost > 1e-6) {
-                log.warn("The sum of the reduced costs should be negative: sumPReducedCost = " + sumReducedCost);
-            }
-            
-            // Check whether to continue
-            if (lowerBound >= upperBound) {
-                // We can fathom this node
-                status = RelaxStatus.Fathomed;
-                break;
-            } else if (numPositiveLambdaRedCosts + numPositiveGammaRedCosts == 0) {
-                // Optimal solution found
-//                //TODO: remove
-//                if (DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs != null) {
-//                    double redcost = ModelParamSubproblem.getReducedCost(modelWeights, DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs) - convexGammaPrice;
-//                    System.out.println("mReducedCost: " + mReducedCost);
-//                    System.out.println("convexGammaPrice: " + convexGammaPrice);
-//                    System.out.println("This should be greater than or equal to zero: " + redcost);
-//                    System.out.println("modelWeights: " + Arrays.deepToString(modelWeights));
-//                    System.out.println("betterLogProbs: " + Arrays.deepToString(DmvDantzigWolfeRelaxationResolutionTest.tempStaticLogProbs));
-//
-//                    assert(redcost >= 0.0);
-//                }
-                lowerBound = cplex.getObjValue();
-                status = RelaxStatus.Optimal;
-                break;
-            } else {
-                // Non-optimal solution, continuing
-                log.debug(String.format("Added %d new trees and %d new gammas", numPositiveLambdaRedCosts, numPositiveGammaRedCosts));
+    protected void printSummary() {
+        log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / getNumSolves());
+        log.debug("Avg sum-to-one time(ms) per solve: " + Time.totMs(stoTimer) / getNumSolves());
+    }
+
+    protected boolean isFeasible() {
+        return !hasInfeasibleBounds && areFeasibleBounds(bounds);
+    }
+    
+    protected SubproblemRetVal addColumns(IloCplex cplex) throws IloException {
+        // Get the simplex multipliers (shadow prices).
+        // These are shared across all slaves, since each slave
+        // has the same D_s matrix.
+        double[] pricesLower = cplex.getDuals(mp.lpMatrix, 0, idm.getNumTotalParams());
+        double[] pricesUpper = cplex.getDuals(mp.lpMatrix, idm.getNumTotalParams(), idm.getNumTotalParams());
+        
+        // Compute the parse weights, which will be shared across all subproblems
+        int numConds = idm.getNumConds();
+        double[][] parseWeights = new double[numConds][];
+        int j = 0;
+        for (int c = 0; c < numConds; c++) {
+            int numParams = idm.getNumParams(c);
+            parseWeights[c] = new double[numParams];
+
+            for (int m = 0; m < numParams; m++) {
+                // Calculate new model parameter values for parser
+                // based on the relaxed-objective-coupling-constraints
+                parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
+                j++;
+                // We want to minimize the following:
+                // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
+                // but we negate this since the parser will try to maximize. In other words:
+                // minimize -q^T D_s = maximize q^T D_s
+                // 
             }
         }
+        DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
 
-        // The lower bound oscillates because of the yo-yo effect, so we take the max.
-        lowerBound = Vectors.max(iterationLowerBounds.toNativeArray());
+        // Get the simplex multipliers (shadow prices) for the lambda
+        // sentence constraints
+        double[] convexLambdaPrices = cplex.getDuals(mp.lambdaSumCons);
+           
+        // Compute the model parameter weights, used by the model parameters subproblem
+        double[][] modelWeights = new double[numConds][];
+        j = 0;
+        for (int c = 0; c < numConds; c++) {
+            int numParams = idm.getNumParams(c);
+            modelWeights[c] = new double[numParams];
+            for (int m = 0; m < numParams; m++) {
+                modelWeights[c][m] = - pricesLower[j] * idm.getTotalMaxFreqCm(c, m);
+                j++;
+            }
+        }
+                 
+        // Get the simplex multipliers (shadow prices) for the gamma 
+        double convexGammaPrice = cplex.getDual(mp.gammaSumCons);
         
-        log.debug("Number of DW iterations: " + dwIter);
-        log.debug("Max number of DW iterations: " + maxDwIterations);
-        log.debug("Final lower bound: " + lowerBound);
-        log.debug("Iteration objective values: " + iterationObjVals);
-        log.debug("Iteration lower bounds: " + iterationLowerBounds);
-        log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
-        log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / numSolves);
-        log.debug("Avg sum-to-one time(ms) per solve: " + Time.totMs(stoTimer) / numSolves);
+        // Keep track of minimum subproblem reduced cost
+        double sumReducedCost = 0.0;
+        
+        // Solve the model parameters subproblem
+        int numPositiveGammaRedCosts = 0;
+        ModelParamSubproblem mps = new ModelParamSubproblem();
+        stoTimer.start();
+        Pair<double[][], Double> mPair = mps.solveModelParamSubproblemJOptimizeLogProb(modelWeights, bounds);
+        stoTimer.stop();
+        if (mPair == null) {
+            hasInfeasibleBounds = true;
+            return new SubproblemRetVal(0.0, 0, true);
+        }
+        double[][] logProbs = mPair.get1();
+        double mReducedCost = mPair.get2() - convexGammaPrice;
+        if (log.isDebugEnabled()) {
+            int index = mp.gammaVars.indexOf(new GammaVar(null, logProbs));
+            if (index != -1) {
+                GammaVar gv = mp.gammaVars.get(index);
+                log.debug(String.format("CPLEX redcost=%f, My redcost=%f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
+                assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-13));
+            }
+        }  
+        if (mReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
+            // Introduce a new gamma variable
+            if (addGammaVar(logProbs)) {
+                numPositiveGammaRedCosts++;
 
-        return new Pair<RelaxStatus,Double>(status, lowerBound);
+                if (mp.gammaVars.size() > mp.lpMatrix.getNrows()) {
+                    // Remove the non-basic gamma variables 
+                    // TODO: remove the gamma variables that price out the highest
+                    for (int i=0; i<mp.gammaVars.size(); i++) {
+                        GammaVar gv = mp.gammaVars.get(i);
+                        BasisStatus bstatus = cplex.getBasisStatus(gv.gammaVar);
+                        if (bstatus != BasisStatus.Basic) {
+                            removeGammaVar(gv);
+                        }
+                    }
+                    assert(mp.gammaVars.size() > 0);
+                }
+            }
+        }
+        sumReducedCost += mReducedCost;
+        
+        // Solve each parsing subproblem
+        DmvCkyParser parser = new DmvCkyParser();
+
+        int numPositiveLambdaRedCosts = 0;
+        for (int s = 0; s < sentences.size(); s++) {
+
+            parsingTimer.start();
+            Pair<DepTree, Double> pPair = parser.parse(sentences.get(s), dpm);
+            parsingTimer.stop();
+            DepTree tree = pPair.get1();
+            // We must negate pair.get2() since we were just maximizing
+            double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
+
+            if (pReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
+                // Introduce a new lambda variable
+                if (addLambdaVar(s, tree)) {
+                    numPositiveLambdaRedCosts++;
+                } else {
+                    log.warn(String.format("Duplicate Lambda Var: redCost=%f s=%d tree=%s ", pReducedCost, s, tree
+                            .getParents().toString()));
+                }
+            } // else: do nothing
+            
+            sumReducedCost += pReducedCost;
+        }
+        if (numPositiveLambdaRedCosts > 0 && sumReducedCost > 1e-6) {
+            log.warn("The sum of the reduced costs should be negative: sumPReducedCost = " + sumReducedCost);
+        }
+        if (numPositiveLambdaRedCosts > 0 || numPositiveGammaRedCosts > 0) {
+            log.debug(String.format("Added %d new trees and %d new gammas", numPositiveLambdaRedCosts, numPositiveGammaRedCosts));
+        }
+        int numPositiveRedCosts = numPositiveLambdaRedCosts + numPositiveGammaRedCosts;
+        
+        return new SubproblemRetVal(sumReducedCost, numPositiveRedCosts, false);
+    }
+
+    protected int addCuts(IloCplex cplex, TDoubleArrayList iterationObjVals,
+            ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
+        return 0;
     }
 
     public void reverseApply(DmvBoundsDelta delta) {
@@ -1009,7 +777,7 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
                 throw new IllegalStateException();
             }
 
-            assert(newLb <= newUb);
+            assert newLb <= newUb : String.format("l,u = %f, %f", newLb, newUb);
             
             // Updates the bounds of the model parameters
             bounds.set(c, m, newLb, newUb);
@@ -1151,18 +919,6 @@ public class DmvDantzigWolfeRelaxationResolution implements DmvRelaxation {
 
     public IndexedDmvModel getIdm() {
         return idm;
-    }
-        
-    public void end() {
-        cplex.end();
-    }
-
-    public void setMaxSimplexIterations(int maxSimplexIterations) {
-        this.maxSimplexIterations = maxSimplexIterations;
-    }
-
-    public void setMaxDwIterations(int maxDwIterations) {
-        this.maxDwIterations = maxDwIterations;
     }
     
 }

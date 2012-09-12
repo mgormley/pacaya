@@ -13,9 +13,10 @@ import edu.jhu.hltcoe.util.Utilities;
 public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
 
     private static Logger log = Logger.getLogger(RegretDmvBoundsDeltaFactory.class);
+    private RandomDmvBoundsDeltaFactory randBrancher;
 
     public RegretDmvBoundsDeltaFactory() {
-        
+        this.randBrancher = new RandomDmvBoundsDeltaFactory(true);
     }
 
     @Override
@@ -23,6 +24,12 @@ public class RegretDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
         DmvBounds origBounds = node.getBounds();
         double[][] regret = node.getRegretCm();
 
+        if (regret == null) {
+            // Back off to random branching.
+            log.warn("Regret not available. Backing off to random.");
+            return randBrancher.getDmvBounds(node);
+        }
+        
         // Don't branch on variables that have bottomed out
         for (int c=0; c<regret.length; c++) {
             for (int m=0; m<regret[c].length; m++) {

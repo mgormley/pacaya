@@ -24,8 +24,10 @@ public class RelaxedDmvSolution implements Solution {
                 return Infeasible;
             } else if (status == Status.Error || status == Status.Unknown) {
                 return Unknown;
-            } else {
+            } else if (status == Status.Optimal || status == Status.Feasible){
                 return Feasible;
+            } else {
+                throw new IllegalStateException("This should never be reached. Status = " + status);
             }
         }
     }
