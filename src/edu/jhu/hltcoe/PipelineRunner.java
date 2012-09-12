@@ -67,9 +67,9 @@ public class PipelineRunner {
         } else if (cmd.hasOption("synthetic")) {
             String synthetic = cmd.getOptionValue("synthetic");
             DmvModel trueModel;
-            if (synthetic == "two") {
+            if (synthetic.equals("two")) {
                 trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
-            } else if (synthetic == "three") {
+            } else if (synthetic.equals("three")) {
                 trueModel = SimpleStaticDmvModel.getThreePosTagInstance();
             } else {
                 throw new ParseException("Unknown synthetic type: " + synthetic);
