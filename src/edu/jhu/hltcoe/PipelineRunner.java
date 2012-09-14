@@ -31,7 +31,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
@@ -133,8 +133,8 @@ public class PipelineRunner {
         if (cmd.hasOption("relaxOnly")) {
             DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd, trainTreebank); 
             dw.setSentences(sentences);
-            dw.init(DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences, 1));
-            DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw);
+            dw.init(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, sentences, null, null));
+            DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw, trainTreebank);
             Stopwatch timer = new Stopwatch();
             timer.start();
             RelaxedDmvSolution relaxSol = dw.solveRelaxation();
@@ -144,7 +144,15 @@ public class PipelineRunner {
             if (initBoundsSol != null) {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
-            //TODO: log.info("containsGoldSol: " + containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
+            // TODO: use add-lambda smoothing here.
+            DmvProjector dmvProjector = new DmvProjector(sentences, dw);
+            DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
+            log.info("projLogLikelihood: " + projSol.getScore());
+            // TODO: Remove this hack. It's only to setup for getEvalParser().
+            //            TrainerFactory.getTrainer(cmd, trainTreebank);
+            //            DependencyParserEvaluator dpEval = new DependencyParserEvaluator(TrainerFactory.getEvalParser(), trainTreebank, "train");
+            //            dpEval.evaluate(projSol)
+            //            TODO: log.info("containsGoldSol: " + containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
         } else {
             // Train the model
             log.info("Training model");
@@ -152,7 +160,7 @@ public class PipelineRunner {
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(sentences);
-                updateBounds(cmd, sentences, bnb.getRootRelaxation());
+                updateBounds(cmd, sentences, bnb.getRootRelaxation(), trainTreebank);
                 bnb.train();
             } else {
                 trainer.train(sentences);
@@ -208,14 +216,23 @@ public class PipelineRunner {
         return trainTreebank;
     }
 
-    private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw) {
+    private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw, DepTreebank trainTreebank) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
             double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
             double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
             int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
             
-            return LocalBnBDmvTrainer.updateBounds(sentences, dw, opt, offsetProb, probOfSkipCm, numDoubledCms);
+            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, sentences, dw, trainTreebank);
+            
+            if (numDoubledCms > 0) {
+                // TODO:
+                throw new RuntimeException("not implemented");
+            }
+            
+            LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
+            
+            return initBoundsSol;
         }
         return null;
     }

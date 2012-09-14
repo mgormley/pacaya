@@ -58,7 +58,7 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
                 // Since we're doing maximization...
                 double c1Delta = parentBound - c1Bound;
                 double c2Delta = parentBound - c2Bound;
-                // The product score used in SCIP
+                // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
                 double score = Math.max(c1Delta, EPSILON) * Math.max(c2Delta, EPSILON);
                 
                 if (score > maxScore) {

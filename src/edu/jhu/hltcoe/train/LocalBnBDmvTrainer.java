@@ -23,6 +23,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvSupervisedWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -186,9 +187,13 @@ public class LocalBnBDmvTrainer implements Trainer {
         }
     }
 
-    public static DmvSolution updateBounds(SentenceCollection sentences, DmvRelaxation dw, InitSol opt, double offsetProb,
-            double probOfSkipCm, int numDoubledCms) {
-        IndexedDmvModel idm = dw.getIdm();
+    public static DmvSolution getInitSol(InitSol opt, SentenceCollection sentences, DmvRelaxation dw, DepTreebank trainTreebank) {
+        IndexedDmvModel idm;
+        if (dw != null) {
+            idm = dw.getIdm();
+        } else {
+            idm = new IndexedDmvModel(sentences);
+        }
     
         DmvSolution initBoundsSol;
         if (opt == InitSol.VITERBI_EM) {
@@ -199,11 +204,13 @@ public class LocalBnBDmvTrainer implements Trainer {
             // TODO initSol = goldSol;
             throw new RuntimeException("not implemented");                
             
-        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM){
+        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM || opt == InitSol.SUPERVISED){
             DmvWeightGenerator weightGen;
             if (opt == InitSol.RANDOM) {
                 Prng.seed(System.currentTimeMillis());
                 weightGen = new DmvRandomWeightGenerator(0.00001);
+            } else if (opt == InitSol.SUPERVISED){
+                weightGen = new DmvSupervisedWeightGenerator(trainTreebank);
             } else {
                 weightGen = new DmvUniformWeightGenerator();
             }
@@ -212,18 +219,16 @@ public class LocalBnBDmvTrainer implements Trainer {
             double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
-            initBoundsSol = new DmvSolution(logProbs, idm, treebank, dw.computeTrueObjective(logProbs, treebank));            
+            double score;
+            if (dw != null) {
+                score = dw.computeTrueObjective(logProbs, treebank);
+            } else {
+                score = parser.getLastParseWeight();
+            }
+            initBoundsSol = new DmvSolution(logProbs, idm, treebank, score);            
         } else {
             throw new IllegalStateException("unsupported initialization: " + opt);
         }
-    
-        if (numDoubledCms > 0) {
-            // TODO:
-            throw new RuntimeException("not implemented");
-        }
-        
-        LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
-        
         return initBoundsSol;
     }
 
@@ -232,6 +237,7 @@ public class LocalBnBDmvTrainer implements Trainer {
         GOLD("gold"), 
         RANDOM("random"), 
         UNIFORM("uniform"),
+        SUPERVISED("supervised"),
         NONE("none");
         
         private String id;
