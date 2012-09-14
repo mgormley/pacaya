@@ -6,6 +6,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * Computes the directed score (as described in Spitkovsky, 2009). Directed score
@@ -23,6 +24,8 @@ public class DependencyParserEvaluator implements Evaluator {
     private double logLikelihood;
     private String dataName;
 
+    private double perTokenCrossEnt;
+
     public DependencyParserEvaluator(ViterbiParser parser, DepTreebank depTreebank, String dataName) {
         this.parser = parser;
         this.depTreebank = depTreebank;
@@ -34,7 +37,8 @@ public class DependencyParserEvaluator implements Evaluator {
         SentenceCollection sentences = depTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
         logLikelihood = parser.getLastParseWeight();
-
+        perTokenCrossEnt = - logLikelihood / Utilities.log(2) / sentences.getNumTokens();
+        
         evaluate(parses);
     }
 
@@ -61,6 +65,7 @@ public class DependencyParserEvaluator implements Evaluator {
     public void print() {
         log.info(String.format("Accuracy on %s: %.2f", dataName, accuracy));
         log.info(String.format("LogLikelihood on %s: %.2f", dataName, logLikelihood));
+        log.info(String.format("Per token cross entropy on %s: %.3f", dataName, perTokenCrossEnt));
     }
 
 }

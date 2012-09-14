@@ -2,29 +2,47 @@ package edu.jhu.hltcoe.data;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import util.Alphabet;
 
-public class SentenceCollection extends ArrayList<Sentence> {
+public class SentenceCollection implements Iterable<Sentence> {
 
     private static final long serialVersionUID = 1L;
     private Alphabet<Label> alphabet;
-
+    private ArrayList<Sentence> sents;
+    private int numTokens;
+    
     public SentenceCollection() {
         super();
         alphabet = new Alphabet<Label>();
+        sents = new ArrayList<Sentence>();
     }
     
     SentenceCollection(DepTreebank treebank) {
         super();
         alphabet = treebank.getAlphabet();
+        sents = new ArrayList<Sentence>();
         for (DepTree tree : treebank) {
             Sentence sentence = new Sentence(alphabet, tree);
             add(sentence);   
         }
     }
     
+    public void add(Sentence sentence) {
+        sents.add(sentence);
+        numTokens += sentence.size();
+    }
+    
+    public Sentence get(int i) {
+        return sents.get(i);
+    }
+    
+    public int size() {
+        return sents.size();
+    }
+
     /**
      * Vocabulary of the sentences including WALL_LABEL
      */
@@ -73,6 +91,15 @@ public class SentenceCollection extends ArrayList<Sentence> {
             }
         }
 
+    }
+
+    public int getNumTokens() {
+        return numTokens;
+    }
+
+    @Override
+    public Iterator<Sentence> iterator() {
+        return sents.iterator();
     }
 
 }
