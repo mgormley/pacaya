@@ -92,42 +92,19 @@ public class LazyBranchAndBoundSolver {
                 log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", upperBoundPQ.peek().getOptimisticBound(), upperBound));
             }
             upperBound = upperBoundPQ.peek().getOptimisticBound();
+            assert (!Double.isNaN(upperBound));
             
             curNode = getNextLeafNode();
             numProcessed++;
-            
-            assert (!Double.isNaN(upperBound));
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
+             
+            // Logging
             log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
                     upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
             if (log.isDebugEnabled() && numProcessed % 100 == 0) {
-                // Print Histogram
-                double[] bounds = new double[leafNodePQ.size()];
-                int i = 0;
-                for (ProblemNode node : leafNodePQ) {
-                    bounds[i] = node.getOptimisticBound();
-                    i++;
-                }
-                log.debug(getHistogram(bounds));
-                
-                // Print timers.
-                log.debug("Avg time(ms) per node: " + Time.totMs(nodeTimer) / numProcessed);
-                log.debug("Avg switch time(ms) per node: " + Time.totMs(switchTimer) / numProcessed);
-                log.debug("Avg relax time(ms) per node: " + Time.totMs(relaxTimer) / numProcessed);
-                log.debug("Avg project time(ms) per node: " + Time.totMs(feasTimer) / numProcessed);
-                log.debug("Avg branch time(ms) per node: " + Time.totMs(branchTimer) / numProcessed);
-                
-                // Print stats about the space remaining.
-                log.info("Log space remaining (sub): " + logSpaceRemain);
-                if (numProcessed % 10000 == 0) {
-                    double logSpaceRemainAdd = computeLogSpaceRemain();
-                    log.info("Log space remaining (add): " + logSpaceRemainAdd);
-                    if (!Utilities.equals(logSpaceRemain, logSpaceRemainAdd, 1e-4)) {
-                        log.warn("Log space remaining differs between subtraction and addition versions.");
-                    }
-                }
-                log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
-                log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
+                printLeafNodeBoundHistogram();
+                printTimers(numProcessed);
+                printSpaceRemaining(numProcessed, rootLogSpace, logSpaceRemain);
             }
             
             curNode.setAsActiveNode();
@@ -195,7 +172,7 @@ public class LazyBranchAndBoundSolver {
         // Return epsilon optimal solution
         return status;
     }
-    
+
     /**
      * Override this method.
      */
@@ -203,6 +180,63 @@ public class LazyBranchAndBoundSolver {
         return;
     }
 
+    private boolean hasNextLeafNode() {
+        return !leafNodePQ.isEmpty();
+    }
+
+    private ProblemNode getNextLeafNode() {
+        ProblemNode node = leafNodePQ.remove();
+        upperBoundPQ.remove(node);
+        return node;
+    }
+
+    private void addToLeafNodes(ProblemNode node) {
+        leafNodePQ.add(node);
+        upperBoundPQ.add(node);
+    }
+
+    public Solution getIncumbentSolution() {
+        return incumbentSolution;
+    }
+    
+    public double getIncumbentScore() {
+        return incumbentScore;
+    }
+    
+    private void printSpaceRemaining(int numProcessed, double rootLogSpace, double logSpaceRemain) {
+        // Print stats about the space remaining.
+        log.info("Log space remaining (sub): " + logSpaceRemain);
+        if (numProcessed % 10000 == 0) {
+            double logSpaceRemainAdd = computeLogSpaceRemain();
+            log.info("Log space remaining (add): " + logSpaceRemainAdd);
+            if (!Utilities.equals(logSpaceRemain, logSpaceRemainAdd, 1e-4)) {
+                log.warn("Log space remaining differs between subtraction and addition versions.");
+            }
+        }
+        log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
+        log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
+    }
+
+    private void printTimers(int numProcessed) {
+        // Print timers.
+        log.debug("Avg time(ms) per node: " + Time.totMs(nodeTimer) / numProcessed);
+        log.debug("Avg switch time(ms) per node: " + Time.totMs(switchTimer) / numProcessed);
+        log.debug("Avg relax time(ms) per node: " + Time.totMs(relaxTimer) / numProcessed);
+        log.debug("Avg project time(ms) per node: " + Time.totMs(feasTimer) / numProcessed);
+        log.debug("Avg branch time(ms) per node: " + Time.totMs(branchTimer) / numProcessed);
+    }
+
+    private void printLeafNodeBoundHistogram() {
+        // Print Histogram
+        double[] bounds = new double[leafNodePQ.size()];
+        int i = 0;
+        for (ProblemNode node : leafNodePQ) {
+            bounds[i] = node.getOptimisticBound();
+            i++;
+        }
+        log.debug(getHistogram(bounds));
+    }
+    
     /** 
      * This VERY SLOWLY computes the log space remaining by 
      * adding up all the bounds of the leaf nodes.
@@ -239,28 +273,5 @@ public class LazyBranchAndBoundSolver {
         }
         return sb.toString();
     }
-
-    private boolean hasNextLeafNode() {
-        return !leafNodePQ.isEmpty();
-    }
-
-    private ProblemNode getNextLeafNode() {
-        ProblemNode node = leafNodePQ.remove();
-        upperBoundPQ.remove(node);
-        return node;
-    }
-
-    private void addToLeafNodes(ProblemNode node) {
-        leafNodePQ.add(node);
-        upperBoundPQ.add(node);
-    }
-
-    public Solution getIncumbentSolution() {
-        return incumbentSolution;
-    }
     
-    public double getIncumbentScore() {
-        return incumbentScore;
-    }
-
 }
