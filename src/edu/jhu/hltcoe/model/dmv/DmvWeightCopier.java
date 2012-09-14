@@ -7,8 +7,8 @@ import java.util.List;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 
 public class DmvWeightCopier implements DmvWeightGenerator {
 
@@ -19,13 +19,13 @@ public class DmvWeightCopier implements DmvWeightGenerator {
     }
 
     @Override
-    public LabeledMultinomial<Label> getChooseMulti(Pair<Label,String> pair, List<Label> children) {
+    public LabeledMultinomial<Label> getChooseMulti(ChooseRhs pair, List<Label> children) {
         // Do NOT normalize the multinomial, this is only copying.
         return new LabeledMultinomial<Label>(dmv.getChooseWeights(pair));
     }
 
     @Override
-    public double getStopWeight(Triple<Label, String, Boolean> triple) {
+    public double getStopWeight(StopRhs triple) {
         return dmv.getStopWeights().get(triple);
     }
     

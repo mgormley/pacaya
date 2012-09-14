@@ -9,9 +9,9 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvModelConverter {
@@ -36,7 +36,7 @@ public class DmvModelConverter {
         }
 
         @Override
-        public double getStopWeight(Triple<Label, String, Boolean> triple) {
+        public double getStopWeight(StopRhs triple) {
             if (triple.get1().equals(WallDepTreeNode.WALL_LABEL)) {
                 return (triple.get2().equals("r") && triple.get3()) ? 0.0 : 1.0;
             } else {
@@ -48,7 +48,7 @@ public class DmvModelConverter {
         }
 
         @Override
-        public LabeledMultinomial<Label> getChooseMulti(Pair<Label, String> pair, List<Label> children) {
+        public LabeledMultinomial<Label> getChooseMulti(ChooseRhs pair, List<Label> children) {
             LabeledMultinomial<Label> mult = new LabeledMultinomial<Label>();
             for (Label child : children) {
                 int c = tagAlphabet.lookupObject(child);
@@ -72,8 +72,8 @@ public class DmvModelConverter {
     public static DepProbMatrix getDepProbMatrix(DmvModel model, Alphabet<Label> tagAlphabet) {
         DepProbMatrix depProbMatrix = new DepProbMatrix(tagAlphabet, 2, 1);
         depProbMatrix.fill(Double.NEGATIVE_INFINITY);
-        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : model.getChooseWeights().entrySet()) {
-            Pair<Label, String> key = entry.getKey();
+        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : model.getChooseWeights().entrySet()) {
+            ChooseRhs key = entry.getKey();
             Label parent = key.get1();
             String lr = key.get2();
             LabeledMultinomial<Label> mult = entry.getValue();
@@ -99,8 +99,8 @@ public class DmvModelConverter {
             }
         }
 
-        for (Entry<Triple<Label, String, Boolean>, Double> entry : model.getStopWeights().entrySet()) {
-            Triple<Label, String, Boolean> key = entry.getKey();
+        for (Entry<StopRhs, Double> entry : model.getStopWeights().entrySet()) {
+            StopRhs key = entry.getKey();
             double stopProb = entry.getValue();
             Label parent = key.get1();
             String lr = key.get2();

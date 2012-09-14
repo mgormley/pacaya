@@ -8,8 +8,8 @@ import java.util.List;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 
 public class DmvUniformWeightGenerator implements DmvWeightGenerator {
 
@@ -17,12 +17,12 @@ public class DmvUniformWeightGenerator implements DmvWeightGenerator {
     }
     
     @Override
-    public double getStopWeight(Triple<Label, String, Boolean> triple) {
+    public double getStopWeight(StopRhs triple) {
         return 0.5;
     }
     
     @Override
-    public LabeledMultinomial<Label> getChooseMulti(Pair<Label, String> pair, List<Label> children) {
+    public LabeledMultinomial<Label> getChooseMulti(ChooseRhs pair, List<Label> children) {
         double[] chooseMulti = new double[children.size()];
         Arrays.fill(chooseMulti, 1.0 / chooseMulti.length);
         return new LabeledMultinomial<Label>(children, chooseMulti);

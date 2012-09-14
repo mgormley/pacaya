@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
 import edu.jhu.hltcoe.util.Quadruple;
 
 public class FixedIntervalDeltaGenerator extends IdentityDeltaGenerator implements DeltaGenerator {
@@ -23,7 +23,7 @@ public class FixedIntervalDeltaGenerator extends IdentityDeltaGenerator implemen
     public Map<Quadruple<Label, String, Label, String>, Double> getCWDeltas(DmvModel dmvModel) {        
         Map<Quadruple<Label, String, Label, String>, Double> cwDeltas = super.getCWDeltas(dmvModel); 
 
-        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : dmvModel.getChooseWeights().entrySet()) {
+        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : dmvModel.getChooseWeights().entrySet()) {
             for (Entry<Label, Double> subEntry : entry.getValue().entrySet()) {
                 double weight = subEntry.getValue();
                 for (int i = -numPerSide; i<=numPerSide; i++) {

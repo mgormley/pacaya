@@ -4,13 +4,12 @@
 package edu.jhu.hltcoe.model.dmv;
 
 import java.util.List;
-import java.util.Map.Entry;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.math.Multinomials;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 
 public class SmoothedDmvWeightCopier implements DmvWeightGenerator {
 
@@ -27,7 +26,7 @@ public class SmoothedDmvWeightCopier implements DmvWeightGenerator {
     }
 
     @Override
-    public LabeledMultinomial<Label> getChooseMulti(Pair<Label,String> pair, List<Label> children) {
+    public LabeledMultinomial<Label> getChooseMulti(ChooseRhs pair, List<Label> children) {
         LabeledMultinomial<Label> mult = dmv.getChooseWeights(pair);
         double[] probs = new double[children.size()];
         for (int i=0; i<probs.length; i++) {
@@ -38,7 +37,7 @@ public class SmoothedDmvWeightCopier implements DmvWeightGenerator {
     }
 
     @Override
-    public double getStopWeight(Triple<Label, String, Boolean> triple) {
+    public double getStopWeight(StopRhs triple) {
         return (dmv.getStopWeights().get(triple) + epsilon) / (1.0 + 2*epsilon);
     }
     

@@ -7,13 +7,13 @@ import java.util.List;
 
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 
 public interface DmvWeightGenerator {
     
-    double getStopWeight(Triple<Label, String, Boolean> triple);
+    double getStopWeight(StopRhs triple);
 
-    LabeledMultinomial<Label> getChooseMulti(Pair<Label, String> pair, List<Label> children);
+    LabeledMultinomial<Label> getChooseMulti(ChooseRhs pair, List<Label> children);
     
 }

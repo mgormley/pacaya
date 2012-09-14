@@ -10,39 +10,54 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.util.ComparablePair;
-import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Triple;
 
 public class DmvModel implements Model {
 
-    private Map<Triple<Label, String, Boolean>, Double> swMap = new HashMap<Triple<Label, String, Boolean>, Double>();
-    private Map<Pair<Label, String>, LabeledMultinomial<Label>> cwMap = new HashMap<Pair<Label, String>, LabeledMultinomial<Label>>();
+    public static class StopRhs extends Triple<Label, String, Boolean> {
+
+        public StopRhs(Label label, String lr, Boolean adjacent) {
+            super(label, lr, adjacent);
+        }
+        
+    }
+    
+    public static class ChooseRhs extends ComparablePair<Label, String> {
+
+        public ChooseRhs(Label parent, String lr) {
+            super(parent, lr);
+        }
+        
+    }
+    
+    private Map<StopRhs, Double> swMap = new HashMap<StopRhs, Double>();
+    private Map<ChooseRhs, LabeledMultinomial<Label>> cwMap = new HashMap<ChooseRhs, LabeledMultinomial<Label>>();
 
     public DmvModel() {
         
     }
     
-    public Map<Triple<Label, String, Boolean>, Double> getStopWeights() {
+    public Map<StopRhs, Double> getStopWeights() {
         return swMap;
     }
 
-    public double getStopWeight(Triple<Label, String, Boolean> triple) {
+    public double getStopWeight(StopRhs triple) {
         return swMap.get(triple);
     }
 
     public double getStopWeight(Label label, String leftRight, boolean adjacent) {
-        return swMap.get(new Triple<Label, String, Boolean>(label, leftRight, adjacent));
+        return swMap.get(new StopRhs(label, leftRight, adjacent));
     }
 
-    public Map<Pair<Label, String>, LabeledMultinomial<Label>> getChooseWeights() {
+    public Map<ChooseRhs, LabeledMultinomial<Label>> getChooseWeights() {
         return cwMap;
     }
 
     public LabeledMultinomial<Label> getChooseWeights(Label label, String lr) {
-        return getChooseWeights(new Pair<Label, String>(label, lr));
+        return getChooseWeights(new ChooseRhs(label, lr));
     }
 
-    public LabeledMultinomial<Label> getChooseWeights(Pair<Label, String> pair) {
+    public LabeledMultinomial<Label> getChooseWeights(ChooseRhs pair) {
         return cwMap.get(pair);
     }
 
@@ -55,12 +70,12 @@ public class DmvModel implements Model {
      * @param weight
      *            The probability of stopping.
      */
-    public void putStopWeight(Triple<Label, String, Boolean> triple, double weight) {
+    public void putStopWeight(StopRhs triple, double weight) {
         swMap.put(triple, weight);
     }
 
     public void putStopWeight(Label label, String leftRight, Boolean adjacent, double weight) {
-        swMap.put(new Triple<Label, String, Boolean>(label, leftRight, adjacent), weight);
+        swMap.put(new StopRhs(label, leftRight, adjacent), weight);
     }
 
     /**
@@ -72,7 +87,7 @@ public class DmvModel implements Model {
      * @param chooseMulti
      */
     public void setChooseWeights(Label parent, String lr, LabeledMultinomial<Label> chooseMulti) {
-        cwMap.put(new Pair<Label, String>(parent, lr), chooseMulti);
+        cwMap.put(new ChooseRhs(parent, lr), chooseMulti);
     }
     
     public void putChooseWeight(Label parent, String leftRight, Label child, double d) {
@@ -81,7 +96,7 @@ public class DmvModel implements Model {
     }
 
     private LabeledMultinomial<Label> safeGetMultinomial(Label parent, String leftRight) {
-        Pair<Label, String> pair = new Pair<Label, String>(parent, leftRight);
+        ChooseRhs pair = new ChooseRhs(parent, leftRight);
         LabeledMultinomial<Label> multinomial = cwMap.get(pair);
         if (multinomial == null) {
             multinomial = new LabeledMultinomial<Label>();
@@ -99,9 +114,9 @@ public class DmvModel implements Model {
         
         sb.append("Choose-weight map:\n");
         // Convert to comparable pairs:
-        ArrayList<ComparablePair<Label, String>> cwList = new ArrayList<ComparablePair<Label, String>>();
-        for (Pair<Label, String> key : cwMap.keySet()) {
-            cwList.add(new ComparablePair<Label, String>(key.get1(), key.get2()));
+        ArrayList<ChooseRhs> cwList = new ArrayList<ChooseRhs>();
+        for (ChooseRhs key : cwMap.keySet()) {
+            cwList.add(new ChooseRhs(key.get1(), key.get2()));
         }
         Object[] cwArray = cwList.toArray();
         Arrays.sort(cwArray);
@@ -135,7 +150,7 @@ public class DmvModel implements Model {
     
 
     public void setAllChooseWeights(double value) {
-        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : getChooseWeights().entrySet()) {
+        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : getChooseWeights().entrySet()) {
             for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
                 subEntry.setValue(value);                
             }
@@ -143,7 +158,7 @@ public class DmvModel implements Model {
     }
 
     public void setAllStopWeights(double value) {
-        for (Entry<Triple<Label, String, Boolean>, Double> entry : getStopWeights().entrySet()) {
+        for (Entry<StopRhs, Double> entry : getStopWeights().entrySet()) {
             entry.setValue(value);
         }
     }

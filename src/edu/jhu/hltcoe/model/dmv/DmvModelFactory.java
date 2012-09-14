@@ -12,8 +12,8 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Triple;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvModelFactory implements ModelFactory {
@@ -47,7 +47,7 @@ public class DmvModelFactory implements ModelFactory {
                     continue;
                 }
                 for (boolean adj : adjacent) {
-                    Triple<Label, String, Boolean> triple = new Triple<Label, String, Boolean>(label, lr, adj);
+                    StopRhs triple = new StopRhs(label, lr, adj);
                     double weight;
                     weight = weightGen.getStopWeight(triple);
                     dmv.putStopWeight(triple, weight);
@@ -70,7 +70,7 @@ public class DmvModelFactory implements ModelFactory {
                     // This will never be used
                     continue;
                 }
-                Pair<Label, String> pair = new Pair<Label, String>(parent, lr);
+                ChooseRhs pair = new ChooseRhs(parent, lr);
                 dmv.setChooseWeights(parent, lr, weightGen.getChooseMulti(pair, childList));
             }
         }

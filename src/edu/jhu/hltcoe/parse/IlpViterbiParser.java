@@ -22,11 +22,11 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
-import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class IlpViterbiParser implements ViterbiParser {
@@ -184,8 +184,8 @@ public class IlpViterbiParser implements ViterbiParser {
     protected void encodeStopWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File stopWeightsFile = new File(tempDir, "input.stopweights");
         PrintWriter stopWeightsWriter = new PrintWriter(stopWeightsFile);
-        Map<Triple<Label,String,Boolean>,Double> stopWeights = dmv.getStopWeights();
-        for (Entry<Triple<Label,String,Boolean>,Double> entry : stopWeights.entrySet()) {
+        Map<StopRhs,Double> stopWeights = dmv.getStopWeights();
+        for (Entry<StopRhs,Double> entry : stopWeights.entrySet()) {
             Label label = entry.getKey().get1();
             String leftRight = entry.getKey().get2();
             int adjacent = entry.getKey().get3() ? 1 : 0;
@@ -200,8 +200,8 @@ public class IlpViterbiParser implements ViterbiParser {
     private void encodeChooseWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File chooseWeightsFile = new File(tempDir, "input.chooseweights");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<Pair<Label, String>, LabeledMultinomial<Label>> chooseWeights = dmv.getChooseWeights();
-        for (Entry<Pair<Label, String>, LabeledMultinomial<Label>> entry : chooseWeights.entrySet()) {
+        Map<ChooseRhs, LabeledMultinomial<Label>> chooseWeights = dmv.getChooseWeights();
+        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : chooseWeights.entrySet()) {
             Label parent = entry.getKey().get1();
             String lr = entry.getKey().get2();
             for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
