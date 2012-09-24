@@ -145,7 +145,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    ilpSolver="cplex",
                    convergenceRatio=0.99999,
                    epsilon=0.1,
-                   branch="regret",
+                   varSelection="regret",
+                   varSplit="half-prob",
                    maxDwIterations=3, 
                    maxSetSizeToConstrain=3, 
                    maxCutRounds=1, 
@@ -197,8 +198,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     for maxNumSentences in [10,100]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for algorithm in ["viterbi", "bnb"]:
-                            for branch in ["regret"]:
-                                experiments.append(all + dataset + msl + mns + DPExpParams(algorithm=algorithm, branch=branch))
+                            for varSelection in ["regret"]:
+                                experiments.append(all + dataset + msl + mns + DPExpParams(algorithm=algorithm, varSelection=varSelection))
         elif self.expname == "bnb":
             all.update(algorithm="bnb")
             for dataset in datasets:
@@ -206,8 +207,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [10,100]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
-                            experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch))
+                        for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
+                            experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
@@ -215,8 +216,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [10,100]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for branch in ["regret", "rand-uniform", "rand-weighted", "full"]:
-                            experiments.append(all + dataset + msl + mns + DPExpParams(branch=branch) + HProfCpuExpParams())
+                        for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
+                            experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection) + HProfCpuExpParams())
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
@@ -228,11 +229,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         # Run for some fixed amount of time.                
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
-                    for branch in ["regret"]:
+                    for varSelection in ["regret"]:
                         for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
                             for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
                                 for probOfSkipCm in [0.0]: #TODO: frange(0.0, 0.21, 0.05):
-                                    algo = DPExpParams(branch=branch,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
+                                    algo = DPExpParams(varSelection=varSelection,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
                                     experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "viterbi-bnb":
             # Fixed seed

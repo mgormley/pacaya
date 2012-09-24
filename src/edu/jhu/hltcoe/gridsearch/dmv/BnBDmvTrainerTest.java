@@ -7,6 +7,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
@@ -73,8 +74,10 @@ public class BnBDmvTrainerTest {
     }
 
 
-    private DmvBoundsDeltaFactory getDefaultBrancher() {
-        return new RegretDmvBoundsDeltaFactory();
+    public static DmvBoundsDeltaFactory getDefaultBrancher() {
+        VariableSelector varSelector = new RegretDmvBoundsDeltaFactory();
+        VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
+        return new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
     }
     
 }

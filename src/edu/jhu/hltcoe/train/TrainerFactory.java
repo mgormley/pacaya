@@ -8,15 +8,20 @@ import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.FullStrongBranchingDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter;
 import edu.jhu.hltcoe.gridsearch.dmv.RandomDmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.RegretDmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.VariableSelector;
+import edu.jhu.hltcoe.gridsearch.dmv.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
@@ -68,7 +73,8 @@ public class TrainerFactory {
         options.addOption("ilp", "ilpSolver", true, "The ILP solver to use " + IlpSolverId.getIdList());
         options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
         options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
-        options.addOption("b", "branch", true, "Branching strategy [full,regret,rand-uniform,rand-weighted]");
+        options.addOption("vse", "varSelection", true, "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]");
+        options.addOption("vsp", "varSplit", true, "Variable splitting strategy for branching [half-prob, half-logprob]");
         options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,lp]");
         options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
         options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
@@ -102,7 +108,8 @@ public class TrainerFactory {
         final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
         final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
         final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
-        final String branch = Command.getOptionValue(cmd, "branch", "regret");
+        final String varSelection = Command.getOptionValue(cmd, "varSelection", "regret");
+        final String varSplit = Command.getOptionValue(cmd, "varSplit", "half-prob");
         final String relaxation = Command.getOptionValue(cmd, "relaxation", "dw");
         final int maxSimplexIterations = Command.getOptionValue(cmd, "maxSimplexIterations", 2100000000);
         final int maxDwIterations = Command.getOptionValue(cmd, "maxDwIterations", 1000);
@@ -215,19 +222,32 @@ public class TrainerFactory {
         
         DmvBoundsDeltaFactory brancher = null;
         if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
-            if (branch.equals("full")) {
-                brancher = new FullStrongBranchingDeltaFactory();
-            } else if (branch.equals("regret")) {
-                brancher = new RegretDmvBoundsDeltaFactory();
-            } else if (branch.equals("rand-uniform")) {
-                brancher = new RandomDmvBoundsDeltaFactory(true);
-            } else if (branch.equals("rand-weighted")) {
-                brancher = new RandomDmvBoundsDeltaFactory(false);
+            
+            VariableSplitter varSplitter;
+            if (varSplit.equals("half-prob")) {
+                varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
+            } else if (varSplit.equals("half-logprob")) {
+                varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_LOGPROB);
             } else {
-                throw new ParseException("Branching strategy not supported: " + branch);
+                throw new ParseException("Variable splitting strategy not supported: " + varSplit);
             }
+
+            VariableSelector varSelector;
+            if (varSelection.equals("full")) {
+                varSelector = new FullStrongBranchingDeltaFactory(varSplitter);
+            } else if (varSelection.equals("regret")) {
+                varSelector = new RegretDmvBoundsDeltaFactory();
+            } else if (varSelection.equals("rand-uniform")) {
+                varSelector = new RandomDmvBoundsDeltaFactory(true);
+            } else if (varSelection.equals("rand-weighted")) {
+                varSelector = new RandomDmvBoundsDeltaFactory(false);
+            } else {
+                throw new ParseException("Variable selection strategy not supported: " + varSelection);
+            }
+            
+            brancher =  new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
         }
-        
+
         if (algorithm.equals("viterbi-bnb")) {
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);

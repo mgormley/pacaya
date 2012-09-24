@@ -1,12 +1,10 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.util.List;
-
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
+public class RandomDmvBoundsDeltaFactory implements VariableSelector {
 
     private boolean uniform; 
     private double[] freqs;
@@ -53,7 +51,7 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
     }
 
     @Override
-    public List<DmvBoundsDelta> getDmvBounds(DmvProblemNode dmvProblemNode) {
+    public VariableId select(DmvProblemNode dmvProblemNode) {
         if (freqs == null) {
             init(dmvProblemNode.getIdm());
         }
@@ -86,7 +84,7 @@ public class RandomDmvBoundsDeltaFactory implements DmvBoundsDeltaFactory {
             m = cms[cmId].get2();
         } while(!origBounds.canBranch(c, m));
 
-        return RegretDmvBoundsDeltaFactory.splitHalfProbSpace(origBounds, c, m);
+        return new VariableId(c, m);
     }
 
 }

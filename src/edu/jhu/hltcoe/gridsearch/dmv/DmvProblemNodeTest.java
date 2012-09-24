@@ -13,6 +13,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -40,7 +41,11 @@ public class DmvProblemNodeTest {
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
 
         DmvRelaxation relax = new DmvDantzigWolfeRelaxation(new File("."), 100, new CutCountComputer());
-        DmvProblemNode node = new DmvProblemNode(corpus, new RandomDmvBoundsDeltaFactory(true), relax);
+
+        VariableSelector varSelector = new RandomDmvBoundsDeltaFactory(true);
+        VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
+        DmvBoundsDeltaFactory brancher = new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
+        DmvProblemNode node = new DmvProblemNode(corpus, brancher, relax);
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);

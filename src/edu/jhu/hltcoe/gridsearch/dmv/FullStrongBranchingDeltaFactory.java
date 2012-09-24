@@ -6,23 +6,25 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 
-public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
+public class FullStrongBranchingDeltaFactory implements VariableSelector {
 
     private static Logger log = Logger.getLogger(FullStrongBranchingDeltaFactory.class);
 
     // This is the epsilon specified in Tobias Achterberg's thesis for the product score
     private static final double EPSILON = 1e-6;
 
-    private RegretDmvBoundsDeltaFactory regretFactory; 
+    private RegretDmvBoundsDeltaFactory regretFactory;
+    private VariableSplitter varSplitter; 
     
-    public FullStrongBranchingDeltaFactory() {
+    public FullStrongBranchingDeltaFactory(VariableSplitter varSplitter) {
         regretFactory = new RegretDmvBoundsDeltaFactory();
+        this.varSplitter = varSplitter; 
     }
 
     @Override
-    public List<DmvBoundsDelta> getDmvBounds(DmvProblemNode node) {
+    public VariableId select(DmvProblemNode node) {
         // Cache the regret based deltas in case we need them as a fallback
-        List<DmvBoundsDelta> regretDeltas = regretFactory.getDmvBounds(node);
+        VariableId regretVarId = regretFactory.select(node);
         
         IndexedDmvModel idm = node.getIdm();
         DmvBounds origBounds = node.getBounds();
@@ -41,7 +43,7 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
                 }
                 
                 node.setAsActiveNode();
-                List<DmvBoundsDelta> deltas = split(origBounds, c, m);
+                List<DmvBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
                 List<ProblemNode> children = node.branch(deltas);
                 assert(children.size() == 2);
                 
@@ -74,18 +76,13 @@ public class FullStrongBranchingDeltaFactory implements DmvBoundsDeltaFactory {
         node.setAsActiveNode();
         
         if (maxC == -1 || maxM == -1) {
-            return regretDeltas;
+            return regretVarId;
         }
         
         String name = idm.getName(maxC, maxM);
         log.info(String.format("Branching: c=%d m=%d name=%s score=%f", maxC, maxM, name, maxScore));
 
-        return split(origBounds, maxC, maxM);
+        return new VariableId(maxC, maxM);
     }
-    
-    private List<DmvBoundsDelta> split(DmvBounds bounds, int c, int m) {
-        return RegretDmvBoundsDeltaFactory.splitHalfProbSpace(bounds, c, m);
-    }
-
 
 }
