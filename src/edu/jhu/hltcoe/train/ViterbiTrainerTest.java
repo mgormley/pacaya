@@ -43,7 +43,7 @@ public class ViterbiTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
 
         Assert.assertEquals(-27.61, trainer.getLogLikelihood(), 1e-2);
     }
@@ -60,7 +60,7 @@ public class ViterbiTrainerTest {
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
         
         Assert.assertEquals(2, trainer.getIterationsCompleted());
     }
@@ -73,7 +73,7 @@ public class ViterbiTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
         
         System.out.println("logLikelihood: " + trainer.getLogLikelihood());
         Assert.assertEquals(-2.284307044440888, trainer.getLogLikelihood());

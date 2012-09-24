@@ -32,8 +32,10 @@ import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
@@ -296,6 +298,17 @@ public class DmvDantzigWolfeRelaxationTest {
     }
     
     @Test
+    public void testSemiSupervisedOnSynthetic() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSyntheticCorpus(dmvModel); 
+
+        DmvDantzigWolfeRelaxation dw = getDw(trainCorpus, 10);
+
+        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
+        assertEquals(-15.046, relaxSol.getScore(), 1e-3);
+    }
+    
+    @Test
     public void testQualityOfRelaxation() throws IOException {
         
         
@@ -318,10 +331,10 @@ public class DmvDantzigWolfeRelaxationTest {
         InitSol opt = InitSol.GOLD;
         DmvSolution initSol;
         if (opt == InitSol.VITERBI_EM) {
-            initSol = getInitFeasSol(sentences);
+            initSol = getInitFeasSol(new DmvTrainCorpus(sentences));
         } else if (opt == InitSol.GOLD) {
             initSol = goldSol;
-        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM){
+        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM) {
             DmvWeightGenerator weightGen;
             if (opt == InitSol.RANDOM) {
                 Prng.seed(System.currentTimeMillis());
@@ -330,7 +343,7 @@ public class DmvDantzigWolfeRelaxationTest {
                 weightGen = new DmvUniformWeightGenerator();
             }
             DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
-            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences);
+            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences.getVocab());
             double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
@@ -420,7 +433,12 @@ public class DmvDantzigWolfeRelaxationTest {
      * @return DW relaxation with 1 round of cuts, and 1 initial cut per parameter
      */
     public static DmvDantzigWolfeRelaxation getDw(SentenceCollection sentences, final int numCuts) {
-        DmvSolution initSol = getInitFeasSol(sentences);
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+        return getDw(corpus, numCuts);
+    }
+
+    private static DmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus, final int numCuts) {
+        DmvSolution initSol = getInitFeasSol(corpus);
         System.out.println(initSol);
         CutCountComputer ccc = new CutCountComputer(){ 
             @Override
@@ -429,17 +447,17 @@ public class DmvDantzigWolfeRelaxationTest {
             }
         };
         DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(new File("."), numCuts, ccc);
-        dw.setSentences(sentences);
-        dw.init(initSol);
+        dw.init1(corpus);
+        dw.init2(initSol);
         return dw;
     }
     
-    public static DmvSolution getInitFeasSol(SentenceCollection sentences) {
+    public static DmvSolution getInitFeasSol(DmvTrainCorpus corpus) {
         int numRestarts = 9;
-        return getInitFeasSol(sentences, numRestarts);
+        return getInitFeasSol(corpus, numRestarts);
     }
     
-    public static DmvSolution getInitFeasSol(SentenceCollection sentences, int numRestarts) {
+    public static DmvSolution getInitFeasSol(DmvTrainCorpus corpus, int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         int iterations = 25;        
         double lambda = 0.1;
@@ -451,11 +469,11 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, null);
         // TODO: use random restarts
-        trainer.train(sentences);
+        trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        IndexedDmvModel idm = new IndexedDmvModel(corpus);
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
         // We let the DmvProblemNode compute the score

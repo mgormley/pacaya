@@ -1,11 +1,10 @@
 package edu.jhu.hltcoe.train;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 
-public interface Trainer {
+public interface Trainer<C> {
 
-    void train(SentenceCollection sentences);
+    void train(TrainCorpus corpus);
     
     Model getModel();
     

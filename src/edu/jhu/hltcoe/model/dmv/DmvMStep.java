@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.model.dmv;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreeNode;
@@ -14,7 +15,9 @@ import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
 import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.MStep;
+import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvMStep implements MStep<DepTreebank> {
@@ -26,13 +29,17 @@ public class DmvMStep implements MStep<DepTreebank> {
     }
 
     @Override
-    public Model getModel(DepTreebank treebank) {
+    public Model getModel(TrainCorpus corpus, DepTreebank treebank) {
+        return getModel(((DmvTrainCorpus)corpus).getVocab(), treebank);
+    }
+    
+    public Model getModel(Set<Label> vocab, DepTreebank treebank) {
         DmvWeightGenerator weightGen = new MLDmvWeightGenerator(getChooseCounts(treebank), getStopCounts(treebank), lambda);
         DmvModelFactory dmvFactory = new DmvModelFactory(weightGen);
 
         SentenceCollection sentences = treebank.getSentences();
         
-        DmvModel dmv = (DmvModel)dmvFactory.getInstance(sentences);
+        DmvModel dmv = (DmvModel)dmvFactory.getInstance(vocab);
         return dmv;
     }
 

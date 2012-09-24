@@ -40,6 +40,7 @@ import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
@@ -85,15 +86,19 @@ public class PipelineRunner {
             throw new ParseException("Either the option --train or --synthetic must be specified");
         }
         
+        // Divide into labeled and unlabeled data.
+        double propSupervised = Command.getOptionValue(cmd, "propSupervised", 0.0);
+        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(trainTreebank, propSupervised); 
+            
+        log.info("Number of unlabeled train sentences: " + trainCorpus.getNumUnlabeled());
+        log.info("Number of labeled train sentences: " + trainCorpus.getNumLabeled());
         log.info("Number of train sentences: " + trainTreebank.size());
         log.info("Number of train tokens: " + trainTreebank.getNumTokens());
         log.info("Number of train types: " + trainTreebank.getNumTypes());
-        
-        SentenceCollection sentences = trainTreebank.getSentences();
-        
+                
         // Print train sentences to a file
-        printSentences(cmd, trainTreebank, sentences);
-          
+        printSentences(cmd, trainTreebank);
+        
         // Get the test data
         DepTreebank testTreebank = null;
         if (cmd.hasOption("test")) {
@@ -132,9 +137,9 @@ public class PipelineRunner {
         
         if (cmd.hasOption("relaxOnly")) {
             DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd, trainTreebank); 
-            dw.setSentences(sentences);
-            dw.init(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, sentences, null, null));
-            DmvSolution initBoundsSol = updateBounds(cmd, sentences, dw, trainTreebank);
+            dw.init1(trainCorpus);
+            dw.init2(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, trainCorpus, null, null));
+            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank);
             Stopwatch timer = new Stopwatch();
             timer.start();
             RelaxedDmvSolution relaxSol = dw.solveRelaxation();
@@ -145,7 +150,7 @@ public class PipelineRunner {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
             // TODO: use add-lambda smoothing here.
-            DmvProjector dmvProjector = new DmvProjector(sentences, dw);
+            DmvProjector dmvProjector = new DmvProjector(trainCorpus, dw);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             log.info("projLogLikelihood: " + projSol.getScore());
             // TODO: Remove this hack. It's only to setup for getEvalParser().
@@ -159,11 +164,11 @@ public class PipelineRunner {
             Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd, trainTreebank);
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
-                bnb.init(sentences);
-                updateBounds(cmd, sentences, bnb.getRootRelaxation(), trainTreebank);
+                bnb.init(trainCorpus);
+                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank);
                 bnb.train();
             } else {
-                trainer.train(sentences);
+                trainer.train(trainCorpus);
             }
             Model model = trainer.getModel();
             
@@ -174,7 +179,7 @@ public class PipelineRunner {
             Evaluator trainEval = new DependencyParserEvaluator(parser, trainTreebank, "train");
             trainEval.evaluate(model);
             trainEval.print();
-
+            
             // Evaluate the model on the test data
             if (testTreebank != null) {
                 log.info("Evaluating model on test");
@@ -216,14 +221,14 @@ public class PipelineRunner {
         return trainTreebank;
     }
 
-    private DmvSolution updateBounds(CommandLine cmd, SentenceCollection sentences, DmvRelaxation dw, DepTreebank trainTreebank) {
+    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
             double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
             double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
             int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
             
-            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, sentences, dw, trainTreebank);
+            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, trainCorpus, dw, trainTreebank);
             
             if (numDoubledCms > 0) {
                 // TODO:
@@ -237,8 +242,9 @@ public class PipelineRunner {
         return null;
     }
 
-    private void printSentences(CommandLine cmd, DepTreebank depTreebank, SentenceCollection sentences)
+    private void printSentences(CommandLine cmd, DepTreebank depTreebank)
             throws IOException {
+        SentenceCollection sentences = depTreebank.getSentences();
         String printSentences = Command.getOptionValue(cmd, "printSentences", null);
         if (printSentences != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(printSentences));
@@ -266,7 +272,7 @@ public class PipelineRunner {
                 writer.write(sb.toString());
             }
             if (cmd.hasOption("synthetic")) {
-                log.info("Print trees...");
+                log.info("Printing trees...");
                 // Also print the synthetic trees
                 writer.write("Trees:\n");
                 writer.write(depTreebank.toString());
@@ -293,6 +299,7 @@ public class PipelineRunner {
         options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
         options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
         options.addOption("ss", "syntheticSeed", true, "Pseudo random number generator seed for synthetic data generation only.");
+        options.addOption("psu", "propSupervised", true, "Proportion of labeled/supervised training data.");
         
         // Options for test data
         options.addOption("te", "test", true, "Test data.");

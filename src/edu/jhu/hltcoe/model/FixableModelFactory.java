@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.model;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.train.TrainCorpus;
 
 public class FixableModelFactory implements ModelFactory {
 
@@ -12,9 +12,9 @@ public class FixableModelFactory implements ModelFactory {
     }
 
     @Override
-    public Model getInstance(SentenceCollection sentences) {
+    public Model getInstance(TrainCorpus corpus) {
         if (model == null) {
-            return modelFactory.getInstance(sentences);
+            return modelFactory.getInstance(corpus);
         } else {
             return model;
         }

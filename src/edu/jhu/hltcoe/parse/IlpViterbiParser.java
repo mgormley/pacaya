@@ -24,6 +24,7 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
 import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
@@ -41,7 +42,6 @@ public class IlpViterbiParser implements ViterbiParser {
     protected File workspace;
     private DelayedDeleter deleter;
     protected IlpSolverFactory ilpSolverFactory;
-
     protected double parseWeight;
     
     public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
@@ -53,6 +53,14 @@ public class IlpViterbiParser implements ViterbiParser {
         deleter = new DelayedDeleter(Integer.MAX_VALUE);
     }
 
+    @Override
+    public DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model genericModel) {
+        if (corpus.getNumLabeled() > 0) {
+            throw new RuntimeException("not implemented");
+        } else {
+            return getViterbiParse(corpus.getSentences(), genericModel);
+        }
+    }
     
     @Override
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
@@ -247,4 +255,5 @@ public class IlpViterbiParser implements ViterbiParser {
         
         return depTreebank;
     }
+    
 }

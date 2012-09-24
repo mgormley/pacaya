@@ -30,8 +30,10 @@ import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
@@ -138,7 +140,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
     }
 
     @Test
-    public void testCutsOnManyPosTags() {
+    public void testSumsOnManyPosTags() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("Det N");
         sentences.addSentenceFromString("Adj N");
@@ -147,7 +149,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("Adj N a c d f e b g");
         sentences.addSentenceFromString("Adj N g f e d c b a");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences, 15);
+        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
@@ -156,7 +158,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.DEFAULT_MIN_SUM_FOR_CUTS);
+            Assert.assertTrue(Utilities.lte(Vectors.sum(logProbs[c]), 1.0, 1e-13));
         }
     }
     
@@ -272,7 +274,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
     }
     
     @Test
-    public void testAdditionalCuttingPlanes() {
+    public void testMaxSumOfModelParamters() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("D N");
         sentences.addSentenceFromString("A N");
@@ -280,29 +282,31 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
 
-        int maxCuts = 5;
-        double[] maxSums = new double[maxCuts];
-        double prevSum = Double.POSITIVE_INFINITY;
-        for (int numCuts=1; numCuts<maxCuts; numCuts++) {
-            Prng.seed(12345);
-            DmvDantzigWolfeRelaxationResolution dw = getDw(sentences, numCuts);
-            RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
-            assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
-            double maxSum = 0.0;
-            double[][] logProbs = relaxSol.getLogProbs();
-            for (int c=0; c<logProbs.length; c++) {
-                Vectors.exp(logProbs[c]);
-                double sum = Vectors.sum(logProbs[c]);
-                if (sum > maxSum) {
-                    maxSum = sum;
-                }
+        Prng.seed(12345);
+        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
+        assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
+        double maxSum = 0.0;
+        double[][] logProbs = relaxSol.getLogProbs();
+        for (int c=0; c<logProbs.length; c++) {
+            Vectors.exp(logProbs[c]);
+            double sum = Vectors.sum(logProbs[c]);
+            if (sum > maxSum) {
+                maxSum = sum;
             }
-            maxSums[numCuts] = maxSum;
-            System.out.println("maxSums=" + Arrays.toString(maxSums));
-            Assert.assertTrue(maxSum <= prevSum);
-            prevSum = maxSum;
         }
-        System.out.println("maxSums=" + Arrays.toString(maxSums));
+        Assert.assertTrue(Utilities.lte(maxSum, 1.0, 1e-13));
+    }
+    
+    @Test
+    public void testSemiSupervisedOnSynthetic() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSyntheticCorpus(dmvModel); 
+
+        DmvDantzigWolfeRelaxation dw = getDw(trainCorpus);
+
+        RelaxedDmvSolution relaxSol = dw.solveRelaxation(); 
+        assertEquals(-15.088, relaxSol.getScore(), 1e-3);
     }
     
     @Test
@@ -319,7 +323,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         System.out.println(goldModel);
         SentenceCollection sentences = goldTreebank.getSentences();
                 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences, 100);
+        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
         IndexedDmvModel idm = dw.getIdm();
 
         double[][] goldLogProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(goldModel, sentences.getLabelAlphabet()));
@@ -328,7 +332,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         InitSol opt = InitSol.GOLD;
         DmvSolution initSol;
         if (opt == InitSol.VITERBI_EM) {
-            initSol = getInitFeasSol(sentences);
+            initSol = getInitFeasSol(new DmvTrainCorpus(sentences));
         } else if (opt == InitSol.GOLD) {
             initSol = goldSol;
         } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM){
@@ -340,7 +344,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
                 weightGen = new DmvUniformWeightGenerator();
             }
             DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
-            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences);
+            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences.getVocab());
             double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
@@ -424,24 +428,21 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         return true;
     }
 
-    private DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences) {
-        return getDw(sentences, 1);
+    private static DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences) {
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+        return getDw(corpus);
     }
-    
-    /**
-     * Helper function 
-     * @return DW relaxation with 1 round of cuts, and 1 initial cut per parameter
-     */
-    public static DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences, final int numCuts) {
-        DmvSolution initSol = getInitFeasSol(sentences);
+
+    private static DmvDantzigWolfeRelaxationResolution getDw(DmvTrainCorpus corpus) {
+        DmvSolution initSol = getInitFeasSol(corpus);
         System.out.println(initSol);
         DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(new File("."));
-        dw.setSentences(sentences);
-        dw.init(initSol);
+        dw.init1(corpus);
+        dw.init2(initSol);
         return dw;
     }
     
-    public static DmvSolution getInitFeasSol(SentenceCollection sentences) {
+    public static DmvSolution getInitFeasSol(DmvTrainCorpus corpus) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         int iterations = 25;        
         double lambda = 0.1;
@@ -454,11 +455,11 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, null);
         // TODO: use random restarts
-        trainer.train(sentences);
+        trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        IndexedDmvModel idm = new IndexedDmvModel(corpus);
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
         // We let the DmvProblemNode compute the score

@@ -5,6 +5,7 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
@@ -12,15 +13,43 @@ import edu.jhu.hltcoe.parse.pr.CKYParser;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 
 public class DmvCkyParser implements ViterbiParser {
 
     private double parseWeight;
+    private DmvObjective dmvObj;
+    private DmvTrainCorpus corpus;
 
     @Override
     public double getLastParseWeight() {
         return parseWeight;
+    }
+    
+    public DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model genericModel) {
+        // Lazily construct the objective.
+        if (dmvObj == null || this.corpus != corpus) {
+            this.dmvObj = new DmvObjective(corpus);
+            this.corpus = corpus;
+        }
+        DmvModel model = (DmvModel) genericModel;
+
+        DepProbMatrix depProbMatrix = DmvModelConverter.getDepProbMatrix(model, corpus.getLabelAlphabet());
+        DepTreebank treebank = new DepTreebank();
+
+        parseWeight = 0.0;
+
+        for (int s = 0; s < corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                treebank.add(corpus.getTree(s));
+            } else {
+                Pair<DepTree, Double> pair = parse(corpus.getSentence(s), depProbMatrix);
+                treebank.add(pair.get1());
+            }
+        }
+        parseWeight = dmvObj.computeTrueObjective((DmvModel)model, treebank);
+        return treebank;
     }
 
     @Override

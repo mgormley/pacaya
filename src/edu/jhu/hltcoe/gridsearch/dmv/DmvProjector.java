@@ -3,20 +3,20 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public class DmvProjector implements Projector {
 
-    private SentenceCollection sentences;
+    private DmvTrainCorpus corpus;
     private DmvRelaxation dwRelax;
     
-    public DmvProjector(SentenceCollection sentences, DmvRelaxation dwRelax) {
+    public DmvProjector(DmvTrainCorpus corpus, DmvRelaxation dwRelax) {
         super();
-        this.sentences = sentences;
+        this.corpus = corpus;
         this.dwRelax = dwRelax;
     }
 
@@ -62,19 +62,23 @@ public class DmvProjector implements Projector {
     private DepTreebank getProjectedParses(double[][] fracRoots, double[][][] fracChildren) {
         DepTreebank treebank = new DepTreebank();
         for (int s = 0; s < fracChildren.length; s++) {
-            Sentence sentence = sentences.get(s);
-            double[] fracRoot = fracRoots[s];
-            double[][] fracChild = fracChildren[s];
-
-            // For projective case we use a DP parser
-            DepTree tree = Projections.getProjectiveParse(sentence, fracRoot, fracChild);
-            treebank.add(tree);
-            
-            // For non-projective case we'd do something like this.
-            // int[] parents = new int[weights.length];
-            // Edmonds eds = new Edmonds();
-            // CompleteGraph graph = new CompleteGraph(weights);
-            // eds.getMaxBranching(graph, 0, parents);
+            if (corpus.isLabeled(s)) {
+                treebank.add(corpus.getTree(s));
+            } else {
+                Sentence sentence = corpus.getSentence(s);
+                double[] fracRoot = fracRoots[s];
+                double[][] fracChild = fracChildren[s];
+    
+                // For projective case we use a DP parser
+                DepTree tree = Projections.getProjectiveParse(sentence, fracRoot, fracChild);
+                treebank.add(tree);
+                
+                // For non-projective case we'd do something like this.
+                // int[] parents = new int[weights.length];
+                // Edmonds eds = new Edmonds();
+                // CompleteGraph graph = new CompleteGraph(weights);
+                // eds.getMaxBranching(graph, 0, parents);
+            }
         }
         return treebank;
     }

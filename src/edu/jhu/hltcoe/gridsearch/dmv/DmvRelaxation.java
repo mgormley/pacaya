@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public interface DmvRelaxation {
 
@@ -30,8 +30,8 @@ public interface DmvRelaxation {
 
     // TODO: Fix this initialization API.
     // These two methods must be called in sequence to initialize.
-    void setSentences(SentenceCollection sentences);
-    void init(DmvSolution initFeasSol);
+    void init1(DmvTrainCorpus corpus);
+    void init2(DmvSolution initFeasSol);
 
     void addFeasibleSolution(DmvSolution initFeasSol);
 

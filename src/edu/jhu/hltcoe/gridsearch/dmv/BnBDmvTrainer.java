@@ -1,11 +1,12 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.model.Model;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.train.Trainer;
 
 public class BnBDmvTrainer implements Trainer {
@@ -23,13 +24,13 @@ public class BnBDmvTrainer implements Trainer {
     }
 
     @Override
-    public void train(SentenceCollection sentences) {
-        init(sentences);
+    public void train(TrainCorpus corpus) {
+        init((DmvTrainCorpus)corpus);
         train();
     }
     
-    public void init(SentenceCollection sentences) {
-        rootNode = new DmvProblemNode(sentences, brancher, relax);
+    public void init(DmvTrainCorpus corpus) {
+        rootNode = new DmvProblemNode(corpus, brancher, relax);
     }
     
     public void train() {

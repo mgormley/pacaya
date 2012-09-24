@@ -30,6 +30,11 @@ public class DepTreebank implements Iterable<DepTree> {
     public DepTreebank() {
         this(Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
+    
+    public DepTreebank(Alphabet<Label> alphabet) {
+        this();
+        this.alphabet = alphabet;
+    }
 
     public DepTreebank(final int maxSentenceLength, final int maxNumSentences) {
         this(maxSentenceLength, maxNumSentences, null);
@@ -151,4 +156,5 @@ public class DepTreebank implements Iterable<DepTree> {
     public Iterator<DepTree> iterator() {
         return trees.iterator();
     }
+    
 }

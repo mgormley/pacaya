@@ -8,7 +8,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
@@ -21,6 +20,7 @@ import edu.jhu.hltcoe.model.dmv.SmoothedDmvWeightCopier;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
@@ -48,13 +48,13 @@ public class ViterbiEmDmvProjector implements Projector {
     private static Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
 
     private DmvProjector dmvProjector;
-    private SentenceCollection sentences;
+    private DmvTrainCorpus corpus;
     private DmvRelaxation dwRelax;
     private DmvSolution initFeasSol;
 
-    public ViterbiEmDmvProjector(SentenceCollection sentences, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
-        dmvProjector = new DmvProjector(sentences, dwRelax);
-        this.sentences = sentences;
+    public ViterbiEmDmvProjector(DmvTrainCorpus corpus, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
+        dmvProjector = new DmvProjector(corpus, dwRelax);
+        this.corpus = corpus;
         this.dwRelax = dwRelax;
         this.initFeasSol = initFeasSol;
     }
@@ -85,9 +85,9 @@ public class ViterbiEmDmvProjector implements Projector {
         if (random < proportionViterbiImprove) {
             // Run Viterbi EM starting from the randomly rounded solution.
             if (random < proportionViterbiImprove / 2.0) {
-                solutions.add(getImprovedSol(sentences, projectedSol.getTreebank()));
+                solutions.add(getImprovedSol(projectedSol.getTreebank()));
             } else {
-                solutions.add(getImprovedSol(sentences, projectedSol.getLogProbs(), projectedSol.getIdm()));
+                solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
             }
         }
 
@@ -95,27 +95,27 @@ public class ViterbiEmDmvProjector implements Projector {
     }
     
 
-    private DmvSolution getImprovedSol(SentenceCollection sentences, double[][] logProbs, IndexedDmvModel idm) {
+    private DmvSolution getImprovedSol(double[][] logProbs, IndexedDmvModel idm) {
         double lambda = 1e-6;
         // TODO: this is a slow conversion
         DmvModel model = idm.getDmvModel(logProbs);
         // We must smooth the weights so that there exists some valid parse
         DmvModelFactory modelFactory = new DmvModelFactory(new SmoothedDmvWeightCopier(model, lambda));
-        return runViterbiEmHelper(sentences, modelFactory, 0);
+        return runViterbiEmHelper(modelFactory, 0);
     }
     
-    private DmvSolution getImprovedSol(SentenceCollection sentences, DepTreebank treebank) {  
+    private DmvSolution getImprovedSol(DepTreebank treebank) {  
         double lambda = 0.1;
         // Do one M-step to create a model
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModel model = (DmvModel) mStep.getModel(treebank);
+        DmvModel model = (DmvModel) mStep.getModel(corpus, treebank);
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
         // Then run Viterbi EM
-        return runViterbiEmHelper(sentences, modelFactory, 0);
+        return runViterbiEmHelper(modelFactory, 0);
     }
 
-    private DmvSolution runViterbiEmHelper(SentenceCollection sentences, 
-            DmvModelFactory modelFactory, int numRestarts) {
+    private DmvSolution runViterbiEmHelper(DmvModelFactory modelFactory, 
+            int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         int iterations = 25;        
         double lambda = 0.1;
@@ -124,11 +124,11 @@ public class ViterbiEmDmvProjector implements Projector {
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, Double.POSITIVE_INFINITY, null);
-        trainer.train(sentences);
+        trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
         IndexedDmvModel idm = dwRelax.getIdm();
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
         // Compute the score for the solution

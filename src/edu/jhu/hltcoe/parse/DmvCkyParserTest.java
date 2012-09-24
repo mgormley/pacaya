@@ -21,9 +21,13 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -97,8 +101,8 @@ public class DmvCkyParserTest {
     public void testProjParses() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight = -33.0063;
 
         // dynamic programming parsing
@@ -118,8 +122,8 @@ public class DmvCkyParserTest {
         // just a part of it.
         //sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
         sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight = -50.3989;
         
         // dynamic programming parsing
@@ -131,9 +135,24 @@ public class DmvCkyParserTest {
             assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
         }
     }
-
     
-    private DepTreebank getDpParses(Model model, SentenceCollection sentences, double expectedParseWeight) {
+    @Test
+    public void testSemiSupervisedOnSynthetic() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        DmvTrainCorpus trainCorpus = getSyntheticCorpus(dmvModel); 
+        
+        double expectedParseWeight = -17.704;
+        getDpParses(dmvModel, trainCorpus, expectedParseWeight);
+    }
+
+    public static DmvTrainCorpus getSyntheticCorpus(DmvModel dmvModel) {
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(10);
+        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 0.5);
+        return trainCorpus;
+    }
+    
+    private static DepTreebank getDpParses(Model model, SentenceCollection sentences, double expectedParseWeight) {
         DmvCkyParser parser = new DmvCkyParser();
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
@@ -141,6 +160,25 @@ public class DmvCkyParserTest {
         }
         System.out.println("prob: " + Utilities.exp(parser.getLastParseWeight()));
         Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
+        return trees;
+    }    
+    
+    private static DepTreebank getDpParses(Model model, DmvTrainCorpus corpus, double expectedParseWeight) {
+        DmvCkyParser parser = new DmvCkyParser();
+        DepTreebank trees = parser.getViterbiParse(corpus, model);
+        for (DepTree depTree : trees) {
+            System.out.println(depTree);
+        }
+        System.out.println("prob: " + Utilities.exp(parser.getLastParseWeight()));
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
+        
+        // Check that the supervised trees are the same as the original.
+        for (int s=0; s<corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                Assert.assertEquals(corpus.getTree(s), trees.get(s));
+            }
+        }
+        
         return trees;
     }
     

@@ -71,7 +71,7 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
         this.simplexTimer = new Stopwatch();
     }
 
-    public void init(DmvSolution initFeasSol) {
+    public void init2(DmvSolution initFeasSol) {
         try {
             this.cplex = new IloCplex();
             buildModel(cplex, initFeasSol);

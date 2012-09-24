@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.util.Utilities;
  *
  * @param <C> The type of expected counts
  */
-public class EMTrainer<C> implements Trainer {
+public class EMTrainer<C> implements Trainer<C> {
 
     private Logger log = Logger.getLogger(EMTrainer.class);
 
@@ -44,14 +44,14 @@ public class EMTrainer<C> implements Trainer {
     }
     
     @Override
-    public void train(SentenceCollection sentences) {
+    public void train(TrainCorpus corpus) {
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
         Model bestModel = null;
         C bestCounts = null;
         Stopwatch roundTimer = new Stopwatch();
         for (int r=0; r<=numRestarts; r++) {
             roundTimer.start();
-            trainOnce(sentences);
+            trainOnce(corpus);
             if (logLikelihood > bestLogLikelihood) {
                 bestLogLikelihood = logLikelihood;
                 bestModel = model;
@@ -78,9 +78,9 @@ public class EMTrainer<C> implements Trainer {
         return;
     }
 
-    public void trainOnce(SentenceCollection sentences) {
+    public void trainOnce(TrainCorpus corpus) {
         // Initialize the parameters of the model
-        model = modelFactory.getInstance(sentences);
+        model = modelFactory.getInstance(corpus);
         
         // Run iterations of EM
         iterCount = 0;
@@ -92,11 +92,11 @@ public class EMTrainer<C> implements Trainer {
             log.info("iteration = " + getIterationsCompleted());
             
             // E-step 
-            Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(sentences, model);
+            Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(corpus, model);
             counts = pair.get1();
+            logLikelihood = pair.get2();
             
             // Check for convergence or iteration limit
-            logLikelihood = pair.get2();
             log.info("logLikelihood = " + logLikelihood);
             log.info("likelihood ratio = " + Utilities.exp(prevLogLikelihood - logLikelihood));
             if (prevLogLikelihood - logLikelihood > Utilities.log(convergenceRatio)) {
@@ -109,7 +109,7 @@ public class EMTrainer<C> implements Trainer {
             prevLogLikelihood = logLikelihood;
             
             // M-step
-            model = mStep.getModel(counts);
+            model = mStep.getModel(corpus, counts);
             
             log.debug("Time remaining: " + Time.durAsStr(Time.avgMs(iterTimer)*(iterations - iterCount)));
             iterTimer.stop();

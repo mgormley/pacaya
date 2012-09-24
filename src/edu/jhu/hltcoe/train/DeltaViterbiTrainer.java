@@ -3,15 +3,15 @@ package edu.jhu.hltcoe.train;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
-public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
+public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
     private static Logger log = Logger.getLogger(DeltaViterbiTrainer.class);
     
@@ -37,10 +37,11 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
         }
         
         @Override
-        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(SentenceCollection sentences, Model model) {
+        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(TrainCorpus c, Model model) {
+            DmvTrainCorpus corpus = (DmvTrainCorpus)c;
             fixableModelFactory.fixModel(model);
-            fastTrainer.train(sentences);
-            DepTreebank depTreebank = deltaParser.getViterbiParse(sentences, fastTrainer.getModel());
+            fastTrainer.train(corpus);
+            DepTreebank depTreebank = deltaParser.getViterbiParse(corpus, fastTrainer.getModel());
             log.info("logLikelihood (delta) = " + deltaParser.getLastParseWeight());
             
             // TODO: It's not clear that just returning the parse is what we want to do. The Viterbi

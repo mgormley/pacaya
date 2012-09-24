@@ -41,8 +41,8 @@ public class IlpViterbiParserTest {
     public void testProjParses() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight = -33.006;
 
         // flow projective parsing
@@ -68,8 +68,8 @@ public class IlpViterbiParserTest {
         // just a part of it.
         //sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
         sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight = -50.398;
 
         Stopwatch timer;
@@ -125,8 +125,8 @@ public class IlpViterbiParserTest {
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
 //        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
 //        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight = -29.319;
 
         // Single commodity flow non-projective parsing
@@ -146,8 +146,8 @@ public class IlpViterbiParserTest {
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
 //        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
 //        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution

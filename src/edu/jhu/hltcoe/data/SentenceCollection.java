@@ -14,27 +14,53 @@ public class SentenceCollection implements Iterable<Sentence> {
     private ArrayList<Sentence> sents;
     private int numTokens;
     
+    private SentenceCollection(Alphabet<Label> alphabet) {
+        this.alphabet = alphabet;
+        this.sents = new ArrayList<Sentence>();
+    }
+    
     public SentenceCollection() {
-        super();
-        alphabet = new Alphabet<Label>();
-        sents = new ArrayList<Sentence>();
+        this(new Alphabet<Label>());
+    }
+    
+    public SentenceCollection(Sentence sentence) {
+        this(sentence.getAlphabet());
+        add(sentence);
     }
     
     SentenceCollection(DepTreebank treebank) {
-        super();
-        alphabet = treebank.getAlphabet();
-        sents = new ArrayList<Sentence>();
+        this(treebank.getAlphabet());
         for (DepTree tree : treebank) {
             Sentence sentence = new Sentence(alphabet, tree);
             add(sentence);   
         }
     }
     
-    public void add(Sentence sentence) {
+    public SentenceCollection(SentenceCollection sentences1, SentenceCollection sentences2) {
+        this(sentences1.alphabet);
+        if (sentences1.alphabet != sentences2.alphabet) {
+            throw new IllegalStateException("Alphabets must be the same");
+        }
+        for (Sentence sentence : sentences1) {
+            add(sentence);
+        }
+        for (Sentence sentence : sentences2) {
+            add(sentence);
+        }
+    }
+
+    private void add(Sentence sentence) {
+        addSentenceToAlphabet(sentence);
         sents.add(sentence);
         numTokens += sentence.size();
     }
     
+    private void addSentenceToAlphabet(Sentence sentence) {
+        for (Label l : sentence) {
+            alphabet.lookupObject(l);
+        }
+    }
+
     public Sentence get(int i) {
         return sents.get(i);
     }

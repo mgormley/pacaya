@@ -14,6 +14,8 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
 import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvModelFactory implements ModelFactory {
@@ -27,8 +29,8 @@ public class DmvModelFactory implements ModelFactory {
     }
 
     @Override
-    public Model getInstance(SentenceCollection sentences) {
-        return getInstance(sentences.getVocab());
+    public Model getInstance(TrainCorpus corpus) {
+        return getInstance(((DmvTrainCorpus)corpus).getVocab());
     }
 
     public Model getInstance(Set<Label> vocab) {
@@ -84,7 +86,7 @@ public class DmvModelFactory implements ModelFactory {
         return dmv;
     }
 
-    public static Map<Label, Set<Label>> getParentChildMap(SentenceCollection sentences) {
+    private static Map<Label, Set<Label>> getParentChildMap(SentenceCollection sentences) {
         Map<Label, Set<Label>> map = new HashMap<Label, Set<Label>>();
         for (Sentence sent : sentences) {
             for (int i = 0; i < sent.size(); i++) {
@@ -103,7 +105,7 @@ public class DmvModelFactory implements ModelFactory {
         return map;
     }
 
-    public static Map<Label, Set<Label>> getParentChildMap(Sentence sent) {
+    private static Map<Label, Set<Label>> getParentChildMap(Sentence sent) {
         Map<Label, Set<Label>> map = new HashMap<Label, Set<Label>>();
 
         for (int i = 0; i < sent.size(); i++) {

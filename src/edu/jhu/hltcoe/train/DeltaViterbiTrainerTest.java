@@ -52,7 +52,7 @@ public class DeltaViterbiTrainerTest {
         sentences.addSentenceFromString("the man ate the pizza");
         sentences.addSentenceFromString("the man ate with a fork the pizza");
         sentences.addSentenceFromString("with a fork the man ate");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
 
         Assert.assertEquals(3, trainer.getIterationsCompleted());
     }

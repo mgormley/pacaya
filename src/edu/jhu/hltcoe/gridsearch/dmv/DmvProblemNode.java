@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
@@ -19,6 +18,8 @@ import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -39,7 +40,7 @@ public class DmvProblemNode implements ProblemNode {
     private DmvRelaxation dwRelax;
     protected boolean isOptimisticBoundCached;
     protected double optimisticBound;
-    private SentenceCollection sentences;
+    private DmvTrainCorpus corpus;
     private RelaxedDmvSolution relaxSol;
     
     // For "fork" nodes only (i.e. nodes that store warm-start information)
@@ -55,12 +56,12 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(SentenceCollection sentences, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
-        this.sentences = sentences;
+    public DmvProblemNode(DmvTrainCorpus corpus, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
+        this.corpus = corpus;
         this.dwRelax = dwRelax;
-        this.dwRelax.setSentences(sentences);
+        this.dwRelax.init1(corpus);
         // Save and use this solution as the first incumbent
-        this.initFeasSol = getInitFeasSol(sentences);
+        this.initFeasSol = getInitFeasSol(corpus);
         log.info("Initial solution score: " + initFeasSol.getScore());
         this.id = getNextId();
         this.parent = null;
@@ -69,8 +70,8 @@ public class DmvProblemNode implements ProblemNode {
         this.deltasFactory = brancher;
         this.isOptimisticBoundCached = false;
         
-        this.dwRelax.init(initFeasSol);
-        this.dmvProjector = new ViterbiEmDmvProjector(this.sentences, this.dwRelax, this.initFeasSol);
+        this.dwRelax.init2(initFeasSol);
+        this.dmvProjector = new ViterbiEmDmvProjector(this.corpus, this.dwRelax, this.initFeasSol);
 
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -93,7 +94,7 @@ public class DmvProblemNode implements ProblemNode {
         this.warmStart = parent.warmStart;
         // The relaxation is set only when this node is set to be the active one
         this.dwRelax = null;
-        this.sentences = parent.sentences;
+        this.corpus = parent.corpus;
     }
     
 
@@ -278,13 +279,13 @@ public class DmvProblemNode implements ProblemNode {
         }
     }
     
-    private DmvSolution getInitFeasSol(SentenceCollection sentences) {        
+    private DmvSolution getInitFeasSol(TrainCorpus corpus) {        
         double lambda = 0.1;
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        return runViterbiEmHelper(sentences, modelFactory, 9);
+        return runViterbiEmHelper(corpus, modelFactory, 9);
     }
 
-    private DmvSolution runViterbiEmHelper(SentenceCollection sentences, 
+    private DmvSolution runViterbiEmHelper(TrainCorpus corpus, 
             DmvModelFactory modelFactory, int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         int iterations = 25;        
@@ -294,11 +295,11 @@ public class DmvProblemNode implements ProblemNode {
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, Double.POSITIVE_INFINITY, null);
-        trainer.train(sentences);
+        trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
         IndexedDmvModel idm = dwRelax.getIdm();
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
+        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
         double[][] logProbs = idm.getCmLogProbs(dpm);
         
         // Compute the score for the solution

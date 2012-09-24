@@ -51,4 +51,8 @@ public class Sentence implements Iterable<Label> {
         return labelIds.toNativeArray();
     }
 
+    public Alphabet<Label> getAlphabet() {
+        return alphabet;
+    }
+
 }

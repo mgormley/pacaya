@@ -13,6 +13,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -36,9 +37,10 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V P");
 //        sentences.addSentenceFromString("N V N N N");
 //        sentences.addSentenceFromString("N V P N");
-        
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+
         DmvRelaxation relax = new DmvDantzigWolfeRelaxation(new File("."), 100, new CutCountComputer());
-        DmvProblemNode node = new DmvProblemNode(sentences, new RandomDmvBoundsDeltaFactory(true), relax);
+        DmvProblemNode node = new DmvProblemNode(corpus, new RandomDmvBoundsDeltaFactory(true), relax);
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);
@@ -52,7 +54,7 @@ public class DmvProblemNodeTest {
         assertEquals(1, c1.getDepth());
         
         
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = new IndexedDmvModel(corpus);
         double[][][] bounds = new double[idm.getNumConds()][][];
         for (int c=0; c<idm.getNumConds(); c++) {
             bounds[c] = new double[idm.getNumParams(c)][2];

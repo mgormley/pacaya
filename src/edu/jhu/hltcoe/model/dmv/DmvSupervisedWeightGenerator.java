@@ -14,7 +14,7 @@ public class DmvSupervisedWeightGenerator implements DmvWeightGenerator {
 
     public DmvSupervisedWeightGenerator(DepTreebank trainTreebank) {
         DmvMStep mStep = new DmvMStep(0.0);
-        model = (DmvModel)mStep.getModel(trainTreebank);
+        model = (DmvModel)mStep.getModel(trainTreebank.getSentences().getVocab(), trainTreebank);
     }
     
     @Override

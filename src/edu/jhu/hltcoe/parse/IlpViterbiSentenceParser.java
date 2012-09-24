@@ -76,8 +76,7 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     }
 
     private File encode(File tempDir, Sentence sentence, Model model) {
-        SentenceCollection sentences = new SentenceCollection();
-        sentences.add(sentence);
+        SentenceCollection sentences = new SentenceCollection(sentence);
         return encode(tempDir, sentences, model);
     }
     
@@ -85,13 +84,12 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
         DmvModel dmv = (DmvModel)model;
         // Keep only the weights relevant to the single sentence in the SentenceCollection
         DmvWeightCopier weightCopier = new DmvWeightCopier(dmv);
-        DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences);
+        DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences.getVocab());
         encodeDmv(tempDir, filteredDmv);
     }
     
     private DepTree decode(Sentence sentence, Map<String,Double> result) {
-        SentenceCollection sentences = new SentenceCollection();
-        sentences.add(sentence);
+        SentenceCollection sentences = new SentenceCollection(sentence);
         DepTreebank depTreebank = decode(sentences, result);
         assert(depTreebank.size() == 1);
         return depTreebank.get(0);

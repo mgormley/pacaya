@@ -1,9 +1,9 @@
 package edu.jhu.hltcoe.model;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.train.TrainCorpus;
 
 public interface ModelFactory {
 
-    Model getInstance(SentenceCollection sentences);
+    Model getInstance(TrainCorpus corpus);
 
 }

@@ -1,8 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntArrayList;
-import ilog.concert.IloColumn;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
@@ -12,8 +9,6 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloObjective;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
-import ilog.cplex.IloCplex.DoubleParam;
-import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
@@ -21,11 +16,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -33,20 +23,14 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.ilp.ZimplRunner;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.IlpViterbiParser;
-import edu.jhu.hltcoe.parse.XmlCodeContainerReader;
 import edu.jhu.hltcoe.parse.ZimplXmlCodeContainerReader;
-import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvLpRelaxation implements DmvRelaxation {
 
@@ -80,27 +64,6 @@ public class DmvLpRelaxation implements DmvRelaxation {
         this.initCutCountComp = initCutCountComp;
         // Counter for printing 
         this.cutCounter = 0;
-    }
-
-    public void init(SentenceCollection sentences, DepTreebank initFeasSol) {
-        try {
-            this.sentences = sentences;
-            this.idm = new IndexedDmvModel(sentences);
-            this.bounds = new DmvBounds(this.idm);
-            this.cplex = new IloCplex();
-            this.mp = buildModel(cplex, initFeasSol);
-            // TODO: add the initial feasible solution to cplex object? Does this even make sense?
-            setCplexParams(cplex);
-        } catch (IloException e) {
-            if (e instanceof ilog.cplex.CpxException) {
-                ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
-                System.err.println("STATUS CODE: " + cpxe.getStatus());
-                System.err.println("ERROR MSG:   " + cpxe.getMessage());
-            }
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public RelaxedDmvSolution solveRelaxation() {
@@ -414,13 +377,13 @@ public class DmvLpRelaxation implements DmvRelaxation {
     }
 
     @Override
-    public void init(DmvSolution initFeasSol) {
+    public void init2(DmvSolution initFeasSol) {
         // TODO Auto-generated method stub
         
     }
 
     @Override
-    public void setSentences(SentenceCollection sentences) {
+    public void init1(DmvTrainCorpus corpus) {
         // TODO Auto-generated method stub
         
     }

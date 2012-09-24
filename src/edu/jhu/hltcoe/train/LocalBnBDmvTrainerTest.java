@@ -44,7 +44,7 @@ public class LocalBnBDmvTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
     }
 
     private DmvBoundsDeltaFactory getDefaultBrancher() {

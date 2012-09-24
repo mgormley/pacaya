@@ -1,7 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.io.File;
-
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +10,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -38,7 +37,7 @@ public class BnBDmvTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
     }
     
     //@Test
@@ -51,7 +50,7 @@ public class BnBDmvTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
     }
     
     //@Test
@@ -70,7 +69,7 @@ public class BnBDmvTrainerTest {
         System.out.println(dmvModel);
         SentenceCollection sentences = treebank.getSentences();
         
-        trainer.train(sentences);
+        trainer.train(new DmvTrainCorpus(sentences));
     }
 
 

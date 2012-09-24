@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
@@ -33,7 +32,7 @@ import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class LocalBnBDmvTrainer implements Trainer {
+public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
     private Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
 
@@ -64,22 +63,23 @@ public class LocalBnBDmvTrainer implements Trainer {
     }
 
     @Override
-    public void train(SentenceCollection sentences) {
+    public void train(TrainCorpus c) {
+        DmvTrainCorpus corpus = (DmvTrainCorpus)c;
         // Initialize
         this.incumbentSolution = null;
         this.incumbentScore = LazyBranchAndBoundSolver.WORST_SCORE;
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
-        DmvProblemNode rootNode = new DmvProblemNode(sentences, brancher, relax);
+        IndexedDmvModel idm = new IndexedDmvModel(corpus);
+        DmvProblemNode rootNode = new DmvProblemNode(corpus, brancher, relax);
 
         Stopwatch timer = new Stopwatch();
         timer.start();
         for (int r=0; r<=numRestarts; r++) {
             // Run Viterbi EM with no random restarts.
-            viterbiTrainer.train(sentences);
+            viterbiTrainer.train(corpus);
             
             // Construct the solution object.
             DepTreebank treebank = viterbiTrainer.getCounts();
-            DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)viterbiTrainer.getModel(), sentences.getLabelAlphabet());
+            DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)viterbiTrainer.getModel(), corpus.getLabelAlphabet());
             double[][] logProbs = idm.getCmLogProbs(dpm);
             double vemScore = relax.computeTrueObjective(logProbs, treebank);
             DmvSolution vemSol = new DmvSolution(logProbs, idm, treebank, vemScore);
@@ -187,18 +187,18 @@ public class LocalBnBDmvTrainer implements Trainer {
         }
     }
 
-    public static DmvSolution getInitSol(InitSol opt, SentenceCollection sentences, DmvRelaxation dw, DepTreebank trainTreebank) {
+    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation dw, DepTreebank trainTreebank) {
         IndexedDmvModel idm;
         if (dw != null) {
             idm = dw.getIdm();
         } else {
-            idm = new IndexedDmvModel(sentences);
+            idm = new IndexedDmvModel(corpus);
         }
     
         DmvSolution initBoundsSol;
         if (opt == InitSol.VITERBI_EM) {
             // TODO: hacky to call a test method and Trainer ignore parameters
-            initBoundsSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(sentences);
+            initBoundsSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         } else if (opt == InitSol.GOLD) {
             
             // TODO initSol = goldSol;
@@ -209,16 +209,16 @@ public class LocalBnBDmvTrainer implements Trainer {
             if (opt == InitSol.RANDOM) {
                 Prng.seed(System.currentTimeMillis());
                 weightGen = new DmvRandomWeightGenerator(0.00001);
-            } else if (opt == InitSol.SUPERVISED){
+            } else if (opt == InitSol.SUPERVISED) {
                 weightGen = new DmvSupervisedWeightGenerator(trainTreebank);
             } else {
                 weightGen = new DmvUniformWeightGenerator();
             }
             DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
-            DmvModel randModel = (DmvModel)modelFactory.getInstance(sentences);
-            double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, sentences.getLabelAlphabet()));
+            DmvModel randModel = (DmvModel)modelFactory.getInstance(corpus);
+            double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, corpus.getLabelAlphabet()));
             ViterbiParser parser = new DmvCkyParser();
-            DepTreebank treebank = parser.getViterbiParse(sentences, randModel);
+            DepTreebank treebank = parser.getViterbiParse(corpus, randModel);
             double score;
             if (dw != null) {
                 score = dw.computeTrueObjective(logProbs, treebank);

@@ -24,15 +24,14 @@ import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
@@ -44,8 +43,9 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
     private int numGammas;
     private boolean hasInfeasibleBounds;
     private Stopwatch stoTimer;
-    private MasterProblem mp;
     private Projections projections;
+    private int[][] supervisedFreqCm;
+    private MasterProblemRes mpr;
     
     public DmvDantzigWolfeRelaxationResolution(File tempDir) {
         super(tempDir, 0, null);
@@ -55,23 +55,19 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         this.stoTimer = new Stopwatch();
     }
 
-    public void setSentences(SentenceCollection sentences) {
-        this.sentences = sentences;
-        this.idm = new IndexedDmvModel(sentences);    
-    }
-
-    protected void clearRelaxedSolution() {
-        optimalLogProbs = null;
+    public void init1(DmvTrainCorpus corpus) {
+        super.init1(corpus);
+        supervisedFreqCm = idm.getTotSupervisedFreqCm(corpus);
     }
         
     protected RelaxedDmvSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException,
             IloException {
-        log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mp.gammaVars.size()));
+        log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mpr.gammaVars.size()));
         
         // Store optimal model parameters
         optimalLogProbs = new double[idm.getNumConds()][];
-        for (int i = 0; i < mp.gammaVars.size(); i++) {
-            GammaVar gv = mp.gammaVars.get(i);
+        for (int i = 0; i < mpr.gammaVars.size(); i++) {
+            GammaVar gv = mpr.gammaVars.get(i);
             double gammaValue = cplex.getValue(gv.gammaVar);
             for (int c = 0; c < idm.getNumConds(); c++) {
                 int numParams = idm.getNumParams(c);
@@ -93,12 +89,17 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         }
 
         // Store fractional corpus parse
-        double[][] fracRoots = new double[sentences.size()][];
-        double[][][] fracParses = new double[sentences.size()][][];
-        for (int s = 0; s < sentences.size(); s++) {
-            Sentence sentence = sentences.get(s);
-            fracRoots[s] = new double[sentence.size()];
-            fracParses[s] = new double[sentence.size()][sentence.size()];
+        double[][] fracRoots = new double[corpus.size()][];
+        double[][][] fracParses = new double[corpus.size()][][];
+        for (int s = 0; s < corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                fracRoots[s] = null;
+                fracParses[s] = null;
+            } else {
+                Sentence sentence = corpus.getSentence(s);
+                fracRoots[s] = new double[sentence.size()];
+                fracParses[s] = new double[sentence.size()][sentence.size()];
+            }
         }
         for (LambdaVar triple : mp.lambdaVars) {
             double frac = cplex.getValue(triple.lambdaVar);
@@ -120,19 +121,6 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
     }
 
-    public WarmStart getWarmStart() {
-        try {
-            WarmStart warmStart = new WarmStart();
-            warmStart.numVars = mp.lpMatrix.getNumVars();
-            warmStart.ranges = mp.lpMatrix.getRanges();
-            warmStart.numVarStatuses = cplex.getBasisStatuses(warmStart.numVars);
-            warmStart.rangeStatuses = cplex.getBasisStatuses(warmStart.ranges);
-            return warmStart;
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
     protected ArrayList<IloNumVar> getUnknownVars(HashSet<IloNumVar> knownVars) {
         ArrayList<IloNumVar> unknownVars = new ArrayList<IloNumVar>();
         for (int i=0; i<mp.lambdaVars.size(); i++) {
@@ -141,8 +129,8 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                 unknownVars.add(lv);
             }
         }
-        for (int i=0; i<mp.gammaVars.size(); i++) {
-            IloNumVar gv = mp.gammaVars.get(i).gammaVar;
+        for (int i=0; i<mpr.gammaVars.size(); i++) {
+            IloNumVar gv = mpr.gammaVars.get(i).gammaVar;
             if (!knownVars.contains(gv)) {
                 unknownVars.add(gv);
             }
@@ -150,72 +138,12 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         return unknownVars;
     }
     
-    public double[][] getRegretCm() {
-        try {
-            // If optimal model parameters \theta_{c,m} are not present, return null.
-            if (optimalLogProbs == null) {
-                return null;
-            }
-
-            // Store feature counts \bar{f}_{c,m} (i.e. number of times each
-            // model parameter was used)
-            double[][] featCounts = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                featCounts[c] = new double[idm.getNumParams(c)];
-            }
-
-            for (LambdaVar triple : mp.lambdaVars) {
-                double frac = cplex.getValue(triple.lambdaVar);
-                int s = triple.s;
-                int[] sentSol = triple.sentSol;
-                for (int i = 0; i < sentSol.length; i++) {
-                    int c = idm.getC(s, i);
-                    int m = idm.getM(s, i);
-                    featCounts[c][m] += sentSol[i] * frac;
-                }
-            }
-
-            // Store objective values z_{c,m}
-            double[][] objVals = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                objVals[c] = cplex.getValues(mp.objVars[c]);
-            }
-
-            // Compute the regret as the difference between the
-            // objective value and true objective value
-            double[][] regret = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                regret[c] = new double[idm.getNumParams(c)];
-                for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * featCounts[c][m]);
-                    //TODO: this seems to be too strong:
-                    //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
-                    if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
-                        log.warn(String.format("Invalid negative regret: regret[%d][%d] = %f", c, m, regret[c][m]));
-                    }
-                }
-            }
-
-            return regret;
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * Convenience class for passing around Master Problem variables
      */
-    private static class MasterProblem {
-        public IloObjective objective;
-        public IloRange[] lambdaSumCons;
-        public List<LambdaVar> lambdaVars;
-        public HashSet<LambdaVar> lambdaVarSet;
+    protected static class MasterProblemRes extends MasterProblem {
         public IloRange gammaSumCons;
         public List<GammaVar> gammaVars;
-        public IloNumVar[][] objVars;
-        public IloRange[][] couplConsLower;
-        public IloRange[][] couplConsUpper;
-        public IloLPMatrix lpMatrix;
     }
     
     /**
@@ -334,63 +262,11 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
     }
         
     
-    /**
-     * Convenience class for storing the columns generated by
-     * Dantzig-Wolfe and their corresponding parses.
-     */
-    private static class LambdaVar {
-        
-        public IloNumVar lambdaVar;
-        public int s;
-        public int[] parents;
-        private int[] sentSol;
-        public int colind;
-        
-        public LambdaVar(IloNumVar lambdaVar, int s, int[] parents, int[] sentSol, int colind) {
-            super();
-            this.lambdaVar = lambdaVar;
-            this.s = s;
-            this.parents = parents;
-            this.sentSol = sentSol;
-            // TODO: If we start removing LambdaVars, then these column indices are wrong!!
-            this.colind = colind;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + Arrays.hashCode(parents);
-            result = prime * result + s;
-            return result;
-        }
-
-        /**
-         * Two LambdaVar objects are equal if their sentence index, s, and their
-         * parents array are equal.
-         */
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-            LambdaVar other = (LambdaVar) obj;
-            if (!Arrays.equals(parents, other.parents))
-                return false;
-            if (s != other.s)
-                return false;
-            return true;
-        }
-                
-    }
-
     protected void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
         this.bounds = new DmvBounds(this.idm);
 
-        mp = new MasterProblem();
+        mpr = new MasterProblemRes();
+        mp = mpr;
         
         // ----- row-wise modeling -----
         // Add x_0 constraints in the original model space first
@@ -406,7 +282,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             mp.objVars[c] = new IloNumVar[numParams];
             for (int m=0; m<numParams; m++) {
                 mp.objVars[c][m] = cplex.numVar(-Double.MAX_VALUE, Double.MAX_VALUE, String.format("z_{%d,%d}",c,m));
-                // Negate the objVars since we are minimizing
+                // Negate the coefficients since we are minimizing
                 cplex.setLinearCoef(mp.objective, -1.0, mp.objVars[c][m]);
             }
         }
@@ -450,7 +326,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         // ----- column-wise modeling -----
 
         // Create the lambda sum to one constraints
-        mp.lambdaSumCons = new IloRange[sentences.size()];
+        mp.lambdaSumCons = new IloRange[corpus.getNumUnlabeled()];
         mp.lambdaVars = new ArrayList<LambdaVar>();
         mp.lambdaVarSet = new HashSet<LambdaVar>();
 
@@ -463,13 +339,15 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             int numConds = idm.getNumConds();
 
             // Add the initial feasible parse as the first lambda columns
-            for (int s = 0; s < sentences.size(); s++) {
-                DepTree tree = feasSol.getTreebank().get(s);
-                addLambdaVar(s, tree);
+            for (int s = 0; s < corpus.size(); s++) {
+                if (!corpus.isLabeled(s)) {
+                    DepTree tree = feasSol.getTreebank().get(s);
+                    addLambdaVar(s, tree);
+                }
             }
 
             // Create the gamma sum to one constraints
-            mp.gammaVars = new ArrayList<GammaVar>();
+            mpr.gammaVars = new ArrayList<GammaVar>();
             // Add the initial feasible solution as the first gamma column
             double[][] initLogProbs = feasSol.getLogProbs();
             for (int c = 0; c < numConds; c++) {
@@ -490,7 +368,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
 
     private boolean addGammaVar(double[][] logProbs) throws IloException {
         GammaVar gvTemp = new GammaVar(null, logProbs);
-        if (mp.gammaVars.contains(gvTemp)) {
+        if (mpr.gammaVars.contains(gvTemp)) {
             // Don't add the duplicate, since this probably just means its reduced cost is really close to zero
             return false;
         }
@@ -516,18 +394,26 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         }
         int colind = mp.lpMatrix.addColumn(gammaVar, ind, val);
 
+        double objCoefficient = 0.0;
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            for (int m = 0; m < idm.getNumParams(c); m++) {
+                // Negate the coefficients since we are minimizing.
+                objCoefficient += -supervisedFreqCm[c][m] * logProbs[c][m];
+            }
+        }
+        cplex.setLinearCoef(mp.objective, objCoefficient, gammaVar);
 
         // Add the gamma var to its sum to one constraint
-        if (mp.gammaSumCons == null) {
-            mp.gammaSumCons = cplex.eq(gammaVar, 1.0, "gammaSum");
-            mp.lpMatrix.addRow(mp.gammaSumCons);
+        if (mpr.gammaSumCons == null) {
+            mpr.gammaSumCons = cplex.eq(gammaVar, 1.0, "gammaSum");
+            mp.lpMatrix.addRow(mpr.gammaSumCons);
         } else {
-            int rowind = mp.lpMatrix.getIndex(mp.gammaSumCons);
+            int rowind = mp.lpMatrix.getIndex(mpr.gammaSumCons);
             mp.lpMatrix.setNZ(rowind, colind, 1.0);
         }
         
         GammaVar gv = new GammaVar(gammaVar, logProbs);
-        mp.gammaVars.add(gv);
+        mpr.gammaVars.add(gv);
         return true;
     }
 
@@ -546,66 +432,9 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             // TODO: remove this or add a debug flag to the if
             cplex.exportModel(new File(tempDir, "dw.afterremoval.lp").getAbsolutePath());
         }
-        mp.gammaVars.remove(gv);
+        mpr.gammaVars.remove(gv);
 
     }
-
-    private boolean addLambdaVar(int s, DepTree tree) throws IloException {
-
-        LambdaVar lvTemp = new LambdaVar(null, s, tree.getParents(), null, -1);
-        if (mp.lambdaVarSet.contains(lvTemp)) {
-            //int lvIdx = mp.lambdaVars.lastIndexOf(lvTemp);
-            //log.error("Duplicate Lambda Var: " + lvTemp);
-            //throw new IllegalStateException("Duplicate LambdaVar already in the master problem");
-            //log.warn("Duplicate LambdaVar already in the master problem");
-            
-            // Don't add the duplicate, since this probably just means its reduced cost is really close to zero
-            return false;
-        }
-        
-        int[] sentSol = idm.getSentSol(sentences.get(s), s, tree);
-        int numSentVars = idm.getNumSentVars(s);
-        
-        IloNumVar lambdaVar = cplex.numVar(0.0, Double.MAX_VALUE, String.format("lambda_{%d}^{%d}", s, numLambdas++));
-        
-        // Add the lambda var to the relaxed-objective-coupling-constraints matrix
-        int[] ind = new int[numSentVars*2];
-        double[] val = new double[numSentVars*2];
-        int j=0;
-        for (int i = 0; i < numSentVars; i++) {
-            int c = idm.getC(s, i);
-            int m = idm.getM(s, i);
-            
-            // Add to the lower coupling constraint
-            ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
-            val[j] = bounds.getLb(c, m) * sentSol[i];
-            j++;
-            
-            // Add to the upper coupling constraint
-            ind[j] = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
-            val[j] = bounds.getUb(c, m) * sentSol[i];
-            j++;
-        }
-        int colind = mp.lpMatrix.addColumn(lambdaVar, ind, val);
-        
-
-        // Add the lambda var to its sum to one constraint
-        if (mp.lambdaSumCons[s] == null) {
-            mp.lambdaSumCons[s] = cplex.eq(lambdaVar, 1.0, "lambdaSum");
-            mp.lpMatrix.addRow(mp.lambdaSumCons[s]);
-        } else {
-            int rowind = mp.lpMatrix.getIndex(mp.lambdaSumCons[s]);
-            mp.lpMatrix.setNZ(rowind, colind, 1.0);
-        }
-        
-        LambdaVar lv = new LambdaVar(lambdaVar, s, tree.getParents(), sentSol, colind);
-        
-        mp.lambdaVars.add(lv);
-        mp.lambdaVarSet.add(lv);
-        
-        return true;
-    }
-
     
 
     protected void printSummary() {
@@ -617,7 +446,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         return !hasInfeasibleBounds && areFeasibleBounds(bounds);
     }
     
-    protected SubproblemRetVal addColumns(IloCplex cplex) throws IloException {
+    protected SubproblemRetVal addColumns(IloCplex cplex) throws UnknownObjectException, IloException {
         // Get the simplex multipliers (shadow prices).
         // These are shared across all slaves, since each slave
         // has the same D_s matrix.
@@ -657,13 +486,13 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             int numParams = idm.getNumParams(c);
             modelWeights[c] = new double[numParams];
             for (int m = 0; m < numParams; m++) {
-                modelWeights[c][m] = - pricesLower[j] * idm.getTotalMaxFreqCm(c, m);
+                modelWeights[c][m] = -supervisedFreqCm[c][m] - pricesLower[j] * idm.getTotalMaxFreqCm(c, m);
                 j++;
             }
         }
                  
         // Get the simplex multipliers (shadow prices) for the gamma 
-        double convexGammaPrice = cplex.getDual(mp.gammaSumCons);
+        double convexGammaPrice = cplex.getDual(mpr.gammaSumCons);
         
         // Keep track of minimum subproblem reduced cost
         double sumReducedCost = 0.0;
@@ -681,9 +510,9 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         double[][] logProbs = mPair.get1();
         double mReducedCost = mPair.get2() - convexGammaPrice;
         if (log.isDebugEnabled()) {
-            int index = mp.gammaVars.indexOf(new GammaVar(null, logProbs));
+            int index = mpr.gammaVars.indexOf(new GammaVar(null, logProbs));
             if (index != -1) {
-                GammaVar gv = mp.gammaVars.get(index);
+                GammaVar gv = mpr.gammaVars.get(index);
                 log.debug(String.format("CPLEX redcost=%f, My redcost=%f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
                 assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-13));
             }
@@ -693,17 +522,17 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             if (addGammaVar(logProbs)) {
                 numPositiveGammaRedCosts++;
 
-                if (mp.gammaVars.size() > mp.lpMatrix.getNrows()) {
+                if (mpr.gammaVars.size() > mp.lpMatrix.getNrows()) {
                     // Remove the non-basic gamma variables 
                     // TODO: remove the gamma variables that price out the highest
-                    for (int i=0; i<mp.gammaVars.size(); i++) {
-                        GammaVar gv = mp.gammaVars.get(i);
+                    for (int i=0; i<mpr.gammaVars.size(); i++) {
+                        GammaVar gv = mpr.gammaVars.get(i);
                         BasisStatus bstatus = cplex.getBasisStatus(gv.gammaVar);
                         if (bstatus != BasisStatus.Basic) {
                             removeGammaVar(gv);
                         }
                     }
-                    assert(mp.gammaVars.size() > 0);
+                    assert(mpr.gammaVars.size() > 0);
                 }
             }
         }
@@ -713,10 +542,12 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         DmvCkyParser parser = new DmvCkyParser();
 
         int numPositiveLambdaRedCosts = 0;
-        for (int s = 0; s < sentences.size(); s++) {
-
+        for (int s = 0; s < corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                continue;
+            }
             parsingTimer.start();
-            Pair<DepTree, Double> pPair = parser.parse(sentences.get(s), dpm);
+            Pair<DepTree, Double> pPair = parser.parse(corpus.getSentence(s), dpm);
             parsingTimer.stop();
             DepTree tree = pPair.get1();
             // We must negate pair.get2() since we were just maximizing
@@ -750,15 +581,8 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         return 0;
     }
 
-    public void reverseApply(DmvBoundsDelta delta) {
-        applyDelta(DmvBoundsDelta.getReverse(delta));
-    }
-
-    public void forwardApply(DmvBoundsDelta delta) {
-        applyDelta(delta);
-    }
-
-    private void applyDelta(DmvBoundsDelta delta) {
+    @Override
+    protected void applyDelta(DmvBoundsDelta delta) {
         try {
             int c = delta.getC();
             int m = delta.getM();
@@ -813,8 +637,8 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             hasInfeasibleBounds = false;
             
             // The gamma columns may need to be projected back onto the feasible region 
-            for (int i=0; i<mp.gammaVars.size(); i++) {
-                GammaVar gv = mp.gammaVars.get(i);
+            for (int i=0; i<mpr.gammaVars.size(); i++) {
+                GammaVar gv = mpr.gammaVars.get(i);
                 if (gv.logProbs[c][m] < newLb || newUb < gv.logProbs[c][m]) {
                     // TODO: This isn't blazing fast, but we could make it faster if necessary
                     double[] params = Vectors.getExp(gv.logProbs[c]);
@@ -859,66 +683,6 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         if (rowind.size() > 0) {
             mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
         }
-    }
-    
-    private boolean areFeasibleBounds(DmvBounds bounds) {
-        // Check that the upper bounds sum to at least 1.0
-        for (int c=0; c<idm.getNumConds(); c++) {
-            double logSum = Double.NEGATIVE_INFINITY;
-            int numParams = idm.getNumParams(c);
-            // Sum the upper bounds
-            for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, bounds.getUb(c, m));
-            }
-            
-            if (logSum < -1e-10) {
-                // The problem is infeasible
-                return false;
-            }
-        }
-        
-        // Check that the lower bounds sum to no more than 1.0
-        for (int c=0; c<idm.getNumConds(); c++) {
-            double logSum = Double.NEGATIVE_INFINITY;
-            int numParams = idm.getNumParams(c);
-            // Sum the lower bounds
-            for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, bounds.getLb(c, m));
-            }
-            
-            if (logSum > 1e-10) {
-                // The problem is infeasible
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
-        double score = 0.0;
-        for (int s = 0; s < sentences.size(); s++) {
-            Sentence sentence = sentences.get(s);
-            DepTree tree = treebank.get(s);
-            int[] sentSol = idm.getSentSol(sentence, s, tree);
-            for (int i=0; i<sentSol.length; i++) {
-                int c = idm.getC(s, i);
-                int m = idm.getM(s, i);
-                if (sentSol[i] != 0) {
-                    // This if-statement is to ensure that 0 * -inf == 0.
-                    score += sentSol[i] * logProbs[c][m];
-                }
-                assert (!Double.isNaN(score));
-            }
-        }
-        return score;
-    }
-
-    public DmvBounds getBounds() {
-        return bounds;
-    }
-
-    public IndexedDmvModel getIdm() {
-        return idm;
     }
     
 }

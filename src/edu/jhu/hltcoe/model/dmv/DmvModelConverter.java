@@ -1,12 +1,12 @@
 package edu.jhu.hltcoe.model.dmv;
 
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import util.Alphabet;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
@@ -20,10 +20,10 @@ public class DmvModelConverter {
         // private constructor
     }
 
-    public static DmvModel getDmvModel(DepProbMatrix dpm, SentenceCollection sentences) {
-        DmvWeightGenerator dwg = new DpmDmvWeightGenerator(sentences.getLabelAlphabet(), dpm);
+    public static DmvModel getDmvModel(DepProbMatrix dpm, Alphabet<Label> alphabet, Set<Label> vocab) {
+        DmvWeightGenerator dwg = new DpmDmvWeightGenerator(alphabet, dpm);
         DmvModelFactory factory = new DmvModelFactory(dwg);
-        return (DmvModel) factory.getInstance(sentences);
+        return (DmvModel) factory.getInstance(vocab);
     }
 
     private static final class DpmDmvWeightGenerator implements DmvWeightGenerator {

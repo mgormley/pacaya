@@ -38,8 +38,8 @@ public class DeltaParseBlockFileWriterTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
@@ -59,8 +59,8 @@ public class DeltaParseBlockFileWriterTest {
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("mouse ate cat");
         //sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
@@ -79,8 +79,8 @@ public class DeltaParseBlockFileWriterTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate");
-        ModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences);
+        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
+        Model model = modelFactory.getInstance(sentences.getVocab());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;

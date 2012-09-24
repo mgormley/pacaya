@@ -28,6 +28,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -211,7 +212,8 @@ public class IndexedDmvModelTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+
         double lambda = 0.0;
         int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
@@ -219,12 +221,12 @@ public class IndexedDmvModelTest {
         DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9, 5, null);
         // TODO: use random restarts
-        trainer.train(sentences);
+        trainer.train(corpus);
         double trainerLogLikelihood = trainer.getLogLikelihood();
         DepTreebank treebank = trainer.getCounts();
         
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 2, new CutCountComputer());
-        dwRelax.setSentences(sentences);
+        dwRelax.init1(corpus);
         
         IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);
         DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());

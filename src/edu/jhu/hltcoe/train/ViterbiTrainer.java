@@ -3,14 +3,13 @@ package edu.jhu.hltcoe.train;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
-public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
+public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
     private static Logger log = Logger.getLogger(ViterbiTrainer.class);
     private DependencyParserEvaluator evaluator;
@@ -43,14 +42,13 @@ public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer {
 
         private ViterbiParser parser;
 
-        
         public ViterbiEStep(ViterbiParser parser) {
             this.parser = parser;
         }
 
         @Override
-        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(SentenceCollection sentences, Model model) {
-            DepTreebank depTreebank = parser.getViterbiParse(sentences, model);
+        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(TrainCorpus corpus, Model model) {
+            DepTreebank depTreebank = parser.getViterbiParse((DmvTrainCorpus)corpus, model);
             return new Pair<DepTreebank,Double>(depTreebank, parser.getLastParseWeight());
         }
         
