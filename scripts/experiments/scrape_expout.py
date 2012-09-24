@@ -11,7 +11,7 @@ import subprocess
 from optparse import OptionParser
 from experiments.run_experiments import DPExpParams
 from glob import glob
-from experiments.core.util import get_all_following, get_following, get_time,\
+from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
     to_str, to_int
 from experiments.core.scrape import Scraper
 
@@ -41,8 +41,9 @@ class DPScraper(Scraper):
         numWords = to_int(get_following(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
         
+        # TODO: switch all to _literal versions
         if "relaxOnly" in exp.keys():
-            exp.update(relaxBound = get_following(stdout_lines, "relaxTime(ms): ", -1))
+            exp.update(relaxTime = get_following_literal(stdout_lines, "relaxTime(ms): ", -1))
             exp.update(relaxBound = get_following(stdout_lines, "relaxBound: ", -1))
             exp.update(relative = get_following(stdout_lines, "relative: ", -1))
         else:

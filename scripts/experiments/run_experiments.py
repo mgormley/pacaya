@@ -204,12 +204,15 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb":
             all.update(algorithm="bnb")
             for dataset in datasets:
-                for maxSentenceLength in [3,5]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(-1, 10, 6*60*60), (-1, 100, 6*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [10,100]:
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
-                            experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    if not self.fast:
+                        # Run for some fixed amount of time.                
+                        all.update(numRestarts=1000000000)
+                        all.update(timeoutSeconds=timeoutSeconds)
+                    for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
+                        experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
         elif self.expname == "bnb-semi":
             all.update(algorithm="bnb",
                        initBounds="viterbi-em",
