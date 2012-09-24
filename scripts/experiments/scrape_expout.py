@@ -68,6 +68,7 @@ class DPScraper(Scraper):
             exp.update(numFathom = get_group1(stdout_lines, "#fathom=(\S+)", -1))
             exp.update(numSeen = get_group1(stdout_lines, "#seen=(\S+)", -1))
             exp.update(propRootSpaceRemain = get_following_literal(stdout_lines, "Proportion of root space remaining: ", -1))
+            exp.update(bnbStatus = get_following_literal(stdout_lines, "B&B search status: ", -1))
              
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
