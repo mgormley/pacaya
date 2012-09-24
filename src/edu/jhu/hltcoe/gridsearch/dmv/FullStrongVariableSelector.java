@@ -6,18 +6,18 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 
-public class FullStrongBranchingDeltaFactory implements VariableSelector {
+public class FullStrongVariableSelector implements VariableSelector {
 
-    private static Logger log = Logger.getLogger(FullStrongBranchingDeltaFactory.class);
+    private static Logger log = Logger.getLogger(FullStrongVariableSelector.class);
 
     // This is the epsilon specified in Tobias Achterberg's thesis for the product score
     private static final double EPSILON = 1e-6;
 
-    private RegretDmvBoundsDeltaFactory regretFactory;
+    private RegretVariableSelector regretFactory;
     private VariableSplitter varSplitter; 
     
-    public FullStrongBranchingDeltaFactory(VariableSplitter varSplitter) {
-        regretFactory = new RegretDmvBoundsDeltaFactory();
+    public FullStrongVariableSelector(VariableSplitter varSplitter) {
+        regretFactory = new RegretVariableSelector();
         this.varSplitter = varSplitter; 
     }
 

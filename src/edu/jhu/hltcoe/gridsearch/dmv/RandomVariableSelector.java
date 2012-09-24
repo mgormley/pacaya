@@ -4,7 +4,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class RandomDmvBoundsDeltaFactory implements VariableSelector {
+public class RandomVariableSelector implements VariableSelector {
 
     private boolean uniform; 
     private double[] freqs;
@@ -13,7 +13,7 @@ public class RandomDmvBoundsDeltaFactory implements VariableSelector {
     /**
      * @param uniform If true, the sampling will be uniform over the used parameters
      */
-    public RandomDmvBoundsDeltaFactory(boolean uniform) {
+    public RandomVariableSelector(boolean uniform) {
         this.uniform = uniform;        
     }
 

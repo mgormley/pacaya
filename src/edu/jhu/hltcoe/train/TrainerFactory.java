@@ -14,10 +14,10 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.FullStrongBranchingDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.FullStrongVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.dmv.RandomDmvBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.RegretDmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.RandomVariableSelector;
+import edu.jhu.hltcoe.gridsearch.dmv.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
@@ -234,13 +234,13 @@ public class TrainerFactory {
 
             VariableSelector varSelector;
             if (varSelection.equals("full")) {
-                varSelector = new FullStrongBranchingDeltaFactory(varSplitter);
+                varSelector = new FullStrongVariableSelector(varSplitter);
             } else if (varSelection.equals("regret")) {
-                varSelector = new RegretDmvBoundsDeltaFactory();
+                varSelector = new RegretVariableSelector();
             } else if (varSelection.equals("rand-uniform")) {
-                varSelector = new RandomDmvBoundsDeltaFactory(true);
+                varSelector = new RandomVariableSelector(true);
             } else if (varSelection.equals("rand-weighted")) {
-                varSelector = new RandomDmvBoundsDeltaFactory(false);
+                varSelector = new RandomVariableSelector(false);
             } else {
                 throw new ParseException("Variable selection strategy not supported: " + varSelection);
             }

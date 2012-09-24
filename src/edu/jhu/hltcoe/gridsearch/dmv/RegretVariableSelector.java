@@ -8,13 +8,13 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class RegretDmvBoundsDeltaFactory implements VariableSelector {
+public class RegretVariableSelector implements VariableSelector {
 
-    private static Logger log = Logger.getLogger(RegretDmvBoundsDeltaFactory.class);
-    private RandomDmvBoundsDeltaFactory randBrancher;
+    private static Logger log = Logger.getLogger(RegretVariableSelector.class);
+    private RandomVariableSelector randBrancher;
 
-    public RegretDmvBoundsDeltaFactory() {
-        this.randBrancher = new RandomDmvBoundsDeltaFactory(true);
+    public RegretVariableSelector() {
+        this.randBrancher = new RandomVariableSelector(true);
     }
 
     @Override

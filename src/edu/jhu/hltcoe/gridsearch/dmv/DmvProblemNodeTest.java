@@ -42,7 +42,7 @@ public class DmvProblemNodeTest {
 
         DmvRelaxation relax = new DmvDantzigWolfeRelaxation(new File("."), 100, new CutCountComputer());
 
-        VariableSelector varSelector = new RandomDmvBoundsDeltaFactory(true);
+        VariableSelector varSelector = new RandomVariableSelector(true);
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
         DmvBoundsDeltaFactory brancher = new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
         DmvProblemNode node = new DmvProblemNode(corpus, brancher, relax);
