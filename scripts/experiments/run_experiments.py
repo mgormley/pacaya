@@ -165,6 +165,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                        maxSentenceLength=7,
                                        maxNumSentences=3,
                                        numRestarts=1,
+                                       timeoutSeconds=10,   
                                        bnbTimeoutSeconds=3)
         else:               all.update(iterations=25,
                                        numRestarts=10,
