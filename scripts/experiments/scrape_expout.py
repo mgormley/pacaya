@@ -12,7 +12,7 @@ from optparse import OptionParser
 from experiments.run_experiments import DPExpParams
 from glob import glob
 from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
-    to_str, to_int, get_group1
+    to_str, to_int, get_group1, head
 from experiments.core.scrape import Scraper
 from experiments.core.util import tail
 
@@ -35,7 +35,8 @@ class DPScraper(Scraper):
             return
         
         if exp.get("expname") == "bnb-semi":
-            stdout_lines = tail(stdout_file, window=500)
+            stdout_lines = head(stdout_file, window=500)
+            stdout_lines += tail(stdout_file, window=500)
         else:
             stdout_lines = self.read_stdout_lines(stdout_file)
         
