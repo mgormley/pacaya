@@ -12,8 +12,9 @@ from optparse import OptionParser
 from experiments.run_experiments import DPExpParams
 from glob import glob
 from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
-    to_str, to_int
+    to_str, to_int, get_group1
 from experiments.core.scrape import Scraper
+from experiments.core.util import tail
 
 class DPScraper(Scraper):
     
@@ -33,26 +34,40 @@ class DPScraper(Scraper):
         if not os.path.exists(stdout_file):
             return
         
-        stdout_lines = self.read_stdout_lines(stdout_file)
+        if exp.get("expname") == "bnb-semi":
+            stdout_lines = tail(stdout_file, window=500)
+        else:
+            stdout_lines = self.read_stdout_lines(stdout_file)
         
         _, _, elapsed = get_time(stdout_lines)
         exp.update(elapsed = elapsed)
+        exp.update(hours = to_int(get_group1(stdout_lines, "^(\d+) \[main\]", -1)) / 1000.0 / 60.0 / 60.0)
         
-        numWords = to_int(get_following(stdout_lines, "Number of train tokens: ", -1))
+        numWords = to_int(get_following_literal(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
         
-        # TODO: switch all to _literal versions
         if "relaxOnly" in exp.keys():
             exp.update(relaxTime = get_following_literal(stdout_lines, "relaxTime(ms): ", -1))
-            exp.update(relaxBound = get_following(stdout_lines, "relaxBound: ", -1))
-            exp.update(relative = get_following(stdout_lines, "relative: ", -1))
+            exp.update(relaxBound = get_following_literal(stdout_lines, "relaxBound: ", -1))
+            exp.update(relative = get_following_literal(stdout_lines, "relative: ", -1))
         else:
-            exp.update(trainAccuracy = get_following(stdout_lines, "Accuracy on train: ", -1))
-            exp.update(trainLogLikelihood = get_following(stdout_lines, "LogLikelihood on train: ", -1))
-            exp.update(testAccuracy = get_following(stdout_lines, "Accuracy on test: ", -1))
-            exp.update(testLogLikelihood = get_following(stdout_lines, "LogLikelihood on test: ", -1))
-            exp.update(timeRemaining = get_following(stdout_lines, "Time remaining: ", -1))
+            exp.update(trainAccuracy = get_following_literal(stdout_lines, "Accuracy on train: ", -1))
+            exp.update(trainLogLikelihood = get_following_literal(stdout_lines, "LogLikelihood on train: ", -1))
+            exp.update(trainPerTokCrossEnt = get_following_literal(stdout_lines, "Per token cross entropy on train: ", -1))
+            exp.update(testAccuracy = get_following_literal(stdout_lines, "Accuracy on test: ", -1))
+            exp.update(testLogLikelihood = get_following_literal(stdout_lines, "LogLikelihood on test: ", -1))
+            exp.update(testPerTokCrossEnt = get_following_literal(stdout_lines, "Per token cross entropy on test: ", -1))
+            exp.update(timeRemaining = get_following_literal(stdout_lines, "Time remaining: ", -1))
         
+        if exp.get("algorithm").find("bnb") != -1:
+            exp.update(relativeDiff = get_group1(stdout_lines, "relativeDiff=(\S+)", -1))
+            exp.update(lowBound = get_group1(stdout_lines, "lowBound=(\S+)", -1))
+            exp.update(upBound = get_group1(stdout_lines, "upBound=(\S+)", -1))
+            exp.update(numLeaves = get_group1(stdout_lines, "#leaves=(\S+)", -1))
+            exp.update(numFathom = get_group1(stdout_lines, "#fathom=(\S+)", -1))
+            exp.update(numSeen = get_group1(stdout_lines, "#seen=(\S+)", -1))
+            exp.update(propRootSpaceRemain = get_following_literal(stdout_lines, "Proportion of root space remaining: ", -1))
+             
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
             tot_parse_times = map(float, tot_parse_times)
