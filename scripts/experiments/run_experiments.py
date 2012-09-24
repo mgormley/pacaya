@@ -18,6 +18,7 @@ from experiments.core.experiment_runner import ExpParamsRunner
 from experiments.core import experiment_runner
 import re
 import random
+from experiments.core.pipeline import write_script, RootStage, Stage
 
 def get_root_dir():
     scripts_dir =  os.path.abspath(sys.path[0])
@@ -209,6 +210,24 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
+        elif self.expname == "bnb-semi":
+            all.update(algorithm="bnb",
+                       initBounds="viterbi-em",
+                       varSelection="regret")
+            for dataset in datasets:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 4*60*60)]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    if not self.fast:
+                        # Run for some fixed amount of time.                
+                        all.update(numRestarts=1000000000)
+                        all.update(timeoutSeconds=timeoutSeconds)
+                    for varSplit in ["half-prob", "half-logprob"]:
+                        for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
+                            for propSupervised in frange(0.0, 1.0, 0.1):
+                                algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
+                                                   propSupervised=propSupervised)
+                                experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
@@ -382,6 +401,12 @@ if __name__ == "__main__":
     
     runner = DepParseExpParamsRunner(options)
     experiments = runner.get_experiments()
-    runner.run_experiments(experiments)
+    if isinstance(experiments, list): 
+        print "Running experiment list"
+        runner.run_experiments(experiments)
+    elif isinstance(experiments, Stage):
+        runner.run_pipeline(experiments)
+    else:
+        raise Exception("unhandled type for experiments: " + str(type(experiments)))
 
 
