@@ -96,6 +96,7 @@ public class LazyBranchAndBoundSolver {
             
             curNode = getNextLeafNode();
             numProcessed++;
+            // TODO: This is incorrect if the bounds are positive.
             double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
              
             // Logging
