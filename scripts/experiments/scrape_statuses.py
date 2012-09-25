@@ -26,8 +26,9 @@ _re_logging_time = re.compile('^(\d+)\s')
 class Status(DPExpParams):
         
     def __init__(self, status):
+        DPExpParams.__init__(self)
         self.update(time = _re_logging_time.search(status).group(0))
-        matches = _re_stat_elem.findall(status)
+        matches = [x for x in _re_stat_elem.finditer(status)]
         self.update(upBound = float(matches[0].group(1)),
                     lowBound = float(matches[1].group(1)),
                     relativeDiff = float(matches[2].group(1)),
@@ -36,7 +37,7 @@ class Status(DPExpParams):
                     numSeen = int(matches[5].group(1)))
         
 def get_status_list(stdout_lines): 
-    status_list = get_all_following(stdout_lines, ".*Summary: ", True)
+    status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver  - Summary: ", True)
     if status_list == None:
         return None
     # Downsample the summaries if there are too many
