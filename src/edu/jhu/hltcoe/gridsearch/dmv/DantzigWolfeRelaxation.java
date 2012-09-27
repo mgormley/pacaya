@@ -285,7 +285,7 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
             // Check whether to continue
             if (lowerBound >= upperBound) {
                 // We can fathom this node
-                status = RelaxStatus.Fathomed;
+                status = RelaxStatus.Pruned;
                 break;
             } else if (sprv.numPositiveRedCosts == 0) {
                 // Optimal solution found

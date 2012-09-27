@@ -26,6 +26,16 @@ public class LazyBranchAndBoundSolver {
     public enum SearchStatus {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND
     }
+    
+    private static class FathomStats {
+        public int numCompletelySolved = 0;
+        public int numPruned = 0;
+        public int numInfeasible = 0;
+        public int numBottomedOut = 0;
+        public int getNumFathomed() {
+            return numPruned + numInfeasible + numCompletelySolved + numBottomedOut;
+        }
+    }
 
     public static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
@@ -73,7 +83,7 @@ public class LazyBranchAndBoundSolver {
         leafNodePQ = new PriorityQueue<ProblemNode>(11, leafComparator);
         upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
         int numProcessed = 0;
-        int numFathomed = 0;
+        FathomStats fathom = new FathomStats();
         
         addToLeafNodes(rootNode);
 
@@ -96,12 +106,10 @@ public class LazyBranchAndBoundSolver {
             
             curNode = getNextLeafNode();
             numProcessed++;
-            // TODO: This is incorrect if the bounds are positive.
-            double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
+            double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
              
             // Logging
-            log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
-                    upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
+            printSummary(upperBound, relativeDiff, numProcessed, fathom);
             if (log.isDebugEnabled() && numProcessed % 100 == 0) {
                 printLeafNodeBoundHistogram();
                 printTimers(numProcessed);
@@ -125,10 +133,17 @@ public class LazyBranchAndBoundSolver {
                     .getSide()));
             relaxTimer.start();
             double curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+            RelaxedSolution relax = curNode.getRelaxedSolution();
             relaxTimer.stop();
             if (curNodeLowerBound <= incumbentScore) {
-                // fathom (i.e. prune) this child node
-                numFathomed++;
+                // Fathom this node: it is either infeasible or was pruned.
+                if (relax.getStatus() == RelaxStatus.Infeasible) {
+                    fathom.numInfeasible++;
+                } else if (relax.getStatus() == RelaxStatus.Pruned) {
+                    fathom.numPruned++;
+                } else {
+                    log.warn("Unhandled status for relaxed solution: " + relax.getStatus());
+                }
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
                 continue;
             }
@@ -150,8 +165,20 @@ public class LazyBranchAndBoundSolver {
             }
             feasTimer.stop();
             
+            if (Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)) {
+                // Fathom this node: the optimal solution for this subproblem was found.
+                fathom.numCompletelySolved++;
+                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
+                continue;
+            }
+            
             branchTimer.start();
             List<ProblemNode> children = curNode.branch();
+            if (children.size() == 0) {
+                // Fathom this node: no more branches can be made.
+                fathom.numBottomedOut++;
+                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
+            }
             for (ProblemNode childNode : children) {
                 addToLeafNodes(childNode);
             }
@@ -160,18 +187,28 @@ public class LazyBranchAndBoundSolver {
         
         // Print summary
         evalIncumbent(incumbentSolution, incumbentScore);
-        double relativeDiff = Math.abs(upperBound - incumbentScore) / Math.abs(incumbentScore);
+        double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
         if (relativeDiff <= epsilon) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
-        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #seen=%d", 
-                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, numProcessed));
+        printSummary(upperBound, relativeDiff, numProcessed, fathom);
         leafNodePQ = null;     
 
         log.info("B&B search status: " + status);
         
         // Return epsilon optimal solution
         return status;
+    }
+
+    private static double computeRelativeDiff(double upperBound, double lowerBound) {
+        // TODO: This is incorrect if the bounds are positive.
+        return Math.abs(upperBound - lowerBound) / Math.abs(lowerBound);
+    }
+
+    private void printSummary(double upperBound, double relativeDiff, int numProcessed, FathomStats fathom) {
+        int numFathomed = fathom.getNumFathomed();
+        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d, #seen=%d", 
+                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, numProcessed));
     }
 
     /**

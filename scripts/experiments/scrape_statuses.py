@@ -34,7 +34,9 @@ class Status(DPExpParams):
                     relativeDiff = float(matches[2].group(1)),
                     numLeaves = int(matches[3].group(1)),
                     numFathom = int(matches[4].group(1)),
-                    numSeen = int(matches[5].group(1)))
+                    numPrune = int(matches[5].group(1)),
+                    numInfeasible = int(matches[6].group(1)),
+                    numSeen = int(matches[7].group(1)))
         
 def get_status_list(stdout_lines): 
     status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver  - Summary: ", True)

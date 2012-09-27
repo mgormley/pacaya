@@ -6,7 +6,7 @@ package edu.jhu.hltcoe.gridsearch;
 import ilog.cplex.IloCplex.Status;
 
 public enum RelaxStatus {
-    Optimal, Feasible, Infeasible, Unknown, Fathomed;
+    Optimal, Feasible, Infeasible, Unknown, Pruned;
 
     public boolean hasSolution() {
         return this == Optimal || this == Feasible;

@@ -22,4 +22,6 @@ public interface ProblemNode {
 
     double getLogSpace();
 
+    RelaxedSolution getRelaxedSolution();
+
 }
