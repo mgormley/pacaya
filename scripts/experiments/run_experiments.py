@@ -117,7 +117,7 @@ class HProfHeapExpParams(DPExpParams):
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        ExpParamsRunner.__init__(self, "bnb", options.queue)
+        ExpParamsRunner.__init__(self, options.expname, options.queue)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
@@ -212,7 +212,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         # Run for some fixed amount of time.                
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
-                    for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
+                    for varSelection in ["regret", "rand-uniform", "rand-weighted", "full", "pseudocost"]:
                         experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
         elif self.expname == "bnb-semi":
             all.update(algorithm="bnb",
@@ -224,7 +224,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
                         # Run for some fixed amount of time.                
-                        all.update(numRestarts=1000000000)
+                        all.update(numRestarts=1000000000, epsilon=0.0)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for varSplit in ["half-prob", "half-logprob"]:
                         for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
