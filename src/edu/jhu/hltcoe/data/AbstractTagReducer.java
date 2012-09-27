@@ -1,5 +1,8 @@
 package edu.jhu.hltcoe.data;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 
 public abstract class AbstractTagReducer {
@@ -18,6 +21,7 @@ public abstract class AbstractTagReducer {
     }
 
     public void reduceTags(DepTree tree) {
+        Set<String> unknownTags = new HashSet<String>();
         for (DepTreeNode node : tree) {
             if (node.getLabel() instanceof TaggedWord) {
                 TaggedWord tw = (TaggedWord) node.getLabel();
@@ -25,9 +29,12 @@ public abstract class AbstractTagReducer {
                 if (newTag != null) {
                     tw.setTag(newTag);
                 } else {
-                    log.warn("Unknown tag: " + tw.getTag());
+                    unknownTags.add(tw.getTag());
                 }
             }
+        }
+        for (String unknownTag : unknownTags) {
+            log.warn("Unknown tag: " + unknownTag);
         }
     }
     
