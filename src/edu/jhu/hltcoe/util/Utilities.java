@@ -13,6 +13,8 @@ import edu.jhu.hltcoe.math.LogAddTable;
 
 public class Utilities {
 
+    private static final double DEFAULT_DELTA = 1e-13;
+
     private Utilities() {
         // private constructor
     }
@@ -326,16 +328,34 @@ public class Utilities {
         return Double.compare(a, b);
     }
 
+    /**
+     * Gets the argmax breaking ties randomly.
+     */
     public static IntTuple getArgmax(double[][] array) {
+        return getArgmax(array, DEFAULT_DELTA);
+    }
+
+    /**
+     * Gets the argmax breaking ties randomly.
+     */
+    public static IntTuple getArgmax(double[][] array, double delta) {
         double maxValue = Double.NEGATIVE_INFINITY;
         int maxX = -1;
         int maxY = -1;
+        double numMax = 1;
         for (int x=0; x<array.length; x++) {
             for (int y=0; y<array[x].length; y++) {
-                if (array[x][y] > maxValue) {
+                double diff = Utilities.compare(array[x][y], maxValue, delta);
+                if (diff == 0 && Prng.nextDouble() < 1.0 / numMax) {
                     maxValue = array[x][y];
                     maxX = x;
                     maxY = y;
+                    numMax++;
+                } else if (diff > 0) {
+                    maxValue = array[x][y];
+                    maxX = x;
+                    maxY = y;
+                    numMax = 1;
                 }
             }
         }
@@ -343,7 +363,7 @@ public class Utilities {
     }
 
     public static boolean lte(double a, double b) {
-        return a <= b + 1e-13;
+        return a <= b + DEFAULT_DELTA;
     }
     
     public static boolean lte(double a, double b, double delta) {
@@ -351,7 +371,7 @@ public class Utilities {
     }
 
     public static boolean gte(double a, double b) {
-        return a + 1e-13 >= b;
+        return a + DEFAULT_DELTA >= b;
     }
     
     public static boolean gte(double a, double b, double delta) {

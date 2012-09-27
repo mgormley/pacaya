@@ -334,6 +334,10 @@ public class DmvProblemNode implements ProblemNode {
         return dwRelax;
     }
 
+    public DmvBoundsDelta getDelta() {
+        return deltas;
+    }
+
     /**
      * For testing only.
      */

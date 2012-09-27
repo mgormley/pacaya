@@ -2,8 +2,15 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 public class DmvBoundsDelta {
 
-    public enum Lu { LOWER, UPPER }
-    public enum Dir { ADD, SUBTRACT }  
+    public enum Lu { 
+        LOWER, UPPER;
+        public int getAsInt() {
+            return (this == LOWER) ? 0 : 1;
+        } 
+    }
+    public enum Dir { 
+        ADD, SUBTRACT 
+    }  
     
     private int c;
     private int m; 

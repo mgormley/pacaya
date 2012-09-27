@@ -53,14 +53,14 @@ public class MidpointVarSplitter implements VariableSplitter {
     }
 
     public static List<DmvBoundsDelta> splitAtMidPoint(DmvBounds origBounds, int c, int m, double mid) {
-        // e.g. [0.0, 0.5]
-        DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, mid - origBounds.getUb(c, m));
         // e.g. [0.5, 1.0]
-        DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, mid - origBounds.getLb(c, m));
+        DmvBoundsDelta lDelta = new DmvBoundsDelta(c, m, Lu.LOWER, mid - origBounds.getLb(c, m));
+        // e.g. [0.0, 0.5]
+        DmvBoundsDelta uDelta = new DmvBoundsDelta(c, m, Lu.UPPER, mid - origBounds.getUb(c, m));
     
         List<DmvBoundsDelta> deltasList = new ArrayList<DmvBoundsDelta>();
-        deltasList.add(deltas1);
-        deltasList.add(deltas2);
+        deltasList.add(lDelta);
+        deltasList.add(uDelta);
         return deltasList;
     }
 

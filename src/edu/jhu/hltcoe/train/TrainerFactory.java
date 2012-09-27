@@ -16,6 +16,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.FullStrongVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter;
+import edu.jhu.hltcoe.gridsearch.dmv.PsuedocostVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.VariableSelector;
@@ -40,7 +41,6 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.decomp.DeltaParseBlockFileWriter;
 import edu.jhu.hltcoe.util.Command;
 
 /**
@@ -235,6 +235,8 @@ public class TrainerFactory {
             VariableSelector varSelector;
             if (varSelection.equals("full")) {
                 varSelector = new FullStrongVariableSelector(varSplitter);
+            } else if (varSelection.equals("pseudocost")) {
+                varSelector = new PsuedocostVariableSelector(varSplitter);
             } else if (varSelection.equals("regret")) {
                 varSelector = new RegretVariableSelector();
             } else if (varSelection.equals("rand-uniform")) {
