@@ -329,6 +329,7 @@ public class PipelineRunner {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e1) {
+            log.error(e1.getMessage());
             formatter.printHelp(usage, options, true);
             System.exit(1);
         }
