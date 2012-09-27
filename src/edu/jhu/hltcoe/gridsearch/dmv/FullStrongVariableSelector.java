@@ -11,7 +11,7 @@ public class FullStrongVariableSelector implements VariableSelector {
     private static Logger log = Logger.getLogger(FullStrongVariableSelector.class);
 
     // This is the epsilon specified in Tobias Achterberg's thesis for the product score
-    private static final double EPSILON = 1e-6;
+    public static final double EPSILON = 1e-6;
 
     private RegretVariableSelector regretFactory;
     private VariableSplitter varSplitter; 
@@ -31,7 +31,6 @@ public class FullStrongVariableSelector implements VariableSelector {
         //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
 
         // TODO: consider using regret to filter this down
-        double parentBound = node.getOptimisticBound();
         
         double maxScore = EPSILON * EPSILON;
         int maxC = -1;
@@ -42,38 +41,15 @@ public class FullStrongVariableSelector implements VariableSelector {
                     continue;
                 }
                 
-                node.setAsActiveNode();
-                List<DmvBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
-                List<ProblemNode> children = node.branch(deltas);
-                assert(children.size() == 2);
-                
-                // Left child
-                DmvProblemNode child1 = (DmvProblemNode)children.get(0);
-                child1.setAsActiveNode();
-                double c1Bound = child1.getOptimisticBound();
-
-                // Right child
-                DmvProblemNode child2 = (DmvProblemNode)children.get(0);
-                child2.setAsActiveNode();
-                double c2Bound = child2.getOptimisticBound();
-                
-                // Since we're doing maximization...
-                double c1Delta = parentBound - c1Bound;
-                double c2Delta = parentBound - c2Bound;
-                // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
-                double score = Math.max(c1Delta, EPSILON) * Math.max(c2Delta, EPSILON);
+                double score = getStrongScore(node, c, m);
                 
                 if (score > maxScore) {
                     maxScore = score;
                     maxC = c;
                     maxM = m;
                 }
-
-                String name = idm.getName(c, m);
-                log.trace(String.format("Probing: c=%d m=%d name=%s score=%f", c, m, name, score));
             }
         }
-        node.setAsActiveNode();
         
         if (maxC == -1 || maxM == -1) {
             return regretVarId;
@@ -83,6 +59,46 @@ public class FullStrongVariableSelector implements VariableSelector {
         log.info(String.format("Branching: c=%d m=%d name=%s score=%f", maxC, maxM, name, maxScore));
 
         return new VariableId(maxC, maxM);
+    }
+
+    public double getStrongScore(DmvProblemNode node, int c, int m) {
+        DmvBounds origBounds = node.getBounds();
+        double parentBound = node.getOptimisticBound();
+
+        node.setAsActiveNode();
+        List<DmvBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
+        List<ProblemNode> children = node.branch(deltas);
+        assert(children.size() == 2);
+        
+        // Left child
+        DmvProblemNode child1 = (DmvProblemNode)children.get(0);
+        child1.setAsActiveNode();
+        double c1Bound = child1.getOptimisticBound();
+
+        // Right child
+        DmvProblemNode child2 = (DmvProblemNode)children.get(1);
+        child2.setAsActiveNode();
+        double c2Bound = child2.getOptimisticBound();
+
+        node.setAsActiveNode();
+        
+        // Since we're doing maximization...
+        double c1Delta = parentBound - c1Bound;
+        double c2Delta = parentBound - c2Bound;
+        // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
+        double score = computeScore(c1Delta, c2Delta);
+
+        String name = node.getIdm().getName(c, m);
+        log.trace(String.format("Probing: c=%d m=%d name=%s score=%f", c, m, name, score));
+
+        return score;
+    }
+    
+    /**
+     * The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
+     */
+    public static double computeScore(double c1Delta, double c2Delta) {
+        return Math.max(c1Delta, EPSILON) * Math.max(c2Delta, EPSILON);
     }
 
 }
