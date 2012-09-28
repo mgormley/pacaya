@@ -147,6 +147,7 @@ public class PipelineRunner {
             log.info("relaxTime(ms): " + Time.totMs(timer));
             log.info("relaxBound: " + relaxSol.getScore());
             if (initBoundsSol != null) {
+                log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
             // TODO: use add-lambda smoothing here.
