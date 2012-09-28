@@ -207,7 +207,6 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM || opt == InitSol.SUPERVISED){
             DmvWeightGenerator weightGen;
             if (opt == InitSol.RANDOM) {
-                Prng.seed(System.currentTimeMillis());
                 weightGen = new DmvRandomWeightGenerator(0.00001);
             } else if (opt == InitSol.SUPERVISED) {
                 weightGen = new DmvSupervisedWeightGenerator(trainTreebank);
