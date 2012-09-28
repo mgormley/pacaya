@@ -7,6 +7,7 @@ import java.util.PriorityQueue;
 import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
+import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
@@ -27,16 +28,6 @@ public class LazyBranchAndBoundSolver {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND
     }
     
-    private static class FathomStats {
-        public int numCompletelySolved = 0;
-        public int numPruned = 0;
-        public int numInfeasible = 0;
-        public int numBottomedOut = 0;
-        public int getNumFathomed() {
-            return numPruned + numInfeasible + numCompletelySolved + numBottomedOut;
-        }
-    }
-
     public static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
     private double incumbentScore;
@@ -138,9 +129,9 @@ public class LazyBranchAndBoundSolver {
             if (curNodeLowerBound <= incumbentScore) {
                 // Fathom this node: it is either infeasible or was pruned.
                 if (relax.getStatus() == RelaxStatus.Infeasible) {
-                    fathom.numInfeasible++;
+                    fathom.fathom(curNode, FathomStatus.Infeasible);
                 } else if (relax.getStatus() == RelaxStatus.Pruned) {
-                    fathom.numPruned++;
+                    fathom.fathom(curNode, FathomStatus.Pruned);
                 } else {
                     log.warn("Unhandled status for relaxed solution: " + relax.getStatus());
                 }
@@ -167,7 +158,7 @@ public class LazyBranchAndBoundSolver {
             
             if (Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)) {
                 // Fathom this node: the optimal solution for this subproblem was found.
-                fathom.numCompletelySolved++;
+                fathom.fathom(curNode, FathomStatus.CompletelySolved);
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
                 continue;
             }
@@ -176,7 +167,7 @@ public class LazyBranchAndBoundSolver {
             List<ProblemNode> children = curNode.branch();
             if (children.size() == 0) {
                 // Fathom this node: no more branches can be made.
-                fathom.numBottomedOut++;
+                fathom.fathom(curNode, FathomStatus.BottomedOut);
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
             }
             for (ProblemNode childNode : children) {
@@ -207,8 +198,8 @@ public class LazyBranchAndBoundSolver {
 
     private void printSummary(double upperBound, double relativeDiff, int numProcessed, FathomStats fathom) {
         int numFathomed = fathom.getNumFathomed();
-        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d, #seen=%d", 
-                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, numProcessed));
+        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d, avgFathomDepth=%.0f #seen=%d", 
+                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, fathom.getAverageDepth(), numProcessed));
     }
 
     /**
