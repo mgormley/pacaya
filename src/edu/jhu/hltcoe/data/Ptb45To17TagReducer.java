@@ -6,6 +6,7 @@ public class Ptb45To17TagReducer extends AbstractTagReducer implements TagReduce
     /**
      * Ported to Java from Jason Smith's reduce-tags.pl.
      */
+    @Override
     public String reduceTag(String tag) {
         if ("``".equals(tag)) { return "LPUNC"; }
         else if (",".equals(tag)) { return "INPUNC"; }

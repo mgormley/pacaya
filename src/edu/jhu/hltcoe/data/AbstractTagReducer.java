@@ -8,20 +8,26 @@ import org.apache.log4j.Logger;
 public abstract class AbstractTagReducer {
 
     private static Logger log = Logger.getLogger(AbstractTagReducer.class);
+    private Set<String> unknownTags;
 
     public AbstractTagReducer() {
         super();
     }
 
     public void reduceTags(DepTreebank trees) {
+        unknownTags = new HashSet<String>();
         for (DepTree tree : trees) {
             reduceTags(tree);
         }
+        log.warn("Number of unknown tags: " + unknownTags.size());
+        for (String unknownTag : unknownTags) {
+            log.warn("Unknown tag: " + unknownTag);
+        }
+        
         trees.rebuildAlphabet();
     }
 
-    public void reduceTags(DepTree tree) {
-        Set<String> unknownTags = new HashSet<String>();
+    private void reduceTags(DepTree tree) {
         for (DepTreeNode node : tree) {
             if (node.getLabel() instanceof TaggedWord) {
                 TaggedWord tw = (TaggedWord) node.getLabel();
@@ -32,9 +38,6 @@ public abstract class AbstractTagReducer {
                     unknownTags.add(tw.getTag());
                 }
             }
-        }
-        for (String unknownTag : unknownTags) {
-            log.warn("Unknown tag: " + unknownTag);
         }
     }
     
