@@ -267,7 +267,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             // TODO: If we start removing LambdaVars, then these column indices are wrong!!
             this.colind = colind;
         }
-
+        
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -280,6 +280,12 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         /**
          * Two LambdaVar objects are equal if their sentence index, s, and their
          * parents array are equal.
+         * 
+         * TODO: in the D-W relaxation setting we really only care whether the 
+         * sentSolutions are equal since those are the sufficient statistics for
+         * the column. However, it's possible we could impose constraints that 
+         * would act over the parent array such as dependency length constraints, 
+         * so we'll leave this as is for now.
          */
         @Override
         public boolean equals(Object obj) {
