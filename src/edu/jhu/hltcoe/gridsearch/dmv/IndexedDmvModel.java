@@ -334,6 +334,17 @@ public class IndexedDmvModel {
         return totFreqCm;
     }
     
+    public int[][] getTotFreqCm(DepTreebank treebank) {
+        int[][] totFreqCm = new int[getNumConds()][];
+        for (int c = 0; c < getNumConds(); c++) {
+            totFreqCm[c] = new int[getNumParams(c)];
+        }
+        for (int s = 0; s < treebank.size(); s++) {
+            addSentSol(treebank.getSentences().get(s), treebank.get(s), totFreqCm);
+        }
+        return totFreqCm;
+    }
+    
     /**
      * Adds the frequency counts for each parameter to counts, which are
      * indexed by c,m.

@@ -26,7 +26,6 @@ import org.jboss.dna.common.statistic.Stopwatch;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
@@ -202,14 +201,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
             // Compute the true quadratic objective given the model
             // parameters and feature counts found by the relaxation.
-            double quadObj = 0.0;
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                for (int m = 0; m < idm.getNumParams(c); m++) {
-                    quadObj += (optimalLogProbs[c][m] * optimalFeatCounts[c][m]);
-                }
-            }
-
-            return quadObj;
+            return dmvObj.computeTrueObjective(optimalLogProbs, optimalFeatCounts);
         } catch (IloException e) {
             throw new RuntimeException(e);
         }

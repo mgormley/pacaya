@@ -1,14 +1,14 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvObjective {
     
+    private static final double EQUALITY_TOLERANCE = 1e-8;
     private DmvTrainCorpus corpus;
     private IndexedDmvModel idm;
     
@@ -17,24 +17,37 @@ public class DmvObjective {
         this.corpus = corpus;
         this.idm = new IndexedDmvModel(corpus);
     }
-    
-    public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
-        double score = 0.0;
-        for (int s = 0; s < corpus.size(); s++) {
-            Sentence sentence = corpus.getSentence(s);
-            DepTree tree = treebank.get(s);
-            int[] sentSol = idm.getSentSol(sentence, s, tree);
-            for (int i=0; i<sentSol.length; i++) {
-                int c = idm.getC(s, i);
-                int m = idm.getM(s, i);
-                if (sentSol[i] != 0) {
-                    // This if-statement is to ensure that 0 * -inf == 0.
-                    score += sentSol[i] * logProbs[c][m];
+
+    public double computeTrueObjective(double[][] logProbs, double[][] featCounts) {
+        double quadObj = 0.0;
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            for (int m = 0; m < idm.getNumParams(c); m++) {
+                if (!Utilities.equals(featCounts[c][m], 0.0, EQUALITY_TOLERANCE)) {
+                    quadObj += (logProbs[c][m] * featCounts[c][m]);
                 }
-                assert (!Double.isNaN(score));
+                assert (!Double.isNaN(quadObj));
             }
         }
-        return score;
+        return quadObj;
+    }
+    
+    public double computeTrueObjective(double[][] logProbs, int[][] featCounts) {
+        double quadObj = 0.0;
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            for (int m = 0; m < idm.getNumParams(c); m++) {
+                if (featCounts[c][m] > 0) {
+                    quadObj += (logProbs[c][m] * featCounts[c][m]);
+                }
+                assert (!Double.isNaN(quadObj));
+            }
+        }
+        return quadObj;
+    }
+    
+    public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
+        int[][] featCounts = idm.getTotFreqCm(treebank);
+        
+        return computeTrueObjective(logProbs, featCounts);
     }
 
     public Double computeTrueObjective(DmvModel model, DepTreebank treebank) {
