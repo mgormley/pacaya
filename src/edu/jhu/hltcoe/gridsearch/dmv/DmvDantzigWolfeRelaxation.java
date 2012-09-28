@@ -47,8 +47,10 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
 
     protected int numLambdas;
-    // Stored for re-use by getRegretCm()
+    // Stored for re-use by getRegretCm() and getTrueRelaxedObjective()
     protected double[][] optimalLogProbs;
+    private double[][] optimalFeatCounts;
+
     protected DmvTrainCorpus corpus;
     protected IndexedDmvModel idm;
     protected DmvBounds bounds;
@@ -80,6 +82,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
     protected void clearRelaxedSolution() {
         optimalLogProbs = null;
+        optimalFeatCounts = null;
     }
     
     protected RelaxedDmvSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
@@ -154,25 +157,11 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             if (optimalLogProbs == null) {
                 return null;
             }
-
-            // Store feature counts \bar{f}_{c,m} (i.e. number of times each
-            // model parameter was used)
-            double[][] featCounts = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                featCounts[c] = new double[idm.getNumParams(c)];
+            // Lazily create the feature counts.
+            if (optimalFeatCounts == null) {
+                optimalFeatCounts = getFeatureCounts();
             }
-
-            for (LambdaVar triple : mp.lambdaVars) {
-                double frac = cplex.getValue(triple.lambdaVar);
-                int s = triple.s;
-                int[] sentSol = triple.sentSol;
-                for (int i = 0; i < sentSol.length; i++) {
-                    int c = idm.getC(s, i);
-                    int m = idm.getM(s, i);
-                    featCounts[c][m] += sentSol[i] * frac;
-                }
-            }
-
+            
             // Store objective values z_{c,m}
             double[][] objVals = new double[idm.getNumConds()][];
             for (int c = 0; c < idm.getNumConds(); c++) {
@@ -185,7 +174,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             for (int c = 0; c < idm.getNumConds(); c++) {
                 regret[c] = new double[idm.getNumParams(c)];
                 for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * featCounts[c][m]);
+                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * optimalFeatCounts[c][m]);
                     //TODO: this seems to be too strong:
                     //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
                     if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
@@ -198,6 +187,53 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public double getTrueObjectiveForRelaxedSolution() {
+        try {
+            // If optimal model parameters \theta_{c,m} are not present, return null.
+            if (optimalLogProbs == null) {
+                throw new IllegalStateException();
+            }
+            // Lazily create the feature counts.
+            if (optimalFeatCounts == null) {
+                optimalFeatCounts = getFeatureCounts();
+            }
+
+            // Compute the true quadratic objective given the model
+            // parameters and feature counts found by the relaxation.
+            double quadObj = 0.0;
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                for (int m = 0; m < idm.getNumParams(c); m++) {
+                    quadObj += (optimalLogProbs[c][m] * optimalFeatCounts[c][m]);
+                }
+            }
+
+            return quadObj;
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private double[][] getFeatureCounts() throws IloException {
+        // Store feature counts \bar{f}_{c,m} (i.e. number of times each
+        // model parameter was used)
+        double[][] featCounts = new double[idm.getNumConds()][];
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            featCounts[c] = new double[idm.getNumParams(c)];
+        }
+
+        for (LambdaVar triple : mp.lambdaVars) {
+            double frac = cplex.getValue(triple.lambdaVar);
+            int s = triple.s;
+            int[] sentSol = triple.sentSol;
+            for (int i = 0; i < sentSol.length; i++) {
+                int c = idm.getC(s, i);
+                int m = idm.getM(s, i);
+                featCounts[c][m] += sentSol[i] * frac;
+            }
+        }
+        return featCounts;
     }
 
     /**

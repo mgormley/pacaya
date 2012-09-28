@@ -121,7 +121,9 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
                 cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
             }
             log.info("Lower bound: " + lowerBound);
-            return extractSolution(status, objective);
+            RelaxedDmvSolution relaxSol = extractSolution(status, objective);
+            log.info("True obj for relaxed vars: " + getTrueObjectiveForRelaxedSolution());
+            return relaxSol;
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -340,6 +342,8 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
     public void setMaxDwIterations(int maxDwIterations) {
         this.maxDwIterations = maxDwIterations;
     }
+    
+    protected abstract double getTrueObjectiveForRelaxedSolution();
     
     protected abstract void clearRelaxedSolution();
 
