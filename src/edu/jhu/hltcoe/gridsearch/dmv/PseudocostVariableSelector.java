@@ -2,11 +2,14 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 
-public class PsuedocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
-    
+public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
+    private static Logger log = Logger.getLogger(PseudocostVariableSelector.class);
+
     private static final int RELIABILITY_THRESHOLD = 2;
     private int[][][] numObserved;
     private double[][][] delta;
@@ -14,7 +17,7 @@ public class PsuedocostVariableSelector extends AbstractScoringVariableSelector 
     private IndexedDmvModel idm;
     private VariableSplitter varSplitter;
 
-    public PsuedocostVariableSelector(VariableSplitter varSplitter) {
+    public PseudocostVariableSelector(VariableSplitter varSplitter) {
         this.varSplitter = varSplitter;
     }
     
@@ -53,6 +56,9 @@ public class PsuedocostVariableSelector extends AbstractScoringVariableSelector 
                             double cDelta = parentBound - cBound;
                             delta[c][m][lu] += cDelta;
                             numObserved[c][m][lu]++;
+
+                            String name = node.getIdm().getName(c, m);
+                            log.trace(String.format("Probing: c=%d m=%d lu=%d name=%s diff=%f", c, m, lu, name, cDelta));
                         }
                     }
                     updateScore(c, m);
