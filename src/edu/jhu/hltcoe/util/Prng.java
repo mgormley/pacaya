@@ -36,6 +36,7 @@ public class Prng {
     public static Random curRandom;
     
     public static void seed(long seed) {
+        System.out.println("SEED="+seed);
         javaRandom = new Random(seed);
         mtf = new MersenneTwisterFast(seed);
         mt = new ec.util.MersenneTwister(seed);
@@ -62,7 +63,6 @@ public class Prng {
     static {
 //        DEFAULT_SEED = 1325449947035l;
         DEFAULT_SEED = System.currentTimeMillis();
-        System.out.println("DEFAULT_SEED="+DEFAULT_SEED);
         System.out.println("WARNING: pseudo random number generator is not thread safe");
         seed(DEFAULT_SEED);
     }
