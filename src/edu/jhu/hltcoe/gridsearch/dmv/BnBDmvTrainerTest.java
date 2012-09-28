@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -33,7 +34,7 @@ public class BnBDmvTrainerTest {
     public void testTwo() {
         double epsilon = 0.4;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -45,7 +46,7 @@ public class BnBDmvTrainerTest {
     public void testOne() {
         double epsilon = 0.5;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
         //trainer.setTempDir(new File("."));
 
         SentenceCollection sentences = new SentenceCollection();
@@ -59,7 +60,7 @@ public class BnBDmvTrainerTest {
         double epsilon = 0.9;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
         dwRelax.setMaxDwIterations(3);
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
         //trainer.setTempDir(new File("."));
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();

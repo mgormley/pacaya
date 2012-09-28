@@ -24,12 +24,15 @@ public class BfsComparatorTest {
     public void testOrdering() {
         BfsComparator comparator = new BfsComparator();
         PriorityQueue<DmvProblemNode> leafNodePQ = new PriorityQueue<DmvProblemNode>(11, comparator);
+        leafNodePQ.add(new MockDmvProblemNode(-4));
         leafNodePQ.add(new MockDmvProblemNode(-2));
         leafNodePQ.add(new MockDmvProblemNode(-1));
         leafNodePQ.add(new MockDmvProblemNode(-3));
-        leafNodePQ.add(new MockDmvProblemNode(-4));
 
         Assert.assertEquals(-1.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
+        Assert.assertEquals(-2.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
+        Assert.assertEquals(-3.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
+        Assert.assertEquals(-4.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
     }
     
     

@@ -6,13 +6,10 @@ import java.util.Comparator;
  * This compartor will sort the elements so that a depth first search is
  * performed and among the children of maximal depth, the best first child will
  * be chosen.
- * TODO: this doesn't make sense if we never bottom out!
  */
 public class DfsBfcComparator implements Comparator<ProblemNode> {
 
-    public DfsBfcComparator() {
-        throw new RuntimeException("This comparator is currently not setup to work correctly with optimistic bounds");
-    }
+    public DfsBfcComparator() { }
     
     @Override
     /** 
@@ -25,6 +22,8 @@ public class DfsBfcComparator implements Comparator<ProblemNode> {
         // a negative integer, zero, or a positive integer as the first
         // argument is less than, equal to, or greater than the second.
 
+        // TODO: fix this - it should be comparing parent ids not depths.
+        
         // First compare depths
         if (node1.getDepth() > node2.getDepth()) {
             return -1;

@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.train;
 
 import java.io.File;
+import java.util.Comparator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -8,6 +9,9 @@ import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
+import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
+import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
@@ -16,7 +20,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.FullStrongVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.dmv.PsuedocostVariableSelector;
+import edu.jhu.hltcoe.gridsearch.dmv.PseudocostVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.VariableSelector;
@@ -75,6 +79,7 @@ public class TrainerFactory {
         options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
         options.addOption("vse", "varSelection", true, "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]");
         options.addOption("vsp", "varSplit", true, "Variable splitting strategy for branching [half-prob, half-logprob]");
+        options.addOption("no", "nodeOrder", true, "Strategy for node selection [bfs, dfs]");
         options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,lp]");
         options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
         options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
@@ -110,6 +115,7 @@ public class TrainerFactory {
         final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
         final String varSelection = Command.getOptionValue(cmd, "varSelection", "regret");
         final String varSplit = Command.getOptionValue(cmd, "varSplit", "half-prob");
+        final String nodeOrder = Command.getOptionValue(cmd, "nodeOrder", "bfs");
         final String relaxation = Command.getOptionValue(cmd, "relaxation", "dw");
         final int maxSimplexIterations = Command.getOptionValue(cmd, "maxSimplexIterations", 2100000000);
         final int maxDwIterations = Command.getOptionValue(cmd, "maxDwIterations", 1000);
@@ -236,7 +242,7 @@ public class TrainerFactory {
             if (varSelection.equals("full")) {
                 varSelector = new FullStrongVariableSelector(varSplitter);
             } else if (varSelection.equals("pseudocost")) {
-                varSelector = new PsuedocostVariableSelector(varSplitter);
+                varSelector = new PseudocostVariableSelector(varSplitter);
             } else if (varSelection.equals("regret")) {
                 varSelector = new RegretVariableSelector();
             } else if (varSelection.equals("rand-uniform")) {
@@ -250,11 +256,18 @@ public class TrainerFactory {
             brancher =  new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
         }
 
+        Comparator<ProblemNode> leafComparator = null;
+        if (nodeOrder.equals("bfs")) {
+            leafComparator = new BfsComparator();
+        } else if (nodeOrder.equals("dfs")) {
+            leafComparator = new DfsBfcComparator();
+        }
+        
         if (algorithm.equals("viterbi-bnb")) {
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
         } else if (algorithm.equals("bnb")) {
-            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds, parserEvaluator);
+            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds, parserEvaluator, leafComparator);
         }
         
         if (trainer == null) {
