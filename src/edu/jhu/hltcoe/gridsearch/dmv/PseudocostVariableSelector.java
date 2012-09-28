@@ -12,7 +12,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
 
     private static final int RELIABILITY_THRESHOLD = 2;
     private int[][][] numObserved;
-    private double[][][] delta;
+    private double[][][] deltaSum;
     private double[][] scores;
     private IndexedDmvModel idm;
     private VariableSplitter varSplitter;
@@ -27,12 +27,12 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
             idm = node.getIdm();
 
             scores = new double[idm.getNumConds()][];
-            delta = new double[idm.getNumConds()][][];
+            deltaSum = new double[idm.getNumConds()][][];
             numObserved = new int[idm.getNumConds()][][];
             
             for (int c = 0; c < idm.getNumConds(); c++) {
                 scores[c] = new double[idm.getNumParams(c)];
-                delta[c] = new double[idm.getNumParams(c)][2];
+                deltaSum[c] = new double[idm.getNumParams(c)][2];
                 numObserved[c] = new int[idm.getNumParams(c)][2];
             }
         }
@@ -54,7 +54,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
                             child.setAsActiveNode();
                             double cBound = child.getOptimisticBound();
                             double cDelta = parentBound - cBound;
-                            delta[c][m][lu] += cDelta;
+                            deltaSum[c][m][lu] += cDelta;
                             numObserved[c][m][lu]++;
 
                             String name = node.getIdm().getName(c, m);
@@ -74,7 +74,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
             int m = dmvBoundsDelta.getM();
             int lu = dmvBoundsDelta.getLu().getAsInt();
             // Since we're doing maximization...
-            delta[c][m][lu] += node.getParent().getOptimisticBound() - node.getOptimisticBound();
+            deltaSum[c][m][lu] += node.getParent().getOptimisticBound() - node.getOptimisticBound();
             numObserved[c][m][lu]++;
             updateScore(c, m);
         }
@@ -83,8 +83,8 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
     }
 
     private void updateScore(int c, int m) {
-        double lDelta = delta[c][m][Lu.LOWER.getAsInt()] / numObserved[c][m][Lu.LOWER.getAsInt()];
-        double uDelta = delta[c][m][Lu.UPPER.getAsInt()] / numObserved[c][m][Lu.UPPER.getAsInt()];
+        double lDelta = deltaSum[c][m][Lu.LOWER.getAsInt()] / numObserved[c][m][Lu.LOWER.getAsInt()];
+        double uDelta = deltaSum[c][m][Lu.UPPER.getAsInt()] / numObserved[c][m][Lu.UPPER.getAsInt()];
         // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
         scores[c][m] = FullStrongVariableSelector.computeScore(lDelta, uDelta);
     }
