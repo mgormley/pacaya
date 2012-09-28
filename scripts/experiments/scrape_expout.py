@@ -19,7 +19,8 @@ from experiments.core.util import tail
 class DPScraper(Scraper):
     
     def __init__(self, options):
-        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj)
+        out = options.out if options.out else sys.stdout            
+        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, out)
     
     def get_exp_params_instance(self):
         return DPExpParams()
@@ -90,6 +91,7 @@ if __name__ == "__main__":
     parser.add_option('--rproj', action="store_true", help="Print out for R-project")
     parser.add_option('--csv', action="store_true", help="Print out for CSV")
     parser.add_option('--google', action="store_true", help="Print out for Google Docs")
+    parser.add_option('--out_file', help="Output file [optional, defaults to stdout]")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) < 2:

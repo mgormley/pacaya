@@ -14,7 +14,7 @@ from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
 from experiments.core.util import head_sentences
 import platform
 from glob import glob
-from experiments.core.experiment_runner import ExpParamsRunner
+from experiments.core.experiment_runner import ExpParamsRunner, ExpParamsStage
 from experiments.core import experiment_runner
 import re
 import random
@@ -41,10 +41,30 @@ def get_some_data(data_dir, file_prefix, name, test_suffix):
     #data.set("dev","%s/%s.%s" % (data_dir, file_prefix, test_suffix),False,True)
     return data
 
+class ScrapeExpout(experiment_runner.PythonExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.PythonExpParams.__init__(self,keywords)
+        self.pyfile = "scripts/experiments/scrape_expout.py"
+        
+    def get_initial_keys(self):
+        return "dataSet model k s".split()
+    
+    def get_instance(self):
+        return ScrapeExpout()
+    
+    def create_experiment_script(self, exp_dir, eprunner):
+        self.add_arg(exp_dir)
+        script = ""
+        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH" % (eprunner.root_dir)
+        cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (eprunner.root_dir, self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+    
 class DPExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
-        experiment_runner.ExpParams.__init__(self,keywords)
+        experiment_runner.JavaExpParams.__init__(self,keywords)
             
     def get_initial_keys(self):
         return "dataSet model k s".split()
@@ -152,7 +172,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxSetSizeToConstrain=3, 
                    maxCutRounds=1, 
                    minSumForCuts=1.01, 
-                   initWeights="uniform")
+                   initWeights="uniform",
+                   nodeOrder="bfs")
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
         # Only keeping sentences that contain a verb
@@ -193,7 +214,21 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         else:               datasets = [brown_full]
         
         experiments = []
-        if self.expname == "nips12":
+        if self.expname == "viterbi-em":
+            root = RootStage()
+            setup = brown_full if not self.fast else brown_cf
+            setup.update(maxSentenceLength=10, maxNumSentences=100000000)
+            setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
+            setup.set("lambda", 1)
+            for initWeights in ["uniform", "random"]:
+                setup.update(initWeights=initWeights)
+                for randomRestartId in range(10):
+                    setup.update(randomRestartId)
+                    experiment = all + setup + DPExpParams()
+                    root.add_dependent(ExpParamsStage(experiment, self))
+            scrape = ScrapeExpout(rproj=None, out="../results.data")
+            scrape.add_prereqs(root.dependents)
+        elif self.expname == "nips12":
             for dataset in datasets:
                 for maxSentenceLength in [3,5]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
