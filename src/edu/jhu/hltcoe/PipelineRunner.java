@@ -336,6 +336,7 @@ public class PipelineRunner {
         }
         for (String requiredOption : requiredOptions) {
             if (!cmd.hasOption(requiredOption)) {
+                log.error("Missing required option: " + requiredOption);
                 formatter.printHelp(usage, options, true);
                 System.exit(1);
             }
@@ -347,6 +348,7 @@ public class PipelineRunner {
         try {
             pipeline.run(cmd);
         } catch (ParseException e1) {
+            log.error(e1.getMessage());
             formatter.printHelp(usage, options, true);
             System.exit(1);
         }
