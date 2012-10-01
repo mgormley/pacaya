@@ -5,6 +5,9 @@ import static depparsing.globals.Constants.RIGHT;
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.util.Utilities;
 
+/**
+ * MRG: This class was modified to remove dependence on the corpus.
+ */
 public class DepSentenceDist {
     public final DepInstance depInst;
 

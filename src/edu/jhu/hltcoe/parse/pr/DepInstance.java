@@ -3,6 +3,9 @@ package edu.jhu.hltcoe.parse.pr;
 import util.CountAlphabet;
 import edu.jhu.hltcoe.data.Label;
 
+/**
+ * MRG: This class was modified to remove dependence on the corpus.
+ */
 public class DepInstance {
 
     public final int numWords;

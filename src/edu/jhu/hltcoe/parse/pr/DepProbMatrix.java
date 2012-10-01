@@ -22,6 +22,8 @@ import depparsing.util.Lambda;
 import edu.jhu.hltcoe.data.Label;
 
 /**
+ * MRG: This class was modified to remove its dependence on the corpus.
+ * 
  * Container for the Model A probabilities specified in Noah Smith's thesis.
  * These parameters, for hypothetical POS tags x and x' are given below:
  * 

@@ -20,6 +20,9 @@ import depparsing.decoding.UnaryRhs;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
+/**
+ * MRG: This class was modified to break ties randomly.
+ */
 public class CKYParser {
 
 	private static final double PROB_EQUALS_TOLERANCE = 1e-13;
