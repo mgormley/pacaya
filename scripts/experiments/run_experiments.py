@@ -45,7 +45,6 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
     
     def __init__(self, **keywords):
         experiment_runner.PythonExpParams.__init__(self,keywords)
-        self.pyfile = "scripts/experiments/scrape_expout.py"
         
     def get_initial_keys(self):
         return "dataSet model k s".split()
@@ -54,9 +53,9 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
         return ScrapeExpout()
     
     def create_experiment_script(self, exp_dir, eprunner):
-        self.add_arg(exp_dir)
+        self.add_arg(os.path.dirname(exp_dir))
         script = ""
-        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH" % (eprunner.root_dir)
+        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (eprunner.root_dir)
         cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (eprunner.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
@@ -223,11 +222,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             for initWeights in ["uniform", "random"]:
                 setup.update(initWeights=initWeights)
                 for randomRestartId in range(10):
-                    setup.update(randomRestartId)
+                    setup.set("randomRestartId", randomRestartId, True, False)
                     experiment = all + setup + DPExpParams()
                     root.add_dependent(ExpParamsStage(experiment, self))
-            scrape = ScrapeExpout(rproj=None, out="../results.data")
+            scrape = ExpParamsStage(ScrapeExpout(rproj=None, out_file="results.data"), self)
             scrape.add_prereqs(root.dependents)
+            return root
         elif self.expname == "nips12":
             for dataset in datasets:
                 for maxSentenceLength in [3,5]:

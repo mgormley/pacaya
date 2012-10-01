@@ -19,8 +19,7 @@ from experiments.core.util import tail
 class DPScraper(Scraper):
     
     def __init__(self, options):
-        out = options.out if options.out else sys.stdout            
-        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, out)
+        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, options.out_file)
     
     def get_exp_params_instance(self):
         return DPExpParams()

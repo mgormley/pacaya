@@ -27,7 +27,7 @@ class Status(DPExpParams):
         
     def __init__(self, status):
         DPExpParams.__init__(self)
-        self.update(time = _re_logging_time.search(status).group(0))
+        self.update(time = _re_logging_time.search(status).group(1))
         matches = [x for x in _re_stat_elem.finditer(status)]
         self.update(upBound = float(matches[0].group(1)),
                     lowBound = float(matches[1].group(1)),
