@@ -59,7 +59,7 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
         cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (eprunner.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
-    
+
 class DPExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
@@ -228,7 +228,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             scrape = ExpParamsStage(ScrapeExpout(rproj=None, out_file="results.data"), self)
             scrape.add_prereqs(root.dependents)
             return root
-        elif self.expname == "nips12":
+        elif self.expname == "viterbi-vs-bnb":
             for dataset in datasets:
                 for maxSentenceLength in [3,5]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
