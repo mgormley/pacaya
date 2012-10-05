@@ -1,37 +1,46 @@
 package edu.jhu.hltcoe.parse;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.ArrayList;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
-import edu.jhu.hltcoe.util.Quadruple;
+import edu.jhu.hltcoe.util.Pair;
 
 public class IdentityDeltaGenerator implements DeltaGenerator {
 
+    public static class Delta extends Pair<String, Double> {
+     
+        public Delta(String deltaId, double newWeight) {
+            super(deltaId, newWeight);
+        }
+
+        public String getId() {
+            return get1();
+        }
+        
+        public double getWeight() {
+            return get2();
+        }
+        
+    }
+    public static class DeltaList extends ArrayList<Delta> {
+
+        private static final long serialVersionUID = 1L;
+
+        public void add(String deltaId, double newWeight) {
+            add(new Delta(deltaId, newWeight));
+        }
+        
+    }
+    
     public static final String IDENTITY_DELTA_ID = "identity";
 
-    @Override
-    public Map<Quadruple<Label, String, Label, String>, Double> getCWDeltas(DmvModel dmvModel) {
-        Map<Quadruple<Label, String, Label, String>, Double> cwDeltas = new HashMap<Quadruple<Label, String, Label, String>, Double>();
-        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : dmvModel.getChooseWeights().entrySet()) {
-            for (Entry<Label, Double> subEntry : entry.getValue().entrySet()) {
-                Quadruple<Label, String, Label, String> key = getDeltaKey(entry.getKey(), subEntry.getKey(),
-                        IDENTITY_DELTA_ID);
-                double weight = subEntry.getValue();
-                cwDeltas.put(key, weight);
-            }
-        }
-        return cwDeltas;
+    public IdentityDeltaGenerator() {
+        // do nothing
     }
-
-    protected Quadruple<Label, String, Label, String> getDeltaKey(ChooseRhs pair, Label child, String deltaId) {
-        Label parent = pair.get1();
-        String lr = pair.get2();
-        return new Quadruple<Label, String, Label, String>(parent, lr, child, deltaId);
+    
+    public DeltaList getDeltas(double weight) {
+        DeltaList deltas = new DeltaList();
+        deltas.add(IDENTITY_DELTA_ID, weight);
+        return deltas;
     }
 
 }

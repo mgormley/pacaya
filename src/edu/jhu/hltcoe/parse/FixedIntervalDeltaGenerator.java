@@ -1,13 +1,5 @@
 package edu.jhu.hltcoe.parse;
 
-import java.util.Map;
-import java.util.Map.Entry;
-
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.math.LabeledMultinomial;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
-import edu.jhu.hltcoe.util.Quadruple;
 
 public class FixedIntervalDeltaGenerator extends IdentityDeltaGenerator implements DeltaGenerator {
 
@@ -18,30 +10,22 @@ public class FixedIntervalDeltaGenerator extends IdentityDeltaGenerator implemen
         this.interval = interval;
         this.numPerSide = numPerSide;
     }
-
-    @Override
-    public Map<Quadruple<Label, String, Label, String>, Double> getCWDeltas(DmvModel dmvModel) {        
-        Map<Quadruple<Label, String, Label, String>, Double> cwDeltas = super.getCWDeltas(dmvModel); 
-
-        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : dmvModel.getChooseWeights().entrySet()) {
-            for (Entry<Label, Double> subEntry : entry.getValue().entrySet()) {
-                double weight = subEntry.getValue();
-                for (int i = -numPerSide; i<=numPerSide; i++) {
-                    if (i == 0) {
-                        // Don't generate the identity delta
-                        continue;
-                    }
-                    String deltaId = "add" + interval * i;
-                    Quadruple<Label, String, Label, String> key = getDeltaKey(entry.getKey(), subEntry.getKey(), deltaId);
-                    double newWeight = weight + interval * i;
-                    // Only keep valid probabilities
-                    if (newWeight <= 1.0 && newWeight >= 0.0) {
-                        cwDeltas.put(key, newWeight);
-                    }
-                }            
+    
+    public DeltaList getDeltas(double weight) {
+        DeltaList deltas = super.getDeltas(weight);
+        for (int i = -numPerSide; i<=numPerSide; i++) {
+            if (i == 0) {
+                // Don't generate the identity delta
+                continue;
             }
-        }        
-        return cwDeltas;
+            String deltaId = "add" + interval * i;
+            double newWeight = weight + interval * i;
+            // Only keep valid probabilities
+            if (newWeight <= 1.0 && newWeight >= 0.0) {
+                deltas.add(deltaId, newWeight);
+            }
+        }
+        return deltas;
     }
-
+    
 }

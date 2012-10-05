@@ -17,6 +17,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
+import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreeNode;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -57,6 +58,7 @@ public class PipelineRunner {
     }
 
     public void run(CommandLine cmd) throws ParseException, IOException {  
+        
         // Get the training data
         DepTreebank trainTreebank;
         if (cmd.hasOption("train")) {
@@ -64,7 +66,8 @@ public class PipelineRunner {
             String trainPath = cmd.getOptionValue("train");
             log.info("Reading train data: " + trainPath);
             int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
-            trainTreebank = getTreebank(cmd, trainPath, maxSentenceLength);
+            Alphabet<Label> alphabet = new Alphabet<Label>();
+            trainTreebank = getTreebank(cmd, trainPath, maxSentenceLength, alphabet);
         } else if (cmd.hasOption("synthetic")) {
             String synthetic = cmd.getOptionValue("synthetic");
             DmvModel trueModel;
@@ -107,32 +110,11 @@ public class PipelineRunner {
             log.info("Reading test data: " + testPath);
             int maxSentenceLengthTest = Command.getOptionValue(cmd, "maxSentenceLengthTest", Integer.MAX_VALUE);
             
-            // TODO: remove this hack and replace with augmentation of the model.
-            int numDropped = 0;
-            Set<Label> trainTypes = trainTreebank.getTypes();
-            testTreebank = getTreebank(cmd, testPath, maxSentenceLengthTest);
-            DepTreebank tmpTreebank = new DepTreebank();
-            for (int i=0; i<testTreebank.size(); i++) {
-                DepTree tree = testTreebank.get(i);
-                Set<Label> sentTypes = new HashSet<Label>();
-                for (DepTreeNode node : tree) {
-                    sentTypes.add(node.getLabel());
-                }
-                sentTypes.remove(WallDepTreeNode.WALL_LABEL);
-                if (trainTypes.containsAll(sentTypes)) {
-                    tmpTreebank.add(tree);
-                } else {
-                    numDropped++;
-                }
-            }
-            testTreebank = tmpTreebank;
-            log.warn("Number of dropped test trees: " + numDropped);
-            
+            testTreebank = getTreebank(cmd, testPath, maxSentenceLengthTest, trainTreebank.getAlphabet());
+
             log.info("Number of test sentences: " + testTreebank.size());
             log.info("Number of test tokens: " + testTreebank.getNumTokens());
             log.info("Number of test types: " + testTreebank.getNumTypes());
-            
-            testTreebank.addToAlphabet(trainTreebank.getAlphabet());
         }
         
         if (cmd.hasOption("relaxOnly")) {
@@ -200,13 +182,13 @@ public class PipelineRunner {
         }
     }
 
-    private DepTreebank getTreebank(CommandLine cmd, String trainPath, int maxSentenceLength) {
+    private DepTreebank getTreebank(CommandLine cmd, String trainPath, int maxSentenceLength, Alphabet<Label> alphabet) {
         DepTreebank trainTreebank;
         int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
         boolean mustContainVerb = cmd.hasOption("mustContainVerb");
         String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
 
-        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences);
+        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences, alphabet);
         if (mustContainVerb) {
             trainTreebank.setTreeFilter(new VerbTreeFilter());
         }

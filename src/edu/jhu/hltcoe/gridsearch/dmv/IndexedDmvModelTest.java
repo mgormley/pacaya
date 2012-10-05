@@ -15,22 +15,20 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Utilities;
 
 
 public class IndexedDmvModelTest {
@@ -161,13 +159,14 @@ public class IndexedDmvModelTest {
             Assert.assertTrue(logProbs[c].length == 2 || logProbs[c].length == 3);
         }
         
-        logProbs[0][1] = Math.log(0.2);
-        logProbs[1][1] = Math.log(0.4);
-        logProbs[3][0] = Math.log(0.6);
+        logProbs[0][1] = Utilities.log(0.2);
+        logProbs[1][1] = Utilities.log(0.4);
+        logProbs[3][0] = Utilities.log(0.6);
         
         DmvModel model = idm.getDmvModel(logProbs);
+        model.convertLogToReal();
         
-        assertEquals(0.2, model.getChooseWeights(WallDepTreeNode.WALL_LABEL, "r").get(new Word("V")), 1e-13);
+        assertEquals(0.2, model.getRootWeights().get(new Word("V")), 1e-13);
         assertEquals(0.4, model.getChooseWeights(new Word("N"), "l").get(new Word("V")), 1e-13);
         assertEquals(0.6, model.getChooseWeights(new Word("V"), "l").get(new Word("N")), 1e-13);
     }
@@ -218,7 +217,7 @@ public class IndexedDmvModelTest {
         int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9, 5, null);
         // TODO: use random restarts
         trainer.train(corpus);
@@ -229,8 +228,7 @@ public class IndexedDmvModelTest {
         dwRelax.init1(corpus);
         
         IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), sentences.getLabelAlphabet());
-        double[][] logProbs = idm.getCmLogProbs(dpm);
+        double[][] logProbs = idm.getCmLogProbs((DmvModel)trainer.getModel());
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, Double.NaN);
         
         // Compute the score for the initial solution
@@ -239,7 +237,6 @@ public class IndexedDmvModelTest {
         
         System.out.println(treebank);
         System.out.println(trainer.getModel());
-        System.out.println(dpm);
         
         System.out.println("logProbs: ");
         for (int c=0; c<logProbs.length; c++) {

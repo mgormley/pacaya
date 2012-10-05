@@ -12,12 +12,10 @@ import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
@@ -280,8 +278,7 @@ public class DmvProblemNode implements ProblemNode {
     }
     
     private DmvSolution getInitFeasSol(TrainCorpus corpus) {        
-        double lambda = 0.1;
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new UniformDmvModelFactory();
         return runViterbiEmHelper(corpus, modelFactory, 9);
     }
 
@@ -299,8 +296,7 @@ public class DmvProblemNode implements ProblemNode {
         
         DepTreebank treebank = trainer.getCounts();
         IndexedDmvModel idm = dwRelax.getIdm();
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
-        double[][] logProbs = idm.getCmLogProbs(dpm);
+        double[][] logProbs = idm.getCmLogProbs((DmvModel)trainer.getModel());
         
         // Compute the score for the solution
         double score = dwRelax.computeTrueObjective(logProbs, treebank);

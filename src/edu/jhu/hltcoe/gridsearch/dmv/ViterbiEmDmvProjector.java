@@ -11,12 +11,10 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvWeightCopier;
-import edu.jhu.hltcoe.model.dmv.SmoothedDmvWeightCopier;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
@@ -100,7 +98,9 @@ public class ViterbiEmDmvProjector implements Projector {
         // TODO: this is a slow conversion
         DmvModel model = idm.getDmvModel(logProbs);
         // We must smooth the weights so that there exists some valid parse
-        DmvModelFactory modelFactory = new DmvModelFactory(new SmoothedDmvWeightCopier(model, lambda));
+        model.backoff(Utilities.log(lambda));
+        model.logNormalize();
+        DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
         return runViterbiEmHelper(modelFactory, 0);
     }
     
@@ -109,7 +109,7 @@ public class ViterbiEmDmvProjector implements Projector {
         // Do one M-step to create a model
         DmvMStep mStep = new DmvMStep(lambda);
         DmvModel model = (DmvModel) mStep.getModel(corpus, treebank);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvWeightCopier(model));
+        DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
         // Then run Viterbi EM
         return runViterbiEmHelper(modelFactory, 0);
     }
@@ -128,8 +128,8 @@ public class ViterbiEmDmvProjector implements Projector {
         
         DepTreebank treebank = trainer.getCounts();
         IndexedDmvModel idm = dwRelax.getIdm();
-        DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)trainer.getModel(), corpus.getLabelAlphabet());
-        double[][] logProbs = idm.getCmLogProbs(dpm);
+        DmvModel dmv = (DmvModel)trainer.getModel();
+        double[][] logProbs = idm.getCmLogProbs(dmv);
         
         // Compute the score for the solution
         double score = dwRelax.computeTrueObjective(logProbs, treebank);

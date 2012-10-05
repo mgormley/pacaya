@@ -12,9 +12,12 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
+import edu.jhu.hltcoe.parse.IdentityDeltaGenerator.Delta;
 import edu.jhu.hltcoe.util.Quadruple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -69,15 +72,34 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
     private void encodeChooseWeightsWithDeltas(File tempDir, DmvModel dmv) throws FileNotFoundException {        
         File chooseWeightsFile = new File(tempDir, "input.chooseweights.delta");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<Quadruple<Label,String,Label,String>,Double> chooseWeights = deltaGen.getCWDeltas(dmv);
-        for (Entry<Quadruple<Label,String,Label,String>,Double> entry : chooseWeights.entrySet()) {
-            Label parent = entry.getKey().get1();
-            String lr = entry.getKey().get2();
-            Label child = entry.getKey().get3();
-            String deltaId = entry.getKey().get4();
-            double weight = entry.getValue();
-            double logWeight = Utilities.logForIlp(weight);
-            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", parent.getLabel(), lr, child.getLabel(), deltaId, weight, logWeight);
+        // Root
+        for (Label child : dmv.getVocab()) {
+            double origWeight = Utilities.exp(dmv.getRootWeight(child));
+            for (Delta delta : deltaGen.getDeltas(origWeight)) {
+                String deltaId = delta.getId();
+                double weight = delta.getWeight();
+                double logWeight = Utilities.logForIlp(weight);
+                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                        WallDepTreeNode.WALL_LABEL.getLabel(), Lr.RIGHT.toString(), child.getLabel(), deltaId, weight, logWeight);
+                // TODO: Remove this once we've updated the zimpl code never use these weights. This is a dummy weight. 
+                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                        WallDepTreeNode.WALL_LABEL.getLabel(), Lr.LEFT.toString(), child.getLabel(), deltaId, weight, logWeight);
+            }
+        }
+        // Child
+        for (Label child : dmv.getVocab()) {
+            for (Label parent : dmv.getVocab()) {
+                for (Lr lr : Lr.values()) {
+                    double origWeight = Utilities.exp(dmv.getChooseWeight(parent, lr, child));
+                    for (Delta delta : deltaGen.getDeltas(origWeight)) {
+                        String deltaId = delta.getId();
+                        double weight = delta.getWeight();
+                        double logWeight = Utilities.logForIlp(weight);
+                        chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                                parent.getLabel(), lr, child.getLabel(), deltaId, weight, logWeight);
+                    }
+                }
+            }
         }
         chooseWeightsWriter.close();
     }

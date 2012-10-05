@@ -8,10 +8,8 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.parse.pr.CKYParser;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
-import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
@@ -34,9 +32,7 @@ public class DmvCkyParser implements ViterbiParser {
             this.corpus = corpus;
         }
         DmvModel model = (DmvModel) genericModel;
-
-        DepProbMatrix depProbMatrix = DmvModelConverter.getDepProbMatrix(model, corpus.getLabelAlphabet());
-        DepTreebank treebank = new DepTreebank();
+        DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
 
         parseWeight = 0.0;
 
@@ -44,7 +40,7 @@ public class DmvCkyParser implements ViterbiParser {
             if (corpus.isLabeled(s)) {
                 treebank.add(corpus.getTree(s));
             } else {
-                Pair<DepTree, Double> pair = parse(corpus.getSentence(s), depProbMatrix);
+                Pair<DepTree, Double> pair = parse(corpus.getSentence(s), model);
                 treebank.add(pair.get1());
             }
         }
@@ -55,13 +51,11 @@ public class DmvCkyParser implements ViterbiParser {
     @Override
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model genericModel) {
         DmvModel model = (DmvModel) genericModel;
-
-        DepProbMatrix depProbMatrix = DmvModelConverter.getDepProbMatrix(model, sentences.getLabelAlphabet());
-        DepTreebank treebank = new DepTreebank();
+        DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
 
         parseWeight = 0.0;
         for (Sentence sentence : sentences) {
-            Pair<DepTree, Double> pair = parse(sentence, depProbMatrix);
+            Pair<DepTree, Double> pair = parse(sentence, model);
             DepTree tree = pair.get1();
             parseWeight += pair.get2();
             
@@ -70,7 +64,8 @@ public class DmvCkyParser implements ViterbiParser {
         return treebank;
     }
 
-    public Pair<DepTree, Double> parse(Sentence sentence, DepProbMatrix depProbMatrix) {
+    public Pair<DepTree, Double> parse(Sentence sentence, DmvModel depProbMatrix) {
+        assert(sentence.getAlphabet() == depProbMatrix.getTagAlphabet());
         int[] tags = sentence.getLabelIds();
         DepInstance depInstance = new DepInstance(tags);
         DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix);

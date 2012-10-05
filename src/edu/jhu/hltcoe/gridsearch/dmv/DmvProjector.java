@@ -1,7 +1,9 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
@@ -60,7 +62,7 @@ public class DmvProjector implements Projector {
     }
 
     private DepTreebank getProjectedParses(double[][] fracRoots, double[][][] fracChildren) {
-        DepTreebank treebank = new DepTreebank();
+        DepTreebank treebank = new DepTreebank(corpus.getLabelAlphabet());
         for (int s = 0; s < fracChildren.length; s++) {
             if (corpus.isLabeled(s)) {
                 treebank.add(corpus.getTree(s));

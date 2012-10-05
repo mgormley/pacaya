@@ -26,25 +26,20 @@ public class DepTreebank implements Iterable<DepTree> {
     private TreeFilter filter = null;
     private Alphabet<Label> alphabet;
     private ArrayList<DepTree> trees;
-    
-    public DepTreebank() {
-        this(Integer.MAX_VALUE, Integer.MAX_VALUE);
-    }
-    
+        
     public DepTreebank(Alphabet<Label> alphabet) {
-        this();
-        this.alphabet = alphabet;
+        this(Integer.MAX_VALUE, Integer.MAX_VALUE, alphabet);
     }
 
-    public DepTreebank(final int maxSentenceLength, final int maxNumSentences) {
-        this(maxSentenceLength, maxNumSentences, null);
+    public DepTreebank(final int maxSentenceLength, final int maxNumSentences, Alphabet<Label> alphabet) {
+        this(maxSentenceLength, maxNumSentences, null, alphabet);
     }
     
-    public DepTreebank(final int maxSentenceLength, final int maxNumSentences, TreeFilter filter) {
+    private DepTreebank(final int maxSentenceLength, final int maxNumSentences, TreeFilter filter, Alphabet<Label> alphabet) {
         this.maxSentenceLength = maxSentenceLength;
         this.maxNumSentences = maxNumSentences;
         this.filter = filter;
-        this.alphabet = new Alphabet<Label>();
+        this.alphabet = alphabet;
         this.trees = new ArrayList<DepTree>();
     }
     
@@ -128,7 +123,7 @@ public class DepTreebank implements Iterable<DepTree> {
     }
     
     public void rebuildAlphabet() {
-        alphabet = new Alphabet<Label>();
+        alphabet.reset();
         for (DepTree tree : trees) {
             addTreeToAlphabet(tree);
         }
@@ -140,12 +135,6 @@ public class DepTreebank implements Iterable<DepTree> {
     
     public int size() {
         return trees.size();
-    }
-    
-    public void addToAlphabet(Alphabet<Label> otherAlphabet) {
-        for (int i=0; i<otherAlphabet.size(); i++) {
-            alphabet.lookupObject(otherAlphabet.lookupIndex(i));
-        }
     }
 
     public Alphabet<Label> getAlphabet() {

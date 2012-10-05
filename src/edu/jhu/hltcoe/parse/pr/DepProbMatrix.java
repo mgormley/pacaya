@@ -11,7 +11,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Random;
 
 import model.AbstractCountTable;
 import util.Alphabet;
@@ -20,6 +19,8 @@ import util.LogSummer;
 import depparsing.model.NonterminalMap;
 import depparsing.util.Lambda;
 import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * MRG: This class was modified to remove its dependence on the corpus.
@@ -53,27 +54,38 @@ import edu.jhu.hltcoe.data.Label;
  */
 public class DepProbMatrix extends AbstractCountTable implements Serializable {
 
-	// So that this class can be serializable,
-	// which means we can save these objects to files
+	/**
+	 *  So that this class can be serializable,
+	 *  which means we can save these objects to files
+	 */
 	private final static long serialVersionUID = 42L;
 	
+	/**
+	 * Number of POS tags.
+	 */
 	public final int numTags;
 	
-	// Root probabilities,
-	// indexed by POS tag
+	/**
+	 *  Root probabilities,
+	 *  indexed by POS tag.
+	 */
 	public final double root[];
 
-	// Child probabilities,
-	// indexed by child POS tag, parent POS tag, direction, and child existence
-	public final double child[][][][];
+	/**
+	 *  Child probabilities,
+	 *  indexed by child POS tag, parent POS tag, direction, and child existence.
+	 */
+    public final double child[][][][];
 
-	// Stop/continue probabilities,
-	// indexed by POS tag, direction, child existence, and the decision (stop/continue)
+	/** 
+	 * Stop/continue probabilities,
+	 * indexed by POS tag, direction, child existence, and the decision (stop/continue).
+	 */
 	public final double decision[][][][];
 		
 	public final NonterminalMap nontermMap;
 
-    private Alphabet<Label> tagAlphabet;
+    protected final Alphabet<Label> tagAlphabet;
 	
 	/**
 	 * Creates a new dependency matrix, with all parameters set to 0.
@@ -87,24 +99,6 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		child = new double[numTags][numTags][2][childValency];
 		decision = new double[numTags][2][decisionValency][2];
 		nontermMap = new NonterminalMap(decisionValency, childValency);
-	}
-	
-	public void applyToDecisions(Lambda.Two<Double, Double, Double> function, Double arg) {
-		for(int p = 0; p < numTags; p++)
-			for(int dir = 0; dir < 2; dir++)
-				for(int kids = 0; kids < nontermMap.decisionValency; kids++)
-					for(int choice = 0; choice < 2; choice++)
-						decision[p][dir][kids][choice] =
-							function.call(decision[p][dir][kids][choice], arg);
-	}
-	
-	public void applyToDecisions(Lambda.Two<Double, Double, Double> function, double[][][][] args) {
-		for(int p = 0; p < numTags; p++)
-			for(int dir = 0; dir < 2; dir++)
-				for(int kids = 0; kids < nontermMap.decisionValency; kids++)
-					for(int choice = 0; choice < 2; choice++)
-						decision[p][dir][kids][choice] =
-							function.call(decision[p][dir][kids][choice], args[p][dir][kids][choice]);
 	}
 	
 	public void getChildNormalizers(double[][][] childNorms) {
@@ -246,6 +240,11 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		
 		return message;
 	}
+	
+	public void assertNormalized(double threshold) {
+	    String msg = isNormalized(threshold);
+	    assert msg.equals("") : msg;
+	}
 
 	public void addChildBackoff(double backoffWeight) {
 		// Set up arrays for collecting backoff counts for child probs
@@ -320,6 +319,27 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		ArrayMath.set(decision, value);
 	}
 	
+	/**
+     * Sets all root model parameters to the given value.
+     */
+    public void fillRoot(double value) {
+        ArrayMath.set(root, value);
+    }
+    
+    /**
+     * Sets all child model parameters to the given value.
+     */
+    public void fillChild(double value) {
+        ArrayMath.set(child, value);
+    }
+
+    /**
+     * Sets all decision model parameters to the given value.
+     */
+    public void fillDecision(double value) {
+        ArrayMath.set(decision, value);
+    }
+    
 	/**
 	 * Copy all model parameters from the given source.
 	 */
@@ -396,7 +416,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 	public void convertLogToReal() {
 		apply(new Lambda.Two<Double, Double, Double[]>() {
 			public Double call(Double a, Double[] b) {
-				return Math.exp(a);
+				return Utilities.exp(a);
 			}},
 			null);
 	}
@@ -407,7 +427,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 	public void convertRealToLog() {
 		apply(new Lambda.Two<Double, Double, Double[]>() {
 			public Double call(Double a, Double[] b) {
-				return Math.log(a);
+				return Utilities.log(a);
 			}},
 			null);
 	}
@@ -415,35 +435,69 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 	/**
 	 * Sets all parameters to random numbers, then normalizes.
 	 */
-	public void setRandom(final Random r) {		
+	public void setRandom() {		
 		apply(new Lambda.Two<Double, Double, Double[]>() {
 			public Double call(Double a, Double[] b) {
-				return r.nextDouble();
+				return Prng.nextDouble();
 			}},
 			null);
 		
 		logNormalize();
 	}
+    
+	public void applyToRoot(Lambda.Two<Double, Double, Double> function, Double arg) {
+	    for(int i = 0; i < numTags; i++) {
+            root[i] = function.call(root[i], arg);
+        }
+    }
 	
+	public void applyToChild(Lambda.Two<Double, Double, Double> function, Double arg) {
+	    for(int i = 0; i < numTags; i++) {
+            for(int dir = 0; dir < 2; dir++) {
+                for(int j = 0; j < numTags; j++)
+                    for(int v = 0; v < nontermMap.childValency; v++)
+                        child[i][j][dir][v] = function.call(child[i][j][dir][v], arg);
+            }
+        }
+    }
+	
+    public void applyToDecisions(Lambda.Two<Double, Double, Double> function, Double arg) {
+        for(int p = 0; p < numTags; p++)
+            for(int dir = 0; dir < 2; dir++)
+                for(int kids = 0; kids < nontermMap.decisionValency; kids++)
+                    for(int choice = 0; choice < 2; choice++)
+                        decision[p][dir][kids][choice] =
+                            function.call(decision[p][dir][kids][choice], arg);
+    }
+    
+    public void applyToDecisions(Lambda.Two<Double, Double, Double> function, double[][][][] args) {
+        for(int p = 0; p < numTags; p++)
+            for(int dir = 0; dir < 2; dir++)
+                for(int kids = 0; kids < nontermMap.decisionValency; kids++)
+                    for(int choice = 0; choice < 2; choice++)
+                        decision[p][dir][kids][choice] =
+                            function.call(decision[p][dir][kids][choice], args[p][dir][kids][choice]);
+    }
+    	
 	/**
-	 * Applies the given function to each model probability, passing in the same args each time.
-	 */
-	public void apply(Lambda.Two<Double, Double, Double[]> function, Double[] args) {
-		for(int i = 0; i < numTags; i++) {
-			root[i] = function.call(root[i], args);
-			
-			for(int dir = 0; dir < 2; dir++) {
-				for(int j = 0; j < numTags; j++)
-					for(int v = 0; v < nontermMap.childValency; v++)
-						child[i][j][dir][v] = function.call(child[i][j][dir][v], args);
-				
-				for(int v = 0; v < nontermMap.decisionValency; v++)
-					for(int choice = 0; choice < 2; choice++)
-						decision[i][dir][v][choice] = function.call(decision[i][dir][v][choice], args);
-			}
-		}
-	}
-	
+     * Applies the given function to each model probability, passing in the same args each time.
+     */
+    public void apply(Lambda.Two<Double, Double, Double[]> function, Double[] args) {
+        for(int i = 0; i < numTags; i++) {
+            root[i] = function.call(root[i], args);
+            
+            for(int dir = 0; dir < 2; dir++) {
+                for(int j = 0; j < numTags; j++)
+                    for(int v = 0; v < nontermMap.childValency; v++)
+                        child[i][j][dir][v] = function.call(child[i][j][dir][v], args);
+                
+                for(int v = 0; v < nontermMap.decisionValency; v++)
+                    for(int choice = 0; choice < 2; choice++)
+                        decision[i][dir][v][choice] = function.call(decision[i][dir][v][choice], args);
+            }
+        }
+    }
+    	
 	/**
 	 * Applies the given function to the model parameters,
 	 * passing an additional parameter whose value depends on
@@ -538,6 +592,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		return out;
 	}
 	
+	@Override
 	public String toString(){
 		StringWriter outWriter = new StringWriter();
 		try {
@@ -564,7 +619,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 	 */
 	public static <T> ArrayList<T> getAllTagsStrings(Alphabet<T> tagAlphabet) {
         ArrayList<T> tags= new ArrayList<T>(tagAlphabet.size());
-        for (int i = 0; i < tags.size(); i++) {
+        for (int i = 0; i < tagAlphabet.size(); i++) {
             tags.add(tagAlphabet.index2feat.get(i));
         }
         return tags;
@@ -575,7 +630,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		// Sort tags in alphabetical order
         ArrayList<Label> allTags = getAllTagsStrings(tagAlphabet);
         Label[] sortedTags = new Label[allTags.size()];
-        allTags.toArray(sortedTags);
+        sortedTags = allTags.toArray(sortedTags);
         Arrays.sort(sortedTags);
 		
 		// Print log probability estimates to output file
@@ -605,6 +660,10 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 			outWriter.write("\n");
 		}
 		
+	}
+	
+	public Alphabet<Label> getTagAlphabet() {
+	    return tagAlphabet;
 	}
 
 

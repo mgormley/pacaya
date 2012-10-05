@@ -31,10 +31,9 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvSupervisedWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
@@ -206,11 +205,11 @@ public class TrainerFactory {
 
             ModelFactory modelFactory;
             if (initWeights.equals("uniform")) {
-                modelFactory = new DmvModelFactory(new DmvUniformWeightGenerator());
+                modelFactory = new UniformDmvModelFactory();
             } else if (initWeights.equals("random")) {
-                modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+                modelFactory = new RandomDmvModelFactory(lambda);
             } else if (initWeights.equals("supervised")) {
-                modelFactory = new DmvModelFactory(new DmvSupervisedWeightGenerator(trainTreebank));
+                modelFactory = new SupervisedDmvModelFactory(trainTreebank);
             } else {
                 throw new ParseException("initWeights not supported: " + initWeights);
             }

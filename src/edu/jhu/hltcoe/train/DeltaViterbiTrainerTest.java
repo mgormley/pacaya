@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -43,7 +43,7 @@ public class DeltaViterbiTrainerTest {
         ViterbiParser deltaParser = new IlpViterbiParserWithDeltas(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory,
                 deltaGen);
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DeltaViterbiTrainer trainer = new DeltaViterbiTrainer(deltaParser, fastParser, mStep, modelFactory, iterations,
                 convergenceRatio);
 
@@ -54,7 +54,7 @@ public class DeltaViterbiTrainerTest {
         sentences.addSentenceFromString("with a fork the man ate");
         trainer.train(new DmvTrainCorpus(sentences));
 
-        Assert.assertEquals(3, trainer.getIterationsCompleted());
+        Assert.assertEquals(2, trainer.getIterationsCompleted());
     }
 
 }

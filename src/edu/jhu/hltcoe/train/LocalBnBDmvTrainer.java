@@ -19,12 +19,10 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvSupervisedWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvUniformWeightGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
@@ -79,8 +77,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             
             // Construct the solution object.
             DepTreebank treebank = viterbiTrainer.getCounts();
-            DepProbMatrix dpm = DmvModelConverter.getDepProbMatrix((DmvModel)viterbiTrainer.getModel(), corpus.getLabelAlphabet());
-            double[][] logProbs = idm.getCmLogProbs(dpm);
+            double[][] logProbs = idm.getCmLogProbs((DmvModel)viterbiTrainer.getModel());
             double vemScore = relax.computeTrueObjective(logProbs, treebank);
             DmvSolution vemSol = new DmvSolution(logProbs, idm, treebank, vemScore);
             
@@ -188,6 +185,10 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     }
 
     public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation dw, DepTreebank trainTreebank) {
+        return getInitSol(opt, corpus, dw, trainTreebank, null);
+    }
+    
+    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvSolution goldSol) {
         IndexedDmvModel idm;
         if (dw != null) {
             idm = dw.getIdm();
@@ -200,22 +201,19 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             // TODO: hacky to call a test method and Trainer ignore parameters
             initBoundsSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         } else if (opt == InitSol.GOLD) {
-            
-            // TODO initSol = goldSol;
-            throw new RuntimeException("not implemented");                
-            
+            initBoundsSol = goldSol;
         } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM || opt == InitSol.SUPERVISED){
-            DmvWeightGenerator weightGen;
+            
+            DmvModelFactory modelFactory;
             if (opt == InitSol.RANDOM) {
-                weightGen = new DmvRandomWeightGenerator(0.00001);
+                modelFactory = new RandomDmvModelFactory(0.00001);
             } else if (opt == InitSol.SUPERVISED) {
-                weightGen = new DmvSupervisedWeightGenerator(trainTreebank);
+                modelFactory = new SupervisedDmvModelFactory(trainTreebank);
             } else {
-                weightGen = new DmvUniformWeightGenerator();
+                modelFactory = new UniformDmvModelFactory();
             }
-            DmvModelFactory modelFactory = new DmvModelFactory(weightGen);
-            DmvModel randModel = (DmvModel)modelFactory.getInstance(corpus);
-            double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(randModel, corpus.getLabelAlphabet()));
+            DmvModel randModel = (DmvModel)modelFactory.getInstance(corpus.getLabelAlphabet());
+            double[][] logProbs = idm.getCmLogProbs(randModel);
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(corpus, randModel);
             double score;

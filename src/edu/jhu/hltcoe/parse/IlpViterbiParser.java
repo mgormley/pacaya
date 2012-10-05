@@ -19,11 +19,9 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
-import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModel.ChooseRhs;
-import edu.jhu.hltcoe.model.dmv.DmvModel.StopRhs;
+import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
@@ -192,15 +190,39 @@ public class IlpViterbiParser implements ViterbiParser {
     protected void encodeStopWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File stopWeightsFile = new File(tempDir, "input.stopweights");
         PrintWriter stopWeightsWriter = new PrintWriter(stopWeightsFile);
-        Map<StopRhs,Double> stopWeights = dmv.getStopWeights();
-        for (Entry<StopRhs,Double> entry : stopWeights.entrySet()) {
-            Label label = entry.getKey().get1();
-            String leftRight = entry.getKey().get2();
-            int adjacent = entry.getKey().get3() ? 1 : 0;
-            double weight = entry.getValue();
-            double logWeightStop = Utilities.logForIlp(weight);
-            double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
-            stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", label.getLabel(), leftRight, adjacent, weight, logWeightStop, logWeightNotStop);
+        // Decision (root) - this is required because of the ZIMPL encoding.
+        // TODO: Remove this once we fix the ZIMPL encoding.
+        for (Lr lr : Lr.values()) {
+            for (boolean adjacent : DmvModel.ADJACENTS) {
+                String leftRight = lr.toString();
+                // TODO: This integer encoding of adjacency is the reverse from Constants.END and Constants.CONT.
+                int adja = adjacent ? 1 : 0;
+                double weight;
+                if (lr == Lr.RIGHT) {
+                    // We should always generate one child on the right and then stop.
+                    weight = adjacent ? 0.0 : 1.0;
+                } else {
+                    // We should always stop immediately on the left.
+                    weight = adjacent ? 1.0 : 0.0;
+                }
+                double logWeightStop = Utilities.logForIlp(weight);
+                double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
+                stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", WallDepTreeNode.WALL_LABEL.getLabel(), leftRight, adja, weight, logWeightStop, logWeightNotStop);
+            }
+        }
+        // Decision (normal)
+        for (Label parent : dmv.getVocab()) {
+            for (Lr lr : Lr.values()) {
+                for (boolean adjacent : DmvModel.ADJACENTS) {
+                    String leftRight = lr.toString();
+                    double weight = Utilities.exp(dmv.getStopWeight(parent, lr, adjacent));
+                    double logWeightStop = Utilities.logForIlp(weight);
+                    double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
+                    // TODO: This integer encoding of adjacency is the reverse from Constants.END and Constants.CONT.
+                    int adja = adjacent ? 1 : 0;
+                    stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", parent.getLabel(), leftRight, adja, weight, logWeightStop, logWeightNotStop);
+                }
+            }
         }
         stopWeightsWriter.close();
     }
@@ -208,22 +230,32 @@ public class IlpViterbiParser implements ViterbiParser {
     private void encodeChooseWeights(File tempDir, DmvModel dmv) throws FileNotFoundException {
         File chooseWeightsFile = new File(tempDir, "input.chooseweights");
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
-        Map<ChooseRhs, LabeledMultinomial<Label>> chooseWeights = dmv.getChooseWeights();
-        for (Entry<ChooseRhs, LabeledMultinomial<Label>> entry : chooseWeights.entrySet()) {
-            Label parent = entry.getKey().get1();
-            String lr = entry.getKey().get2();
-            for (Entry<Label,Double> subEntry : entry.getValue().entrySet()) {
-                Label child = subEntry.getKey();
-                double weight = subEntry.getValue();
-                double logWeight = Utilities.logForIlp(weight);
-                chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", parent.getLabel(), lr, child.getLabel(), weight, logWeight);
+        // Root
+        for (Label child : dmv.getVocab()) {
+            double weight = Utilities.exp(dmv.getRootWeight(child));
+            double logWeight = Utilities.logForIlp(weight);
+            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                    WallDepTreeNode.WALL_LABEL.getLabel(), Lr.RIGHT.toString(), child.getLabel(), weight, logWeight);
+            // TODO: Remove this once we've updated the zimpl code never use these weights. This is a dummy weight. 
+            chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                    WallDepTreeNode.WALL_LABEL.getLabel(), Lr.LEFT.toString(), child.getLabel(), weight, logWeight);
+        }
+        // Child
+        for (Label child : dmv.getVocab()) {
+            for (Label parent : dmv.getVocab()) {
+                for (Lr lr : Lr.values()) {
+                    double weight = Utilities.exp(dmv.getChooseWeight(parent, lr, child));
+                    double logWeight = Utilities.logForIlp(weight);
+                    chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
+                            parent.getLabel(), lr, child.getLabel(), weight, logWeight);
+                }
             }
         }
         chooseWeightsWriter.close();
     }
 
     protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
-        DepTreebank depTreebank = new DepTreebank();
+        DepTreebank depTreebank = new DepTreebank(sentences.getLabelAlphabet());
         
         int[][] parents = new int[sentences.size()][];
         for (int i=0; i<sentences.size(); i++) {

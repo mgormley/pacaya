@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelConverter;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -51,7 +50,7 @@ public class DmvObjective {
     }
 
     public Double computeTrueObjective(DmvModel model, DepTreebank treebank) {
-        double[][] logProbs = idm.getCmLogProbs(DmvModelConverter.getDepProbMatrix(model, corpus.getLabelAlphabet()));
+        double[][] logProbs = idm.getCmLogProbs(model);
         return computeTrueObjective(logProbs, treebank);
     }
 

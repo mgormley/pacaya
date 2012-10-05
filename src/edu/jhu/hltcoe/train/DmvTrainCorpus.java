@@ -101,5 +101,15 @@ public class DmvTrainCorpus implements TrainCorpus {
             return null;
         }
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("All sentences:\n");
+        sb.append(allSentences.toString());
+        sb.append("All trees:\n");
+        sb.append(allTrees.toString());
+        return sb.toString();
+    }
         
 }

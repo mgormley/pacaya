@@ -340,22 +340,8 @@ public class DmvLpRelaxation implements DmvRelaxation {
     }
     
     public double computeTrueObjective(double[][] logProbs, DepTreebank treebank) {
-        double score = 0.0;
-        for (int s = 0; s < sentences.size(); s++) {
-            Sentence sentence = sentences.get(s);
-            DepTree tree = treebank.get(s);
-            int[] sentSol = idm.getSentSol(sentence, s, tree);
-            for (int i=0; i<sentSol.length; i++) {
-                int c = idm.getC(s, i);
-                int m = idm.getM(s, i);
-                if (sentSol[i] != 0) {
-                    // This if-statement is to ensure that 0 * -inf == 0.
-                    score += sentSol[i] * logProbs[c][m];
-                }
-                assert (!Double.isNaN(score));
-            }
-        }
-        return score;
+        // TODO: write this
+        throw new RuntimeException("not implemented");
     }
 
     public DmvBounds getBounds() {

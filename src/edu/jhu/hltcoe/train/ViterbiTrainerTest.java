@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
@@ -37,7 +37,7 @@ public class ViterbiTrainerTest {
         int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999);
         
         SentenceCollection sentences = new SentenceCollection();
@@ -45,7 +45,7 @@ public class ViterbiTrainerTest {
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");
         trainer.train(new DmvTrainCorpus(sentences));
 
-        Assert.assertEquals(-27.61, trainer.getLogLikelihood(), 1e-2);
+        Assert.assertEquals(-24.952, trainer.getLogLikelihood(), 1e-3);
     }
     
     @Test
@@ -55,7 +55,7 @@ public class ViterbiTrainerTest {
         IlpSolverFactory ilpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
         ViterbiParser parser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999);
         
         SentenceCollection sentences = new SentenceCollection();
@@ -76,7 +76,7 @@ public class ViterbiTrainerTest {
         trainer.train(new DmvTrainCorpus(sentences));
         
         System.out.println("logLikelihood: " + trainer.getLogLikelihood());
-        Assert.assertEquals(-2.284307044440888, trainer.getLogLikelihood());
+        Assert.assertEquals(-2.284, trainer.getLogLikelihood(), 1e-3);
     }
 
     public static ViterbiTrainer getDefaultCkyViterbiTrainer() {
@@ -84,7 +84,7 @@ public class ViterbiTrainerTest {
         int iterations = 5;
         ViterbiParser parser = new DmvCkyParser();
         DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9, 5, null);
         return trainer;
     }

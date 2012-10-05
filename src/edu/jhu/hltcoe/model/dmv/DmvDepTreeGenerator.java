@@ -16,12 +16,14 @@ public class DmvDepTreeGenerator {
     private Random random;
 
     public DmvDepTreeGenerator(DmvModel model, long seed) {
-        this.model = model;
+        this.model = new DmvModel(model.getTagAlphabet());
+        this.model.copyFrom(model);
+        this.model.convertLogToReal();
         random = new Random(seed);
     }
     
     public DepTreebank getTreebank(int numTrees) {
-        DepTreebank treebank = new DepTreebank();
+        DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
         
         for (int i=0; i<numTrees; i++) {
             ProjDepTreeNode wall = new ProjWallDepTreeNode();
@@ -34,10 +36,14 @@ public class DmvDepTreeGenerator {
     }
 
     private void recursivelyGenerate(ProjDepTreeNode parent) {
-        if (!parent.isWall()) {
+        if (parent.isWall()) {
+            LabeledMultinomial<Label> parameters = model.getRootWeights();
+            Label childLabel = parameters.sampleFromMultinomial(random);
+            parent.addChildToOutside(new ProjDepTreeNode(childLabel), "r");
+        } else {
             sampleChildren(parent, "l");
+            sampleChildren(parent, "r");
         }
-        sampleChildren(parent, "r");
         
         // Recurse on each child
         for (DepTreeNode child : parent.getChildren()) {

@@ -29,6 +29,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -473,7 +474,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                 // 
             }
         }
-        DepProbMatrix dpm = idm.getDepProbMatrix(parseWeights);
+        DmvModel dmv = idm.getDmvModel(parseWeights);
 
         // Get the simplex multipliers (shadow prices) for the lambda
         // sentence constraints
@@ -547,7 +548,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                 continue;
             }
             parsingTimer.start();
-            Pair<DepTree, Double> pPair = parser.parse(corpus.getSentence(s), dpm);
+            Pair<DepTree, Double> pPair = parser.parse(corpus.getSentence(s), dmv);
             parsingTimer.stop();
             DepTree tree = pPair.get1();
             // We must negate pair.get2() since we were just maximizing

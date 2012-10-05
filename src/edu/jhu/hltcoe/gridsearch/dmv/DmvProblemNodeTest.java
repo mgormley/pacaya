@@ -57,8 +57,7 @@ public class DmvProblemNodeTest {
         
         assertEquals(0, node.getDepth()); 
         assertEquals(1, c1.getDepth());
-        
-        
+                
         IndexedDmvModel idm = new IndexedDmvModel(corpus);
         double[][][] bounds = new double[idm.getNumConds()][][];
         for (int c=0; c<idm.getNumConds(); c++) {
@@ -79,9 +78,9 @@ public class DmvProblemNodeTest {
             }
         }
         if (c1.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c1.getBounds().getUb(0, 1), 1e-7);
+            assertEquals(Math.log(0.5), c1.getBounds().getLb(2, 1), 1e-7);
         } else {
-            assertEquals(Math.log(0.5), c1.getBounds().getUb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c1.getBounds().getLb(2, 1), 1e-7);
         }
         
         DmvProblemNode c3 = (DmvProblemNode)c1.branch().get(0);
@@ -90,9 +89,9 @@ public class DmvProblemNodeTest {
         
         checkedSetActive(c2, c3);
         if (c2.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c2.getBounds().getLb(0, 1), 1e-7);
+            assertEquals(Math.log(0.5), c2.getBounds().getUb(2, 1), 1e-7);
         } else {
-            assertEquals(Math.log(0.5), c2.getBounds().getLb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c2.getBounds().getUb(2, 1), 1e-7);
         }
         DmvProblemNode c4 = (DmvProblemNode)c2.branch().get(1);
         checkedSetActive(c4, c2);

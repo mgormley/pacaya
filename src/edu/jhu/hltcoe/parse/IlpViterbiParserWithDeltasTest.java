@@ -18,9 +18,8 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -42,9 +41,9 @@ public class IlpViterbiParserWithDeltasTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences.getVocab());
-        double expectedParseWeight = -43.684;
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+        double expectedParseWeight = -37.087;
 
         DeltaGenerator deltaGen;
 
@@ -63,12 +62,12 @@ public class IlpViterbiParserWithDeltasTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences.getVocab());
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
-        expectedParseWeight = -38.071;
+        expectedParseWeight = -32.271;
         deltaGen = new FixedIntervalDeltaGenerator(0.1, 1);
         getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
     }
@@ -79,12 +78,12 @@ public class IlpViterbiParserWithDeltasTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda));
-        Model model = modelFactory.getInstance(sentences.getVocab());
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
-        expectedParseWeight = -42.983;
+        expectedParseWeight = -36.342;
         deltaGen = new FactorDeltaGenerator(1.1, 2);
         getParses(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
     }
@@ -109,7 +108,7 @@ public class IlpViterbiParserWithDeltasTest {
 
         protected DepTreebank decode(SentenceCollection sentences, Map<String,Double> result) {
             // Get trees from arcDelta vars
-            DepTreebank arcDeltaTrees = new DepTreebank();
+            DepTreebank arcDeltaTrees = new DepTreebank(sentences.getLabelAlphabet());
             
             int[][] parents = new int[sentences.size()][];
             for (int i=0; i<sentences.size(); i++) {

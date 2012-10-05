@@ -11,9 +11,8 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvRandomWeightGenerator;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
@@ -38,8 +37,8 @@ public class DeltaParseBlockFileWriterTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate the mouse with the hat");
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences.getVocab());
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
@@ -59,8 +58,8 @@ public class DeltaParseBlockFileWriterTest {
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("mouse ate cat");
         //sentences.add(IlpViterbiParserTest.getSentenceFromString("the cat ate the mouse with the hat"));
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences.getVocab());
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;
@@ -79,8 +78,8 @@ public class DeltaParseBlockFileWriterTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
         sentences.addSentenceFromString("the cat ate");
-        DmvModelFactory modelFactory = new DmvModelFactory(new DmvRandomWeightGenerator(lambda ));
-        Model model = modelFactory.getInstance(sentences.getVocab());
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight;
 
         DeltaGenerator deltaGen;

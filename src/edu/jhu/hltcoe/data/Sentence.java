@@ -54,5 +54,15 @@ public class Sentence implements Iterable<Label> {
     public Alphabet<Label> getAlphabet() {
         return alphabet;
     }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Label label : this) {
+            sb.append(label);
+            sb.append(" ");
+        }
+        return sb.toString();
+    }
 
 }

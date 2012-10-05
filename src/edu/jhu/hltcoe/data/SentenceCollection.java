@@ -14,11 +14,17 @@ public class SentenceCollection implements Iterable<Sentence> {
     private ArrayList<Sentence> sents;
     private int numTokens;
     
-    private SentenceCollection(Alphabet<Label> alphabet) {
+    /**
+     * Visible for testing only.
+     */
+    public SentenceCollection(Alphabet<Label> alphabet) {
         this.alphabet = alphabet;
         this.sents = new ArrayList<Sentence>();
     }
     
+    /**
+     * For testing only.
+     */
     public SentenceCollection() {
         this(new Alphabet<Label>());
     }
@@ -128,4 +134,14 @@ public class SentenceCollection implements Iterable<Sentence> {
         return sents.iterator();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Sentence sent : this) {
+            sb.append(sent);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+    
 }

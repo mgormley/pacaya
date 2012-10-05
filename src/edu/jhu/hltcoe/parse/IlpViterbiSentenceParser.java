@@ -16,7 +16,6 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvWeightCopier;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 
@@ -33,11 +32,12 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
         super(formulation, ilpSolverFactory);
     }
     
-    public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
+    public DepTreebank getViterbiParse(SentenceCollection sentences, Model genericModel) {
+        DmvModel model = (DmvModel) genericModel;
         // TODO: could be a field
         Stopwatch stopwatch = new Stopwatch();
         
-        DepTreebank treebank = new DepTreebank();
+        DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
         double totalParseWeight = 0.0;
         for (Sentence sentence: sentences) {
             stopwatch.start();
@@ -82,10 +82,13 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     
     protected void encodeModel(File tempDir, Model model, SentenceCollection sentences) throws FileNotFoundException {
         DmvModel dmv = (DmvModel)model;
-        // Keep only the weights relevant to the single sentence in the SentenceCollection
-        DmvWeightCopier weightCopier = new DmvWeightCopier(dmv);
-        DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences.getVocab());
-        encodeDmv(tempDir, filteredDmv);
+
+        // TODO: Keep only the weights relevant to the single sentence in the SentenceCollection
+        //DmvWeightCopier weightCopier = new DmvWeightCopier(dmv);
+        //DmvModel filteredDmv = (DmvModel)(new DmvModelFactory(weightCopier)).getInstance(sentences.getVocab());
+        log.warn("Not filtering any model parameters -- parsing speed may be affected.");
+        
+        encodeDmv(tempDir, dmv);
     }
     
     private DepTree decode(Sentence sentence, Map<String,Double> result) {
