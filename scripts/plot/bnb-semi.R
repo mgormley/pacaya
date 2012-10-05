@@ -12,14 +12,16 @@ results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bn
 
 df <- read.table(results.file, header=TRUE)
 
-#df <- subset(df, varSplit == "half-prob" & maxNumSentences == 300)
-df$groupLevel <- factor(do.call(paste, c(df[c("maxNumSentences",
-                                                "maxSentenceLength",
-                                                "varSplit")], sep = ".")))
-##df$groupLevel <- factor(str_c(df$maxNumSentences, df$maxSentenceLength, df$varSplit, sep="."))
 df$bnbStatusShort <- str_replace(df$bnbStatus, "_SOLUTION_FOUND", "")
 
+#df <- subset(df, varSplit == "half-prob" & maxNumSentences == 300)
+df$groupLevel <- factor(str_c(df$maxNumSentences, df$maxSentenceLength, df$varSplit, sep="."))
 groups <- daply(df, .(groupLevel), function(dat) { return(dat) })
+
+getDataset <- function(mydata) {
+  colsubset <- df[,c("dataset", "maxNumSentences", "maxSentenceLength")]
+  unique(str_c(df$dataset, df$maxNumSentences, df$maxSentenceLength, sep="."))
+}
 
 myplot <- function(p, filename) {
   p <- p + theme_bw(12, base_family="serif")
@@ -93,10 +95,10 @@ plotnumfathom <- function(mydata) {
 }
 
 myplot(ggplot(df, aes(factor(df$bnbStatusShort))) + geom_bar(),
-       paste(c(results.file, "all", "bnbStatus", "pdf"), collapse = "."))
+       str_c(results.file, "all", "bnbStatus", "pdf", sep="."))
 
 myplot(plotvarsplit(df),
-       paste(c(results.file, "all", "varSplit", "pdf"), collapse = "."))
+       str_c(results.file, "all", "varSplit", "pdf", sep="."))
 
 for(dfsubset in groups) {
   print(head(dfsubset$groupLevel, n=1))
@@ -105,26 +107,26 @@ for(dfsubset in groups) {
   groupLevel <-  as.character(dfsubset$groupLevel[1])
   
   myplot(plotnumfathom(dfsubset),
-         paste(c(results.file, groupLevel, "numFathom", "pdf"), collapse = "."))
+         str_c(results.file, groupLevel, "numFathom", "pdf", sep="."))
   
   myplot(plotreldiff(dfsubset),
-         paste(c(results.file, groupLevel, "reldiff", "pdf"), collapse = "."))
+         str_c(results.file, groupLevel, "reldiff", "pdf", sep="."))
   
   myplot(plotaccuracy(dfsubset),
-         paste(c(results.file, groupLevel, "accuracy", "pdf"), collapse = "."))
+         str_c(results.file, groupLevel, "accuracy", "pdf", sep="."))
   
   myplot(plotlikelihood(dfsubset),
-         paste(c(results.file, groupLevel, "likelihood", "pdf"), collapse = "."))
+         str_c(results.file, groupLevel, "likelihood", "pdf", sep="."))
   
   myplot(plotspace(dfsubset),
-         paste(c(results.file, groupLevel, "space", "pdf"), collapse = "."))
+         str_c(results.file, groupLevel, "space", "pdf", sep="."))
 }
 
 
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status_0.5_0.5.data"
-##results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status.data"
+##results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status_0.5_0.5.data"
+results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status.data"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
@@ -137,7 +139,53 @@ dfUp$bound <- df$upBound
 dfUp$boundType <- "upper"
 
 dfBoth <- rbind(dfUp, dfLow)
-##dfBoth <- subset(dfBoth, propSupervised == 0.9 & time < 2e5)# | propSupervised == 0.8 | propSupervised == 0.7)
+dfBoth <- subset(dfBoth,
+                 propSupervised == 0.0 |
+                 propSupervised == 0.2 |
+                 propSupervised == 0.4 |
+                 propSupervised == 0.6 |
+                 propSupervised == 0.8)
+##dfBoth <- subset(dfBoth, propSupervised == 0.9 & time < 2e5)
+## | propSupervised == 0.8 | propSupervised == 0.7)
 
-p <- ggplot(dfBoth, aes(x=numSeen, y=(numFathom / numSeen), color=exp_dir)) + geom_line(aes(linetype=boundType))
-print(p)
+
+plotbnbbounds <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Number of nodes processed"
+  ylab = "Bounds on log-likelihood"
+  p <- ggplot(mydata, aes(x=numSeen, y=bound, color=factor(propSupervised)))
+  p <- p + geom_line(aes(linetype=boundType))
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_linetype_discrete(name="Bound type")
+  p <- p + scale_color_discrete(name="Proportion supervised")
+}
+myplot(plotbnbbounds(dfBoth), str_c(results.file, "ul-bounds", "pdf", sep="."))
+
+plotnumfathom <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Time (minutes)"
+  ylab = "# fathomed / # processed"
+  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=(numFathom / numSeen), color=factor(propSupervised)))
+  p <- p + geom_line()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_color_discrete(name="Proportion supervised")
+}
+myplot(plotnumfathom(dfBoth), str_c(results.file, "fathom-rate", "pdf", sep="."))
+
+
+
+
+## Read data
+##results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status_0.5_0.5.data"
+results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/viterbi-em/results.data"
+df <- read.table(results.file, header=TRUE)
+
+plotaccuracyvslikelihood <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Train Log-likelihood"
+  ylab = "Train Accuracy"
+  p <- ggplot(mydata, aes(x=trainLogLikelihood, y=trainAccuracy, color=initWeights))
+  p <- p + geom_point()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+}
+myplot(plotaccuracyvslikelihood(df), str_c(results.file, "accvlike", "pdf", sep="."))
