@@ -167,8 +167,8 @@ public class IndexedDmvModelTest {
         model.convertLogToReal();
         
         assertEquals(0.2, model.getRootWeights().get(new Word("V")), 1e-13);
-        assertEquals(0.4, model.getChooseWeights(new Word("N"), "l").get(new Word("V")), 1e-13);
-        assertEquals(0.6, model.getChooseWeights(new Word("V"), "l").get(new Word("N")), 1e-13);
+        assertEquals(0.4, model.getChildWeights(new Word("N"), "l").get(new Word("V")), 1e-13);
+        assertEquals(0.6, model.getChildWeights(new Word("V"), "l").get(new Word("N")), 1e-13);
     }
     
 

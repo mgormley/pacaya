@@ -66,11 +66,11 @@ public class DmvModel extends DepProbMatrix implements Model {
     // ------------------ Child -------------------
 
     @Deprecated
-    public LabeledMultinomial<Label> getChooseWeights(Label label, String lr) {
-        return getChooseWeights(label, lr.equals("l") ? Lr.LEFT : Lr.RIGHT);
+    public LabeledMultinomial<Label> getChildWeights(Label label, String lr) {
+        return getChildWeights(label, lr.equals("l") ? Lr.LEFT : Lr.RIGHT);
     }
     
-    public LabeledMultinomial<Label> getChooseWeights(Label label, Lr lr) {
+    public LabeledMultinomial<Label> getChildWeights(Label label, Lr lr) {
         
         // TODO: this should be a method on Alphabet.
         Set<Label> children = getVocab();
@@ -86,7 +86,7 @@ public class DmvModel extends DepProbMatrix implements Model {
         return mult;
     }
 
-    public double getChooseWeight(Label parentLabel, Lr lr, Label childLabel) {
+    public double getChildWeight(Label parentLabel, Lr lr, Label childLabel) {
         int c = tagAlphabet.lookupObject(childLabel);
         int p = tagAlphabet.lookupObject(parentLabel);
         int dir = lr.getAsInt();
@@ -95,11 +95,11 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
 
     @Deprecated
-    public void putChooseWeight(Label parentLabel, String lr, Label childLabel, double logProb) {
-        putChooseWeight(parentLabel, lr.equals("l") ? Lr.LEFT : Lr.RIGHT, childLabel, logProb);
+    public void putChildWeight(Label parentLabel, String lr, Label childLabel, double logProb) {
+        putChildWeight(parentLabel, lr.equals("l") ? Lr.LEFT : Lr.RIGHT, childLabel, logProb);
     }
     
-    public void putChooseWeight(Label parentLabel, Lr lr, Label childLabel, double logProb) {
+    public void putChildWeight(Label parentLabel, Lr lr, Label childLabel, double logProb) {
         int c = tagAlphabet.lookupObject(childLabel);
         int p = tagAlphabet.lookupObject(parentLabel);
         int dir = lr.getAsInt();

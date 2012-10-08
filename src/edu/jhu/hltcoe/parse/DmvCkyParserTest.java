@@ -58,8 +58,8 @@ public class DmvCkyParserTest {
         dmvModel.putRootWeight(TW_B, 0.5);
 //        dmvModel.putChooseWeight(TW_A, "l", TW_A, 0.4);
 //        dmvModel.putChooseWeight(TW_A, "l", TW_B, 0.6);
-        dmvModel.putChooseWeight(TW_A, "r", TW_A, 1.0);
-        dmvModel.putChooseWeight(TW_A, "r", TW_B, 0.0); // dummy param
+        dmvModel.putChildWeight(TW_A, "r", TW_A, 1.0);
+        dmvModel.putChildWeight(TW_A, "r", TW_B, 0.0); // dummy param
 //        dmvModel.putChooseWeight(TW_B, "l", TW_A, 0.5);
 //        dmvModel.putChooseWeight(TW_B, "l", TW_B, 0.5);
 //        dmvModel.putChooseWeight(TW_B, "r", TW_A, 0.0);

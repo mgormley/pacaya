@@ -20,12 +20,12 @@ public class SimpleStaticDmvModel {
         dmvModel.fill(0.0);
         dmvModel.putRootWeight(TW_A, 0.5);
         dmvModel.putRootWeight(TW_B, 0.5);
-        dmvModel.putChooseWeight(TW_A, "l", TW_A, 0.5);
-        dmvModel.putChooseWeight(TW_A, "l", TW_B, 0.5);
-        dmvModel.putChooseWeight(TW_A, "r", TW_A, 1.0); // dummy param
-        dmvModel.putChooseWeight(TW_B, "l", TW_A, 0.5);
-        dmvModel.putChooseWeight(TW_B, "l", TW_B, 0.5);
-        dmvModel.putChooseWeight(TW_B, "r", TW_B, 1.0);
+        dmvModel.putChildWeight(TW_A, "l", TW_A, 0.5);
+        dmvModel.putChildWeight(TW_A, "l", TW_B, 0.5);
+        dmvModel.putChildWeight(TW_A, "r", TW_A, 1.0); // dummy param
+        dmvModel.putChildWeight(TW_B, "l", TW_A, 0.5);
+        dmvModel.putChildWeight(TW_B, "l", TW_B, 0.5);
+        dmvModel.putChildWeight(TW_B, "r", TW_B, 1.0);
         
         dmvModel.fillStopProbs(1.0);
         dmvModel.putStopProb(TW_A, "l", true, 0.6);
@@ -52,12 +52,12 @@ public class SimpleStaticDmvModel {
 
         dmvModel.fill(0.0);
         dmvModel.putRootWeight(verb, 1.0);
-        dmvModel.putChooseWeight(noun, "l", adj, 1.0);
-        dmvModel.putChooseWeight(noun, "r", verb, 1.0);
-        dmvModel.putChooseWeight(adj, "l", adj, 1.0);
-        dmvModel.putChooseWeight(adj, "r", adj, 1.0);
-        dmvModel.putChooseWeight(verb, "l", noun, 1.0);
-        dmvModel.putChooseWeight(verb, "r", noun, 1.0);
+        dmvModel.putChildWeight(noun, "l", adj, 1.0);
+        dmvModel.putChildWeight(noun, "r", verb, 1.0);
+        dmvModel.putChildWeight(adj, "l", adj, 1.0);
+        dmvModel.putChildWeight(adj, "r", adj, 1.0);
+        dmvModel.putChildWeight(verb, "l", noun, 1.0);
+        dmvModel.putChildWeight(verb, "r", noun, 1.0);
         
         dmvModel.fillStopProbs(1.0);
         dmvModel.putStopProb(noun, "l", true, 0.6);

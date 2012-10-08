@@ -244,7 +244,7 @@ public class IlpViterbiParser implements ViterbiParser {
         for (Label child : dmv.getVocab()) {
             for (Label parent : dmv.getVocab()) {
                 for (Lr lr : Lr.values()) {
-                    double weight = Utilities.exp(dmv.getChooseWeight(parent, lr, child));
+                    double weight = Utilities.exp(dmv.getChildWeight(parent, lr, child));
                     double logWeight = Utilities.logForIlp(weight);
                     chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
                             parent.getLabel(), lr, child.getLabel(), weight, logWeight);

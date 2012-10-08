@@ -54,7 +54,7 @@ public class DmvDepTreeGenerator {
     private void sampleChildren(ProjDepTreeNode parent, String lr) {
         if (random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, true)) {
             // Generate adjacent
-            LabeledMultinomial<Label> parameters = model.getChooseWeights(parent.getLabel(), lr);
+            LabeledMultinomial<Label> parameters = model.getChildWeights(parent.getLabel(), lr);
             Label childLabel = parameters.sampleFromMultinomial(random);
             parent.addChildToOutside(new ProjDepTreeNode(childLabel), lr);
             while (random.nextDouble() > model.getStopWeight(parent.getLabel(), lr, false)) {

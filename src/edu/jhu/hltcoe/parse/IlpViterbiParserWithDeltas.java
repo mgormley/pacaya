@@ -90,7 +90,7 @@ public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements Vite
         for (Label child : dmv.getVocab()) {
             for (Label parent : dmv.getVocab()) {
                 for (Lr lr : Lr.values()) {
-                    double origWeight = Utilities.exp(dmv.getChooseWeight(parent, lr, child));
+                    double origWeight = Utilities.exp(dmv.getChildWeight(parent, lr, child));
                     for (Delta delta : deltaGen.getDeltas(origWeight)) {
                         String deltaId = delta.getId();
                         double weight = delta.getWeight();
