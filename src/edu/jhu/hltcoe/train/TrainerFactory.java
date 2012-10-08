@@ -29,8 +29,10 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
+import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
@@ -87,13 +89,12 @@ public class TrainerFactory {
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
         options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
         options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
-        options.addOption("op", "numDoubledCms", true, "How many model parameters around which the bounds should be doubled");
         options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
         options.addOption("op", "timeoutSeconds", true, "The timeout in seconds for training run");
         options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
     }
 
-    public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank) throws ParseException {
+    public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
 
         final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
         final int iterations = Command.getOptionValue(cmd, "iterations", 10);
@@ -124,7 +125,6 @@ public class TrainerFactory {
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
         double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
         double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
-        int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
         double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
         double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
 
@@ -210,6 +210,9 @@ public class TrainerFactory {
                 modelFactory = new RandomDmvModelFactory(lambda);
             } else if (initWeights.equals("supervised")) {
                 modelFactory = new SupervisedDmvModelFactory(trainTreebank);
+            } else if (initWeights.equals("gold")) {
+                modelFactory = new FixableModelFactory(null);
+                ((FixableModelFactory)modelFactory).fixModel(trueModel);
             } else {
                 throw new ParseException("initWeights not supported: " + initWeights);
             }

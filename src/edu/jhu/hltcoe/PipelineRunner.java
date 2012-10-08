@@ -31,6 +31,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -57,6 +58,7 @@ public class PipelineRunner {
         
         // Get the training data
         DepTreebank trainTreebank;
+        DmvModel trueModel = null;
         if (cmd.hasOption("train")) {
             // Read the data and (maybe) reduce size of treebank
             String trainPath = cmd.getOptionValue("train");
@@ -66,11 +68,12 @@ public class PipelineRunner {
             trainTreebank = getTreebank(cmd, trainPath, maxSentenceLength, alphabet);
         } else if (cmd.hasOption("synthetic")) {
             String synthetic = cmd.getOptionValue("synthetic");
-            DmvModel trueModel;
             if (synthetic.equals("two")) {
                 trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
             } else if (synthetic.equals("three")) {
                 trueModel = SimpleStaticDmvModel.getThreePosTagInstance();
+            } else if (synthetic.equals("alt-three")) {
+                trueModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
             } else {
                 throw new ParseException("Unknown synthetic type: " + synthetic);
             }
@@ -114,10 +117,10 @@ public class PipelineRunner {
         }
         
         if (cmd.hasOption("relaxOnly")) {
-            DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd, trainTreebank); 
+            DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd, trainTreebank, trueModel); 
             dw.init1(trainCorpus);
-            dw.init2(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, trainCorpus, null, null));
-            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank);
+            dw.init2(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, trainCorpus, null, null, null));
+            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank, trueModel);
             Stopwatch timer = new Stopwatch();
             timer.start();
             RelaxedDmvSolution relaxSol = dw.solveRelaxation();
@@ -140,11 +143,11 @@ public class PipelineRunner {
         } else {
             // Train the model
             log.info("Training model");
-            Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd, trainTreebank);
+            Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd, trainTreebank, trueModel);
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(trainCorpus);
-                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank);
+                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank, trueModel);
                 bnb.train();
             } else {
                 trainer.train(trainCorpus);
@@ -208,19 +211,18 @@ public class PipelineRunner {
         return trainTreebank;
     }
 
-    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank) {
+    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) {
         if (cmd.hasOption("initBounds")) {
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
             double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
             double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
-            int numDoubledCms = Command.getOptionValue(cmd, "numDoubledCms", 0);
             
-            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, trainCorpus, dw, trainTreebank);
-            
-            if (numDoubledCms > 0) {
-                // TODO:
-                throw new RuntimeException("not implemented");
+            DmvSolution goldSol = null;
+            if (trueModel != null) { 
+                IndexedDmvModel idm = new IndexedDmvModel(trainCorpus);
+                goldSol = new DmvSolution(idm.getCmLogProbs(trueModel), idm, trainTreebank, Double.NaN);
             }
+            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
             
             LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
             

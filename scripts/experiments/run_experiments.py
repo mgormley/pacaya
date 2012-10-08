@@ -197,7 +197,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
-        synthetic = DPExpParams(synthetic="three")
+        synth_alt_three = DPExpParams(synthetic="alt-three")
+
+        wsj = wsj_full if not self.fast else wsj_00
+        brown = brown_full if not self.fast else brown_cf
         
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full]:
@@ -206,7 +209,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-brown.map" % (self.root_dir))
         
         if self.data == "synthetic": 
-            datasets = [synthetic]
+            datasets = [synth_alt_three]
             all.update(printSentences="./data.txt",
                        syntheticSeed=123454321)
         elif self.fast:       datasets = [brown_cf]
@@ -215,7 +218,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         experiments = []
         if self.expname == "viterbi-em":
             root = RootStage()
-            setup = brown_full if not self.fast else brown_cf
+            setup = brown
             setup.update(maxSentenceLength=10, maxNumSentences=100000000)
             setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
             setup.set("lambda", 1)
@@ -251,22 +254,40 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
         elif self.expname == "bnb-semi":
             all.update(algorithm="bnb",
-                       initBounds="viterbi-em",
+                       initBounds="viterbi-em",                    
                        varSelection="regret")
-            for dataset in datasets:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 4*60*60)]:
-                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    mns = DPExpParams(maxNumSentences=maxNumSentences)
-                    if not self.fast:
-                        # Run for some fixed amount of time.                
-                        all.update(numRestarts=1000000000, epsilon=0.0)
-                        all.update(timeoutSeconds=timeoutSeconds)
-                    for varSplit in ["half-prob", "half-logprob"]:
-                        for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
-                            for propSupervised in frange(0.0, 1.0, 0.1):
-                                algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
-                                                   propSupervised=propSupervised)
-                                experiments.append(all + dataset + msl + mns + algo)
+            dataset = brown
+            for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 4*60*60)]:
+                msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                mns = DPExpParams(maxNumSentences=maxNumSentences)
+                if not self.fast:
+                    # Run for some fixed amount of time.                
+                    all.update(numRestarts=1000000000, epsilon=0.0)
+                    all.update(timeoutSeconds=timeoutSeconds)
+                for varSplit in ["half-prob", "half-logprob"]:
+                    for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
+                        for propSupervised in frange(0.0, 1.0, 0.1):
+                            algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
+                                               propSupervised=propSupervised)
+                            experiments.append(all + dataset + msl + mns + algo)
+        elif self.expname == "bnb-semi-synth":
+            all.update(algorithm="bnb",
+                       initBounds="gold",
+                       initWeights="gold",
+                       varSelection="regret")
+            dataset = synth_alt_three
+            for maxNumSentences, timeoutSeconds in [(300, 20*60)]:
+                mns = DPExpParams(maxNumSentences=maxNumSentences)
+                if not self.fast:
+                    # Run for some fixed amount of time.                
+                    all.update(numRestarts=1000000000, epsilon=0.0)
+                    all.update(timeoutSeconds=timeoutSeconds)
+                for varSplit in ["half-prob"]:
+                    for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]:
+                        for propSupervised in frange(0.0, 1.0, 0.1):
+                            algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
+                                               propSupervised=propSupervised)
+                            experiments.append(all + dataset + mns + algo)
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
