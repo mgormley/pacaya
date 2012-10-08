@@ -335,6 +335,14 @@ public class IndexedDmvModel {
      */
     public static DmvModel getMleDmv(DepTreebank treebank, double lambda) {
         DmvModel dmv = new DmvModel(treebank.getAlphabet());
+        getMleDmv(treebank, lambda, dmv);
+        return dmv;
+    }
+    
+    /**
+     * Get maximum likelihood DMV given this treebank, smoothed by lambda.
+     */
+    public static void getMleDmv(DepTreebank treebank, double lambda, DmvModel dmv) {
         dmv.fill(0.0);
         for (int s = 0; s < treebank.size(); s++) {
             addSentSol(treebank.getSentences().get(s), treebank.get(s), dmv);
@@ -342,7 +350,6 @@ public class IndexedDmvModel {
         dmv.addConstant(lambda);
         dmv.convertRealToLog();
         dmv.logNormalize();
-        return dmv;
     }
     
     /**
