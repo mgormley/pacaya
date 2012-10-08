@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import edu.jhu.hltcoe.math.LogAddTable;
-
 public class Utilities {
 
     private static final double DEFAULT_DELTA = 1e-13;
@@ -206,39 +204,96 @@ public class Utilities {
         return log(d) / LOG2;
     }
 
+    public static double[][][][] copyOf(double[][][][] array) {
+        double[][][][] clone = new double[array.length][][][];
+        for (int i = 0; i < clone.length; i++) {
+            clone[i] = copyOf(array[i]);
+        }
+        return clone;
+    }
+
+    public static double[][][] copyOf(double[][][] array) {
+        double[][][] clone = new double[array.length][][];
+        for (int i = 0; i < clone.length; i++) {
+            clone[i] = copyOf(array[i]);
+        }
+        return clone;
+    }
+
     public static double[][] copyOf(double[][] array) {
         double[][] newArray = new double[array.length][];
-        for(int i=0; i<array.length; i++) {
+        for (int i = 0; i < array.length; i++) {
             newArray[i] = Utilities.copyOf(array[i], array[i].length);
         }
         return newArray;
     }
-    
+
     public static int[][] copyOf(int[][] array) {
         int[][] newArray = new int[array.length][];
-        for(int i=0; i<array.length; i++) {
+        for (int i = 0; i < array.length; i++) {
             newArray[i] = Utilities.copyOf(array[i], array[i].length);
         }
         return newArray;
     }
-    
+
+    public static boolean[] copyOf(boolean[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static int[] copyOf(int[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static int[] copyOf(int[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+
+    public static double[] copyOf(double[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static double[] copyOf(double[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+
     public static void copy(int[][] array, int[][] clone) {
-        assert(array.length == clone.length);
-        for(int i=0; i<array.length; i++) {
+        assert (array.length == clone.length);
+        for (int i = 0; i < array.length; i++) {
             copy(array[i], clone[i]);
         }
     }
 
     public static void copy(int[] array, int[] clone) {
-        assert(array.length == clone.length);
+        assert (array.length == clone.length);
         System.arraycopy(array, 0, clone, 0, array.length);
     }
-    
+
     public static void copy(double[] array, double[] clone) {
-        assert(array.length == clone.length);
+        assert (array.length == clone.length);
         System.arraycopy(array, 0, clone, 0, array.length);
     }
-    
+
+    public static void copy(double[][] array, double[][] clone) {
+        assert (array.length == clone.length);
+        for (int i = 0; i < clone.length; i++) {
+            copy(array[i], clone[i]);
+        }
+    }
+
+    public static void copy(double[][][] array, double[][][] clone) {
+        assert (array.length == clone.length);
+        for (int i = 0; i < clone.length; i++) {
+            copy(array[i], clone[i]);
+        }
+    }
+
+    public static void copy(double[][][][] array, double[][][][] clone) {
+        assert (array.length == clone.length);
+        for (int i = 0; i < clone.length; i++) {
+            copy(array[i], clone[i]);
+        }
+    }
+
     public static double infinityNorm(double[][] gradient) {
         double maxIN = 0.0;
         for (int i=0; i<gradient.length; i++) {
@@ -273,26 +328,6 @@ public class Utilities {
         array[i] = array[j];
         array[j] = tmp;
       }
-    }
-
-    public static boolean[] copyOf(boolean[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static int[] copyOf(int[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-    
-    public static int[] copyOf(int[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-    public static double[] copyOf(double[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-    
-    public static double[] copyOf(double[] original) {
-        return Arrays.copyOf(original, original.length);
     }
     
     public static void assertDoubleEquals(double a, double b) {
@@ -391,4 +426,5 @@ public class Utilities {
         sb.append("]");
         return sb.toString();
     }
+    
 }
