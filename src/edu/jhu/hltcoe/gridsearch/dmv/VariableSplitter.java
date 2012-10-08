@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface VariableSplitter {
 
-    List<DmvBoundsDelta> split(DmvBounds bounds, VariableId varId);
+    List<DmvBoundsDelta> split(CptBounds bounds, VariableId varId);
 
 }

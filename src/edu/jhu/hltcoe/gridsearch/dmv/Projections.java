@@ -90,7 +90,7 @@ public class Projections {
      * @param params Vector to project onto (param.length - 1)-simplex in probability space
      * @return The projected parameters or null if infeasible
      */
-    public double[] getProjectedParams(DmvBounds logBounds, int c, double[] params) throws IloException {
+    public double[] getProjectedParams(CptBounds logBounds, int c, double[] params) throws IloException {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {

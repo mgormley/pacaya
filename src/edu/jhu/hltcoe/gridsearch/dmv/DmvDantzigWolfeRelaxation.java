@@ -52,7 +52,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
     protected DmvTrainCorpus corpus;
     protected IndexedDmvModel idm;
-    protected DmvBounds bounds;
+    protected CptBounds bounds;
     protected Stopwatch parsingTimer;
     protected MasterProblem mp;
     
@@ -306,7 +306,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     }
 
     protected void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
-        this.bounds = new DmvBounds(this.idm);
+        this.bounds = new CptBounds(this.idm);
 
         mp = new MasterProblem();
         
@@ -729,7 +729,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         }
     }
     
-    protected boolean areFeasibleBounds(DmvBounds bounds) {
+    protected boolean areFeasibleBounds(CptBounds bounds) {
         // Check that the upper bounds sum to at least 1.0
         for (int c=0; c<idm.getNumConds(); c++) {
             double logSum = Double.NEGATIVE_INFINITY;
@@ -766,7 +766,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return dmvObj.computeTrueObjective(logProbs, treebank);
     }
 
-    public DmvBounds getBounds() {
+    public CptBounds getBounds() {
         return bounds;
     }
 

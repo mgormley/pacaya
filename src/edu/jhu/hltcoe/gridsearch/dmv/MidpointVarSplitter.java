@@ -20,7 +20,7 @@ public class MidpointVarSplitter implements VariableSplitter {
     }
     
     @Override
-    public List<DmvBoundsDelta> split(DmvBounds bounds, VariableId varId) {
+    public List<DmvBoundsDelta> split(CptBounds bounds, VariableId varId) {
         if (!varId.hasVar()) {
             return Collections.emptyList();
         }
@@ -34,7 +34,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         }
     }
 
-    public static List<DmvBoundsDelta> splitHalfProbSpace(DmvBounds origBounds, int c, int m) {
+    public static List<DmvBoundsDelta> splitHalfProbSpace(CptBounds origBounds, int c, int m) {
         // Split the current LB-UB probability space in half
         double lb = origBounds.getLb(c, m);
         double ub = origBounds.getUb(c, m);
@@ -43,7 +43,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         return splitAtMidPoint(origBounds, c, m, mid);
     }
 
-    public static List<DmvBoundsDelta> splitHalfLogProbSpace(DmvBounds origBounds, int c, int m) {
+    public static List<DmvBoundsDelta> splitHalfLogProbSpace(CptBounds origBounds, int c, int m) {
         // Split the current LB-UB probability space in half
         double lb = origBounds.getLb(c, m);
         double ub = origBounds.getUb(c, m);
@@ -52,7 +52,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         return splitAtMidPoint(origBounds, c, m, mid);
     }
 
-    public static List<DmvBoundsDelta> splitAtMidPoint(DmvBounds origBounds, int c, int m, double mid) {
+    public static List<DmvBoundsDelta> splitAtMidPoint(CptBounds origBounds, int c, int m, double mid) {
         // e.g. [0.5, 1.0]
         DmvBoundsDelta lDelta = new DmvBoundsDelta(c, m, Lu.LOWER, mid - origBounds.getLb(c, m));
         // e.g. [0.0, 0.5]

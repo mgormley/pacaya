@@ -21,7 +21,7 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Pair;
 
-public class IndexedDmvModel {
+public class IndexedDmvModel implements IndexedCpt {
     
     private static Logger log = Logger.getLogger(IndexedDmvModel.class);
     
@@ -232,14 +232,23 @@ public class IndexedDmvModel {
         return maxFreq;
     }
     
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumConds()
+     */
     public int getNumConds() {
         return rhsToC.size();
     }
 
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumTotalParams()
+     */
     public int getNumTotalParams() {
         return numTotalParams;
     }
     
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumParams(int)
+     */
     public int getNumParams(int c) { 
         Rhs rhs = rhsToC.lookupIndex(c);
         if (rhs.get(0) == ROOT || rhs.get(0) == CHILD) {
@@ -251,6 +260,9 @@ public class IndexedDmvModel {
         }
     }
 
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getName(int, int)
+     */
     public String getName(int c, int m) {
         Rhs rhs = rhsToC.lookupIndex(c);
         if (rhs.get(0) == ROOT) {
@@ -276,17 +288,23 @@ public class IndexedDmvModel {
         return rhsToC.lookupObject(new Rhs(DECISION, parent, lr, dv));
     }
 
-    /**
-     * Used by DmvBoundsFactory
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
      */
     public int[][] getTotalMaxFreqCm() {
         return totMaxFreqCm;
     }
 
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm(int, int)
+     */
     public int getTotalMaxFreqCm(int c, int m) {
         return totMaxFreqCm[c][m];
     }
     
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumNonZeroMaxFreqCms()
+     */
     public int getNumNonZeroMaxFreqCms() {
         return numNZMaxFreqCms;
     }

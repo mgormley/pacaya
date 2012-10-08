@@ -34,7 +34,7 @@ public class ModelParamSubproblemTest {
         IndexedDmvModel idm = new IndexedDmvModel(sentences);
         
         ModelParamSubproblem mps = new ModelParamSubproblem();
-        DmvBounds bounds = new DmvBounds(idm);
+        CptBounds bounds = new CptBounds(idm);
 
         // [[-0.0073286529568420125, -0.007328652956842013,
         // -0.007328652956842013], [-0.0, -0.0, -0.0], [-0.0, -0.0, -0.0],
@@ -67,10 +67,10 @@ public class ModelParamSubproblemTest {
         System.out.println("betterredcost: " + betterRedCost);
     }
 
-    private void adjustBounds(IndexedDmvModel idm, DmvBounds bounds) {
+    private void adjustBounds(IndexedDmvModel idm, CptBounds bounds) {
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
-                bounds.set(c, m, DmvBounds.DEFAULT_LOWER_BOUND, DmvBounds.DEFAULT_UPPER_BOUND);
+                bounds.set(c, m, CptBounds.DEFAULT_LOWER_BOUND, CptBounds.DEFAULT_UPPER_BOUND);
             }
         }
     }
@@ -84,7 +84,7 @@ public class ModelParamSubproblemTest {
         IndexedDmvModel idm = new IndexedDmvModel(sentences);
         
         ModelParamSubproblem mps = new ModelParamSubproblem();
-        DmvBounds bounds = new DmvBounds(idm);
+        CptBounds bounds = new CptBounds(idm);
 
         // [[-0.0073286529568420125, -0.007328652956842013,
         // -0.007328652956842013], [-0.0, -0.0, -0.0], [-0.0, -0.0, -0.0],

@@ -56,7 +56,7 @@ public class RandomVariableSelector implements VariableSelector {
             init(dmvProblemNode.getIdm());
         }
         
-        DmvBounds origBounds = dmvProblemNode.getBounds();
+        CptBounds origBounds = dmvProblemNode.getBounds();
 
         // Choose a model parameter with probability proportional to its 
         // possible occurrence in the corpus

@@ -5,7 +5,11 @@ import java.util.Arrays;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvBounds {
+/**
+ * Bounds for a conditional probability table.
+ * @author mgormley
+ */
+public class CptBounds {
     
     /** 
      * Upper bound by log(1.0)
@@ -22,13 +26,13 @@ public class DmvBounds {
     private double[][] lbs;
     private double[][] ubs;
 
-    public DmvBounds(IndexedDmvModel idm) {
-        int[][] totMaxFreqCm = idm.getTotalMaxFreqCm();
+    public CptBounds(IndexedCpt icpt) {
+        int[][] totMaxFreqCm = icpt.getTotalMaxFreqCm();
         
-        lbs = new double[idm.getNumConds()][];
-        ubs = new double[idm.getNumConds()][];
+        lbs = new double[icpt.getNumConds()][];
+        ubs = new double[icpt.getNumConds()][];
         for (int c=0; c<lbs.length; c++) {
-            lbs[c] = new double[idm.getNumParams(c)];
+            lbs[c] = new double[icpt.getNumParams(c)];
             ubs[c] = new double[lbs[c].length];
             Arrays.fill(lbs[c], DEFAULT_LOWER_BOUND);
             Arrays.fill(ubs[c], DEFAULT_UPPER_BOUND);

@@ -19,7 +19,7 @@ public class RegretVariableSelector implements VariableSelector {
 
     @Override
     public VariableId select(DmvProblemNode node) {
-        DmvBounds origBounds = node.getBounds();
+        CptBounds origBounds = node.getBounds();
         double[][] regret = node.getRegretCm();
 
         if (regret == null) {

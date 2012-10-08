@@ -63,7 +63,7 @@ public class DmvProblemNodeTest {
         for (int c=0; c<idm.getNumConds(); c++) {
             bounds[c] = new double[idm.getNumParams(c)][2];
             for (int m=0; m<idm.getNumParams(c); m++) {
-                DmvBounds b = node.getBounds();
+                CptBounds b = node.getBounds();
                 bounds[c][m][0] = b.getLb(c, m);
                 bounds[c][m][1] = b.getUb(c, m);
             }
@@ -71,7 +71,7 @@ public class DmvProblemNodeTest {
         
         checkedSetActive(c1, node);
         for (int c=0; c<idm.getNumConds(); c++) {
-            DmvBounds b = c1.getBounds();                
+            CptBounds b = c1.getBounds();                
              for (int m=0; m<idm.getNumParams(c); m++) {
                 Assert.assertTrue(bounds[c][m][0] <= b.getLb(c, m));
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(c, m));
@@ -97,7 +97,7 @@ public class DmvProblemNodeTest {
         checkedSetActive(c4, c2);
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
-                DmvBounds b = c4.getBounds();                
+                CptBounds b = c4.getBounds();                
                 Assert.assertTrue(bounds[c][m][0] <= b.getLb(c, m));
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(c, m));
             }

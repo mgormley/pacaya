@@ -8,7 +8,7 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBounds;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBounds;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
@@ -139,25 +139,25 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
     
                 double newL, newU;
-                DmvBounds origBounds = dw.getBounds();
+                CptBounds origBounds = dw.getBounds();
                 double lb = origBounds.getLb(c, m);
                 double ub = origBounds.getUb(c, m);
                 
                 if (Prng.nextDouble() < probOfSkipCm) {
                     // Don't constrain this variable
-                    newL = DmvBounds.DEFAULT_LOWER_BOUND;
-                    newU = DmvBounds.DEFAULT_UPPER_BOUND;
+                    newL = CptBounds.DEFAULT_LOWER_BOUND;
+                    newU = CptBounds.DEFAULT_UPPER_BOUND;
                 } else {
                     // Constrain the bounds to be +/- offsetLogProb from logProbs[c][m]
                     newU = Utilities.logAdd(logProbs[c][m], offsetLogProb);
-                    if (newU > DmvBounds.DEFAULT_UPPER_BOUND) {
-                        newU = DmvBounds.DEFAULT_UPPER_BOUND;
+                    if (newU > CptBounds.DEFAULT_UPPER_BOUND) {
+                        newU = CptBounds.DEFAULT_UPPER_BOUND;
                     }
     
                     if (logProbs[c][m] > offsetLogProb) {
                         newL = Utilities.logSubtract(logProbs[c][m], offsetLogProb);                    
                     } else {
-                        newL = DmvBounds.DEFAULT_LOWER_BOUND;
+                        newL = CptBounds.DEFAULT_LOWER_BOUND;
                     }
                 }
                 

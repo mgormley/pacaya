@@ -27,7 +27,7 @@ public class FullStrongVariableSelector implements VariableSelector {
         VariableId regretVarId = regretFactory.select(node);
         
         IndexedDmvModel idm = node.getIdm();
-        DmvBounds origBounds = node.getBounds();
+        CptBounds origBounds = node.getBounds();
         //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
 
         // TODO: consider using regret to filter this down
@@ -62,7 +62,7 @@ public class FullStrongVariableSelector implements VariableSelector {
     }
 
     public double getStrongScore(DmvProblemNode node, int c, int m) {
-        DmvBounds origBounds = node.getBounds();
+        CptBounds origBounds = node.getBounds();
         double parentBound = node.getOptimisticBound();
 
         node.setAsActiveNode();

@@ -264,7 +264,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         
     
     protected void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
-        this.bounds = new DmvBounds(this.idm);
+        this.bounds = new CptBounds(this.idm);
 
         mpr = new MasterProblemRes();
         mp = mpr;

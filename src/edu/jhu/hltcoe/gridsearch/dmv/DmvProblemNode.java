@@ -259,7 +259,7 @@ public class DmvProblemNode implements ProblemNode {
         return tmp1;
     }
 
-    public DmvBounds getBounds() {
+    public CptBounds getBounds() {
         return dwRelax.getBounds();
     }
 

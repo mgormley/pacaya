@@ -38,7 +38,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
         }
         
         // Initialize unreliable pseudocost values with strong branching.
-        DmvBounds origBounds = node.getBounds();
+        CptBounds origBounds = node.getBounds();
         double parentBound = node.getOptimisticBound();
         for (int c = 0; c < idm.getNumConds(); c++) {
             for (int m = 0; m < idm.getNumParams(c); m++) {

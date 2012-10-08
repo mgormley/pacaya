@@ -174,7 +174,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
 
         DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
         
-        DmvBounds bds = dw.getBounds();
+        CptBounds bds = dw.getBounds();
         double origLower = bds.getLb(0, 0);
         double origUpper = bds.getUb(0, 0);
                 
@@ -230,7 +230,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
-                DmvBounds origBounds = dw.getBounds();
+                CptBounds origBounds = dw.getBounds();
                 double lb = origBounds.getLb(c, m);
                 double ub = origBounds.getUb(c, m);
 
@@ -390,12 +390,12 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         writer.close();
     }
 
-    private boolean containsInitSol(DmvBounds bounds, double[][] logProbs) {
+    private boolean containsInitSol(CptBounds bounds, double[][] logProbs) {
         for (int c=0; c<logProbs.length; c++) {
             for (int m=0; m<logProbs[c].length; m++) {
                 double logProb = logProbs[c][m];
-                if (logProb < DmvBounds.DEFAULT_LOWER_BOUND) {
-                    logProb = DmvBounds.DEFAULT_LOWER_BOUND;
+                if (logProb < CptBounds.DEFAULT_LOWER_BOUND) {
+                    logProb = CptBounds.DEFAULT_LOWER_BOUND;
                 }
                 if (bounds.getLb(c, m) > logProb || bounds.getUb(c, m) < logProb) {
                     return false;

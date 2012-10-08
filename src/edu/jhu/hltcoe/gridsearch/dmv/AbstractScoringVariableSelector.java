@@ -17,7 +17,7 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
         double[][] scores = getScores(node);
 
         // Don't branch on variables that have bottomed out
-        DmvBounds origBounds = node.getBounds();
+        CptBounds origBounds = node.getBounds();
         for (int c=0; c<scores.length; c++) {
             for (int m=0; m<scores[c].length; m++) {
                 if (!origBounds.canBranch(c,m)) {

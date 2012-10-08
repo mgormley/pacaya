@@ -44,7 +44,7 @@ public class ModelParamSubproblem {
      * Solve the minimization subproblem for the model parameters subject to the
      * sum-to-one constraints and the bounds on the variables.
      */
-    public Pair<double[][], Double> solveModelParamSubproblemJOptimizeProb(double[][] weights, DmvBounds bounds) {
+    public Pair<double[][], Double> solveModelParamSubproblemJOptimizeProb(double[][] weights, CptBounds bounds) {
         int numConds = weights.length;
 
         double cost = 0.0;
@@ -56,7 +56,7 @@ public class ModelParamSubproblem {
         return new Pair<double[][], Double>(logProbs, cost);
     }
     
-    public double[] solveModelParamSubproblemJOptimizeProb(final double[] weights, DmvBounds bounds, int c) {
+    public double[] solveModelParamSubproblemJOptimizeProb(final double[] weights, CptBounds bounds, int c) {
         final int numParams = weights.length;
         
         // Log-probability space objective
@@ -165,9 +165,9 @@ public class ModelParamSubproblem {
         double[] solution = sol.toArray();
         for (int m=0; m<numParams; m++) {
             if (solution[m] < 0) {
-                solution[m] = DmvBounds.DEFAULT_LOWER_BOUND;
+                solution[m] = CptBounds.DEFAULT_LOWER_BOUND;
             } else {
-                solution[m] = Math.max(Utilities.log(solution[m]), DmvBounds.DEFAULT_LOWER_BOUND);
+                solution[m] = Math.max(Utilities.log(solution[m]), CptBounds.DEFAULT_LOWER_BOUND);
             }
         }
         //Multinomials.normalizeLogProps(solution);
@@ -180,7 +180,7 @@ public class ModelParamSubproblem {
      * Solve the minimization subproblem for the model parameters subject to the
      * sum-to-one constraints and the bounds on the variables.
      */
-    public Pair<double[][], Double> solveModelParamSubproblemJOptimizeLogProb(double[][] weights, DmvBounds bounds) {
+    public Pair<double[][], Double> solveModelParamSubproblemJOptimizeLogProb(double[][] weights, CptBounds bounds) {
         int numConds = weights.length;
 
         double cost = 0.0;
@@ -192,7 +192,7 @@ public class ModelParamSubproblem {
         return new Pair<double[][], Double>(logProbs, cost);
     }
     
-    public double[] solveModelParamSubproblemJOptimizeLogProb(final double[] weights, DmvBounds bounds, int c) {
+    public double[] solveModelParamSubproblemJOptimizeLogProb(final double[] weights, CptBounds bounds, int c) {
         final int numParams = weights.length;
         final DoubleMatrix1D weights1D = F1.make(weights);
         final DoubleMatrix2D zeros2D = F2.make(numParams, numParams);
@@ -297,7 +297,7 @@ public class ModelParamSubproblem {
      * sum-to-one constraints and the bounds on the variables.
      */
     @Deprecated
-    public static Pair<double[][], Double> solveModelParamSubproblem(double[][] weights, DmvBounds bounds) {
+    public static Pair<double[][], Double> solveModelParamSubproblem(double[][] weights, CptBounds bounds) {
         int numConds = weights.length;
 
         double cost = 0.0;

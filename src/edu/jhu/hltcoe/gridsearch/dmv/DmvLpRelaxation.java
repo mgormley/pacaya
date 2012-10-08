@@ -38,7 +38,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
 
     private static Logger log = Logger.getLogger(DmvLpRelaxation.class);
 
-    private DmvBounds bounds;
+    private CptBounds bounds;
     private File tempDir;
     private double workMemMegs;
     private int numThreads;
@@ -344,7 +344,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         throw new RuntimeException("not implemented");
     }
 
-    public DmvBounds getBounds() {
+    public CptBounds getBounds() {
         return bounds;
     }
 
