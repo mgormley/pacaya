@@ -188,7 +188,8 @@ public class PipelineRunner {
         boolean mustContainVerb = cmd.hasOption("mustContainVerb");
         String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
 
-        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences, alphabet);
+        // Create the original trainTreebank with a throw-away alphabet.
+        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences, new Alphabet<Label>());
         if (mustContainVerb) {
             trainTreebank.setTreeFilter(new VerbTreeFilter());
         }
@@ -201,6 +202,13 @@ public class PipelineRunner {
             log.info("Reducing tags with file map: " + reduceTags);
             (new FileMapTagReducer(new File(reduceTags))).reduceTags(trainTreebank);
         }
+
+        // After reducing tags we create an entirely new treebank that uses the alphabet we care about.
+        DepTreebank tmpTreebank = new DepTreebank(alphabet);
+        for (DepTree tree : trainTreebank) {
+            tmpTreebank.add(tree);
+        }
+        trainTreebank = tmpTreebank;
         return trainTreebank;
     }
 

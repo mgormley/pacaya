@@ -122,13 +122,6 @@ public class DepTreebank implements Iterable<DepTree> {
         }
     }
     
-    public void rebuildAlphabet() {
-        alphabet.reset();
-        for (DepTree tree : trees) {
-            addTreeToAlphabet(tree);
-        }
-    }
-    
     public DepTree get(int i) {
         return trees.get(i);
     }

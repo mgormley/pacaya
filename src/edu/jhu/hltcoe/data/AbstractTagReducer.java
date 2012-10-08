@@ -23,8 +23,8 @@ public abstract class AbstractTagReducer {
         for (String unknownTag : unknownTags) {
             log.warn("Unknown tag: " + unknownTag);
         }
-        
-        trees.rebuildAlphabet();
+        // TODO: this is buggy in that the alphabet is left out of sync with
+        // the treebank.
     }
 
     private void reduceTags(DepTree tree) {
