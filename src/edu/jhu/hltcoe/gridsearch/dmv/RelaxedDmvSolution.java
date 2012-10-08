@@ -7,16 +7,14 @@ public class RelaxedDmvSolution implements RelaxedSolution {
 
     private double score;
     private double[][] logProbs;
-    private double[][] fracRoots;
-    private double[][][] fracChildren;
     private RelaxStatus status;
+    private RelaxedDepTreebank treebank;
     
     public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score, RelaxStatus status) {
         super();
         this.score = score;
         this.logProbs = logProbs;
-        this.fracRoots = fracRoots;
-        this.fracChildren = fracChildren;
+        this.treebank = new RelaxedDepTreebank(fracRoots, fracChildren);
         this.status = status;
     }
 
@@ -28,17 +26,13 @@ public class RelaxedDmvSolution implements RelaxedSolution {
     public double[][] getLogProbs() {
         return logProbs;
     }
-    
-    public double[][] getFracRoots() {
-        return fracRoots;
-    }
-    
-    public double[][][] getFracChildren() {
-        return fracChildren;
-    }
 
     public RelaxStatus getStatus() {
         return status;
+    }
+
+    public RelaxedDepTreebank getTreebank() {
+        return treebank;
     }
 
 }

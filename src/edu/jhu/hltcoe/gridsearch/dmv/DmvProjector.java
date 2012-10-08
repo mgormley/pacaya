@@ -27,7 +27,6 @@ public class DmvProjector implements Projector {
         return getProjectedDmvSolution((RelaxedDmvSolution) relaxSol);
     }
 
-
     public DmvSolution getProjectedDmvSolution(RelaxedDmvSolution relaxSol) {
         if (!relaxSol.getStatus().hasSolution()) {
             return null;
@@ -52,7 +51,7 @@ public class DmvProjector implements Projector {
         // where the weight of each edge is given by the indicator variable
         // TODO: How would we do randomized rounding on the Dantzig-Wolfe parse
         // solution?
-        DepTreebank treebank = getProjectedParses(relaxSol.getFracRoots(), relaxSol.getFracChildren());
+        DepTreebank treebank = getProjectedParses(relaxSol.getTreebank());
    
         // TODO: write a new DmvMStep that stays in the bounded parameter space
         double score = dwRelax.computeTrueObjective(logProbs, treebank);
@@ -61,7 +60,10 @@ public class DmvProjector implements Projector {
         return sol;
     }
 
-    private DepTreebank getProjectedParses(double[][] fracRoots, double[][][] fracChildren) {
+    private DepTreebank getProjectedParses(RelaxedDepTreebank fracTreebank) {
+        double[][] fracRoots = fracTreebank.getFracRoots(); 
+        double[][][] fracChildren = fracTreebank.getFracChildren();
+        
         DepTreebank treebank = new DepTreebank(corpus.getLabelAlphabet());
         for (int s = 0; s < fracChildren.length; s++) {
             if (corpus.isLabeled(s)) {

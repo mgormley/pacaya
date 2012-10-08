@@ -264,7 +264,9 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         for (int s = 0; s < sentences.size(); s++) {
-            double sum = Vectors.sum(relaxSol.getFracChildren()[s]) + Vectors.sum(relaxSol.getFracRoots()[s]);
+            double[] fracRoots = relaxSol.getTreebank().getFracRoots()[s];
+            double[][] fracChildren = relaxSol.getTreebank().getFracChildren()[s];
+            double sum = Vectors.sum(fracChildren) + Vectors.sum(fracRoots);
             System.out.println(s + " fracParseSum: " + sum);
             assertEquals(sum, sentences.get(s).size(), 1e-13);
         }
