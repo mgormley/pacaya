@@ -4,8 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,7 +17,6 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreeNode;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.FileMapTagReducer;
 import edu.jhu.hltcoe.data.Label;
@@ -28,7 +25,6 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.VerbTreeFilter;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
