@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public interface DmvRelaxation {
@@ -22,8 +23,8 @@ public interface DmvRelaxation {
 
     void end();
 
-    RelaxedDmvSolution solveRelaxation();
-    RelaxedDmvSolution solveRelaxation(double incumbentScore);
+    RelaxedSolution solveRelaxation();
+    RelaxedSolution solveRelaxation(double incumbentScore);
 
     WarmStart getWarmStart();
     void setWarmStart(WarmStart warmStart);

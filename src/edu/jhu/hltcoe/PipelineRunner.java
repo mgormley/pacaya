@@ -27,9 +27,10 @@ import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
@@ -123,7 +124,7 @@ public class PipelineRunner {
             DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank, trueModel);
             Stopwatch timer = new Stopwatch();
             timer.start();
-            RelaxedDmvSolution relaxSol = dw.solveRelaxation();
+            RelaxedSolution relaxSol = dw.solveRelaxation();
             timer.stop();
             log.info("relaxTime(ms): " + Time.totMs(timer));
             log.info("relaxBound: " + relaxSol.getScore());
@@ -133,7 +134,7 @@ public class PipelineRunner {
             }
             // TODO: use add-lambda smoothing here.
             DmvProjector dmvProjector = new DmvProjector(trainCorpus, dw);
-            DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
+            DmvSolution projSol = dmvProjector.getProjectedDmvSolution((RelaxedDmvSolution)relaxSol);
             log.info("projLogLikelihood: " + projSol.getScore());
             // TODO: Remove this hack. It's only to setup for getEvalParser().
             //            TrainerFactory.getTrainer(cmd, trainTreebank);

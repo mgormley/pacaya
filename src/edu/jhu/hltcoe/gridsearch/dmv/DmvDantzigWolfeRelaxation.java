@@ -28,6 +28,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -84,7 +85,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         optimalFeatCounts = null;
     }
     
-    protected RelaxedDmvSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
+    protected RelaxedSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
         log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), mp.numStoCons));
         
         // Store optimal model parameters

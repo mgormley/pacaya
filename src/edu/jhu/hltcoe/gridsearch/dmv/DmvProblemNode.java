@@ -129,7 +129,7 @@ public class DmvProblemNode implements ProblemNode {
                 if (warmStart != null) {
                     dwRelax.setWarmStart(warmStart);
                 }
-                relaxSol = dwRelax.solveRelaxation(incumbentScore);
+                relaxSol = (RelaxedDmvSolution) dwRelax.solveRelaxation(incumbentScore);
                 optimisticBound = relaxSol.getScore();
                 isOptimisticBoundCached = true;
                 warmStart = dwRelax.getWarmStart();

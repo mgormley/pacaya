@@ -23,11 +23,12 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 
-public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
+public abstract class DantzigWolfeRelaxation {
 
     static Logger log = Logger.getLogger(DantzigWolfeRelaxation.class);
 
@@ -88,11 +89,11 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
         }
     }
 
-    public RelaxedDmvSolution solveRelaxation() {
+    public RelaxedSolution solveRelaxation() {
         return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE);
     }
 
-    public RelaxedDmvSolution solveRelaxation(double incumbentScore) {
+    public RelaxedSolution solveRelaxation(double incumbentScore) {
         try {
             clearRelaxedSolution();
             numSolves++;
@@ -121,7 +122,7 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
                 cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
             }
             log.info("Lower bound: " + lowerBound);
-            RelaxedDmvSolution relaxSol = extractSolution(status, objective);
+            RelaxedSolution relaxSol = extractSolution(status, objective);
             log.info("True obj for relaxed vars: " + getTrueObjectiveForRelaxedSolution());
             return relaxSol;
         } catch (IloException e) {
@@ -347,7 +348,7 @@ public abstract class DantzigWolfeRelaxation implements DmvRelaxation {
     
     protected abstract void clearRelaxedSolution();
 
-    protected abstract RelaxedDmvSolution extractSolution(RelaxStatus status, double objective)  throws UnknownObjectException, IloException;
+    protected abstract RelaxedSolution extractSolution(RelaxStatus status, double objective)  throws UnknownObjectException, IloException;
     
     protected abstract ArrayList<IloNumVar> getUnknownVars(HashSet<IloNumVar> knownVars);
 
