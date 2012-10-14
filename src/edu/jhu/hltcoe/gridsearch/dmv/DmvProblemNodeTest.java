@@ -44,7 +44,7 @@ public class DmvProblemNodeTest {
 
         VariableSelector varSelector = new RandomVariableSelector(true);
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
-        DmvBoundsDeltaFactory brancher = new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
+        CptBoundsDeltaFactory brancher = new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
         DmvProblemNode node = new DmvProblemNode(corpus, brancher, relax);
         List<ProblemNode> children = node.branch();
         assertEquals(2, children.size());

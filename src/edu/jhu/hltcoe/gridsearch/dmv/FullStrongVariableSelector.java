@@ -66,7 +66,7 @@ public class FullStrongVariableSelector implements VariableSelector {
         double parentBound = node.getOptimisticBound();
 
         node.setAsActiveNode();
-        List<DmvBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
+        List<CptBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
         List<ProblemNode> children = node.branch(deltas);
         assert(children.size() == 2);
         

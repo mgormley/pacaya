@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
@@ -35,7 +35,7 @@ public class LocalBnBDmvTrainerTest {
         double timeoutSeconds = 10;
         ViterbiTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
         DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
-        DmvBoundsDeltaFactory brancher = BnBDmvTrainerTest.getDefaultBrancher();
+        CptBoundsDeltaFactory brancher = BnBDmvTrainerTest.getDefaultBrancher();
         LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
                 offsetProb, probOfSkipCm, timeoutSeconds, null);
 

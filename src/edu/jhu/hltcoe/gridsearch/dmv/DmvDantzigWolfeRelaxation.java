@@ -29,7 +29,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -664,15 +664,15 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return numCutAdded;
     }
 
-    public void reverseApply(DmvBoundsDelta delta) {
-        applyDelta(DmvBoundsDelta.getReverse(delta));
+    public void reverseApply(CptBoundsDelta delta) {
+        applyDelta(CptBoundsDelta.getReverse(delta));
     }
 
-    public void forwardApply(DmvBoundsDelta delta) {
+    public void forwardApply(CptBoundsDelta delta) {
         applyDelta(delta);
     }
 
-    protected void applyDelta(DmvBoundsDelta delta) {
+    protected void applyDelta(CptBoundsDelta delta) {
         try {
             int c = delta.getC();
             int m = delta.getM();

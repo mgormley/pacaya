@@ -12,9 +12,9 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
@@ -228,7 +228,7 @@ public class TrainerFactory {
             }
         }
         
-        DmvBoundsDeltaFactory brancher = null;
+        CptBoundsDeltaFactory brancher = null;
         if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
             
             VariableSplitter varSplitter;
@@ -255,7 +255,7 @@ public class TrainerFactory {
                 throw new ParseException("Variable selection strategy not supported: " + varSelection);
             }
             
-            brancher =  new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
+            brancher =  new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
         }
 
         Comparator<ProblemNode> leafComparator = null;

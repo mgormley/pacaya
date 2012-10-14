@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class MidpointVarSplitter implements VariableSplitter {
@@ -20,7 +20,7 @@ public class MidpointVarSplitter implements VariableSplitter {
     }
     
     @Override
-    public List<DmvBoundsDelta> split(CptBounds bounds, VariableId varId) {
+    public List<CptBoundsDelta> split(CptBounds bounds, VariableId varId) {
         if (!varId.hasVar()) {
             return Collections.emptyList();
         }
@@ -34,7 +34,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         }
     }
 
-    public static List<DmvBoundsDelta> splitHalfProbSpace(CptBounds origBounds, int c, int m) {
+    public static List<CptBoundsDelta> splitHalfProbSpace(CptBounds origBounds, int c, int m) {
         // Split the current LB-UB probability space in half
         double lb = origBounds.getLb(c, m);
         double ub = origBounds.getUb(c, m);
@@ -43,7 +43,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         return splitAtMidPoint(origBounds, c, m, mid);
     }
 
-    public static List<DmvBoundsDelta> splitHalfLogProbSpace(CptBounds origBounds, int c, int m) {
+    public static List<CptBoundsDelta> splitHalfLogProbSpace(CptBounds origBounds, int c, int m) {
         // Split the current LB-UB probability space in half
         double lb = origBounds.getLb(c, m);
         double ub = origBounds.getUb(c, m);
@@ -52,13 +52,13 @@ public class MidpointVarSplitter implements VariableSplitter {
         return splitAtMidPoint(origBounds, c, m, mid);
     }
 
-    public static List<DmvBoundsDelta> splitAtMidPoint(CptBounds origBounds, int c, int m, double mid) {
+    public static List<CptBoundsDelta> splitAtMidPoint(CptBounds origBounds, int c, int m, double mid) {
         // e.g. [0.5, 1.0]
-        DmvBoundsDelta lDelta = new DmvBoundsDelta(c, m, Lu.LOWER, mid - origBounds.getLb(c, m));
+        CptBoundsDelta lDelta = new CptBoundsDelta(c, m, Lu.LOWER, mid - origBounds.getLb(c, m));
         // e.g. [0.0, 0.5]
-        DmvBoundsDelta uDelta = new DmvBoundsDelta(c, m, Lu.UPPER, mid - origBounds.getUb(c, m));
+        CptBoundsDelta uDelta = new CptBoundsDelta(c, m, Lu.UPPER, mid - origBounds.getUb(c, m));
     
-        List<DmvBoundsDelta> deltasList = new ArrayList<DmvBoundsDelta>();
+        List<CptBoundsDelta> deltasList = new ArrayList<CptBoundsDelta>();
         deltasList.add(lDelta);
         deltasList.add(uDelta);
         return deltasList;

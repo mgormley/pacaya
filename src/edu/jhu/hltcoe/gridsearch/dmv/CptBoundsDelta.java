@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-public class DmvBoundsDelta {
+public class CptBoundsDelta {
 
     public enum Lu { 
         LOWER, UPPER;
@@ -17,7 +17,7 @@ public class DmvBoundsDelta {
     private Lu lu;
     private double delta;
 
-    public DmvBoundsDelta(int c, int m, Lu lu, double delta) {
+    public CptBoundsDelta(int c, int m, Lu lu, double delta) {
         super();
         this.c = c;
         this.m = m;
@@ -41,7 +41,7 @@ public class DmvBoundsDelta {
         return lu;
     }
     
-    public static DmvBoundsDelta getReverse(DmvBoundsDelta delta) {
-        return new DmvBoundsDelta(delta.c, delta.m, delta.lu, -delta.delta);
+    public static CptBoundsDelta getReverse(CptBoundsDelta delta) {
+        return new CptBoundsDelta(delta.c, delta.m, delta.lu, -delta.delta);
     }
 }

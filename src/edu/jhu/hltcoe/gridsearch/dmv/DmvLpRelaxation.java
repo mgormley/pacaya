@@ -326,15 +326,15 @@ public class DmvLpRelaxation implements DmvRelaxation {
 
     }
 
-    public void reverseApply(DmvBoundsDelta delta) {
-        applyDelta(DmvBoundsDelta.getReverse(delta));
+    public void reverseApply(CptBoundsDelta delta) {
+        applyDelta(CptBoundsDelta.getReverse(delta));
     }
 
-    public void forwardApply(DmvBoundsDelta delta) {
+    public void forwardApply(CptBoundsDelta delta) {
         applyDelta(delta);
     }
 
-    private void applyDelta(DmvBoundsDelta delta) {
+    private void applyDelta(CptBoundsDelta delta) {
         // TODO: write this
         throw new RuntimeException("not implemented");
     }

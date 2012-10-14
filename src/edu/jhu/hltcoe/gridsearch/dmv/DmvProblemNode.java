@@ -31,10 +31,10 @@ public class DmvProblemNode implements ProblemNode {
     private DmvProblemNode parent;
     private int depth;
     private int side;
-    private DmvBoundsDelta deltas;
+    private CptBoundsDelta deltas;
     
     // For active node only:
-    private DmvBoundsDeltaFactory deltasFactory;
+    private CptBoundsDeltaFactory deltasFactory;
     private DmvRelaxation dwRelax;
     protected boolean isOptimisticBoundCached;
     protected double optimisticBound;
@@ -54,7 +54,7 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Root node constructor
      */
-    public DmvProblemNode(DmvTrainCorpus corpus, DmvBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
+    public DmvProblemNode(DmvTrainCorpus corpus, CptBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
         this.corpus = corpus;
         this.dwRelax = dwRelax;
         this.dwRelax.init1(corpus);
@@ -80,7 +80,7 @@ public class DmvProblemNode implements ProblemNode {
     /**
      * Non-root node constructor
      */
-    public DmvProblemNode(DmvBoundsDelta deltas, DmvBoundsDeltaFactory deltasFactory, DmvProblemNode parent, int side) {
+    public DmvProblemNode(CptBoundsDelta deltas, CptBoundsDeltaFactory deltasFactory, DmvProblemNode parent, int side) {
         this.deltas = deltas;
         this.deltasFactory = deltasFactory;
         this.id = getNextId();
@@ -152,17 +152,17 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public List<ProblemNode> branch() {
-        List<DmvBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
+        List<CptBoundsDelta> deltasForChildren = deltasFactory.getDmvBounds(this);
         return branch(deltasForChildren);
     }
 
     /** 
      * For use in strong branching
      */
-    List<ProblemNode> branch(List<DmvBoundsDelta> deltasForChildren) {
+    List<ProblemNode> branch(List<CptBoundsDelta> deltasForChildren) {
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
         for (int i=0; i<deltasForChildren.size(); i++) {
-            DmvBoundsDelta deltasForChild = deltasForChildren.get(i);
+            CptBoundsDelta deltasForChild = deltasForChildren.get(i);
             children.add(new DmvProblemNode(deltasForChild, deltasFactory, this, i));
         }
         warmStart = null;
@@ -330,7 +330,7 @@ public class DmvProblemNode implements ProblemNode {
         return dwRelax;
     }
 
-    public DmvBoundsDelta getDelta() {
+    public CptBoundsDelta getDelta() {
         return deltas;
     }
 

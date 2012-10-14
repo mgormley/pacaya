@@ -75,10 +75,10 @@ public class BnBDmvTrainerTest {
     }
 
 
-    public static DmvBoundsDeltaFactory getDefaultBrancher() {
+    public static CptBoundsDeltaFactory getDefaultBrancher() {
         VariableSelector varSelector = new RegretVariableSelector();
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
-        return new BasicDmvBoundsDeltaFactory(varSelector, varSplitter);
+        return new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
     }
     
 }

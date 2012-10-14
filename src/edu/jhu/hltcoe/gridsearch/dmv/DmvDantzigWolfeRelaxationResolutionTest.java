@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -237,8 +237,8 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
-                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
+                CptBoundsDelta deltas1 = new CptBoundsDelta(c, m, Lu.UPPER, deltU);
+                CptBoundsDelta deltas2 = new CptBoundsDelta(c, m, Lu.LOWER, deltL);
                 if (forward) {
                     dw.forwardApply(deltas1);
                     dw.forwardApply(deltas2);

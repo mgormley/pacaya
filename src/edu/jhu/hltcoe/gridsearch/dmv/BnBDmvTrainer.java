@@ -15,11 +15,11 @@ import edu.jhu.hltcoe.train.Trainer;
 public class BnBDmvTrainer implements Trainer<DepTreebank> {
 
     private LazyBranchAndBoundSolver bnbSolver;
-    private DmvBoundsDeltaFactory brancher;
+    private CptBoundsDeltaFactory brancher;
     private DmvProblemNode rootNode;
     private DmvRelaxation relax;
 
-    public BnBDmvTrainer(double epsilon, DmvBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds,
+    public BnBDmvTrainer(double epsilon, CptBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds,
             DependencyParserEvaluator evaluator, Comparator<ProblemNode> leafComparator) {
         this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, leafComparator, timeoutSeconds, evaluator);
         this.brancher = brancher;

@@ -16,8 +16,8 @@ public interface DmvRelaxation {
      */
     double[][] getRegretCm();
 
-    void reverseApply(DmvBoundsDelta deltas);
-    void forwardApply(DmvBoundsDelta deltas);
+    void reverseApply(CptBoundsDelta deltas);
+    void forwardApply(CptBoundsDelta deltas);
 
     CptBounds getBounds();
 

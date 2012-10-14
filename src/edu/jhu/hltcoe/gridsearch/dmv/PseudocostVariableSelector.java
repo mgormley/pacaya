@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
 
 public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
     private static Logger log = Logger.getLogger(PseudocostVariableSelector.class);
@@ -44,7 +44,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
             for (int m = 0; m < idm.getNumParams(c); m++) {
                 if (numObserved[c][m][0] < RELIABILITY_THRESHOLD || numObserved[c][m][1] < RELIABILITY_THRESHOLD) {
                     node.setAsActiveNode();
-                    List<DmvBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
+                    List<CptBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
                     List<ProblemNode> children = node.branch(deltas);
                     assert(children.size() == 2);
                     for (int lu = 0; lu < 2; lu++) {
@@ -68,7 +68,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
         }
         
         // Update the pseudocosts with the current node.
-        DmvBoundsDelta dmvBoundsDelta = node.getDelta();
+        CptBoundsDelta dmvBoundsDelta = node.getDelta();
         if (dmvBoundsDelta != null) {
             int c = dmvBoundsDelta.getC();
             int m = dmvBoundsDelta.getM();

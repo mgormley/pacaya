@@ -9,14 +9,14 @@ import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.dmv.CptBounds;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
@@ -36,7 +36,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
     ViterbiTrainer viterbiTrainer;
     private LazyBranchAndBoundSolver bnbSolver;
-    private DmvBoundsDeltaFactory brancher;
+    private CptBoundsDeltaFactory brancher;
     private DmvRelaxation relax;
     private int numRestarts;
     private double offsetProb;
@@ -46,7 +46,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     private double timeoutSeconds;
     private DependencyParserEvaluator evaluator;
     
-    public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, double epsilon, DmvBoundsDeltaFactory brancher,
+    public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, double epsilon, CptBoundsDeltaFactory brancher,
             DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm, 
             double timeoutSeconds, DependencyParserEvaluator evaluator) {
         this.viterbiTrainer = viterbiTrainer;
@@ -164,8 +164,8 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                DmvBoundsDelta deltas1 = new DmvBoundsDelta(c, m, Lu.UPPER, deltU);
-                DmvBoundsDelta deltas2 = new DmvBoundsDelta(c, m, Lu.LOWER, deltL);
+                CptBoundsDelta deltas1 = new CptBoundsDelta(c, m, Lu.UPPER, deltU);
+                CptBoundsDelta deltas2 = new CptBoundsDelta(c, m, Lu.LOWER, deltL);
                 if (forward) {
                     if (lb <= newU) {
                         dw.forwardApply(deltas1);
