@@ -224,7 +224,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             setup.set("lambda", 1)
             for initWeights in ["uniform", "random"]:
                 setup.update(initWeights=initWeights)
-                for randomRestartId in range(10):
+                for randomRestartId in range(100):
                     setup.set("randomRestartId", randomRestartId, True, False)
                     experiment = all + setup + DPExpParams()
                     root.add_dependent(ExpParamsStage(experiment, self))
