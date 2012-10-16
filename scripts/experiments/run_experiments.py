@@ -258,7 +258,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        initBounds="viterbi-em",                    
                        varSelection="regret")
             dataset = brown
-            for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 4*60*60)]:
+            for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 1*60*60)]:
                 msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                 mns = DPExpParams(maxNumSentences=maxNumSentences)
                 if not self.fast:
