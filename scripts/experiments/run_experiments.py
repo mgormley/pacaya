@@ -253,6 +253,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     for varSelection in ["regret", "rand-uniform", "rand-weighted", "full", "pseudocost"]:
                         experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
         elif self.expname == "bnb-semi":
+            root = RootStage()
             all.update(algorithm="bnb",
                        initBounds="viterbi-em",                    
                        varSelection="regret")
@@ -269,7 +270,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for propSupervised in frange(0.0, 1.0, 0.1):
                             algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
                                                propSupervised=propSupervised)
-                            experiments.append(all + dataset + msl + mns + algo)
+                            experiment = all + dataset + msl + mns + algo
+                            root.add_dependent(ExpParamsStage(experiment, self))
+            scrape = ExpParamsStage(ScrapeExpout(rproj=None, out_file="results.data"), self)
+            scrape.add_prereqs(root.dependents)
+            return root
         elif self.expname == "bnb-semi-synth":
             all.update(algorithm="bnb",
                        initBounds="gold",
