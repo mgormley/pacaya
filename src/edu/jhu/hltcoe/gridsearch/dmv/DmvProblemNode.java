@@ -162,8 +162,8 @@ public class DmvProblemNode implements ProblemNode {
     List<ProblemNode> branch(List<CptBoundsDelta> deltasForChildren) {
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
         for (int i=0; i<deltasForChildren.size(); i++) {
-            CptBoundsDelta deltasForChild = deltasForChildren.get(i);
-            children.add(new DmvProblemNode(deltasForChild, deltasFactory, this, i));
+            CptBoundsDelta deltaForChild = deltasForChildren.get(i);
+            children.add(new DmvProblemNode(deltaForChild, deltasFactory, this, i));
         }
         warmStart = null;
         return children;

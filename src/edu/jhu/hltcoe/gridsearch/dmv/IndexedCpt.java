@@ -15,8 +15,8 @@ public interface IndexedCpt {
      */
     public int[][] getTotalMaxFreqCm();
 
-    public int getTotalMaxFreqCm(int c, int m);
+    public int getUnsupervisedMaxTotalFreqCm(int c, int m);
 
-    public int getNumNonZeroMaxFreqCms();
+    public int getNumNonZeroUnsupMaxFreqCms();
 
 }

@@ -80,7 +80,7 @@ public class ProjectionsTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("N V N Adj");
         sentences.addSentenceFromString("N N V Adj");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = IndexedDmvModelTest.getIdm(sentences);
         CptBounds logBounds = new CptBounds(idm);
         Assert.assertEquals(lbs.length, ubs.length);
         int c = 0;
@@ -125,7 +125,7 @@ public class ProjectionsTest {
             }
         }
         sentences.addSentenceFromString(fakeSentence.toString());
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = IndexedDmvModelTest.getIdm(sentences);
         CptBounds logBounds = new CptBounds(idm);
         
         int c = 0;

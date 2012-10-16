@@ -307,6 +307,10 @@ public class DmvDantzigWolfeRelaxationTest {
 
         DmvDantzigWolfeRelaxation dw = getDw(trainCorpus, 10);
 
+        DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(InitSol.VITERBI_EM, trainCorpus, dw, null, null);
+        LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, 0.1, 0.0);
+            
+        // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(-14.813, relaxSol.getScore(), 1e-3);
     }

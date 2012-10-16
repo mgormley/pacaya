@@ -31,7 +31,7 @@ public class ModelParamSubproblemTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("Det N"); 
         sentences.addSentenceFromString("Adj N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = IndexedDmvModelTest.getIdm(sentences);
         
         ModelParamSubproblem mps = new ModelParamSubproblem();
         CptBounds bounds = new CptBounds(idm);
@@ -72,7 +72,7 @@ public class ModelParamSubproblemTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("Det N"); 
         sentences.addSentenceFromString("Adj N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = IndexedDmvModelTest.getIdm(sentences);
         
         ModelParamSubproblem mps = new ModelParamSubproblem();
         CptBounds bounds = new CptBounds(idm);

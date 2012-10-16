@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -65,19 +66,15 @@ public class IndexedDmvModel implements IndexedCpt {
     private ArrayList<Alphabet<ParamId>> sentParamToI;
     private ArrayList<Alphabet<CM>> sentCmToI;
     private int[][] sentMaxFreqSi; 
-    private int[][] totMaxFreqCm;
+    private int[][] unsupMaxTotFreqCm;
     private int numTotalParams;
-    private int numNZMaxFreqCms;
+    private int numNZUnsupMaxFreqCms;
     private Alphabet<Label> alphabet;
     private Set<Label> vocab;
     private SentenceCollection sentences; 
     
     public IndexedDmvModel(DmvTrainCorpus corpus) {
-        this(corpus.getSentences());
-    }
-    
-    public IndexedDmvModel(SentenceCollection sentences) {
-        this.sentences = sentences;
+        this.sentences = corpus.getSentences();
         this.alphabet = sentences.getLabelAlphabet();
         this.vocab = sentences.getVocab();
 
@@ -154,23 +151,34 @@ public class IndexedDmvModel implements IndexedCpt {
             }
         }
 
-        // Create the count of total max frequencies for each model parameter in term of c,m
-        // Also count total number of parameters
+        // Count total number of parameters
         numTotalParams = 0;
-        numNZMaxFreqCms = 0;
-        totMaxFreqCm = new int[getNumConds()][];
         for (int c = 0; c < getNumConds(); c++) {
-            totMaxFreqCm[c] = new int[getNumParams(c)];
             for (int m = 0; m < getNumParams(c); m++) {
                 numTotalParams++;
+            }
+        }
+        // Create the count of total max frequencies for each model parameter in term of c,m
+        // and count the total number of non-zero max frequencies.
+        numNZUnsupMaxFreqCms = 0;
+        unsupMaxTotFreqCm = new int[getNumConds()][];
+        for (int c = 0; c < getNumConds(); c++) {
+            unsupMaxTotFreqCm[c] = new int[getNumParams(c)];
+            for (int m = 0; m < getNumParams(c); m++) {
                 for (int s = 0; s < sentMaxFreqSi.length; s++) {
-                    totMaxFreqCm[c][m] += sentMaxFreqCm[s][c][m];
+                    if (!corpus.isLabeled(s)) {
+                        unsupMaxTotFreqCm[c][m] += sentMaxFreqCm[s][c][m];
+                    }
                 }
-                if (totMaxFreqCm[c][m] > 0) {
-                    numNZMaxFreqCms++;
+              
+                if (unsupMaxTotFreqCm[c][m] > 0) {
+                    numNZUnsupMaxFreqCms++;
                 }                    
             }
         }
+        
+        System.out.println("numNZUnsupMaxFreqCms: " + numNZUnsupMaxFreqCms);
+        System.out.println("unsupMaxTotFreqCm: " + Arrays.deepToString(unsupMaxTotFreqCm));
     }
 
     private int[][] getSentMaxFreqCm(Sentence sentence) {
@@ -292,21 +300,21 @@ public class IndexedDmvModel implements IndexedCpt {
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
      */
     public int[][] getTotalMaxFreqCm() {
-        return totMaxFreqCm;
+        return unsupMaxTotFreqCm;
     }
 
     /* (non-Javadoc)
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm(int, int)
      */
-    public int getTotalMaxFreqCm(int c, int m) {
-        return totMaxFreqCm[c][m];
+    public int getUnsupervisedMaxTotalFreqCm(int c, int m) {
+        return unsupMaxTotFreqCm[c][m];
     }
     
     /* (non-Javadoc)
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumNonZeroMaxFreqCms()
      */
-    public int getNumNonZeroMaxFreqCms() {
-        return numNZMaxFreqCms;
+    public int getNumNonZeroUnsupMaxFreqCms() {
+        return numNZUnsupMaxFreqCms;
     }
     
     public int getNumSentVars(int s) {        
@@ -332,8 +340,9 @@ public class IndexedDmvModel implements IndexedCpt {
     }
 
     /**
-     * 
+     * Not used anywhere.
      */
+    @Deprecated
     public int getMaxFreq(int s, int i) {
         return sentMaxFreqSi[s][i];
     }

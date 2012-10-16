@@ -252,7 +252,7 @@ public class DwDmvRelaxedParser extends DantzigWolfeRelaxation {
                 // Add the lower coupling constraint
                 IloNumVar slackVarLower = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarLower_{%d,%d}",c,m));
                 name = String.format("ccLb(%d,%d)", c, m);   
-                double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
+                double maxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
                                         cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
                 mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);

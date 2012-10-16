@@ -49,7 +49,7 @@ public class IndexedDmvModelTest {
         sentences.addSentenceFromString("N V");
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = getIdm(sentences);
                 
         assertEquals(1+6+3*2*2, idm.getNumConds());
         // Root
@@ -108,6 +108,10 @@ public class IndexedDmvModelTest {
         int[][] maxFreqCm = idm.getTotalMaxFreqCm();
         assertEquals(2, maxFreqCm[0][1]);
     }
+
+    public static IndexedDmvModel getIdm(SentenceCollection sentences) {
+        return new IndexedDmvModel(new DmvTrainCorpus(sentences));
+    }
     
     @Test
     public void testDepSentenceDist() {
@@ -115,7 +119,7 @@ public class IndexedDmvModelTest {
         sentences.addSentenceFromString("N V");
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = getIdm(sentences);
 
         System.out.print("alphabet: ");
         for (int i=0; i<sentences.getLabelAlphabet().size(); i++){
@@ -151,7 +155,7 @@ public class IndexedDmvModelTest {
         sentences.addSentenceFromString("N V");
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = getIdm(sentences);
         
         double[][] logProbs = new double[idm.getNumConds()][];
         for (int c=0; c<logProbs.length; c++) {
@@ -178,7 +182,7 @@ public class IndexedDmvModelTest {
         sentences.addSentenceFromString("N V");
         sentences.addSentenceFromString("N V N N N");
         sentences.addSentenceFromString("D N");
-        IndexedDmvModel idm = new IndexedDmvModel(sentences);
+        IndexedDmvModel idm = getIdm(sentences);
         
         int s = 1;
         Sentence sentence = sentences.get(s);

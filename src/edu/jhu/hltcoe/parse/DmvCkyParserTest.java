@@ -145,8 +145,8 @@ public class DmvCkyParserTest {
 
     public static DmvTrainCorpus getSyntheticCorpus(DmvModel dmvModel) {
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
-        DepTreebank treebank = generator.getTreebank(10);
-        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 0.5);
+        DepTreebank treebank = generator.getTreebank(100);
+        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 0.9);
         System.out.println("Fully supervised logProb: " + (new DmvObjective(trainCorpus)).computeTrueObjective(dmvModel, treebank));
         return trainCorpus;
     }
