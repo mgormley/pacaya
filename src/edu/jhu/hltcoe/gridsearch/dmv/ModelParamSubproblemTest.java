@@ -8,7 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
@@ -66,15 +66,6 @@ public class ModelParamSubproblemTest {
         System.out.println("bLogProbs: " + Utilities.deepToString(betterLogProbs));
         System.out.println("betterredcost: " + betterRedCost);
     }
-
-    private void adjustBounds(IndexedDmvModel idm, CptBounds bounds) {
-        for (int c=0; c<idm.getNumConds(); c++) {
-            for (int m=0; m<idm.getNumParams(c); m++) {
-                bounds.set(c, m, CptBounds.DEFAULT_LOWER_BOUND, CptBounds.DEFAULT_UPPER_BOUND);
-            }
-        }
-    }
-    
 
     @Test
     public void testCorrectnessJOptimizeLogProb() {

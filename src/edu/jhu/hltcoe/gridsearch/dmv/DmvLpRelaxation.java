@@ -19,10 +19,9 @@ import java.io.PrintWriter;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.ilp.ZimplRunner;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -153,7 +152,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         for (int c = 0; c < numConds; c++) {
             mp.modelParamVars[c] = new IloNumVar[idm.getNumParams(c)];
             for (int m = 0; m < mp.modelParamVars[c].length; m++) {
-                mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), idm.getName(c, m));
+                mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(Type.PARAM, c, m), bounds.getUb(Type.PARAM, c, m), idm.getName(c, m));
             }
         }
 
@@ -198,7 +197,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
                                         cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
-                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
+                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);
                 
                 // Add the upper coupling constraint
                 IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarUpper_{%d,%d}",c,m));

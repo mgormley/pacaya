@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -21,7 +21,7 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
         CptBounds origBounds = node.getBounds();
         for (int c=0; c<scores.length; c++) {
             for (int m=0; m<scores[c].length; m++) {
-                if (!origBounds.canBranch(c,m)) {
+                if (!origBounds.canBranch(Type.PARAM, c, m)) {
                     scores[c][m] = Double.NEGATIVE_INFINITY;
                 }
             }

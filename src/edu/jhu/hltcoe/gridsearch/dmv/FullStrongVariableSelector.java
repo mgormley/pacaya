@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 
 public class FullStrongVariableSelector implements VariableSelector {
 
@@ -37,7 +38,7 @@ public class FullStrongVariableSelector implements VariableSelector {
         int maxM = -1;
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
-                if (!origBounds.canBranch(c, m)) {
+                if (!origBounds.canBranch(Type.PARAM, c, m)) {
                     continue;
                 }
                 

@@ -27,6 +27,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -302,7 +303,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                 name = String.format("ccLb(%d,%d)", c, m);   
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.diff(slackVarLower, mp.objVars[c][m]);
-                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
+                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);
                 
                 // Add the upper coupling constraint
                 IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarUpper_{%d,%d}",c,m));
@@ -463,7 +464,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             for (int m = 0; m < numParams; m++) {
                 // Calculate new model parameter values for parser
                 // based on the relaxed-objective-coupling-constraints
-                parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
+                parseWeights[c][m] = (pricesLower[j] * bounds.getLb(Type.PARAM, c, m) + pricesUpper[j] * bounds.getUb(Type.PARAM, c, m));
                 j++;
                 // We want to minimize the following:
                 // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
@@ -586,8 +587,8 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             int c = delta.getC();
             int m = delta.getM();
             
-            double origLb = bounds.getLb(c, m);
-            double origUb = bounds.getUb(c, m);
+            double origLb = bounds.getLb(Type.PARAM, c, m);
+            double origUb = bounds.getUb(Type.PARAM, c, m);
             double newLb = origLb;
             double newUb = origUb;
             
@@ -603,7 +604,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
             assert newLb <= newUb : String.format("l,u = %f, %f", newLb, newUb);
             
             // Updates the bounds of the model parameters
-            bounds.set(c, m, newLb, newUb);
+            bounds.set(Type.PARAM, c, m, newLb, newUb);
 
             // Update lambda column if it uses parameter c,m
             TIntArrayList rowind = new TIntArrayList();
@@ -621,11 +622,11 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                     // Update the lower coupling constraint coefficient
                     rowind.add(lowCmInd);
                     colind.add(lv.colind);
-                    val.add(bounds.getLb(c, m) * lv.sentSol[i]);
+                    val.add(bounds.getLb(Type.PARAM, c, m) * lv.sentSol[i]);
                     // Update the upper coupling constraint coefficient
                     rowind.add(upCmInd);
                     colind.add(lv.colind);
-                    val.add(bounds.getUb(c, m) * lv.sentSol[i]);
+                    val.add(bounds.getUb(Type.PARAM, c, m) * lv.sentSol[i]);
                 }
             }
             if (rowind.size() > 0) {

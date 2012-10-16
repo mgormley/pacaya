@@ -6,9 +6,9 @@ import ilog.cplex.IloCplex.BasisStatus;
 
 public class WarmStart {
 
-    IloNumVar[] numVars;
-    IloRange[] ranges;
-    BasisStatus[] numVarStatuses;
-    BasisStatus[] rangeStatuses;
+    public IloNumVar[] numVars;
+    public IloRange[] ranges;
+    public BasisStatus[] numVarStatuses;
+    public BasisStatus[] rangeStatuses;
     
 }

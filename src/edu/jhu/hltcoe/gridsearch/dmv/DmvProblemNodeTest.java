@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -64,8 +65,8 @@ public class DmvProblemNodeTest {
             bounds[c] = new double[idm.getNumParams(c)][2];
             for (int m=0; m<idm.getNumParams(c); m++) {
                 CptBounds b = node.getBounds();
-                bounds[c][m][0] = b.getLb(c, m);
-                bounds[c][m][1] = b.getUb(c, m);
+                bounds[c][m][0] = b.getLb(Type.PARAM, c, m);
+                bounds[c][m][1] = b.getUb(Type.PARAM, c, m);
             }
         }
         
@@ -73,14 +74,14 @@ public class DmvProblemNodeTest {
         for (int c=0; c<idm.getNumConds(); c++) {
             CptBounds b = c1.getBounds();                
              for (int m=0; m<idm.getNumParams(c); m++) {
-                Assert.assertTrue(bounds[c][m][0] <= b.getLb(c, m));
-                Assert.assertTrue(bounds[c][m][1] >= b.getUb(c, m));
+                Assert.assertTrue(bounds[c][m][0] <= b.getLb(Type.PARAM, c, m));
+                Assert.assertTrue(bounds[c][m][1] >= b.getUb(Type.PARAM, c, m));
             }
         }
         if (c1.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c1.getBounds().getLb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
         } else {
-            assertEquals(Math.log(0.5), c1.getBounds().getLb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
         }
         
         DmvProblemNode c3 = (DmvProblemNode)c1.branch().get(0);
@@ -89,17 +90,17 @@ public class DmvProblemNodeTest {
         
         checkedSetActive(c2, c3);
         if (c2.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c2.getBounds().getUb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
         } else {
-            assertEquals(Math.log(0.5), c2.getBounds().getUb(2, 1), 1e-7);
+            assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
         }
         DmvProblemNode c4 = (DmvProblemNode)c2.branch().get(1);
         checkedSetActive(c4, c2);
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
                 CptBounds b = c4.getBounds();                
-                Assert.assertTrue(bounds[c][m][0] <= b.getLb(c, m));
-                Assert.assertTrue(bounds[c][m][1] >= b.getUb(c, m));
+                Assert.assertTrue(bounds[c][m][0] <= b.getLb(Type.PARAM, c, m));
+                Assert.assertTrue(bounds[c][m][1] >= b.getUb(Type.PARAM, c, m));
             }
         }
 

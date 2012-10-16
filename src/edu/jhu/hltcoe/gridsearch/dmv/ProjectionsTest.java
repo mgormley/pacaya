@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Utilities;
@@ -84,7 +85,7 @@ public class ProjectionsTest {
         Assert.assertEquals(lbs.length, ubs.length);
         int c = 0;
         for (int m=0; m<lbs.length; m++) {
-            logBounds.set(c, m, Utilities.log(lbs[m]), Utilities.log(ubs[m]));
+            logBounds.set(Type.PARAM, c, m, Utilities.log(lbs[m]), Utilities.log(ubs[m]));
         }
         
         double[] x = projections.getProjectedParams(logBounds, c, params);
@@ -133,8 +134,8 @@ public class ProjectionsTest {
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         
         for (int m=0; m<params.length; m++) {
-            Assert.assertTrue(Utilities.exp(logBounds.getLb(c, m)) <= x[m]);
-            Assert.assertTrue(x[m] <= Utilities.exp(logBounds.getUb(c, m)));
+            Assert.assertTrue(Utilities.exp(logBounds.getLb(Type.PARAM, c, m)) <= x[m]);
+            Assert.assertTrue(x[m] <= Utilities.exp(logBounds.getUb(Type.PARAM, c, m)));
         }
     }
     

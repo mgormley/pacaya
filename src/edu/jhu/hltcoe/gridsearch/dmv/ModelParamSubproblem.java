@@ -1,7 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.util.Arrays;
-
 import org.apache.log4j.Logger;
 
 import cern.colt.matrix.DoubleFactory1D;
@@ -19,7 +17,7 @@ import com.joptimizer.optimizers.OptimizationRequest;
 import com.joptimizer.optimizers.OptimizationResponse;
 import com.joptimizer.optimizers.PrimalDualMethod;
 
-import edu.jhu.hltcoe.math.Multinomials;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Sort;
@@ -111,14 +109,14 @@ public class ModelParamSubproblem {
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = -1;
-            inequalities[m] = new LinearMultivariateRealFunction(F1.make(factors), Utilities.exp(bounds.getLb(c, m)) - 1e-13);
+            inequalities[m] = new LinearMultivariateRealFunction(F1.make(factors), Utilities.exp(bounds.getLb(Type.PARAM, c, m)) - 1e-13);
         }
         
         // Upper bounds
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = 1;
-            inequalities[numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), - (Utilities.exp((bounds.getUb(c, m)) + 1e-13)));
+            inequalities[numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), - (Utilities.exp((bounds.getUb(Type.PARAM, c, m)) + 1e-13)));
         }
 
         OptimizationRequest or = new OptimizationRequest();
@@ -126,11 +124,11 @@ public class ModelParamSubproblem {
         // TODO: better initialization!!!
         double[] initProbs = new double[numParams];
         for (int m=0; m<numParams; m++) {
-            initProbs[m] = Utilities.exp(bounds.getLb(c, m));
+            initProbs[m] = Utilities.exp(bounds.getLb(Type.PARAM, c, m));
         }
         double remaining = 1.0 - Vectors.sum(initProbs);
         for (int m=0; m<numParams; m++) {
-            double diff = Math.min(remaining, Utilities.exp(bounds.getUb(c, m)) - initProbs[m]);
+            double diff = Math.min(remaining, Utilities.exp(bounds.getUb(Type.PARAM, c, m)) - initProbs[m]);
             initProbs[m] += diff;
             remaining -= diff;
             if (remaining <= 0) {
@@ -250,14 +248,14 @@ public class ModelParamSubproblem {
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = -1;
-            inequalities[1+m] = new LinearMultivariateRealFunction(F1.make(factors), bounds.getLb(c, m) - 1e-13);
+            inequalities[1+m] = new LinearMultivariateRealFunction(F1.make(factors), bounds.getLb(Type.PARAM, c, m) - 1e-13);
         }
         
         // Upper bounds
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = 1;
-            inequalities[1+numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), -(bounds.getUb(c, m) + 1e-13));
+            inequalities[1+numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), -(bounds.getUb(Type.PARAM, c, m) + 1e-13));
         }
         
         // Run optimization
@@ -266,7 +264,7 @@ public class ModelParamSubproblem {
         // TODO: better initialization!!!
         double[] initLogProbs = new double[numParams];
         for (int m=0; m<numParams; m++) {
-            initLogProbs[m] = bounds.getLb(c, m);
+            initLogProbs[m] = bounds.getLb(Type.PARAM, c, m);
         }
         or.initialPoint = F1.make(initLogProbs);
         or.fi = inequalities;
@@ -311,7 +309,7 @@ public class ModelParamSubproblem {
 
             // Initialize each parameter to its lower bound
             for (int m = 0; m < numParams; m++) {
-                logProbs[c][m] = bounds.getLb(c, m);
+                logProbs[c][m] = bounds.getLb(Type.PARAM, c, m);
                 massRemaining -= Utilities.exp(logProbs[c][m]);
             }
 
@@ -333,7 +331,7 @@ public class ModelParamSubproblem {
                 double logMax = Utilities.logAdd(Utilities.log(massRemaining), logProbs[c][m]);
                 // double logMax = Utilities.log(massRemaining +
                 // Utilities.exp(logProbs[c][m]));
-                double diff = Math.min(logMax, bounds.getUb(c, m)) - logProbs[c][m];
+                double diff = Math.min(logMax, bounds.getUb(Type.PARAM, c, m)) - logProbs[c][m];
                 massRemaining += Utilities.exp(logProbs[c][m]);
                 logProbs[c][m] += diff;
                 massRemaining -= Utilities.exp(logProbs[c][m]);

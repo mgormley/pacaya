@@ -11,20 +11,32 @@ public class CptBoundsDelta {
     public enum Dir { 
         ADD, SUBTRACT 
     }  
+    public enum Type {
+        PARAM, COUNT;
+        public int getAsInt() {
+            return (this == PARAM) ? 0 : 1;
+        } 
+    }
     
     private int c;
     private int m; 
     private Lu lu;
     private double delta;
+    private Type type;
 
-    public CptBoundsDelta(int c, int m, Lu lu, double delta) {
+    public CptBoundsDelta(Type type, int c, int m, Lu lu, double delta) {
         super();
+        this.type = type;
         this.c = c;
         this.m = m;
         this.lu = lu;
         this.delta = delta;
     }
 
+    public Type getType() {
+        return type;
+    }
+    
     public int getC() {
         return c;
     }
@@ -42,6 +54,6 @@ public class CptBoundsDelta {
     }
     
     public static CptBoundsDelta getReverse(CptBoundsDelta delta) {
-        return new CptBoundsDelta(delta.c, delta.m, delta.lu, -delta.delta);
+        return new CptBoundsDelta(delta.type, delta.c, delta.m, delta.lu, -delta.delta);
     }
 }

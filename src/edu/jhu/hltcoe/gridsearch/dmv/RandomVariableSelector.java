@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
@@ -69,20 +70,21 @@ public class RandomVariableSelector implements VariableSelector {
         int c;
         int m;
 
-        double[] adjusted = Utilities.copyOf(freqs);
-        for (int i=0; i<adjusted.length; i++) {
-            c = cms[i].get1();
-            m = cms[i].get2();
-            if (!origBounds.canBranch(c, m)) {
-                
-            }
-        }
+        //        // TODO: This code might help but we'd need to fix sampleFromProportions so that it didn't return 0.0 proportion items.
+        //        double[] adjusted = Utilities.copyOf(freqs);
+        //        for (int i=0; i<adjusted.length; i++) {
+        //            c = cms[i].get1();
+        //            m = cms[i].get2();
+        //            if (!origBounds.canBranch(Type.PARAM, c, m)) {
+        //                adjusted[i] = 0.0;
+        //            }
+        //        }
         
         do {
             int cmId = Multinomials.sampleFromProportions(freqs);
             c = cms[cmId].get1();
             m = cms[cmId].get2();
-        } while(!origBounds.canBranch(c, m));
+        } while(!origBounds.canBranch(Type.PARAM, c, m));
 
         return new VariableId(c, m);
     }

@@ -30,6 +30,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -321,14 +322,14 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 
         // Create the model parameter variables, adding them to the objective
         mp.modelParamVars = new IloNumVar[numConds][];
-        int[][] totFreqCm = idm.getTotSupervisedFreqCm(corpus);
+        int[][] totSupFreqCm = idm.getTotSupervisedFreqCm(corpus);
         for (int c = 0; c < numConds; c++) {
             mp.modelParamVars[c] = new IloNumVar[idm.getNumParams(c)];
             for (int m = 0; m < mp.modelParamVars[c].length; m++) {
-                mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(c, m), bounds.getUb(c, m), idm.getName(c, m));
-                if (totFreqCm[c][m] != 0) {
+                mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(Type.PARAM, c, m), bounds.getUb(Type.PARAM, c, m), idm.getName(c, m));
+                if (totSupFreqCm[c][m] != 0) {
                     // Negate the coefficients since we are minimizing
-                    cplex.setLinearCoef(mp.objective, -totFreqCm[c][m], mp.modelParamVars[c][m]);
+                    cplex.setLinearCoef(mp.objective, -totSupFreqCm[c][m], mp.modelParamVars[c][m]);
                 }
             }
         }
@@ -362,7 +363,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 double maxFreqCm = idm.getTotalMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
                                         cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
-                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(c,m), rhsLower, name);
+                mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);
                 
                 // Add the upper coupling constraint
                 IloNumVar slackVarUpper = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarUpper_{%d,%d}",c,m));
@@ -525,12 +526,12 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             
             // Add to the lower coupling constraint
             ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
-            val[j] = bounds.getLb(c, m) * sentSol[i];
+            val[j] = bounds.getLb(Type.PARAM, c, m) * sentSol[i];
             j++;
             
             // Add to the upper coupling constraint
             ind[j] = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
-            val[j] = bounds.getUb(c, m) * sentSol[i];
+            val[j] = bounds.getUb(Type.PARAM, c, m) * sentSol[i];
             j++;
         }
         int colind = mp.lpMatrix.addColumn(lambdaVar, ind, val);
@@ -579,7 +580,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             for (int m = 0; m < numParams; m++) {
                 // Calculate new model parameter values for parser
                 // based on the relaxed-objective-coupling-constraints
-                parseWeights[c][m] = (pricesLower[j] * bounds.getLb(c, m) + pricesUpper[j] * bounds.getUb(c, m));
+                parseWeights[c][m] = (pricesLower[j] * bounds.getLb(Type.PARAM, c, m) + pricesUpper[j] * bounds.getUb(Type.PARAM, c, m));
                 j++;
                 // We want to minimize the following:
                 // c^T - q^T D_s = - (pricesLower[m]*bounds.getLb(c,m) + pricesUpper[m]*bounds.getUb(c,m))
@@ -674,15 +675,15 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
     protected void applyDelta(CptBoundsDelta delta) {
         try {
+            Type type = delta.getType();
             int c = delta.getC();
             int m = delta.getM();
-            
-            double origLb = bounds.getLb(c, m);
-            double origUb = bounds.getUb(c, m);
+
+            double origLb = bounds.getLb(type, c, m);
+            double origUb = bounds.getUb(type, c, m);
             double newLb = origLb;
             double newUb = origUb;
-            
-            // TODO: all the logAdds should be relegated to the Bounds Delta Factory
+
             if (delta.getLu() == Lu.LOWER) {
                 newLb = origLb + delta.getDelta();
             } else if (delta.getLu() == Lu.UPPER) {
@@ -692,39 +693,45 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             }
 
             assert newLb <= newUb : String.format("l,u = %f, %f", newLb, newUb);
-            
-            // Updates the bounds of the model parameters
-            bounds.set(c, m, newLb, newUb);
-            mp.modelParamVars[c][m].setLB(newLb);
-            mp.modelParamVars[c][m].setUB(newUb);
+            bounds.set(type, c, m, newLb, newUb);
 
-            // Update lambda column if it uses parameter c,m
-            TIntArrayList rowind = new TIntArrayList();
-            TIntArrayList colind = new TIntArrayList();
-            TDoubleArrayList val = new TDoubleArrayList();
-            int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
-            int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
-            for (LambdaVar lv : mp.lambdaVars) {
-                int i = idm.getSi(lv.s, c, m);
-                if (i != -1) {
-                    // Using cplex.setLinearCoef() is horridly slow. Some suggestions for how to make modification 
-                    // of the problem faster here:
-                    // https://www.ibm.com/developerworks/forums/thread.jspa?threadID=324926
+            if (type == Type.PARAM) {
+                // Updates the bounds of the model parameters
+                mp.modelParamVars[c][m].setLB(newLb);
+                mp.modelParamVars[c][m].setUB(newUb);
 
-                    // Update the lower coupling constraint coefficient
-                    rowind.add(lowCmInd);
-                    colind.add(lv.colind);
-                    val.add(bounds.getLb(c, m) * lv.sentSol[i]);
-                    // Update the upper coupling constraint coefficient
-                    rowind.add(upCmInd);
-                    colind.add(lv.colind);
-                    val.add(bounds.getUb(c, m) * lv.sentSol[i]);
+                // Update lambda column if it uses parameter c,m
+                TIntArrayList rowind = new TIntArrayList();
+                TIntArrayList colind = new TIntArrayList();
+                TDoubleArrayList val = new TDoubleArrayList();
+                int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
+                int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
+                for (LambdaVar lv : mp.lambdaVars) {
+                    int i = idm.getSi(lv.s, c, m);
+                    if (i != -1) {
+                        // Using cplex.setLinearCoef() is horridly slow. Some
+                        // suggestions for how to make modification
+                        // of the problem faster here:
+                        // https://www.ibm.com/developerworks/forums/thread.jspa?threadID=324926
+
+                        // Update the lower coupling constraint coefficient
+                        rowind.add(lowCmInd);
+                        colind.add(lv.colind);
+                        val.add(bounds.getLb(Type.PARAM, c, m) * lv.sentSol[i]);
+                        // Update the upper coupling constraint coefficient
+                        rowind.add(upCmInd);
+                        colind.add(lv.colind);
+                        val.add(bounds.getUb(Type.PARAM, c, m) * lv.sentSol[i]);
+                    }
                 }
+                if (rowind.size() > 0) {
+                    mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
+                }
+            } else {
+                //TODO: Implement this
+                throw new RuntimeException("not implemented");
             }
-            if (rowind.size() > 0) {
-                mp.lpMatrix.setNZs(rowind.toNativeArray(), colind.toNativeArray(), val.toNativeArray());
-            }
-            
+
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
@@ -737,7 +744,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             int numParams = idm.getNumParams(c);
             // Sum the upper bounds
             for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, bounds.getUb(c, m));
+                logSum = Utilities.logAdd(logSum, bounds.getUb(Type.PARAM, c, m));
             }
             
             if (logSum < -1e-10) {
@@ -752,7 +759,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             int numParams = idm.getNumParams(c);
             // Sum the lower bounds
             for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, bounds.getLb(c, m));
+                logSum = Utilities.logAdd(logSum, bounds.getLb(Type.PARAM, c, m));
             }
             
             if (logSum > 1e-10) {

@@ -17,6 +17,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
@@ -25,7 +26,6 @@ import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.pr.DepProbMatrix;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
@@ -133,15 +133,16 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         boolean forward = true;
         double offsetLogProb = Utilities.log(offsetProb);
         double[][] logProbs = initSol.getLogProbs();
-        
+        int[][] featCounts = initSol.getFeatCounts(); 
+              
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
     
                 double newL, newU;
                 CptBounds origBounds = dw.getBounds();
-                double lb = origBounds.getLb(c, m);
-                double ub = origBounds.getUb(c, m);
+                double lb = origBounds.getLb(Type.PARAM, c, m);
+                double ub = origBounds.getUb(Type.PARAM, c, m);
                 
                 if (Prng.nextDouble() < probOfSkipCm) {
                     // Don't constrain this variable
@@ -164,8 +165,8 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                CptBoundsDelta deltas1 = new CptBoundsDelta(c, m, Lu.UPPER, deltU);
-                CptBoundsDelta deltas2 = new CptBoundsDelta(c, m, Lu.LOWER, deltL);
+                CptBoundsDelta deltas1 = new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU);
+                CptBoundsDelta deltas2 = new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL);
                 if (forward) {
                     if (lb <= newU) {
                         dw.forwardApply(deltas1);
@@ -179,7 +180,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                     dw.reverseApply(deltas1);
                     dw.reverseApply(deltas2);
                 }
-                System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
+                System.out.println("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
             }
         }
     }

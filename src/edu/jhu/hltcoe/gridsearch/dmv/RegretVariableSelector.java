@@ -1,10 +1,8 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -31,7 +29,7 @@ public class RegretVariableSelector implements VariableSelector {
         // Don't branch on variables that have bottomed out
         for (int c=0; c<regret.length; c++) {
             for (int m=0; m<regret[c].length; m++) {
-                if (!origBounds.canBranch(c,m)) {
+                if (!origBounds.canBranch(Type.PARAM,c, m)) {
                     regret[c][m] = Double.NEGATIVE_INFINITY;
                 }
             }

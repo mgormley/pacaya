@@ -38,4 +38,8 @@ public class DmvSolution implements Solution {
         this.score = score;
     }
 
+    public int[][] getFeatCounts() {
+        return idm.getTotFreqCm(treebank);
+    }
+
 }

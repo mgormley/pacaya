@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;
@@ -94,8 +95,8 @@ public class Projections {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
-            lbs[m] = Utilities.exp(logBounds.getLb(c, m));
-            ubs[m] = Utilities.exp(logBounds.getUb(c, m));
+            lbs[m] = Utilities.exp(logBounds.getLb(Type.PARAM, c, m));
+            ubs[m] = Utilities.exp(logBounds.getUb(Type.PARAM, c, m));
         }
         
         return getProjectedParams(params, lbs, ubs);

@@ -20,6 +20,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -173,8 +174,8 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvDantzigWolfeRelaxation dw = getDw(sentences);
         
         CptBounds bds = dw.getBounds();
-        double origLower = bds.getLb(0, 0);
-        double origUpper = bds.getUb(0, 0);
+        double origLower = bds.getLb(Type.PARAM, 0, 0);
+        double origUpper = bds.getUb(Type.PARAM, 0, 0);
         
         double newL, newU;
 
@@ -191,8 +192,8 @@ public class DmvDantzigWolfeRelaxationTest {
         relaxSol = testBoundsHelper(dw, newL, newU, true);
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
         
-        assertEquals(origLower, bds.getLb(0, 0), 1e-7);
-        assertEquals(origUpper, bds.getUb(0, 0), 1e-13);
+        assertEquals(origLower, bds.getLb(Type.PARAM, 0, 0), 1e-7);
+        assertEquals(origUpper, bds.getUb(Type.PARAM, 0, 0), 1e-13);
         
     }
 
@@ -224,14 +225,14 @@ public class DmvDantzigWolfeRelaxationTest {
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
                 CptBounds origBounds = dw.getBounds();
-                double lb = origBounds.getLb(c, m);
-                double ub = origBounds.getUb(c, m);
+                double lb = origBounds.getLb(Type.PARAM, c, m);
+                double ub = origBounds.getUb(Type.PARAM, c, m);
 
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                CptBoundsDelta deltas1 = new CptBoundsDelta(c, m, Lu.UPPER, deltU);
-                CptBoundsDelta deltas2 = new CptBoundsDelta(c, m, Lu.LOWER, deltL);
+                CptBoundsDelta deltas1 = new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU);
+                CptBoundsDelta deltas2 = new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL);
                 if (forward) {
                     dw.forwardApply(deltas1);
                     dw.forwardApply(deltas2);
@@ -239,7 +240,7 @@ public class DmvDantzigWolfeRelaxationTest {
                     dw.reverseApply(deltas1);
                     dw.reverseApply(deltas2);
                 }
-                System.out.println("l, u = " + dw.getBounds().getLb(c,m) + ", " + dw.getBounds().getUb(c,m));
+                System.out.println("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
             }
         }
     }
@@ -398,7 +399,7 @@ public class DmvDantzigWolfeRelaxationTest {
                 if (logProb < CptBounds.DEFAULT_LOWER_BOUND) {
                     logProb = CptBounds.DEFAULT_LOWER_BOUND;
                 }
-                if (bounds.getLb(c, m) > logProb || bounds.getUb(c, m) < logProb) {
+                if (bounds.getLb(Type.PARAM, c, m) > logProb || bounds.getUb(Type.PARAM, c, m) < logProb) {
                     return false;
                 }
             }
