@@ -5,8 +5,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;

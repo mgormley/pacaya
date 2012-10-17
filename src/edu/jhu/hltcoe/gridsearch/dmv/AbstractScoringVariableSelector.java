@@ -2,7 +2,10 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.VariableId;
+import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 

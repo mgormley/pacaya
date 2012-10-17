@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public interface DmvRelaxation {

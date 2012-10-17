@@ -1,6 +1,7 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
 import java.util.List;
+
 
 public interface VariableSplitter {
 

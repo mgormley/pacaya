@@ -7,6 +7,7 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.TrainCorpus;

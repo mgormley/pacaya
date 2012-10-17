@@ -8,7 +8,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;

@@ -10,6 +10,9 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
@@ -159,7 +162,7 @@ public class DmvProblemNode implements ProblemNode {
     /** 
      * For use in strong branching
      */
-    List<ProblemNode> branch(List<CptBoundsDelta> deltasForChildren) {
+    public List<ProblemNode> branch(List<CptBoundsDelta> deltasForChildren) {
         ArrayList<ProblemNode> children = new ArrayList<ProblemNode>(deltasForChildren.size());
         for (int i=0; i<deltasForChildren.size(); i++) {
             CptBoundsDelta deltaForChild = deltasForChildren.get(i);

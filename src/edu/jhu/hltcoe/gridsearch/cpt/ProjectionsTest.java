@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
 import java.util.Arrays;
 
@@ -9,7 +9,9 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModelTest;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Utilities;

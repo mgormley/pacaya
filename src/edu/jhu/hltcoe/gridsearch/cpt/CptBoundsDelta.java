@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
 public class CptBoundsDelta {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
 import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
@@ -15,7 +15,7 @@ import org.apache.log4j.Logger;
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepSentenceDist;

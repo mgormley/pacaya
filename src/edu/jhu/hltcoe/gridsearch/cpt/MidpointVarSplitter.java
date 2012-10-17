@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class MidpointVarSplitter implements VariableSplitter {

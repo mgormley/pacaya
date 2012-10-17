@@ -17,7 +17,8 @@ import com.joptimizer.optimizers.OptimizationRequest;
 import com.joptimizer.optimizers.OptimizationResponse;
 import com.joptimizer.optimizers.PrimalDualMethod;
 
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Sort;

@@ -1,9 +1,10 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch.cpt;
 
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
-import edu.jhu.hltcoe.util.Utilities;
 
 public class RandomVariableSelector implements VariableSelector {
 

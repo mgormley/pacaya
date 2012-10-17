@@ -8,6 +8,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 

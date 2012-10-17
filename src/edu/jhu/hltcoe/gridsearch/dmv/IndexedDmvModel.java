@@ -14,6 +14,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.pr.DepInstance;
 import edu.jhu.hltcoe.parse.pr.DepProbMatrix;

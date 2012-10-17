@@ -17,8 +17,10 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.dmv.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;

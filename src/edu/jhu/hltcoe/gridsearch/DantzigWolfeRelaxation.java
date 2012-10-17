@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.gridsearch;
 
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
@@ -21,9 +21,9 @@ import java.util.HashSet;
 import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.RelaxStatus;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
