@@ -287,12 +287,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     # Run for some fixed amount of time.                
                     all.update(numRestarts=1000000000, epsilon=0.0)
                     all.update(timeoutSeconds=timeoutSeconds)
-                for varSplit in ["half-prob"]:
-                    for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]:
-                        for propSupervised in frange(0.0, 1.0, 0.1):
-                            algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
-                                               propSupervised=propSupervised)
-                            experiments.append(all + dataset + mns + algo)
+                for varSplit in ["half-prob", "half-logprob"]:
+                    for varSelection in ["regret", "pseudocost", "full"]:
+                        for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]:
+                            for propSupervised in frange(0.0, 1.0, 0.1):
+                                algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
+                                                   propSupervised=propSupervised)
+                                experiments.append(all + dataset + mns + algo)
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
