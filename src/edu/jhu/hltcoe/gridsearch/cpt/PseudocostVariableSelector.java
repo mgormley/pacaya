@@ -47,13 +47,13 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
             for (int m = 0; m < idm.getNumParams(c); m++) {
                 if (numObserved[c][m][0] < RELIABILITY_THRESHOLD || numObserved[c][m][1] < RELIABILITY_THRESHOLD) {
                     node.setAsActiveNode();
-                    List<CptBoundsDelta> deltas = varSplitter.split(origBounds, new VariableId(c, m));
+                    List<CptBoundsDeltaList> deltas = varSplitter.split(origBounds, new VariableId(c, m));
                     List<ProblemNode> children = node.branch(deltas);
                     assert(children.size() == 2);
                     for (int lu = 0; lu < 2; lu++) {
                         if (numObserved[c][m][lu] < RELIABILITY_THRESHOLD) {
                             DmvProblemNode child = (DmvProblemNode)children.get(lu);
-                            assert(child.getDelta().getLu().getAsInt() == lu);
+                            assert(child.getDeltas().getPrimary().getLu().getAsInt() == lu);
                             child.setAsActiveNode();
                             double cBound = child.getOptimisticBound();
                             double cDelta = parentBound - cBound;
@@ -71,11 +71,11 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
         }
         
         // Update the pseudocosts with the current node.
-        CptBoundsDelta dmvBoundsDelta = node.getDelta();
-        if (dmvBoundsDelta != null) {
-            int c = dmvBoundsDelta.getC();
-            int m = dmvBoundsDelta.getM();
-            int lu = dmvBoundsDelta.getLu().getAsInt();
+        CptBoundsDelta primaryDelta = node.getDeltas().getPrimary();
+        if (primaryDelta != null) {
+            int c = primaryDelta.getC();
+            int m = primaryDelta.getM();
+            int lu = primaryDelta.getLu().getAsInt();
             // Since we're doing maximization...
             deltaSum[c][m][lu] += node.getParent().getOptimisticBound() - node.getOptimisticBound();
             numObserved[c][m][lu]++;

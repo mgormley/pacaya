@@ -21,6 +21,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
@@ -222,7 +223,7 @@ public class DmvDantzigWolfeRelaxationTest {
         return relaxSol;
     }
 
-    public static void adjustBounds(DmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
+    public static void adjustBounds(DmvRelaxation dw, double newL, double newU, boolean forward) {
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
@@ -233,8 +234,8 @@ public class DmvDantzigWolfeRelaxationTest {
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                CptBoundsDelta deltas1 = new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU);
-                CptBoundsDelta deltas2 = new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL);
+                CptBoundsDeltaList deltas1 = new CptBoundsDeltaList(new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU));
+                CptBoundsDeltaList deltas2 = new CptBoundsDeltaList(new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL));
                 if (forward) {
                     dw.forwardApply(deltas1);
                     dw.forwardApply(deltas2);

@@ -56,4 +56,9 @@ public class CptBoundsDelta {
     public static CptBoundsDelta getReverse(CptBoundsDelta delta) {
         return new CptBoundsDelta(delta.type, delta.c, delta.m, delta.lu, -delta.delta);
     }
+
+    @Override
+    public String toString() {
+        return "CptBoundsDelta [c=" + c + ", m=" + m + ", delta=" + delta + ", lu=" + lu + ", type=" + type + "]";
+    }    
 }

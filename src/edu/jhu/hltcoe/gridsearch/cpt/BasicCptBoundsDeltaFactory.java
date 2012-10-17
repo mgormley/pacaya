@@ -15,7 +15,7 @@ public class BasicCptBoundsDeltaFactory implements CptBoundsDeltaFactory {
     }
 
     @Override
-    public List<CptBoundsDelta> getDmvBounds(DmvProblemNode node) {
+    public List<CptBoundsDeltaList> getDmvBounds(DmvProblemNode node) {
         VariableId varId = varSelector.select(node);
         return varSplitter.split(node.getBounds(), varId);
     }

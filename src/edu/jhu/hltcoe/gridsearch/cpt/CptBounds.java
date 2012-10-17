@@ -95,4 +95,14 @@ public class CptBounds {
         return logSpace;
     }
 
+    public int getNumParams(int c) {
+        return lbs[Type.PARAM.getAsInt()][c].length;
+    }
+
+    @Override
+    public String toString() {
+        return "CptBounds [lbs=" + Arrays.deepToString(lbs) + ", ubs=" + Arrays.deepToString(ubs) + "]";
+    }
+    
+    
 }

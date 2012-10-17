@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public interface DmvRelaxation {
@@ -18,8 +18,8 @@ public interface DmvRelaxation {
      */
     double[][] getRegretCm();
 
-    void reverseApply(CptBoundsDelta deltas);
-    void forwardApply(CptBoundsDelta deltas);
+    void reverseApply(CptBoundsDeltaList deltas);
+    void forwardApply(CptBoundsDeltaList deltas);
 
     CptBounds getBounds();
 

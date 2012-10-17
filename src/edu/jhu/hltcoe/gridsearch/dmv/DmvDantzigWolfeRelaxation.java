@@ -32,6 +32,7 @@ import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
@@ -669,14 +670,20 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return numCutAdded;
     }
 
-    public void reverseApply(CptBoundsDelta delta) {
-        applyDelta(CptBoundsDelta.getReverse(delta));
+    public void reverseApply(CptBoundsDeltaList deltas) {
+        applyDeltaList(CptBoundsDeltaList.getReverse(deltas));
     }
 
-    public void forwardApply(CptBoundsDelta delta) {
-        applyDelta(delta);
+    public void forwardApply(CptBoundsDeltaList deltas) {
+        applyDeltaList(deltas);
     }
 
+    protected void applyDeltaList(CptBoundsDeltaList deltas) {
+        for (CptBoundsDelta delta : deltas) {
+            applyDelta(delta);
+        }
+    }
+    
     protected void applyDelta(CptBoundsDelta delta) {
         try {
             Type type = delta.getType();

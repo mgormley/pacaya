@@ -178,8 +178,9 @@ public class IndexedDmvModel implements IndexedCpt {
             }
         }
         
-        System.out.println("numNZUnsupMaxFreqCms: " + numNZUnsupMaxFreqCms);
-        System.out.println("unsupMaxTotFreqCm: " + Arrays.deepToString(unsupMaxTotFreqCm));
+        // TODO: remove
+        //System.out.println("numNZUnsupMaxFreqCms: " + numNZUnsupMaxFreqCms);
+        //System.out.println("unsupMaxTotFreqCm: " + Arrays.deepToString(unsupMaxTotFreqCm));
     }
 
     private int[][] getSentMaxFreqCm(Sentence sentence) {

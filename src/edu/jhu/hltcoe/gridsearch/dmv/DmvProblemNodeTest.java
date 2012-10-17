@@ -85,22 +85,16 @@ public class DmvProblemNodeTest {
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(Type.PARAM, c, m));
             }
         }
-        if (c1.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
-        } else {
-            assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
-        }
+        assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
         
-        DmvProblemNode c3 = (DmvProblemNode)c1.branch().get(0);
+        
+        List<ProblemNode> c1Children = c1.branch();
+        DmvProblemNode c3 = (DmvProblemNode)c1Children.get(0);
         
         checkedSetActive(c3, c1);
         
         checkedSetActive(c2, c3);
-        if (c2.getRelaxation() instanceof DmvDantzigWolfeRelaxation) {
-            assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
-        } else {
-            assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
-        }
+        assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
         DmvProblemNode c4 = (DmvProblemNode)c2.branch().get(1);
         checkedSetActive(c4, c2);
         for (int c=0; c<idm.getNumConds(); c++) {

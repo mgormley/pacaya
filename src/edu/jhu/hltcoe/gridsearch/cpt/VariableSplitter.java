@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface VariableSplitter {
 
-    List<CptBoundsDelta> split(CptBounds bounds, VariableId varId);
+    List<CptBoundsDeltaList> split(CptBounds bounds, VariableId varId);
 
 }

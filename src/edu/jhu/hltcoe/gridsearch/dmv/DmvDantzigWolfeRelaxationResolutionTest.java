@@ -18,8 +18,6 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -200,7 +198,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
 
     private RelaxedDmvSolution testBoundsHelper(DmvDantzigWolfeRelaxationResolution dw, double newL, double newU, boolean forward) {
         
-        adjustBounds(dw, newL, newU, forward);
+        DmvDantzigWolfeRelaxationTest.adjustBounds(dw, newL, newU, forward);
         
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
 
@@ -219,31 +217,6 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
             System.out.println("");
         }
         return relaxSol;
-    }
-
-    private void adjustBounds(DmvDantzigWolfeRelaxationResolution dw, double newL, double newU, boolean forward) {
-        // Adjust bounds
-        for (int c=0; c<dw.getIdm().getNumConds(); c++) {
-            for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
-                CptBounds origBounds = dw.getBounds();
-                double lb = origBounds.getLb(Type.PARAM, c, m);
-                double ub = origBounds.getUb(Type.PARAM, c, m);
-
-                double deltU = newU - ub;
-                double deltL = newL - lb;
-                //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                CptBoundsDelta deltas1 = new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU);
-                CptBoundsDelta deltas2 = new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL);
-                if (forward) {
-                    dw.forwardApply(deltas1);
-                    dw.forwardApply(deltas2);
-                } else {
-                    dw.reverseApply(deltas1);
-                    dw.reverseApply(deltas2);
-                }
-                System.out.println("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
-            }
-        }
     }
     
     @Test 

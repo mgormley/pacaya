@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
@@ -165,8 +166,8 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                 double deltU = newU - ub;
                 double deltL = newL - lb;
                 //double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
-                CptBoundsDelta deltas1 = new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU);
-                CptBoundsDelta deltas2 = new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL);
+                CptBoundsDeltaList deltas1 = new CptBoundsDeltaList(new CptBoundsDelta(Type.PARAM, c, m, Lu.UPPER, deltU));
+                CptBoundsDeltaList deltas2 = new CptBoundsDeltaList(new CptBoundsDelta(Type.PARAM, c, m, Lu.LOWER, deltL));
                 if (forward) {
                     if (lb <= newU) {
                         dw.forwardApply(deltas1);

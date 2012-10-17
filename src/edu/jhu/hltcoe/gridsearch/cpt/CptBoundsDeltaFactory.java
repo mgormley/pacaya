@@ -6,6 +6,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 
 public interface CptBoundsDeltaFactory {
 
-    List<CptBoundsDelta> getDmvBounds(DmvProblemNode dmvProblemNode);
+    List<CptBoundsDeltaList> getDmvBounds(DmvProblemNode dmvProblemNode);
 
 }
