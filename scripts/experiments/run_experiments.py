@@ -316,6 +316,25 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
                                                    propSupervised=propSupervised)
                                 experiments.append(all + dataset + mns + algo)
+        elif self.expname == "bnb-supervised":
+            root = RootStage()
+            all.update(algorithm="bnb",
+                       initBounds="viterbi-em",                    
+                       varSelection="regret",
+                       offsetProb=1.0, 
+                       varSplit="half-prob",
+                       propSupervised=1.0)
+            dataset = brown
+            for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 300, 1*60*60)]:
+                msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                mns = DPExpParams(maxNumSentences=maxNumSentences)
+                if not self.fast:
+                    # Run for some fixed amount of time.                
+                    all.update(numRestarts=1000000000, epsilon=0.0)
+                    all.update(timeoutSeconds=timeoutSeconds)
+                experiment = all + dataset + msl + mns
+                root.add_dependent(experiment)
+            return root
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
