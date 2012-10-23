@@ -14,7 +14,7 @@ from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
 from experiments.core.util import head_sentences
 import platform
 from glob import glob
-from experiments.core.experiment_runner import ExpParamsRunner, ExpParamsStage
+from experiments.core.experiment_runner import ExpParamsRunner, get_subset
 from experiments.core import experiment_runner
 import re
 import random
@@ -52,11 +52,33 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
     def get_instance(self):
         return ScrapeExpout()
     
-    def create_experiment_script(self, exp_dir, eprunner):
+    def create_experiment_script(self, exp_dir):
         self.add_arg(os.path.dirname(exp_dir))
         script = ""
-        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (eprunner.root_dir)
-        cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (eprunner.root_dir, self.get_args())
+        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (self.root_dir)
+        cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (self.root_dir, self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+
+class ScrapeStatuses(experiment_runner.PythonExpParams):
+    
+    def __init__(self, stages_to_scrape, **keywords):
+        experiment_runner.PythonExpParams.__init__(self,keywords)
+        self.stages_to_scrape = stages_to_scrape
+        
+    def get_initial_keys(self):
+        return "dataSet model k s".split()
+    
+    def get_instance(self):
+        return ScrapeStatuses()
+    
+    def create_experiment_script(self, exp_dir):
+        # Add directories to scrape.
+        for stage in self.stages_to_scrape:
+            self.add_arg(stage.cwd)
+        script = ""
+        script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (self.root_dir)
+        cmd = "python %s/scripts/experiments/scrape_statuses.py %s\n" % (self.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
 
@@ -71,17 +93,17 @@ class DPExpParams(experiment_runner.JavaExpParams):
     def get_instance(self):
         return DPExpParams()
     
-    def create_experiment_script(self, exp_dir, eprunner):
+    def create_experiment_script(self, exp_dir):
         script = ""
-        #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (eprunner.root_dir, eprunner.root_dir)
+        #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (self.root_dir, self.root_dir)
         script += "echo 'CLASSPATH=$CLASSPATH'\n"
-        cmd = "java -cp $CLASSPATH " + self.get_java_args(eprunner) + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
+        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     
-    def get_java_args(self, eprunner):
+    def get_java_args(self):
         # Allot the available memory to the JVM, ILP solver, and ZIMPL
-        total_work_mem_megs = eprunner.work_mem_megs
+        total_work_mem_megs = self.work_mem_megs
         if (self.get("parser").startswith("ilp-")):
             zimpl_mem = int(total_work_mem_megs * 0.5)
         else:
@@ -116,9 +138,9 @@ class HProfCpuExpParams(DPExpParams):
     def get_instance(self):
         return HProfCpuExpParams()
     
-    def get_java_args(self, eprunner):
+    def get_java_args(self):
         # Default interval is 10ms
-        return DPExpParams.get_java_args(self, eprunner) + " -agentlib:hprof=cpu=samples,depth=7,interval=2 "
+        return DPExpParams.get_java_args(self) + " -agentlib:hprof=cpu=samples,depth=7,interval=2 "
     
 class HProfHeapExpParams(DPExpParams):
 
@@ -129,8 +151,8 @@ class HProfHeapExpParams(DPExpParams):
     def get_instance(self):
         return HProfHeapExpParams()
     
-    def get_java_args(self, eprunner):
-        return DPExpParams.get_java_args(self, eprunner) + " -agentlib:hprof=heap=sites "
+    def get_java_args(self):
+        return DPExpParams.get_java_args(self) + " -agentlib:hprof=heap=sites "
     
 
 class DepParseExpParamsRunner(ExpParamsRunner):
@@ -148,11 +170,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             
         if self.queue and not self.queue == "mem":
             print "WARN: Are you sure you don't want the mem queue?"
-            
-        if self.queue == "mem" or self.queue == "himem":
-            # Override qsub_args to exclude "-l h_vmem=%dM"
-            # Old way: self.qsub_args = re.sub("-l h_vmem=", "-l virtual_free=", self.qsub_args)
-            self.qsub_args = re.sub("-l h_vmem=\S+", "", self.qsub_args)
             
     def get_experiments(self):
         all = DPExpParams()
@@ -227,8 +244,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 for randomRestartId in range(100):
                     setup.set("randomRestartId", randomRestartId, True, False)
                     experiment = all + setup + DPExpParams()
-                    root.add_dependent(ExpParamsStage(experiment, self))
-            scrape = ExpParamsStage(ScrapeExpout(rproj=None, out_file="results.data"), self)
+                    root.add_dependent(experiment)
+            scrape = ScrapeExpout(rproj=None, out_file="results.data")
             scrape.add_prereqs(root.dependents)
             return root
         elif self.expname == "viterbi-vs-bnb":
@@ -271,9 +288,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
                                                propSupervised=propSupervised)
                             experiment = all + dataset + msl + mns + algo
-                            root.add_dependent(ExpParamsStage(experiment, self))
-            scrape = ExpParamsStage(ScrapeExpout(rproj=None, out_file="results.data"), self)
+                            root.add_dependent(experiment)
+            # Scrape all results.
+            scrape = ScrapeExpout(rproj=None, out_file="results.data")
             scrape.add_prereqs(root.dependents)
+            #Scrape status information from a subset of the experiments.
+            subset = get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300)
+            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="status.data")
+            scrape_stat.add_prereqs(subset)
             return root
         elif self.expname == "bnb-semi-synth":
             all.update(algorithm="bnb",
@@ -443,12 +465,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             raise Exception("Unknown expname: " + str(self.expname))
                 
         print "Number of experiments:",len(experiments)
-        return experiments
-
-    def create_post_processing_script(self, top_dir, exp_tuples):
-        #return "python %s/scripts/experiments/pp_scrape_expout.py %s" % (self.tagging_dir, top_dir)
-        return None;
-
+        print "Number of experiments: %d" % (len(experiments))
+        root_stage = RootStage()
+        root_stage.add_dependents(experiments)
+        return root_stage
   
 if __name__ == "__main__":
     usage = "%prog "
@@ -466,13 +486,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     runner = DepParseExpParamsRunner(options)
-    experiments = runner.get_experiments()
-    if isinstance(experiments, list): 
-        print "Running experiment list"
-        runner.run_experiments(experiments)
-    elif isinstance(experiments, Stage):
-        runner.run_pipeline(experiments)
-    else:
-        raise Exception("unhandled type for experiments: " + str(type(experiments)))
+    root_stage = runner.get_experiments()
+    runner.run_pipeline(root_stage)
 
 
