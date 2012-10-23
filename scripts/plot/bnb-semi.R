@@ -125,7 +125,6 @@ for(dfsubset in groups) {
 
 
 ## Read data
-##results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status_0.5_0.5.data"
 results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status.data"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
@@ -139,6 +138,7 @@ dfUp$bound <- df$upBound
 dfUp$boundType <- "upper"
 
 dfBoth <- rbind(dfUp, dfLow)
+dfBoth <- subset(dfBoth, offsetProb == 1)
 dfBoth <- subset(dfBoth,
                  propSupervised == 0.0 |
                  propSupervised == 0.2 |
@@ -173,19 +173,40 @@ plotnumfathom <- function(mydata) {
 myplot(plotnumfathom(dfBoth), str_c(results.file, "fathom-rate", "pdf", sep="."))
 
 
+plotnumtrees <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Time (minutes)"
+  ylab = "# trees"
+  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=num, color=factor(propSupervised)))
+  p <- p + geom_line()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_color_discrete(name="Proportion supervised")
+}
+myplot(plotnumfathom(dfBoth), str_c(results.file, "fathom-rate", "pdf", sep="."))
+
+
 
 
 ## Read data
-##results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status_0.5_0.5.data"
 results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/viterbi-em/results.data"
 df <- read.table(results.file, header=TRUE)
 
 plotaccuracyvslikelihood <- function(mydata) {
-  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
-  xlab = "Train Log-likelihood"
-  ylab = "Train Accuracy"
-  p <- ggplot(mydata, aes(x=trainLogLikelihood, y=trainAccuracy, color=initWeights))
+  title = "Penn Treebank, Brown"
+  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Per token log-likelihood (train)"
+  ylab = "Accuracy (train)"
+  p <- ggplot(mydata, aes(x=trainLogLikelihood/numWords,
+                          y=trainAccuracy, color=initWeights))
   p <- p + geom_point()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_color_discrete(name="Initialization")
+  p <- p + geom_smooth()
 }
-myplot(plotaccuracyvslikelihood(df), str_c(results.file, "accvlike", "pdf", sep="."))
+myplot(plotaccuracyvslikelihood(df),
+       str_c(results.file, "accvlike", "pdf", sep="."))
+
+library(Hmisc)
+dfCorr <- subset(df, initWeights == "random")
+dfCorr <- dfCorr[,c("trainAccuracy", "trainLogLikelihood")]
+rcorr(as.matrix(dfCorr), type="pearson")
