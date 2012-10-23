@@ -30,7 +30,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class IlpViterbiParser implements ViterbiParser {
 
-    private static Logger log = Logger.getLogger(IlpViterbiParser.class);
+    private static final Logger log = Logger.getLogger(IlpViterbiParser.class);
     
     public static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;

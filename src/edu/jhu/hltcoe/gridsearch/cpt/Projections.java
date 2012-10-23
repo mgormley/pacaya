@@ -24,7 +24,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class Projections {
 
-    private static Logger log = Logger.getLogger(Projections.class);
+    private static final Logger log = Logger.getLogger(Projections.class);
 
     private IloCplex cplex;
     private File tempDir;

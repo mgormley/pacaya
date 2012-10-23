@@ -30,7 +30,7 @@ import edu.jhu.hltcoe.util.Files;
  */
 public abstract class AbstractDipSolver implements IlpSolver {
 
-    private static Logger log = Logger.getLogger(AbstractDipSolver.class);
+    private static final Logger log = Logger.getLogger(AbstractDipSolver.class);
 
     protected static final String dipDir;
     static {

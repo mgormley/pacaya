@@ -12,7 +12,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 
 public class DmvLazyBranchAndBoundSolver extends LazyBranchAndBoundSolver {
 
-    private static Logger log = Logger.getLogger(DmvLazyBranchAndBoundSolver.class);
+    private static final Logger log = Logger.getLogger(DmvLazyBranchAndBoundSolver.class);
     private DependencyParserEvaluator evaluator;
     
     public DmvLazyBranchAndBoundSolver(double epsilon, Comparator<ProblemNode> leafComparator, double timeoutSeconds, DependencyParserEvaluator evaluator) {

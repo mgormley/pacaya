@@ -18,7 +18,7 @@ public class DepTreebank implements Iterable<DepTree> {
 
     private static final long serialVersionUID = 1L;
 
-    private static Logger log = Logger.getLogger(DepTreebank.class);
+    private static final Logger log = Logger.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;
     private int maxSentenceLength;

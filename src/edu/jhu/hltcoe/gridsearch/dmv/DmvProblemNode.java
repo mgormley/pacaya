@@ -27,7 +27,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
 
-    private static Logger log = Logger.getLogger(DmvProblemNode.class);
+    private static final Logger log = Logger.getLogger(DmvProblemNode.class);
 
     private static AtomicInteger atomicIntId = new AtomicInteger(0);
 

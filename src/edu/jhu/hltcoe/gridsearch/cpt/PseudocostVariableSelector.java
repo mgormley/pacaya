@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 
 public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
-    private static Logger log = Logger.getLogger(PseudocostVariableSelector.class);
+    private static final Logger log = Logger.getLogger(PseudocostVariableSelector.class);
 
     private static final int RELIABILITY_THRESHOLD = 2;
     private int[][][] numObserved;

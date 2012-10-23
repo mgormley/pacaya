@@ -39,7 +39,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
 
     static final double MIN_SUM_FOR_CUT = 1.01;
 
-    private static Logger log = Logger.getLogger(DmvLpRelaxation.class);
+    private static final Logger log = Logger.getLogger(DmvLpRelaxation.class);
 
     private CptBounds bounds;
     private File tempDir;

@@ -26,7 +26,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class ModelParamSubproblem {
     
-    private static Logger log = Logger.getLogger(ModelParamSubproblem.class);
+    private static final Logger log = Logger.getLogger(ModelParamSubproblem.class);
 
     
     // Allow for some floating point error in logadd

@@ -33,7 +33,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
-    private Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
+    private static final Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
 
     ViterbiTrainer viterbiTrainer;
     private LazyBranchAndBoundSolver bnbSolver;
@@ -181,7 +181,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                     dw.reverseApply(deltas1);
                     dw.reverseApply(deltas2);
                 }
-                System.out.println("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
+                log.debug("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
             }
         }
     }

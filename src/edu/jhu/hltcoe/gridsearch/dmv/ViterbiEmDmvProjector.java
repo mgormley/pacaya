@@ -43,7 +43,7 @@ public class ViterbiEmDmvProjector implements Projector {
         }
     }
 
-    private static Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
+    private static final Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
 
     private DmvProjector dmvProjector;
     private DmvTrainCorpus corpus;

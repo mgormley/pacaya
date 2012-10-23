@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public abstract class AbstractScoringVariableSelector implements VariableSelector {
 
-    private static Logger log = Logger.getLogger(AbstractScoringVariableSelector.class);
+    private static final Logger log = Logger.getLogger(AbstractScoringVariableSelector.class);
                       
     public AbstractScoringVariableSelector() {
     }

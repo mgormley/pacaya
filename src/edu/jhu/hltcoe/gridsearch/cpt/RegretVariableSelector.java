@@ -9,7 +9,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class RegretVariableSelector implements VariableSelector {
 
-    private static Logger log = Logger.getLogger(RegretVariableSelector.class);
+    private static final Logger log = Logger.getLogger(RegretVariableSelector.class);
     private RandomVariableSelector randBrancher;
 
     public RegretVariableSelector() {

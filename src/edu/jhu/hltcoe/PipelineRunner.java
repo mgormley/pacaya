@@ -49,7 +49,7 @@ import edu.jhu.hltcoe.util.Time;
 
 public class PipelineRunner {
 
-    private static Logger log = Logger.getLogger(PipelineRunner.class);
+    private static final Logger log = Logger.getLogger(PipelineRunner.class);
 
     public PipelineRunner() {
     }

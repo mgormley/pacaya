@@ -26,7 +26,7 @@ import edu.jhu.hltcoe.util.Time;
  */
 public class IlpViterbiSentenceParser extends IlpViterbiParser implements ViterbiSentenceParser {
 
-    private static Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
+    private static final Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
         
     public IlpViterbiSentenceParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         super(formulation, ilpSolverFactory);

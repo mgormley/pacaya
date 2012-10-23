@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.util.Pair;
 
 public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
-    private static Logger log = Logger.getLogger(ViterbiTrainer.class);
+    private static final Logger log = Logger.getLogger(ViterbiTrainer.class);
     private DependencyParserEvaluator evaluator;
     
     public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 

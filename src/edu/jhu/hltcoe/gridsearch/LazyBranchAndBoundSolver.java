@@ -22,7 +22,7 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class LazyBranchAndBoundSolver {
 
-    private static Logger log = Logger.getLogger(LazyBranchAndBoundSolver.class);
+    private static final Logger log = Logger.getLogger(LazyBranchAndBoundSolver.class);
 
     public enum SearchStatus {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND

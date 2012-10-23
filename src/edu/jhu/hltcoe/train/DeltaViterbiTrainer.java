@@ -13,7 +13,7 @@ import edu.jhu.hltcoe.util.Pair;
 
 public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
-    private static Logger log = Logger.getLogger(DeltaViterbiTrainer.class);
+    private static final Logger log = Logger.getLogger(DeltaViterbiTrainer.class);
     
     public DeltaViterbiTrainer(ViterbiParser deltaParser, ViterbiParser fastParser, MStep<DepTreebank> mStep, ModelFactory modelFactory, int iterations, double convergenceRatio) {
         super(new ViterbiEStepForDeltas(deltaParser, fastParser, mStep, modelFactory, iterations, convergenceRatio), 

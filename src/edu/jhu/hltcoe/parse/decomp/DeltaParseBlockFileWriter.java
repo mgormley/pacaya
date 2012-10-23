@@ -24,7 +24,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DeltaParseBlockFileWriter implements BlockFileWriter {
 
-    private static Logger log = Logger.getLogger(DeltaParseBlockFileWriter.class);
+    private static final Logger log = Logger.getLogger(DeltaParseBlockFileWriter.class);
 
     private final Pattern spaceRegex = Pattern.compile("\\s+");
     

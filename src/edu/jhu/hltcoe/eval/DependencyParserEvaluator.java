@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class DependencyParserEvaluator implements Evaluator {
 
-    private static Logger log = Logger.getLogger(DependencyParserEvaluator.class);
+    private static final Logger log = Logger.getLogger(DependencyParserEvaluator.class);
 
     private DepTreebank depTreebank;
     private ViterbiParser parser;

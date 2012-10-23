@@ -41,7 +41,7 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
-    private static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
+    private static final Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
     
     private int numGammas;
     private boolean hasInfeasibleBounds;

@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 
 public abstract class AbstractTagReducer {
 
-    private static Logger log = Logger.getLogger(AbstractTagReducer.class);
+    private static final Logger log = Logger.getLogger(AbstractTagReducer.class);
     private Set<String> unknownTags;
 
     public AbstractTagReducer() {

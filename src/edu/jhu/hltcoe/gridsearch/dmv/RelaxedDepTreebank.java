@@ -48,7 +48,11 @@ public class RelaxedDepTreebank {
                 }
             }
         }
-        return numFractional / numArcs;
+        if (numArcs == 0) {
+            return 0.0;
+        } else {
+            return (double) numFractional / numArcs;
+        }
     }
 
     private boolean isFractional(double arcWeight) {

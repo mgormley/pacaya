@@ -25,7 +25,7 @@ import edu.jhu.hltcoe.util.Pair;
 
 public class IndexedDmvModel implements IndexedCpt {
     
-    private static Logger log = Logger.getLogger(IndexedDmvModel.class);
+    private static final Logger log = Logger.getLogger(IndexedDmvModel.class);
     
     public static class Rhs extends IntTuple {
         public Rhs(int... args) {

@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
 @Deprecated
 public class EagerBranchAndBoundSolver {
     
-    private static Logger log = Logger.getLogger(EagerBranchAndBoundSolver.class);
+    private static final Logger log = Logger.getLogger(EagerBranchAndBoundSolver.class);
 
     public enum SearchStatus {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND

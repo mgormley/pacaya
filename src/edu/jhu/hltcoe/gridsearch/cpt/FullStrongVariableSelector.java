@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 
 public class FullStrongVariableSelector implements VariableSelector {
 
-    private static Logger log = Logger.getLogger(FullStrongVariableSelector.class);
+    private static final Logger log = Logger.getLogger(FullStrongVariableSelector.class);
 
     // This is the epsilon specified in Tobias Achterberg's thesis for the product score
     public static final double EPSILON = 1e-6;

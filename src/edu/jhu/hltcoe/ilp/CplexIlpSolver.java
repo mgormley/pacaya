@@ -30,7 +30,7 @@ import edu.jhu.hltcoe.util.Command;
 
 public class CplexIlpSolver implements IlpSolver {
     
-    private static Logger log = Logger.getLogger(CplexIlpSolver.class);
+    private static final Logger log = Logger.getLogger(CplexIlpSolver.class);
 
     private File tempDir;
     private int numThreads;
