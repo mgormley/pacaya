@@ -24,7 +24,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationResolution;
+import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
@@ -144,7 +144,7 @@ public class TrainerFactory {
                 dw.setMinSumForCuts(minSumForCuts);
                 relax = dw;
             } else if (relaxation.equals("dw-res")) {
-                DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(dwTemp);
+                ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(dwTemp);
                 dw.setMaxSimplexIterations(maxSimplexIterations);
                 dw.setMaxDwIterations(maxDwIterations);
                 relax = dw;

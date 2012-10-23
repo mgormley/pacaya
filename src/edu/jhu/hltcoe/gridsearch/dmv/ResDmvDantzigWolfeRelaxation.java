@@ -22,8 +22,6 @@ import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -39,9 +37,18 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
+/**
+ * Alternative to DmvDantzigWolfeRelaxation which doesn't use any cuts. This is accomplished by 
+ * pushing the sum-to-one constraints into a subproblem which enforces that they sum to <= 1.0. 
+ * Doing this requires an application of the resolution theorem, where instead of having a
+ * finite set of integer points, we have an infinite set of points on a convex region in 
+ * log-probability space. 
+ * 
+ * @author mgormley
+ */
+public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
-    private static final Logger log = Logger.getLogger(DmvDantzigWolfeRelaxationResolution.class);
+    private static final Logger log = Logger.getLogger(ResDmvDantzigWolfeRelaxation.class);
     
     private int numGammas;
     private boolean hasInfeasibleBounds;
@@ -50,7 +57,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
     private int[][] supervisedFreqCm;
     private MasterProblemRes mpr;
     
-    public DmvDantzigWolfeRelaxationResolution(File tempDir) {
+    public ResDmvDantzigWolfeRelaxation(File tempDir) {
         super(tempDir, 0, null);
         this.projections = new Projections(tempDir);
         this.hasInfeasibleBounds = false;

@@ -34,7 +34,7 @@ import edu.jhu.hltcoe.util.rproj.RDataFrame;
 import edu.jhu.hltcoe.util.rproj.RRow;
 
 
-public class DmvDantzigWolfeRelaxationResolutionTest {
+public class ResDmvDantzigWolfeRelaxationTest {
 
     private static final double DEFAULT_SOLUTION_TOLERANCE = 1e-8;
 
@@ -76,7 +76,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("N");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
@@ -96,7 +96,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("N V P");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
@@ -117,7 +117,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("Det N");
         sentences.addSentenceFromString("Adj N");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
@@ -139,7 +139,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("Adj N a c d f e b g");
         sentences.addSentenceFromString("Adj N g f e d c b a");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
@@ -165,7 +165,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         //sentences.addSentenceFromString("N V N N");
         //sentences.addSentenceFromString("D N");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
         
         CptBounds bds = dw.getBounds();
         double origLower = bds.getLb(Type.PARAM, 0, 0);
@@ -196,7 +196,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         
     }
 
-    private RelaxedDmvSolution testBoundsHelper(DmvDantzigWolfeRelaxationResolution dw, double newL, double newU, boolean forward) {
+    private RelaxedDmvSolution testBoundsHelper(ResDmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
         
         DmvDantzigWolfeRelaxationTest.adjustBounds(dw, newL, newU, forward);
         
@@ -226,7 +226,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("N V N N N");
         sentences.addSentenceFromString("N V P N");
 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
@@ -250,7 +250,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         sentences.addSentenceFromString("D N");
 
         Prng.seed(12345);
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
         double maxSum = 0.0;
@@ -291,7 +291,7 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         System.out.println(goldModel);
         SentenceCollection sentences = goldTreebank.getSentences();
                 
-        DmvDantzigWolfeRelaxationResolution dw = getDw(sentences);
+        ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
         IndexedDmvModel idm = dw.getIdm();
 
         double[][] goldLogProbs = idm.getCmLogProbs(goldModel);
@@ -375,15 +375,15 @@ public class DmvDantzigWolfeRelaxationResolutionTest {
         return true;
     }
 
-    private static DmvDantzigWolfeRelaxationResolution getDw(SentenceCollection sentences) {
+    private static ResDmvDantzigWolfeRelaxation getDw(SentenceCollection sentences) {
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
         return getDw(corpus);
     }
 
-    private static DmvDantzigWolfeRelaxationResolution getDw(DmvTrainCorpus corpus) {
+    private static ResDmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus) {
         DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         System.out.println(initSol);
-        DmvDantzigWolfeRelaxationResolution dw = new DmvDantzigWolfeRelaxationResolution(new File("."));
+        ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(new File("."));
         dw.init1(corpus);
         dw.init2(initSol);
         return dw;
