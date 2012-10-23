@@ -10,11 +10,11 @@ public class RelaxedDmvSolution implements RelaxedSolution {
     private RelaxStatus status;
     private RelaxedDepTreebank treebank;
     
-    public RelaxedDmvSolution(double[][] logProbs, double[][] fracRoots, double[][][] fracChildren, double score, RelaxStatus status) {
+    public RelaxedDmvSolution(double[][] logProbs, RelaxedDepTreebank treebank, double score, RelaxStatus status) {
         super();
         this.score = score;
         this.logProbs = logProbs;
-        this.treebank = new RelaxedDepTreebank(fracRoots, fracChildren);
+        this.treebank = treebank;
         this.status = status;
     }
 

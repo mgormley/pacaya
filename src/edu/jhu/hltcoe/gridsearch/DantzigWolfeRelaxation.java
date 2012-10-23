@@ -115,7 +115,7 @@ public abstract class DantzigWolfeRelaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new RelaxedDmvSolution(null, null, null, objective, status);
+                return new RelaxedDmvSolution(null, null, objective, status);
             }
             
             if (tempDir != null) {

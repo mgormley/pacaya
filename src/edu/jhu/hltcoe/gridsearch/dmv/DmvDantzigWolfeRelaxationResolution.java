@@ -68,7 +68,19 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
         log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mpr.gammaVars.size()));
         
         // Store optimal model parameters
-        optimalLogProbs = new double[idm.getNumConds()][];
+        optimalLogProbs = extractRelaxedLogProbs();
+
+        // Store fractional corpus parse
+        RelaxedDepTreebank treebank = extractRelaxedParse();
+
+        // Print out proportion of fractional edges
+        log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
+        
+        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status);
+    }
+
+    protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
+        double[][] optimalLogProbs = new double[idm.getNumConds()][];
         for (int i = 0; i < mpr.gammaVars.size(); i++) {
             GammaVar gv = mpr.gammaVars.get(i);
             double gammaValue = cplex.getValue(gv.gammaVar);
@@ -90,38 +102,7 @@ public class DmvDantzigWolfeRelaxationResolution extends DmvDantzigWolfeRelaxati
                 log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
             }
         }
-
-        // Store fractional corpus parse
-        double[][] fracRoots = new double[corpus.size()][];
-        double[][][] fracParses = new double[corpus.size()][][];
-        for (int s = 0; s < corpus.size(); s++) {
-            if (corpus.isLabeled(s)) {
-                fracRoots[s] = null;
-                fracParses[s] = null;
-            } else {
-                Sentence sentence = corpus.getSentence(s);
-                fracRoots[s] = new double[sentence.size()];
-                fracParses[s] = new double[sentence.size()][sentence.size()];
-            }
-        }
-        for (LambdaVar triple : mp.lambdaVars) {
-            double frac = cplex.getValue(triple.lambdaVar);
-            int s = triple.s;
-            int[] parents = triple.parents;
-
-            double[] fracRoot = fracRoots[s];
-            double[][] fracParse = fracParses[s];
-            for (int child = 0; child < parents.length; child++) {
-                int parent = parents[child];
-                if (parent == WallDepTreeNode.WALL_POSITION) {
-                    fracRoot[child] += frac;
-                } else {
-                    fracParse[parent][child] += frac;
-                }
-            }
-        }
-        
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
+        return optimalLogProbs;
     }
 
     protected ArrayList<IloNumVar> getUnknownVars(HashSet<IloNumVar> knownVars) {

@@ -95,12 +95,26 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), mp.numStoCons));
         
         // Store optimal model parameters
-        optimalLogProbs = new double[idm.getNumConds()][];
+        optimalLogProbs = extractRelaxedLogProbs();
+
+        // Store fractional corpus parse
+        RelaxedDepTreebank treebank = extractRelaxedParse();
+
+        // Print out proportion of fractional edges
+        log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
+        
+        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status);
+    }
+
+    protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
+        double[][] optimalLogProbs = new double[idm.getNumConds()][];
         for (int c = 0; c < idm.getNumConds(); c++) {
             optimalLogProbs[c] = cplex.getValues(mp.modelParamVars[c]);
         }
+        return optimalLogProbs;
+    }
 
-        // Store fractional corpus parse
+    protected RelaxedDepTreebank extractRelaxedParse() throws UnknownObjectException, IloException {
         double[][] fracRoots = new double[corpus.size()][];
         double[][][] fracParses = new double[corpus.size()][][];
         for (int s = 0; s < corpus.size(); s++) {
@@ -129,8 +143,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 }
             }
         }
-        
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), fracRoots, fracParses, objective, status);
+        return new RelaxedDepTreebank(fracRoots, fracParses);
     }
 
     public WarmStart getWarmStart() {
