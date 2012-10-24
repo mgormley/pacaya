@@ -323,16 +323,20 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        varSelection="regret",
                        offsetProb=1.0, 
                        varSplit="half-prob",
-                       propSupervised=1.0)
+                       propSupervised=1.0,
+                       maxSimplexIterations=1000000000,
+                       maxDwIterations=1000000000,
+                       maxCutRounds=1000000000,
+                       minSumForCuts=1.00001,
+                       maxSentenceLength=10,
+                       maxNumSentences=300,)
+            all.set("lambda", 0.0)
+            # Run for some fixed amount of time.                
+            all.update(numRestarts=1000000000, epsilon=0.0,
+                       timeoutSeconds=2*60)
             dataset = brown
-            for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 300, 1*60*60)]:
-                msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                mns = DPExpParams(maxNumSentences=maxNumSentences)
-                if not self.fast:
-                    # Run for some fixed amount of time.                
-                    all.update(numRestarts=1000000000, epsilon=0.0)
-                    all.update(timeoutSeconds=timeoutSeconds)
-                experiment = all + dataset + msl + mns
+            for relaxation in ["dw", "dw-res"]:
+                experiment = all + dataset + DPExpParams(relaxation=relaxation)
                 root.add_dependent(experiment)
             return root
         elif self.expname == "bnb-hprof":

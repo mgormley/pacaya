@@ -504,8 +504,8 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             int index = mpr.gammaVars.indexOf(new GammaVar(null, logProbs));
             if (index != -1) {
                 GammaVar gv = mpr.gammaVars.get(index);
-                log.debug(String.format("CPLEX redcost=%f, My redcost=%f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
-                assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-13));
+                log.debug(String.format("CPLEX redcost=%.13f, My redcost=%.13f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
+                assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-8));
             }
         }  
         if (mReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
