@@ -294,7 +294,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)
             #Scrape status information from a subset of the experiments.
             subset = get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300)
-            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="status.data")
+            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="bnb-status.data", type="bnb")
             scrape_stat.add_prereqs(subset)
             return root
         elif self.expname == "bnb-semi-synth":
@@ -366,6 +366,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                     algo = DPExpParams(varSelection=varSelection,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
                                     experiments.append(all + dataset + msl + mns + algo)
         elif self.expname == "viterbi-bnb":
+            root = RootStage()
             # Fixed seed
             all.update(seed=112233)
             for dataset in datasets:
@@ -384,9 +385,18 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for offsetProb in frange(0.05, 0.21, 0.05):
                                 for probOfSkipCm in frange(0.0, 0.21, 0.05):
                                     algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
-                                    experiments.append(all + dataset + msl + mns + algo)
+                                    root.add_dependent(all + dataset + msl + mns + algo)
                         else:
-                            experiments.append(all + dataset + msl + mns + algo)
+                            root.add_dependent(all + dataset + msl + mns + algo)
+            # Scrape all results.
+            scrape = ScrapeExpout(rproj=None, out_file="results.data")
+            scrape.add_prereqs(root.dependents)
+            #Scrape status information from a subset of the experiments.
+            #TODO: maybe a subset? #get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300) 
+            subset = root.dependents
+            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="incumbent-status.data", type="incumbent")
+            scrape_stat.add_prereqs(subset)
+            return root
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:
