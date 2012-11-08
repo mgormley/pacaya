@@ -21,6 +21,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
@@ -274,6 +275,31 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(-14.866, relaxSol.getScore(), 1e-3);
+    }
+
+    @Test
+    public void testSupervised() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(10);        
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
+
+        // Get the relaxed solution.
+        ResDmvDantzigWolfeRelaxation dwRelax = new ResDmvDantzigWolfeRelaxation(null);
+        dwRelax.init1(corpus);
+        dwRelax.init2(DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
+        
+        // Get the model from a single M-step.
+        DmvMStep mStep = new DmvMStep(0.0);
+        DmvModel m1 = mStep.getModel(treebank);
+                
+        DmvObjective obj = new DmvObjective(corpus);
+        double m1Obj = obj.computeTrueObjective(m1, treebank);
+        
+        Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
+        System.out.printf("mle=%.13f relax=%.13f\n", m1Obj, relaxSol.getScore());
     }
     
     @Test

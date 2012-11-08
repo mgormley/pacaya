@@ -319,6 +319,31 @@ public class DmvDantzigWolfeRelaxationTest {
     }
     
     @Test
+    public void testSupervised() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(10);        
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
+
+        // Get the relaxed solution.
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
+        dwRelax.setMinSumForCuts(1.000001);
+        dwRelax.init1(corpus);
+        dwRelax.init2(DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
+        
+        // Get the model from a single M-step.
+        DmvMStep mStep = new DmvMStep(0.0);
+        DmvModel m1 = mStep.getModel(treebank);
+                
+        DmvObjective obj = new DmvObjective(corpus);
+        double m1Obj = obj.computeTrueObjective(m1, treebank);
+        
+        Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
+    }
+    
+    @Test
     public void testQualityOfRelaxation() throws IOException {
         
         
