@@ -1,11 +1,15 @@
 <?xml version="1.0"?>
 <project name="coref" default="compile" basedir=".">
 
-  <property name="build.path"     value="${basedir}/classes" />
+  <property name="classes.path"     value="${basedir}/classes" />
   <property name="source.path"    value="${basedir}/src" />
   <property name="test.path"    value="${basedir}/tests" />
   <property name="test.raw.path"    value="${test.path}/raw-test-output" />
   <property name="test.reports.path"    value="${test.path}/test-reports" />
+  <property name="classes.path"     value="${basedir}/build" />
+  <property name="app.jar.path"     value="${classes.path}/prunner.jar" />
+  <property name="mega.jar.path"     value="${classes.path}/mega.jar" />
+  <property name="gcj.path"     value="${classes.path}/PipelineRunner" />
 
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
@@ -26,36 +30,38 @@
     <property name="myclasspath" refid="classpath"/>
     <echo message="Classpath = ${myclasspath}"/>
     <path id="classes">
-      <pathelement location="${build.path}" />
+      <pathelement location="${classes.path}" />
     </path>
   </target>
 
   <target name="clean" description="Delete old classes">
     <echo message="${ant.project.name}" />
     <delete includeemptydirs="true" failonerror="false">
-      <fileset dir="${build.path}/" includes="**/*"/>
+      <fileset dir="${classes.path}/" includes="**/*"/>
+      <fileset dir="${classes.path}/" includes="**/*"/>
       <fileset dir="${test.path}"/>
     </delete>
   </target>
 
   <target name="build-dir" description="Create build output directories">
-    <mkdir dir="${build.path}" />
+    <mkdir dir="${classes.path}" />
+    <mkdir dir="${classes.path}" />
   </target>
 
   <target name="resources" description="Copy resources to build output directory">
-    <mkdir dir="${build.path}/edu/jhu/hltcoe/parse" />
-    <copy todir="${build.path}/edu/jhu/hltcoe/parse">
+    <mkdir dir="${classes.path}/edu/jhu/hltcoe/parse" />
+    <copy todir="${classes.path}/edu/jhu/hltcoe/parse">
       <fileset dir="${source.path}/edu/jhu/hltcoe/parse">
     	<include name="*.xml"/>
       </fileset>
     </copy>
-    <mkdir dir="${build.path}/edu/jhu/hltcoe/ilp/decomp" />
-    <copy todir="${build.path}/edu/jhu/hltcoe/ilp/decomp">
+    <mkdir dir="${classes.path}/edu/jhu/hltcoe/ilp/decomp" />
+    <copy todir="${classes.path}/edu/jhu/hltcoe/ilp/decomp">
       <fileset dir="${source.path}/edu/jhu/hltcoe/ilp/decomp">
     	<include name="*.parm"/>
       </fileset>
     </copy>
-    <copy todir="${build.path}">
+    <copy todir="${classes.path}">
       <fileset dir="${source.path}">
     	<include name="*.properties"/>
       </fileset>
@@ -66,7 +72,7 @@
           description="Compile core sources">
     <echo message="${ant.project.name}" />
     <javac srcdir="${source.path}"
-           destdir="${build.path}"
+           destdir="${classes.path}"
            debug="${compile.debug}"
            encoding="utf-8" 
 	   deprecation="${compile.deprecation}"
@@ -79,6 +85,41 @@
       <compilerarg value="-Xlint:finally"/>
       <compilerarg value="-Xlint:path"/>
     </javac>
+  </target>
+
+  <target name="gcj-app" depends="compile">
+    <jar destfile="${app.jar.path}">
+      <fileset dir="${classes.path}" excludes="**/*Test*.class"/> 
+    </jar>
+    <property name="myclasspath" refid="classpath"/>
+    <exec executable="echo">
+      <arg line="-g --main=edu.jhu.hltcoe.sp.PipelineRunner --CLASSPATH=${myclasspath} -o ${gcj.path}.app ${app.jar.path}"/>
+    </exec>
+  </target>
+
+  <target name="gcj-mega" depends="compile">
+    <!-- This nested restrict doesn't work for older versions of ant -->
+    <jar destfile="${mega.jar.path}">
+      <fileset dir="${classes.path}"/>
+      
+      <restrict>
+	<name name="**/*.class"/>
+	<archives>
+	  <zips>
+	    <fileset dir="${basedir}/lib">
+	      <include name="*.jar"/>
+	    </fileset>
+	  </zips>
+	</archives>
+      </restrict>
+      <manifest>
+	<attribute name="Main-Class"
+		   value="edu.jhu.hltcoe.sp.PipelineRunner"/>
+      </manifest>
+    </jar> 
+    <exec executable="gcj">
+      <arg line="-g --main=edu.jhu.hltcoe.sp.PipelineRunner -o ${gcj.path}.mega ${mega.jar.path}"/>
+    </exec>
   </target>
 
   <target name="junit" depends="compile"
