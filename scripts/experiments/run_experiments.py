@@ -16,6 +16,7 @@ import platform
 from glob import glob
 from experiments.core.experiment_runner import ExpParamsRunner, get_subset
 from experiments.core import experiment_runner
+from experiments.core import pipeline
 import re
 import random
 from experiments.core.pipeline import write_script, RootStage, Stage
@@ -45,7 +46,8 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
     
     def __init__(self, **keywords):
         experiment_runner.PythonExpParams.__init__(self,keywords)
-        
+        self.always_relaunch()
+
     def get_initial_keys(self):
         return "dataSet model k s".split()
     
@@ -64,6 +66,7 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
     
     def __init__(self, stages_to_scrape, **keywords):
         experiment_runner.PythonExpParams.__init__(self,keywords)
+        self.always_relaunch()
         self.stages_to_scrape = stages_to_scrape
         
     def get_initial_keys(self):
@@ -82,16 +85,17 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
         script += fancify_cmd(cmd)
         return script
 
-class SvnCommitResults(experiment_runner.ExpParams):
-        
-    def __init__(self, expname, **keywords):
-        experiment_runner.ExpParams.__init__(self,keywords)
+class SvnCommitResults(pipeline.NamedStage):
+    '''TODO: Move this to core.'''
+    def __init__(self, expname):
+        pipeline.NamedStage.__init__(self, "svn_commit_results")
+        self.always_relaunch()
         self.expname = expname
         
     def get_instance(self):
         return SvnCommitResults()
         
-    def create_experiment_script(self, exp_dir):
+    def create_stage_script(self, exp_dir):
         # TODO: check that all the experiments completed successfully 
         # before committing. 
         top_dir = os.path.dirname(exp_dir)
