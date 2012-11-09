@@ -54,6 +54,9 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
     def get_instance(self):
         return ScrapeExpout()
     
+    def get_name(self):
+        return "scrape_expout"
+    
     def create_experiment_script(self, exp_dir):
         self.add_arg(os.path.dirname(exp_dir))
         script = ""
@@ -74,6 +77,9 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
     
     def get_instance(self):
         return ScrapeStatuses()
+    
+    def get_name(self):
+        return "scrape_statuses"
     
     def create_experiment_script(self, exp_dir):
         # Add directories to scrape.
