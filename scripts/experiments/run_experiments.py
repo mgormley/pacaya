@@ -135,7 +135,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
         java_mem = int((total_work_mem_megs - zimpl_mem) * 0.5)
         ilp_mem = total_work_mem_megs - java_mem - zimpl_mem
         # Subtract off some overhead for CPLEX
-        ilp_mem -= 128
+        ilp_mem -= 1024
         assert (zimpl_mem + java_mem + ilp_mem <= total_work_mem_megs)
 
         self.update(ilpWorkMemMegs=ilp_mem)

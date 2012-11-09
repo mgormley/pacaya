@@ -63,7 +63,7 @@ public abstract class DantzigWolfeRelaxation {
     public DantzigWolfeRelaxation(File tempDir, int maxCutRounds) {
         // TODO: pass these through
         this.tempDir = tempDir;
-        this.workMemMegs = 256;
+        this.workMemMegs = 1024;
         this.numThreads = 1;
         this.maxSimplexIterations = 2100000000;
         this.maxDwIterations = 1000;
@@ -175,6 +175,10 @@ public abstract class DantzigWolfeRelaxation {
         // megabytes, that CPLEX is permitted to use for working memory
         // before swapping to disk files, compressing memory, or taking
         // other actions.
+        // 
+        // A user-written Java application and CPLEX internals use separate 
+        // memory heaps.
+        //
         // Values: Any nonnegative number, in megabytes; default: 128.0
         cplex.setParam(DoubleParam.WorkMem, workMemMegs);
         //cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
