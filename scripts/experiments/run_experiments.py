@@ -269,6 +269,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     root.add_dependent(experiment)
             scrape = ScrapeExpout(rproj=None, out_file="results.data")
             scrape.add_prereqs(root.dependents)
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereqs(scrape)
             return root
         elif self.expname == "viterbi-vs-bnb":
             for dataset in datasets:
