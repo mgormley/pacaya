@@ -82,6 +82,30 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
         script += fancify_cmd(cmd)
         return script
 
+class SvnCommitResults(experiment_runner.ExpParams):
+        
+    def __init__(self, expname, **keywords):
+        experiment_runner.ExpParams.__init__(self,keywords)
+        self.expname = expname
+        
+    def get_instance(self):
+        return SvnCommitResults()
+        
+    def create_experiment_script(self, exp_dir):
+        # TODO: check that all the experiments completed successfully 
+        # before committing. 
+        top_dir = os.path.dirname(exp_dir)
+        # Copy results files ending in .data to results/<expname>
+        script = ""
+        script += "find %s -name '*.data' "  % (top_dir)
+        script += " | xargs cp -t %s/results/%s/ \n" % (self.root_dir, self.expname)
+        # Add all new results to svn
+        script += "svn add --force %s/results\n" % (self.root_dir)
+        # Commit the new results to svn
+        script += "svn commit -m 'AUTOCOMMIT: Updates to results "
+        script += " from %s' %s/results\n" % (os.path.basename(top_dir), self.root_dir)
+        return script
+
 class DPExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
@@ -296,6 +320,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             subset = get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300)
             scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="bnb-status.data", type="bnb")
             scrape_stat.add_prereqs(subset)
+            # Commit results to svn
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereqs([scrape, scrape_stat])
             return root
         elif self.expname == "bnb-semi-synth":
             all.update(algorithm="bnb",
