@@ -79,7 +79,7 @@ def get_incumbent_status_list(stdout_lines):
 class DpSingleScraper(Scraper):
     
     def __init__(self, options):
-        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj)
+        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, options.out_file)
         self.type = options.type
 
     def get_exp_params_instance(self):
@@ -113,6 +113,7 @@ if __name__ == "__main__":
     parser.add_option('--rproj', action="store_true", help="Print out for R-project")
     parser.add_option('--csv', action="store_true", help="Print out for CSV")
     parser.add_option('--google', action="store_true", help="Print out for Google Docs")
+    parser.add_option('--out_file', help="Output file [optional, defaults to stdout]")
     parser.add_option('--type', help="The type of status info to scrape [bnb, incumbent]")
     (options, args) = parser.parse_args(sys.argv)
 
