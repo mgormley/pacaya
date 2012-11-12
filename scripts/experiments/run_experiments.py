@@ -105,10 +105,12 @@ class SvnCommitResults(pipeline.NamedStage):
         # TODO: check that all the experiments completed successfully 
         # before committing. 
         top_dir = os.path.dirname(exp_dir)
+        results_exp_dir = "%s/results/%s" % (self.root_dir, self.expname)
         # Copy results files ending in .data to results/<expname>
         script = ""
+        script += "mkdir %s\n" % (results_exp_dir)
         script += "find %s -name '*.data' "  % (top_dir)
-        script += " | xargs cp -t %s/results/%s/ \n" % (self.root_dir, self.expname)
+        script += " | xargs cp -t %s/ \n" % (results_exp_dir)
         # Add all new results to svn
         script += "svn add --force %s/results\n" % (self.root_dir)
         # Commit the new results to svn
@@ -407,11 +409,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             # Fixed seed
             all.update(seed=112233)
             for dataset in datasets:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 300, 1*60*60), (10, 3000, 4*60*60)]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 300, 1*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
-                        # Run for some fixed amount of time.           
+                        # Run for some fixed amount of time.
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for algorithm in ["viterbi", "viterbi-bnb", "bnb"]:
@@ -433,6 +435,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             subset = root.dependents
             scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="incumbent-status.data", type="incumbent")
             scrape_stat.add_prereqs(subset)
+            # Commit results to svn
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereqs([scrape, scrape_stat])
             return root
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
