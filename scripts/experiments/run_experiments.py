@@ -353,7 +353,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]:
                             for propSupervised in frange(0.0, 1.0, 0.1):
                                 algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
-                                                   propSupervised=propSupervised)
+                                                   propSupervised=propSupervised, varSelection=varSelection)
                                 experiments.append(all + dataset + mns + algo)
         elif self.expname == "bnb-supervised":
             root = RootStage()

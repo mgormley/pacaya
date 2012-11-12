@@ -108,11 +108,13 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                 incumbentSolution = (DmvSolution) bnbSolver.getIncumbentSolution();
                 evalIncumbent();
             }
-            
+	    
+	    timer.stop();
             if (Time.totSec(timer) > timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
+	    timer.start();
         }
         evalIncumbent();
         rootNode.end();
