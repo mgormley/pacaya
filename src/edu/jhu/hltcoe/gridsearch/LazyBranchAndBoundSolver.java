@@ -67,12 +67,6 @@ public class LazyBranchAndBoundSolver {
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, Solution initialSolution, double initialScore) {
         // Initialize
-        if (incumbentSolution == null) {
-            // When B&B is used as a subroutine within our large-neighborhood
-            // local search approach, there's no reason to repeatedly print out
-            // the same incumbent.
-            evalIncumbent(initialSolution);
-        }
         this.incumbentSolution = initialSolution;
         this.incumbentScore = initialScore;
         double upperBound = BEST_SCORE;
@@ -87,7 +81,8 @@ public class LazyBranchAndBoundSolver {
         double rootLogSpace = rootNode.getLogSpace();
         double logSpaceRemain = rootLogSpace;
         ProblemNode curNode = null;
-        
+
+        evalIncumbent(initialSolution);
         while (hasNextLeafNode()) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
             nodeTimer.start();

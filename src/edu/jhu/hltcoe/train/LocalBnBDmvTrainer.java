@@ -51,7 +51,8 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm, 
             double timeoutSeconds, DependencyParserEvaluator evaluator) {
         this.viterbiTrainer = viterbiTrainer;
-        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds, evaluator);
+        // Use a null evaluator so that the incumbent is not repeatedly printed out.
+        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds, null);
         this.brancher = brancher;
         this.relax = relax;
         this.numRestarts = numRestarts;
