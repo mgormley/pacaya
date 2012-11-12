@@ -422,9 +422,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             if not self.fast:
                                 algo.update(bnbTimeoutSeconds=maxNumSentences/3)
                             for offsetProb in frange(0.05, 0.21, 0.05):
-                                for probOfSkipCm in frange(0.0, 0.21, 0.05):
-                                    algo.update(offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
-                                    root.add_dependent(all + dataset + msl + mns + algo)
+                                algo.update(offsetProb=offsetProb)
+                                root.add_dependent(all + dataset + msl + mns + algo)
                         else:
                             root.add_dependent(all + dataset + msl + mns + algo)
             # Scrape all results.
