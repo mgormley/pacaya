@@ -67,7 +67,7 @@ public class LazyBranchAndBoundSolver {
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, Solution initialSolution, double initialScore) {
         // Initialize
-        if (incumbentScore != initialScore) {
+        if (incumbentSolution == null) {
             // When B&B is used as a subroutine within our large-neighborhood
             // local search approach, there's no reason to repeatedly print out
             // the same incumbent.
