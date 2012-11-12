@@ -97,6 +97,7 @@ class SvnCommitResults(pipeline.NamedStage):
         pipeline.NamedStage.__init__(self, "svn_commit_results")
         self.always_relaunch()
         self.expname = expname
+        self.minutes = 10
         
     def get_instance(self):
         return SvnCommitResults()
@@ -543,7 +544,25 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         root_stage = RootStage()
         root_stage.add_dependents(experiments)
         return root_stage
-  
+
+    def updateStagesForQsub(self, root_stage):
+        '''Makes sure that the stage object specifies reasonable values for the 
+        qsub parameters given its experimental parameters.
+        '''
+        for stage in self.get_stages_as_list(root_stage):
+            if isinstance(stage, experiment_runner.ExpParams):
+                # Update the thread count
+                threads = stage.get("threads")
+                if threads != None: 
+                    stage.threads = threads
+                # Update the runtime
+                timeoutSeconds = stage.get("timeoutSeconds")
+                if timeoutSeconds != None:
+                    stage.minutes = (timeoutSeconds / 60.0)
+                    # Add some extra time in case some other part of the experiment
+                    # (e.g. evaluation) takes excessively long.
+                    stage.minutes = (stage.minutes * 2.0) + 10
+
 if __name__ == "__main__":
     usage = "%prog "
 
@@ -561,6 +580,7 @@ if __name__ == "__main__":
     
     runner = DepParseExpParamsRunner(options)
     root_stage = runner.get_experiments()
+    runner.updateStagesForQsub(root_stage)
     runner.run_pipeline(root_stage)
 
 
