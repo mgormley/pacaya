@@ -74,18 +74,23 @@ public class ViterbiEmDmvProjector implements Projector {
         }
         
         DmvSolution projectedSol = dmvProjector.getProjectedDmvSolution(relaxSol);
+        // Add the null solution, so that the collection isn't empty.
         solutions.add(projectedSol);
-        // TODO: These solutions might not be feasible according to the bounds.
-        // TODO: Decide on a better heuristic for when to do this (e.g. depth >
-        // dwRelax.getIdm().getNumTotalParams())
-        double random = Prng.nextDouble();
-        double proportionViterbiImprove = 0.1;
-        if (random < proportionViterbiImprove) {
-            // Run Viterbi EM starting from the randomly rounded solution.
-            if (random < proportionViterbiImprove / 2.0) {
-                solutions.add(getImprovedSol(projectedSol.getTreebank()));
-            } else {
-                solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
+        if (projectedSol != null) {
+            // TODO: These solutions might not be feasible according to the
+            // bounds.
+            // TODO: Decide on a better heuristic for when to do this (e.g.
+            // depth >
+            // dwRelax.getIdm().getNumTotalParams())
+            double random = Prng.nextDouble();
+            double proportionViterbiImprove = 0.1;
+            if (random < proportionViterbiImprove) {
+                // Run Viterbi EM starting from the randomly rounded solution.
+                if (random < proportionViterbiImprove / 2.0) {
+                    solutions.add(getImprovedSol(projectedSol.getTreebank()));
+                } else {
+                    solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
+                }
             }
         }
 

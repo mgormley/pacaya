@@ -36,23 +36,28 @@ public class LazyBranchAndBoundSolver {
     private SearchStatus status;
 
     // Storage of active nodes
-    private PriorityQueue<ProblemNode> leafNodePQ;
-    private PriorityQueue<ProblemNode> upperBoundPQ;
+    private final NodeOrderer leafNodePQ;
+    private final PriorityQueue<ProblemNode> upperBoundPQ;
     
     private final double epsilon;
-    private final Comparator<ProblemNode> leafComparator;
     private final double timeoutSeconds;
     private Stopwatch nodeTimer;
     private Stopwatch switchTimer;
     private Stopwatch relaxTimer;
     private Stopwatch feasTimer;
     private Stopwatch branchTimer;
-    
-    public LazyBranchAndBoundSolver(double epsilon, Comparator<ProblemNode> leafComparator, double timeoutSeconds) {
-        this.epsilon = epsilon;
-        this.leafComparator = leafComparator;
-        this.timeoutSeconds = timeoutSeconds;
 
+    // If true, fathoming is disabled. This enables random sampling of the
+    // branch and bound tree.
+    private boolean disableFathoming;
+    
+    public LazyBranchAndBoundSolver(double epsilon, NodeOrderer leafNodeOrderer, double timeoutSeconds) {
+        this.epsilon = epsilon;
+        this.leafNodePQ = leafNodeOrderer;
+        this.upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
+        this.timeoutSeconds = timeoutSeconds;
+        this.disableFathoming = false;
+        
         // Timers
         nodeTimer = new Stopwatch();
         switchTimer = new Stopwatch();
@@ -71,8 +76,8 @@ public class LazyBranchAndBoundSolver {
         this.incumbentScore = initialScore;
         double upperBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
-        leafNodePQ = new PriorityQueue<ProblemNode>(11, leafComparator);
-        upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
+        leafNodePQ.clear();
+        upperBoundPQ.clear();
         int numProcessed = 0;
         FathomStats fathom = new FathomStats();
         
@@ -120,13 +125,13 @@ public class LazyBranchAndBoundSolver {
 
             // The active node can compute a tighter upper bound instead of
             // using its parent's bound
-            log.info(String.format("CurrentNode: id=%d depth=%d side=%d", curNode.getId(), curNode.getDepth(), curNode
-                    .getSide()));
             relaxTimer.start();
             double curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
             RelaxedSolution relax = curNode.getRelaxedSolution();
             relaxTimer.stop();
-            if (curNodeLowerBound <= incumbentScore) {
+            log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s", curNode.getId(),
+                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString()));
+            if (curNodeLowerBound <= incumbentScore && !disableFathoming) {
                 // Fathom this node: it is either infeasible or was pruned.
                 if (relax.getStatus() == RelaxStatus.Infeasible) {
                     fathom.fathom(curNode, FathomStatus.Infeasible);
@@ -156,7 +161,7 @@ public class LazyBranchAndBoundSolver {
             }
             feasTimer.stop();
             
-            if (Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)) {
+            if (sol != null && Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)  && !disableFathoming) {
                 // Fathom this node: the optimal solution for this subproblem was found.
                 fathom.fathom(curNode, FathomStatus.CompletelySolved);
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
@@ -183,7 +188,8 @@ public class LazyBranchAndBoundSolver {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
         printSummary(upperBound, relativeDiff, numProcessed, fathom);
-        leafNodePQ = null;     
+        leafNodePQ.clear();
+        upperBoundPQ.clear();
 
         log.info("B&B search status: " + status);
         
@@ -221,7 +227,12 @@ public class LazyBranchAndBoundSolver {
 
     private void addToLeafNodes(ProblemNode node) {
         leafNodePQ.add(node);
-        upperBoundPQ.add(node);
+        if (disableFathoming && upperBoundPQ.size() > 0) {
+            // This is a hack to ensure that we don't populate the upperBoundPQ.
+            return;
+        } else {
+            upperBoundPQ.add(node);
+        }
     }
 
     public Solution getIncumbentSolution() {
@@ -230,6 +241,10 @@ public class LazyBranchAndBoundSolver {
     
     public double getIncumbentScore() {
         return incumbentScore;
+    }
+    
+    public void setDisableFathoming(boolean disableFathoming) {
+        this.disableFathoming = disableFathoming;
     }
     
     private void printSpaceRemaining(int numProcessed, double rootLogSpace, double logSpaceRemain) {

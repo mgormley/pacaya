@@ -1,12 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import java.util.Comparator;
-
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -20,9 +15,8 @@ public class BnBDmvTrainer implements Trainer<DepTreebank> {
     private DmvProblemNode rootNode;
     private DmvRelaxation relax;
 
-    public BnBDmvTrainer(double epsilon, CptBoundsDeltaFactory brancher, DmvRelaxation relax, double timeoutSeconds,
-            DependencyParserEvaluator evaluator, Comparator<ProblemNode> leafComparator) {
-        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, leafComparator, timeoutSeconds, evaluator);
+    public BnBDmvTrainer(LazyBranchAndBoundSolver bnbSolver, CptBoundsDeltaFactory brancher, DmvRelaxation relax) {
+        this.bnbSolver = bnbSolver;
         this.brancher = brancher;
         this.relax = relax;
     }

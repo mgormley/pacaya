@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.gridsearch;
 import java.util.Comparator;
 
 /**
- * This compartor will sort the elements so that a depth first search is
+ * This comparator will sort the elements so that a depth first search is
  * performed and among the children of maximal depth, the best first child will
  * be chosen.
  */

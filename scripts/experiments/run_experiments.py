@@ -111,7 +111,8 @@ class SvnCommitResults(pipeline.NamedStage):
         script = ""
         script += "mkdir %s\n" % (results_exp_dir)
         script += "find %s -name '*.data' "  % (top_dir)
-        script += " | xargs cp -t %s/ \n" % (results_exp_dir)
+        # We use -I and -n with xargs because cp's -t is not supported on Mac OS X.
+        script += " | xargs -I %% -n 1 cp %% %s/ \n" % (results_exp_dir)
         # Add all new results to svn
         script += "svn add --force %s/results\n" % (self.root_dir)
         # Commit the new results to svn
@@ -356,6 +357,37 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
                                                    propSupervised=propSupervised, varSelection=varSelection)
                                 experiments.append(all + dataset + mns + algo)
+        elif self.expname == "bnb-depth-test":
+            root = RootStage()
+            all.update(nodeOrder="dfs-randwalk",
+                       algorithm="bnb",
+                       initBounds="viterbi-em",                    
+                       varSelection="regret",
+                       offsetProb=1.0, 
+                       varSplit="half-prob",
+                       propSupervised=0.0,
+                       maxSimplexIterations=1000000000,
+                       maxDwIterations=1000000000,
+                       maxCutRounds=1000000000,
+                       minSumForCuts=1.00001,
+                       maxSentenceLength=10,
+                       maxNumSentences=50,
+                       disableFathoming=True)
+            all.set("lambda", 0.0)
+            # Run for some fixed amount of time.
+            all.update(numRestarts=1000000000, epsilon=0.0,
+                       timeoutSeconds=10*60)
+            dataset = synth_alt_three
+            for relaxation in ["dw"]:
+                experiment = all + dataset + DPExpParams(relaxation=relaxation)
+                root.add_dependent(experiment)
+            #Scrape status information from a subset of the experiments.
+            scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
+            scrape_stat.add_prereqs(root.dependents)
+            # Commit results to svn
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereq(scrape_stat)
+            return root
         elif self.expname == "bnb-supervised":
             root = RootStage()
             all.update(algorithm="bnb",

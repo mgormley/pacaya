@@ -49,9 +49,30 @@ def get_bnb_status_list(stdout_lines):
         status_list = sample(status_list, 500)
     return map(lambda x: BnbStatus(x), status_list)
 
+
+class CurNodeStatus(DPExpParams):
+        
+    def __init__(self, status):
+        DPExpParams.__init__(self)
+        self.update(time = _re_logging_time.search(status).group(1))
+        matches = [x for x in _re_stat_elem.finditer(status)]
+        self.update(id = int(matches[0].group(1)),
+                    depth = int(matches[1].group(1)),
+                    side = int(matches[2].group(1)),
+                    upperBound = float(matches[3].group(1)),
+                    relaxStatus = matches[4].group(1))
+       
+       
+def get_curnode_status_list(stdout_lines):
+    '''Gets a list of current node statuses from lines in stdout''' 
+    status_list = get_all_following(stdout_lines, ".*CurrentNode: ", True)
+    if status_list == None:
+        return None
+    return map(lambda x: CurNodeStatus(x), status_list)
+
     
 def get_incumbent_status_list(stdout_lines):
-    '''Gets a list of incumbent statuses from summary lines in stdout''' 
+    '''Gets a list of incumbent statuses from lines in stdout''' 
     ll_list = get_all_matches(stdout_lines, "(\d+).*Incumbent logLikelihood: (.*)")
     acc_list = get_all_matches(stdout_lines, "(\d+).*Incumbent accuracy: (.*)")
     if ll_list == None or acc_list == None:
@@ -100,6 +121,10 @@ class DpSingleScraper(Scraper):
             status_list = get_incumbent_status_list(stdout_lines)
         elif self.type == "bnb":
             status_list = get_bnb_status_list(stdout_lines)
+        elif self.type == "curnode":
+            status_list = get_curnode_status_list(stdout_lines)
+        else:
+            raise Exception()
 
         # Combine the status objects with the experiment definition. 
         return [exp + status for status in status_list]
@@ -114,7 +139,7 @@ if __name__ == "__main__":
     parser.add_option('--csv', action="store_true", help="Print out for CSV")
     parser.add_option('--google', action="store_true", help="Print out for Google Docs")
     parser.add_option('--out_file', help="Output file [optional, defaults to stdout]")
-    parser.add_option('--type', help="The type of status info to scrape [bnb, incumbent]")
+    parser.add_option('--type', help="The type of status info to scrape [bnb, curnode, incumbent]")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) < 2 or options.type is None:

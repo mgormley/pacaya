@@ -5,8 +5,6 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.BfsComparator;
-import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
@@ -47,12 +45,11 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     private double timeoutSeconds;
     private DependencyParserEvaluator evaluator;
     
-    public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, double epsilon, CptBoundsDeltaFactory brancher,
-            DmvRelaxation relax, double bnbTimeoutSeconds, int numRestarts, double offsetProb, double probOfSkipCm, 
+    public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, LazyBranchAndBoundSolver bnbSolver, CptBoundsDeltaFactory brancher,
+            DmvRelaxation relax, int numRestarts, double offsetProb, double probOfSkipCm, 
             double timeoutSeconds, DependencyParserEvaluator evaluator) {
         this.viterbiTrainer = viterbiTrainer;
-        // Use a null evaluator so that the incumbent is not repeatedly printed out.
-        this.bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new BfsComparator(), bnbTimeoutSeconds, null);
+        this.bnbSolver = bnbSolver;
         this.brancher = brancher;
         this.relax = relax;
         this.numRestarts = numRestarts;

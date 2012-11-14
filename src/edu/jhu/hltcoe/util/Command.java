@@ -11,7 +11,7 @@ import org.apache.commons.cli.CommandLine;
 public class Command {
 
     static final int NUM_DIGITS = 3;
-    
+
     private Command() {
         // private constructor
     }
@@ -22,8 +22,8 @@ public class Command {
     public static void runCommand(String[] cmdArray, File logFile, File dir) {
         Process proc = runProcess(cmdArray, logFile, dir);
         if (proc.exitValue() != 0) {
-            throw new RuntimeException("Command failed with exit code "
-                    + proc.exitValue() + ": " + cmdToString(cmdArray) + "\n" + Files.tail(logFile));
+            throw new RuntimeException("Command failed with exit code " + proc.exitValue() + ": "
+                    + cmdToString(cmdArray) + "\n" + Files.tail(logFile));
         }
     }
 
@@ -60,7 +60,7 @@ public class Command {
 
         } catch (Exception e) {
             String tail = "";
-            try { 
+            try {
                 tail = Files.tail(logFile);
             } catch (Throwable t) {
                 // Ignore new exceptions
@@ -78,7 +78,7 @@ public class Command {
         }
         return sb.toString();
     }
-    
+
     public static String getOptionValue(CommandLine cmd, String name, String defaultValue) {
         return cmd.hasOption(name) ? cmd.getOptionValue(name) : defaultValue;
     }
@@ -86,7 +86,7 @@ public class Command {
     public static int getOptionValue(CommandLine cmd, String name, int defaultValue) {
         return cmd.hasOption(name) ? Integer.parseInt(cmd.getOptionValue(name)) : defaultValue;
     }
-    
+
     public static long getOptionValue(CommandLine cmd, String name, long defaultValue) {
         return cmd.hasOption(name) ? Long.parseLong(cmd.getOptionValue(name)) : defaultValue;
     }
@@ -94,5 +94,9 @@ public class Command {
     public static double getOptionValue(CommandLine cmd, String name, double defaultValue) {
         return cmd.hasOption(name) ? Double.parseDouble(cmd.getOptionValue(name)) : defaultValue;
     }
-   
+
+    public static boolean getOptionValue(CommandLine cmd, String name, boolean defaultValue) {
+        return cmd.hasOption(name) ? Boolean.parseBoolean(cmd.getOptionValue(name)) : defaultValue;
+    }
+
 }

@@ -5,6 +5,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
@@ -36,7 +40,8 @@ public class LocalBnBDmvTrainerTest {
         ViterbiTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
         DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
         CptBoundsDeltaFactory brancher = BnBDmvTrainerTest.getDefaultBrancher();
-        LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
+        LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new PqNodeOrderer(new BfsComparator()), bnbTimeoutSeconds, null);
+        LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,
                 offsetProb, probOfSkipCm, timeoutSeconds, null);
 
         SentenceCollection sentences = new SentenceCollection();

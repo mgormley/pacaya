@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.train;
 
 import java.io.File;
-import java.util.Comparator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
@@ -11,7 +10,12 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.DfsRandChildNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.DfsRandWalkNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.NodeOrderer;
+import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
@@ -24,8 +28,8 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
@@ -92,6 +96,7 @@ public class TrainerFactory {
         options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
         options.addOption("op", "timeoutSeconds", true, "The timeout in seconds for training run");
         options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
+        options.addOption("df", "disableFathoming", true, "Disables fathoming in branch-and-bound");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -127,7 +132,8 @@ public class TrainerFactory {
         double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
         double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
         double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
-
+        boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
+        
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
         }
@@ -258,18 +264,27 @@ public class TrainerFactory {
             brancher =  new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
         }
 
-        Comparator<ProblemNode> leafComparator = null;
+        NodeOrderer nodeOrderer = null;
         if (nodeOrder.equals("bfs")) {
-            leafComparator = new BfsComparator();
+            nodeOrderer = new PqNodeOrderer(new BfsComparator());
         } else if (nodeOrder.equals("dfs")) {
-            leafComparator = new DfsBfcComparator();
+            nodeOrderer = new PqNodeOrderer(new DfsBfcComparator());
+        } else if (nodeOrder.equals("dfs-rand")) {
+            nodeOrderer = new DfsRandChildNodeOrderer(60);
+        } else if (nodeOrder.equals("dfs-randwalk")) {
+            nodeOrderer = new DfsRandWalkNodeOrderer(60);
         }
         
         if (algorithm.equals("viterbi-bnb")) {
-            trainer = new LocalBnBDmvTrainer(viterbiTrainer, epsilon, brancher, relax, bnbTimeoutSeconds, numRestarts,
+            // Use a null evaluator so that the incumbent is not repeatedly printed out.
+            LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, bnbTimeoutSeconds, null);
+            bnbSolver.setDisableFathoming(disableFathoming);
+            trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
         } else if (algorithm.equals("bnb")) {
-            trainer = new BnBDmvTrainer(epsilon, brancher, relax, timeoutSeconds, parserEvaluator, leafComparator);
+            LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
+            bnbSolver.setDisableFathoming(disableFathoming);
+            trainer = new BnBDmvTrainer(bnbSolver, brancher, relax);
         }
         
         if (trainer == null) {

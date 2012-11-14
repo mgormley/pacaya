@@ -7,6 +7,9 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
@@ -34,13 +37,12 @@ public class BnBDmvTrainerTest {
         Prng.seed(1234567890);
         DmvProblemNode.clearActiveNode();
     }
-
     
     @Test
     public void testTwo() {
         double epsilon = 0.4;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -52,8 +54,7 @@ public class BnBDmvTrainerTest {
     public void testOne() {
         double epsilon = 0.5;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
-        //trainer.setTempDir(new File("."));
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -66,8 +67,7 @@ public class BnBDmvTrainerTest {
         double epsilon = 0.9;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
         dwRelax.setMaxDwIterations(3);
-        BnBDmvTrainer trainer = new BnBDmvTrainer(epsilon, getDefaultBrancher(), dwRelax, 5, null, new BfsComparator());
-        //trainer.setTempDir(new File("."));
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
 
@@ -80,7 +80,12 @@ public class BnBDmvTrainerTest {
         trainer.train(new DmvTrainCorpus(sentences));
     }
 
-
+    private BnBDmvTrainer getDefaultBnb(double epsilon, DmvDantzigWolfeRelaxation dwRelax) {
+        LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new PqNodeOrderer(new BfsComparator()), 5, null);
+        BnBDmvTrainer trainer = new BnBDmvTrainer(bnbSolver, getDefaultBrancher(), dwRelax);
+        return trainer;
+    }
+    
     public static CptBoundsDeltaFactory getDefaultBrancher() {
         VariableSelector varSelector = new RegretVariableSelector();
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);

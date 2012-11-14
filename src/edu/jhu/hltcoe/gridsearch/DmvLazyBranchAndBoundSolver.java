@@ -3,8 +3,6 @@
  */
 package edu.jhu.hltcoe.gridsearch;
 
-import java.util.Comparator;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
@@ -15,8 +13,8 @@ public class DmvLazyBranchAndBoundSolver extends LazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(DmvLazyBranchAndBoundSolver.class);
     private DependencyParserEvaluator evaluator;
     
-    public DmvLazyBranchAndBoundSolver(double epsilon, Comparator<ProblemNode> leafComparator, double timeoutSeconds, DependencyParserEvaluator evaluator) {
-        super(epsilon, leafComparator, timeoutSeconds);
+    public DmvLazyBranchAndBoundSolver(double epsilon, NodeOrderer nodeOrderer, double timeoutSeconds, DependencyParserEvaluator evaluator) {
+        super(epsilon, nodeOrderer, timeoutSeconds);
         this.evaluator = evaluator;
     }
     

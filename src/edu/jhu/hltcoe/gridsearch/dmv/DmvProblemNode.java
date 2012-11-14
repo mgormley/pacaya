@@ -33,7 +33,7 @@ public class DmvProblemNode implements ProblemNode {
 
     private int id;
     private DmvProblemNode parent;
-    private int depth;
+    protected int depth;
     private int side;
     private CptBoundsDeltaList deltas;
     
