@@ -17,29 +17,43 @@ myplot <- function(p, filename) {
 ## Read data
 results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/viterbi-bnb/incumbent-status.data"
 df <- read.table(results.file, header=TRUE)
+df.orig <- df
 
 df$method = str_c(df$algorithm, df$offsetProb, df$probOfSkipCm, df$initWeights, sep=".")
 
+df <- subset(df, algorithm == "viterbi" | algorithm == "bnb" | probOfSkipCm == 0)
+df <- subset(df, maxNumSentences == 300)
+df <- subset(df, time/1000/60 < 61)
+
 plotLogLikeVsTime <- function(mydata) {
   title = "Penn Treebank, Brown"
-  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Time (min)"
   ylab = "Log-likelihood (train)"
   p <- ggplot(mydata, aes(x=time / 1000 / 60,
                           y=incumbentLogLikelihood, color=method))
-  ##p <- p + geom_point()
+  #TODO p <- p + geom_point()
   p <- p + geom_line()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   p <- p + scale_color_discrete(name="Method")
 }
 
-#HACK: TODO: remove this: Just remove some dummy points
-df <- subset(df, incumbentLogLikelihood < -2000)
-df <- subset(df, algorithm=="viterbi" | offsetProb == 0.2)
-df <- subset(df, maxNumSentences == 300)
+plotAccVsTime <- function(mydata) {
+  title = "Penn Treebank, Brown"
+  xlab = "Time (min)"
+  ylab = "Accuracy (train)"
+  p <- ggplot(mydata, aes(x=time / 1000 / 60,
+                          y=incumbentAccuracy, color=method))
+  #TODO p <- p + geom_point()
+  p <- p + geom_line()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_color_discrete(name="Method")
+}
 
 myplot(plotLogLikeVsTime(df),
        str_c(results.file, "llvtime", "pdf", sep="."))
+
+myplot(plotAccVsTime(df),
+       str_c(results.file, "accvtime", "pdf", sep="."))
 
 # For debugging:
 x <- df[,c("time", "incumbentLogLikelihood", "method")]
