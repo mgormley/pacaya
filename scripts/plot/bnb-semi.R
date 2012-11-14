@@ -13,8 +13,13 @@ myplot <- function(p, filename) {
   ggsave(filename, width=stdwidth, height=stdheight)
 }
 
+getDataset <- function(mydata) {
+  colsubset <- df[,c("dataset", "maxNumSentences", "maxSentenceLength")]
+  unique(str_c(df$dataset, df$maxNumSentences, df$maxSentenceLength, sep="."))
+}
+
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016.data"
+results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb-semi/bnb_016.data"
 
 df <- read.table(results.file, header=TRUE)
 
@@ -23,11 +28,6 @@ df$bnbStatusShort <- str_replace(df$bnbStatus, "_SOLUTION_FOUND", "")
 #df <- subset(df, varSplit == "half-prob" & maxNumSentences == 300)
 df$groupLevel <- factor(str_c(df$maxNumSentences, df$maxSentenceLength, df$varSplit, sep="."))
 groups <- daply(df, .(groupLevel), function(dat) { return(dat) })
-
-getDataset <- function(mydata) {
-  colsubset <- df[,c("dataset", "maxNumSentences", "maxSentenceLength")]
-  unique(str_c(df$dataset, df$maxNumSentences, df$maxSentenceLength, sep="."))
-}
 
 plotreldiff <- function(mydata) {
   xlab = "Proportion of training data supervised"
@@ -125,7 +125,7 @@ for(dfsubset in groups) {
 
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb_semi/bnb_016_status.data"
+results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb-semi/bnb_016_status.data"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
@@ -147,7 +147,7 @@ dfBoth <- subset(dfBoth,
                  propSupervised == 0.8)
 ##dfBoth <- subset(dfBoth, propSupervised == 0.9 & time < 2e5)
 ## | propSupervised == 0.8 | propSupervised == 0.7)
-
+dfBoth <- subset(dfBoth, maxNumSentences == 100 & varSplit == "half-prob")
 
 plotbnbbounds <- function(mydata) {
   title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
@@ -155,6 +155,7 @@ plotbnbbounds <- function(mydata) {
   ylab = "Bounds on log-likelihood"
   p <- ggplot(mydata, aes(x=numSeen, y=bound, color=factor(propSupervised)))
   p <- p + geom_line(aes(linetype=boundType))
+  #p <- p + geom_point(aes(shape=boundType))
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   p <- p + scale_linetype_discrete(name="Bound type")
   p <- p + scale_color_discrete(name="Proportion supervised")
