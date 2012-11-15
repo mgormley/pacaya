@@ -213,6 +213,7 @@ public class PipelineRunner {
 
     private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) {
         if (cmd.hasOption("initBounds")) {
+            // Initialize the bounds as a hypercube around some initial solution.
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
             double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
             double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
