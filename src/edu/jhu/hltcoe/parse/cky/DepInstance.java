@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.pr;
+package edu.jhu.hltcoe.parse.cky;
 
 import util.CountAlphabet;
 import edu.jhu.hltcoe.data.Label;
