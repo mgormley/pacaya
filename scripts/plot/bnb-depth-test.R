@@ -37,6 +37,10 @@ plotLowerBoundVsDepth <- function(mydata) {
   p <- p + geom_abline(intercept=incumbentScore, slope=0)
 }
 
+myplot(plotLowerBoundVsDepth(df),
+       str_c(results.file, "lbvdepth", "pdf", sep="."))
+
+## Plot counts of each status.
 plotCountsVsDepth <- function(mydata) {
   title = "Synthetic Data from DMV with 3 POS tags"
   xlab = "Depth"
@@ -46,31 +50,11 @@ plotCountsVsDepth <- function(mydata) {
   p <- p + scale_fill_discrete(name="Relaxation Status")
 }
 
-plotProportionVsDepth <- function(mydata) {
-  title = "Synthetic Data from DMV with 3 POS tags"
-  xlab = "Depth"
-  ylab = "Count"
-  p <- ggplot(mydata, aes(x=factor(depth), fill=factor(relaxStatus2))) 
-  p <- p + geom_bar(position="fill")
-  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
-  p <- p + scale_fill_discrete(name="Relaxation Status")
-}
-
-myplot(plotLowerBoundVsDepth(df),
-       str_c(results.file, "lbvdepth", "pdf", sep="."))
-
-## Plot counts of each status.
 df$relaxStatus2 <- ifelse(df$upperBound < incumbentScore, "Pruned", "Not-pruned")
 myplot(plotCountsVsDepth(df),
        str_c(results.file, "countsvdepth", "pdf", sep="."))
 
 ## Plot proportion of each status.
-depths <- ddply(df, .(depth, relaxStatus2), summarise, count=length(depth))
-myplot(plotProportionVsDepth(depths),
-       str_c(results.file, "propvdepth", "pdf", sep="."))
-
-## Print out the estimated number of nodes in the pruned B&B tree
-##
 mysummary <- function(df) {
   df$isKept <- ifelse(df$relaxStatus2 == "Pruned", 0, 1)
 
@@ -89,11 +73,33 @@ mysummary <- function(df) {
 }
 depths <- ddply(df, .(depth), mysummary)
 
+plotProportionVsDepth <- function(mydata) {
+  title = "Synthetic Data from DMV with 3 POS tags"
+  xlab = "Depth"
+  ylab = "Proportion of nodes pruned"
+  ## p <- ggplot(mydata, aes(x=factor(depth), y=count, fill=factor(relaxStatus2))) 
+  ## p <- p + geom_bar(position="fill")
+  ## p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  ## p <- p + scale_fill_discrete(name="Relaxation Status")
+  p <- ggplot(mydata, aes(x=depth, y=(1 - sampleMean)))
+  p <- p + geom_line()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_fill_discrete(name="Relaxation Status")
+}
+
+##depths <- ddply(df, .(depth, relaxStatus2), summarise, count=length(depth))
+myplot(plotProportionVsDepth(depths),
+       str_c(results.file, "propvdepth", "pdf", sep="."))
+
+## Print out the estimated number of nodes in the pruned B&B tree
+##
+
 ## Estimate of the total number of nodes kept.
 est.pop.tot <- sum(depths$estNumKept)
 
 ## The stratified sample variance for that estimate.
 ## See : http://webcast.idready.org/materials/fall07/appliedepir/2007-11-27/stratsurvey2.pdf
+## Also see pg 217 of Rice book.
 attach(depths)
 var.tot.vec <- (1 - (numSampled/population)) * population^2 * (sampleVariance/numSampled)
 detach(depths)
@@ -106,10 +112,13 @@ se.tot <- sqrt(var.tot)
 ci <- c(est.pop.tot - 1.96 * se.tot,
         est.pop.tot + 1.96 * se.tot)
 
-# Print everything out.
+# Print the estimates.
 sprintf("estimate=%f stddev=%f", est.pop.tot, se.tot)
 sprintf("confidence interval = %f", ci)
+sprintf("number of hours to complete (26ms per node) = %f", est.pop.tot * 26 / 1000 / 60 / 60)
+sprintf("number of days to complete (26ms per node) = %f", est.pop.tot * 26 / 1000 / 60 / 60 / 24)
 
+## ------ Trash -------
 ## depths <- ddply(df, depth ~ relaxStatus2, summarise,
 ##                 numSampled = length(depth),
 ##                 numPruned =  length(subset(relaxStatus2, relaxStatus2 == "Pruned")))
