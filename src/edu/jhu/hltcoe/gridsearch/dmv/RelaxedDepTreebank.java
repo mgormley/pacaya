@@ -3,17 +3,29 @@
  */
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class RelaxedDepTreebank {
     private double[][] fracRoots;
     private double[][][] fracChildren;
 
-    public RelaxedDepTreebank(double[][] fracRoots, double[][][] fracChildren) {
-        this.fracRoots = fracRoots;
-        this.fracChildren = fracChildren;
+    public RelaxedDepTreebank(DmvTrainCorpus corpus) {
+        fracRoots = new double[corpus.size()][];
+        fracChildren = new double[corpus.size()][][];
+        for (int s = 0; s < corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                fracRoots[s] = null;
+                fracChildren[s] = null;
+            } else {
+                Sentence sentence = corpus.getSentence(s);
+                fracRoots[s] = new double[sentence.size()];
+                fracChildren[s] = new double[sentence.size()][sentence.size()];
+            }
+        }
     }
-
+    
     public double[][] getFracRoots() {
         return fracRoots;
     }

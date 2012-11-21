@@ -17,6 +17,7 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
@@ -70,6 +71,25 @@ public class IlpViterbiParser implements ViterbiParser {
         
         // Decode parses
         DepTreebank depTreebank = decode(sentences, result);
+        
+        stopwatch.stop();
+        log.debug(String.format("Avg parse time: %.3f", 
+                Time.totMs(stopwatch) / sentences.size()));
+        log.debug(String.format("Tot parse time: %.3f", 
+                Time.totMs(stopwatch)));
+        
+        return depTreebank;
+    }
+    
+    public RelaxedDepTreebank getRelaxedParse(SentenceCollection sentences, Model model) {
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        
+        // Encode the model/sentences as an ILP and solve.
+        Map<String, Double> result = solve(sentences, model);
+        
+        // Decode relaxed parses.
+        RelaxedDepTreebank depTreebank = relaxedDecode(sentences, result);
         
         stopwatch.stop();
         log.debug(String.format("Avg parse time: %.3f", 
@@ -286,6 +306,34 @@ public class IlpViterbiParser implements ViterbiParser {
         }
         
         return depTreebank;
+    }
+    
+    protected RelaxedDepTreebank relaxedDecode(SentenceCollection sentences, Map<String,Double> result) {
+        // TODO: if we switch to handling semi-supervised corpora, then remove the next line.
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+        RelaxedDepTreebank relaxTreebank = new RelaxedDepTreebank(corpus);
+        
+        for (Entry<String,Double> entry : result.entrySet()) {
+            String zimplVar = entry.getKey();
+            Double value = entry.getValue();
+            String[] splits = zimplVarRegex.split(zimplVar);
+            String varType = splits[0];
+            if (varType.equals("arc")) {
+                int sentId = Integer.parseInt(splits[1]);
+                int parent = Integer.parseInt(splits[2]);
+                int child = Integer.parseInt(splits[3]);
+                if (parent == 0) {
+                    relaxTreebank.getFracRoots()[sentId][child-1] = value;
+                } else if (child == 0) {
+                    // Skip the arcs that would indicate the parent having a head.
+                    assert(Utilities.equals(value, 0.0, 1e-9));
+                } else {
+                    relaxTreebank.getFracChildren()[sentId][parent-1][child-1] = value;
+                }
+            }
+        }
+        
+        return relaxTreebank;
     }
     
 }

@@ -11,6 +11,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.Model;
@@ -143,19 +144,18 @@ public class IlpViterbiParserTest {
     
     @Test
     public void testLpRelaxations() {
-        Assert.fail("These LP relaxations aren't working at the moment.");
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
-//        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
-//        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, -24.879331719999996);
+        getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, -26.467);
         
-        getIlpParses(model, sentences, IlpFormulation.DP_PROJ_LPRELAX, -24.879331719999996);
+        getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, -26.525);
+        
+        getLpParses(model, sentences, IlpFormulation.DP_PROJ_LPRELAX, -26.467);
     }
 
     public static DepTreebank getIlpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
@@ -165,6 +165,16 @@ public class IlpViterbiParserTest {
         for (DepTree depTree : trees) {
             System.out.println(depTree);
         }
+        System.out.println("logProb: " + parser.getLastParseWeight());
+        Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
+        return trees;
+    }
+
+
+    public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
+        IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
+        IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
+        RelaxedDepTreebank trees = parser.getRelaxedParse(sentences, model);
         System.out.println("logProb: " + parser.getLastParseWeight());
         Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
         return trees;

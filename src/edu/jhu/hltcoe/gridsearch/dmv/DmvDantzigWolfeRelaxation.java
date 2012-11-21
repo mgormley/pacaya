@@ -115,25 +115,14 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     }
 
     protected RelaxedDepTreebank extractRelaxedParse() throws UnknownObjectException, IloException {
-        double[][] fracRoots = new double[corpus.size()][];
-        double[][][] fracParses = new double[corpus.size()][][];
-        for (int s = 0; s < corpus.size(); s++) {
-            if (corpus.isLabeled(s)) {
-                fracRoots[s] = null;
-                fracParses[s] = null;
-            } else {
-                Sentence sentence = corpus.getSentence(s);
-                fracRoots[s] = new double[sentence.size()];
-                fracParses[s] = new double[sentence.size()][sentence.size()];
-            }
-        }
+        RelaxedDepTreebank relaxTreebank = new RelaxedDepTreebank(corpus);
         for (LambdaVar triple : mp.lambdaVars) {
             double frac = cplex.getValue(triple.lambdaVar);
             int s = triple.s;
             int[] parents = triple.parents;
 
-            double[] fracRoot = fracRoots[s];
-            double[][] fracParse = fracParses[s];
+            double[] fracRoot = relaxTreebank.getFracRoots()[s];
+            double[][] fracParse = relaxTreebank.getFracChildren()[s];
             for (int child = 0; child < parents.length; child++) {
                 int parent = parents[child];
                 if (parent == WallDepTreeNode.WALL_POSITION) {
@@ -143,7 +132,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 }
             }
         }
-        return new RelaxedDepTreebank(fracRoots, fracParses);
+        return relaxTreebank;
     }
 
     public WarmStart getWarmStart() {
