@@ -176,7 +176,7 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
         if (formulation != IlpFormulation.MFLOW_NONPROJ && formulation != IlpFormulation.MFLOW_PROJ) {
             zimplWriter.write(codeMap.getCodeSnippet("deptree-general"));
         }
-        if (formulation == IlpFormulation.FLOW_PROJ) {
+        if (formulation == IlpFormulation.FLOW_PROJ || formulation == IlpFormulation.FLOW_PROJ_LPRELAX) {
             zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.FLOW_NONPROJ));
         } else if (formulation == IlpFormulation.MFLOW_PROJ) {
             zimplWriter.write(codeMap.getCodeSnippet(IlpFormulation.MFLOW_NONPROJ));

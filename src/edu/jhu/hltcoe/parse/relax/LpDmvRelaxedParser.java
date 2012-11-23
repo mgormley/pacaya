@@ -116,8 +116,8 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             pp.flowRoot[s] = new IloNumVar[sent.size()];
             pp.flowChild[s] = new IloNumVar[sent.size()][sent.size()];
             for (int c = 0; c < sent.size(); c++) {
-                pp.arcRoot[s][c] = cplex.numVar(0, 1, String.format("arcChild_{%d,%d}", s, c));
-                pp.flowRoot[s][c] = cplex.numVar(0, sent.size(), String.format("flowChild_{%d,%d}", s, c));
+                pp.arcRoot[s][c] = cplex.numVar(0, 1, String.format("arcRoot_{%d,%d}", s, c));
+                pp.flowRoot[s][c] = cplex.numVar(0, sent.size(), String.format("flowRoot_{%d,%d}", s, c));
             }
             for (int p = 0; p < sent.size(); p++) {
                 for (int c = 0; c < sent.size(); c++) {
@@ -140,13 +140,13 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             pp.noGenAdj[s] = new IloNumVar[sent.size()][2];
             pp.numNonAdj[s] = new IloNumVar[sent.size()][2];
             for (int i = 0; i < sent.size(); i++) {
-                for (int lr = 0; lr < sent.size(); lr++) {
-                    pp.numToSide[s][i][lr] = cplex.numVar(0, sent.size(), String.format("numToSide_{%d,%d,%d}", s, i,
-                            lr));
-                    pp.genAdj[s][i][lr] = cplex.numVar(0, 1, String.format("genAdj_{%d,%d,%d}", s, i, lr));
-                    pp.noGenAdj[s][i][lr] = cplex.numVar(0, 1, String.format("noGenAdj_{%d,%d,%d}", s, i, lr));
-                    pp.numNonAdj[s][i][lr] = cplex.numVar(0, sent.size() - 1, String.format("numNonAdj_{%d,%d,%d}", s,
-                            i, lr));
+                for (int side = 0; side < 2; side++) {
+                    pp.numToSide[s][i][side] = cplex.numVar(0, sent.size(), String.format("numToSide_{%d,%d,%d}", s, i,
+                            side));
+                    pp.genAdj[s][i][side] = cplex.numVar(0, 1, String.format("genAdj_{%d,%d,%d}", s, i, side));
+                    pp.noGenAdj[s][i][side] = cplex.numVar(0, 1, String.format("noGenAdj_{%d,%d,%d}", s, i, side));
+                    pp.numNonAdj[s][i][side] = cplex.numVar(0, sent.size() - 1, String.format("numNonAdj_{%d,%d,%d}", s,
+                            i, side));
                 }
             }
         }
@@ -163,7 +163,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             double[] ones = new double[pp.arcRoot[s].length];
             Arrays.fill(ones, 1.0);
             IloLinearNumExpr expr = cplex.scalProd(ones, pp.arcRoot[s]);
-            pp.oneArcPerWall[s] = cplex.eq(expr, 1.0);
+            pp.oneArcPerWall[s] = cplex.eq(expr, 1.0, "oneArcPerWall");
         }
 
         // # Other tree constraints
@@ -182,7 +182,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     expr.addTerm(1.0, pp.arcChild[s][p][c]);
                 }
                 expr.addTerm(1.0, pp.arcRoot[s][c]);
-                pp.oneParent[s][c] = cplex.eq(expr, 1.0);
+                pp.oneParent[s][c] = cplex.eq(expr, 1.0, "oneParent");
             }
         }
 
@@ -205,7 +205,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             Arrays.fill(ones, 1.0);
             IloLinearNumExpr expr = cplex.scalProd(ones, pp.flowRoot[s]);
             Sentence sent = corpus.getSentence(s);
-            pp.rootFlowIsSentLength[s] = cplex.eq(expr, sent.size());
+            pp.rootFlowIsSentLength[s] = cplex.eq(expr, sent.size(), "rootFlowIsSentLength");
         }
 
         // Out-flow equals in-flow minus one.
@@ -227,7 +227,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                 for (int c = 0; c < sent.size(); c++) {
                     expr.addTerm(-1.0, pp.flowChild[s][i][c]);
                 }
-                pp.flowDiff[s][i] = cplex.eq(expr, 1.0);
+                pp.flowDiff[s][i] = cplex.eq(expr, 1.0, "flowDiff");
             }
         }
 
@@ -245,7 +245,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     expr.addTerm(1.0, pp.flowChild[s][p][c]);
                     expr.addTerm(-sent.size(), pp.arcChild[s][p][c]);
-                    pp.flowBound[s][p][c] = cplex.le(expr, 0.0);
+                    pp.flowBound[s][p][c] = cplex.le(expr, 0.0, "flowBound");
                 }
             }
         }
@@ -289,7 +289,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                             }
                         }
                         expr.addTerm(sent.size(), pp.arcChild[s][p][c]);
-                        pp.projectivity[s][p][c] = cplex.le(expr, sent.size());
+                        pp.projectivity[s][p][c] = cplex.le(expr, sent.size(), "projectivity");
                     }
                 }
             }
@@ -322,7 +322,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                         }
                     }
                     expr.addTerm(-1.0, pp.numToSide[s][p][side]);
-                    pp.numToSideCons[s][p][side] = cplex.eq(expr, 0.0);
+                    pp.numToSideCons[s][p][side] = cplex.eq(expr, 0.0, "numToSideCons");
                 }
             }
         }
@@ -339,7 +339,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     expr.addTerm(-1.0, pp.genAdj[s][p][side]);
                     expr.addTerm(1.0 / sent.size(), pp.numToSide[s][p][side]);
-                    pp.genAdjCons[s][p][side] = cplex.le(expr, 0.0);
+                    pp.genAdjCons[s][p][side] = cplex.le(expr, 0.0, "genAdjCons");
                 }
             }
         }
@@ -357,7 +357,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     expr.addTerm(1.0, pp.numToSide[s][p][side]);
                     expr.addTerm(-1.0, pp.genAdj[s][p][side]);
                     expr.addTerm(-1.0, pp.numNonAdj[s][p][side]);
-                    pp.numNonAdjCons[s][p][side] = cplex.eq(expr, 0.0);
+                    pp.numNonAdjCons[s][p][side] = cplex.eq(expr, 0.0, "numNonAdjCons");
                 }
             }
         }
@@ -374,7 +374,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     expr.addTerm(1.0, pp.genAdj[s][p][side]);
                     expr.addTerm(1.0, pp.noGenAdj[s][p][side]);
-                    pp.noGenAdjCons[s][p][side] = cplex.eq(expr, 1.0);
+                    pp.noGenAdjCons[s][p][side] = cplex.eq(expr, 1.0, "noGenAdjCons");
                 }
             }
         }
@@ -387,7 +387,9 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         pp.mat.addRows(pp.rootFlowIsSentLength);
         addRows(pp.mat, pp.flowDiff);
         addRows(pp.mat, pp.flowBound);
-        addRows(pp.mat, pp.projectivity);
+        if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX) {
+            addRows(pp.mat, pp.projectivity);
+        }
         addRows(pp.mat, pp.numToSideCons);
         addRows(pp.mat, pp.genAdjCons);
         addRows(pp.mat, pp.numNonAdjCons);
@@ -458,6 +460,10 @@ public class LpDmvRelaxedParser implements RelaxedParser {
     @Override
     public double getLastParseWeight() {
         return lastParseWeight;
+    }
+
+    public void setTempDir(File tempDir) {
+        this.tempDir = tempDir;
     }
 
 }

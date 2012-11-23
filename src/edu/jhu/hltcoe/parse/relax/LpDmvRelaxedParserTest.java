@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.parse.relax;
 
 
+import java.io.File;
+
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,7 +33,27 @@ public class LpDmvRelaxedParserTest {
     }
     
     @Test
-    public void testCplexLpParser() {
+    public void testTinyProj() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("the cat");
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+
+        double expectedObj = -4.593;
+
+        // Single commodity flow non-projective parsing LP Relaxation
+        // This is conveniently an integer solution
+        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        
+        // This should have the same expected objective as the Zimpl version.
+        RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        
+        Assert.assertArrayEquals(trees1.getFracRoots(), trees2.getFracRoots());
+        Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
+    }
+    
+    @Test
+    public void testCplexLpParserNonProj() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
@@ -44,6 +66,26 @@ public class LpDmvRelaxedParserTest {
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
         RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);
+        
+        Assert.assertArrayEquals(trees1.getFracRoots(), trees2.getFracRoots());
+        Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
+    }
+    
+
+    @Test
+    public void testCplexLpParserProj() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("the cat ate the hat with the mouse");
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+        
+        // This should have the same expected objective as the Zimpl version.
+        double expectedObj = -27.274;
+        RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        
+        // Single commodity flow non-projective parsing LP Relaxation
+        // This is conveniently an integer solution
+        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
         
         Assert.assertArrayEquals(trees1.getFracRoots(), trees2.getFracRoots());
         Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
@@ -72,6 +114,7 @@ public class LpDmvRelaxedParserTest {
 
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexFactory(), IlpFormulation.FLOW_NONPROJ_LPRELAX);
+        parser.setTempDir(new File("."));
         RelaxedDepTreebank trees = parser.getRelaxedParse(new DmvTrainCorpus(sentences), model);
         System.out.println("logProb: " + parser.getLastParseWeight());
         Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
