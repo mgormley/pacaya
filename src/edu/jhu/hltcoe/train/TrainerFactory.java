@@ -33,6 +33,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
+import edu.jhu.hltcoe.lp.CplexFactory;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -138,20 +139,22 @@ public class TrainerFactory {
             throw new ParseException("Model not supported: " + modelName);
         }
 
+        CplexFactory cplexFactory = new CplexFactory(ilpWorkMemMegs, numThreads, maxSimplexIterations);
+        
         DmvRelaxation relax = null;
         if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
             File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
             if (relaxation.equals("dw")) {
                 DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(dwTemp, maxCutRounds,
                         new CutCountComputer());
-                dw.setMaxSimplexIterations(maxSimplexIterations);
+                dw.setCplexFactory(cplexFactory);
                 dw.setMaxDwIterations(maxDwIterations);
                 dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
                 dw.setMinSumForCuts(minSumForCuts);
                 relax = dw;
             } else if (relaxation.equals("dw-res")) {
                 ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(dwTemp);
-                dw.setMaxSimplexIterations(maxSimplexIterations);
+                dw.setCplexFactory(cplexFactory);
                 dw.setMaxDwIterations(maxDwIterations);
                 relax = dw;
             } else if (relaxation.equals("lp")) {

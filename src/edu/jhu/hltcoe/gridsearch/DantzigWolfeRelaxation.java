@@ -24,6 +24,7 @@ import org.jboss.dna.common.statistic.Stopwatch;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
+import edu.jhu.hltcoe.lp.CplexFactory;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
@@ -39,13 +40,12 @@ public abstract class DantzigWolfeRelaxation {
     private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
     private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
-    private double workMemMegs;
-    private int numThreads;
-    private int maxSimplexIterations;
+    private CplexFactory cplexFactory;
     private int maxDwIterations;
     private int maxCutRounds;
     private int numSolves;
     private Stopwatch simplexTimer;
+
 
     public static class SubproblemRetVal {
         public double sumReducedCosts;
@@ -63,9 +63,7 @@ public abstract class DantzigWolfeRelaxation {
     public DantzigWolfeRelaxation(File tempDir, int maxCutRounds) {
         // TODO: pass these through
         this.tempDir = tempDir;
-        this.workMemMegs = 1024;
-        this.numThreads = 1;
-        this.maxSimplexIterations = 2100000000;
+        this.cplexFactory = new CplexFactory();
         this.maxDwIterations = 1000;
         this.maxCutRounds = maxCutRounds;
         this.numSolves = 0;
@@ -73,18 +71,15 @@ public abstract class DantzigWolfeRelaxation {
     }
 
     public void init2(DmvSolution initFeasSol) {
+        this.cplex = cplexFactory.getInstance();
         try {
-            this.cplex = new IloCplex();
             buildModel(cplex, initFeasSol);
-            setCplexParams(cplex);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
                 System.err.println("STATUS CODE: " + cpxe.getStatus());
                 System.err.println("ERROR MSG:   " + cpxe.getMessage());
             }
-            throw new RuntimeException(e);
-        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -168,64 +163,6 @@ public abstract class DantzigWolfeRelaxation {
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void setCplexParams(IloCplex cplex) throws IloException, FileNotFoundException {
-        // Specifies an upper limit on the amount of central memory, in
-        // megabytes, that CPLEX is permitted to use for working memory
-        // before swapping to disk files, compressing memory, or taking
-        // other actions.
-        // 
-        // A user-written Java application and CPLEX internals use separate 
-        // memory heaps.
-        //
-        // Values: Any nonnegative number, in megabytes; default: 128.0
-        cplex.setParam(DoubleParam.WorkMem, workMemMegs);
-        //cplex.setParam(StringParam.WorkDir, tempDir.getAbsolutePath());
-    
-        cplex.setParam(IntParam.Threads, numThreads);
-    
-        // -1 = oportunistic, 0 = auto (default), 1 = deterministic
-        // In this context, deterministic means that multiple runs with
-        // the
-        // same model at the same parameter settings on the same
-        // platform
-        // will reproduce the same solution path and results.
-        cplex.setParam(IntParam.ParallelMode, 1);
-    
-        // From the CPLEX documentation: the Dual algorithm can take better advantage of a previous basis
-        // after adding new constraints. 
-        // http://ibm.co/GHorLT
-        // However it may be that Primal can better take advantage of a feasible basis after adding 
-        // new variables.
-        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
-        
-        // Note: we'd like to reuse basis information by explicitly storing it
-        // with the Fork nodes as in SCIP. However, this is only possible if the
-        // number of rows/columns in the problem remains the same, which it will
-        // not for our master problem.
-        // http://ibm.co/GCQ709
-        // By default, the solver will make use of basis information internally 
-        // even when we update the problem. This is (hopefully) good enough.
-    
-        // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
-        
-        cplex.setParam(IntParam.ItLim, maxSimplexIterations);
-        
-        // For continuous models solved with simplex, setting 1 (one) will use the 
-        // currently loaded basis. If a basis is available only for the original, unpresolved 
-        // model, or if CPLEX has a start vector rather than a simplex basis, then the 
-        // simplex algorithm will proceed on the unpresolved model. With setting 2, 
-        // CPLEX will first perform presolve on the model and on the basis or start vector, 
-        // and then proceed with optimization on the presolved problem.
-        cplex.setParam(IntParam.AdvInd, 1);
-        
-        // Whether or not to presolve.
-        //cplex.setParam(BooleanParam.PreInd, false);
-        
-        //        OutputStream out = new BufferedOutputStream(new FileOutputStream(new File(tempDir, "cplex.log")));
-        //        cplex.setOut(out);
-        //         cplex.setWarning(out);
     }
 
     public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, double upperBound) throws UnknownObjectException, IloException {
@@ -340,8 +277,8 @@ public abstract class DantzigWolfeRelaxation {
         return numSolves;
     }
     
-    public void setMaxSimplexIterations(int maxSimplexIterations) {
-        this.maxSimplexIterations = maxSimplexIterations;
+    public void setCplexFactory(CplexFactory cplexFactory) {
+        this.cplexFactory = cplexFactory;
     }
 
     public void setMaxDwIterations(int maxDwIterations) {
