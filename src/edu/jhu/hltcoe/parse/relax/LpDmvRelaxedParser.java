@@ -81,7 +81,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         // The DMV Objective support variables.
         IloNumVar[][][] numToSide;
         IloNumVar[][][] genAdj;
-        IloNumVar[][][] noGenAdj;
+        IloNumVar[][][] stopAdj;
         IloNumVar[][][] numNonAdj;
 
         // --- Constraints ---
@@ -90,14 +90,16 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         public IloRange[][] oneParent;
         public IloRange[] rootFlowIsSentLength;
         public IloRange[][] flowDiff;
-        public IloRange[][][] flowBound;
-        public IloRange[][][] projectivity;
+        public IloRange[][] flowBoundRoot;
+        public IloRange[][][] flowBoundChild;
+        public IloRange[][] projectiveRoot;
+        public IloRange[][][] projectiveChild;
         public IloRange[][][] numToSideCons;
         public IloRange[][][] genAdjCons;
         public IloRange[][][] numNonAdjCons;
         public IloLPMatrix mat;
         public IloObjective obj;
-        public IloRange[][][] noGenAdjCons;
+        public IloRange[][][] stopAdjCons;
 
     }
 
@@ -121,6 +123,9 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             }
             for (int p = 0; p < sent.size(); p++) {
                 for (int c = 0; c < sent.size(); c++) {
+                    if (p == c) {
+                        continue;
+                    }
                     pp.arcChild[s][p][c] = cplex.numVar(0, 1, String.format("arcChild_{%d,%d,%d}", s, p, c));
                     pp.flowChild[s][p][c] = cplex
                             .numVar(0, sent.size(), String.format("flowChild_{%d,%d,%d}", s, p, c));
@@ -131,20 +136,20 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         // Construct the DMV Objective support variables.
         pp.numToSide = new IloNumVar[corpus.size()][][];
         pp.genAdj = new IloNumVar[corpus.size()][][];
-        pp.noGenAdj = new IloNumVar[corpus.size()][][];
+        pp.stopAdj = new IloNumVar[corpus.size()][][];
         pp.numNonAdj = new IloNumVar[corpus.size()][][];
         for (int s = 0; s < corpus.size(); s++) {
             Sentence sent = corpus.getSentence(s);
             pp.numToSide[s] = new IloNumVar[sent.size()][2];
             pp.genAdj[s] = new IloNumVar[sent.size()][2];
-            pp.noGenAdj[s] = new IloNumVar[sent.size()][2];
+            pp.stopAdj[s] = new IloNumVar[sent.size()][2];
             pp.numNonAdj[s] = new IloNumVar[sent.size()][2];
             for (int i = 0; i < sent.size(); i++) {
                 for (int side = 0; side < 2; side++) {
                     pp.numToSide[s][i][side] = cplex.numVar(0, sent.size(), String.format("numToSide_{%d,%d,%d}", s, i,
                             side));
                     pp.genAdj[s][i][side] = cplex.numVar(0, 1, String.format("genAdj_{%d,%d,%d}", s, i, side));
-                    pp.noGenAdj[s][i][side] = cplex.numVar(0, 1, String.format("noGenAdj_{%d,%d,%d}", s, i, side));
+                    pp.stopAdj[s][i][side] = cplex.numVar(0, 1, String.format("stopAdj_{%d,%d,%d}", s, i, side));
                     pp.numNonAdj[s][i][side] = cplex.numVar(0, sent.size() - 1, String.format("numNonAdj_{%d,%d,%d}", s,
                             i, side));
                 }
@@ -179,6 +184,9 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             for (int c = 0; c < sent.size(); c++) {
                 IloLinearNumExpr expr = cplex.linearNumExpr();
                 for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) {
+                        continue;
+                    }
                     expr.addTerm(1.0, pp.arcChild[s][p][c]);
                 }
                 expr.addTerm(1.0, pp.arcRoot[s][c]);
@@ -221,10 +229,12 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             for (int i = 0; i < sent.size(); i++) {
                 IloLinearNumExpr expr = cplex.linearNumExpr();
                 for (int p = 0; p < sent.size(); p++) {
+                    if (p == i) { continue; }
                     expr.addTerm(1.0, pp.flowChild[s][p][i]);
                 }
                 expr.addTerm(1.0, pp.flowRoot[s][i]);
                 for (int c = 0; c < sent.size(); c++) {
+                    if (i == c) { continue; }
                     expr.addTerm(-1.0, pp.flowChild[s][i][c]);
                 }
                 pp.flowDiff[s][i] = cplex.eq(expr, 1.0, "flowDiff");
@@ -236,16 +246,29 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         // flow[s,i,j] <= Length[s] * arc[s,i,j];
         // EQUIVALENTLY:
         // flow[s,i,j] - Length[s] * arc[s,i,j] <= 0.0;
-        pp.flowBound = new IloRange[corpus.size()][][];
+        pp.flowBoundRoot = new IloRange[corpus.size()][];
         for (int s = 0; s < corpus.size(); s++) {
             Sentence sent = corpus.getSentence(s);
-            pp.flowBound[s] = new IloRange[sent.size()][sent.size()];
+            pp.flowBoundRoot[s] = new IloRange[sent.size()];
+            for (int c = 0; c < sent.size(); c++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
+                expr.addTerm(1.0, pp.flowRoot[s][c]);
+                expr.addTerm(-sent.size(), pp.arcRoot[s][c]);
+                pp.flowBoundRoot[s][c] = cplex.le(expr, 0.0, "flowBoundRoot");
+            }
+        }
+        
+        pp.flowBoundChild = new IloRange[corpus.size()][][];
+        for (int s = 0; s < corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            pp.flowBoundChild[s] = new IloRange[sent.size()][sent.size()];
             for (int c = 0; c < sent.size(); c++) {
                 for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) { continue; }
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     expr.addTerm(1.0, pp.flowChild[s][p][c]);
                     expr.addTerm(-sent.size(), pp.arcChild[s][p][c]);
-                    pp.flowBound[s][p][c] = cplex.le(expr, 0.0, "flowBound");
+                    pp.flowBoundChild[s][p][c] = cplex.le(expr, 0.0, "flowBoundChild");
                 }
             }
         }
@@ -266,12 +289,36 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             // < min(i,j) or l > max(i,j)): (arc[s,k,l] + arc[s,l,k])) <=
             // Length[s] * (1 - arc[s,i,j]);
             // # ==================================================
-            pp.projectivity = new IloRange[corpus.size()][][];
+            pp.projectiveRoot = new IloRange[corpus.size()][];
             for (int s = 0; s < corpus.size(); s++) {
                 Sentence sent = corpus.getSentence(s);
-                pp.projectivity[s] = new IloRange[sent.size()][sent.size()];
-                for (int p = 0; p < sent.size(); p++) {
-                    for (int c = 0; c < sent.size(); c++) {
+                pp.projectiveRoot[s] = new IloRange[sent.size()];
+                for (int c = 0; c < sent.size(); c++) {
+                    int p = -1;
+                    IloLinearNumExpr expr = cplex.linearNumExpr();
+
+                    for (int k = Math.min(p, c) + 1; k < Math.max(p, c); k++) {
+                        for (int l = 0; l < sent.size(); l++) {
+                            if (l >= Math.min(p, c) && l <= Math.max(p, c)) {
+                                continue;
+                            }
+                            expr.addTerm(1.0, pp.arcChild[s][k][l]);
+                            expr.addTerm(1.0, pp.arcChild[s][l][k]);
+                        }
+                    }
+                    // TODO: a better constraint, would use the count of non-projective arcs
+                    // instead of sent.size() as the multiplier.
+                    expr.addTerm(sent.size(), pp.arcRoot[s][c]);
+                    pp.projectiveRoot[s][c] = cplex.le(expr, sent.size(), "projectiveRoot");
+                }
+            }
+            
+            pp.projectiveChild = new IloRange[corpus.size()][][];
+            for (int s = 0; s < corpus.size(); s++) {
+                Sentence sent = corpus.getSentence(s);
+                pp.projectiveChild[s] = new IloRange[sent.size()][sent.size()];
+                for (int c = 0; c < sent.size(); c++) {
+                    for (int p = 0; p < sent.size(); p++) {
                         if (c == p) {
                             // TODO: this will create null entries, is this a
                             // problem when adding to the LPMatrix?
@@ -288,8 +335,10 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                                 expr.addTerm(1.0, pp.arcChild[s][l][k]);
                             }
                         }
+                        // TODO: a better constraint, would use the count of non-projective arcs
+                        // instead of sent.size() as the multiplier.
                         expr.addTerm(sent.size(), pp.arcChild[s][p][c]);
-                        pp.projectivity[s][p][c] = cplex.le(expr, sent.size(), "projectivity");
+                        pp.projectiveChild[s][p][c] = cplex.le(expr, sent.size(), "projectiveChild");
                     }
                 }
             }
@@ -312,7 +361,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     if (side == DmvModel.Lr.LEFT.getAsInt()) {
                         // Left side.
-                        for (int c = 0; c < p - 1; c++) {
+                        for (int c = 0; c < p; c++) {
                             expr.addTerm(1.0, pp.arcChild[s][p][c]);
                         }
                     } else {
@@ -363,18 +412,18 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         }
 
         // subto noGenAdj:
-        // forall <s,i,lr> in AllTokensLR:
-        // noGenAdj[s,i,lr] == 1 - genAdj[s,i,lr]
-        pp.noGenAdjCons = new IloRange[corpus.size()][][];
+        //    forall <s,i,lr> in AllTokensLR:
+        //       stopAdj[s,i,lr] == 1 - genAdj[s,i,lr]
+        pp.stopAdjCons = new IloRange[corpus.size()][][];
         for (int s = 0; s < corpus.size(); s++) {
             Sentence sent = corpus.getSentence(s);
-            pp.noGenAdjCons[s] = new IloRange[sent.size()][2];
+            pp.stopAdjCons[s] = new IloRange[sent.size()][2];
             for (int p = 0; p < sent.size(); p++) {
                 for (int side = 0; side < 2; side++) {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
                     expr.addTerm(1.0, pp.genAdj[s][p][side]);
-                    expr.addTerm(1.0, pp.noGenAdj[s][p][side]);
-                    pp.noGenAdjCons[s][p][side] = cplex.eq(expr, 1.0, "noGenAdjCons");
+                    expr.addTerm(1.0, pp.stopAdj[s][p][side]);
+                    pp.stopAdjCons[s][p][side] = cplex.eq(expr, 1.0, "stopAdjCons");
                 }
             }
         }
@@ -383,17 +432,19 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         pp.mat = cplex.LPMatrix();
 
         pp.mat.addRows(pp.oneArcPerWall);
-        addRows(pp.mat, pp.oneParent);
+        CplexUtils.addRows(pp.mat, pp.oneParent);
         pp.mat.addRows(pp.rootFlowIsSentLength);
-        addRows(pp.mat, pp.flowDiff);
-        addRows(pp.mat, pp.flowBound);
+        CplexUtils.addRows(pp.mat, pp.flowDiff);
+        CplexUtils.addRows(pp.mat, pp.flowBoundRoot);
+        CplexUtils.addRows(pp.mat, pp.flowBoundChild);
         if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX) {
-            addRows(pp.mat, pp.projectivity);
+            CplexUtils.addRows(pp.mat, pp.projectiveRoot);
+            CplexUtils.addRows(pp.mat, pp.projectiveChild);
         }
-        addRows(pp.mat, pp.numToSideCons);
-        addRows(pp.mat, pp.genAdjCons);
-        addRows(pp.mat, pp.numNonAdjCons);
-        addRows(pp.mat, pp.noGenAdjCons);
+        CplexUtils.addRows(pp.mat, pp.numToSideCons);
+        CplexUtils.addRows(pp.mat, pp.genAdjCons);
+        CplexUtils.addRows(pp.mat, pp.numNonAdjCons);
+        CplexUtils.addRows(pp.mat, pp.stopAdjCons);
 
         // Add DMV objective.
 
@@ -422,12 +473,13 @@ public class LpDmvRelaxedParser implements RelaxedParser {
             for (int c = 0; c < sent.size(); c++) {
                 expr.addTerm(sd.root[c], pp.arcRoot[s][c]);
                 for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) { continue; }                    
                     expr.addTerm(sd.child[c][p][0], pp.arcChild[s][p][c]);
                 }
             }
             for (int p = 0; p < sent.size(); p++) {
                 for (int side = 0; side < 2; side++) {
-                    expr.addTerm(sd.decision[p][side][0][0], pp.noGenAdj[s][p][side]);
+                    expr.addTerm(sd.decision[p][side][0][0], pp.stopAdj[s][p][side]);
                     expr.addTerm(sd.decision[p][side][0][1] + sd.decision[p][side][1][0], pp.genAdj[s][p][side]);
                     expr.addTerm(sd.decision[p][side][1][1], pp.numNonAdj[s][p][side]);
                 }
@@ -436,18 +488,6 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         pp.obj.setExpr(expr);
 
         return pp;
-    }
-
-    private void addRows(IloLPMatrix mat, IloRange[][][] ranges) throws IloException {
-        for (int i = 0; i < ranges.length; i++) {
-            addRows(mat, ranges[i]);
-        }
-    }
-
-    private void addRows(IloLPMatrix mat, IloRange[][] ranges) throws IloException {
-        for (int i = 0; i < ranges.length; i++) {
-            mat.addRows(ranges[i]);
-        }
     }
 
     private RelaxedDepTreebank extractSolution(DmvTrainCorpus corpus, ParsingProblem pp) throws IloException {
