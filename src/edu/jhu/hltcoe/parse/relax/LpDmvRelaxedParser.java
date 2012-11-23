@@ -33,6 +33,8 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         this.cplexFactory = cplexFactory;
         if (!formulation.isLpRelaxation()) {
             throw new IllegalStateException("must be LP relaxation");
+        } else if (formulation != IlpFormulation.FLOW_NONPROJ_LPRELAX && formulation != IlpFormulation.FLOW_PROJ_LPRELAX) {
+            throw new IllegalStateException("Formulation not implemented: " + formulation);
         }
         this.formulation = formulation;
     }
@@ -73,10 +75,15 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         // --- Constraints ---
         
         IloRange[] oneArcPerWall;
+        public IloRange[][] oneParent;
+        public IloRange[] rootFlowIsSentLength;
+        public IloRange[][] flowDiff;
+        public IloRange[][][] flowBound;
+        public IloRange[][][] projectivity;
         
     }
     
-    private void buildProgram(DmvTrainCorpus corpus, Model model) throws IloException {
+    private void buildProgram(DmvTrainCorpus corpus, Model model) throws IloException {        
         ParsingProblem pp = new ParsingProblem();
         
         // Construct the arc and flow variables.
@@ -140,8 +147,21 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         //        subto one_incoming_arc:
         //            forall <s> in Sents:
         //                forall <j> in { 1 to Length[s] }:
-        //                sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
-
+        //                    sum <i> in { 0 to Length[s] } with i != j: arc[s,i,j] == 1;
+        pp.oneParent = new IloRange[corpus.size()][];
+        for (int s=0; s<corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            for (int c=0; c < sent.size(); c++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
+                for (int p=0; p < sent.size(); p++) {
+                    expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                }
+                expr.addTerm(1.0, pp.arcRoot[s][c]);
+                pp.oneParent[s][c] = cplex.eq(expr, 1.0);
+            }
+        }
+        
+        // TODO: No self-arcs.
         
         // Add flow constraints.
         
@@ -153,33 +173,130 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         //    subto flow_sum: 
         //        forall <s> in Sents:
         //            Length[s] == sum <j> in { 1 to Length[s] }: flow[s,0,j];
-        //
+        pp.rootFlowIsSentLength = new IloRange[corpus.size()];
+        for (int s=0; s<corpus.size(); s++) {
+            double[] ones = new double[pp.arcRoot[s].length];
+            Arrays.fill(ones, 1.0);
+            IloLinearNumExpr expr = cplex.scalProd(ones, pp.flowRoot[s]);
+            Sentence sent = corpus.getSentence(s);
+            pp.rootFlowIsSentLength[s] = cplex.eq(expr, sent.size());
+        }
+        
+        // Out-flow equals in-flow minus one.
         //    subto flow_diff: 
         //        forall <s> in Sents:
         //            forall <i> in { 1 to Length[s] }:
         //            1 == (sum <j> in {0 to Length[s] } with i != j: flow[s,j,i])
         //                 - (sum <j> in { 0 to Length[s] } with i != j: flow[s,i,j]);
-        //
+        pp.flowDiff = new IloRange[corpus.size()][];
+        for (int s=0; s<corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            for (int i=0; i < sent.size(); i++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
+                for (int p=0; p < sent.size(); p++) {
+                    expr.addTerm(1.0, pp.flowChild[s][p][i]);
+                }
+                expr.addTerm(1.0, pp.flowRoot[s][i]);
+                for (int c=0; c < sent.size(); c++) {
+                    expr.addTerm(-1.0, pp.flowChild[s][i][c]);
+                }
+                pp.flowDiff[s][i] = cplex.eq(expr, 1.0);
+            }
+        }
+        
         //    subto flow_bound:
         //        forall <s,i,j> in AllArcs:
         //            flow[s,i,j] <= Length[s] * arc[s,i,j];
-        //    # ==================================================
+        //            EQUIVALENTLY:
+        //            flow[s,i,j] - Length[s] * arc[s,i,j] <= 0.0;
+        pp.flowBound = new IloRange[corpus.size()][][];
+        for (int s=0; s<corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            for (int c=0; c < sent.size(); c++) {
+                for (int p=0; p < sent.size(); p++) {
+                    IloLinearNumExpr expr = cplex.linearNumExpr();
+                    expr.addTerm(1.0, pp.flowChild[s][p][c]);
+                    expr.addTerm(-sent.size(), pp.arcChild[s][p][c]);
+                    pp.flowBound[s][p][c] = cplex.le(expr, 0.0);
+                }
+            }
+        }
 
+        if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX) {
+            // Add projectivity constraint.
+    
+            //    # ==================================================
+            //    # ==== Option 4: Projective parsing (also requires constraints from Option 2) ====
+            //    # This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
+            //    # and that the parents of those nodes are not outside the range[i,j]
+            //    subto proj_parse_no_illegal_parents:
+            //        forall <s,i,j> in AllArcs with abs(i-j) > 1:
+            //            (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l < min(i,j) or l > max(i,j)): (arc[s,k,l] + arc[s,l,k])) <= Length[s] * (1 - arc[s,i,j]); 
+            //    # ==================================================
+            pp.projectivity = new IloRange[corpus.size()][][];
+            for (int s=0; s<corpus.size(); s++) {
+                Sentence sent = corpus.getSentence(s);
+                for (int p=0; p < sent.size(); p++) {
+                    for (int c=0; c < sent.size(); c++) {
+                        if (c == p) {
+                            // TODO: this will create null entries, is this a problem when adding to the LPMatrix?
+                            continue;
+                        }
+                        IloLinearNumExpr expr = cplex.linearNumExpr();
 
-        // Add projectivity constraint.
-
-        //    # ==================================================
-        //    # ==== Option 4: Projective parsing (also requires constraints from Option 2) ====
-        //    # This constraint ensures that descendents of Word[s,i] are not parents of nodes outside the range [i,j]
-        //    # and that the parents of those nodes are not outside the range[i,j]
-        //    subto proj_parse_no_illegal_parents:
-        //        forall <s,i,j> in AllArcs with abs(i-j) > 1:
-        //            (sum <k,l> in Arcs[s] with (k > min(i,j) and k < max(i,j)) and (l < min(i,j) or l > max(i,j)): (arc[s,k,l] + arc[s,l,k])) <= Length[s] * (1 - arc[s,i,j]); 
-        //    # ==================================================
+                        for (int k=Math.min(p, c)+1; k < Math.max(p, c); k++)  {
+                            for (int l=0; l<sent.size(); l++) {
+                                if (l >= Math.min(p,c) && l <= Math.max(p, c)) {
+                                    continue;
+                                }
+                                expr.addTerm(1.0,  pp.arcChild[s][k][l]);
+                                expr.addTerm(1.0,  pp.arcChild[s][l][k]);
+                            }
+                        }
+                        expr.addTerm(sent.size(), pp.arcChild[s][p][c]);
+                        pp.projectivity[s][p][c] = cplex.le(expr, sent.size());
+                    }
+                }
+            }
+        }
         
         // Add DMV objective support constraints.
+
+        //    subto numToSideLeft:
+        //        forall <s,i> in AllTokens:
+        //            numToSide[s,i,"l"] == sum <j> in { 0 to i-1 }: arc[s,i,j];
         
+        //    subto numToSideRight:
+        //        forall <s,i> in AllTokens:
+        //            numToSide[s,i,"r"] == sum <j> in { i+1 to Length[s] }: arc[s,i,j];
+        
+        //    subto genAdjLeftAndRight:
+        //        forall <s,i,lr> in AllTokensLR: 
+        //            genAdj[s,i,lr] >= numToSide[s,i,lr]/Length[s];
+        
+        //    subto numNonAdjLeftAndRight:
+        //        forall <s,i,lr> in AllTokensLR:
+        //            numNonAdj[s,i,lr] == numToSide[s,i,lr] - genAdj[s,i,lr];
+
         // Add DMV objective.
+        
+        //    # ---------- DMV log-likelihood ----------
+        //
+        //    # Prob for stop weights: 
+        //    # 1. logprob of stopping adjacent without generating any children OR
+        //    # 2. logprob of not stopping adjacent 
+        //    #    + logprob of not stopping non-adjacent * number of times non-adjacent children were generated
+        //    #    + logprob of stopping non-adajacent 
+        //    maximize goal: 
+        //        (sum <s,i,j> in AllArcsObj: 
+        //            arc[s,i,j] * LogChooseWeight[Word[s,i],LRForIJ[i,j],Word[s,j]]) 
+        //        + (sum <s,i,lr> in AllTokensLRObj: 
+        //             ((1 - genAdj[s,i,lr]) * LogStopWeight[Word[s,i],lr,1]
+        //           + genAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,1]
+        //           + numNonAdj[s,i,lr] * LogNotStopWeight[Word[s,i],lr,0]
+        //           + genAdj[s,i,lr] * LogStopWeight[Word[s,i],lr,0])
+        //          );
+        
     }
 
     private RelaxedDepTreebank extractSolution() {
