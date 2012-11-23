@@ -170,7 +170,6 @@ public class IlpViterbiParserTest {
         return trees;
     }
 
-
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
         IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);

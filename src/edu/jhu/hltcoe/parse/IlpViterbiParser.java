@@ -29,7 +29,7 @@ import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class IlpViterbiParser implements ViterbiParser {
+public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
 
     private static final Logger log = Logger.getLogger(IlpViterbiParser.class);
     
@@ -81,6 +81,15 @@ public class IlpViterbiParser implements ViterbiParser {
         return depTreebank;
     }
     
+    @Override
+    public RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model genericModel) {
+        if (corpus.getNumLabeled() > 0) {
+            throw new RuntimeException("not implemented");
+        } else {
+            return getRelaxedParse(corpus.getSentences(), genericModel);
+        }
+    }
+
     public RelaxedDepTreebank getRelaxedParse(SentenceCollection sentences, Model model) {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
