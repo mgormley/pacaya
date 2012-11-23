@@ -66,9 +66,7 @@ public class DmvCkyParser implements ViterbiParser {
 
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel depProbMatrix) {
         assert(sentence.getAlphabet() == depProbMatrix.getTagAlphabet());
-        int[] tags = sentence.getLabelIds();
-        DepInstance depInstance = new DepInstance(tags);
-        DepSentenceDist sd = new DepSentenceDist(depInstance, depProbMatrix);
+        DepSentenceDist sd = new DepSentenceDist(sentence, depProbMatrix);
 
         Pair<DepTree, Double> pair = parse(sentence, sd);
         return pair;

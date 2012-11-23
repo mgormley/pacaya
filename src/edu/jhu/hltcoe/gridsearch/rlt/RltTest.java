@@ -19,6 +19,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltProgram;
+import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.JUnitUtils;
 
 public class RltTest {
@@ -94,7 +95,7 @@ public class RltTest {
         }
 
         double[] varVals = cplex.getValues(vars);
-        double[][] rltVarVals = Rlt.getValues(cplex, rltVars);
+        double[][] rltVarVals = CplexUtils.getValues(cplex, rltVars);
 
         System.out.println(Arrays.toString(varVals));
         System.out.println(Arrays.deepToString(rltVarVals));

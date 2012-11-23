@@ -218,18 +218,5 @@ public class Rlt {
 
         return new RltProgram(rltMat, rltVars);
     }
-    
-    /**
-     * Helper method for getting first-order RLT variables' solution values.
-     * @throws IloException 
-     * @throws  
-     */
-    public static double[][] getValues(IloCplex cplex, IloNumVar[][] rltVars) throws IloException {
-        double[][] vals = new double[rltVars.length][];
-        for (int i=0; i<rltVars.length; i++) {
-            vals[i] = cplex.getValues(rltVars[i]);
-        }
-        return vals;
-    }
 
 }

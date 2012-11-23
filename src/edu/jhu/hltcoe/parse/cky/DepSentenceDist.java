@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.parse.cky;
 import static depparsing.globals.Constants.LEFT;
 import static depparsing.globals.Constants.RIGHT;
 import depparsing.model.NonterminalMap;
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -26,6 +27,10 @@ public class DepSentenceDist {
 
     public final NonterminalMap nontermMap;
 
+    public DepSentenceDist(Sentence sentence, DepProbMatrix depProbMatrix) {
+        this(new DepInstance(sentence.getLabelIds()), depProbMatrix);
+    }
+    
     public DepSentenceDist(DepInstance depInst, DepProbMatrix depProbMatrix) {
         this(depInst, depProbMatrix.nontermMap);
         cacheModel(depProbMatrix);

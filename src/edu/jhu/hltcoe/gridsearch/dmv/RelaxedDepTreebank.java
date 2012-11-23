@@ -26,14 +26,6 @@ public class RelaxedDepTreebank {
         }
     }
     
-    public double[][] getFracRoots() {
-        return fracRoots;
-    }
-
-    public double[][][] getFracChildren() {
-        return fracChildren;
-    }
-
     public double getPropFracArcs() {
         int numFractional = 0;
         int numArcs = 0;
@@ -73,4 +65,21 @@ public class RelaxedDepTreebank {
         }
         return true;
     }
+
+    public double[][] getFracRoots() {
+        return fracRoots;
+    }
+
+    public double[][][] getFracChildren() {
+        return fracChildren;
+    }
+
+    public void setFracRoots(double[][] fracRoots) {
+        this.fracRoots = fracRoots;
+    }
+
+    public void setFracChildren(double[][][] fracChildren) {
+        this.fracChildren = fracChildren;
+    }
+    
 }
