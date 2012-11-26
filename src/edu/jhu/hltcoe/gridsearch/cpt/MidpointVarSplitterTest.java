@@ -57,7 +57,7 @@ public class MidpointVarSplitterTest {
         }
     }
     
-    private static class MockIndexedCpt implements IndexedCpt {
+    public static class MockIndexedCpt implements IndexedCpt {
         private int numConds;
         private int numParams;
         public MockIndexedCpt(int numConds, int numParams) {

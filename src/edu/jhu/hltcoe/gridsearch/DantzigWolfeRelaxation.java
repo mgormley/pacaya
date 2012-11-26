@@ -303,6 +303,6 @@ public abstract class DantzigWolfeRelaxation {
 
     protected abstract boolean isFeasible();
 
-    protected abstract void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException;
+    protected abstract void buildModel(IloCplex cplex, DmvSolution initFeasSol) throws IloException;
 
 }

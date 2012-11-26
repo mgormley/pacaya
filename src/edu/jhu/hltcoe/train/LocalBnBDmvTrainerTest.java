@@ -10,10 +10,11 @@ import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
 import edu.jhu.hltcoe.util.Prng;
 
 public class LocalBnBDmvTrainerTest {

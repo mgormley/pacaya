@@ -22,9 +22,10 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -59,6 +60,7 @@ public class DmvDantzigWolfeRelaxationTest {
         Prng.seed(1234567890);
     }
     
+    // TODO: move this test to a more appropriate place.
     @Test
     public void testQuadraticObjectiveInCplex() throws IloException {
         System.out.println("Trying to solve quadratic");
@@ -87,7 +89,6 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvDantzigWolfeRelaxation dw = getDw(sentences);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        assertEquals(0.0, relaxSol.getScore(), 1e-13);
         
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -97,6 +98,7 @@ public class DmvDantzigWolfeRelaxationTest {
                 
             }
         }
+        assertEquals(0.0, relaxSol.getScore(), 1e-13);
     }
     
     @Test
@@ -160,7 +162,7 @@ public class DmvDantzigWolfeRelaxationTest {
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Vectors.sum(logProbs[c]) <= DmvDantzigWolfeRelaxation.DEFAULT_MIN_SUM_FOR_CUTS);
+            Assert.assertTrue(Vectors.sum(logProbs[c]) <= LpSumToOne.DEFAULT_MIN_SUM_FOR_CUTS);
         }
     }
     
@@ -455,7 +457,7 @@ public class DmvDantzigWolfeRelaxationTest {
     private static DmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus, final int numCuts) {
         DmvSolution initSol = getInitFeasSol(corpus);
         System.out.println(initSol);
-        CutCountComputer ccc = new CutCountComputer(){ 
+        LpSumToOne.CutCountComputer ccc = new CutCountComputer(){ 
             @Override
             public int getNumCuts(int numParams) {
                 return numCuts;

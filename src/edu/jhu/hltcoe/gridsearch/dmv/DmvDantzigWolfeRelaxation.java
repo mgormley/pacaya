@@ -4,8 +4,6 @@ import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
-import ilog.concert.IloLinearNumExpr;
-import ilog.concert.IloMPModeler;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloObjective;
@@ -25,7 +23,6 @@ import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.DantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
@@ -33,16 +30,13 @@ import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Sets;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -50,8 +44,6 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
     static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
     
-    static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
-
     protected int numLambdas;
     // Stored for re-use by getRegretCm() and getTrueRelaxedObjective()
     protected double[][] optimalLogProbs;
@@ -62,21 +54,14 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     protected CptBounds bounds;
     protected Stopwatch parsingTimer;
     protected MasterProblem mp;
+    private LpSumToOne sto;
     
-    private int cutCounter;
-    private int maxSetSizeToConstrain;
-    private double minSumForCuts;
-    private CutCountComputer initCutCountComp;
     private DmvObjective dmvObj;
 
     public DmvDantzigWolfeRelaxation(File tempDir,
-            int maxCutRounds, CutCountComputer initCutCountComp) {
+            int maxCutRounds, LpSumToOne.CutCountComputer initCutCountComp) {
         super(tempDir, maxCutRounds);
-        this.maxSetSizeToConstrain = 2;
-        this.minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
-        this.initCutCountComp = initCutCountComp;
-        // Counter for printing 
-        this.cutCounter = 0;
+        this.sto = new LpSumToOne(initCutCountComp);
         this.parsingTimer = new Stopwatch();
     }
     
@@ -92,7 +77,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     }
     
     protected RelaxedSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
-        log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), mp.numStoCons));
+        log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), sto.getNumStoCons()));
         
         // Store optimal model parameters
         optimalLogProbs = extractRelaxedLogProbs();
@@ -107,11 +92,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     }
 
     protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
-        double[][] optimalLogProbs = new double[idm.getNumConds()][];
-        for (int c = 0; c < idm.getNumConds(); c++) {
-            optimalLogProbs[c] = cplex.getValues(mp.modelParamVars[c]);
-        }
-        return optimalLogProbs;
+        return sto.extractRelaxedLogProbs();
     }
 
     protected RelaxedDepTreebank extractRelaxedParse() throws UnknownObjectException, IloException {
@@ -249,10 +230,6 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         public IloRange[][] couplConsLower;
         public IloRange[][] couplConsUpper;
         public IloLPMatrix lpMatrix;
-        
-        // Used only by this D-W relaxation.
-        public IloNumVar[][] modelParamVars;
-        public int numStoCons = 0;
     }
     
     /**
@@ -314,10 +291,16 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 
     }
 
-    protected void buildModel(IloMPModeler cplex, DmvSolution initFeasSol) throws IloException {
+    protected void buildModel(IloCplex cplex, DmvSolution initFeasSol) throws IloException {
         this.bounds = new CptBounds(this.idm);
 
         mp = new MasterProblem();
+        
+        // Add the LP matrix that will contain all the constraints.
+        mp.lpMatrix = cplex.addLPMatrix("couplingMatrix");
+        
+        // Initialize the model parameter variables and constraints.
+        sto.init(cplex, mp.lpMatrix, idm, bounds);
         
         // ----- row-wise modeling -----
         // Add x_0 constraints in the original model space first
@@ -326,17 +309,15 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         
         // Create the objective
         mp.objective = cplex.addMinimize();
-                
-        // Create the model parameter variables, adding them to the objective
-        mp.modelParamVars = new IloNumVar[numConds][];
+                        
+        sto.createModelParamVars();
+        
         int[][] totSupFreqCm = idm.getTotSupervisedFreqCm(corpus);
         for (int c = 0; c < numConds; c++) {
-            mp.modelParamVars[c] = new IloNumVar[idm.getNumParams(c)];
-            for (int m = 0; m < mp.modelParamVars[c].length; m++) {
-                mp.modelParamVars[c][m] = cplex.numVar(bounds.getLb(Type.PARAM, c, m), bounds.getUb(Type.PARAM, c, m), idm.getName(c, m));
+            for (int m = 0; m < idm.getNumParams(c); m++) {
                 if (totSupFreqCm[c][m] != 0) {
                     // Negate the coefficients since we are minimizing
-                    cplex.setLinearCoef(mp.objective, -totSupFreqCm[c][m], mp.modelParamVars[c][m]);
+                    cplex.setLinearCoef(mp.objective, -totSupFreqCm[c][m], sto.modelParamVars[c][m]);
                 }
             }
         }
@@ -369,7 +350,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 name = String.format("ccLb(%d,%d)", c, m);   
                 double maxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
-                                        cplex.diff(cplex.prod(maxFreqCm, mp.modelParamVars[c][m]), mp.objVars[c][m]));
+                                        cplex.diff(cplex.prod(maxFreqCm, sto.modelParamVars[c][m]), mp.objVars[c][m]));
                 mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);
                 
                 // Add the upper coupling constraint
@@ -382,7 +363,6 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         // We need the lower coupling constraints (and the upper) to each 
         // be added in sequence to the master problem. So we add all the upper
         // constraints afterwards
-        mp.lpMatrix = cplex.addLPMatrix("couplingMatrix");
         for (int c = 0; c < numConds; c++) {
             mp.lpMatrix.addRows(mp.couplConsLower[c]);
         }
@@ -400,22 +380,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         // Add the initial feasible parse as the first lambda columns
         addFeasibleSolution(initFeasSol);
         
-        // TODO: Use the initial solution as the points here.
-        // Create the cut vectors for sum-to-one constraints
-        double[][][] pointsArray = getInitialPoints();
-        // Add the initial cuts
-        for (int c = 0; c < numConds; c++) {
-            for (int i = 0; i < pointsArray[c].length; i++) {
-                double[] probs = pointsArray[c][i];
-                addSumToOneConstraint(c, probs);
-            }
-        }
-        
-        for (int setSize=2; setSize <= maxSetSizeToConstrain; setSize++) {
-            for (int c = 0; c < numConds; c++) {
-                addSetContraints(setSize, c);
-            }
-        }
+        sto.addModelParamConstraints();
     }
 
     @Override
@@ -429,79 +394,6 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             }
         } catch (IloException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public static class CutCountComputer {
-        public int getNumCuts(int numParams) {
-            return (int)Math.pow(numParams, 2.0);
-        }
-    }
-    
-    private double[][][] getInitialPoints() throws IloException {
-        int numConds = idm.getNumConds();
-        double[][][] vectors = new double[numConds][][];
-
-        for (int c = 0; c < numConds; c++) {
-            int numParams = idm.getNumParams(c);
-            // Create numParams^2 vectors
-            int numVectors = initCutCountComp.getNumCuts(numParams); 
-            vectors[c] = new double[numVectors][];
-            for (int i = 0; i < vectors[c].length; i++) {
-                double[] vector = new double[numParams];
-                // Randomly initialize the parameters
-                for (int m = 0; m < numParams; m++) {
-                    vector[m] = Prng.nextDouble();
-                }
-                vectors[c][i] = vector;
-            }
-        }
-        return vectors;
-    }
-
-    private void addSumToOneConstraint(int c, double[] point) throws IloException {
-        // TODO: should this respect the bounds?
-        //double[] probs = projections.getProjectedParams(bounds, c, point);
-        double[] probs = Projections.getProjectedParams(point);
-        double[] logProbs = Vectors.getLog(probs);
-        
-        double vectorSum = 1.0;
-        for (int m = 0; m < logProbs.length; m++) {
-            if (probs[m] > 0.0) {
-                // Otherwise we'd get a NaN
-                vectorSum += (logProbs[m] - 1.0) * probs[m];
-            }
-        }
-
-        IloLinearNumExpr vectorExpr = cplex.scalProd(probs, mp.modelParamVars[c]);
-        IloRange constraint = cplex.le(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, cutCounter++));
-        // TODO: double check that this doesn't slow us down (by growing the LP matrix)
-        mp.lpMatrix.addRow(constraint);
-        mp.numStoCons++;
-    }
-    
-    private void addSetContraints(int setSize, int c) throws IloException {
-
-        double[] ones = new double[setSize];
-        Arrays.fill(ones, 1.0);
-        
-        int numParams = idm.getNumParams(c);
-        int counter = 0;
-        
-        // Make sure setSize isn't larger than numParams
-        setSize = Math.min(setSize,numParams);
-        
-        for (int[] paramIndices : Sets.getSets(setSize, numParams)) {
-            assert(paramIndices.length == setSize);
-            IloNumVar[] paramVars = new IloNumVar[setSize]; 
-            for (int i=0; i<setSize; i++) {
-                int m = paramIndices[i];
-                paramVars[i] = mp.modelParamVars[c][m];
-            }
-
-            IloLinearNumExpr vectorExpr = cplex.scalProd(ones, paramVars);
-            IloRange constraint = cplex.le(vectorExpr, 1.0, String.format("setCons(%d)-%d", c, counter++));
-            mp.lpMatrix.addRow(constraint);
         }
     }
 
@@ -651,25 +543,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         iterationObjVals.clear();
         iterationStatus.clear();
 
-        // Add a cut for each distribution by projecting the model
-        // parameters
-        // back onto the simplex.
-        double[][] params = new double[idm.getNumConds()][];
-        for (int c = 0; c < idm.getNumConds(); c++) {
-            // Here the params are log probs
-            params[c] = cplex.getValues(mp.modelParamVars[c]);
-        }
-        int numNewStoConstraints = 0;
-        for (int c = 0; c < idm.getNumConds(); c++) {
-            Vectors.exp(params[c]);
-            // Here the params are probs
-            if (Vectors.sum(params[c]) > minSumForCuts) {
-                numNewStoConstraints++;
-                addSumToOneConstraint(c, params[c]);
-            }
-        }
-        int numCutAdded = numNewStoConstraints;
-        return numCutAdded;
+        return sto.projectModelParamsAndAddCuts();
     }
 
     public void reverseApply(CptBoundsDeltaList deltas) {
@@ -710,8 +584,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
             if (type == Type.PARAM) {
                 // Updates the bounds of the model parameters
-                mp.modelParamVars[c][m].setLB(newLb);
-                mp.modelParamVars[c][m].setUB(newUb);
+                sto.updateModelParamBounds(c, m, newLb, newUb);
 
                 // Update lambda column if it uses parameter c,m
                 TIntArrayList rowind = new TIntArrayList();
@@ -795,12 +668,14 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return idm;
     }
 
+    // TODO: remove this method.
     public void setMaxSetSizeToConstrain(int maxSetSizeToConstrain) {
-        this.maxSetSizeToConstrain = maxSetSizeToConstrain;
+        sto.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
     }
 
+    // TODO: remove this method.
     public void setMinSumForCuts(double minSumForCuts) {
-        this.minSumForCuts = minSumForCuts;
+        sto.setMinSumForCuts(minSumForCuts);
     }
     
 }

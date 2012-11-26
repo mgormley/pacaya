@@ -26,6 +26,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
 import edu.jhu.hltcoe.ilp.ZimplRunner;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -222,12 +223,6 @@ public class DmvLpRelaxation implements DmvRelaxation {
         }
         
         return mp;
-    }
-
-    public static class CutCountComputer {
-        public int getNumCuts(int numParams) {
-            return (int)Math.pow(numParams, 2.0);
-        }
     }
     
     private double[][][] getInitialPoints() throws IloException {
