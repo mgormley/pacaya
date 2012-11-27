@@ -22,10 +22,10 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -162,7 +162,7 @@ public class DmvDantzigWolfeRelaxationTest {
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);
             System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Vectors.sum(logProbs[c]) <= LpSumToOne.DEFAULT_MIN_SUM_FOR_CUTS);
+            Assert.assertTrue(Vectors.sum(logProbs[c]) <= LpSumToOneBuilder.DEFAULT_MIN_SUM_FOR_CUTS);
         }
     }
     
@@ -457,7 +457,7 @@ public class DmvDantzigWolfeRelaxationTest {
     private static DmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus, final int numCuts) {
         DmvSolution initSol = getInitFeasSol(corpus);
         System.out.println(initSol);
-        LpSumToOne.CutCountComputer ccc = new CutCountComputer(){ 
+        CutCountComputer ccc = new CutCountComputer(){ 
             @Override
             public int getNumCuts(int numParams) {
                 return numCuts;

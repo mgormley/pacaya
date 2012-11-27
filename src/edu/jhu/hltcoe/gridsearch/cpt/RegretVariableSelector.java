@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -19,7 +20,8 @@ public class RegretVariableSelector implements VariableSelector {
     @Override
     public VariableId select(DmvProblemNode node) {
         CptBounds origBounds = node.getBounds();
-        double[][] regret = node.getRegretCm();
+        RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
+        double[][] regret = getRegretCm(relaxSol);
 
         if (regret == null) {
             // Back off to random branching.
@@ -57,4 +59,36 @@ public class RegretVariableSelector implements VariableSelector {
         return new VariableId(c, m);
     }
 
+    private static double[][] getRegretCm(RelaxedDmvSolution relaxSol) {
+        return getRegretCm(relaxSol.getLogProbs(), relaxSol.getFeatCounts(), relaxSol.getObjVals());
+    }
+
+    /**
+     * @return A CxM array of doubles containing the regret of each model
+     *         parameter, or null if the regret is unavailable.
+     */
+    public static double[][] getRegretCm(double[][] logProbs, double[][] featCounts, double[][] objVals) {
+        // If optimal model parameters \theta_{c,m} are not present, return null.
+        if (logProbs == null) {
+            return null;
+        }
+
+        // Compute the regret as the difference between the
+        // objective value and true objective value
+        double[][] regret = new double[logProbs.length][];
+        for (int c = 0; c < regret.length; c++) {
+            regret[c] = new double[logProbs[c].length];
+            for (int m = 0; m < regret[c].length; m++) {
+                regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
+                //TODO: this seems to be too strong:
+                //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
+                if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
+                    log.warn(String.format("Invalid negative regret: regret[%d][%d] = %f", c, m, regret[c][m]));
+                }
+            }
+        }
+
+        return regret;
+    }
+    
 }

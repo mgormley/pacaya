@@ -30,9 +30,10 @@ import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -45,23 +46,19 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
     
     protected int numLambdas;
-    // Stored for re-use by getRegretCm() and getTrueRelaxedObjective()
-    protected double[][] optimalLogProbs;
-    private double[][] optimalFeatCounts;
 
     protected DmvTrainCorpus corpus;
     protected IndexedDmvModel idm;
     protected CptBounds bounds;
     protected Stopwatch parsingTimer;
     protected MasterProblem mp;
-    private LpSumToOne sto;
-    
+    private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
 
     public DmvDantzigWolfeRelaxation(File tempDir,
-            int maxCutRounds, LpSumToOne.CutCountComputer initCutCountComp) {
+            int maxCutRounds, CutCountComputer initCutCountComp) {
         super(tempDir, maxCutRounds);
-        this.sto = new LpSumToOne(initCutCountComp);
+        this.sto = new LpSumToOneBuilder(initCutCountComp);
         this.parsingTimer = new Stopwatch();
     }
     
@@ -71,24 +68,31 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         this.dmvObj = new DmvObjective(this.corpus);
     }
 
-    protected void clearRelaxedSolution() {
-        optimalLogProbs = null;
-        optimalFeatCounts = null;
-    }
-    
     protected RelaxedSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
-        log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), sto.getNumStoCons()));
-        
         // Store optimal model parameters
-        optimalLogProbs = extractRelaxedLogProbs();
+        double[][] optimalLogProbs = extractRelaxedLogProbs();
+        
+        // Store optimal feature counts
+        double[][] optimalFeatCounts = getFeatureCounts();
 
+        // Store objective values z_{c,m}
+        double[][] objVals = new double[idm.getNumConds()][];
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            objVals[c] = cplex.getValues(mp.objVars[c]);
+        }
+        
+        // Compute the true quadratic objective given the model
+        // parameters and feature counts found by the relaxation.
+        double trueRelaxObj = dmvObj.computeTrueObjective(optimalLogProbs, optimalFeatCounts);
+        
         // Store fractional corpus parse
         RelaxedDepTreebank treebank = extractRelaxedParse();
 
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
         
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status);
+        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
+                .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
     }
 
     protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
@@ -139,64 +143,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         }
         return unknownVars;
     }
-    
-    public double[][] getRegretCm() {
-        try {
-            // If optimal model parameters \theta_{c,m} are not present, return null.
-            if (optimalLogProbs == null) {
-                return null;
-            }
-            // Lazily create the feature counts.
-            if (optimalFeatCounts == null) {
-                optimalFeatCounts = getFeatureCounts();
-            }
-            
-            // Store objective values z_{c,m}
-            double[][] objVals = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                objVals[c] = cplex.getValues(mp.objVars[c]);
-            }
-
-            // Compute the regret as the difference between the
-            // objective value and true objective value
-            double[][] regret = new double[idm.getNumConds()][];
-            for (int c = 0; c < idm.getNumConds(); c++) {
-                regret[c] = new double[idm.getNumParams(c)];
-                for (int m = 0; m < idm.getNumParams(c); m++) {
-                    regret[c][m] = objVals[c][m] - (optimalLogProbs[c][m] * optimalFeatCounts[c][m]);
-                    //TODO: this seems to be too strong:
-                    //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
-                    if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
-                        log.warn(String.format("Invalid negative regret: regret[%d][%d] = %f", c, m, regret[c][m]));
-                    }
-                }
-            }
-
-            return regret;
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
-    public double getTrueObjectiveForRelaxedSolution() {
-        try {
-            // If optimal model parameters \theta_{c,m} are not present, return null.
-            if (optimalLogProbs == null) {
-                throw new IllegalStateException();
-            }
-            // Lazily create the feature counts.
-            if (optimalFeatCounts == null) {
-                optimalFeatCounts = getFeatureCounts();
-            }
-
-            // Compute the true quadratic objective given the model
-            // parameters and feature counts found by the relaxation.
-            return dmvObj.computeTrueObjective(optimalLogProbs, optimalFeatCounts);
-        } catch (IloException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+        
     private double[][] getFeatureCounts() throws IloException {
         // Store feature counts \bar{f}_{c,m} (i.e. number of times each
         // model parameter was used)
@@ -312,6 +259,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                         
         sto.createModelParamVars();
         
+        // Add the supervised portion to the objective.
         int[][] totSupFreqCm = idm.getTotSupervisedFreqCm(corpus);
         for (int c = 0; c < numConds; c++) {
             for (int m = 0; m < idm.getNumParams(c); m++) {
@@ -455,6 +403,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     
     protected void printSummary() {
         log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / getNumSolves());
+        log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), sto.getNumStoCons()));
     }
 
     protected boolean isFeasible() {

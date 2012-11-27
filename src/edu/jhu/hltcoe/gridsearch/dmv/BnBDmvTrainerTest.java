@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;

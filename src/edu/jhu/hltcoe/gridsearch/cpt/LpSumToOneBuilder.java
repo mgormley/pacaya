@@ -17,22 +17,21 @@ import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Sets;
 
-public class LpSumToOne {
-    
-    
+public class LpSumToOneBuilder {
+        
     public static class CutCountComputer {
         public int getNumCuts(int numParams) {
             return (int)Math.pow(numParams, 2.0);
         }
     }
 
-    static Logger log = Logger.getLogger(LpSumToOne.class);
+    static Logger log = Logger.getLogger(LpSumToOneBuilder.class);
     
     public static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
     
     private int maxSetSizeToConstrain;
     private double minSumForCuts;
-    private LpSumToOne.CutCountComputer initCutCountComp;
+    private LpSumToOneBuilder.CutCountComputer initCutCountComp;
     
     private IloCplex cplex;
     private IloLPMatrix lpMatrix;
@@ -43,7 +42,7 @@ public class LpSumToOne {
     public IloNumVar[][] modelParamVars;
     private int numStoCons;
 
-    public LpSumToOne(LpSumToOne.CutCountComputer initCutCountComp) {
+    public LpSumToOneBuilder(LpSumToOneBuilder.CutCountComputer initCutCountComp) {
         // Store parameters.
         this.maxSetSizeToConstrain = 2;
         this.minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;

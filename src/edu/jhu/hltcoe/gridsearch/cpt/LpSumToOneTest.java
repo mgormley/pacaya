@@ -8,7 +8,7 @@ import ilog.cplex.IloCplex;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOne.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.hltcoe.math.Vectors;
 
@@ -27,8 +27,10 @@ public class LpSumToOneTest {
         };
         CptBounds bounds = new CptBounds(icpt);
         
-        LpSumToOne sto = new LpSumToOne(new CutCountComputer());
+        LpSumToOneBuilder sto = new LpSumToOneBuilder(new CutCountComputer());
         sto.init(cplex, lpMatrix, icpt, bounds);
+        sto.createModelParamVars();
+        sto.addModelParamConstraints();
         
         IloObjective obj = cplex.addMaximize();
         IloLinearNumExpr expr = cplex.linearNumExpr();

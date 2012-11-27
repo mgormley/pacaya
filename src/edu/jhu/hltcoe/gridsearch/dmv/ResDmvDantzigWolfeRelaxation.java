@@ -69,22 +69,6 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
         super.init1(corpus);
         supervisedFreqCm = idm.getTotSupervisedFreqCm(corpus);
     }
-        
-    protected RelaxedSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException,
-            IloException {
-        log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mpr.gammaVars.size()));
-        
-        // Store optimal model parameters
-        optimalLogProbs = extractRelaxedLogProbs();
-
-        // Store fractional corpus parse
-        RelaxedDepTreebank treebank = extractRelaxedParse();
-
-        // Print out proportion of fractional edges
-        log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
-        
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status);
-    }
 
     protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
         double[][] optimalLogProbs = new double[idm.getNumConds()][];
@@ -431,6 +415,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     protected void printSummary() {
         log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / getNumSolves());
         log.debug("Avg sum-to-one time(ms) per solve: " + Time.totMs(stoTimer) / getNumSolves());
+        log.info(String.format("Summary: #lambdas=%d #gammas=%d", mp.lambdaVars.size(), mpr.gammaVars.size()));
     }
 
     protected boolean isFeasible() {

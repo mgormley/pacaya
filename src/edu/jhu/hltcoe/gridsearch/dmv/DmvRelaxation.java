@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import ilog.concert.IloException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -8,22 +9,12 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
 public interface DmvRelaxation {
 
-    double computeTrueObjective(double[][] logProbs, DepTreebank treebank);
+    // TODO: Fix this initialization API.
+    // These two methods must be called in sequence to initialize.
+    void init1(DmvTrainCorpus corpus);
+    void init2(DmvSolution initFeasSol);
 
-    IndexedDmvModel getIdm();
-
-    /**
-     * @return A CxM array of doubles containing the regret of each model
-     *         parameter, or null if the regret is unavailable.
-     */
-    double[][] getRegretCm();
-
-    void reverseApply(CptBoundsDeltaList deltas);
-    void forwardApply(CptBoundsDeltaList deltas);
-
-    CptBounds getBounds();
-
-    void end();
+    void addFeasibleSolution(DmvSolution initFeasSol);
 
     RelaxedSolution solveRelaxation();
     RelaxedSolution solveRelaxation(double incumbentScore);
@@ -31,11 +22,15 @@ public interface DmvRelaxation {
     WarmStart getWarmStart();
     void setWarmStart(WarmStart warmStart);
 
-    // TODO: Fix this initialization API.
-    // These two methods must be called in sequence to initialize.
-    void init1(DmvTrainCorpus corpus);
-    void init2(DmvSolution initFeasSol);
+    void reverseApply(CptBoundsDeltaList deltas);
+    void forwardApply(CptBoundsDeltaList deltas);
+    
+    double computeTrueObjective(double[][] logProbs, DepTreebank treebank);
 
-    void addFeasibleSolution(DmvSolution initFeasSol);
+    IndexedDmvModel getIdm();
+
+    CptBounds getBounds();
+
+    void end();
 
 }

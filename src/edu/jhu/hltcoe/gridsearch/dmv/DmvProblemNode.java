@@ -319,12 +319,6 @@ public class DmvProblemNode implements ProblemNode {
         }
         return dwRelax.getBounds().getLogSpace();
     }
-    
-    public double[][] getRegretCm() {
-        // TODO: we could store this in the relaxed solution if 
-        // we start using it regularly.
-        return dwRelax.getRegretCm();
-    }
 
     public IndexedDmvModel getIdm() {
         return dwRelax.getIdm();

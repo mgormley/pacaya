@@ -286,16 +286,16 @@ public class IndexedDmvModel implements IndexedCpt {
         }
     }
 
-    private int getCRoot() {
+    public int getCRoot() {
         return rhsToC.lookupObject(new Rhs(ROOT));
     }
     
-    private int getCChild(int parent, int lr, int cv) {
-        return rhsToC.lookupObject(new Rhs(CHILD, parent, lr, cv));
+    public int getCChild(int pTag, int lr, int cv) {
+        return rhsToC.lookupObject(new Rhs(CHILD, pTag, lr, cv));
     }
     
-    private int getCDecision(int parent, int lr, int dv) {
-        return rhsToC.lookupObject(new Rhs(DECISION, parent, lr, dv));
+    public int getCDecision(int pTag, int lr, int dv) {
+        return rhsToC.lookupObject(new Rhs(DECISION, pTag, lr, dv));
     }
 
     /* (non-Javadoc)

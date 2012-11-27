@@ -90,7 +90,6 @@ public abstract class DantzigWolfeRelaxation {
 
     public RelaxedSolution solveRelaxation(double incumbentScore) {
         try {
-            clearRelaxedSolution();
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
@@ -110,7 +109,7 @@ public abstract class DantzigWolfeRelaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new RelaxedDmvSolution(null, null, objective, status);
+                return new RelaxedDmvSolution(null, null, objective, status, null, null, Double.NaN);
             }
             
             if (tempDir != null) {
@@ -118,7 +117,7 @@ public abstract class DantzigWolfeRelaxation {
             }
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
-            log.info("True obj for relaxed vars: " + getTrueObjectiveForRelaxedSolution());
+            log.info("True obj for relaxed vars: " + relaxSol.getTrueObjectiveForRelaxedSolution());
             return relaxSol;
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
@@ -132,6 +131,7 @@ public abstract class DantzigWolfeRelaxation {
 
     public void setWarmStart(WarmStart warmStart) {
         try {
+            // TODO: This is commented out because it MIGHT not be working. If it does work it would be better than the slow solution below.
 //            // Initialize all the lambda variables to their lower bounds.
 //            IloNumVar[] lambdaVars = new IloNumVar[mp.lambdaVars.size()];
 //            for (int i=0; i<lambdaVars.length; i++) {
@@ -158,8 +158,6 @@ public abstract class DantzigWolfeRelaxation {
             
             // Set the basis status of known and unknown variables
             cplex.setBasisStatuses(allVars, allStatuses, warmStart.ranges, warmStart.rangeStatuses);            
-            
-            //TODO: remove: cplex.setBasisStatuses(warmStart.numVars, warmStart.numVarStatuses, warmStart.ranges, warmStart.rangeStatuses);
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
@@ -284,11 +282,7 @@ public abstract class DantzigWolfeRelaxation {
     public void setMaxDwIterations(int maxDwIterations) {
         this.maxDwIterations = maxDwIterations;
     }
-    
-    protected abstract double getTrueObjectiveForRelaxedSolution();
-    
-    protected abstract void clearRelaxedSolution();
-
+        
     protected abstract RelaxedSolution extractSolution(RelaxStatus status, double objective)  throws UnknownObjectException, IloException;
     
     protected abstract ArrayList<IloNumVar> getUnknownVars(HashSet<IloNumVar> knownVars);
