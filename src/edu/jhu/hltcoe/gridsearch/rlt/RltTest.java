@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.gridsearch.rlt;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -64,11 +65,10 @@ public class RltTest {
         mat.addRows(cons);
 
         RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
-        IloLPMatrix rltMat = rlt.getLPMatrix();
+        IloLPMatrix rltMat = rlt.getRltMatrix();
         IloNumVar[][] rltVars = rlt.getRltVars();
         cplex.add(rltMat);
 
-        IloRange rng0 = rltMat.getRange(0);
         // Check the first constraint.
         double[] lb = new double[1];
         double[] ub = new double[1];
@@ -76,11 +76,11 @@ public class RltTest {
         double[][] val = new double[1][];
         rltMat.getRows(0, 1, lb, ub, ind, val);
         assertEquals(2304.0, ub[0], 1e-13);
-        assertArrayEquals(new int[]{0,1,2,3,4}, ind[0]);
-        JUnitUtils.assertArrayEquals(new double[]{-576.0, 768.0, -36.0, 96.0, -64.0}, val[0], 1e-13);
-        
-        cplex.addMinimize(cplex.sum(cplex.sum(cplex.sum(cplex.prod(-1, rltVars[0][0]), cplex.prod(
-                -1, rltVars[1][1])), cplex.prod(24, x1)), -144), "obj");
+        assertArrayEquals(new int[] { 0, 1, 2, 3, 4 }, ind[0]);
+        JUnitUtils.assertArrayEquals(new double[] { -576.0, 768.0, -36.0, 96.0, -64.0 }, val[0], 1e-13);
+
+        cplex.addMinimize(cplex.sum(cplex.sum(cplex.sum(cplex.prod(-1, rltVars[0][0]), cplex.prod(-1, rltVars[1][1])),
+                cplex.prod(24, x1)), -144), "obj");
 
         if (tempDir != null) {
             cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
@@ -109,6 +109,112 @@ public class RltTest {
             assertEquals(48, rltVarVals[1][0], 1e-13);
             assertEquals(72, rltVarVals[1][1], 1e-13);
         }
+    }
+    
+    @Test
+    public void testGetRltVars() throws IloException {
+        double x1Lb = 2;
+        double x1Ub = 3;
+        double x2Lb = 5;
+        double x2Ub = 7;
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
+        IloNumVar x2 = cplex.numVar(x2Lb, x2Ub, "x2");
+        
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+
+        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        IloNumVar[][] rltVars = rlt.getRltVars();
+        assertEquals(rltVars[0][0], rlt.getRltVar(x1, x1));
+        assertEquals(rltVars[1][0], rlt.getRltVar(x1, x2));
+        assertEquals(rltVars[1][0], rlt.getRltVar(x2, x1));
+        assertEquals(rltVars[1][1], rlt.getRltVar(x2, x2));
+    }
+
+    @Test
+    public void testBoundsOnlyYieldConvexEnvelope() throws IloException {
+        double x1Lb = 2;
+        double x1Ub = 3;
+        double x2Lb = 5;
+        double x2Ub = 7;
+        
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
+        IloNumVar x2 = cplex.numVar(x2Lb, x2Ub, "x2");
+        
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+
+        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        cplex.add(rltMat);
+
+        System.out.println(rltMat);
+
+        String rltMatStr = rltMat.toString();
+        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
+        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
+        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
+        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
+        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
+        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
+        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
+        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
+
+        assertEquals(16, rltMat.getNrows());
+    }
+
+    @Test
+    public void testGetConvexEnvelope() throws IloException {
+        double x1Lb = 2;
+        double x1Ub = 3;
+        double x2Lb = 5;
+        double x2Ub = 7;
+        
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
+        IloNumVar x2 = cplex.numVar(x2Lb, x2Ub, "x2");
+        IloRange c1 = cplex.le(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
+        IloRange c2 = cplex.le(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloRange[] cons = new IloRange[] { c1, c2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+        mat.addRows(cons);
+
+        RltProgram rlt = Rlt.getConvexConcaveEnvelope(cplex, mat);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        cplex.add(rltMat);
+
+        System.out.println(rltMat);
+
+        String rltMatStr = rltMat.toString();
+        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
+        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
+        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
+        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
+        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
+        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
+        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
+        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
+        
+        assertEquals(16, rltMat.getNrows());
     }
 
 }

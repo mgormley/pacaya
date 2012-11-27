@@ -31,20 +31,28 @@ public class Rlt {
     
     public static class RltProgram {
 
-        private IloLPMatrix lpMat;
+        private IloLPMatrix rltMat;
         private IloNumVar[][] rltVars;
+        private IloLPMatrix inputMatrix;
 
-        public RltProgram(IloLPMatrix lpMat, IloNumVar[][] rltVars) {
-            this.lpMat = lpMat;
+        public RltProgram(IloLPMatrix rltMat, IloNumVar[][] rltVars, IloLPMatrix inputMatrix) {
+            this.rltMat = rltMat;
             this.rltVars = rltVars;
+            this.inputMatrix = inputMatrix;
         }
 
-        public IloLPMatrix getLPMatrix() {
-            return lpMat;
+        public IloLPMatrix getRltMatrix() {
+            return rltMat;
         }
 
         public IloNumVar[][] getRltVars() {
             return rltVars;
+        }
+
+        public IloNumVar getRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
+            int idx1 = inputMatrix.getIndex(var1);
+            int idx2 = inputMatrix.getIndex(var2);            
+            return rltVars[Math.max(idx1, idx2)][Math.min(idx1, idx2)];
         }
 
     }
@@ -63,6 +71,25 @@ public class Rlt {
             return String.format("g=%f G=%s", g, G.toString());
         }
     }
+    
+    public Rlt(IloCplex cplex, IloLPMatrix inputMatrix) {
+        // this.cplex = cplex;
+        //this.mat = inputMatrix;
+    }
+
+    public static RltProgram getConvexConcaveEnvelope(IloCplex cplex, IloLPMatrix mat) throws IloException {
+        int n = mat.getNcols();
+        int m = mat.getNrows();
+        IloNumVar[] numVars = mat.getNumVars();
+
+        // The size of the vectors. This is over-generous but it doesn't make
+        // any difference b/c we use sparse vectors.
+        int size = (2*n + m)*(2*n + m); 
+
+        List<Factor> factors = getFactors(mat, n, m, numVars, size, true);
+
+        return getRltConstraints(cplex, n, numVars, size, factors, mat);
+    }
 
     public static RltProgram getFirstOrderRlt(IloCplex cplex, IloLPMatrix mat) throws IloException {
         int n = mat.getNcols();
@@ -71,42 +98,44 @@ public class Rlt {
 
         // The size of the vectors. This is over-generous but it doesn't make
         // any difference b/c we use sparse vectors.
-        int size = n + m*m; 
+        int size = (2*n + m)*(2*n + m); 
 
-        List<Factor> factors = getFactors(mat, n, m, numVars, size);
+        List<Factor> factors = getFactors(mat, n, m, numVars, size, false);
 
-        return getRltConstraints(cplex, n, numVars, size, factors);
+        return getRltConstraints(cplex, n, numVars, size, factors, mat);
     }
 
     /**
      * Creates the constraint and bounds factors.
      */
-    private static List<Factor> getFactors(IloLPMatrix mat, int n, int m, IloNumVar[] numVars, int size)
+    private static List<Factor> getFactors(IloLPMatrix mat, int n, int m, IloNumVar[] numVars, int size, boolean envelopeOnly)
             throws IloException {
         List<Factor> factors = new ArrayList<Factor>();
 
-        // Add constraint factors.
-        double[] lb = new double[m];
-        double[] ub = new double[m];
-        int[][] Aind = new int[m][];
-        double[][] Aval = new double[m][];
-        mat.getRows(0, m, lb, ub, Aind, Aval);
-        for (int i = 0; i < m; i++) {
-            if (lb[i] != CPLEX_NEG_INF) {
-                // b <= A_i x
-                // 0 <= A_i x - b = (-b - (-A_i x))
-                double[] vals = Utilities.copyOf(Aval[i]);
-                Vectors.scale(vals, -1.0);
-                factors.add(new Factor(size, -lb[i], Aind[i], vals));
+        if (!envelopeOnly) {
+            // Add constraint factors.
+            double[] lb = new double[m];
+            double[] ub = new double[m];
+            int[][] Aind = new int[m][];
+            double[][] Aval = new double[m][];
+            mat.getRows(0, m, lb, ub, Aind, Aval);
+            for (int i = 0; i < m; i++) {
+                if (lb[i] != CPLEX_NEG_INF) {
+                    // b <= A_i x
+                    // 0 <= A_i x - b = (-b - (-A_i x))
+                    double[] vals = Utilities.copyOf(Aval[i]);
+                    Vectors.scale(vals, -1.0);
+                    factors.add(new Factor(size, -lb[i], Aind[i], vals));
+                }
+                if (ub[i] != CPLEX_POS_INF) {
+                    // A_i x <= b
+                    // 0 <= b - A_i x
+                    factors.add(new Factor(size, ub[i], Aind[i], Aval[i]));
+                }
+                // TODO: special handling of equality constraints.
             }
-            if (ub[i] != CPLEX_POS_INF) {
-                // A_i x <= b
-                // 0 <= b - A_i x
-                factors.add(new Factor(size, ub[i], Aind[i], Aval[i]));
-            }
-            // TODO: special handling of equality constraints.
         }
-
+        
         // Add bounds factors.
         for (int i = 0; i < n; i++) {
             double varLb = numVars[i].getLB();
@@ -125,6 +154,7 @@ public class Rlt {
                 factors.add(new Factor(size, varUb, varInd, varVal));
             }
         }
+        
         if (log.isDebugEnabled()) {
             log.debug("factors: ");
             for (Factor f : factors) {
@@ -135,7 +165,7 @@ public class Rlt {
     }
 
     private static RltProgram getRltConstraints(IloCplex cplex, int n, IloNumVar[] numVars, int size,
-            List<Factor> factors) throws IloException {
+            List<Factor> factors, IloLPMatrix inputMatrix) throws IloException {
         // Create the first-order RLT variables.
         IloNumVar[][] rltVars = new IloNumVar[n][];
         for (int i = 0; i < n; i++) {
@@ -216,7 +246,7 @@ public class Rlt {
             }
         }
 
-        return new RltProgram(rltMat, rltVars);
+        return new RltProgram(rltMat, rltVars, inputMatrix);
     }
 
 }
