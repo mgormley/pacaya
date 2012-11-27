@@ -23,6 +23,7 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
+import edu.jhu.hltcoe.parse.relax.RelaxedParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;

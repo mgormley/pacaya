@@ -179,6 +179,26 @@ All other variables matching '*' are 0.
         Assert.assertArrayEquals(trees1.getFracRoots(), trees2.getFracRoots());
         Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
     }
+    
+    @Test
+    public void testFeatCountObjective() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("cat ate mouse");
+        sentences.addSentenceFromString("cat ate hat");
+        sentences.addSentenceFromString("mouse cat ate");
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+        double expectedObj = -26.664;
+
+        // Single commodity flow non-projective parsing LP Relaxation -- standard objective.
+        RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        
+        // Single commodity flow non-projective parsing LP Relaxation -- feature count objective.
+        RelaxedDepTreebank trees2 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ, expectedObj);
+        
+        Assert.assertArrayEquals(trees1.getFracRoots(), trees2.getFracRoots());
+        Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
+    }
 
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexFactory(), formulation);

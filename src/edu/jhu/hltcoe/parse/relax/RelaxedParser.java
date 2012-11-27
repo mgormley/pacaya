@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.hltcoe.parse.relax;
 
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.model.Model;

@@ -10,7 +10,8 @@ public enum IlpFormulation {
     FLOW_NONPROJ("deptree-flow-nonproj", false),
     FLOW_NONPROJ_LPRELAX("deptree-flow-nonproj-lprelax", false, true),
     FLOW_PROJ("deptree-flow-proj", true),
-    FLOW_PROJ_LPRELAX("deptree-flow-proj", true, true),
+    FLOW_PROJ_LPRELAX("deptree-flow-proj-lprelax", true, true),
+    FLOW_PROJ_LPRELAX_FCOBJ("deptree-flow-proj-lprelax", true, true),
     MFLOW_NONPROJ("deptree-multiflow-nonproj", false),
     MFLOW_PROJ("deptree-multiflow-proj", true);
     
