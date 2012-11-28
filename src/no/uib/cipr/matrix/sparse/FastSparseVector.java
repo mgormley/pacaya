@@ -21,6 +21,9 @@
 package no.uib.cipr.matrix.sparse;
 
 import no.uib.cipr.matrix.Vector;
+import no.uib.cipr.matrix.VectorEntry;
+import edu.jhu.hltcoe.util.Sort;
+import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * Faster Sparse vector
@@ -43,7 +46,15 @@ public class FastSparseVector extends SparseVector {
     }
     
     public FastSparseVector(int size, int[] index, double[] data) {
-        super(size, index, data);
+        super(size, Sort.sortIndexAsc(index, data), data);
+    }
+
+    public FastSparseVector(int[] index, double[] data) {
+        this(Integer.MAX_VALUE, index, data);
+    }
+    
+    public FastSparseVector(double[] denseData) {
+        super(Integer.MAX_VALUE, Sort.getIndexArray(denseData), denseData);
     }
 
     @Override
@@ -120,4 +131,25 @@ public class FastSparseVector extends SparseVector {
         return sb.toString();
     }
 
+    /**
+     * Returns true if the input vector is equal to this one.
+     */
+    public boolean equals(FastSparseVector other, double delta) {
+        if (other.size() != this.size()) {
+            return false;
+        }
+        // This is slow, but correct.
+        for (VectorEntry ve : this) {
+            if (!Utilities.equals(ve.get(), other.get(ve.index()), delta)) {
+                return false;
+            }
+        }
+        for (VectorEntry ve : other) {
+            if (!Utilities.equals(ve.get(), this.get(ve.index()), delta)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
 }
