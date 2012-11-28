@@ -419,7 +419,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     }
 
     protected boolean isFeasible() {
-        return !hasInfeasibleBounds && areFeasibleBounds(bounds);
+        return !hasInfeasibleBounds && bounds.areFeasibleBounds();
     }
     
     protected SubproblemRetVal addColumns(IloCplex cplex) throws UnknownObjectException, IloException {

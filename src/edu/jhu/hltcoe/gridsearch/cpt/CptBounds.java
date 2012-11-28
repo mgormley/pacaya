@@ -94,7 +94,11 @@ public class CptBounds {
         }
         return logSpace;
     }
-
+    
+    public int getNumConds() {
+        return lbs[Type.PARAM.getAsInt()].length;
+    }
+    
     public int getNumParams(int c) {
         return lbs[Type.PARAM.getAsInt()][c].length;
     }
@@ -104,5 +108,36 @@ public class CptBounds {
         return "CptBounds [lbs=" + Arrays.deepToString(lbs) + ", ubs=" + Arrays.deepToString(ubs) + "]";
     }
     
-    
+    public boolean areFeasibleBounds() {
+        // Check that the upper bounds sum to at least 1.0
+        for (int c=0; c<getNumConds(); c++) {
+            double logSum = Double.NEGATIVE_INFINITY;
+            int numParams = getNumParams(c);
+            // Sum the upper bounds
+            for (int m = 0; m < numParams; m++) {
+                logSum = Utilities.logAdd(logSum, getUb(Type.PARAM, c, m));
+            }
+            
+            if (logSum < -1e-10) {
+                // The problem is infeasible
+                return false;
+            }
+        }
+        
+        // Check that the lower bounds sum to no more than 1.0
+        for (int c=0; c<getNumConds(); c++) {
+            double logSum = Double.NEGATIVE_INFINITY;
+            int numParams = getNumParams(c);
+            // Sum the lower bounds
+            for (int m = 0; m < numParams; m++) {
+                logSum = Utilities.logAdd(logSum, getLb(Type.PARAM, c, m));
+            }
+            
+            if (logSum > 1e-10) {
+                // The problem is infeasible
+                return false;
+            }
+        }
+        return true;
+    }
 }

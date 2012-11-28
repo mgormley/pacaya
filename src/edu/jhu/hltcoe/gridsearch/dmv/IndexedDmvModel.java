@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
