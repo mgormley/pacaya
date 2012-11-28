@@ -59,28 +59,7 @@ public class DmvDantzigWolfeRelaxationTest {
     public void setUp() {
         Prng.seed(1234567890);
     }
-    
-    // TODO: move this test to a more appropriate place.
-    @Test
-    public void testQuadraticObjectiveInCplex() throws IloException {
-        System.out.println("Trying to solve quadratic");
-        IloCplex cplex = new IloCplex();
         
-        IloNumVar thetaVar = cplex.numVar(-20, 0, "theta");
-        IloNumVar edgeVar = cplex.numVar(0, 1, "edge");
-        
-        cplex.addMinimize(cplex.prod(edgeVar, thetaVar), "obj");
-        
-        cplex.exportModel(new File("quad.lp").getAbsolutePath());
-        
-        try {
-            cplex.solve();
-            Assert.fail();
-        } catch (Exception e) {
-            // pass
-        }
-    }
-    
     @Test
     public void testOneWordSentence() {
         SentenceCollection sentences = new SentenceCollection();
