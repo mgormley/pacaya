@@ -197,7 +197,7 @@ public class Rlt {
         // Build the RLT constraints.
         for (int i = 0; i < factors.size(); i++) {
             Factor facI = factors.get(i);
-            for (int j = 0; j < factors.size(); j++) {
+            for (int j = 0; j <= i; j++) {
                 Factor facJ = factors.get(j);
                 // Here we add the following constraint:
                 // \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k

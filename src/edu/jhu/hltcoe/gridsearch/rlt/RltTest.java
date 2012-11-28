@@ -164,15 +164,11 @@ public class RltTest {
 
         String rltMatStr = rltMat.toString();
         assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
-        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
-        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
         assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
         assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
-        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
-        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
         assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
 
-        assertEquals(16, rltMat.getNrows());
+        assertEquals(10, rltMat.getNrows());
     }
 
     @Test
@@ -206,15 +202,11 @@ public class RltTest {
 
         String rltMatStr = rltMat.toString();
         assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
-        assertTrue(rltMatStr.contains("-7.0*x1 - 2.0*x2 + 1.0*w_{1,0} <= -14.0"));
-        assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
         assertTrue(rltMatStr.contains("-5.0*x1 - 3.0*x2 + 1.0*w_{1,0} <= -15.0"));
         assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
-        assertTrue(rltMatStr.contains("5.0*x1 + 2.0*x2 - 1.0*w_{1,0} <= 10.0"));
-        assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
         assertTrue(rltMatStr.contains("7.0*x1 + 3.0*x2 - 1.0*w_{1,0} <= 21.0"));
         
-        assertEquals(16, rltMat.getNrows());
+        assertEquals(10, rltMat.getNrows());
     }
 
 }
