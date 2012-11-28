@@ -135,7 +135,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
             // Add the convex/concave envelope.
             mp.rltProg = Rlt.getConvexConcaveEnvelope(cplex, mp.origMatrix);
             IloLPMatrix rltMat = mp.rltProg.getRltMatrix();
-            mp.origMatrix.addRows(rltMat.getRanges());
+            cplex.add(rltMat);
             cplex.add(mp.origMatrix);
         } else {
             // Add the first-order RLT constraints.
@@ -434,9 +434,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
             if (type == Type.PARAM) {
                 // Updates the bounds of the model parameters
                 sto.updateModelParamBounds(c, m, newLb, newUb);
-                // TODO: NOT COMPLETED.
-                //mp.rltProg.updateBounds();
-                throw new RuntimeException("not implemented");
+                mp.rltProg.updateBound(sto.modelParamVars[c][m], delta.getLu());
             } else {
                 //TODO: Implement this
                 throw new RuntimeException("not implemented");
