@@ -326,7 +326,7 @@ public class ModelParamSubproblem {
             // remaining.
             double[] ws = Utilities.copyOf(weights[c]);
             int[] indices = Sort.getIndexArray(ws);
-            Sort.quicksortAsc(ws, indices);
+            Sort.sortValuesAsc(ws, indices);
             for (int i = 0; i < indices.length && massRemaining > 0; i++) {
                 int m = indices[i];
                 double logMax = Utilities.logAdd(Utilities.log(massRemaining), logProbs[c][m]);
