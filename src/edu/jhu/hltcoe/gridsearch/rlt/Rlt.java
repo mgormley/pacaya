@@ -46,18 +46,100 @@ public class Rlt {
         private SymIntMat rltVarsInd;
         private SymIntMat rltConsInd;
         private HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap;
+        private IloCplex cplex;
+        private boolean envelopeOnly;
 
-        public RltProgram(IloLPMatrix rltMat, SymVarMat rltVars, IloLPMatrix inputMatrix, List<Factor> factors,
-                int constantVarColIdx, SymIntMat rltVarsInd, SymIntMat rltConsInd) throws IloException {
-            this.rltMat = rltMat;
-            this.rltVars = rltVars;
+        private RltProgram(IloCplex cplex, List<Factor> newFactors, IloLPMatrix inputMatrix, boolean envelopeOnly)
+                throws IloException {
+            log.debug("RLT factors: " + newFactors.size());
+
+            this.cplex = cplex;
+            this.envelopeOnly = envelopeOnly;
             this.inputMatrix = inputMatrix;
-            this.factors = factors;
-            this.constantVarColIdx = constantVarColIdx;
-            this.rltVarsInd = rltVarsInd;
-            this.rltConsInd = rltConsInd;
             
+            int n = inputMatrix.getNcols();
+            int m = inputMatrix.getNrows();
+            IloNumVar[] numVars = inputMatrix.getNumVars();
+            
+            // Create the first-order RLT variables.
+            rltVars = new SymVarMat();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j <= i; j++) {
+                    rltVars.set(i, j, cplex.numVar(getLowerBound(numVars[i], numVars[j]), getUpperBound(numVars[i],
+                            numVars[j]), String.format("w_{%d,%d}", i, j)));
+                }
+            }
+            
+            // Reformulate and linearize the constraints.
+
+            // Add the columns to the matrix.
+            rltMat = cplex.LPMatrix();
+            rltMat.addCols(numVars);
+            for (int i = 0; i < n; i++) {
+                rltMat.addCols(rltVars.getRowAsArray(i));
+            }
+
+            // Add a variable that is always 1.0. This enables us to update the
+            // upper bound without adding/removing rows of the matrix.
+            constantVarColIdx = rltMat.addColumn(cplex.numVar(1, 1, "const"));
+            
+            // Store rltVar column indices.
+            rltVarsInd = new SymIntMat();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j <= i; j++) {
+                    rltVarsInd.set(i, j, rltMat.getIndex(rltVars.get(i,j)));
+                }
+            }
+            
+            // Store RLT constraints' row indices.
+            rltConsInd = new SymIntMat();
+
+            // Build the RLT constraints by adding each factor one at a time.
+            this.factors = new ArrayList<Factor>();
+            for (int i = 0; i < newFactors.size(); i++) {
+                addFactor(cplex, newFactors.get(i));
+            }            
+
+            // This can be initialized only after all the bounds factors have been
+            // added to the RLT matrix, rltMat.
             this.boundsFactorMap = getBoundsFactorMap(rltMat, factors);
+        }
+        
+        private void addFactor(IloCplex cplex, Factor facI) throws IloException {
+            int n = inputMatrix.getNcols();
+            // Index of the factor we are adding.
+            int i = factors.size();
+            // Add the new factor so we multiply it with itself.
+            this.factors.add(facI);
+            if (facI.isEq()) {  
+                // Add an equality factor by multiplying it with each variable.
+                for (int k=0; k<n; k++) {
+                    String rowName = String.format("eqcons_{%d, %d}", i, k);
+                    int rowind = rltMat.addRow(cplex.range(0.0, 0.0, rowName));
+                    // k is the column index of the kth column variable.
+                    assert(inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
+                    
+                    updateRowNZsForEq(facI, k, rowind, rltMat, rltVarsInd);
+                }
+            } else {
+                // Add a standard <= factor by multiplying it with each factor.
+                for (int j = 0; j < factors.size(); j++) {
+                    Factor facJ = factors.get(j);
+                    
+                    if (facI.isEq() || facJ.isEq()) { 
+                        // Skip the equality constraints.
+                        continue;
+                    } else if (envelopeOnly && ((BoundFactor)facI).colIdx == ((BoundFactor)facJ).colIdx) {
+                        // Don't multiply the constraint with itself for the envelope. 
+                        continue;
+                    }
+                    
+                    String rowName = String.format("lecons_{%d, %d}", i, j);
+                    int rowind = rltMat.addRow(cplex.range(CPLEX_NEG_INF, 0.0, rowName));
+                    rltConsInd.set(i, j, rowind);
+                    updateRowNZsForLeq(facJ, facI, rowind, rltMat, constantVarColIdx, rltVarsInd);
+                }
+            }
         }
 
         public IloLPMatrix getRltMatrix() {
@@ -77,7 +159,7 @@ public class Rlt {
             // Update the factor.
             BoundFactor bf = (BoundFactor)factors.get(factorIdx);
             Factor factor;
-            if (bf.lu == Lu.LOWER){ 
+            if (bf.lu == Lu.LOWER) { 
                 factor = getBoundFactorLower(inputMatrix.getNumVars(), bf.colIdx);
             } else {
                 factor = getBoundFactorUpper(inputMatrix.getNumVars(), bf.colIdx);
@@ -90,8 +172,10 @@ public class Rlt {
             //    This requires adding an auxiliary variable that is fixed to equal 1.0.
             for (int i = 0; i < factors.size(); i++) {
                 Factor facI = factors.get(i);
-                int rowind = rltConsInd.get(factorIdx, i);
-                updateRowNZs(factor, facI, rowind, rltMat, constantVarColIdx, rltVarsInd);
+                if (rltConsInd.contains(factorIdx, i)) {
+                    int rowind = rltConsInd.get(factorIdx, i);
+                    updateRowNZsForLeq(factor, facI, rowind, rltMat, constantVarColIdx, rltVarsInd);
+                }
             }
         }
 
@@ -117,6 +201,38 @@ public class Rlt {
 
         public double[][] getRltVarVals(IloCplex cplex) throws IloException {
             return CplexUtils.getValues(cplex, rltVars);
+        }
+
+        public void addRows(List<Integer> rows) throws IloException {
+            if (!areConsecutive(rows)) {
+                throw new IllegalStateException("Expecting a consecutive list: " + rows);
+            }
+            if (rows.size() > 0) {
+                List<Factor> newFactors = new ArrayList<Factor>();
+                addRowFactors(rows.get(0), rows.size(), inputMatrix, newFactors);
+                for (Factor factor : newFactors) {
+                    addFactor(cplex, factor);
+                }
+            }
+        }
+
+        /**
+         * Returns true iff the list of integers is a consecutive list.
+         */
+        private static boolean areConsecutive(List<Integer> rows) {
+            if (rows.size() <= 1) {
+                return true;
+            }
+            int i=0;
+            int cur = rows.get(i);
+            for (i=1; i<rows.size(); i++) {
+                if (rows.get(i) != cur + 1) {
+                    return false;
+                } else {
+                    cur = rows.get(i);
+                }                
+            }
+            return true;
         }
         
     }
@@ -183,38 +299,27 @@ public class Rlt {
     }
 
     public static RltProgram getConvexConcaveEnvelope(IloCplex cplex, IloLPMatrix mat) throws IloException {
-        int n = mat.getNcols();
-        int m = mat.getNrows();
-        IloNumVar[] numVars = mat.getNumVars();
-
-        List<Factor> factors = getFactors(mat, n, m, numVars, true);
-
-        return getRltConstraints(cplex, m, n, numVars, factors, mat);
+        boolean envelopeOnly = true;
+        List<Factor> factors = getFactors(mat, envelopeOnly);
+        return new RltProgram(cplex, factors, mat, envelopeOnly);
     }
 
     public static RltProgram getFirstOrderRlt(IloCplex cplex, IloLPMatrix mat) throws IloException {
-        int n = mat.getNcols();
-        int m = mat.getNrows();
-        IloNumVar[] numVars = mat.getNumVars();
-
-        List<Factor> factors = getFactors(mat, n, m, numVars, false);
-
-        return getRltConstraints(cplex, m, n, numVars, factors, mat);
+        boolean envelopeOnly = false;
+        List<Factor> factors = getFactors(mat, envelopeOnly);
+        return new RltProgram(cplex, factors, mat, envelopeOnly);
     }
 
     /**
      * Creates the constraint and bounds factors.
      */
-    private static List<Factor> getFactors(IloLPMatrix mat, int n, int m, IloNumVar[] numVars, boolean envelopeOnly)
+    private static List<Factor> getFactors(IloLPMatrix mat, boolean envelopeOnly)
             throws IloException {
+        int n = mat.getNcols();
+        int m = mat.getNrows();
+        IloNumVar[] numVars = mat.getNumVars();
+        
         List<Factor> factors = new ArrayList<Factor>();
-
-        if (!envelopeOnly) {
-            // Add constraint factors.
-            int startRow = 0;
-            int numRows = m;            
-            addRowFactors(startRow, numRows, mat, factors);
-        }
         
         // Add bounds factors.
         for (int colIdx = 0; colIdx < n; colIdx++) {
@@ -227,11 +332,18 @@ public class Rlt {
                 factors.add(bfUb);
             }
         }
+
+        if (!envelopeOnly) {
+            // Add constraint factors.
+            int startRow = 0;
+            int numRows = m;            
+            addRowFactors(startRow, numRows, mat, factors);
+        }
         
-        if (log.isDebugEnabled()) {
-            log.debug("factors: ");
+        if (log.isTraceEnabled()) {
+            log.trace("factors: ");
             for (Factor f : factors) {
-                log.debug("\t" + f);
+                log.trace("\t" + f);
             }
         }
         return factors;
@@ -298,94 +410,6 @@ public class Rlt {
         return null;
     }
     
-    private static RltProgram getRltConstraints(IloCplex cplex, int m, int n,
-            IloNumVar[] numVars, List<Factor> factors, IloLPMatrix inputMatrix) throws IloException {
-        // Create the first-order RLT variables.
-        SymVarMat rltVars = new SymVarMat();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                rltVars.set(i, j, cplex.numVar(getLowerBound(numVars[i], numVars[j]), getUpperBound(numVars[i],
-                        numVars[j]), String.format("w_{%d,%d}", i, j)));
-            }
-        }
-        
-        // Reformulate and linearize the constraints.
-
-        // Add the columns to the matrix.
-        IloLPMatrix rltMat = cplex.LPMatrix();
-        rltMat.addCols(numVars);
-        for (int i = 0; i < n; i++) {
-            rltMat.addCols(rltVars.getRowAsArray(i));
-        }
-
-        // Add a variable that is always 1.0. This enables us to update the
-        // upper bound without adding/removing rows of the matrix.
-        int constantVarColIdx = rltMat.addColumn(cplex.numVar(1, 1, "const"));
-        
-        // Store rltVar column indices.
-        SymIntMat rltVarsInd = new SymIntMat();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                rltVarsInd.set(i, j, rltMat.getIndex(rltVars.get(i,j)));
-            }
-        }
-        
-        // Store RLT constraints' row indices.
-        SymIntMat rltConsInd = new SymIntMat();
-
-        // Build the RLT constraints.
-        for (int i = 0; i < factors.size(); i++) {
-            Factor facI = factors.get(i);
-            for (int j = 0; j <= i; j++) {
-                Factor facJ = factors.get(j);
-                
-                if (facI.isEq() || facJ.isEq()) { 
-                    // Skip the equality constraints.
-                    continue;
-                }
-                
-                String rowName = String.format("leqcons_{%d, %d}", i, j);
-                int rowind = rltMat.addRow(cplex.range(CPLEX_NEG_INF, 0.0, rowName));
-                rltConsInd.set(i, j, rowind);
-                updateRowNZs(facJ, facI, rowind, rltMat, constantVarColIdx, rltVarsInd);
-            }
-        }
-
-        for (int i = 0; i < factors.size(); i++) {
-            Factor facI = factors.get(i);
-            if (facI.isEq()) {  
-                for (int k=0; k<n; k++) {
-                    String rowName = String.format("eqcons_{%d, %d}", i, k);
-                    int rowind = rltMat.addRow(cplex.range(0.0, 0.0, rowName));
-                    
-                    SparseVector row = new FastSparseVector();
-                    
-                    // Original: x_k * g_i + sum_{l=1}^n x_k * G_{il} * x_l
-                    // Linearized: x_k * g_i + sum_{l=1}^n G_{il} w_{kl}
-                    
-                    // Add x_k * g_i 
-                    // k is the column index of the kth column variable.
-                    assert(inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
-                    row.add(k, facI.g);
-                    
-                    // Add sum_{l=1}^n G_{il} w_{kl}
-                    for (int idx = 0; idx < facI.G.getUsed(); idx++) {
-                        int l = facI.G.getIndex()[idx];
-                        double val = facI.G.getData()[idx];
-                        row.add(rltVarsInd.get(k, l), val);
-                    }
-                    
-                    // Add the complete constraint.
-                    rltMat.setNZs(getRowIndArray(row, rowind), row.getIndex(), row.getData());
-                    
-                    log.debug(rltMat.getRange(rowind).getName() + " " + row + " == 0.0");
-                }
-            }
-        }
-        
-        return new RltProgram(rltMat, rltVars, inputMatrix, factors, constantVarColIdx, rltVarsInd, rltConsInd);
-    }
-
     /**
      * Gets the lower bound of the product of two variables.
      */
@@ -400,7 +424,7 @@ public class Rlt {
         return CPLEX_POS_INF;
     }
 
-    private static void updateRowNZs(Factor facJ, Factor facI, int rowind, IloLPMatrix rltMat,
+    private static void updateRowNZsForLeq(Factor facJ, Factor facI, int rowind, IloLPMatrix rltMat,
             int constantVarColIdx, SymIntMat rltVarsInd) throws IloException {
         // Here we add the following constraint:
         // \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
@@ -444,7 +468,30 @@ public class Rlt {
         row.add(constantVarColIdx, -rowUb);
         rltMat.setNZs(getRowIndArray(row, rowind), row.getIndex(), row.getData());
         
-        log.debug(rltMat.getRange(rowind).getName() + " " + row + " <= " + rowUb);
+        log.trace(rltMat.getRange(rowind).getName() + " " + row + " <= " + rowUb);
+    }
+
+    private static void updateRowNZsForEq(Factor facI, int k, int rowind, IloLPMatrix rltMat, SymIntMat rltVarsInd)
+            throws IloException {
+        SparseVector row = new FastSparseVector();
+        
+        // Original: x_k * g_i + sum_{l=1}^n x_k * G_{il} * x_l
+        // Linearized: x_k * g_i + sum_{l=1}^n G_{il} w_{kl}
+        
+        // Add x_k * g_i 
+        row.add(k, facI.g);
+        
+        // Add sum_{l=1}^n G_{il} w_{kl}
+        for (int idx = 0; idx < facI.G.getUsed(); idx++) {
+            int l = facI.G.getIndex()[idx];
+            double val = facI.G.getData()[idx];
+            row.add(rltVarsInd.get(k, l), val);
+        }
+        
+        // Add the complete constraint.
+        rltMat.setNZs(getRowIndArray(row, rowind), row.getIndex(), row.getData());
+        
+        log.trace(rltMat.getRange(rowind).getName() + " " + row + " == 0.0");
     }
 
     /**

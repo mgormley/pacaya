@@ -11,6 +11,7 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
@@ -127,7 +128,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         sto.addModelParamConstraints();      
         
         // Add the parsing constraints.
-        DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, IlpFormulation.FLOW_PROJ_LPRELAX);
+        DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ);
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
                 
@@ -201,7 +202,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
             // assert(Utilities.lte(objective, 0.0, 1e-7));
             
             if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
+                cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
             }
             
             log.info("Solution status: " + status);
@@ -210,7 +211,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
             }
             
             if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
+                cplex.writeSolution(new File(tempDir, "rlt.sol").getAbsolutePath());
             }
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
@@ -242,7 +243,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         // Solve the full D-W problem
         for (cut = 0; ;) {
             if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "lp.lp").getAbsolutePath());
+                cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
             }
             
             // Solve the master problem
@@ -260,7 +261,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
                 return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
             }
             if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "lp.sol").getAbsolutePath());
+                cplex.writeSolution(new File(tempDir, "rlt.sol").getAbsolutePath());
             }
             double objVal = cplex.getObjValue();
             log.trace("Simplex solution value: " + objVal);
@@ -312,7 +313,8 @@ public class DmvLpRelaxation implements DmvRelaxation {
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
-        log.info(String.format("Summary: #cuts=%d", sto.getNumStoCons()));
+        log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
+                sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rltProg.getRltMatrix().getNrows()));
     
         return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
@@ -325,7 +327,11 @@ public class DmvLpRelaxation implements DmvRelaxation {
         iterationObjVals.clear();
         iterationStatus.clear();
 
-        return sto.projectModelParamsAndAddCuts();
+         List<Integer> rows = sto.projectModelParamsAndAddCuts();
+         if (!envelopeOnly) {
+             mp.rltProg.addRows(rows);
+         }
+         return rows.size();
     }
     
     // Copied from DmvDantzigWolfeRelaxation.
@@ -481,5 +487,15 @@ public class DmvLpRelaxation implements DmvRelaxation {
             throw new RuntimeException(e);
         }
     } 
+
+    // TODO: remove this method.
+    public void setMaxSetSizeToConstrain(int maxSetSizeToConstrain) {
+        sto.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
+    }
+
+    // TODO: remove this method.
+    public void setMinSumForCuts(double minSumForCuts) {
+        sto.setMinSumForCuts(minSumForCuts);
+    }
     
 }

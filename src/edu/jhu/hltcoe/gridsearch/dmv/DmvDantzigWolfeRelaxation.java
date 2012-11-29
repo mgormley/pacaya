@@ -492,7 +492,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         iterationObjVals.clear();
         iterationStatus.clear();
 
-        return sto.projectModelParamsAndAddCuts();
+        return sto.projectModelParamsAndAddCuts().size();
     }
 
     public void reverseApply(CptBoundsDeltaList deltas) {

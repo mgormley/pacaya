@@ -8,7 +8,9 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
@@ -119,7 +121,7 @@ public class LpSumToOneBuilder {
         return vectors;
     }
 
-    private void addSumToOneConstraint(int c, double[] point) throws IloException {
+    private int addSumToOneConstraint(int c, double[] point) throws IloException {
         // TODO: should this respect the bounds?
         //double[] probs = projections.getProjectedParams(bounds, c, point);
         double[] probs = Projections.getProjectedParams(point);
@@ -136,7 +138,7 @@ public class LpSumToOneBuilder {
         IloLinearNumExpr vectorExpr = cplex.scalProd(probs, modelParamVars[c]);
         IloRange constraint = cplex.le(vectorExpr, vectorSum, String.format("maxVar(%d)-%d", c, numStoCons++));
         // TODO: double check that this doesn't slow us down (by growing the LP matrix)
-        lpMatrix.addRow(constraint);
+        return lpMatrix.addRow(constraint);
     }
     
     private void addSetContraints(int setSize, int c) throws IloException {
@@ -164,7 +166,11 @@ public class LpSumToOneBuilder {
         }
     }
     
-    public int projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
+    /**
+     * @param newRows
+     * @return The number of new constraints added.
+     */
+    public List<Integer> projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
         // Add a cut for each distribution by projecting the model
         // parameters
         // back onto the simplex.
@@ -173,16 +179,15 @@ public class LpSumToOneBuilder {
             // Here the params are log probs
             params[c] = cplex.getValues(modelParamVars[c]);
         }
-        int numNewStoConstraints = 0;
+        ArrayList<Integer> rows = new ArrayList<Integer>();
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs
             if (Vectors.sum(params[c]) > minSumForCuts) {
-                numNewStoConstraints++;
-                addSumToOneConstraint(c, params[c]);
+                rows.add(addSumToOneConstraint(c, params[c]));
             }
         }
-        return numNewStoConstraints;
+        return rows;
     }
     
     public double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {

@@ -10,10 +10,14 @@ import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
-
+import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,7 +33,12 @@ public class RltTest {
     @BeforeClass
     public static void classSetUp() {
         BasicConfigurator.configure();
-        // Logger.getRootLogger().setLevel(Level.TRACE);
+        Logger.getRootLogger().setLevel(Level.TRACE);
+    }
+    
+    @AfterClass
+    public static void classTearDown() {
+        Logger.getRootLogger().setLevel(Level.DEBUG);
     }
 
     /**
@@ -196,7 +205,7 @@ public class RltTest {
         CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
         CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
         
-        assertEquals(10, rltMat.getNrows());
+        assertEquals(4, rltMat.getNrows());
     }
     
 
@@ -358,6 +367,60 @@ public class RltTest {
         CplexUtils.assertContainsRow(rltMat, new double[]{ 48, 0, -6, 8, 0, 0});
         CplexUtils.assertContainsRow(rltMat, new double[]{ 0, 48, 0, -6, 8, 0});
         assertEquals(14, rltMat.getNrows());
+    }    
+
+    @Test
+    public void testAddRows() throws IloException {
+        RltProgram rlt1 = getRlt(false);
+        RltProgram rlt2 = getRlt(true);
+        IloLPMatrix mat1 = rlt1.getRltMatrix();
+        IloLPMatrix mat2 = rlt2.getRltMatrix();
+
+        assertEquals(mat1.getNrows(), mat2.getNrows());
+        
+        assertEquals(mat1.toString(), mat2.toString());
+    }
+
+    private RltProgram getRlt(boolean addRows) throws IloException {
+        double x1Lb = 2;
+        double x1Ub = 3;
+        double x2Lb = 5;
+        double x2Ub = 7;
+        
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
+        IloNumVar x2 = cplex.numVar(x2Lb, x2Ub, "x2");
+        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
+        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
+        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48);
+        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120);
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+
+        if (addRows) {
+            // Add the first 2.
+            IloRange[] cons = new IloRange[] { c1, c3};
+            mat.addRows(cons);
+            RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+            
+            // Then add two more.
+            List<Integer> newCons = new ArrayList<Integer>();
+            newCons.add(mat.addRow(c2));
+            newCons.add(mat.addRow(c4));
+            rlt.addRows(newCons);
+            return rlt;
+        } else {
+            // Add all four at once.
+            IloRange[] cons = new IloRange[] { c1, c3, c2, c4};
+            mat.addRows(cons);
+            return Rlt.getFirstOrderRlt(cplex, mat);
+        }
     }
     
 }

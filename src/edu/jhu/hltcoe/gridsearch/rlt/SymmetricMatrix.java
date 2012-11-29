@@ -55,7 +55,13 @@ public class SymmetricMatrix<T> {
             row.add(null);
         }
     }
-
+    
+    public boolean contains(int iIdx, int jIdx) {
+        int i = Math.max(iIdx, jIdx);
+        int j = Math.min(iIdx, jIdx);
+        return i < matrix.size() && j < matrix.get(i).size();
+    }
+    
     public T get(int i, int j) {
         return matrix.get(Math.max(i, j)).get(Math.min(i,j));
     }
