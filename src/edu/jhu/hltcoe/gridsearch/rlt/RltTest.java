@@ -23,7 +23,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltProgram;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
 import edu.jhu.hltcoe.util.CplexUtils;
 
 public class RltTest {
@@ -72,7 +72,7 @@ public class RltTest {
         mat.addCols(vars);
         mat.addRows(cons);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -131,7 +131,7 @@ public class RltTest {
         IloLPMatrix mat = cplex.LPMatrix("lpmat");
         mat.addCols(vars);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         assertEquals("w_{0,0}", rlt.getRltVar(x1, x1).getName());
         assertEquals("w_{1,0}", rlt.getRltVar(x1, x2).getName());
         assertEquals("w_{1,0}", rlt.getRltVar(x2, x1).getName());
@@ -157,7 +157,7 @@ public class RltTest {
         IloLPMatrix mat = cplex.LPMatrix("lpmat");
         mat.addCols(vars);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -194,7 +194,7 @@ public class RltTest {
         mat.addCols(vars);
         mat.addRows(cons);
 
-        RltProgram rlt = Rlt.getConvexConcaveEnvelope(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getConvexConcaveEnvelope());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -232,7 +232,7 @@ public class RltTest {
         mat.addCols(vars);
         mat.addRows(cons);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -293,7 +293,7 @@ public class RltTest {
         mat.addCols(vars);
         mat.addRows(cons);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -352,7 +352,7 @@ public class RltTest {
         mat.addCols(vars);
         mat.addRows(cons);
 
-        RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+        Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
         cplex.add(rltMat);
 
@@ -371,8 +371,8 @@ public class RltTest {
 
     @Test
     public void testAddRows() throws IloException {
-        RltProgram rlt1 = getRlt(false);
-        RltProgram rlt2 = getRlt(true);
+        Rlt rlt1 = getRlt(false);
+        Rlt rlt2 = getRlt(true);
         IloLPMatrix mat1 = rlt1.getRltMatrix();
         IloLPMatrix mat2 = rlt2.getRltMatrix();
 
@@ -381,7 +381,7 @@ public class RltTest {
         assertEquals(mat1.toString(), mat2.toString());
     }
 
-    private RltProgram getRlt(boolean addRows) throws IloException {
+    private Rlt getRlt(boolean addRows) throws IloException {
         double x1Lb = 2;
         double x1Ub = 3;
         double x2Lb = 5;
@@ -407,7 +407,7 @@ public class RltTest {
             // Add the first 2.
             IloRange[] cons = new IloRange[] { c1, c3};
             mat.addRows(cons);
-            RltProgram rlt = Rlt.getFirstOrderRlt(cplex, mat);
+            Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
             
             // Then add two more.
             List<Integer> newCons = new ArrayList<Integer>();
@@ -419,7 +419,7 @@ public class RltTest {
             // Add all four at once.
             IloRange[] cons = new IloRange[] { c1, c3, c2, c4};
             mat.addRows(cons);
-            return Rlt.getFirstOrderRlt(cplex, mat);
+            return new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         }
     }
     

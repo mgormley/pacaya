@@ -28,7 +28,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltProgram;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
 import edu.jhu.hltcoe.lp.CplexFactory;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -104,7 +104,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         public IloObjective objective;
         public IloNumVar[][] objVars;
         public IloLPMatrix origMatrix;
-        public RltProgram rltProg;
+        public Rlt rltProg;
         public DmvTreeProgram pp;
     }
         
@@ -134,13 +134,13 @@ public class DmvLpRelaxation implements DmvRelaxation {
                 
         if (envelopeOnly) {
             // Add the convex/concave envelope.
-            mp.rltProg = Rlt.getConvexConcaveEnvelope(cplex, mp.origMatrix);
+            mp.rltProg = new Rlt(cplex, mp.origMatrix, RltParams.getConvexConcaveEnvelope());
             IloLPMatrix rltMat = mp.rltProg.getRltMatrix();
             cplex.add(rltMat);
             cplex.add(mp.origMatrix);
         } else {
             // Add the first-order RLT constraints.
-            mp.rltProg = Rlt.getFirstOrderRlt(cplex, mp.origMatrix);
+            mp.rltProg = new Rlt(cplex, mp.origMatrix, RltParams.getFirstOrderRlt());
             IloLPMatrix rltMat = mp.rltProg.getRltMatrix();
             cplex.add(rltMat);
         }
