@@ -190,7 +190,7 @@ class HProfHeapExpParams(DPExpParams):
         return HProfHeapExpParams()
     
     def get_java_args(self):
-        return DPExpParams.get_java_args(self) + " -agentlib:hprof=heap=sites "
+        return DPExpParams.get_java_args(self) + " -agentlib:hprof=heap=sites,depth=7 "
     
 
 class DepParseExpParamsRunner(ExpParamsRunner):
