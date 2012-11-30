@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.rlt;
 
 import gnu.trove.TIntHashSet;
+import gnu.trove.TIntIntHashMap;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -20,7 +21,6 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.BoundFactor;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
-import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymIntMat;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
@@ -32,8 +32,9 @@ public class Rlt {
 
     public static class RltParams {
         public boolean envelopeOnly = true;
-        public RltRowFilter filter = null;
+        public RltRowFilter rowFilter = null;
         public boolean nameRltVarsAndCons = true;
+        public RltFactorFilter factorFilter = null;
 
         public static RltParams getConvexConcaveEnvelope() {
             RltParams prm = new RltParams();
@@ -54,13 +55,18 @@ public class Rlt {
         boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ);
     }
     
+    public interface RltFactorFilter {
+        boolean accept(Factor factor);
+        void init(Rlt rlt) throws IloException;
+    }
+    
     /**
      * Accepts only RLT rows that have a non-zero coefficient for some RLT variable corresponding
      * to the given pairs of variables.
      */
     public static class RltVarRowFilter implements RltRowFilter {
         
-        private TIntHashSet objVars;
+        private TIntHashSet rltVarIds;
         private List<Pair<IloNumVar, IloNumVar>> pairs;
 
         public RltVarRowFilter(List<Pair<IloNumVar,IloNumVar>> pairs) {
@@ -69,9 +75,9 @@ public class Rlt {
 
         @Override
         public void init(Rlt rlt) throws IloException {
-            objVars = new TIntHashSet();
+            rltVarIds = new TIntHashSet();
             for (Pair<IloNumVar, IloNumVar> pair : pairs) {
-                objVars.add(rlt.getIdForRltVar(pair.get1(), pair.get2()));
+                rltVarIds.add(rlt.getIdForRltVar(pair.get1(), pair.get2()));
             }
             pairs = null;
         }
@@ -88,14 +94,46 @@ public class Rlt {
 
         private boolean acceptRow(SparseVector row) {
             for (VectorEntry ve : row) {
-                if (!Utilities.equals(ve.get(), 0.0, 1e-13) && objVars.contains(ve.index())) {
+                if (!Utilities.equals(ve.get(), 0.0, 1e-13) && rltVarIds.contains(ve.index())) {
                     return true;
                 }
             }
             return false;
         }
     }
+    
+    /**
+     * Accepts only RLT factors that have a non-zero coefficient for one of the given input matrix variable columns.
+     */
+    public static class RltVarFactorFilter implements RltFactorFilter {
+        
+        private TIntHashSet cols;
+        private List<IloNumVar> vars;
 
+        public RltVarFactorFilter(List<IloNumVar> vars) {
+            this.vars = vars;
+        }
+
+        @Override
+        public void init(Rlt rlt) throws IloException {
+            cols = new TIntHashSet();
+            for (IloNumVar var : vars) {
+                cols.add(rlt.inputMatrix.getIndex(var));
+            }
+            vars = null;
+        }
+
+        @Override
+        public boolean accept(Factor f) {
+            for (VectorEntry ve : f.G) {
+                if (!Utilities.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(Rlt.class);
 
     /**
@@ -122,12 +160,8 @@ public class Rlt {
     // The INTERNAL column indices of the RLT vars, where rltVarsInd.get(i,j) := index of
     // w_{ij} in the RLT matrix.
     private SymIntMat rltVarsIdx;
-    // The IDENTIFIERS for the RLT vars, where idsForRltVars.get(i,j) := ID of w_{ij}. 
-    private SymIntMat idsForRltVars;
     // Mapping of INDENTIFIERS for RLT matrix vars to INTERNAL column indices.
-    private int[] idToColIdx;
-    // Mapping of INDENTIFIERS for RLT vars to i,j pairs.
-    private int[][] idToIJ;
+    private TIntIntHashMap idToColIdx;
     // The columns of the RLT matrix.
     private ArrayList<IloNumVar> rltMatVars;
     
@@ -139,6 +173,8 @@ public class Rlt {
 
     // The variables from the original inputMatrix.
     private IloNumVar[] numVars;
+
+    private RltIds idsForRltVars;
     
     public Rlt(IloCplex cplex, IloLPMatrix inputMatrix, RltParams prm) throws IloException {
         List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
@@ -148,7 +184,6 @@ public class Rlt {
         this.prm = prm;
         this.inputMatrix = inputMatrix;
 
-        int n = inputMatrix.getNcols();
         numVars = inputMatrix.getNumVars();
 
         // Reformulate and linearize the constraints.
@@ -166,41 +201,25 @@ public class Rlt {
         rltMatVars = new ArrayList<IloNumVar>();
         rltMatVars.addAll(Arrays.asList(numVars));
         rltMatVars.add(rltMat.getNumVar(constantVarColIdx));
-                
-        // Store rltVar IDs.
-        log.debug("Storing RLT variable identifiers.");
-        idsForRltVars = new SymIntMat();
-        int curRltId = constantVarColIdx + 1;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                idsForRltVars.set(i, j, curRltId++);
-            }
-        }
+
         // Setup the ID to column index map. Set the values for the non-RLT variables.
-        idToColIdx = new int[curRltId];
-        Arrays.fill(idToColIdx, UNINITIALIZED_COLUMN);
+        idToColIdx = new TIntIntHashMap();
         for (int i=0; i<numVars.length; i++) {
-            idToColIdx[i] = i;
+            idToColIdx.put(i, i);
         }
-        idToColIdx[constantVarColIdx] = constantVarColIdx;
-
-        // Setup the ID to i,j map.
-        idToIJ = new int[curRltId][2];
-        Utilities.fill(idToIJ, -1);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                idToIJ[idsForRltVars.get(i, j)][0] = i;
-                idToIJ[idsForRltVars.get(i, j)][1] = j;
-            }
-        }
-
+        idToColIdx.put(constantVarColIdx, constantVarColIdx);
+        idsForRltVars = new RltIds(numVars.length);
+        
         // Create but do not fill the mapping from i,j pairs to column indices
         // in the RLT matrix.
         rltVarsIdx = new SymIntMat();
 
         // Initialize the filter with this RLT object.
-        if (prm.filter != null) {
-            prm.filter.init(this);
+        if (prm.rowFilter != null) {
+            prm.rowFilter.init(this);
+        }
+        if (prm.factorFilter != null) {
+            prm.factorFilter.init(this);
         }
         
         // Store RLT constraints' row indices.
@@ -232,10 +251,9 @@ public class Rlt {
         for (int m=0; m<rows.size(); m++) {
             for (VectorEntry ve : rows.get(m)) {
                 int id = ve.index();
-                int index = idToColIdx[id];
-                if (index == UNINITIALIZED_COLUMN) {
-                    int i = idToIJ[id][0];
-                    int j = idToIJ[id][1];
+                if (!idToColIdx.contains(id)) {
+                    int i = idsForRltVars.getI(id);
+                    int j = idsForRltVars.getJ(id);
                     
                     IloNumVar rltVar = cplex.numVar(getLowerBound(numVars[i], numVars[j]), getUpperBound(numVars[i], numVars[j]));
                     if (prm.nameRltVarsAndCons) {
@@ -244,9 +262,9 @@ public class Rlt {
                     }
                     
                     // Add the new variable to the appropriate mappings and lists.
-                    index = numRltCols + newRltVars.size();
+                    int index = numRltCols + newRltVars.size();
                     rltVarsIdx.set(i, j, index);
-                    idToColIdx[id] = index;
+                    idToColIdx.put(id, index);
                     newRltVars.add(rltVar);
                 }
             }
@@ -262,7 +280,7 @@ public class Rlt {
             SparseVector newCoefs = new FastSparseVector();
             for (VectorEntry ve : oldCoefs) {
                 int id = ve.index();
-                int index = idToColIdx[id];
+                int index = idToColIdx.get(id);
                 assert (index != -1);
                 newCoefs.set(index, ve.get());
             }
@@ -293,6 +311,9 @@ public class Rlt {
      * Adds a new factor to the RLT program by appending new rows to the CplexRows object.
      */
     private void addFactor(IloCplex cplex, Factor facI, CplexRows rows, SymIntMat tempConsIdx) throws IloException {
+        if (prm.factorFilter != null && !prm.factorFilter.accept(facI)) {
+            return;
+        }
         int n = inputMatrix.getNcols();
         // Index of the factor we are adding.
         int i = factors.size();
@@ -308,7 +329,7 @@ public class Rlt {
                 if (log.isTraceEnabled()) {
                     assert (inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
                 }
-                if (prm.filter == null || prm.filter.acceptEq(row, rowName, facI, k)) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k)) {
                     // Add the complete constraint.
                     rows.addRow(0.0, row, 0.0, rowName);
                 }
@@ -329,7 +350,7 @@ public class Rlt {
 
                 String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%d, %d}", i, j) : null;
                 SparseVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
-                if (prm.filter == null || prm.filter.acceptLeq(row, rowName, facI, facJ)) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)) {
                     // Add the complete constraint.
                     int rowind = rows.addRow(CPLEX_NEG_INF, row, 0.0, rowName);
                     tempConsIdx.set(i, j, rowind);
@@ -347,7 +368,7 @@ public class Rlt {
         int idx2 = inputMatrix.getIndex(var2);
         
         int id = idsForRltVars.get(idx1, idx2);
-        int index = idToColIdx[id];
+        int index = idToColIdx.get(id);
         return rltMatVars.get(index);
     }
 
@@ -491,7 +512,7 @@ public class Rlt {
         return CPLEX_POS_INF;
     }
 
-    private static SparseVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, SymIntMat rltVarsInd)
+    private static SparseVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)
             throws IloException {
         // Here we add the following constraint:
         // \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
@@ -537,7 +558,7 @@ public class Rlt {
         return row;
     }
 
-    private static SparseVector getRltRowForEq(Factor facI, int k, SymIntMat rltVarsInd) throws IloException {
+    private static SparseVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
         SparseVector row = new FastSparseVector();
 
         // Original: x_k * g_i + sum_{l=1}^n x_k * G_{il} * x_l

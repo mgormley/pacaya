@@ -275,11 +275,7 @@ public class RltTest {
      * @throws IloException
      */
     @Test
-    public void testRltConsOnIllustrativeExampleUsingUpdateBound() throws IloException {
-        runIllustrativeExample(0, 24, -216);
-        runIllustrativeExample(0, 8, -180);
-        runIllustrativeExample(8, 24, -180);
-        
+    public void testRltConsOnIllustrativeExampleUsingUpdateBound() throws IloException {        
         IloCplex cplex = new IloCplex();
         // Turn off stdout but not stderr
         // cplex.setOut(null);
@@ -441,7 +437,7 @@ public class RltTest {
         IloRange[] cons = new IloRange[] { c1, c3};
         mat.addRows(cons);
         RltParams prm = RltParams.getFirstOrderRlt();
-        prm.filter = new RltVarRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
+        prm.rowFilter = new RltVarRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
         Rlt rlt = new Rlt(cplex, mat, prm);
         IloLPMatrix rltMat = rlt.getRltMatrix();
         System.out.println(rltMat);

@@ -30,6 +30,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
 import edu.jhu.hltcoe.lp.CplexFactory;
 import edu.jhu.hltcoe.math.Vectors;
@@ -138,7 +139,8 @@ public class DmvLpRelaxation implements DmvRelaxation {
         rltPrm.envelopeOnly = envelopeOnly;
         rltPrm.nameRltVarsAndCons = false;
         // Accept only RLT rows that have a non-zero coefficient for some objective variable.
-        rltPrm.filter = new RltVarRowFilter(getObjVarPairs());
+        rltPrm.rowFilter = new RltVarRowFilter(getObjVarPairs());
+        rltPrm.factorFilter = new RltVarFactorFilter(getObjVarCols());
         
         // Add the RLT constraints.
         mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
@@ -172,6 +174,17 @@ public class DmvLpRelaxation implements DmvRelaxation {
                 cplex.setLinearCoef(mp.objective, -1.0, mp.objVars[c][m]);
             }
         }
+    }
+
+    private List<IloNumVar> getObjVarCols() {
+        List<IloNumVar> vars = new ArrayList<IloNumVar>();
+        for (int c = 0; c < sto.modelParamVars.length; c++) {
+            for (int m = 0; m < sto.modelParamVars[c].length; m++) {
+                vars.add(sto.modelParamVars[c][m]);
+                vars.add(mp.pp.featCountVars[c][m]);
+            }
+        }
+        return vars;
     }
 
     private List<Pair<IloNumVar, IloNumVar>> getObjVarPairs() {
