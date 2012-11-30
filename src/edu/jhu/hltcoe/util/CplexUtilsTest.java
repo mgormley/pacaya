@@ -66,5 +66,20 @@ public class CplexUtilsTest {
         assertEquals(10, mat.getNZ(0, 1), 1e-13);
         // We might expect 3 here, but it seems zero can be a "non-zero" coefficient.
         assertEquals(4, mat.getNNZs());
+        
+        // Impossible to set non-zero coefficients of rows or columns that haven't been added.
+        try {
+            mat.setNZ(2, 3, 33);
+            Assert.fail();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // pass
+        }
+        try {
+            mat.setNZs(new int[]{3}, new int[]{2}, new double[]{33});
+            Assert.fail();
+        } catch (NullPointerException e) {
+            // pass
+        }
+        
     }
 }

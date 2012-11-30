@@ -152,4 +152,19 @@ public class FastSparseVector extends SparseVector {
         return true;
     }
     
+    /**
+     * Returns the data.
+     */
+    @Override
+    public double[] getData() {
+        if (used == data.length)
+            return data;
+        
+        double [] values = new double[used];
+        for (int i = 0 ; i < used; i++) {
+            values[i] = data[i];
+        }
+        return values;
+    }
+    
 }

@@ -3,6 +3,8 @@ package edu.jhu.hltcoe.gridsearch.rlt;
 import ilog.concert.IloNumVar;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class SymmetricMatrix<T> {
 
@@ -12,6 +14,34 @@ public class SymmetricMatrix<T> {
     public static class SymIntMat extends SymmetricMatrix<Integer> { 
         public Integer[] getRowAsArray(int i) {
             return getRowAsArray(i, new Integer[]{});
+        }
+
+        public void incrementAll(int incr) {
+            for (int i=0; i<matrix.size(); i++) {
+                ArrayList<Integer> row = matrix.get(i);
+                if (row != null) {
+                    for (int j=0; j<row.size(); j++) {
+                        Integer intObj = row.get(j);
+                        if (intObj != null) {
+                            row.set(j, intObj + incr);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void setAll(SymIntMat other) {
+            for (int i=0; i<other.matrix.size(); i++) {
+                ArrayList<Integer> row = other.matrix.get(i);
+                if (row != null) {
+                    for (int j=0; j<row.size(); j++) {
+                        Integer intObj = row.get(j);
+                        if (intObj != null) {
+                            this.set(i, j, intObj);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -33,8 +63,8 @@ public class SymmetricMatrix<T> {
         }
     }
 
-    private ArrayList<ArrayList<T>> matrix;
-
+    protected ArrayList<ArrayList<T>> matrix;
+    
     public SymmetricMatrix() {
         matrix = new ArrayList<ArrayList<T>>();
     }
@@ -59,7 +89,7 @@ public class SymmetricMatrix<T> {
     public boolean contains(int iIdx, int jIdx) {
         int i = Math.max(iIdx, jIdx);
         int j = Math.min(iIdx, jIdx);
-        return i < matrix.size() && j < matrix.get(i).size();
+        return i < matrix.size() && j < matrix.get(i).size() && matrix.get(i).get(j) != null;
     }
     
     public T get(int i, int j) {
@@ -69,9 +99,25 @@ public class SymmetricMatrix<T> {
     public int getNrows() {
         return matrix.size();
     }
+    
+    public int getNumNonNull() {
+        int numNonNull = 0;
+        for (ArrayList<T> row : matrix) {
+            for (T val : row) {
+                if (val != null) {
+                    numNonNull++;
+                }
+            }
+        }
+        return numNonNull;
+    }
 
     public T[] getRowAsArray(int i, T[] row) {
         return matrix.get(i).toArray(row);
+    }
+    
+    public List<T> getRowAsList(int i) {
+        return Collections.unmodifiableList(matrix.get(i));
     }
 
 }

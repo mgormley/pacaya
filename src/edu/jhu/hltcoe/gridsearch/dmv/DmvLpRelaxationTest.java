@@ -312,7 +312,7 @@ public class DmvLpRelaxationTest {
         DmvLpRelaxation dwRelax = new DmvLpRelaxation(null, 100, new CutCountComputer(), true);
         dwRelax.setMinSumForCuts(1.000001);
         dwRelax.init1(corpus);
-        dwRelax.init2(DmvLpRelaxationTest.getInitFeasSol(corpus));
+        dwRelax.init2(null);
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
         
         // Get the model from a single M-step.
@@ -435,46 +435,16 @@ public class DmvLpRelaxationTest {
     }
 
     private static DmvLpRelaxation getLp(DmvTrainCorpus corpus, final int numCuts) {
-        DmvSolution initSol = getInitFeasSol(corpus);
-        System.out.println(initSol);
         CutCountComputer ccc = new CutCountComputer(){ 
             @Override
             public int getNumCuts(int numParams) {
                 return numCuts;
             }
         };
-        DmvLpRelaxation dw = new DmvLpRelaxation(new File("."), numCuts, ccc, true);
+        DmvLpRelaxation dw = new DmvLpRelaxation(new File("."), numCuts, ccc, false);
         dw.init1(corpus);
-        dw.init2(initSol);
+        dw.init2(null);
         return dw;
-    }
-    
-    public static DmvSolution getInitFeasSol(DmvTrainCorpus corpus) {
-        int numRestarts = 9;
-        return getInitFeasSol(corpus, numRestarts);
-    }
-    
-    public static DmvSolution getInitFeasSol(DmvTrainCorpus corpus, int numRestarts) {
-        // Run Viterbi EM to get a reasonable starting incumbent solution
-        int iterations = 25;        
-        double lambda = 0.1;
-        double convergenceRatio = 0.99999;
-        double timeoutSeconds = 5;
-        
-        ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
-        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, null);
-        // TODO: use random restarts
-        trainer.train(corpus);
-        
-        DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = new IndexedDmvModel(corpus);
-        double[][] logProbs = idm.getCmLogProbs((DmvModel)trainer.getModel());
-        
-        // We let the DmvProblemNode compute the score
-        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, trainer.getLogLikelihood());
-        return sol;
     }
         
 }

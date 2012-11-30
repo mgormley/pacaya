@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import gnu.trove.TDoubleArrayList;
+import gnu.trove.TIntHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -29,6 +30,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
 import edu.jhu.hltcoe.lp.CplexFactory;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -62,7 +64,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
     private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
     private boolean envelopeOnly;
-
+ 
     public DmvLpRelaxation(File tempDir, int maxCutRounds, CutCountComputer initCutCountComp, boolean envelopeOnly) {
         this.tempDir = tempDir;
         this.cplexFactory = new CplexFactory();
@@ -104,10 +106,10 @@ public class DmvLpRelaxation implements DmvRelaxation {
         public IloObjective objective;
         public IloNumVar[][] objVars;
         public IloLPMatrix origMatrix;
-        public Rlt rltProg;
+        public Rlt rlt;
         public DmvTreeProgram pp;
     }
-        
+
     private void buildModel(IloCplex cplex, DmvSolution initFeasSol) throws IloException {
         this.bounds = new CptBounds(this.idm);
 
@@ -125,25 +127,24 @@ public class DmvLpRelaxation implements DmvRelaxation {
         sto.createModelParamVars();
 
         // Add sum-to-one constraints on the model parameters.
-        sto.addModelParamConstraints();      
+        sto.addModelParamConstraints();
         
         // Add the parsing constraints.
         DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ);
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
-                
-        if (envelopeOnly) {
-            // Add the convex/concave envelope.
-            mp.rltProg = new Rlt(cplex, mp.origMatrix, RltParams.getConvexConcaveEnvelope());
-            IloLPMatrix rltMat = mp.rltProg.getRltMatrix();
-            cplex.add(rltMat);
-            cplex.add(mp.origMatrix);
-        } else {
-            // Add the first-order RLT constraints.
-            mp.rltProg = new Rlt(cplex, mp.origMatrix, RltParams.getFirstOrderRlt());
-            IloLPMatrix rltMat = mp.rltProg.getRltMatrix();
-            cplex.add(rltMat);
-        }
+        
+        RltParams rltPrm = new RltParams();
+        rltPrm.envelopeOnly = envelopeOnly;
+        rltPrm.nameRltVarsAndCons = false;
+        // Accept only RLT rows that have a non-zero coefficient for some objective variable.
+        rltPrm.filter = new RltVarRowFilter(getObjVarPairs());
+        
+        // Add the RLT constraints.
+        mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
+        IloLPMatrix rltMat = mp.rlt.getRltMatrix();
+        cplex.add(rltMat);
+        cplex.add(mp.origMatrix);
         
         // Create the objective
         mp.objective = cplex.addMinimize();
@@ -166,11 +167,21 @@ public class DmvLpRelaxation implements DmvRelaxation {
             mp.objVars[c] = new IloNumVar[numParams];
             for (int m=0; m<numParams; m++) {
                 // Assign RLT vars to objVars.
-                mp.objVars[c][m] = mp.rltProg.getRltVar(sto.modelParamVars[c][m], mp.pp.featCountVars[c][m]);
+                mp.objVars[c][m] = mp.rlt.getRltVar(sto.modelParamVars[c][m], mp.pp.featCountVars[c][m]);
                 // Negate the coefficients since we are minimizing
                 cplex.setLinearCoef(mp.objective, -1.0, mp.objVars[c][m]);
             }
         }
+    }
+
+    private List<Pair<IloNumVar, IloNumVar>> getObjVarPairs() {
+        List<Pair<IloNumVar, IloNumVar>> pairs = new ArrayList<Pair<IloNumVar, IloNumVar>>();
+        for (int c = 0; c < sto.modelParamVars.length; c++) {
+            for (int m = 0; m < sto.modelParamVars[c].length; m++) {
+                pairs.add(new Pair<IloNumVar,IloNumVar>(sto.modelParamVars[c][m], mp.pp.featCountVars[c][m]));
+            }
+        }
+        return pairs;
     }
 
     @Override
@@ -314,7 +325,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
-                sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rltProg.getRltMatrix().getNrows()));
+                sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rlt.getRltMatrix().getNrows()));
     
         return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
@@ -329,7 +340,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
 
          List<Integer> rows = sto.projectModelParamsAndAddCuts();
          if (!envelopeOnly) {
-             mp.rltProg.addRows(rows);
+             mp.rlt.addRows(rows);
          }
          return rows.size();
     }
@@ -440,7 +451,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
             if (type == Type.PARAM) {
                 // Updates the bounds of the model parameters
                 sto.updateModelParamBounds(c, m, newLb, newUb);
-                mp.rltProg.updateBound(sto.modelParamVars[c][m], delta.getLu());
+                mp.rlt.updateBound(sto.modelParamVars[c][m], delta.getLu());
             } else {
                 //TODO: Implement this
                 throw new RuntimeException("not implemented");

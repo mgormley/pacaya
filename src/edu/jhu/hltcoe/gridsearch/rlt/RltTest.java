@@ -24,7 +24,10 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
 import edu.jhu.hltcoe.util.CplexUtils;
+import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class RltTest {
 
@@ -74,12 +77,12 @@ public class RltTest {
 
         Rlt rlt = new Rlt(cplex, mat, RltParams.getFirstOrderRlt());
         IloLPMatrix rltMat = rlt.getRltMatrix();
+        System.out.println(rltMat);
         cplex.add(rltMat);
 
-        System.out.println(rltMat);
         // Check the first constraint.
         //assertTrue(rltMat.toString().contains("-576.0*x1 + 768.0*x2 - 36.0*w_{0,0} + 96.0*w_{1,0} - 64.0*w_{1,1} - 2304.0*const <= 0.0"));
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -576.0, 768.0, -36.0, 96.0, -64.0, -2304.0});
+        assertContainsRow(rltMat, new double[]{ -576.0, 768.0, -36.0, 96.0, -64.0, -2304.0});
         
         cplex.addMinimize(cplex.sum(cplex.sum(cplex.sum(cplex.prod(-1, rlt.getRltVar(x1, x1)), cplex.prod(-1, rlt.getRltVar(x2, x2))),
                 cplex.prod(24, x1)), -144), "obj");
@@ -163,10 +166,10 @@ public class RltTest {
 
         System.out.println(rltMat);
 
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
 
         assertEquals(10, rltMat.getNrows());
     }
@@ -200,10 +203,10 @@ public class RltTest {
 
         System.out.println(rltMat);
 
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
         
         assertEquals(4, rltMat.getNrows());
     }
@@ -238,29 +241,29 @@ public class RltTest {
 
         System.out.println(rltMat);
 
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
         assertEquals(21, rltMat.getNrows());
         
         // Leaving the bound unchanged then calling updateBound should have no effect.
         rlt.updateBound(x1, Lu.LOWER);        
         System.out.println(rltMat);
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
         assertEquals(21, rltMat.getNrows());
 
         // Changing the bound then calling updateBound should have effect.
         x1.setUB(11);
         rlt.updateBound(x1, Lu.UPPER);        
         System.out.println(rltMat);
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -11, 0, 1, 0, 55});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 11, 0, -1, 0, -77});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -11, 0, 1, 0, 55});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 11, 0, -1, 0, -77});
         assertEquals(21, rltMat.getNrows());
     }
     
@@ -358,14 +361,14 @@ public class RltTest {
 
         System.out.println(rltMat);
 
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
+        assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
+        assertContainsRow(rltMat, new double[]{ -5, -3, 0, 1, 0, 15});
+        assertContainsRow(rltMat, new double[]{ 5, 2, 0, -1, 0, -10});
+        assertContainsRow(rltMat, new double[]{ 7, 3, 0, -1, 0, -21});
         
         // Assert contains RLT transformed equality constraints.
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 48, 0, -6, 8, 0, 0});
-        CplexUtils.assertContainsRow(rltMat, new double[]{ 0, 48, 0, -6, 8, 0});
+        assertContainsRow(rltMat, new double[]{ 48, 0, -6, 8, 0, 0});
+        assertContainsRow(rltMat, new double[]{ 0, 48, 0, -6, 8, 0});
         assertEquals(14, rltMat.getNrows());
     }    
 
@@ -382,18 +385,13 @@ public class RltTest {
     }
 
     private Rlt getRlt(boolean addRows) throws IloException {
-        double x1Lb = 2;
-        double x1Ub = 3;
-        double x2Lb = 5;
-        double x2Ub = 7;
-        
         IloCplex cplex = new IloCplex();
         // Turn off stdout but not stderr
         // cplex.setOut(null);
         cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
 
-        IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
-        IloNumVar x2 = cplex.numVar(x2Lb, x2Ub, "x2");
+        IloNumVar x1 = cplex.numVar(2, 3, "x1");
+        IloNumVar x2 = cplex.numVar(5, 7, "x2");
         IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
         IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
         IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48);
@@ -423,4 +421,60 @@ public class RltTest {
         }
     }
     
+    @Test
+    public void testRltFilter() throws IloException {
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(2, 3, "x1");
+        IloNumVar x2 = cplex.numVar(5, 7, "x2");
+        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
+        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
+        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48);
+        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120);
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+        IloRange[] cons = new IloRange[] { c1, c3};
+        mat.addRows(cons);
+        RltParams prm = RltParams.getFirstOrderRlt();
+        prm.filter = new RltVarRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
+        Rlt rlt = new Rlt(cplex, mat, prm);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        System.out.println(rltMat);
+        assertEquals(11, rltMat.getNrows());
+
+        // Then add two more.
+        List<Integer> newCons = new ArrayList<Integer>();
+        newCons.add(mat.addRow(c2));
+        newCons.add(mat.addRow(c4));
+        rlt.addRows(newCons);
+        System.out.println(rltMat);
+        assertEquals(19, rltMat.getNrows());
+        
+        double[][] vals = new double[1][];
+        rltMat.getCols(rlt.getRltVarIdx(x1, x2), 1, new int[1][], vals);
+        for (int i=0; i<vals[0].length; i++) {
+            Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
+        }
+    }
+
+    private static void assertContainsRow(IloLPMatrix rltMat, double[] row) {
+        // Right now we only handle the 2 variable case.
+        int numVars = 2;
+        assertEquals(6, row.length);
+        double[] newRow = new double[row.length];
+        for (int i=0; i<row.length; i++) {
+            if (i < numVars) {
+                newRow[i] = row[i];
+            } else if (i == numVars+1) {
+                newRow[i] = row[row.length-1];
+            } else {
+                newRow[i] = row[i-1];
+            }
+        }
+    }
 }

@@ -431,5 +431,11 @@ public class Utilities {
         sb.append("]");
         return sb.toString();
     }
+
+    public static void fill(int[][] array, int value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
+        }
+    }
     
 }
