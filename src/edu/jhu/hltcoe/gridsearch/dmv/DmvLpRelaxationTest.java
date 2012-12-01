@@ -289,7 +289,7 @@ public class DmvLpRelaxationTest {
     @Test
     public void testSemiSupervisedOnSynthetic() {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSyntheticCorpus(dmvModel); 
+        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSemiSupervisedSyntheticCorpus(dmvModel); 
 
         DmvRltRelaxation dw = getLp(trainCorpus, 10);
 

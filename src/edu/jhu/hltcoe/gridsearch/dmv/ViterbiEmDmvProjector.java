@@ -51,7 +51,7 @@ public class ViterbiEmDmvProjector implements Projector {
     private DmvSolution initFeasSol;
 
     public ViterbiEmDmvProjector(DmvTrainCorpus corpus, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
-        dmvProjector = new DmvProjector(corpus, dwRelax);
+        dmvProjector = new DmvProjector(corpus);
         this.corpus = corpus;
         this.dwRelax = dwRelax;
         this.initFeasSol = initFeasSol;

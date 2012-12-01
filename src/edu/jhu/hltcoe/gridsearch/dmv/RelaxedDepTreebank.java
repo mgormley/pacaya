@@ -81,5 +81,9 @@ public class RelaxedDepTreebank {
     public void setFracChildren(double[][][] fracChildren) {
         this.fracChildren = fracChildren;
     }
+
+    public int size() {
+        return fracRoots.length;
+    }
     
 }

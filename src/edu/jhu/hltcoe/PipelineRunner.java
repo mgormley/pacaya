@@ -132,7 +132,7 @@ public class PipelineRunner {
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
             // TODO: use add-lambda smoothing here.
-            DmvProjector dmvProjector = new DmvProjector(trainCorpus, dw);
+            DmvProjector dmvProjector = new DmvProjector(trainCorpus);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             log.info("projLogLikelihood: " + projSol.getScore());
             // TODO: Remove this hack. It's only to setup for getEvalParser().

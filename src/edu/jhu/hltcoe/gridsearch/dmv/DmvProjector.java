@@ -1,9 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
@@ -15,12 +13,15 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 public class DmvProjector implements Projector {
 
     private DmvTrainCorpus corpus;
-    private DmvRelaxation dwRelax;
+    private IndexedDmvModel idm;
+    private DmvObjective obj;
     
-    public DmvProjector(DmvTrainCorpus corpus, DmvRelaxation dwRelax) {
+    public DmvProjector(DmvTrainCorpus corpus) {
         super();
         this.corpus = corpus;
-        this.dwRelax = dwRelax;
+        // TODO: we shouldn't have to create a new IndexedDmvModel here.
+        this.idm = new IndexedDmvModel(this.corpus);
+        this.obj = new DmvObjective(this.corpus);
     }
 
     @Override
@@ -46,7 +47,6 @@ public class DmvProjector implements Projector {
             logProbs[c] = Vectors.getLog(probs); 
         }
         // Create a new DmvModel from these model parameters
-        IndexedDmvModel idm = dwRelax.getIdm();
    
         // Project the fractional parse back to the feasible region
         // where the weight of each edge is given by the indicator variable
@@ -55,13 +55,13 @@ public class DmvProjector implements Projector {
         DepTreebank treebank = getProjectedParses(relaxSol.getTreebank());
    
         // TODO: write a new DmvMStep that stays in the bounded parameter space
-        double score = dwRelax.computeTrueObjective(logProbs, treebank);
+        double score = obj.computeTrueObjective(logProbs, treebank);
         
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
         return sol;
     }
 
-    private DepTreebank getProjectedParses(RelaxedDepTreebank fracTreebank) {
+    public DepTreebank getProjectedParses(RelaxedDepTreebank fracTreebank) {
         double[][] fracRoots = fracTreebank.getFracRoots(); 
         double[][][] fracChildren = fracTreebank.getFracChildren();
         

@@ -134,7 +134,7 @@ public class DmvCkyParserTest {
     @Test
     public void testSemiSupervisedOnSynthetic() {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvTrainCorpus trainCorpus = getSyntheticCorpus(dmvModel);
+        DmvTrainCorpus trainCorpus = getSemiSupervisedSyntheticCorpus(dmvModel);
         
         System.out.println(dmvModel.toString());
         System.out.println(trainCorpus);
@@ -143,7 +143,7 @@ public class DmvCkyParserTest {
         getDpParses(dmvModel, trainCorpus, expectedParseWeight);
     }
 
-    public static DmvTrainCorpus getSyntheticCorpus(DmvModel dmvModel) {
+    public static DmvTrainCorpus getSemiSupervisedSyntheticCorpus(DmvModel dmvModel) {
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
         DepTreebank treebank = generator.getTreebank(100);
         DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 0.9);

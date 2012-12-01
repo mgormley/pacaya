@@ -1,9 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static org.junit.Assert.assertEquals;
-import ilog.concert.IloException;
-import ilog.concert.IloNumVar;
-import ilog.cplex.IloCplex;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -32,15 +29,10 @@ import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
-import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
@@ -285,11 +277,25 @@ public class DmvRltRelaxationTest {
         }
         System.out.println("maxSums=" + Arrays.toString(maxSums));
     }
+
+    @Test
+    public void testProjection() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(50);
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
+        
+        DmvRltRelaxation dw = getLp(corpus, 1);
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
+        DmvProjector projector = new DmvProjector(corpus);
+        projector.getProjectedDmvSolution(relaxSol);
+    }
     
     @Test
     public void testSemiSupervisedOnSynthetic() {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSyntheticCorpus(dmvModel); 
+        DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSemiSupervisedSyntheticCorpus(dmvModel); 
 
         DmvRltRelaxation dw = getLp(trainCorpus, 10);
 
