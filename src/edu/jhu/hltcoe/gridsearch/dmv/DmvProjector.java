@@ -9,6 +9,7 @@ import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProjector implements Projector {
 
@@ -37,7 +38,7 @@ public class DmvProjector implements Projector {
         // sum-to-exactly-one space
         // TODO: must use bounds here?
    
-        double[][] logProbs = relaxSol.getLogProbs();
+        double[][] logProbs = Utilities.copyOf(relaxSol.getLogProbs());
         // Project the model parameters back onto the feasible (sum-to-one)
         // region ignoring the model parameter bounds (we just want a good solution)
         // there's no reason to constrain it.

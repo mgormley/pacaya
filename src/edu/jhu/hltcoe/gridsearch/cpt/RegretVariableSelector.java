@@ -42,14 +42,16 @@ public class RegretVariableSelector implements VariableSelector {
         int c = max.get(0);
         int m = max.get(1);
 
-        if (c == -1 || m == -1 || regret[c][m] == Double.NEGATIVE_INFINITY) {
+        assert(!Double.isNaN(regret[c][m]));
+        
+        if (c == -1 || m == -1) {
             log.warn("Branching bottomed-out at node " + node.getId());
             return new VariableId();
         }
         
         String name = node.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));
-        assert(regret[c][m] != Double.NEGATIVE_INFINITY);
+        assert(!Double.isInfinite(regret[c][m]));
         
         // TODO: make this an option: split at current value
         // TODO: as is, this is buggy: it will sometimes set the ub to -inf which is lower than the lb
