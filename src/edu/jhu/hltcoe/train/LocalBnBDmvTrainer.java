@@ -214,7 +214,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             } else {
                 modelFactory = new UniformDmvModelFactory();
             }
-            DmvModel randModel = (DmvModel)modelFactory.getInstance(corpus.getLabelAlphabet());
+            DmvModel randModel = modelFactory.getInstance(corpus.getLabelAlphabet());
             double[][] logProbs = idm.getCmLogProbs(randModel);
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(corpus, randModel);

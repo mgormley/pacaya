@@ -175,7 +175,7 @@ public class TrainerFactory {
             } else if (relaxation.equals("rlt")) {
                 RltPrm rltPrm = new RltPrm();
                 rltPrm.envelopeOnly = envelopeOnly;
-                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm(dwTemp, maxCutRounds, cplexPrm, rltPrm, stoPrm);
+                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm();
                 rlxPrm.tempDir = dwTemp;
                 rlxPrm.maxCutRounds = maxCutRounds;
                 rlxPrm.cplexPrm = cplexPrm;

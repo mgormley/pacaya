@@ -51,7 +51,7 @@ public class DmvCkyParserTest {
         Alphabet<Label> alphabet = new Alphabet<Label>();
         alphabet.lookupObject(TW_A);
         alphabet.lookupObject(TW_B);
-        DmvModel dmvModel = (DmvModel) modelFactory.getInstance(alphabet);
+        DmvModel dmvModel = modelFactory.getInstance(alphabet);
         
         dmvModel.fill(0.5);
         dmvModel.putRootWeight(TW_A, 0.5);
