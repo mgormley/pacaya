@@ -7,15 +7,15 @@ import ilog.cplex.IloCplex.IntParam;
 
 import java.io.FileNotFoundException;
 
-public class CplexParams {
+public class CplexPrm {
 
     public double workMemMegs = 1024;
     public int numThreads = 1;
     public int maxSimplexIterations = 2100000000;
         
-    public CplexParams() { }
+    public CplexPrm() { }
 
-    public CplexParams(double workMemMegs, int numThreads, int maxSimplexIterations) {
+    public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations) {
         this.workMemMegs = workMemMegs;
         this.numThreads = numThreads;
         this.maxSimplexIterations = maxSimplexIterations;

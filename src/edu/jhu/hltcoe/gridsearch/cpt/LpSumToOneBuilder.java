@@ -21,7 +21,7 @@ import edu.jhu.hltcoe.util.Sets;
 
 public class LpSumToOneBuilder {
     
-    public static class LpStoBuilderParams {
+    public static class LpStoBuilderPrm {
         public int maxSetSizeToConstrain = 2;
         public double minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
         public CutCountComputer initCutCountComp = new CutCountComputer();
@@ -37,7 +37,7 @@ public class LpSumToOneBuilder {
     
     public static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
     
-    private LpStoBuilderParams prm;
+    private LpStoBuilderPrm prm;
     
     private IloCplex cplex;
     private IloLPMatrix lpMatrix;
@@ -48,7 +48,7 @@ public class LpSumToOneBuilder {
     public IloNumVar[][] modelParamVars;
     private int numStoCons;
 
-    public LpSumToOneBuilder(LpStoBuilderParams prm) {
+    public LpSumToOneBuilder(LpStoBuilderPrm prm) {
         this.prm = prm;
     }
 

@@ -24,7 +24,7 @@ import org.jboss.dna.common.statistic.Stopwatch;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
-import edu.jhu.hltcoe.lp.CplexParams;
+import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
@@ -50,7 +50,7 @@ public abstract class DantzigWolfeRelaxation {
         public int maxDwIterations = 1000;
         public int maxCutRounds = 1;
         public File tempDir = null;
-        public CplexParams cplexPrm = new CplexParams();
+        public CplexPrm cplexPrm = new CplexPrm();
     }
     
     static Logger log = Logger.getLogger(DantzigWolfeRelaxation.class);

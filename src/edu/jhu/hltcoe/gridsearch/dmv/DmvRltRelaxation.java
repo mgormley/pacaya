@@ -27,12 +27,12 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
-import edu.jhu.hltcoe.lp.CplexParams;
+import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
@@ -48,12 +48,12 @@ public class DmvRltRelaxation implements DmvRelaxation {
     public static class DmvRltRelaxPrm {
         public File tempDir = null;
         public int maxCutRounds = 1;
-        public CplexParams cplexPrm = new CplexParams();
-        public RltParams rltPrm = new RltParams();
-        public LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+        public CplexPrm cplexPrm = new CplexPrm();
+        public RltPrm rltPrm = new RltPrm();
+        public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
 
-        public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CplexParams cplexPrm, RltParams rltPrm,
-                LpStoBuilderParams stoPrm) {
+        public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CplexPrm cplexPrm, RltPrm rltPrm,
+                LpStoBuilderPrm stoPrm) {
             super();
             this.tempDir = tempDir;
             this.maxCutRounds = maxCutRounds;
@@ -155,7 +155,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
-        RltParams rltPrm = prm.rltPrm;
+        RltPrm rltPrm = prm.rltPrm;
         rltPrm.nameRltVarsAndCons = false;
         // Accept only RLT rows/factors that have a non-zero coefficient for some objective variable.
         rltPrm.rowFilter = new RltVarRowFilter(getObjVarPairs());

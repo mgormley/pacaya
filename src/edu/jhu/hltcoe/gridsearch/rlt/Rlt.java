@@ -30,20 +30,20 @@ import edu.jhu.hltcoe.util.CplexUtils.CplexRows;
 
 public class Rlt {
 
-    public static class RltParams {
+    public static class RltPrm {
         public boolean envelopeOnly = true;
         public RltRowFilter rowFilter = null;
         public boolean nameRltVarsAndCons = true;
         public RltFactorFilter factorFilter = null;
 
-        public static RltParams getConvexConcaveEnvelope() {
-            RltParams prm = new RltParams();
+        public static RltPrm getConvexConcaveEnvelope() {
+            RltPrm prm = new RltPrm();
             prm.envelopeOnly = true;
             return prm;
         }
 
-        public static RltParams getFirstOrderRlt() {
-            RltParams prm = new RltParams();
+        public static RltPrm getFirstOrderRlt() {
+            RltPrm prm = new RltPrm();
             prm.envelopeOnly = false;
             return prm;
         }
@@ -152,7 +152,7 @@ public class Rlt {
     private List<Factor> factors;
     private HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap;
     private IloCplex cplex;
-    private RltParams prm;
+    private RltPrm prm;
     // The column index of the constant (always equal to 1.0) variable in the
     // RLT matrix.
     private int constantVarColIdx;
@@ -176,7 +176,7 @@ public class Rlt {
 
     private RltIds idsForRltVars;
     
-    public Rlt(IloCplex cplex, IloLPMatrix inputMatrix, RltParams prm) throws IloException {
+    public Rlt(IloCplex cplex, IloLPMatrix inputMatrix, RltPrm prm) throws IloException {
         List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
         log.debug("RLT factors: " + newFactors.size());
 

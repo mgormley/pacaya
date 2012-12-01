@@ -8,7 +8,7 @@ import ilog.cplex.IloCplex;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.hltcoe.math.Vectors;
 
@@ -27,7 +27,7 @@ public class LpSumToOneTest {
         };
         CptBounds bounds = new CptBounds(icpt);
         
-        LpSumToOneBuilder sto = new LpSumToOneBuilder(new LpStoBuilderParams());
+        LpSumToOneBuilder sto = new LpSumToOneBuilder(new LpStoBuilderPrm());
         sto.init(cplex, lpMatrix, icpt, bounds);
         sto.createModelParamVars();
         sto.addModelParamConstraints();

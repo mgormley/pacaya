@@ -26,7 +26,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
@@ -36,10 +36,10 @@ import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
-import edu.jhu.hltcoe.lp.CplexParams;
+import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -147,9 +147,9 @@ public class TrainerFactory {
             throw new ParseException("Model not supported: " + modelName);
         }
 
-        CplexParams cplexFactory = new CplexParams(ilpWorkMemMegs, numThreads, maxSimplexIterations);
+        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations);
 
-        LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+        LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         stoPrm.initCutCountComp = new CutCountComputer();
         stoPrm.maxSetSizeToConstrain = maxSetSizeToConstrain;
         stoPrm.minSumForCuts = minSumForCuts;
@@ -161,7 +161,7 @@ public class TrainerFactory {
                 DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
                 dwPrm.tempDir = dwTemp;
                 dwPrm.maxCutRounds = maxCutRounds;
-                dwPrm.cplexPrm = cplexFactory;
+                dwPrm.cplexPrm = cplexPrm;
                 dwPrm.maxDwIterations = maxDwIterations;
                 dwPrm.stoPrm = stoPrm;
                 relax = new DmvDantzigWolfeRelaxation(dwPrm);
@@ -169,16 +169,16 @@ public class TrainerFactory {
                 ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
                 dwPrm.tempDir = dwTemp;
                 dwPrm.maxCutRounds = maxCutRounds;
-                dwPrm.cplexPrm = cplexFactory;
+                dwPrm.cplexPrm = cplexPrm;
                 dwPrm.maxDwIterations = maxDwIterations;
                 relax = new ResDmvDantzigWolfeRelaxation(dwPrm);
             } else if (relaxation.equals("rlt")) {
-                RltParams rltPrm = new RltParams();
+                RltPrm rltPrm = new RltPrm();
                 rltPrm.envelopeOnly = envelopeOnly;
-                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm(dwTemp, maxCutRounds, cplexFactory, rltPrm, stoPrm);
+                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm(dwTemp, maxCutRounds, cplexPrm, rltPrm, stoPrm);
                 rlxPrm.tempDir = dwTemp;
                 rlxPrm.maxCutRounds = maxCutRounds;
-                rlxPrm.cplexPrm = cplexFactory;
+                rlxPrm.cplexPrm = cplexPrm;
                 rlxPrm.rltPrm = rltPrm;
                 rlxPrm.stoPrm = stoPrm;
                 relax = new DmvRltRelaxation(rlxPrm);

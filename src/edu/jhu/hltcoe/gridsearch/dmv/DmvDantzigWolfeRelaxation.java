@@ -34,9 +34,9 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
-import edu.jhu.hltcoe.lp.CplexParams;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
+import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -47,8 +47,8 @@ import edu.jhu.hltcoe.util.Utilities;
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
     
     public static class DmvDwRelaxPrm extends DwRelaxPrm {
-        public CplexParams cplexPrm = new CplexParams();
-        public LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+        public CplexPrm cplexPrm = new CplexPrm();
+        public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public DmvDwRelaxPrm() {
             super();
         }
