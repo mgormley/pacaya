@@ -24,7 +24,10 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -293,6 +296,74 @@ public class DmvRltRelaxationTest {
     }
     
     @Test
+    public void testCompareRelaxations() {
+        
+        
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(50);
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
+        
+        DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
+        
+                
+        // Shared Parameters.
+        double offsetProb = 0.5;
+        double probOfSkip = 0.5;
+        int numCuts = 100000000;
+        CplexPrm cplexPrm = new CplexPrm();
+
+        LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
+        stoPrm.initCutCountComp = new CutCountComputer();
+        stoPrm.maxSetSizeToConstrain = 3;
+        stoPrm.minSumForCuts = 1.00001;
+                
+        // RLT
+        DmvRltRelaxPrm rltPrm = new DmvRltRelaxPrm();
+        rltPrm.maxCutRounds = numCuts;
+        rltPrm.cplexPrm = cplexPrm;
+        rltPrm.stoPrm = stoPrm;        
+        rltPrm.rltPrm.envelopeOnly = false;
+        DmvRltRelaxation rltRelax = new DmvRltRelaxation(rltPrm);
+        rltRelax.init1(corpus);
+        rltRelax.init2(null);
+        Prng.seed(888);
+        LocalBnBDmvTrainer.setBoundsFromInitSol(rltRelax, initSol, offsetProb, probOfSkip);
+        RelaxedDmvSolution rltSol = (RelaxedDmvSolution) rltRelax.solveRelaxation(); 
+        
+        // LP:
+        rltPrm.rltPrm.envelopeOnly = true;
+        DmvRltRelaxation lpRelax = new DmvRltRelaxation(rltPrm);
+        lpRelax.init1(corpus);
+        lpRelax.init2(null);
+        Prng.seed(888);
+        LocalBnBDmvTrainer.setBoundsFromInitSol(lpRelax, initSol, offsetProb, probOfSkip);
+        RelaxedDmvSolution lpSol = (RelaxedDmvSolution) lpRelax.solveRelaxation(); 
+
+        // DW
+        DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
+        dwPrm.maxCutRounds = numCuts;
+        dwPrm.cplexPrm = cplexPrm;
+        dwPrm.maxDwIterations = 100000000;
+        dwPrm.stoPrm = stoPrm;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(dwPrm);
+        dwRelax.init1(corpus);
+        dwRelax.init2(initSol);
+        Prng.seed(888);
+        LocalBnBDmvTrainer.setBoundsFromInitSol(dwRelax, initSol, offsetProb, probOfSkip);
+        RelaxedDmvSolution dwSol = (RelaxedDmvSolution) dwRelax.solveRelaxation(); 
+
+        // SUMMARIZE
+        System.out.println("lp: " + lpSol.getScore());
+        System.out.println("rlt: " + rltSol.getScore());
+        System.out.println("dw: " + dwSol.getScore());
+        
+        Assert.assertTrue(dwSol.getScore() <= lpSol.getScore());
+        Assert.assertTrue(rltSol.getScore() <= lpSol.getScore());
+    }
+    
+    @Test
     public void testSemiSupervisedOnSynthetic() {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
         DmvTrainCorpus trainCorpus = DmvCkyParserTest.getSemiSupervisedSyntheticCorpus(dmvModel); 
@@ -430,26 +501,34 @@ public class DmvRltRelaxationTest {
     }
 
     private DmvRltRelaxation getLp(SentenceCollection sentences) {
-        return getLp(sentences, 1);
+        return getLp(sentences, 1, false);
+    }
+    private DmvRltRelaxation getLp(SentenceCollection sentences, int numCuts) {
+        return getLp(sentences, numCuts, false);
+    }
+    private DmvRltRelaxation getLp(DmvTrainCorpus corpus) {
+        return getLp(corpus, 1, false);
+    }
+    private DmvRltRelaxation getLp(DmvTrainCorpus corpus, int numCuts) {
+        return getLp(corpus, numCuts, false);
     }
     
     /**
      * Helper function 
      * @return DW relaxation with 1 round of cuts, and 1 initial cut per parameter
      */
-    public static DmvRltRelaxation getLp(SentenceCollection sentences, final int numCuts) {
+    public static DmvRltRelaxation getLp(SentenceCollection sentences, final int numCuts, boolean envelopeOnly) {
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
-        return getLp(corpus, numCuts);
+        return getLp(corpus, numCuts, envelopeOnly);
     }
 
-    protected static DmvRltRelaxation getLp(DmvTrainCorpus corpus, final int numCuts) {
+    protected static DmvRltRelaxation getLp(DmvTrainCorpus corpus, final int numCuts, boolean envelopeOnly) {
         CutCountComputer ccc = new CutCountComputer(){ 
             @Override
             public int getNumCuts(int numParams) {
                 return numCuts;
             }
         };
-        boolean envelopeOnly = false;
         DmvRltRelaxPrm prm = new DmvRltRelaxPrm(new File("."), numCuts, ccc, envelopeOnly);
         DmvRltRelaxation dw = new DmvRltRelaxation(prm);
         dw.init1(corpus);

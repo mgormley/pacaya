@@ -433,7 +433,7 @@ public class DmvDantzigWolfeRelaxationTest {
         return getDw(corpus, numCuts);
     }
 
-    private static DmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus, final int numCuts) {
+    public static DmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus, final int numCuts) {
         DmvSolution initSol = getInitFeasSol(corpus);
         System.out.println(initSol);
         CutCountComputer ccc = new CutCountComputer(){ 

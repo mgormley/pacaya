@@ -51,7 +51,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public CplexPrm cplexPrm = new CplexPrm();
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
-
+        public DmvRltRelaxPrm() { }
         public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CplexPrm cplexPrm, RltPrm rltPrm,
                 LpStoBuilderPrm stoPrm) {
             super();
