@@ -292,8 +292,9 @@ public class Rlt {
     /**
      * Adds a list of factors by constructing a full set of rows and then adding the rows
      * all at once to the CPLEX modeling object.
+     * @return The number of rows added to the RLT matrix.
      */
-    private void addNewFactors(List<Factor> newFactors) throws IloException {
+    private int addNewFactors(List<Factor> newFactors) throws IloException {
         CplexRows rows = new CplexRows(prm.nameRltVarsAndCons);
         SymIntMat tempRltConsInd = new SymIntMat();
         for (Factor factor : newFactors) {
@@ -305,6 +306,7 @@ public class Rlt {
         int startRow = rows.addRowsToMatrix(rltMat);
         tempRltConsInd.incrementAll(startRow);
         rltConsIdx.setAll(tempRltConsInd);
+        return rows.getNumRows();
     }
     
     /**
@@ -468,14 +470,23 @@ public class Rlt {
         return CplexUtils.getValues(cplex, rltVars);
     }
 
-    public void addRows(List<Integer> rowIds) throws IloException {
+    /**
+     * @return The number of rows added to the RLT matrix.
+     */
+    public int addRows(List<Integer> rowIds) throws IloException {
+        if (prm.envelopeOnly) {
+            // Don't add the rows.
+            return 0;
+        }
         if (!areConsecutive(rowIds)) {
             throw new IllegalStateException("Expecting a consecutive list: " + rowIds);
         }
         if (rowIds.size() > 0) {
             List<Factor> newFactors = new ArrayList<Factor>();
             FactorBuilder.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix, newFactors);
-            addNewFactors(newFactors);
+            return addNewFactors(newFactors);
+        } else {
+            return 0;
         }
     }
 

@@ -22,6 +22,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -48,7 +49,11 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V P N");
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
 
-        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(new File("."), 100, new CutCountComputer());
+
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.tempDir = new File(".");
+        prm.maxCutRounds = 100;
+        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(prm);
 
         VariableSelector varSelector = new RandomVariableSelector(true);
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);

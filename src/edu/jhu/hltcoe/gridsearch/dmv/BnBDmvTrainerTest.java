@@ -18,6 +18,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
@@ -41,7 +42,9 @@ public class BnBDmvTrainerTest {
     @Test
     public void testTwo() {
         double epsilon = 0.4;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.maxCutRounds = 100;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
         BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
         
         SentenceCollection sentences = new SentenceCollection();
@@ -53,7 +56,9 @@ public class BnBDmvTrainerTest {
     //@Test
     public void testOne() {
         double epsilon = 0.5;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.maxCutRounds = 100;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
         BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
 
         SentenceCollection sentences = new SentenceCollection();
@@ -65,8 +70,9 @@ public class BnBDmvTrainerTest {
     //@Test
     public void testSynthetic() {
         double epsilon = 0.9;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
-        dwRelax.setMaxDwIterations(3);
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.maxDwIterations = 3;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
         BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();

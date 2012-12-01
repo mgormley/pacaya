@@ -48,6 +48,12 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
+    public static class ResDmvDwRelaxPrm extends DmvDwRelaxPrm {
+        public ResDmvDwRelaxPrm() {
+            this.stoPrm = null;
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(ResDmvDantzigWolfeRelaxation.class);
     
     private int numGammas;
@@ -57,9 +63,12 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     private int[][] supervisedFreqCm;
     private MasterProblemRes mpr;
     
-    public ResDmvDantzigWolfeRelaxation(File tempDir) {
-        super(tempDir, 0, null);
-        this.projections = new Projections(tempDir);
+    private ResDmvDwRelaxPrm prm;
+    
+    public ResDmvDantzigWolfeRelaxation(ResDmvDwRelaxPrm prm) {
+        super(prm);
+        this.prm = prm;
+        this.projections = new Projections(prm.tempDir);
         this.hasInfeasibleBounds = false;
         this.parsingTimer = new Stopwatch();
         this.stoTimer = new Stopwatch();
@@ -395,17 +404,17 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     private void removeGammaVar(GammaVar gv)  throws IloException {
 
         //TODO: remove these printouts
-        if (tempDir != null) {
+        if (prm.tempDir != null) {
             // TODO: remove this or add a debug flag to the if
-            cplex.exportModel(new File(tempDir, "dw.beforeremoval.lp").getAbsolutePath());
+            cplex.exportModel(new File(prm.tempDir, "dw.beforeremoval.lp").getAbsolutePath());
         }        
         
         //TODO: this might be wrong
         mp.lpMatrix.removeColumn(mp.lpMatrix.getIndex(gv.gammaVar));
        
-        if (tempDir != null) {
+        if (prm.tempDir != null) {
             // TODO: remove this or add a debug flag to the if
-            cplex.exportModel(new File(tempDir, "dw.afterremoval.lp").getAbsolutePath());
+            cplex.exportModel(new File(prm.tempDir, "dw.afterremoval.lp").getAbsolutePath());
         }
         mpr.gammaVars.remove(gv);
 
@@ -493,7 +502,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                 assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-8));
             }
         }  
-        if (mReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
+        if (mReducedCost < prm.NEGATIVE_REDUCED_COST_TOLERANCE) {
             // Introduce a new gamma variable
             if (addGammaVar(logProbs)) {
                 numPositiveGammaRedCosts++;
@@ -529,7 +538,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             // We must negate pair.get2() since we were just maximizing
             double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
 
-            if (pReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
+            if (pReducedCost < prm.NEGATIVE_REDUCED_COST_TOLERANCE) {
                 // Introduce a new lambda variable
                 if (addLambdaVar(s, tree)) {
                     numPositiveLambdaRedCosts++;

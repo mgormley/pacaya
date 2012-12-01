@@ -34,6 +34,9 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -42,23 +45,39 @@ import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
-
+    
+    public static class DmvDwRelaxPrm extends DwRelaxPrm {
+        public CplexParams cplexPrm = new CplexParams();
+        public LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+        public DmvDwRelaxPrm() {
+            super();
+        }
+        public DmvDwRelaxPrm(File tempDir, int maxCutRounds, CutCountComputer ccc) {
+            this();
+            this.tempDir = tempDir;
+            this.maxCutRounds = maxCutRounds;
+            this.stoPrm.initCutCountComp = ccc;
+        }
+    }
+    
     static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
     
     protected int numLambdas;
-
     protected DmvTrainCorpus corpus;
     protected IndexedDmvModel idm;
     protected CptBounds bounds;
     protected Stopwatch parsingTimer;
     protected MasterProblem mp;
+    
     private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
 
-    public DmvDantzigWolfeRelaxation(File tempDir,
-            int maxCutRounds, CutCountComputer initCutCountComp) {
-        super(tempDir, maxCutRounds);
-        this.sto = new LpSumToOneBuilder(initCutCountComp);
+    private DmvDwRelaxPrm prm;
+    
+    public DmvDantzigWolfeRelaxation(DmvDwRelaxPrm prm) {
+        super(prm);
+        this.prm = prm;
+        this.sto = new LpSumToOneBuilder(prm.stoPrm);
         this.parsingTimer = new Stopwatch();
     }
     
@@ -461,7 +480,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             // We must negate pair.get2() since we were just maximizing
             double pReducedCost = -pPair.get2() - convexLambdaPrices[s];
 
-            if (pReducedCost < NEGATIVE_REDUCED_COST_TOLERANCE) {
+            if (pReducedCost < prm.NEGATIVE_REDUCED_COST_TOLERANCE) {
                 // Introduce a new lambda variable
                 if (addLambdaVar(s, tree)) {
                     numPositiveLambdaRedCosts++;
@@ -582,16 +601,6 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
     public IndexedDmvModel getIdm() {
         return idm;
-    }
-
-    // TODO: remove this method.
-    public void setMaxSetSizeToConstrain(int maxSetSizeToConstrain) {
-        sto.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
-    }
-
-    // TODO: remove this method.
-    public void setMinSumForCuts(double minSumForCuts) {
-        sto.setMinSumForCuts(minSumForCuts);
     }
     
 }

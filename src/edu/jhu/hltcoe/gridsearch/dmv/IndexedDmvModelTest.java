@@ -17,6 +17,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -227,8 +228,10 @@ public class IndexedDmvModelTest {
         trainer.train(corpus);
         double trainerLogLikelihood = trainer.getLogLikelihood();
         DepTreebank treebank = trainer.getCounts();
-        
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 2, new CutCountComputer());
+
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.maxCutRounds = 2;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
         dwRelax.init1(corpus);
         
         IndexedDmvModel idm = dwRelax.getIdm();//new IndexedDmvModel(sentences);

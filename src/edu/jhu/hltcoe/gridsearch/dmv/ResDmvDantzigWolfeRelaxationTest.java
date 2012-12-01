@@ -19,6 +19,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -409,7 +410,9 @@ public class ResDmvDantzigWolfeRelaxationTest {
     private static ResDmvDantzigWolfeRelaxation getDw(DmvTrainCorpus corpus) {
         DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         System.out.println(initSol);
-        ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(new File("."));
+        ResDmvDwRelaxPrm prm = new ResDmvDwRelaxPrm();
+        prm.tempDir = new File(".");
+        ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(prm);
         dw.init1(corpus);
         dw.init2(initSol);
         return dw;

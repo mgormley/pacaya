@@ -20,7 +20,13 @@ import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Sets;
 
 public class LpSumToOneBuilder {
-        
+    
+    public static class LpStoBuilderParams {
+        public int maxSetSizeToConstrain = 2;
+        public double minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
+        public CutCountComputer initCutCountComp = new CutCountComputer();
+    }
+    
     public static class CutCountComputer {
         public int getNumCuts(int numParams) {
             return (int)Math.pow(numParams, 2.0);
@@ -31,9 +37,7 @@ public class LpSumToOneBuilder {
     
     public static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
     
-    private int maxSetSizeToConstrain;
-    private double minSumForCuts;
-    private LpSumToOneBuilder.CutCountComputer initCutCountComp;
+    private LpStoBuilderParams prm;
     
     private IloCplex cplex;
     private IloLPMatrix lpMatrix;
@@ -44,11 +48,8 @@ public class LpSumToOneBuilder {
     public IloNumVar[][] modelParamVars;
     private int numStoCons;
 
-    public LpSumToOneBuilder(LpSumToOneBuilder.CutCountComputer initCutCountComp) {
-        // Store parameters.
-        this.maxSetSizeToConstrain = 2;
-        this.minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
-        this.initCutCountComp = initCutCountComp;
+    public LpSumToOneBuilder(LpStoBuilderParams prm) {
+        this.prm = prm;
     }
 
     public void init(IloCplex cplex, IloLPMatrix lpMatrix, IndexedCpt idm, CptBounds bounds) throws IloException {
@@ -93,7 +94,7 @@ public class LpSumToOneBuilder {
             }
         }
         
-        for (int setSize=2; setSize <= maxSetSizeToConstrain; setSize++) {
+        for (int setSize=2; setSize <= prm.maxSetSizeToConstrain; setSize++) {
             for (int c = 0; c < numConds; c++) {
                 addSetContraints(setSize, c);
             }
@@ -107,7 +108,7 @@ public class LpSumToOneBuilder {
         for (int c = 0; c < numConds; c++) {
             int numParams = idm.getNumParams(c);
             // Create numParams^2 vectors
-            int numVectors = initCutCountComp.getNumCuts(numParams); 
+            int numVectors = prm.initCutCountComp.getNumCuts(numParams); 
             vectors[c] = new double[numVectors][];
             for (int i = 0; i < vectors[c].length; i++) {
                 double[] vector = new double[numParams];
@@ -183,7 +184,7 @@ public class LpSumToOneBuilder {
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs
-            if (Vectors.sum(params[c]) > minSumForCuts) {
+            if (Vectors.sum(params[c]) > prm.minSumForCuts) {
                 rows.add(addSumToOneConstraint(c, params[c]));
             }
         }
@@ -201,14 +202,6 @@ public class LpSumToOneBuilder {
     public void updateModelParamBounds(int c, int m, double newLb, double newUb) throws IloException {
         modelParamVars[c][m].setLB(newLb);
         modelParamVars[c][m].setUB(newUb);
-    }
-
-    public void setMaxSetSizeToConstrain(int maxSetSizeToConstrain) {
-        this.maxSetSizeToConstrain = maxSetSizeToConstrain;
-    }
-
-    public void setMinSumForCuts(double minSumForCuts) {
-        this.minSumForCuts = minSumForCuts;
     }
 
     public int getNumStoCons() {

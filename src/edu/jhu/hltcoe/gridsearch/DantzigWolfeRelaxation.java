@@ -30,23 +30,7 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 
 public abstract class DantzigWolfeRelaxation {
-
-    static Logger log = Logger.getLogger(DantzigWolfeRelaxation.class);
-
-    protected static final double NEGATIVE_REDUCED_COST_TOLERANCE = -1e-5;
-    protected IloCplex cplex;
-    protected File tempDir;
     
-    private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
-    private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
-    private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
-    private CplexParams cplexFactory;
-    private int maxDwIterations;
-    private int maxCutRounds;
-    private int numSolves;
-    private Stopwatch simplexTimer;
-
-
     public static class SubproblemRetVal {
         public double sumReducedCosts;
         public int numPositiveRedCosts;
@@ -60,18 +44,34 @@ public abstract class DantzigWolfeRelaxation {
     
     }
 
-    public DantzigWolfeRelaxation(File tempDir, int maxCutRounds) {
-        // TODO: pass these through
-        this.tempDir = tempDir;
-        this.cplexFactory = new CplexParams();
-        this.maxDwIterations = 1000;
-        this.maxCutRounds = maxCutRounds;
+    public static class DwRelaxPrm {
+        public static final double NEGATIVE_REDUCED_COST_TOLERANCE = -1e-5;
+        public static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
+        public int maxDwIterations = 1000;
+        public int maxCutRounds = 1;
+        public File tempDir = null;
+        public CplexParams cplexPrm = new CplexParams();
+    }
+    
+    static Logger log = Logger.getLogger(DantzigWolfeRelaxation.class);
+
+    protected IloCplex cplex;
+    
+    private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
+    private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
+    private int numSolves;
+    private Stopwatch simplexTimer;
+
+    private DwRelaxPrm prm;
+    
+    public DantzigWolfeRelaxation(DwRelaxPrm prm) {
+        this.prm = prm;
         this.numSolves = 0;
         this.simplexTimer = new Stopwatch();
     }
 
     public void init2(DmvSolution initFeasSol) {
-        this.cplex = cplexFactory.getIloCplexInstance();
+        this.cplex = prm.cplexPrm.getIloCplexInstance();
         try {
             buildModel(cplex, initFeasSol);
         } catch (IloException e) {
@@ -103,8 +103,8 @@ public abstract class DantzigWolfeRelaxation {
             // This won't always be true if we are stopping early: 
             // assert(Utilities.lte(objective, 0.0, 1e-7));
             
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "dw.lp").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.exportModel(new File(prm.tempDir, "dw.lp").getAbsolutePath());
             }
             
             log.info("Solution status: " + status);
@@ -112,8 +112,8 @@ public abstract class DantzigWolfeRelaxation {
                 return new RelaxedDmvSolution(null, null, objective, status, null, null, Double.NaN);
             }
             
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "dw.sol").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.writeSolution(new File(prm.tempDir, "dw.sol").getAbsolutePath());
             }
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
@@ -179,8 +179,8 @@ public abstract class DantzigWolfeRelaxation {
         int dwIter;
         // Solve the full D-W problem
         for (dwIter = 0, cut = 0; ; dwIter++) {
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, String.format("dw.%d.lp", dwIter)).getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.exportModel(new File(prm.tempDir, String.format("dw.%d.lp", dwIter)).getAbsolutePath());
             }
             
             // Solve the master problem
@@ -197,17 +197,17 @@ public abstract class DantzigWolfeRelaxation {
             if (status == RelaxStatus.Infeasible) {
                 return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
             }
-            if (dwIter>=maxDwIterations) {
+            if (dwIter>=prm.maxDwIterations) {
                 break;
             }
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, String.format("dw.%d.sol", dwIter)).getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.writeSolution(new File(prm.tempDir, String.format("dw.%d.sol", dwIter)).getAbsolutePath());
             }
             double objVal = cplex.getObjValue();
             log.trace("Master solution value: " + objVal);
             double prevObjVal = iterationObjVals.size() > 0 ? iterationObjVals.get(iterationObjVals.size() - 1)
                     : INTERNAL_WORST_SCORE;
-            if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
+            if (objVal > prevObjVal + prm.OBJ_VAL_DECREASE_TOLERANCE) {
                 Status prevStatus = iterationStatus.size() > 0 ? iterationStatus.get(iterationObjVals.size() - 1)
                         : Status.Unknown;
                 log.warn(String.format("Master problem objective should monotonically decrease: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevObjVal, objVal, prevStatus, cplex.getStatus()));
@@ -234,7 +234,7 @@ public abstract class DantzigWolfeRelaxation {
                 lowerBound = cplex.getObjValue();
                 status = RelaxStatus.Optimal;
                 
-                if (cut < maxCutRounds) {
+                if (cut < prm.maxCutRounds) {
                     int numCutAdded = addCuts(cplex, iterationObjVals, iterationStatus, cut);
                     log.debug("Added cuts " + numCutAdded + ", round " + cut);
                     if (numCutAdded == 0) {
@@ -257,7 +257,7 @@ public abstract class DantzigWolfeRelaxation {
         
         log.debug("Number of cut rounds: " + cut);
         log.debug("Number of DW iterations: " + dwIter);
-        log.debug("Max number of DW iterations: " + maxDwIterations);
+        log.debug("Max number of DW iterations: " + prm.maxDwIterations);
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
@@ -273,14 +273,6 @@ public abstract class DantzigWolfeRelaxation {
 
     public int getNumSolves() {
         return numSolves;
-    }
-    
-    public void setCplexFactory(CplexParams cplexFactory) {
-        this.cplexFactory = cplexFactory;
-    }
-
-    public void setMaxDwIterations(int maxDwIterations) {
-        this.maxDwIterations = maxDwIterations;
     }
         
     protected abstract RelaxedSolution extractSolution(RelaxStatus status, double objective)  throws UnknownObjectException, IloException;

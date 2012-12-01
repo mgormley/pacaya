@@ -27,6 +27,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -309,8 +310,9 @@ public class DmvLpRelaxationTest {
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
 
         // Get the relaxed solution.
-        DmvRltRelaxation dwRelax = new DmvRltRelaxation(null, 100, new CutCountComputer(), true);
-        dwRelax.setMinSumForCuts(1.000001);
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), true);
+        prm.stoPrm.minSumForCuts = 1.000001;
+        DmvRltRelaxation dwRelax = new DmvRltRelaxation(prm);
         dwRelax.init1(corpus);
         dwRelax.init2(null);
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
@@ -442,7 +444,8 @@ public class DmvLpRelaxationTest {
             }
         };
         boolean envelopeOnly = true;
-        DmvRltRelaxation dw = new DmvRltRelaxation(new File("."), numCuts, ccc, envelopeOnly);
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm(new File("."), numCuts, ccc, envelopeOnly);
+        DmvRltRelaxation dw = new DmvRltRelaxation(prm);
         dw.init1(corpus);
         dw.init2(null);
         return dw;

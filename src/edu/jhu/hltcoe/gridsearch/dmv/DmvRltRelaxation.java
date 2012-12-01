@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -28,6 +27,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarFactorFilter;
@@ -45,6 +45,31 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvRltRelaxation implements DmvRelaxation {
 
+    public static class DmvRltRelaxPrm {
+        public File tempDir = null;
+        public int maxCutRounds = 1;
+        public CplexParams cplexPrm = new CplexParams();
+        public RltParams rltPrm = new RltParams();
+        public LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+
+        public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CplexParams cplexPrm, RltParams rltPrm,
+                LpStoBuilderParams stoPrm) {
+            super();
+            this.tempDir = tempDir;
+            this.maxCutRounds = maxCutRounds;
+            this.cplexPrm = cplexPrm;
+            this.rltPrm = rltPrm;
+            this.stoPrm = stoPrm;
+        }
+
+        public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CutCountComputer ccc, boolean envelopeOnly) {
+            this.tempDir = tempDir;
+            this.maxCutRounds = maxCutRounds;
+            this.stoPrm.initCutCountComp = ccc;
+            this.rltPrm.envelopeOnly = envelopeOnly;
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(DmvRltRelaxation.class);
 
     private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
@@ -52,9 +77,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
     
     private IloCplex cplex;
-    private File tempDir;
-    private CplexParams cplexFactory;
-    private int maxCutRounds;
     private int numSolves;
     private Stopwatch simplexTimer;
 
@@ -64,16 +86,14 @@ public class DmvRltRelaxation implements DmvRelaxation {
     private LpProblem mp;
     private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
-    private boolean envelopeOnly;
  
-    public DmvRltRelaxation(File tempDir, int maxCutRounds, CutCountComputer initCutCountComp, boolean envelopeOnly) {
-        this.tempDir = tempDir;
-        this.cplexFactory = new CplexParams();
-        this.maxCutRounds = maxCutRounds;
+    private DmvRltRelaxPrm prm;
+    
+    public DmvRltRelaxation(DmvRltRelaxPrm prm) {
+        this.prm = prm;
         this.numSolves = 0;
         this.simplexTimer = new Stopwatch();
-        this.sto = new LpSumToOneBuilder(initCutCountComp);        
-        this.envelopeOnly = envelopeOnly;
+        this.sto = new LpSumToOneBuilder(prm.stoPrm);        
     }
     
     // Copied from DmvDantzigWolfeRelaxation.
@@ -87,7 +107,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     // Copied from DantzigWolfeRelaxation.
     @Override
     public void init2(DmvSolution initFeasSol) {
-        this.cplex = cplexFactory.getIloCplexInstance();
+        this.cplex = prm.cplexPrm.getIloCplexInstance();
         try {
             buildModel(cplex, initFeasSol);
         } catch (IloException e) {
@@ -135,10 +155,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
-        RltParams rltPrm = new RltParams();
-        rltPrm.envelopeOnly = envelopeOnly;
+        RltParams rltPrm = prm.rltPrm;
         rltPrm.nameRltVarsAndCons = false;
-        // Accept only RLT rows that have a non-zero coefficient for some objective variable.
+        // Accept only RLT rows/factors that have a non-zero coefficient for some objective variable.
         rltPrm.rowFilter = new RltVarRowFilter(getObjVarPairs());
         rltPrm.factorFilter = new RltVarFactorFilter(getObjVarCols());
         
@@ -225,8 +244,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
             // This won't always be true if we are stopping early: 
             // assert(Utilities.lte(objective, 0.0, 1e-7));
             
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.exportModel(new File(prm.tempDir, "rlt.lp").getAbsolutePath());
             }
             
             log.info("Solution status: " + status);
@@ -234,8 +253,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 return new RelaxedDmvSolution(null, null, objective, status, null, null, Double.NaN);
             }
             
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "rlt.sol").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
             }
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
@@ -266,8 +285,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         int cut;
         // Solve the full D-W problem
         for (cut = 0; ;) {
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.exportModel(new File(prm.tempDir, "rlt.lp").getAbsolutePath());
             }
             
             // Solve the master problem
@@ -284,8 +303,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
             if (status == RelaxStatus.Infeasible) {
                 return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
             }
-            if (tempDir != null) {
-                cplex.writeSolution(new File(tempDir, "rlt.sol").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
             }
             double objVal = cplex.getObjValue();
             log.trace("Simplex solution value: " + objVal);
@@ -313,7 +332,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 lowerBound = cplex.getObjValue();
                 status = RelaxStatus.Optimal;
                 
-                if (cut < maxCutRounds) {
+                if (cut < prm.maxCutRounds) {
                     int numCutAdded = addCuts(cplex, iterationObjVals, iterationStatus, cut);
                     log.debug("Added cuts " + numCutAdded + ", round " + cut);
                     if (numCutAdded == 0) {
@@ -352,10 +371,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         iterationStatus.clear();
 
          List<Integer> rows = sto.projectModelParamsAndAddCuts();
-         if (!envelopeOnly) {
-             mp.rlt.addRows(rows);
-         }
-         return rows.size();
+         return mp.rlt.addRows(rows);
     }
     
     // Copied from DmvDantzigWolfeRelaxation.
@@ -510,16 +526,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
         } catch (IloException e) {
             throw new RuntimeException(e);
         }
-    } 
-
-    // TODO: remove this method.
-    public void setMaxSetSizeToConstrain(int maxSetSizeToConstrain) {
-        sto.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
-    }
-
-    // TODO: remove this method.
-    public void setMinSumForCuts(double minSumForCuts) {
-        sto.setMinSumForCuts(minSumForCuts);
     }
     
 }

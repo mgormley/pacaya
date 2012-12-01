@@ -1,9 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static org.junit.Assert.assertEquals;
-import ilog.concert.IloException;
-import ilog.concert.IloNumVar;
-import ilog.cplex.IloCplex;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,6 +23,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -308,8 +306,10 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
 
         // Get the relaxed solution.
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(null, 100, new CutCountComputer());
-        dwRelax.setMinSumForCuts(1.000001);
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
+        prm.maxCutRounds = 100;
+        prm.stoPrm.minSumForCuts = 1.000001;
+        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
         dwRelax.init1(corpus);
         dwRelax.init2(DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
@@ -442,7 +442,8 @@ public class DmvDantzigWolfeRelaxationTest {
                 return numCuts;
             }
         };
-        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(new File("."), numCuts, ccc);
+        DmvDwRelaxPrm prm = new DmvDwRelaxPrm(new File("."), numCuts, ccc);
+        DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(prm);
         dw.init1(corpus);
         dw.init2(initSol);
         return dw;

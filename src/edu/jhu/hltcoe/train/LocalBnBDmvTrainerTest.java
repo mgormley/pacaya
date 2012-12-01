@@ -10,10 +10,10 @@ import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.util.Prng;
 
 public class LocalBnBDmvTrainerTest {
@@ -38,7 +38,7 @@ public class LocalBnBDmvTrainerTest {
         double bnbTimeoutSeconds = 2;
         double timeoutSeconds = 10;
         ViterbiTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
-        DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(null, 1, new CutCountComputer());
+        DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(new DmvDwRelaxPrm());
         CptBoundsDeltaFactory brancher = BnBDmvTrainerTest.getDefaultBrancher();
         LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new PqNodeOrderer(new BfsComparator()), bnbTimeoutSeconds, null);
         LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,

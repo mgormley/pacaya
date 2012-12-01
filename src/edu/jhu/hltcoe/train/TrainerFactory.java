@@ -26,11 +26,17 @@ import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderParams;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.lp.CplexParams;
@@ -86,7 +92,7 @@ public class TrainerFactory {
         options.addOption("vse", "varSelection", true, "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]");
         options.addOption("vsp", "varSplit", true, "Variable splitting strategy for branching [half-prob, half-logprob]");
         options.addOption("no", "nodeOrder", true, "Strategy for node selection [bfs, dfs]");
-        options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,lp]");
+        options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,rlt]");
         options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
         options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
         options.addOption("rx", "maxSetSizeToConstrain", true, "(D-W only) The maximum size of sets to contrain to be <= 1.0");
@@ -98,6 +104,7 @@ public class TrainerFactory {
         options.addOption("op", "timeoutSeconds", true, "The timeout in seconds for training run");
         options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
         options.addOption("df", "disableFathoming", true, "Disables fathoming in branch-and-bound");
+        options.addOption("eo", "envelopeOnly", true, "Whether to use only the convex/concave envelope for the RLT relaxation");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -134,31 +141,47 @@ public class TrainerFactory {
         double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
         double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
         boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
+        boolean envelopeOnly = Command.getOptionValue(cmd, "envelopeOnly", true);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
         }
 
         CplexParams cplexFactory = new CplexParams(ilpWorkMemMegs, numThreads, maxSimplexIterations);
+
+        LpStoBuilderParams stoPrm = new LpStoBuilderParams();
+        stoPrm.initCutCountComp = new CutCountComputer();
+        stoPrm.maxSetSizeToConstrain = maxSetSizeToConstrain;
+        stoPrm.minSumForCuts = minSumForCuts;
         
         DmvRelaxation relax = null;
         if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
             File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
             if (relaxation.equals("dw")) {
-                DmvDantzigWolfeRelaxation dw = new DmvDantzigWolfeRelaxation(dwTemp, maxCutRounds,
-                        new CutCountComputer());
-                dw.setCplexFactory(cplexFactory);
-                dw.setMaxDwIterations(maxDwIterations);
-                dw.setMaxSetSizeToConstrain(maxSetSizeToConstrain);
-                dw.setMinSumForCuts(minSumForCuts);
-                relax = dw;
+                DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
+                dwPrm.tempDir = dwTemp;
+                dwPrm.maxCutRounds = maxCutRounds;
+                dwPrm.cplexPrm = cplexFactory;
+                dwPrm.maxDwIterations = maxDwIterations;
+                dwPrm.stoPrm = stoPrm;
+                relax = new DmvDantzigWolfeRelaxation(dwPrm);
             } else if (relaxation.equals("dw-res")) {
-                ResDmvDantzigWolfeRelaxation dw = new ResDmvDantzigWolfeRelaxation(dwTemp);
-                dw.setCplexFactory(cplexFactory);
-                dw.setMaxDwIterations(maxDwIterations);
-                relax = dw;
-            } else if (relaxation.equals("lp")) {
-                throw new RuntimeException("LP relaxation not yet implemented");
+                ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
+                dwPrm.tempDir = dwTemp;
+                dwPrm.maxCutRounds = maxCutRounds;
+                dwPrm.cplexPrm = cplexFactory;
+                dwPrm.maxDwIterations = maxDwIterations;
+                relax = new ResDmvDantzigWolfeRelaxation(dwPrm);
+            } else if (relaxation.equals("rlt")) {
+                RltParams rltPrm = new RltParams();
+                rltPrm.envelopeOnly = envelopeOnly;
+                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm(dwTemp, maxCutRounds, cplexFactory, rltPrm, stoPrm);
+                rlxPrm.tempDir = dwTemp;
+                rlxPrm.maxCutRounds = maxCutRounds;
+                rlxPrm.cplexPrm = cplexFactory;
+                rlxPrm.rltPrm = rltPrm;
+                rlxPrm.stoPrm = stoPrm;
+                relax = new DmvRltRelaxation(rlxPrm);
             } else {
                 throw new ParseException("Relaxation not supported: " + relaxation);
             }
