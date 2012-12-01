@@ -361,9 +361,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(nodeOrder="dfs-randwalk",
                        algorithm="bnb",
-                       initBounds="viterbi-em",                    
                        varSelection="regret",
-                       offsetProb=1.0, 
                        varSplit="half-prob",
                        propSupervised=0.0,
                        maxSimplexIterations=1000000000,
@@ -378,8 +376,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(numRestarts=1000000000, epsilon=0.0,
                        timeoutSeconds=10*60)
             dataset = synth_alt_three
-            for relaxation in ["dw"]:
-                experiment = all + dataset + DPExpParams(relaxation=relaxation)
+            for relaxation,envelopeOnly in [("dw",True), ("rlt", True), ("rlt",False)]:
+                experiment = all + dataset + DPExpParams(relaxation=relaxation, envelopeOnly=envelopeOnly)
                 root.add_dependent(experiment)
             #Scrape status information from a subset of the experiments.
             scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
