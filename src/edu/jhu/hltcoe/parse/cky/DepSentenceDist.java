@@ -90,7 +90,7 @@ public class DepSentenceDist {
     private void cacheModel(double[] fracRoot, double[][] fracChild) {
         int[] i2tag = depInst.postags;
         for (int c = 0; c < i2tag.length; c++) {
-            root[c] = Utilities.log(fracRoot[c]);
+            root[c] = Utilities.logForIlp(fracRoot[c]);
             for (int p = 0; p < i2tag.length; p++) {
                 if (c == p)
                     continue;
@@ -99,7 +99,7 @@ public class DepSentenceDist {
                 }
                 // Oddly: the child field is indexed by child then parent
                 // not parent then child as my fracChild var is.
-                child[c][p][0] = Utilities.log(fracChild[p][c]);
+                child[c][p][0] = Utilities.logForIlp(fracChild[p][c]);
             }
             for (int dir = 0; dir < 2; dir++) {
                 for (int v = 0; v < nontermMap.decisionValency; v++) {
