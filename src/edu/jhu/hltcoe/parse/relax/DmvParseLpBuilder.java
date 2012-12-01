@@ -64,6 +64,9 @@ public class DmvParseLpBuilder {
         public IloRange[][] flowDiff;
         public IloRange[][] flowBoundRoot;
         public IloRange[][][] flowBoundChild;
+        // Extra flow constraints.
+        public IloRange[][] arcFlowBoundRoot;
+        public IloRange[][][] arcFlowBoundChild;
         // Projectivity constraints.
         public IloRange[][] projectiveRoot;
         public IloRange[][][] projectiveChild;
@@ -74,6 +77,7 @@ public class DmvParseLpBuilder {
         public IloRange[][][] stopAdjCons;
         // Feature count constraints.
         public IloRange[][] featCountCons;
+        public IloRange[][][] oneArcPerPair;
     }
     
     public static class DmvParsingProgram extends DmvTreeProgram {
@@ -141,10 +145,13 @@ public class DmvParseLpBuilder {
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
         mat.addRows(pp.oneArcPerWall);
         CplexUtils.addRows(mat, pp.oneParent);
+        CplexUtils.addRows(mat, pp.oneArcPerPair);
         mat.addRows(pp.rootFlowIsSentLength);
         CplexUtils.addRows(mat, pp.flowDiff);
         CplexUtils.addRows(mat, pp.flowBoundRoot);
         CplexUtils.addRows(mat, pp.flowBoundChild);
+        CplexUtils.addRows(mat, pp.arcFlowBoundRoot);
+        CplexUtils.addRows(mat, pp.arcFlowBoundChild);
         if (pp.projectiveRoot != null && pp.projectiveChild != null) {
             CplexUtils.addRows(mat, pp.projectiveRoot);
             CplexUtils.addRows(mat, pp.projectiveChild);
@@ -246,6 +253,29 @@ public class DmvParseLpBuilder {
                 pp.oneParent[s][c] = cplex.eq(expr, 1.0, "oneParent");
             }
         }
+        
+        // MY NEW CONSTRAINT: Each arc should be on in only one direction.
+        // This was added after observing that some relaxed trees break this rule.
+        //
+        // forall <s> in Sents:
+        // forall <j> in { 1 to Length[s] }:
+        // sum <i> in { 1 to Length[s] } with i != j: arc[s,i,j] + arc[s,j,i] <= 1;
+        pp.oneArcPerPair = new IloRange[corpus.size()][][];
+        for (int s = 0; s < corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            pp.oneArcPerPair[s] = new IloRange[sent.size()][sent.size()];
+            for (int c = 0; c < sent.size(); c++) {
+                for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) {
+                        continue;
+                    }
+                    IloLinearNumExpr expr = cplex.linearNumExpr();
+                    expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                    expr.addTerm(1.0, pp.arcChild[s][c][p]);
+                    pp.oneArcPerPair[s][p][c] = cplex.le(expr, 1.0, "oneArcPerPair");
+                }
+            }
+        }
     }
 
     private void addSingleCommodityFlowCons(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {
@@ -320,6 +350,35 @@ public class DmvParseLpBuilder {
                     expr.addTerm(1.0, pp.flowChild[s][p][c]);
                     expr.addTerm(-sent.size(), pp.arcChild[s][p][c]);
                     pp.flowBoundChild[s][p][c] = cplex.le(expr, 0.0, "flowBoundChild");
+                }
+            }
+        }
+        
+        // MY NEW CONSTRAINT: 
+        // forall <s,i,j> in AllArcs:
+        // arc[s,i,j] <= flow[s,i,j];
+        pp.arcFlowBoundRoot = new IloRange[corpus.size()][];
+        for (int s = 0; s < corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            pp.arcFlowBoundRoot[s] = new IloRange[sent.size()];
+            for (int c = 0; c < sent.size(); c++) {
+                IloLinearNumExpr expr = cplex.linearNumExpr();
+                expr.addTerm(-1.0, pp.flowRoot[s][c]);
+                expr.addTerm(1.0, pp.arcRoot[s][c]);
+                pp.arcFlowBoundRoot[s][c] = cplex.le(expr, 0.0, "flowBoundRoot");
+            }
+        }
+        pp.arcFlowBoundChild = new IloRange[corpus.size()][][];
+        for (int s = 0; s < corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            pp.arcFlowBoundChild[s] = new IloRange[sent.size()][sent.size()];
+            for (int c = 0; c < sent.size(); c++) {
+                for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) { continue; }
+                    IloLinearNumExpr expr = cplex.linearNumExpr();
+                    expr.addTerm(-1.0, pp.flowChild[s][p][c]);
+                    expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                    pp.arcFlowBoundChild[s][p][c] = cplex.le(expr, 0.0, "flowBoundChild");
                 }
             }
         }

@@ -9,8 +9,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.lp.CplexPrm;
+import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
@@ -31,55 +33,6 @@ public class LpDmvRelaxedParserTest {
     public void setUp() {
         Prng.seed(1234567890);
     }
-    
-    /*
-     * ZIMPL with arc#0#0#2 == 1
-Variable Name           Solution Value
-arc#0#0#2                     1.000000
-arc#0#2#1                     1.000000
-arc#0#2#3                     1.000000
-genAdj#0#2$l                  1.000000
-genAdj#0#2$r                  0.333333
-numNonAdj#0@2d                0.666667
-stopAdj#0#1$l                 1.000000
-stopAdj#0#1$r                 1.000000
-stopAdj#0#2$r                 0.666667
-stopAdj#0#3$l                 1.000000
-stopAdj#0#3$r                 1.000000
-stopNonAdj#@3c                1.000000
-stopNonAdj#@3d                0.333333
-flow#0#0#2                    3.000000
-flow#0#2#1                    1.000000
-flow#0#2#3                    1.000000
-numToSide#0@1c                1.000000
-numToSide#0@19                1.000000
-numToSide#0@1d                1.000000
-genAdj#0#0$r                  1.000000
-stopAdj#0#0$l                 1.000000
-stopNonAdj#@39                1.000000
-All other variables matching '*' are 0.
-
-    CPLEX API 
-Variable Name            Solution Value
-arcRoot_{0,1}                  1.000000
-arcChild_{0,2,0}               1.000000
-arcChild_{0,1,2}               1.000000
-genAdj_{0,1,1}                 0.333333
-genAdj_{0,2,0}                 1.000000
-numNonAdj_{0,1,1}              0.666667
-stopAdj_{0,0,0}                1.000000
-stopAdj_{0,0,1}                1.000000
-stopAdj_{0,1,0}                1.000000
-stopAdj_{0,1,1}                0.666667
-stopAdj_{0,2,1}                1.000000
-flowRoot_{0,1}                 3.000000
-flowChild_{0,2,0}              1.000000
-flowChild_{0,1,2}              2.000000
-numToSide_{0,1,1}              1.000000
-numToSide_{0,2,0}              1.000000
-All other variables matching '*' are 0.
-
-     */
     
     @Test
     public void testTinyProj2() {
@@ -200,12 +153,53 @@ All other variables matching '*' are 0.
         Assert.assertArrayEquals(trees1.getFracChildren(), trees2.getFracChildren());
     }
 
+    @Test
+    public void testProjection() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("cat ate mouse");
+        sentences.addSentenceFromString("cat ate hat");
+        sentences.addSentenceFromString("mouse cat ate");        
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+
+        IlpFormulation formulation = IlpFormulation.FLOW_PROJ_LPRELAX;
+        
+        LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexPrm(), formulation);
+        parser.setTempDir(new File("."));
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+        RelaxedDepTreebank trees = parser.getRelaxedParse(corpus, model);
+        checkFractionalTrees(trees);
+        
+        DmvProjector projector = new DmvProjector(corpus);
+        projector.getProjectedParses(trees);
+    }
+    
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexPrm(), formulation);
         parser.setTempDir(new File("."));
         RelaxedDepTreebank trees = parser.getRelaxedParse(new DmvTrainCorpus(sentences), model);
+        checkFractionalTrees(trees);
         System.out.println("logProb: " + parser.getLastParseWeight());
         Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);
         return trees;
+    }
+
+    private static void checkFractionalTrees(RelaxedDepTreebank trees) {
+        // Check the parents of the nodes.
+        for (int s=0; s<trees.size(); s++) {
+            double[] fracRoots = trees.getFracRoots()[s];
+            double[][] fracChildren = trees.getFracChildren()[s];
+            // Check that the wall has "one" child.
+            Assert.assertEquals(1.0, Vectors.sum(fracRoots), 1e-13);
+            // Check that each node has "one" parent.
+            int sentLen = fracChildren.length;
+            for (int c = 0; c<sentLen; c++) {
+                double sum = fracRoots[c];
+                for (int p = 0; p<sentLen; p++) {
+                    sum += fracChildren[p][c];
+                }
+                Assert.assertEquals(1.0, sum, 1e-13);
+            }
+        }
     }
 }
