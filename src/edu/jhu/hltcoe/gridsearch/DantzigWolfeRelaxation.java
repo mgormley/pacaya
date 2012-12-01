@@ -24,7 +24,7 @@ import org.jboss.dna.common.statistic.Stopwatch;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
-import edu.jhu.hltcoe.lp.CplexFactory;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
@@ -40,7 +40,7 @@ public abstract class DantzigWolfeRelaxation {
     private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
     private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
-    private CplexFactory cplexFactory;
+    private CplexParams cplexFactory;
     private int maxDwIterations;
     private int maxCutRounds;
     private int numSolves;
@@ -63,7 +63,7 @@ public abstract class DantzigWolfeRelaxation {
     public DantzigWolfeRelaxation(File tempDir, int maxCutRounds) {
         // TODO: pass these through
         this.tempDir = tempDir;
-        this.cplexFactory = new CplexFactory();
+        this.cplexFactory = new CplexParams();
         this.maxDwIterations = 1000;
         this.maxCutRounds = maxCutRounds;
         this.numSolves = 0;
@@ -71,7 +71,7 @@ public abstract class DantzigWolfeRelaxation {
     }
 
     public void init2(DmvSolution initFeasSol) {
-        this.cplex = cplexFactory.getInstance();
+        this.cplex = cplexFactory.getIloCplexInstance();
         try {
             buildModel(cplex, initFeasSol);
         } catch (IloException e) {
@@ -275,7 +275,7 @@ public abstract class DantzigWolfeRelaxation {
         return numSolves;
     }
     
-    public void setCplexFactory(CplexFactory cplexFactory) {
+    public void setCplexFactory(CplexParams cplexFactory) {
         this.cplexFactory = cplexFactory;
     }
 

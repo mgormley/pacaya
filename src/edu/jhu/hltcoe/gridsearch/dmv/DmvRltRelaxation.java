@@ -32,7 +32,7 @@ import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltParams;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
-import edu.jhu.hltcoe.lp.CplexFactory;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
@@ -43,9 +43,9 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class DmvLpRelaxation implements DmvRelaxation {
+public class DmvRltRelaxation implements DmvRelaxation {
 
-    private static final Logger log = Logger.getLogger(DmvLpRelaxation.class);
+    private static final Logger log = Logger.getLogger(DmvRltRelaxation.class);
 
     private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
     private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
@@ -53,7 +53,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
     
     private IloCplex cplex;
     private File tempDir;
-    private CplexFactory cplexFactory;
+    private CplexParams cplexFactory;
     private int maxCutRounds;
     private int numSolves;
     private Stopwatch simplexTimer;
@@ -66,9 +66,9 @@ public class DmvLpRelaxation implements DmvRelaxation {
     private DmvObjective dmvObj;
     private boolean envelopeOnly;
  
-    public DmvLpRelaxation(File tempDir, int maxCutRounds, CutCountComputer initCutCountComp, boolean envelopeOnly) {
+    public DmvRltRelaxation(File tempDir, int maxCutRounds, CutCountComputer initCutCountComp, boolean envelopeOnly) {
         this.tempDir = tempDir;
-        this.cplexFactory = new CplexFactory();
+        this.cplexFactory = new CplexParams();
         this.maxCutRounds = maxCutRounds;
         this.numSolves = 0;
         this.simplexTimer = new Stopwatch();
@@ -87,7 +87,7 @@ public class DmvLpRelaxation implements DmvRelaxation {
     // Copied from DantzigWolfeRelaxation.
     @Override
     public void init2(DmvSolution initFeasSol) {
-        this.cplex = cplexFactory.getInstance();
+        this.cplex = cplexFactory.getIloCplexInstance();
         try {
             buildModel(cplex, initFeasSol);
         } catch (IloException e) {

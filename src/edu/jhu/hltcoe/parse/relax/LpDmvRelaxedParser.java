@@ -8,7 +8,7 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.lp.CplexFactory;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -22,11 +22,11 @@ public class LpDmvRelaxedParser implements RelaxedParser {
 
     private IloCplex cplex;
     private File tempDir;
-    private CplexFactory cplexFactory;
+    private CplexParams cplexFactory;
     private IlpFormulation formulation;
     private double lastParseWeight;
 
-    public LpDmvRelaxedParser(CplexFactory cplexFactory, IlpFormulation formulation) {
+    public LpDmvRelaxedParser(CplexParams cplexFactory, IlpFormulation formulation) {
         this.cplexFactory = cplexFactory;
         this.formulation = formulation;
     }
@@ -35,7 +35,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
     public RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model model) {
         DmvModel dmv = (DmvModel) model;
         try {
-            this.cplex = cplexFactory.getInstance();
+            this.cplex = cplexFactory.getIloCplexInstance();
             DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, formulation);
 
             DmvParsingProgram pp = builder.buildParsingProgram(corpus, dmv);

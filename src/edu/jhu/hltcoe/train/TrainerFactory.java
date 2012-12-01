@@ -33,7 +33,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
-import edu.jhu.hltcoe.lp.CplexFactory;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -139,7 +139,7 @@ public class TrainerFactory {
             throw new ParseException("Model not supported: " + modelName);
         }
 
-        CplexFactory cplexFactory = new CplexFactory(ilpWorkMemMegs, numThreads, maxSimplexIterations);
+        CplexParams cplexFactory = new CplexParams(ilpWorkMemMegs, numThreads, maxSimplexIterations);
         
         DmvRelaxation relax = null;
         if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {

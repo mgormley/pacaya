@@ -48,7 +48,7 @@ import edu.jhu.hltcoe.util.rproj.RDataFrame;
 import edu.jhu.hltcoe.util.rproj.RRow;
 
 
-public class DmvLpRelaxationTest {
+public class DmvRltRelaxationTest {
 
     @BeforeClass
     public static void classSetUp() {
@@ -441,7 +441,7 @@ public class DmvLpRelaxationTest {
                 return numCuts;
             }
         };
-        boolean envelopeOnly = true;
+        boolean envelopeOnly = false;
         DmvRltRelaxation dw = new DmvRltRelaxation(new File("."), numCuts, ccc, envelopeOnly);
         dw.init1(corpus);
         dw.init2(null);

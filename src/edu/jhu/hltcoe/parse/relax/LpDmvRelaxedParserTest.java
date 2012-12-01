@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.lp.CplexFactory;
+import edu.jhu.hltcoe.lp.CplexParams;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
@@ -201,7 +201,7 @@ All other variables matching '*' are 0.
     }
 
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
-        LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexFactory(), formulation);
+        LpDmvRelaxedParser parser = new LpDmvRelaxedParser(new CplexParams(), formulation);
         parser.setTempDir(new File("."));
         RelaxedDepTreebank trees = parser.getRelaxedParse(new DmvTrainCorpus(sentences), model);
         System.out.println("logProb: " + parser.getLastParseWeight());
