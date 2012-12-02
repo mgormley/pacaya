@@ -60,7 +60,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
                             deltaSum[c][m][lu] += cDelta;
                             numObserved[c][m][lu]++;
 
-                            String name = node.getIdm().getName(c, m);
+                            String name = idm.getName(c, m);
                             log.trace(String.format("Probing: c=%d m=%d lu=%d name=%s diff=%f", c, m, lu, name, cDelta));
                         }
                     }
