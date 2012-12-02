@@ -376,9 +376,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(numRestarts=1000000000, epsilon=0.0,
                        timeoutSeconds=10*60)
             dataset = synth_alt_three
-            for relaxation,envelopeOnly in [("dw",True), ("rlt", True), ("rlt",False)]:
-                experiment = all + dataset + DPExpParams(relaxation=relaxation, envelopeOnly=envelopeOnly)
-                root.add_dependent(experiment)
+            for varSelection in ["rand-uniform", "regret", "pseudocost", "full"]:
+                for relaxation,envelopeOnly in [("dw",True), ("rlt", True), ("rlt",False)]:
+                    experiment = all + dataset + DPExpParams(relaxation=relaxation, 
+                                                             envelopeOnly=envelopeOnly,
+                                                             varSelection=varSelection)
+                    root.add_dependent(experiment)
             #Scrape status information from a subset of the experiments.
             scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
             scrape_stat.add_prereqs(root.dependents)
