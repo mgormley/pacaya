@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.util.Prng;
 
-public class DfsRandChildNodeOrderer implements NodeOrderer {
+public class DfsRandChildAtDepthNodeOrderer implements NodeOrderer {
 
     private static class NodeWithJitter {
         private double jitter;
@@ -39,7 +39,7 @@ public class DfsRandChildNodeOrderer implements NodeOrderer {
 
     }
 
-    private static final Logger log = Logger.getLogger(DfsRandChildNodeOrderer.class);
+    private static final Logger log = Logger.getLogger(DfsRandChildAtDepthNodeOrderer.class);
 
     private ArrayList<PriorityQueue<NodeWithJitter>> pqs;
     PriorityQueue<NodeWithJitter> others;
@@ -47,7 +47,7 @@ public class DfsRandChildNodeOrderer implements NodeOrderer {
     private int curDepth;
     private int size;
     
-    public DfsRandChildNodeOrderer(int maxDepth) {
+    public DfsRandChildAtDepthNodeOrderer(int maxDepth) {
         this.maxDepth = maxDepth; 
         curDepth = 0;
         size = 0;

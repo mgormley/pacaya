@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
-import edu.jhu.hltcoe.gridsearch.DfsRandChildNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
@@ -296,7 +296,7 @@ public class TrainerFactory {
         } else if (nodeOrder.equals("dfs")) {
             nodeOrderer = new PqNodeOrderer(new DfsBfcComparator());
         } else if (nodeOrder.equals("dfs-rand")) {
-            nodeOrderer = new DfsRandChildNodeOrderer(60);
+            nodeOrderer = new DfsRandChildAtDepthNodeOrderer(60);
         } else if (nodeOrder.equals("dfs-randwalk")) {
             nodeOrderer = new DfsRandWalkNodeOrderer(60);
         }

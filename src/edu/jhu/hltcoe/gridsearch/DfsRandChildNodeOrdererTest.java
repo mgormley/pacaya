@@ -38,7 +38,7 @@ public class DfsRandChildNodeOrdererTest {
         ProblemNode n2c = new MockDmvProblemNode(2);
         ProblemNode n3a = new MockDmvProblemNode(3);
         
-        DfsRandChildNodeOrderer pq = new DfsRandChildNodeOrderer(3);
+        DfsRandChildAtDepthNodeOrderer pq = new DfsRandChildAtDepthNodeOrderer(3);
         pq.add(n1a);
         pq.add(n2a);
         pq.add(n3a);
