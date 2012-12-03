@@ -35,11 +35,17 @@ public class CplexUtils {
         }
 
         public void updateRowsInMatrix(IloLPMatrix mat) throws IloException {
+            TIntArrayList rowInd = new TIntArrayList();
+            TIntArrayList colInd = new TIntArrayList();
+            TDoubleArrayList val = new TDoubleArrayList();
             for (int i=0; i<rowIdxs.size(); i++) {
                 int rowind = rowIdxs.get(i);
                 SparseVector row = coefs.get(i);
-                mat.setNZs(getRowIndArray(row, rowind), row.getIndex(), row.getData());
+                rowInd.add(getRowIndArray(row, rowind));
+                colInd.add(row.getIndex());
+                val.add(row.getData());
             }
+            mat.setNZs(rowInd.toNativeArray(), colInd.toNativeArray(), val.toNativeArray());
         }
 
         public ArrayList<SparseVector> getAllCoefs() {
