@@ -19,7 +19,8 @@ results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb-depth-t
 df <- read.table(results.file, header=TRUE)
 df.orig <- df
 
-df$method = str_c(df$algorithm, df$offsetProb, df$probOfSkipCm, df$initWeights, sep=".")
+df$method = str_c(df$relaxation, df$envelopeOnly, df$varSelection, sep=".")
+df$relaxStatus2 <- ifelse(df$upperBound < incumbentScore, "Pruned", "Not-pruned")
 incumbentScore <- -119.228527
 
 plotLowerBoundVsDepth <- function(mydata) {
@@ -27,12 +28,13 @@ plotLowerBoundVsDepth <- function(mydata) {
   xlab = "Depth"
   ylab = "Bound on log-likelihood"
   p <- ggplot(mydata, aes(x=depth,
-                          y=upperBound))#, color=factor(depth)))
-  p <- p + geom_boxplot(aes(group=depth))
-  #p <- p + geom_jitter(aes(group=depth, alpha=0.7))
+                          y=upperBound, color=method)) #color=factor(depth)))
+  #p <- p + geom_boxplot(aes(group=depth))
+  p <- p + geom_jitter(aes(group=method, alpha=0.1))
+  #p <- p + geom_smooth(aes(group=method, alpha=0.7))
   #p <- p + geom_point()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
-  p <- p + scale_color_discrete(guide=FALSE)
+  #p <- p + scale_color_discrete(guide=FALSE)
   # Add a line showing the lower bound found.
   p <- p + geom_abline(intercept=incumbentScore, slope=0)
 }
@@ -50,7 +52,6 @@ plotCountsVsDepth <- function(mydata) {
   p <- p + scale_fill_discrete(name="Relaxation Status")
 }
 
-df$relaxStatus2 <- ifelse(df$upperBound < incumbentScore, "Pruned", "Not-pruned")
 myplot(plotCountsVsDepth(df),
        str_c(results.file, "countsvdepth", "pdf", sep="."))
 
@@ -60,6 +61,7 @@ mysummary <- function(df) {
 
   mydf <- data.frame(depth = 0)  
   mydf$depth <- df$depth[1]
+  mydf$method <- df$method[1]
   mydf$sampleMean <- mean(df$isKept)
   mydf$sampleVariance <- var(df$isKept)
   mydf$numSampled <- length(df$depth)
@@ -71,7 +73,6 @@ mysummary <- function(df) {
   
   return(mydf)
 }
-depths <- ddply(df, .(depth), mysummary)
 
 plotProportionVsDepth <- function(mydata) {
   title = "Synthetic Data from DMV with 3 POS tags"
@@ -82,11 +83,12 @@ plotProportionVsDepth <- function(mydata) {
   ## p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   ## p <- p + scale_fill_discrete(name="Relaxation Status")
   p <- ggplot(mydata, aes(x=depth, y=(1 - sampleMean)))
-  p <- p + geom_line()
+  p <- p + geom_line(aes(color=method))
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   p <- p + scale_fill_discrete(name="Relaxation Status")
 }
 
+depths <- ddply(subset(df, varSelection=="rand-uniform"), .(depth, method), mysummary)
 ##depths <- ddply(df, .(depth, relaxStatus2), summarise, count=length(depth))
 myplot(plotProportionVsDepth(depths),
        str_c(results.file, "propvdepth", "pdf", sep="."))
@@ -94,30 +96,39 @@ myplot(plotProportionVsDepth(depths),
 ## Print out the estimated number of nodes in the pruned B&B tree
 ##
 
-## Estimate of the total number of nodes kept.
-est.pop.tot <- sum(depths$estNumKept)
+depths.orig <- depths
+for (m in unique(depths.orig$method)) {
+  depths = subset(depths.orig, method == m)
+  ## Estimate of the total number of nodes kept.
+  est.pop.tot <- sum(depths$estNumKept)
 
-## The stratified sample variance for that estimate.
-## See : http://webcast.idready.org/materials/fall07/appliedepir/2007-11-27/stratsurvey2.pdf
-## Also see pg 217 of Rice book.
-attach(depths)
-var.tot.vec <- (1 - (numSampled/population)) * population^2 * (sampleVariance/numSampled)
-detach(depths)
-## Set the variance of the root node to zero.
-var.tot.vec[1] <- 0.0
-var.tot <- sum(var.tot.vec)
-se.tot <- sqrt(var.tot)
+  ## The stratified sample variance for that estimate.
+  ## See : http://webcast.idready.org/materials/fall07/appliedepir/2007-11-27/stratsurvey2.pdf
+  ## Also see pg 217 of Rice book.
+  attach(depths)
+  var.tot.vec <- (1 - (numSampled/population)) * population^2 * (sampleVariance/numSampled)
+  detach(depths)
+  ## Set the variance of the root node to zero.
+  var.tot.vec[1] <- 0.0
+  var.tot <- sum(var.tot.vec)
+  se.tot <- sqrt(var.tot)
 
-## Confidence interval for the estimate.
-ci <- c(est.pop.tot - 1.96 * se.tot,
-        est.pop.tot + 1.96 * se.tot)
+  ## Confidence interval for the estimate.
+  ci <- c(est.pop.tot - 1.96 * se.tot,
+          est.pop.tot + 1.96 * se.tot)
 
-# Print the estimates.
-sprintf("estimate=%f stddev=%f", est.pop.tot, se.tot)
-sprintf("confidence interval = %f", ci)
-sprintf("number of hours to complete (26ms per node) = %f", est.pop.tot * 26 / 1000 / 60 / 60)
-sprintf("number of days to complete (26ms per node) = %f", est.pop.tot * 26 / 1000 / 60 / 60 / 24)
+  ## Time(ms) per node. TODO: strip this from the method.
+  time.per.node <- 17
+  ## Print the estimates.
+  print(sprintf("method=%s", m))
+  print(sprintf("estimate=%f stddev=%f", est.pop.tot, se.tot))
+  print(sprintf("confidence interval = %f", ci))
+  print(sprintf("number of hours to complete (%dms per node) = %f", time.per.node,
+                est.pop.tot * time.per.node / 1000 / 60 / 60))
+  print(sprintf("number of days to complete (%dms per node) = %f",  time.per.node,
+                est.pop.tot * time.per.node / 1000 / 60 / 60 / 24))
 
+}
 ## ------ Trash -------
 ## depths <- ddply(df, depth ~ relaxStatus2, summarise,
 ##                 numSampled = length(depth),
