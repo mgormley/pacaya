@@ -275,11 +275,18 @@ public class IndexedDmvModel implements IndexedCpt {
     public String getName(int c, int m) {
         Rhs rhs = rhsToC.lookupIndex(c);
         if (rhs.get(0) == ROOT) {
-            return String.format("root(%d)", m);
+            String cTag = alphabet.lookupIndex(m).getLabel();
+            return String.format("root(%s)", cTag);
         } else if (rhs.get(0) == CHILD) {
-            return String.format("child_{%d,%d,%d}(%d)", rhs.get(1), rhs.get(2), rhs.get(3), m);
+            String pTag = alphabet.lookupIndex(rhs.get(1)).getLabel();
+            String lr = rhs.get(2) == Constants.LEFT ? "l" : "r";
+            String cTag = alphabet.lookupIndex(m).getLabel();
+            return String.format("child_{%s,%s,%d}(%s)", pTag, lr, rhs.get(3), cTag);
         } else if (rhs.get(0) == DECISION) {
-            return String.format("dec_{%d,%d,%d}(%d)",  rhs.get(1), rhs.get(2), rhs.get(3), m);
+            String pTag = alphabet.lookupIndex(rhs.get(1)).getLabel();
+            String lr = (rhs.get(2) == Constants.LEFT) ? "l" : "r";
+            String sc = (m == Constants.END) ? "s" : "c";
+            return String.format("dec_{%s,%s,%d}(%s)",  pTag, lr, rhs.get(3), sc);
         } else {
             throw new IllegalStateException("Unsupported type");
         }
