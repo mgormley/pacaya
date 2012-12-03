@@ -78,7 +78,7 @@ public class IndexedDmvModel implements IndexedCpt {
         this.alphabet = sentences.getLabelAlphabet();
         this.vocab = sentences.getVocab();
 
-        numTags = vocab.size() - 1;
+        numTags = alphabet.size();
         log.trace("numTags: " + numTags);
         
         // Create map of DepProbMatrix right hand sides to integers
