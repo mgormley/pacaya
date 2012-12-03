@@ -51,6 +51,9 @@ public abstract class DantzigWolfeRelaxation {
         public int maxCutRounds = 1;
         public File tempDir = null;
         public CplexPrm cplexPrm = new CplexPrm();
+        public DwRelaxPrm() {
+            cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Primal;
+        }
     }
     
     static Logger log = Logger.getLogger(DantzigWolfeRelaxation.class);
@@ -190,7 +193,6 @@ public abstract class DantzigWolfeRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
-            warmStart = getWarmStart();
             status = RelaxStatus.get(cplex.getStatus()); 
             
             log.trace("Master solution status: " + cplex.getStatus());
@@ -203,6 +205,7 @@ public abstract class DantzigWolfeRelaxation {
             if (prm.tempDir != null) {
                 cplex.writeSolution(new File(prm.tempDir, String.format("dw.%d.sol", dwIter)).getAbsolutePath());
             }
+            warmStart = getWarmStart();
             double objVal = cplex.getObjValue();
             log.trace("Master solution value: " + objVal);
             double prevObjVal = iterationObjVals.size() > 0 ? iterationObjVals.get(iterationObjVals.size() - 1)

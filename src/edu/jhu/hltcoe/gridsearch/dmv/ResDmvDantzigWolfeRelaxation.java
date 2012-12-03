@@ -3,7 +3,6 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
-import ilog.concert.IloMPModeler;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
@@ -22,8 +21,6 @@ import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.gridsearch.RelaxStatus;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
@@ -50,6 +47,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
 
     public static class ResDmvDwRelaxPrm extends DmvDwRelaxPrm {
         public ResDmvDwRelaxPrm() {
+            super();
             this.stoPrm = null;
         }
     }

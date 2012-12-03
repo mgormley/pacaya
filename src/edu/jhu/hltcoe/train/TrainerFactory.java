@@ -36,6 +36,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RandPropRltRowFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
@@ -105,6 +106,8 @@ public class TrainerFactory {
         options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
         options.addOption("df", "disableFathoming", true, "Disables fathoming in branch-and-bound");
         options.addOption("eo", "envelopeOnly", true, "Whether to use only the convex/concave envelope for the RLT relaxation");
+        options.addOption("eo", "rltFilter", true, "RLT filter type [obj-var, prop]");
+        options.addOption("eo", "rltAcceptProp", true, "(prop only) Proportion of rows to accept.");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -136,12 +139,14 @@ public class TrainerFactory {
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
-        double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
-        double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
-        double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
-        double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
-        boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
-        boolean envelopeOnly = Command.getOptionValue(cmd, "envelopeOnly", true);
+        final double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
+        final double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
+        final double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
+        final double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
+        final boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
+        final boolean envelopeOnly = Command.getOptionValue(cmd, "envelopeOnly", true);
+        final String rltFilter = Command.getOptionValue(cmd, "rltFilter", "obj-var");
+        final double rltAcceptProp = Command.getOptionValue(cmd, "rltAcceptProp", 0.1);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -174,14 +179,27 @@ public class TrainerFactory {
                 relax = new ResDmvDantzigWolfeRelaxation(dwPrm);
             } else if (relaxation.equals("rlt")) {
                 RltPrm rltPrm = new RltPrm();
+                rltPrm.nameRltVarsAndCons = false;
                 rltPrm.envelopeOnly = envelopeOnly;
-                DmvRltRelaxPrm rlxPrm = new DmvRltRelaxPrm();
-                rlxPrm.tempDir = dwTemp;
-                rlxPrm.maxCutRounds = maxCutRounds;
-                rlxPrm.cplexPrm = cplexPrm;
-                rlxPrm.rltPrm = rltPrm;
-                rlxPrm.stoPrm = stoPrm;
-                relax = new DmvRltRelaxation(rlxPrm);
+                    
+                DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
+                rrPrm.tempDir = dwTemp;
+                rrPrm.maxCutRounds = maxCutRounds;
+                rrPrm.cplexPrm = cplexPrm;
+                rrPrm.rltPrm = rltPrm;
+                rrPrm.stoPrm = stoPrm;
+                
+                rrPrm.objVarFilter = false;
+                if (rltFilter.equals("obj-var")) {
+                    rrPrm.objVarFilter = true;
+                    rltPrm.factorFilter = null;
+                    rltPrm.rowFilter = null;
+                } else if (rltFilter.equals("prop")) {
+                    rltPrm.rowFilter = new RandPropRltRowFilter(rltAcceptProp);
+                } else {
+                    throw new ParseException("RLT filter type not supported: " + rltFilter);
+                }
+                relax = new DmvRltRelaxation(rrPrm);
             } else {
                 throw new ParseException("Relaxation not supported: " + relaxation);
             }

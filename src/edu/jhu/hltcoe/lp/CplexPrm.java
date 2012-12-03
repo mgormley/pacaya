@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.lp;
 
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
+import ilog.cplex.IloCplex.BooleanParam;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
 
@@ -12,7 +13,8 @@ public class CplexPrm {
     public double workMemMegs = 1024;
     public int numThreads = 1;
     public int maxSimplexIterations = 2100000000;
-        
+    public int simplexAlgorithm = IloCplex.Algorithm.Auto;   
+    
     public CplexPrm() { }
 
     public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations) {
@@ -63,7 +65,7 @@ public class CplexPrm {
         // However it may be that Primal can better take advantage of a feasible
         // basis after adding
         // new variables.
-        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+        cplex.setParam(IntParam.RootAlg, simplexAlgorithm);
 
         // Note: we'd like to reuse basis information by explicitly storing it
         // with the Fork nodes as in SCIP. However, this is only possible if the
@@ -77,22 +79,26 @@ public class CplexPrm {
 
         cplex.setParam(IntParam.ItLim, maxSimplexIterations);
 
-        // For continuous models solved with simplex, setting 1 (one) will use
-        // the
-        // currently loaded basis. If a basis is available only for the
-        // original, unpresolved
-        // model, or if CPLEX has a start vector rather than a simplex basis,
-        // then the
-        // simplex algorithm will proceed on the unpresolved model. With setting
-        // 2,
-        // CPLEX will first perform presolve on the model and on the basis or
-        // start vector,
-        // and then proceed with optimization on the presolved problem.
+        //    For continuous models solved with simplex, setting 1 (one) will use
+        //    the currently loaded basis. If a basis is available only for the
+        //    original, unpresolved model, or if CPLEX has a start vector rather
+        //    than a simplex basis, then the simplex algorithm will proceed on the
+        //    unpresolved model. With setting 2, CPLEX will first perform presolve
+        //    on the model and on the basis or start vector, and then proceed with
+        //    optimization on the presolved problem.
         cplex.setParam(IntParam.AdvInd, 1);
 
-        // Whether or not to presolve.
+        // Whether or not to presolve (default true).
         // cplex.setParam(BooleanParam.PreInd, false);
 
+        // Parameter for increasing optimality tolerance:
+        // cplex.setParam(DoubleParam.EpOpt, 1e-1);
+        // Parameter for increasing feasibility tolerance:
+        // cplex.setParam(DoubleParam.EpRHS, 1e-1);
+        
+        // Numerical precision emphasis (default false)
+        // cplex.setParam(BooleanParam.NumericalEmphasis, true);
+        
         // OutputStream out = new BufferedOutputStream(new FileOutputStream(new
         // File(tempDir, "cplex.log")));
         // cplex.setOut(out);
