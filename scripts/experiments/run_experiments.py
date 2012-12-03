@@ -400,7 +400,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     for relax in [dwRelax, lpRelax, rltObjVarRelax, rltHalfRelax, rltAllRelax]:
                         experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
                                                                          maxNumSentences=maxNumSentences)
-                    root.add_dependent(experiment)
+                        root.add_dependent(experiment)
             #Scrape status information from a subset of the experiments.
             scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
             scrape_stat.add_prereqs(root.dependents)
