@@ -181,7 +181,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                     dw.reverseApply(deltas1);
                     dw.reverseApply(deltas2);
                 }
-                log.debug("l, u = " + dw.getBounds().getLb(Type.PARAM,c, m) + ", " + dw.getBounds().getUb(Type.PARAM,c, m));
+                log.debug(String.format("Updated bounds: %s = [%f, %f]", dw.getIdm().getName(c, m), dw.getBounds().getLb(Type.PARAM,c, m), dw.getBounds().getUb(Type.PARAM,c, m)));
             }
         }
     }
