@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class FastSparseVectorTest {
@@ -55,5 +56,39 @@ public class FastSparseVectorTest {
         assertEquals(10 * 2.4, ip.get(23), 1e-13);
         assertEquals(2.3 * 7, ip.get(49), 1e-13);
     }
+    
+    @Test
+    public void testFilterZeros() {
+        FastSparseVector v1 = new FastSparseVector();
+        v1.set(4, 530.8);
+        v1.set(49, 2.3);
+        v1.set(32, 1e-10);        
+        v1.set(23, 10);
+        v1.set(10, -1e-10);
+        
+        double zeroThreshold = 1e-9;
+        SparseVector v2 = FastSparseVector.getWithNoZeroValues(v1, zeroThreshold);
+        
+        System.out.println("v2: " + v2);
+        
+        assertEquals(5, v1.getUsed());
+        assertEquals(3, v2.getUsed());
+        
+        assertEquals(530.8, v2.get(4), 1e-13);
+        assertEquals(2.3, v2.get(49), 1e-13);
+        assertEquals(10, v2.get(23), 1e-13);
+    }
+    
+    @Test
+    public void testFilterNonZeros() {
+        FastSparseVector v1 = new FastSparseVector();
+        v1.set(4, 530.8);
+        v1.set(49, 2.3);
+        v1.set(23, 10);
+        
+        double zeroThreshold = 1e-9;
+        SparseVector v2 = FastSparseVector.getWithNoZeroValues(v1, zeroThreshold);
 
+        Assert.assertTrue(v1 == v2);
+    }
 }

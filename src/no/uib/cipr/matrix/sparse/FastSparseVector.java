@@ -32,11 +32,11 @@ public class FastSparseVector extends SparseVector {
 
     boolean norm2Cached = false;
     double norm2Value;
-    
+
     public FastSparseVector() {
         super(Integer.MAX_VALUE);
     }
-    
+
     public FastSparseVector(int size) {
         super(size);
     }
@@ -44,7 +44,7 @@ public class FastSparseVector extends SparseVector {
     public FastSparseVector(Vector vector) {
         super(vector);
     }
-    
+
     public FastSparseVector(int size, int[] index, double[] data) {
         super(size, Sort.sortIndexAsc(index, data), data);
     }
@@ -52,9 +52,49 @@ public class FastSparseVector extends SparseVector {
     public FastSparseVector(int[] index, double[] data) {
         this(Integer.MAX_VALUE, index, data);
     }
-    
+
     public FastSparseVector(double[] denseData) {
         super(Integer.MAX_VALUE, Sort.getIndexArray(denseData), denseData);
+    }
+
+    /**
+     * @return A new vector without zeros OR the same vector if it has none.
+     */
+    public static SparseVector getWithNoZeroValues(FastSparseVector row, double zeroThreshold) {
+        int[] origIndex = row.getIndex();
+        double[] origData = row.getData();
+        
+        // Count and keep track of nonzeros.
+        int numNonZeros = 0;
+        boolean[] isNonZero = new boolean[row.getUsed()];
+        for (int i = 0; i < row.getUsed(); i++) {
+            double absVal = Math.abs(origData[i]);
+            if (absVal < -zeroThreshold || zeroThreshold < absVal) {
+                isNonZero[i] = true;
+                numNonZeros++;
+            } else {
+                isNonZero[i] = false;
+            }
+        }
+        int numZeros = row.getUsed() - numNonZeros;
+        
+        if (numZeros > 0) {
+            // Create the new vector without the zeros.
+            int[] newIndex = new int[numNonZeros];
+            double[] newData = new double[numNonZeros];
+
+            int newIdx = 0;
+            for (int i = 0; i < row.getUsed(); i++) {
+                if (isNonZero[i]) {
+                    newIndex[newIdx] = origIndex[i];
+                    newData[newIdx] = origData[i];
+                    newIdx++;
+                }
+            }
+            return new FastSparseVector(newIndex, newData);
+        } else {
+            return row;
+        }
     }
 
     @Override
@@ -81,7 +121,7 @@ public class FastSparseVector extends SparseVector {
             return super.dot(y);
         }
     }
-    
+
     /**
      * TODO: Consider removing this since it's specific to the SCTM usage.
      */
@@ -95,7 +135,8 @@ public class FastSparseVector extends SparseVector {
     }
 
     /**
-     * Computes the Hadamard product (or entry-wise product) of this vector with another.
+     * Computes the Hadamard product (or entry-wise product) of this vector with
+     * another.
      */
     public SparseVector hadamardProd(FastSparseVector other) {
         FastSparseVector ip = new FastSparseVector(Math.max(other.size(), this.size()));
@@ -114,16 +155,16 @@ public class FastSparseVector extends SparseVector {
         }
         return ip;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{");
-        for (int i=0; i<used; i++) {
+        for (int i = 0; i < used; i++) {
             sb.append(index[i]);
             sb.append(":");
             sb.append(data[i]);
-            if (i+1<used) {
+            if (i + 1 < used) {
                 sb.append(", ");
             }
         }
@@ -151,7 +192,7 @@ public class FastSparseVector extends SparseVector {
         }
         return true;
     }
-    
+
     /**
      * Returns the data.
      */
@@ -159,12 +200,12 @@ public class FastSparseVector extends SparseVector {
     public double[] getData() {
         if (used == data.length)
             return data;
-        
-        double [] values = new double[used];
-        for (int i = 0 ; i < used; i++) {
+
+        double[] values = new double[used];
+        for (int i = 0; i < used; i++) {
             values[i] = data[i];
         }
         return values;
     }
-    
+
 }
