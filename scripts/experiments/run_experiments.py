@@ -236,6 +236,25 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
         
+        # Define commonly used relaxations:
+        dwRelax = DPExpParams(relaxation="dw",
+                              envelopeOnly=True)
+        lpRelax = DPExpParams(relaxation="rlt",
+                              envelopeOnly=True,
+                              rltFilter="obj-var")
+        rltObjVarRelax = DPExpParams(relaxation="rlt",
+                                     envelopeOnly=False,
+                                     rltFilter="obj-var")
+        rltHalfRelax = DPExpParams(relaxation="rlt",
+                                  envelopeOnly=False,
+                                  rltFilter="prop",
+                                  rltAcceptProp=0.5)
+        rltAllRelax = DPExpParams(relaxation="rlt",
+                                  envelopeOnly=False,
+                                  rltFilter="prop",
+                                  rltAcceptProp=1.0)
+        
+        # For --fast option
         if self.fast:       all.update(iterations=1,
                                        maxSentenceLength=7,
                                        maxNumSentences=3,
@@ -376,11 +395,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(numRestarts=1000000000, epsilon=0.0,
                        timeoutSeconds=10*60)
             dataset = synth_alt_three
-            for varSelection in ["rand-uniform", "regret", "pseudocost", "full"]:
-                for relaxation,envelopeOnly in [("dw",True), ("rlt", True), ("rlt",False)]:
-                    experiment = all + dataset + DPExpParams(relaxation=relaxation, 
-                                                             envelopeOnly=envelopeOnly,
-                                                             varSelection=varSelection)
+            for maxNumSentences in [4,50]:
+                for varSelection in ["rand-uniform", "regret", "pseudocost", "full"]:
+                    for relax in [dwRelax, lpRelax, rltObjVarRelax, rltHalfRelax, rltAllRelax]:
+                        experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
+                                                                         maxNumSentences=maxNumSentences)
                     root.add_dependent(experiment)
             #Scrape status information from a subset of the experiments.
             scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
