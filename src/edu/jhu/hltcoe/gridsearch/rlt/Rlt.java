@@ -24,6 +24,7 @@ import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.CplexUtils.CplexRowUpdates;
 import edu.jhu.hltcoe.util.CplexUtils.CplexRows;
@@ -35,7 +36,7 @@ public class Rlt {
         public RltRowFilter rowFilter = null;
         public boolean nameRltVarsAndCons = true;
         public RltFactorFilter factorFilter = null;
-
+        
         public static RltPrm getConvexConcaveEnvelope() {
             RltPrm prm = new RltPrm();
             prm.envelopeOnly = true;
@@ -61,15 +62,83 @@ public class Rlt {
     }
     
     /**
+     * Randomly accepts only a fixed proportion of the rows.
+     */
+    public static class RandPropRltRowFilter implements RltRowFilter {
+
+        private double acceptProp;
+        
+        public RandPropRltRowFilter(double acceptProp) {
+            this.acceptProp = acceptProp;
+        }
+        
+        @Override
+        public void init(Rlt rlt) throws IloException {
+            // Do nothing.
+        }
+        
+        @Override
+        public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
+            return Prng.nextDouble() < acceptProp; 
+        }
+
+        @Override
+        public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
+            return Prng.nextDouble() < acceptProp; 
+        }
+        
+    }
+    
+    /**
+     * Accepts only rows with non-zero coefficients whose absolute values are greater than some value.
+     */
+    public static class NumericalStabilityRltRowFilter implements RltRowFilter {
+
+        private double minCoef;
+        private double maxCoef;
+        
+        public NumericalStabilityRltRowFilter(double minCoef, double maxCoef) {
+            this.minCoef = minCoef;
+            this.maxCoef = maxCoef;
+        }
+        
+        @Override
+        public void init(Rlt rlt) throws IloException {
+            // Do nothing.
+        }
+        
+        @Override
+        public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
+            return accept(row);
+        }
+
+        @Override
+        public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
+            return accept(row);
+        }
+
+        private boolean accept(SparseVector row) {
+            double[] data = row.getData();
+            for (int i=0; i<row.getUsed(); i++) {
+                double absVal = Math.abs(data[i]);
+                if (absVal < minCoef || maxCoef < absVal) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    
+    /**
      * Accepts only RLT rows that have a non-zero coefficient for some RLT variable corresponding
      * to the given pairs of variables.
      */
-    public static class RltVarRowFilter implements RltRowFilter {
+    public static class VarRltRowFilter implements RltRowFilter {
         
         private TIntHashSet rltVarIds;
         private List<Pair<IloNumVar, IloNumVar>> pairs;
 
-        public RltVarRowFilter(List<Pair<IloNumVar,IloNumVar>> pairs) {
+        public VarRltRowFilter(List<Pair<IloNumVar,IloNumVar>> pairs) {
             this.pairs = pairs;
         }
 
@@ -105,12 +174,12 @@ public class Rlt {
     /**
      * Accepts only RLT factors that have a non-zero coefficient for one of the given input matrix variable columns.
      */
-    public static class RltVarFactorFilter implements RltFactorFilter {
+    public static class VarRltFactorFilter implements RltFactorFilter {
         
         private TIntHashSet cols;
         private List<IloNumVar> vars;
 
-        public RltVarFactorFilter(List<IloNumVar> vars) {
+        public VarRltFactorFilter(List<IloNumVar> vars) {
             this.vars = vars;
         }
 
@@ -145,8 +214,6 @@ public class Rlt {
      */
     public static final double CPLEX_NEG_INF = -Double.MAX_VALUE;
 
-    private static final int UNINITIALIZED_COLUMN = -1;
-
     private IloLPMatrix rltMat;
     private IloLPMatrix inputMatrix;
     private List<Factor> factors;
@@ -178,7 +245,8 @@ public class Rlt {
     
     public Rlt(IloCplex cplex, IloLPMatrix inputMatrix, RltPrm prm) throws IloException {
         List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
-        log.debug("RLT factors: " + newFactors.size());
+        log.debug("# unfiltered RLT factors: " + newFactors.size());
+        log.debug("# unfiltered RLT rows: " + FactorBuilder.getNumRows(newFactors, inputMatrix));
 
         this.cplex = cplex;
         this.prm = prm;
@@ -230,6 +298,9 @@ public class Rlt {
         this.factors = new ArrayList<Factor>();
         addNewFactors(newFactors);
         
+        log.debug("# filtered RLT factors: " + factors.size());
+        log.debug("# filtered RLT rows: " + rltMat.getNrows());
+
         // This can be initialized only after all the bounds factors have been
         // added to the RLT matrix, rltMat.
         this.boundsFactorMap = getBoundsFactorMap(rltMat, factors);
@@ -245,7 +316,7 @@ public class Rlt {
     
     private ArrayList<SparseVector> convertRltVarIdsToColumIndices(List<SparseVector> rows)  throws IloException {
         // Make sure all the IDs are added as columns.
-        log.debug("Creating new first-order RLT variables.");
+        log.trace("Creating new first-order RLT variables.");
         int numRltCols = rltMat.getNcols();
         List<IloNumVar> newRltVars = new ArrayList<IloNumVar>();
         for (int m=0; m<rows.size(); m++) {
@@ -258,7 +329,7 @@ public class Rlt {
                     IloNumVar rltVar = cplex.numVar(getLowerBound(numVars[i], numVars[j]), getUpperBound(numVars[i], numVars[j]));
                     if (prm.nameRltVarsAndCons) {
                         // Optionally add a name.
-                        rltVar.setName(String.format("w_{%d,%d}", i, j));
+                        rltVar.setName(String.format("w_{%s,%s}", numVars[i].getName(), numVars[j].getName()));
                     }
                     
                     // Add the new variable to the appropriate mappings and lists.
@@ -273,7 +344,7 @@ public class Rlt {
         rltMatVars.addAll(newRltVars);
         
         // Convert the IDs to indices.
-        log.debug("Converting IDs to column indices");
+        log.trace("Converting IDs to column indices");
         ArrayList<SparseVector> rowsWithColIdx = new ArrayList<SparseVector>();
         for (int m=0; m<rows.size(); m++) {
             SparseVector oldCoefs = rows.get(m);
@@ -324,13 +395,13 @@ public class Rlt {
         if (facI.isEq()) {
             // Add an equality factor by multiplying it with each variable.
             for (int k = 0; k < n; k++) {
-                String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d, %d}", i, k) : null;
-                SparseVector row = getRltRowForEq(facI, k, idsForRltVars);
-
                 // k is the column index of the kth column variable.
                 if (log.isTraceEnabled()) {
                     assert (inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
                 }
+                
+                String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d,%d}", i, k) : null;
+                SparseVector row = getRltRowForEq(facI, k, idsForRltVars);
                 if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k)) {
                     // Add the complete constraint.
                     rows.addRow(0.0, row, 0.0, rowName);
@@ -350,7 +421,7 @@ public class Rlt {
                     continue;
                 }
 
-                String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%d, %d}", i, j) : null;
+                String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
                 SparseVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
                 if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)) {
                     // Add the complete constraint.
@@ -404,9 +475,9 @@ public class Rlt {
         BoundFactor bf = (BoundFactor) factors.get(factorIdx);
         Factor factor;
         if (bf.lu == Lu.LOWER) {
-            factor = FactorBuilder.getBoundFactorLower(inputMatrix.getNumVars(), bf.colIdx);
+            factor = FactorBuilder.getBoundFactorLower(inputMatrix.getNumVars(), bf.colIdx, inputMatrix);
         } else {
-            factor = FactorBuilder.getBoundFactorUpper(inputMatrix.getNumVars(), bf.colIdx);
+            factor = FactorBuilder.getBoundFactorUpper(inputMatrix.getNumVars(), bf.colIdx, inputMatrix);
         }
         factors.set(factorIdx, factor);
 
@@ -531,7 +602,7 @@ public class Rlt {
         // + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il} G_{jk})
         // w_{kl} &\leq g_ig_j
 
-        SparseVector row = new FastSparseVector();
+        FastSparseVector row = new FastSparseVector();
         // Part 1: \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
         SparseVector facIG = facI.G.copy();
         SparseVector facJG = facJ.G.copy();
@@ -547,7 +618,7 @@ public class Rlt {
             double val = ip.getData()[idx];
             shiftedIp.set(rltVarsInd.get(k, k), val);
         }
-        row = (SparseVector) row.add(shiftedIp);
+        row.add(shiftedIp);
 
         // Part 3: + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il}
         // G_{jk}) w_{kl}
@@ -566,22 +637,23 @@ public class Rlt {
 
         double rowUb = facI.g * facJ.g;
         row.add(constantVarColIdx, -rowUb);
+        
         return row;
     }
 
     private static SparseVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
-        SparseVector row = new FastSparseVector();
+        FastSparseVector row = new FastSparseVector();
 
-        // Original: x_k * g_i + sum_{l=1}^n x_k * G_{il} * x_l
-        // Linearized: x_k * g_i + sum_{l=1}^n G_{il} w_{kl}
+        // Original: x_k * g_i + sum_{l=1}^n - x_k * G_{il} * x_l = 0
+        // Linearized: x_k * g_i + sum_{l=1}^n - G_{il} w_{kl} = 0
 
         // Add x_k * g_i
         row.add(k, facI.g);
 
-        // Add sum_{l=1}^n G_{il} w_{kl}
+        // Add sum_{l=1}^n - G_{il} w_{kl}
         for (int idx = 0; idx < facI.G.getUsed(); idx++) {
             int l = facI.G.getIndex()[idx];
-            double val = facI.G.getData()[idx];
+            double val = - facI.G.getData()[idx];
             row.add(rltVarsInd.get(k, l), val);
         }
         return row;

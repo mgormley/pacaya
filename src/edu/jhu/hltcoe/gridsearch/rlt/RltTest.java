@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltVarRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt.VarRltRowFilter;
 import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
@@ -88,7 +88,7 @@ public class RltTest {
                 cplex.prod(24, x1)), -144), "obj");
 
         if (tempDir != null) {
-            cplex.exportModel(new File(tempDir, "rlt.lp").getAbsolutePath());
+            cplex.exportModel(new File(tempDir, String.format("rlt%f-%f.lp", x1Lb, x1Ub)).getAbsolutePath());
         }
         if (!cplex.solve()) {
             System.out.println("STATUS: " + cplex.getStatus());
@@ -135,10 +135,10 @@ public class RltTest {
         mat.addCols(vars);
 
         Rlt rlt = new Rlt(cplex, mat, RltPrm.getFirstOrderRlt());
-        assertEquals("w_{0,0}", rlt.getRltVar(x1, x1).getName());
-        assertEquals("w_{1,0}", rlt.getRltVar(x1, x2).getName());
-        assertEquals("w_{1,0}", rlt.getRltVar(x2, x1).getName());
-        assertEquals("w_{1,1}", rlt.getRltVar(x2, x2).getName());
+        assertEquals("w_{x1,x1}", rlt.getRltVar(x1, x1).getName());
+        assertEquals("w_{x2,x1}", rlt.getRltVar(x1, x2).getName());
+        assertEquals("w_{x2,x1}", rlt.getRltVar(x2, x1).getName());
+        assertEquals("w_{x2,x2}", rlt.getRltVar(x2, x2).getName());
     }
 
     @Test
@@ -320,6 +320,7 @@ public class RltTest {
         x1.setUB(8);
         rlt.updateBound(x1, Lu.LOWER);
         rlt.updateBound(x1, Lu.UPPER);
+        cplex.exportModel("rlt08update.lp");
         if (!cplex.solve()) {
             System.out.println("STATUS: " + cplex.getStatus());
             System.out.println("CPLEX_STATUS: " + cplex.getCplexStatus());
@@ -365,6 +366,8 @@ public class RltTest {
         // Assert contains RLT transformed equality constraints.
         assertContainsRow(rltMat, new double[]{ 48, 0, -6, 8, 0, 0});
         assertContainsRow(rltMat, new double[]{ 0, 48, 0, -6, 8, 0});
+        assertContainsRow(rltMat, new double[]{ 120, 0, 3, 8, 0, 0});
+        assertContainsRow(rltMat, new double[]{ 0, 120, 0, 3, 8, 0});
         assertEquals(14, rltMat.getNrows());
     }    
 
@@ -437,7 +440,7 @@ public class RltTest {
         IloRange[] cons = new IloRange[] { c1, c3};
         mat.addRows(cons);
         RltPrm prm = RltPrm.getFirstOrderRlt();
-        prm.rowFilter = new RltVarRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
+        prm.rowFilter = new VarRltRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
         Rlt rlt = new Rlt(cplex, mat, prm);
         IloLPMatrix rltMat = rlt.getRltMatrix();
         System.out.println(rltMat);
