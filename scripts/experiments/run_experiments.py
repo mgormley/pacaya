@@ -389,15 +389,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        minSumForCuts=1.00001,
                        maxSentenceLength=10,
                        maxNumSentences=50,
-                       disableFathoming=True)
+                       disableFathoming=True,
+                       threads=8)
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=10*60)
+                       timeoutSeconds=30*60)
             dataset = synth_alt_three
-            for maxNumSentences in [4,50]:
-                for varSelection in ["rand-uniform", "regret", "pseudocost", "full"]:
-                    for relax in [dwRelax, lpRelax, rltObjVarRelax, rltHalfRelax, rltAllRelax]:
+            extra_relaxes = [rltAllRelax + DPExpParams(rltAcceptProp=p) for p in frange(0.2, 1.01, 0.2)]
+            for maxNumSentences in [4]:
+                for varSelection in ["rand-uniform", "regret"]:
+                    for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
                         experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
                                                                          maxNumSentences=maxNumSentences)
                         root.add_dependent(experiment)

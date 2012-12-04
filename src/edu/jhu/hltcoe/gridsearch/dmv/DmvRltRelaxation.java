@@ -156,6 +156,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
         RltPrm rltPrm = prm.rltPrm;
+        // We always keep the convex/concave envelope on the objective variables
+        // so that the problem isn't unbounded.
         rltPrm.alwaysKeepRowFilter = new VarRltRowFilter(getObjVarPairs());
         if (prm.objVarFilter) {
             if (rltPrm.rowFilter != null && rltPrm.factorFilter != null) {
