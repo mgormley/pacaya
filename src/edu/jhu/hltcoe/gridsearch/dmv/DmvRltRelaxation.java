@@ -52,8 +52,11 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public CplexPrm cplexPrm = new CplexPrm();
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
-        public DmvRltRelaxPrm() { }
+        public DmvRltRelaxPrm() { 
+            cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Dual;
+        }
         public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CutCountComputer ccc, boolean envelopeOnly) {
+            this();
             this.tempDir = tempDir;
             this.maxCutRounds = maxCutRounds;
             this.stoPrm.initCutCountComp = ccc;
@@ -271,11 +274,11 @@ public class DmvRltRelaxation implements DmvRelaxation {
         }
         
         RelaxStatus status = RelaxStatus.Unknown;
-        TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
-        TDoubleArrayList iterationObjVals = new TDoubleArrayList();
-        ArrayList<Status> iterationStatus = new ArrayList<Status>();
+        TDoubleArrayList cutIterLowerBounds = new TDoubleArrayList();
+        TDoubleArrayList cutIterObjVals = new TDoubleArrayList();
+        ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
-        iterationLowerBounds.add(INTERNAL_BEST_SCORE);        
+        cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
         
         int cut;
         // Solve the full LP problem
@@ -291,7 +294,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
-            status = RelaxStatus.get(cplex.getStatus()); 
+            status = RelaxStatus.getForLp(cplex.getStatus()); 
             
             log.trace("LP solution status: " + cplex.getStatus());
             if (status == RelaxStatus.Infeasible) {
@@ -303,19 +306,18 @@ public class DmvRltRelaxation implements DmvRelaxation {
             warmStart = getWarmStart();
             double objVal = cplex.getObjValue();
             log.trace("Simplex solution value: " + objVal);
-            double prevObjVal = iterationObjVals.size() > 0 ? iterationObjVals.get(iterationObjVals.size() - 1)
+            double prevObjVal = cutIterObjVals.size() > 0 ? cutIterObjVals.get(cutIterObjVals.size() - 1)
                     : INTERNAL_WORST_SCORE;
             if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
-                Status prevStatus = iterationStatus.size() > 0 ? iterationStatus.get(iterationObjVals.size() - 1)
+                Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterObjVals.size() - 1)
                         : Status.Unknown;
                 log.warn(String.format("LP objective should monotonically decrease: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevObjVal, objVal, prevStatus, cplex.getStatus()));
-                throw new IllegalStateException("LP objective should monotonically decrease");
             }
-            iterationObjVals.add(objVal);
-            iterationStatus.add(cplex.getStatus());
+            cutIterObjVals.add(objVal);
+            cutIterStatuses.add(cplex.getStatus());
             
             double lowerBound = objVal;
-            iterationLowerBounds.add(lowerBound);
+            cutIterLowerBounds.add(lowerBound);
             
             if (status == RelaxStatus.Feasible) {
                 // TODO: get the dual bound and remove this warning.
@@ -332,7 +334,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 status = RelaxStatus.Optimal;
                 
                 if (cut < prm.maxCutRounds) {
-                    int numCutAdded = addCuts(cplex, iterationObjVals, iterationStatus, cut);
+                    log.debug(String.format("Iteration objective values (cut=%d): %s", cut, cutIterObjVals));
+                    int numCutAdded = addCuts(cplex, cut);
                     log.debug("Added cuts " + numCutAdded + ", round " + cut);
                     if (numCutAdded == 0) {
                         // No new cuts are needed
@@ -347,13 +350,14 @@ public class DmvRltRelaxation implements DmvRelaxation {
             }
         }
         
-        // The lower bound oscillates because of the yo-yo effect, so we take the max.
-        double lowerBound = Vectors.max(iterationLowerBounds.toNativeArray());
+        // The lower bound should be strictly increasing, because we add cuts. We still
+        // keep track of the lower bounds in case we terminate early.
+        double lowerBound = Vectors.max(cutIterLowerBounds.toNativeArray());
         
         log.debug("Number of cut rounds: " + cut);
         log.debug("Final lower bound: " + lowerBound);
-        log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
-        log.debug("Iteration lower bounds: " + iterationLowerBounds);
+        log.debug(String.format("Iteration objective values (cut=%d): %s", cut, cutIterObjVals));
+        log.debug("Iteration lower bounds: " + cutIterLowerBounds);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
                 sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rlt.getRltMatrix().getNrows()));
@@ -361,14 +365,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         return new Pair<RelaxStatus,Double>(status, lowerBound);
     }
 
-    protected int addCuts(IloCplex cplex, TDoubleArrayList iterationObjVals,
-            ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
-        // Reset the objective values list, since we would expect the next iteration
-        // to increase, not decrease, after adding the cut below.
-        log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
-        iterationObjVals.clear();
-        iterationStatus.clear();
-
+    private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
          List<Integer> rows = sto.projectModelParamsAndAddCuts();
          return mp.rlt.addRows(rows);
     }

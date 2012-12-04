@@ -193,7 +193,7 @@ public abstract class DantzigWolfeRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
-            status = RelaxStatus.get(cplex.getStatus()); 
+            status = RelaxStatus.getForDw(cplex.getStatus()); 
             
             log.trace("Master solution status: " + cplex.getStatus());
             if (status == RelaxStatus.Infeasible) {
