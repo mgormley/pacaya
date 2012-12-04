@@ -7,6 +7,8 @@ import ilog.concert.IloNumVar;
 import ilog.concert.IloObjective;
 import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
+import ilog.cplex.IloCplex.CplexStatus;
+import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
@@ -282,6 +284,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
         
+        // Stop early if we can fathom the node.
+        cplex.setParam(DoubleParam.ObjULim, upperBound);
+        
         int cut;
         // Solve the full LP problem
         for (cut = 0; ;) {
@@ -299,6 +304,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             status = RelaxStatus.getForLp(cplex.getStatus()); 
             
             log.trace("LP solution status: " + cplex.getStatus());
+            log.trace("LP CPLEX status: " + cplex.getCplexStatus());
             if (status == RelaxStatus.Infeasible) {
                 return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
             }
@@ -324,6 +330,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
             if (status == RelaxStatus.Feasible) {
                 // TODO: get the dual bound and remove this warning.
                 log.warn("A feasible solution does not currently give a valid bound.");
+            }
+            if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
+                log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
             }
             
             // Check whether to continue
@@ -506,7 +515,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     public WarmStart getWarmStart() {
         try {
             WarmStart warmStart = new WarmStart();
-
+            
             ArrayList<IloNumVar> numVars = new ArrayList<IloNumVar>();
             numVars.addAll(Arrays.asList(mp.origMatrix.getNumVars()));
             numVars.addAll(Arrays.asList(mp.rlt.getRltMatrix().getNumVars()));

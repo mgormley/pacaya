@@ -176,8 +176,8 @@ public abstract class DantzigWolfeRelaxation {
         TDoubleArrayList iterationObjVals = new TDoubleArrayList();
         ArrayList<Status> iterationStatus = new ArrayList<Status>();
         WarmStart warmStart = null;
-        iterationLowerBounds.add(INTERNAL_BEST_SCORE);        
-        
+        iterationLowerBounds.add(INTERNAL_BEST_SCORE);
+
         int cut;
         int dwIter;
         // Solve the full D-W problem

@@ -288,7 +288,6 @@ public class DmvRltRelaxationTest {
     @Test
     public void testProjection() {
         DmvModel dmvModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
-
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
         DepTreebank treebank = generator.getTreebank(50);
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
@@ -298,7 +297,26 @@ public class DmvRltRelaxationTest {
         DmvProjector projector = new DmvProjector(corpus);
         projector.getProjectedDmvSolution(relaxSol);
     }
-    
+
+    @Test
+    public void testEarlyStopping() {
+        DmvModel dmvModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(50);
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
+        
+        // True objective should be -3.6
+        double incumbentScore = -1.0;
+        DmvRltRelaxation relax = getLp(corpus, 1);
+        DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
+        double offsetProb = 0.5;
+        double probOfSkip = 0.5;
+        LocalBnBDmvTrainer.setBoundsFromInitSol(relax, initSol, offsetProb, probOfSkip);
+
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) relax.solveRelaxation(incumbentScore);
+        Assert.assertTrue(relaxSol.getScore() <= incumbentScore);
+    }
+
     @Test
     public void testUnfilteredRlt() {
         SentenceCollection sentences = new SentenceCollection();
