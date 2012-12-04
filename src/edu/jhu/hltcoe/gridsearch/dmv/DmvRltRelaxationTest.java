@@ -302,7 +302,7 @@ public class DmvRltRelaxationTest {
 
     @Test
     public void testEarlyStopping() {
-        Logger.getRootLogger().setLevel(Level.TRACE);
+        //Logger.getRootLogger().setLevel(Level.TRACE);
 
         DmvModel dmvModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));

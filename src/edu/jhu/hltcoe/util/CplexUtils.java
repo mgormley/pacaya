@@ -363,7 +363,13 @@ public class CplexUtils {
 
     /**
      * Gets the dual objective value from CPLEX.
+     * 
+     * This method is currently broken. We would need to test it on a CPLEX
+     * problem where we can do early stopping as we do in RLT. Then we could
+     * compare against the objective value given by the dual simplex algorithm,
+     * which (it turns out) is exactly what we want anyway.
      */
+    @Deprecated
     public static double getDualObjectiveValue(IloCplex cplex, IloLPMatrix mat) throws IloException {
         if (!cplex.isDualFeasible()) {
             throw new IllegalStateException("No objective value");

@@ -57,6 +57,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public DmvRltRelaxPrm() { 
+            // We have to use the Dual simplex algorithm in order to 
+            // stop early and fathom a node.
             cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Dual;
         }
         public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CutCountComputer ccc, boolean envelopeOnly) {
@@ -323,32 +325,13 @@ public class DmvRltRelaxation implements DmvRelaxation {
             }
             cutIterObjVals.add(objVal);
             cutIterStatuses.add(cplex.getStatus());
-            
-            // Get the lower bound, possibly from the dual feasible solution.
-            double lowerBound;
-            if (status == RelaxStatus.Optimal) {
-                lowerBound = objVal;
-                if (log.isTraceEnabled()) {
-                    double dualBound = getDualObjVal();
-                    if (!Utilities.equals(objVal, dualBound, 1e-13)) {
-                        log.warn(String.format("Dual bound should equal primal objective when optimal. dualBound=%f objVal=%f", dualBound, objVal));
-                    }
-                }
-            } else if (cplex.isDualFeasible()) {
-                double dualBound = getDualObjVal();
-                if (!Utilities.lte(dualBound, objVal, 1e-13)) {
-                    log.warn(String.format("Dual bound should be <= primal objective when not optimal. dualBound=%f objVal=%f", dualBound, objVal));
-                }
-                lowerBound = dualBound;
-            } else {
-                lowerBound = INTERNAL_BEST_SCORE;
-            }
+
+            // Get the lower bound. Because we explicitly use the Dual simplex
+            // algorithm, the objective value is the lower bound, even if we
+            // terminate early.
+            double lowerBound = objVal;
             cutIterLowerBounds.add(lowerBound);
             
-            if (status == RelaxStatus.Feasible) {
-                // TODO: get the dual bound and remove this warning.
-                log.warn("A feasible solution does not currently give a valid bound.");
-            }
             if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
                 log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
             }
@@ -392,12 +375,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rlt.getRltMatrix().getNrows()));
     
         return new Pair<RelaxStatus,Double>(status, lowerBound);
-    }
-
-    private double getDualObjVal() throws IloException {
-        double dualBound = CplexUtils.getDualObjectiveValue(cplex, mp.origMatrix);
-        dualBound += CplexUtils.getDualObjectiveValue(cplex, mp.rlt.getRltMatrix());
-        return dualBound;
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
