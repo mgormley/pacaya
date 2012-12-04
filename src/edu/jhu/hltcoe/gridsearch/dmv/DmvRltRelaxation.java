@@ -5,12 +5,14 @@ import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloObjective;
+import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -504,8 +506,17 @@ public class DmvRltRelaxation implements DmvRelaxation {
     public WarmStart getWarmStart() {
         try {
             WarmStart warmStart = new WarmStart();
-            warmStart.numVars = mp.origMatrix.getNumVars();
-            warmStart.ranges = mp.origMatrix.getRanges();
+
+            ArrayList<IloNumVar> numVars = new ArrayList<IloNumVar>();
+            numVars.addAll(Arrays.asList(mp.origMatrix.getNumVars()));
+            numVars.addAll(Arrays.asList(mp.rlt.getRltMatrix().getNumVars()));
+            
+            ArrayList<IloRange> ranges = new ArrayList<IloRange>();
+            ranges.addAll(Arrays.asList(mp.origMatrix.getRanges()));
+            ranges.addAll(Arrays.asList(mp.rlt.getRltMatrix().getRanges()));
+            
+            warmStart.numVars = numVars.toArray(new IloNumVar[]{});
+            warmStart.ranges = ranges.toArray(new IloRange[]{});
             warmStart.numVarStatuses = cplex.getBasisStatuses(warmStart.numVars);
             warmStart.rangeStatuses = cplex.getBasisStatuses(warmStart.ranges);
             return warmStart;
