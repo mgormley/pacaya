@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.lp;
 
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
-import ilog.cplex.IloCplex.BooleanParam;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
 
@@ -14,13 +13,15 @@ public class CplexPrm {
     public int numThreads = 1;
     public int maxSimplexIterations = 2100000000;
     public int simplexAlgorithm = IloCplex.Algorithm.Auto;   
+    public double timeoutSeconds = 1e+75;
     
     public CplexPrm() { }
 
-    public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations) {
+    public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations, double timeoutSeconds) {
         this.workMemMegs = workMemMegs;
         this.numThreads = numThreads;
         this.maxSimplexIterations = maxSimplexIterations;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     public IloCplex getIloCplexInstance() {
@@ -67,17 +68,11 @@ public class CplexPrm {
         // new variables.
         cplex.setParam(IntParam.RootAlg, simplexAlgorithm);
 
-        // Note: we'd like to reuse basis information by explicitly storing it
-        // with the Fork nodes as in SCIP. However, this is only possible if the
-        // number of rows/columns in the problem remains the same, which it will
-        // not for our master problem.
-        // http://ibm.co/GCQ709
-        // By default, the solver will make use of basis information internally
-        // even when we update the problem. This is (hopefully) good enough.
-
-        // TODO: For v12.3 only: cplex.setParam(IntParam.CloneLog, 1);
-
+        // Maximum number of simplex iterations.
         cplex.setParam(IntParam.ItLim, maxSimplexIterations);
+        
+        // Maximum amount of wall clock time, in seconds, to run.
+        cplex.setParam(DoubleParam.TiLim, timeoutSeconds);
         
         //    For continuous models solved with simplex, setting 1 (one) will use
         //    the currently loaded basis. If a basis is available only for the
@@ -88,6 +83,7 @@ public class CplexPrm {
         //    optimization on the presolved problem.
         cplex.setParam(IntParam.AdvInd, 1);
 
+        
         // When set to 2, will display at each iteration.
         //cplex.setParam(IntParam.SimDisplay, 2);
         

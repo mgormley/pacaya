@@ -152,7 +152,8 @@ public class TrainerFactory {
             throw new ParseException("Model not supported: " + modelName);
         }
 
-        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations);
+        double simplexTimeout = algorithm.equals("viterbi-bnb") ? bnbTimeoutSeconds : timeoutSeconds;
+        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, simplexTimeout);
 
         LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         stoPrm.initCutCountComp = new CutCountComputer();

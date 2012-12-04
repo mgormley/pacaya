@@ -285,8 +285,10 @@ public class DmvRltRelaxation implements DmvRelaxation {
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
-        
-        // Stop early if we can fathom the node.
+
+        // Ensures that we stop early if we can fathom the node. We use the
+        // upper limit because the dual problem (which we're solving) is a
+        // maximization.
         cplex.setParam(DoubleParam.ObjULim, upperBound);
         
         int cut;
