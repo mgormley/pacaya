@@ -88,6 +88,9 @@ public class CplexPrm {
         //    optimization on the presolved problem.
         cplex.setParam(IntParam.AdvInd, 1);
 
+        // When set to 2, will display at each iteration.
+        //cplex.setParam(IntParam.SimDisplay, 2);
+        
         // Whether or not to presolve (default true).
         // cplex.setParam(BooleanParam.PreInd, false);
 

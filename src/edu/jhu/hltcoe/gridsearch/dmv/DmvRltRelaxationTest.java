@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Assert;
 import org.junit.Before;
@@ -300,13 +302,15 @@ public class DmvRltRelaxationTest {
 
     @Test
     public void testEarlyStopping() {
+        Logger.getRootLogger().setLevel(Level.TRACE);
+
         DmvModel dmvModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
         DepTreebank treebank = generator.getTreebank(50);
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
         
         // True objective should be -3.6
-        double incumbentScore = -1.0;
+        double incumbentScore = -1.2;
         DmvRltRelaxation relax = getLp(corpus, 1);
         DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         double offsetProb = 0.5;
