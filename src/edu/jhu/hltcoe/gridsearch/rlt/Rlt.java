@@ -326,7 +326,7 @@ public class Rlt {
                     int i = idsForRltVars.getI(id);
                     int j = idsForRltVars.getJ(id);
                     
-                    IloNumVar rltVar = cplex.numVar(getLowerBound(numVars[i], numVars[j]), getUpperBound(numVars[i], numVars[j]));
+                    IloNumVar rltVar = cplex.numVar(CplexUtils.getLowerBound(numVars[i], numVars[j]), CplexUtils.getUpperBound(numVars[i], numVars[j]));
                     if (prm.nameRltVarsAndCons) {
                         // Optionally add a name.
                         rltVar.setName(String.format("w_{%s,%s}", numVars[i].getName(), numVars[j].getName()));
@@ -578,20 +578,6 @@ public class Rlt {
             }
         }
         return true;
-    }
-
-    /**
-     * Gets the lower bound of the product of two variables.
-     */
-    private static double getLowerBound(IloNumVar iloNumVar, IloNumVar iloNumVar2) {
-        return CPLEX_NEG_INF;
-    }
-
-    /**
-     * Gets the upper bound of the product of two variables.
-     */
-    private static double getUpperBound(IloNumVar iloNumVar, IloNumVar iloNumVar2) {
-        return CPLEX_POS_INF;
     }
 
     private static SparseVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)

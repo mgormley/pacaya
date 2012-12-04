@@ -1,7 +1,9 @@
 package edu.jhu.hltcoe.util;
 
 import static org.junit.Assert.assertTrue;
+import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.hltcoe.math.Vectors;
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
@@ -168,6 +170,23 @@ public class CplexUtils {
         }
         
     }
+
+
+    /**
+     * The cutoff point at which to treat the value as positive infinity.
+     */
+    public static final double CPLEX_POS_INF_CUTOFF = 1e19;
+    /**
+     * The cutoff point at which to treat the value as negative infinity.
+     */
+    public static final double CPLEX_NEG_INF_CUTOFF = -1e19;
+    
+    public static boolean isInfinite(double v) {
+        if (v < CPLEX_NEG_INF_CUTOFF || CPLEX_POS_INF_CUTOFF < v) {
+            return true;
+        }
+        return false;
+    }
     
     /**
      * Helper method for getting a 3D array of CPLEX variables.
@@ -287,6 +306,46 @@ public class CplexUtils {
             }
         }
         Assert.fail("Matrix does not contain row: " + Arrays.toString(denseRow));
+    }
+
+    /**
+     * Gets the upper bound of the product of two variables.
+     */
+    public static double getUpperBound(IloNumVar var1, IloNumVar var2) throws IloException {
+        double[] prods = getProductsOfBounds(var1, var2);
+        double max = Vectors.max(prods);
+        assert(CPLEX_NEG_INF_CUTOFF < max);
+        if (isInfinite(max)) {
+            return Rlt.CPLEX_POS_INF;
+        } else {
+            return max;
+        }
+    }
+
+    /**
+     * Gets the lower bound of the product of two variables.
+     */
+    public static double getLowerBound(IloNumVar var1, IloNumVar var2) throws IloException {
+        double[] prods = getProductsOfBounds(var1, var2);
+        double min = Vectors.min(prods);
+        assert(min < CPLEX_POS_INF_CUTOFF);
+        if (isInfinite(min)) {
+            return Rlt.CPLEX_NEG_INF;
+        } else {
+            return min;
+        }
+    }
+
+    /**
+     * Gets all possible products of the variables' bounds.
+     */
+    private static double[] getProductsOfBounds(IloNumVar var1, IloNumVar var2) throws IloException {
+        double[] prods = new double[4];
+        prods[0] = var1.getLB() * var2.getLB();
+        prods[1] = var1.getLB() * var2.getUB();
+        prods[2] = var1.getUB() * var2.getLB();
+        prods[3] = var1.getUB() * var2.getUB();
+        return prods;
     }
 
 }

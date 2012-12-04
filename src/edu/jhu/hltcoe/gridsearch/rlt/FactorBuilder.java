@@ -13,19 +13,11 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class FactorBuilder {
 
-    /**
-     * The cutoff point at which to treat the value as positive infinity.
-     */
-    public static final double CPLEX_POS_INF_CUTOFF = 1e19;
-    /**
-     * The cutoff point at which to treat the value as negative infinity.
-     */
-    public static final double CPLEX_NEG_INF_CUTOFF = -1e19;
-    
     private static final Logger log = Logger.getLogger(FactorBuilder.class);
 
     public abstract static class Factor {
@@ -132,7 +124,7 @@ public class FactorBuilder {
         }
         return factors;
     }
-
+    
     /**
      * Create numRows RowFactors starting from the startRow'th row of mat and add these rows to factors.
      * @return The number of new factors added to factors.
@@ -151,7 +143,7 @@ public class FactorBuilder {
                 factors.add(new RowFactor(ub[rowIdx], Aind[rowIdx], Aval[rowIdx], rowIdx, RowFactorType.EQ, mat));
                 numNewFactors++;
             } else {
-                if (CPLEX_NEG_INF_CUTOFF < lb[rowIdx]) {
+                if (!CplexUtils.isInfinite(lb[rowIdx])) {
                     // b <= A_i x
                     // 0 <= A_i x - b = (-b - (-A_i x))
                     double[] vals = Utilities.copyOf(Aval[rowIdx]);
@@ -159,7 +151,7 @@ public class FactorBuilder {
                     factors.add(new RowFactor(-lb[rowIdx], Aind[rowIdx], vals, rowIdx, RowFactorType.LOWER, mat));
                     numNewFactors++;
                 }
-                if (ub[rowIdx] < CPLEX_POS_INF_CUTOFF) {
+                if (!CplexUtils.isInfinite(ub[rowIdx])) {
                     // A_i x <= b
                     // 0 <= b - A_i x
                     factors.add(new RowFactor(ub[rowIdx], Aind[rowIdx], Aval[rowIdx], rowIdx, RowFactorType.UPPER, mat));
@@ -172,7 +164,7 @@ public class FactorBuilder {
 
     public static BoundFactor getBoundFactorLower(IloNumVar[] numVars, int colIdx, IloLPMatrix mat) throws IloException {
         double varLb = numVars[colIdx].getLB();
-        if (CPLEX_NEG_INF_CUTOFF < varLb) {
+        if (!CplexUtils.isInfinite(varLb)) {
             // varLb <= x_i
             // 0 <= x_i - varLb = -varLb - (-x_i)
             int[] varInd = new int[] { colIdx };    
@@ -184,7 +176,7 @@ public class FactorBuilder {
     
     public static BoundFactor getBoundFactorUpper(IloNumVar[] numVars, int colIdx, IloLPMatrix mat) throws IloException {
         double varUb = numVars[colIdx].getUB();
-        if (varUb < CPLEX_POS_INF_CUTOFF) {
+        if (!CplexUtils.isInfinite(varUb)) {
             // x_i <= varUb
             // 0 <= varUb - x_i
             int[] varInd = new int[] { colIdx };
