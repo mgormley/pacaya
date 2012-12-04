@@ -397,6 +397,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        timeoutSeconds=30*60)
             dataset = synth_alt_three
             extra_relaxes = [rltAllRelax + DPExpParams(rltAcceptProp=p) for p in frange(0.2, 1.01, 0.2)]
+            for x in extra_relaxes: x.update(maxCutRounds=1)
             for maxNumSentences in [4]:
                 for varSelection in ["rand-uniform", "regret"]:
                     for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
