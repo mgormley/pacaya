@@ -156,6 +156,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
         RltPrm rltPrm = prm.rltPrm;
+        rltPrm.alwaysKeepRowFilter = new VarRltRowFilter(getObjVarPairs());
         if (prm.objVarFilter) {
             if (rltPrm.rowFilter != null && rltPrm.factorFilter != null) {
                 log.warn("Overriding existing filters");

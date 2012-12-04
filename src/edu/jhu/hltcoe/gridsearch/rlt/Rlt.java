@@ -33,9 +33,10 @@ public class Rlt {
 
     public static class RltPrm {
         public boolean envelopeOnly = true;
-        public RltRowFilter rowFilter = null;
         public boolean nameRltVarsAndCons = true;
         public RltFactorFilter factorFilter = null;
+        public RltRowFilter rowFilter = null;
+        public RltRowFilter alwaysKeepRowFilter = null;
         
         public static RltPrm getConvexConcaveEnvelope() {
             RltPrm prm = new RltPrm();
@@ -283,11 +284,14 @@ public class Rlt {
         rltVarsIdx = new SymIntMat();
 
         // Initialize the filter with this RLT object.
+        if (prm.factorFilter != null) {
+            prm.factorFilter.init(this);
+        }
         if (prm.rowFilter != null) {
             prm.rowFilter.init(this);
         }
-        if (prm.factorFilter != null) {
-            prm.factorFilter.init(this);
+        if (prm.alwaysKeepRowFilter != null && prm.rowFilter != prm.alwaysKeepRowFilter) {
+            prm.alwaysKeepRowFilter.init(this);
         }
         
         // Store RLT constraints' row indices.
@@ -402,7 +406,8 @@ public class Rlt {
                 
                 String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d,%d}", i, k) : null;
                 SparseVector row = getRltRowForEq(facI, k, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k)) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k)
+                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k))) {
                     // Add the complete constraint.
                     rows.addRow(0.0, row, 0.0, rowName);
                 }
@@ -423,7 +428,8 @@ public class Rlt {
 
                 String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
                 SparseVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)
+                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ))) {
                     // Add the complete constraint.
                     int rowind = rows.addRow(CPLEX_NEG_INF, row, 0.0, rowName);
                     tempConsIdx.set(i, j, rowind);
