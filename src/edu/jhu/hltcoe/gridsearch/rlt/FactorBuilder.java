@@ -21,8 +21,8 @@ public class FactorBuilder {
     private static final Logger log = Logger.getLogger(FactorBuilder.class);
 
     public abstract static class Factor {
-        double g;
-        FastSparseVector G;
+        public double g;
+        public FastSparseVector G;
         protected IloLPMatrix mat;
         
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {

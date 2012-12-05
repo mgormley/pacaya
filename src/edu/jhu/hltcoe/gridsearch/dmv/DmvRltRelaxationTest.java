@@ -31,7 +31,6 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.NumericalStabilityRltRowFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;

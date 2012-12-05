@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.VarRltRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowFilter;
 import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;

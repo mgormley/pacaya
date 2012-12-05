@@ -1,6 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.rlt;
 
-import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -22,10 +21,10 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.BoundFactor;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RltFactorFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter;
 import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.CplexUtils.CplexRowUpdates;
 import edu.jhu.hltcoe.util.CplexUtils.CplexRows;
 
@@ -51,159 +50,6 @@ public class Rlt {
         }
     }
 
-    public interface RltRowFilter {
-        void init(Rlt rlt) throws IloException;
-        boolean acceptEq(SparseVector row, String rowName, Factor facI, int k);
-        boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ);
-    }
-    
-    public interface RltFactorFilter {
-        boolean accept(Factor factor);
-        void init(Rlt rlt) throws IloException;
-    }
-    
-    /**
-     * Randomly accepts only a fixed proportion of the rows.
-     */
-    public static class RandPropRltRowFilter implements RltRowFilter {
-
-        private double acceptProp;
-        
-        public RandPropRltRowFilter(double acceptProp) {
-            this.acceptProp = acceptProp;
-        }
-        
-        @Override
-        public void init(Rlt rlt) throws IloException {
-            // Do nothing.
-        }
-        
-        @Override
-        public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
-            return Prng.nextDouble() < acceptProp; 
-        }
-
-        @Override
-        public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
-            return Prng.nextDouble() < acceptProp; 
-        }
-        
-    }
-    
-    /**
-     * Accepts only rows with non-zero coefficients whose absolute values are greater than some value.
-     */
-    public static class NumericalStabilityRltRowFilter implements RltRowFilter {
-
-        private double minCoef;
-        private double maxCoef;
-        
-        public NumericalStabilityRltRowFilter(double minCoef, double maxCoef) {
-            this.minCoef = minCoef;
-            this.maxCoef = maxCoef;
-        }
-        
-        @Override
-        public void init(Rlt rlt) throws IloException {
-            // Do nothing.
-        }
-        
-        @Override
-        public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
-            return accept(row);
-        }
-
-        @Override
-        public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
-            return accept(row);
-        }
-
-        private boolean accept(SparseVector row) {
-            double[] data = row.getData();
-            for (int i=0; i<row.getUsed(); i++) {
-                double absVal = Math.abs(data[i]);
-                if (absVal < minCoef || maxCoef < absVal) {
-                    return false;
-                }
-            }
-            return true;
-        }
-    }
-    
-    /**
-     * Accepts only RLT rows that have a non-zero coefficient for some RLT variable corresponding
-     * to the given pairs of variables.
-     */
-    public static class VarRltRowFilter implements RltRowFilter {
-        
-        private TIntHashSet rltVarIds;
-        private List<Pair<IloNumVar, IloNumVar>> pairs;
-
-        public VarRltRowFilter(List<Pair<IloNumVar,IloNumVar>> pairs) {
-            this.pairs = pairs;
-        }
-
-        @Override
-        public void init(Rlt rlt) throws IloException {
-            rltVarIds = new TIntHashSet();
-            for (Pair<IloNumVar, IloNumVar> pair : pairs) {
-                rltVarIds.add(rlt.getIdForRltVar(pair.get1(), pair.get2()));
-            }
-            pairs = null;
-        }
-
-        @Override
-        public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
-            return acceptRow(row);
-        }
-
-        @Override
-        public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
-            return acceptRow(row);
-        }
-
-        private boolean acceptRow(SparseVector row) {
-            for (VectorEntry ve : row) {
-                if (!Utilities.equals(ve.get(), 0.0, 1e-13) && rltVarIds.contains(ve.index())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-    
-    /**
-     * Accepts only RLT factors that have a non-zero coefficient for one of the given input matrix variable columns.
-     */
-    public static class VarRltFactorFilter implements RltFactorFilter {
-        
-        private TIntHashSet cols;
-        private List<IloNumVar> vars;
-
-        public VarRltFactorFilter(List<IloNumVar> vars) {
-            this.vars = vars;
-        }
-
-        @Override
-        public void init(Rlt rlt) throws IloException {
-            cols = new TIntHashSet();
-            for (IloNumVar var : vars) {
-                cols.add(rlt.inputMatrix.getIndex(var));
-            }
-            vars = null;
-        }
-
-        @Override
-        public boolean accept(Factor f) {
-            for (VectorEntry ve : f.G) {
-                if (!Utilities.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-    
     private static final Logger log = Logger.getLogger(Rlt.class);
 
     /**
@@ -216,7 +62,7 @@ public class Rlt {
     public static final double CPLEX_NEG_INF = -Double.MAX_VALUE;
 
     private IloLPMatrix rltMat;
-    private IloLPMatrix inputMatrix;
+    IloLPMatrix inputMatrix;
     private List<Factor> factors;
     private HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap;
     private IloCplex cplex;
@@ -649,6 +495,10 @@ public class Rlt {
             row.add(rltVarsInd.get(k, l), val);
         }
         return row;
+    }
+
+    public IloLPMatrix getInputMatrix() {
+        return inputMatrix;
     }
 
 }
