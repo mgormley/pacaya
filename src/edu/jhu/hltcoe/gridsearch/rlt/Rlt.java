@@ -87,7 +87,7 @@ public class Rlt {
         }
         
         private void maybePush() throws IloException {
-            if (rows.getNumRows() > maxRowsToCache) {
+            if (rows.getNumRows() >= maxRowsToCache) {
                 pushRowsToCplex();
             }
         }
