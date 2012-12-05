@@ -23,10 +23,10 @@ import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RltFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter;
-import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.CplexUtils.CplexRowUpdates;
-import edu.jhu.hltcoe.util.CplexUtils.CplexRows;
+import edu.jhu.hltcoe.util.cplex.CplexRowUpdates;
+import edu.jhu.hltcoe.util.cplex.CplexRows;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class Rlt {
 
@@ -36,6 +36,7 @@ public class Rlt {
         public RltFactorFilter factorFilter = null;
         public RltRowFilter rowFilter = null;
         public RltRowFilter alwaysKeepRowFilter = null;
+        public int maxRowsToCache = 10000;
         
         public static RltPrm getConvexConcaveEnvelope() {
             RltPrm prm = new RltPrm();
@@ -49,17 +50,64 @@ public class Rlt {
             return prm;
         }
     }
+    
+    /**
+     * This class caches rows so that they can be re-indexed and then pushed to
+     * CPLEX in batches.
+     */
+    private class RltRows {
+
+        private int maxRowsToCache;
+        private CplexRows rows;
+        private int numRowsAdded;
+        private SymIntMat tempRltConsInd;
+        public RltRows(int maxRowsToCache) {
+            this.maxRowsToCache = maxRowsToCache;
+            this.numRowsAdded = 0;
+            reset();
+        }
+
+        private void reset() {
+            this.rows = new CplexRows(prm.nameRltVarsAndCons);
+            tempRltConsInd = new SymIntMat();
+        }
+
+        public void addRow(double lb, SparseVector coef, double ub, String name) throws IloException {
+            rows.addRow(lb, coef, ub, name);
+            numRowsAdded++;
+            maybePush();
+        }
+
+        public void addRow(double cplexNegInf, SparseVector row, double d, String rowName, int i, int j) throws IloException {
+            int rowind = rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName);
+            tempRltConsInd.set(i, j, rowind);
+            numRowsAdded++;
+            maybePush();
+        }
+        
+        private void maybePush() throws IloException {
+            if (rows.getNumRows() > maxRowsToCache) {
+                pushRowsToCplex();
+            }
+        }
+
+        public void pushRowsToCplex() throws IloException {
+            log.trace("Converting RLT variable IDs to column indices.");
+            convertRltVarIdsToColumIndices(rows);
+            log.trace("Adding RLT constraints to matrix.");
+            int startRow = rows.addRowsToMatrix(rltMat);
+            tempRltConsInd.incrementAll(startRow);
+            rltConsIdx.setAll(tempRltConsInd);
+            reset();
+        }
+
+        public int getNumRows() {
+            return numRowsAdded;
+        }
+
+    }
 
     private static final Logger log = Logger.getLogger(Rlt.class);
-
-    /**
-     * The CPLEX representation of positive infinity.
-     */
-    public static final double CPLEX_POS_INF = Double.MAX_VALUE;
-    /**
-     * The CPLEX representation of negative infinity.
-     */
-    public static final double CPLEX_NEG_INF = -Double.MAX_VALUE;
 
     private IloLPMatrix rltMat;
     IloLPMatrix inputMatrix;
@@ -216,24 +264,18 @@ public class Rlt {
      * @return The number of rows added to the RLT matrix.
      */
     private int addNewFactors(List<Factor> newFactors) throws IloException {
-        CplexRows rows = new CplexRows(prm.nameRltVarsAndCons);
-        SymIntMat tempRltConsInd = new SymIntMat();
+        RltRows rows = new RltRows(prm.maxRowsToCache );
         for (Factor factor : newFactors) {
-            addFactor(cplex, factor, rows, tempRltConsInd);
-        }        
-        log.debug("Converting RLT variable IDs to column indices.");
-        convertRltVarIdsToColumIndices(rows);
-        log.debug("Adding RLT constraints to matrix.");
-        int startRow = rows.addRowsToMatrix(rltMat);
-        tempRltConsInd.incrementAll(startRow);
-        rltConsIdx.setAll(tempRltConsInd);
+            addFactor(cplex, factor, rows);
+        }
+        rows.pushRowsToCplex();
         return rows.getNumRows();
     }
     
     /**
      * Adds a new factor to the RLT program by appending new rows to the CplexRows object.
      */
-    private void addFactor(IloCplex cplex, Factor facI, CplexRows rows, SymIntMat tempConsIdx) throws IloException {
+    private void addFactor(IloCplex cplex, Factor facI, RltRows rows) throws IloException {
         if (prm.factorFilter != null && !prm.factorFilter.accept(facI)) {
             return;
         }
@@ -277,8 +319,7 @@ public class Rlt {
                 if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)
                         || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ))) {
                     // Add the complete constraint.
-                    int rowind = rows.addRow(CPLEX_NEG_INF, row, 0.0, rowName);
-                    tempConsIdx.set(i, j, rowind);
+                    rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
                 }
             }
         }
@@ -286,6 +327,10 @@ public class Rlt {
 
     public IloLPMatrix getRltMatrix() {
         return rltMat;
+    }
+
+    public IloLPMatrix getInputMatrix() {
+        return inputMatrix;
     }
 
     public IloNumVar getRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
@@ -496,9 +541,4 @@ public class Rlt {
         }
         return row;
     }
-
-    public IloLPMatrix getInputMatrix() {
-        return inputMatrix;
-    }
-
 }

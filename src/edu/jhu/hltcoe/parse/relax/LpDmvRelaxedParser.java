@@ -14,7 +14,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.CplexUtils;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class LpDmvRelaxedParser implements RelaxedParser {
 

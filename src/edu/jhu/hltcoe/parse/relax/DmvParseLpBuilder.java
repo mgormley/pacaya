@@ -13,12 +13,11 @@ import java.util.Arrays;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.CplexUtils;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DmvParseLpBuilder {
 
@@ -550,7 +549,7 @@ public class DmvParseLpBuilder {
         for (int c=0; c<idm.getNumConds(); c++) {
             pp.featCountVars[c] = new IloNumVar[idm.getNumParams(c)];
             for (int m=0; m<idm.getNumParams(c); m++) {
-                pp.featCountVars[c][m] = cplex.numVar(0.0, Rlt.CPLEX_POS_INF, String.format("featCount_{%d,%d}", c, m));
+                pp.featCountVars[c][m] = cplex.numVar(0.0, CplexUtils.CPLEX_POS_INF, String.format("featCount_{%d,%d}", c, m));
             }
         }
     }

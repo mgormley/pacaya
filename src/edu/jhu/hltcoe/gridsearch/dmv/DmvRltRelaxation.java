@@ -42,10 +42,10 @@ import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DmvRltRelaxation implements DmvRelaxation {
 

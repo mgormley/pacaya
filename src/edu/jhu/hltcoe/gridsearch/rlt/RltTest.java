@@ -25,9 +25,9 @@ import org.junit.Test;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowFilter;
-import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class RltTest {
 
@@ -65,7 +65,7 @@ public class RltTest {
         cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
 
         IloNumVar x1 = cplex.numVar(x1Lb, x1Ub, "x1");
-        IloNumVar x2 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "x2");
+        IloNumVar x2 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "x2");
         IloRange c1 = cplex.le(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
         IloRange c2 = cplex.le(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
 
@@ -258,7 +258,7 @@ public class RltTest {
 
         // Changing the bound then calling updateBound should have effect.
         x1.setUB(11);
-        rlt.updateBound(x1, Lu.UPPER);        
+        rlt.updateBound(x1, Lu.UPPER);
         System.out.println(rltMat);
         assertContainsRow(rltMat, new double[]{ -7, -2, 0, 1, 0, 14});
         assertContainsRow(rltMat, new double[]{ -5, -11, 0, 1, 0, 55});
@@ -282,7 +282,7 @@ public class RltTest {
         cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
 
         IloNumVar x1 = cplex.numVar(0, 24, "x1");
-        IloNumVar x2 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "x2");
+        IloNumVar x2 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "x2");
         IloRange c1 = cplex.le(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
         IloRange c2 = cplex.le(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
 
@@ -459,6 +459,46 @@ public class RltTest {
         for (int i=0; i<vals[0].length; i++) {
             Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
         }
+    }
+        
+    @Test
+    public void testRowCaching() throws IloException {
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(0, 24, "x1");
+        IloNumVar x2 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "x2");
+        IloRange c1 = cplex.le(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
+        IloRange c2 = cplex.le(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloRange[] cons = new IloRange[] { c1, c2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+        mat.addRows(cons);
+
+        RltPrm rltPrm = RltPrm.getFirstOrderRlt();
+        rltPrm.maxRowsToCache = 2;
+        Rlt rlt = new Rlt(cplex, mat, rltPrm);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        System.out.println(rltMat);
+        cplex.add(rltMat);
+
+        // Check the first constraint.
+        //assertTrue(rltMat.toString().contains("-576.0*x1 + 768.0*x2 - 36.0*w_{0,0} + 96.0*w_{1,0} - 64.0*w_{1,1} - 2304.0*const <= 0.0"));
+        assertContainsRow(rltMat, new double[]{ -576.0, 768.0, -36.0, 96.0, -64.0, -2304.0});
+        
+        cplex.addMinimize(cplex.sum(cplex.sum(cplex.sum(cplex.prod(-1, rlt.getRltVar(x1, x1)), cplex.prod(-1, rlt.getRltVar(x2, x2))),
+                cplex.prod(24, x1)), -144), "obj");
+
+        if (!cplex.solve()) {
+            System.out.println("STATUS: " + cplex.getStatus());
+            System.out.println("CPLEX_STATUS: " + cplex.getCplexStatus());
+            Assert.fail("Program not solved");
+        }
+        assertEquals(-216, cplex.getObjValue(), 1e-13);
     }
 
     private static void assertContainsRow(IloLPMatrix rltMat, double[] row) {

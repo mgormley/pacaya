@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.hltcoe.util.cplex;
 
 import static org.junit.Assert.assertEquals;
 import ilog.concert.IloException;
@@ -14,7 +14,6 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 
 public class CplexUtilsTest {
 
@@ -117,8 +116,8 @@ public class CplexUtilsTest {
         {
             IloNumVar x1 = cplex.numVar(-1e20, 1e20, "x1");
             IloNumVar x2 = cplex.numVar(-11, -5, "x2");
-            Assert.assertEquals(Rlt.CPLEX_NEG_INF, CplexUtils.getLowerBound(x1, x2), 1e-13);
-            Assert.assertEquals(Rlt.CPLEX_POS_INF, CplexUtils.getUpperBound(x1, x2), 1e-13);
+            Assert.assertEquals(CplexUtils.CPLEX_NEG_INF, CplexUtils.getLowerBound(x1, x2), 1e-13);
+            Assert.assertEquals(CplexUtils.CPLEX_POS_INF, CplexUtils.getUpperBound(x1, x2), 1e-13);
         }
     }
 
@@ -140,9 +139,9 @@ public class CplexUtilsTest {
         {
             IloCplex cplex = new IloCplex();
 
-            IloNumVar x1 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "x1");
-            IloNumVar x2 = cplex.numVar(Rlt.CPLEX_NEG_INF, Rlt.CPLEX_POS_INF, "x2");
-            IloNumVar x3 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "x3");
+            IloNumVar x1 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "x1");
+            IloNumVar x2 = cplex.numVar(CplexUtils.CPLEX_NEG_INF, CplexUtils.CPLEX_POS_INF, "x2");
+            IloNumVar x3 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "x3");
             IloNumVar[] vars = new IloNumVar[] { x1, x2, x3 };
 
             IloRange c1 = cplex.eq(cplex.scalProd(new double[] { 5, 3, 1 }, vars), 8, "y1");
@@ -198,10 +197,10 @@ public class CplexUtilsTest {
         {
             IloCplex cplex = new IloCplex();
 
-            IloNumVar x1 = cplex.numVar(Rlt.CPLEX_NEG_INF, Rlt.CPLEX_POS_INF, "y1");
-            IloNumVar x2 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "y2");
-            IloNumVar x3 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "y3");
-            IloNumVar x4 = cplex.numVar(0, Rlt.CPLEX_POS_INF, "y4");
+            IloNumVar x1 = cplex.numVar(CplexUtils.CPLEX_NEG_INF, CplexUtils.CPLEX_POS_INF, "y1");
+            IloNumVar x2 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "y2");
+            IloNumVar x3 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "y3");
+            IloNumVar x4 = cplex.numVar(0, CplexUtils.CPLEX_POS_INF, "y4");
             IloNumVar[] vars = new IloNumVar[] { x1, x2, x3, x4 };
 
             IloRange c1 = cplex.ge(cplex.scalProd(new double[] { 5, 4, -6, 1 }, vars), 3, "x1");

@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
-import edu.jhu.hltcoe.util.CplexUtils;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class FactorBuilder {
 
