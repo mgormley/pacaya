@@ -394,7 +394,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=30*60)
+                       timeoutSeconds=60*60*6)
             dataset = synth_alt_three
             extra_relaxes = [rltAllRelax + DPExpParams(rltAcceptProp=p) for p in frange(0.2, 1.01, 0.2)]
             for x in extra_relaxes: x.update(maxCutRounds=1)
