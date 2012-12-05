@@ -23,6 +23,7 @@ import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RltFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter.RowType;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.cplex.CplexRowUpdates;
 import edu.jhu.hltcoe.util.cplex.CplexRows;
@@ -198,7 +199,7 @@ public class Rlt {
         // Build the RLT constraints by adding each factor one at a time.
         log.debug("Creating RLT constraints.");
         this.factors = new ArrayList<Factor>();
-        addNewFactors(newFactors);
+        addNewFactors(newFactors, RowType.INITIAL);
         
         log.debug("# filtered RLT factors: " + factors.size());
         log.debug("# filtered RLT rows: " + rltMat.getNrows());
@@ -265,12 +266,13 @@ public class Rlt {
     /**
      * Adds a list of factors by constructing a full set of rows and then adding the rows
      * all at once to the CPLEX modeling object.
+     * @param type TODO
      * @return The number of rows added to the RLT matrix.
      */
-    private int addNewFactors(List<Factor> newFactors) throws IloException {
+    private int addNewFactors(List<Factor> newFactors, RowType type) throws IloException {
         RltRows rows = new RltRows(prm.maxRowsToCache );
         for (Factor factor : newFactors) {
-            addFactor(cplex, factor, rows);
+            addFactor(cplex, factor, rows, type);
         }
         rows.pushRowsToCplex();
         return rows.getNumRows();
@@ -278,8 +280,9 @@ public class Rlt {
     
     /**
      * Adds a new factor to the RLT program by appending new rows to the CplexRows object.
+     * @param type TODO
      */
-    private void addFactor(IloCplex cplex, Factor facI, RltRows rows) throws IloException {
+    private void addFactor(IloCplex cplex, Factor facI, RltRows rows, RowType type) throws IloException {
         if (prm.factorFilter != null && !prm.factorFilter.accept(facI)) {
             return;
         }
@@ -298,8 +301,8 @@ public class Rlt {
                 
                 String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d,%d}", i, k) : null;
                 SparseVector row = getRltRowForEq(facI, k, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k)
-                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k))) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k, type)
+                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k, type))) {
                     // Add the complete constraint.
                     rows.addRow(0.0, row, 0.0, rowName);
                 }
@@ -320,8 +323,8 @@ public class Rlt {
 
                 String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
                 SparseVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ)
-                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ))) {
+                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ, type)
+                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ, type))) {
                     // Add the complete constraint.
                     rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
                 }
@@ -456,7 +459,7 @@ public class Rlt {
         if (rowIds.size() > 0) {
             List<Factor> newFactors = new ArrayList<Factor>();
             FactorBuilder.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix, newFactors);
-            return addNewFactors(newFactors);
+            return addNewFactors(newFactors, RowType.CUT);
         } else {
             return 0;
         }

@@ -107,7 +107,8 @@ public class TrainerFactory {
         options.addOption("df", "disableFathoming", true, "Disables fathoming in branch-and-bound");
         options.addOption("eo", "envelopeOnly", true, "Whether to use only the convex/concave envelope for the RLT relaxation");
         options.addOption("eo", "rltFilter", true, "RLT filter type [obj-var, prop]");
-        options.addOption("eo", "rltAcceptProp", true, "(prop only) Proportion of rows to accept.");
+        options.addOption("eo", "rltInitProp", true, "(prop only) Proportion of initial rows to accept.");
+        options.addOption("eo", "rltCutProp", true, "(prop only) Proportion of cut rows to accept.");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -146,7 +147,8 @@ public class TrainerFactory {
         final boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
         final boolean envelopeOnly = Command.getOptionValue(cmd, "envelopeOnly", true);
         final String rltFilter = Command.getOptionValue(cmd, "rltFilter", "obj-var");
-        final double rltAcceptProp = Command.getOptionValue(cmd, "rltAcceptProp", 0.1);
+        final double rltInitProp = Command.getOptionValue(cmd, "rltInitProp", 0.1);
+        final double rltCutProp = Command.getOptionValue(cmd, "rltCutProp", 0.1);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -196,7 +198,7 @@ public class TrainerFactory {
                     rltPrm.factorFilter = null;
                     rltPrm.rowFilter = null;
                 } else if (rltFilter.equals("prop")) {
-                    rltPrm.rowFilter = new RandPropRltRowFilter(rltAcceptProp);
+                    rltPrm.rowFilter = new RandPropRltRowFilter(rltInitProp, rltCutProp);
                 } else {
                     throw new ParseException("RLT filter type not supported: " + rltFilter);
                 }

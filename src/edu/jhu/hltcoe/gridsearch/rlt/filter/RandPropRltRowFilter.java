@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
 import no.uib.cipr.matrix.sparse.SparseVector;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Prng;
@@ -12,10 +11,12 @@ import edu.jhu.hltcoe.util.Prng;
  */
 public class RandPropRltRowFilter implements RltRowFilter {
 
-    private double acceptProp;
+    private double initProp;
+    private double cutProp;
     
-    public RandPropRltRowFilter(double acceptProp) {
-        this.acceptProp = acceptProp;
+    public RandPropRltRowFilter(double initProp, double cutProp) {
+        this.initProp = initProp;
+        this.cutProp = cutProp;
     }
     
     @Override
@@ -24,13 +25,22 @@ public class RandPropRltRowFilter implements RltRowFilter {
     }
     
     @Override
-    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
-        return Prng.nextDouble() < acceptProp; 
+    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k, RowType type) {
+        return accept(type);
     }
 
     @Override
-    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
-        return Prng.nextDouble() < acceptProp; 
+    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ, RowType type) {
+        return accept(type);
     }
     
+    private boolean accept(RowType type) {
+        if (type == RowType.INITIAL) {
+            return Prng.nextDouble() < initProp;
+        } else if (type == RowType.CUT) {
+            return Prng.nextDouble() < cutProp;
+        } else {
+            throw new IllegalStateException("unhandled type: " + type);
+        }
+    }
 }

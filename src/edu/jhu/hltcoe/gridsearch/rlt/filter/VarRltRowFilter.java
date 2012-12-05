@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.gridsearch.rlt.filter;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter.RowType;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntHashSet;
@@ -37,12 +38,12 @@ public class VarRltRowFilter implements RltRowFilter {
     }
 
     @Override
-    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
+    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ, RowType type) {
         return acceptRow(row);
     }
 
     @Override
-    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
+    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k, RowType type) {
         return acceptRow(row);
     }
 

@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
 import no.uib.cipr.matrix.sparse.SparseVector;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 
@@ -25,12 +24,12 @@ public class NumericalStabilityRltRowFilter implements RltRowFilter {
     }
     
     @Override
-    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k) {
+    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k, RowType type) {
         return accept(row);
     }
 
     @Override
-    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ) {
+    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ, RowType type) {
         return accept(row);
     }
 

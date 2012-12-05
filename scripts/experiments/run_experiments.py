@@ -246,14 +246,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         rltObjVarRelax = DPExpParams(relaxation="rlt",
                                      envelopeOnly=False,
                                      rltFilter="obj-var")
-        rltHalfRelax = DPExpParams(relaxation="rlt",
-                                  envelopeOnly=False,
-                                  rltFilter="prop",
-                                  rltAcceptProp=0.5)
         rltAllRelax = DPExpParams(relaxation="rlt",
                                   envelopeOnly=False,
                                   rltFilter="prop",
-                                  rltAcceptProp=1.0)
+                                  rltInitProp=1.0,
+                                  rltCutProp=1.0)
         
         # For --fast option
         if self.fast:       all.update(iterations=1,
@@ -397,9 +394,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=60*60)
+                       timeoutSeconds=60*60*3)
             dataset = synth_alt_three
-            extra_relaxes = [rltAllRelax + DPExpParams(rltAcceptProp=p) for p in frange(0.2, 1.01, 0.2)]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.2, 1.01, 0.2)]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.2, 1.01, 0.2)]
             for x in extra_relaxes: x.update(maxCutRounds=1)
             for maxNumSentences in [4]:
                 for varSelection in ["rand-uniform", "regret"]:
