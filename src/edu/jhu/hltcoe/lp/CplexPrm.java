@@ -53,10 +53,8 @@ public class CplexPrm {
 
         // -1 = oportunistic, 0 = auto (default), 1 = deterministic
         // In this context, deterministic means that multiple runs with
-        // the
-        // same model at the same parameter settings on the same
-        // platform
-        // will reproduce the same solution path and results.
+        // the same model at the same parameter settings on the same
+        // platform will reproduce the same solution path and results.
         cplex.setParam(IntParam.ParallelMode, 1);
 
         // From the CPLEX documentation: the Dual algorithm can take better

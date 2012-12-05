@@ -390,7 +390,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxSentenceLength=10,
                        maxNumSentences=50,
                        disableFathoming=True,
-                       threads=8)
+                       threads=2)
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
