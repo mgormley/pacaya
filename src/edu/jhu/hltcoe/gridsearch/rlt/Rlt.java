@@ -141,16 +141,18 @@ public class Rlt {
     private RltIds idsForRltVars;
     
     public Rlt(IloCplex cplex, IloLPMatrix inputMatrix, RltPrm prm) throws IloException {
-        List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
-        log.debug("# unfiltered RLT factors: " + newFactors.size());
-        log.debug("# unfiltered RLT rows: " + FactorBuilder.getNumRows(newFactors, inputMatrix));
-
         this.cplex = cplex;
         this.prm = prm;
         this.inputMatrix = inputMatrix;
 
         numVars = inputMatrix.getNumVars();
 
+        List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
+        log.debug("# unfiltered input variables: " + inputMatrix.getNcols());
+        log.debug("# unfiltered RLT variables: " + inputMatrix.getNcols() * inputMatrix.getNcols());
+        log.debug("# unfiltered input factors: " + newFactors.size());
+        log.debug("# unfiltered RLT rows: " + FactorBuilder.getNumRows(newFactors, inputMatrix));
+        
         // Reformulate and linearize the constraints.
 
         // Add the columns to the matrix.
