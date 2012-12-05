@@ -196,7 +196,7 @@ public abstract class DantzigWolfeRelaxation {
             status = RelaxStatus.getForDw(cplex.getStatus()); 
             
             log.trace("Master solution status: " + cplex.getStatus());
-            if (status == RelaxStatus.Infeasible) {
+            if (status == RelaxStatus.Infeasible || status == RelaxStatus.Unknown) {
                 return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
             }
             if (dwIter>=prm.maxDwIterations) {

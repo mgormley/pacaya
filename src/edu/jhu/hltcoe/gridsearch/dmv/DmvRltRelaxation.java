@@ -308,39 +308,45 @@ public class DmvRltRelaxation implements DmvRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
-            status = RelaxStatus.getForLp(cplex.getStatus()); 
+            status = RelaxStatus.getForLp(cplex.getStatus());
+            double objVal;
+            double lowerBound;
+            if (status != RelaxStatus.Unknown) {
+                log.trace("LP solution status: " + cplex.getStatus());
+                log.trace("LP CPLEX status: " + cplex.getCplexStatus());
+                if (status == RelaxStatus.Infeasible) {
+                    return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
+                }
+                if (prm.tempDir != null) {
+                    cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
+                }
+                warmStart = getWarmStart();
+                objVal = cplex.getObjValue();
+                log.trace("Simplex solution value: " + objVal);
+                double prevObjVal = cutIterObjVals.size() > 0 ? cutIterObjVals.get(cutIterObjVals.size() - 1)
+                        : INTERNAL_WORST_SCORE;
+                if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
+                    Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterObjVals.size() - 1)
+                            : Status.Unknown;
+                    log.warn(String.format("LP objective should monotonically decrease: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevObjVal, objVal, prevStatus, cplex.getStatus()));
+                }
+    
+                // Get the lower bound. Because we explicitly use the Dual simplex
+                // algorithm, the objective value is the lower bound, even if we
+                // terminate early.
+                lowerBound = objVal;
+                if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
+                    log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
+                }
+            } else {
+                objVal = INTERNAL_BEST_SCORE;
+                lowerBound = INTERNAL_BEST_SCORE;
+            }
             
-            log.trace("LP solution status: " + cplex.getStatus());
-            log.trace("LP CPLEX status: " + cplex.getCplexStatus());
-            if (status == RelaxStatus.Infeasible) {
-                return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
-            }
-            if (prm.tempDir != null) {
-                cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
-            }
-            warmStart = getWarmStart();
-            double objVal = cplex.getObjValue();
-            log.trace("Simplex solution value: " + objVal);
-            double prevObjVal = cutIterObjVals.size() > 0 ? cutIterObjVals.get(cutIterObjVals.size() - 1)
-                    : INTERNAL_WORST_SCORE;
-            if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
-                Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterObjVals.size() - 1)
-                        : Status.Unknown;
-                log.warn(String.format("LP objective should monotonically decrease: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevObjVal, objVal, prevStatus, cplex.getStatus()));
-            }
             cutIterObjVals.add(objVal);
             cutIterStatuses.add(cplex.getStatus());
-
-            // Get the lower bound. Because we explicitly use the Dual simplex
-            // algorithm, the objective value is the lower bound, even if we
-            // terminate early.
-            double lowerBound = objVal;
             cutIterLowerBounds.add(lowerBound);
-            
-            if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
-                log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
-            }
-            
+
             // Check whether to continue
             if (lowerBound >= upperBound) {
                 // We can fathom this node
