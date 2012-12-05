@@ -61,6 +61,7 @@ public class Rlt {
         private CplexRows rows;
         private int numRowsAdded;
         private SymIntMat tempRltConsInd;
+        
         public RltRows(int maxRowsToCache) {
             this.maxRowsToCache = maxRowsToCache;
             this.numRowsAdded = 0;
@@ -98,6 +99,7 @@ public class Rlt {
             int startRow = rows.addRowsToMatrix(rltMat);
             tempRltConsInd.incrementAll(startRow);
             rltConsIdx.setAll(tempRltConsInd);
+            log.debug("RLT rows added: " + numRowsAdded);
             reset();
         }
 
