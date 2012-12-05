@@ -227,7 +227,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxCutRounds=1, 
                    minSumForCuts=1.01, 
                    initWeights="uniform",
-                   nodeOrder="bfs")
+                   nodeOrder="bfs",
+                   seed=random.getrandbits(63))
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
         # Only keeping sentences that contain a verb
@@ -280,10 +281,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
             ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
         
-        if self.data == "synthetic": 
-            datasets = [synth_alt_three]
-            all.update(printSentences="./data.txt",
-                       syntheticSeed=123454321)
+        # Printing synthetic data with fixed synthetic seed.
+        for synthdata in [synth_alt_three]: 
+            synthdata.update(printSentences="./data.txt",
+                             syntheticSeed=123454321)
+            
+        if self.data == "synthetic": datasets = [synth_alt_three]
         elif self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
         
@@ -390,11 +393,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxSentenceLength=10,
                        maxNumSentences=50,
                        disableFathoming=True,
-                       threads=2)
+                       threads=1)
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=60*60*6)
+                       timeoutSeconds=60*60)
             dataset = synth_alt_three
             extra_relaxes = [rltAllRelax + DPExpParams(rltAcceptProp=p) for p in frange(0.2, 1.01, 0.2)]
             for x in extra_relaxes: x.update(maxCutRounds=1)

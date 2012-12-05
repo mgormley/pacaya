@@ -61,8 +61,8 @@ public class Prng {
     }
 
     static {
-//        DEFAULT_SEED = 1325449947035l;
-        DEFAULT_SEED = System.currentTimeMillis();
+        DEFAULT_SEED = 123456789101112l;
+        //DEFAULT_SEED = System.currentTimeMillis();
         System.out.println("WARNING: pseudo random number generator is not thread safe");
         seed(DEFAULT_SEED);
     }
