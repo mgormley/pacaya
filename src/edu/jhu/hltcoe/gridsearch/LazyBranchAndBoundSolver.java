@@ -126,7 +126,13 @@ public class LazyBranchAndBoundSolver {
             // The active node can compute a tighter upper bound instead of
             // using its parent's bound
             relaxTimer.start();
-            double curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+            double curNodeLowerBound;
+            if (disableFathoming) {
+                // If not fathoming, don't stop the relaxation early.
+                curNodeLowerBound = curNode.getOptimisticBound();
+            } else {
+                curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+            }
             RelaxedSolution relax = curNode.getRelaxedSolution();
             relaxTimer.stop();
             log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s", curNode.getId(),
