@@ -113,7 +113,7 @@ class DpSingleScraper(Scraper):
         return hs.split()
     
     def scrape_exp_statuses(self, exp, exp_dir, stdout_file):
-        stdout_lines = self.read_stdout_lines(stdout_file)
+        stdout_lines = self.read_stdout_lines(stdout_file, 100000)
         
         # Get the status list of the appropriate type.
         status_list = None
