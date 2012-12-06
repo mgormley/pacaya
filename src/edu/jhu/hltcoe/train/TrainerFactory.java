@@ -109,6 +109,7 @@ public class TrainerFactory {
         options.addOption("eo", "rltFilter", true, "RLT filter type [obj-var, prop]");
         options.addOption("eo", "rltInitProp", true, "(prop only) Proportion of initial rows to accept.");
         options.addOption("eo", "rltCutProp", true, "(prop only) Proportion of cut rows to accept.");
+        options.addOption("eo", "rltNames", true, "Whether to set RLT variable/constraint names.");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -149,6 +150,7 @@ public class TrainerFactory {
         final String rltFilter = Command.getOptionValue(cmd, "rltFilter", "obj-var");
         final double rltInitProp = Command.getOptionValue(cmd, "rltInitProp", 0.1);
         final double rltCutProp = Command.getOptionValue(cmd, "rltCutProp", 0.1);
+        final boolean rltNames = Command.getOptionValue(cmd, "rltNames", false);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -184,7 +186,8 @@ public class TrainerFactory {
                 RltPrm rltPrm = new RltPrm();
                 rltPrm.nameRltVarsAndCons = false;
                 rltPrm.envelopeOnly = envelopeOnly;
-                    
+                rltPrm.nameRltVarsAndCons = rltNames;    
+                
                 DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
                 rrPrm.tempDir = dwTemp;
                 rrPrm.maxCutRounds = maxCutRounds;
