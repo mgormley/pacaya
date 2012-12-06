@@ -72,15 +72,7 @@ public class MidpointVarSplitterTest {
         public int getNumParams(int c) {
             return numParams;
         }
-        public String getName(int c, int m) {
-            throw new RuntimeException("This method not be called");
-        }
-        public int getNumNonZeroUnsupMaxFreqCms() {
-            throw new RuntimeException("This method not be called");
-        }
-        public int getNumTotalParams() {
-            throw new RuntimeException("This method not be called");
-        }
+        @Override
         public int[][] getTotalMaxFreqCm() {
             int[][] totMaxFreqCm = new int[numConds][numParams];
             for (int i=0; i<totMaxFreqCm.length; i++) {
@@ -88,7 +80,28 @@ public class MidpointVarSplitterTest {
             }
             return totMaxFreqCm;
         }
-        public int getUnsupervisedMaxTotalFreqCm(int c, int m) {
+        @Override
+        public String getName(int c, int m) {
+            throw new RuntimeException("This method not be called");
+        }
+        @Override        
+        public int getNumNonZeroUnsupMaxFreqCms() {
+            throw new RuntimeException("This method not be called");
+        }
+        @Override        
+        public int getNumTotalParams() {
+            throw new RuntimeException("This method not be called");
+        }
+        @Override        
+        public int getTotUnsupervisedMaxFreqCm(int c, int m) {
+            throw new RuntimeException("This method not be called");
+        }
+        @Override
+        public int[][] getTotSupervisedFreqCm() {
+            throw new RuntimeException("This method not be called");
+        }
+        @Override
+        public int[][] getTotUnsupervisedMaxFreqCm() {
             throw new RuntimeException("This method not be called");
         }        
     }        

@@ -410,7 +410,7 @@ public class RltTest {
             List<Integer> newCons = new ArrayList<Integer>();
             newCons.add(mat.addRow(c2));
             newCons.add(mat.addRow(c4));
-            rlt.addRows(newCons);
+            rlt.addRowsAsFactors(newCons);
             return rlt;
         } else {
             // Add all four at once.
@@ -450,7 +450,7 @@ public class RltTest {
         List<Integer> newCons = new ArrayList<Integer>();
         newCons.add(mat.addRow(c2));
         newCons.add(mat.addRow(c4));
-        rlt.addRows(newCons);
+        rlt.addRowsAsFactors(newCons);
         System.out.println(rltMat);
         assertEquals(19, rltMat.getNrows());
         

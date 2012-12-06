@@ -275,7 +275,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         DmvDantzigWolfeRelaxation dw = getDw(trainCorpus);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        assertEquals(-14.866, relaxSol.getScore(), 1e-3);
+        assertEquals(-267.521, relaxSol.getScore(), 1e-3);
     }
 
     @Test

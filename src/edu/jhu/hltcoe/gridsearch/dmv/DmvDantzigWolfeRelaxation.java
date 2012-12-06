@@ -99,6 +99,17 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         for (int c = 0; c < idm.getNumConds(); c++) {
             objVals[c] = cplex.getValues(mp.objVars[c]);
         }
+
+        // Add in the counts from supervision. This program, unlike the RLT
+        // relaxation, accounts for the supervised feature counts as a separate
+        // portion of the objective.
+        int[][] totSupFreqCm = idm.getTotSupervisedFreqCm();
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            for (int m=0; m<idm.getNumParams(c); m++) {
+                optimalFeatCounts[c][m] += totSupFreqCm[c][m];
+                objVals[c][m] += optimalLogProbs[c][m] * (double)totSupFreqCm[c][m];
+            }
+        }
         
         // Compute the true quadratic objective given the model
         // parameters and feature counts found by the relaxation.
@@ -109,7 +120,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
 
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
-        
+
         return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
                 .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
     }
@@ -315,7 +326,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 // Add the lower coupling constraint
                 IloNumVar slackVarLower = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarLower_{%d,%d}",c,m));
                 name = String.format("ccLb(%d,%d)", c, m);   
-                double maxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c,m);
+                double maxFreqCm = idm.getTotUnsupervisedMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.sum(slackVarLower,
                                         cplex.diff(cplex.prod(maxFreqCm, sto.modelParamVars[c][m]), mp.objVars[c][m]));
                 mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);

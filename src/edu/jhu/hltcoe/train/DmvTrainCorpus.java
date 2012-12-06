@@ -27,7 +27,7 @@ public class DmvTrainCorpus implements TrainCorpus {
         Arrays.fill(isLabeled, true);
         Arrays.fill(isLabeled, 0, (int)(isLabeled.length*(1.0 - propSupervised)), false);
         // TODO: switch this a randomly ordered set of booleans. The trick is dealing with cplex.getDuals() in 
-        // the D-W relaxation.
+        // the D-W relaxation (and RLT relaxation?).
         // isLabeled = getRandBools(treebank.size(), propSupervised);
         
         numLabeled = getNumTrue(isLabeled);

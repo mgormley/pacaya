@@ -29,6 +29,7 @@ public class CptBounds {
     private double[][][] ubs;
 
     public CptBounds(IndexedCpt icpt) {
+        int[][] supFreqCm = icpt.getTotSupervisedFreqCm();
         int[][] totMaxFreqCm = icpt.getTotalMaxFreqCm();
 
         lbs = new double[2][icpt.getNumConds()][];
@@ -57,8 +58,8 @@ public class CptBounds {
                     }
                 } else {
                     // Fill frequency count bounds.
-                    Arrays.fill(lbs[t][c], 0);
                     for (int m = 0; m < lbs[t][c].length; m++) {
+                        lbs[t][c][m] = supFreqCm[c][m];
                         ubs[t][c][m] = totMaxFreqCm[c][m];
                     }
                 }

@@ -24,7 +24,7 @@ public class RandomVariableSelector implements VariableSelector {
     }
 
     private void init(IndexedDmvModel idm) {
-        int[][] maxFreqCm = idm.getTotalMaxFreqCm();
+        int[][] maxFreqCm = idm.getTotUnsupervisedMaxFreqCm();
 
         // Restructure the max freqs for efficient sampling
         int numCm = 0;

@@ -294,7 +294,7 @@ public class DmvDantzigWolfeRelaxationTest {
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        assertEquals(-14.813, relaxSol.getScore(), 1e-3);
+        assertEquals(-277.897, relaxSol.getScore(), 1e-3);
     }
     
     @Test

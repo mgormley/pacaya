@@ -283,7 +283,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                 // Add the lower coupling constraint
                 IloNumVar slackVarLower = cplex.numVar(-Double.MAX_VALUE, 0.0, String.format("slackVarLower_{%d,%d}",c,m));
                 name = String.format("ccLb(%d,%d)", c, m);   
-                double maxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c,m);
+                double maxFreqCm = idm.getTotUnsupervisedMaxFreqCm(c,m);
                 IloNumExpr rhsLower = cplex.diff(slackVarLower, mp.objVars[c][m]);
                 mp.couplConsLower[c][m] = cplex.eq(maxFreqCm * bounds.getLb(Type.PARAM,c, m), rhsLower, name);
                 
@@ -365,7 +365,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
         for (int c = 0; c < idm.getNumConds(); c++) {
             for (int m = 0; m < idm.getNumParams(c); m++) {
                 // Only update non zero rows
-                int totMaxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c, m);
+                int totMaxFreqCm = idm.getTotUnsupervisedMaxFreqCm(c, m);
                 if (totMaxFreqCm > 0) {
                     // Add to the lower coupling constraint
                     ind[j] = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
@@ -469,7 +469,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             int numParams = idm.getNumParams(c);
             modelWeights[c] = new double[numParams];
             for (int m = 0; m < numParams; m++) {
-                modelWeights[c][m] = -supervisedFreqCm[c][m] - pricesLower[j] * idm.getUnsupervisedMaxTotalFreqCm(c, m);
+                modelWeights[c][m] = -supervisedFreqCm[c][m] - pricesLower[j] * idm.getTotUnsupervisedMaxFreqCm(c, m);
                 j++;
             }
         }
@@ -655,7 +655,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
 
         for (int m = 0; m < idm.getNumParams(c); m++) {
             // Only update non zero rows
-            int totMaxFreqCm = idm.getUnsupervisedMaxTotalFreqCm(c, m);
+            int totMaxFreqCm = idm.getTotUnsupervisedMaxFreqCm(c, m);
             if (totMaxFreqCm > 0) {
                 // Add to the lower coupling constraint
                 rowind.add(mp.lpMatrix.getIndex(mp.couplConsLower[c][m]));

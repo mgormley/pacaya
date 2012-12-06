@@ -177,17 +177,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
         // Create the objective
         mp.objective = cplex.addMinimize();
 
-        // Add the supervised portion to the objective.
-        int[][] totSupFreqCm = idm.getTotSupervisedFreqCm(corpus);
-        for (int c = 0; c < numConds; c++) {
-            for (int m = 0; m < idm.getNumParams(c); m++) {
-                if (totSupFreqCm[c][m] != 0) {
-                    // Negate the coefficients since we are minimizing
-                    cplex.setLinearCoef(mp.objective, -totSupFreqCm[c][m], sto.modelParamVars[c][m]);
-                }
-            }
-        }
-        
         // Create the objective variables, adding them to the objective
         mp.objVars = new IloNumVar[numConds][];
         for (int c = 0; c < numConds; c++) {
@@ -308,10 +297,13 @@ public class DmvRltRelaxation implements DmvRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
-            status = RelaxStatus.getForLp(cplex.getStatus());
+            status = RelaxStatus.getForLp(cplex.getStatus(), cplex.getCplexStatus());
             double objVal;
             double lowerBound;
-            if (status != RelaxStatus.Unknown) {
+            if (status == RelaxStatus.Unknown) {
+                objVal = INTERNAL_BEST_SCORE;
+                lowerBound = INTERNAL_BEST_SCORE;
+            } else {
                 log.trace("LP solution status: " + cplex.getStatus());
                 log.trace("LP CPLEX status: " + cplex.getCplexStatus());
                 if (status == RelaxStatus.Infeasible) {
@@ -338,10 +330,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
                     log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
                 }
-            } else {
-                objVal = INTERNAL_BEST_SCORE;
-                lowerBound = INTERNAL_BEST_SCORE;
-            }
+            } 
             
             cutIterObjVals.add(objVal);
             cutIterStatuses.add(cplex.getStatus());
@@ -381,6 +370,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, cutIterObjVals));
         log.debug("Iteration lower bounds: " + cutIterLowerBounds);
+        log.debug("Iteration statuses: " + cutIterStatuses);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
                 sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rlt.getRltMatrix().getNrows()));
@@ -390,7 +380,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
          List<Integer> rows = sto.projectModelParamsAndAddCuts();
-         return mp.rlt.addRows(rows);
+         return rows.size() + mp.rlt.addRowsAsFactors(rows);
     }
     
     // Copied from DmvDantzigWolfeRelaxation.

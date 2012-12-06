@@ -11,7 +11,11 @@ import ilog.concert.IloRange;
 import java.util.Arrays;
 
 import depparsing.globals.Constants;
+import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -139,6 +143,9 @@ public class DmvParseLpBuilder {
             IndexedDmvModel idm = new IndexedDmvModel(corpus);
             addFeatCountVarsAndCons(corpus, idm, pp);
         }
+        
+        // Fix the supervised sentences to have the gold tree.
+        addSupervision(corpus, pp);
     }
 
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
@@ -545,11 +552,14 @@ public class DmvParseLpBuilder {
     }
 
     private void createFeatCountVars(IndexedDmvModel idm, DmvTreeProgram pp) throws IloException {
+        CptBounds bounds = new CptBounds(idm);
+
         pp.featCountVars = new IloNumVar[idm.getNumConds()][];
         for (int c=0; c<idm.getNumConds(); c++) {
             pp.featCountVars[c] = new IloNumVar[idm.getNumParams(c)];
             for (int m=0; m<idm.getNumParams(c); m++) {
-                pp.featCountVars[c][m] = cplex.numVar(0.0, CplexUtils.CPLEX_POS_INF, String.format("featCount_{%d,%d}", c, m));
+                // These bounds recognize that the supervised data will make a fixed contribution.
+                pp.featCountVars[c][m] = cplex.numVar(bounds.getLb(Type.COUNT, c, m), bounds.getUb(Type.COUNT, c, m), String.format("featCount_{%d,%d}", c, m));
             }
         }
     }
@@ -632,7 +642,31 @@ public class DmvParseLpBuilder {
         }
         pp.obj.setExpr(expr);
     }
-    
+
+    private void addSupervision(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {
+        for (int s = 0; s < corpus.size(); s++) {
+            if (corpus.isLabeled(s)) {
+                DepTree tree = corpus.getTree(s);
+                int[] parents = tree.getParents();
+                for (int c = 0; c < parents.length; c++) {
+                    double val = (parents[c] == WallDepTreeNode.WALL_POSITION) ? 1 : 0;
+                    pp.arcRoot[s][c].setLB(val);
+                    pp.arcRoot[s][c].setUB(val);
+                }
+                for (int p = 0; p < parents.length; p++) {
+                    for (int c = 0; c < parents.length; c++) {
+                        if (p == c) {
+                            continue;
+                        }
+                        double val = (parents[c] == p) ? 1 : 0;
+                        pp.arcChild[s][p][c].setLB(val);
+                        pp.arcChild[s][p][c].setUB(val);
+                    }
+                }
+            }
+        }
+    }
+
     private void addDmvObj(DmvTrainCorpus corpus, DmvModel model, DmvParsingProgram pp) throws IloException {
         // # ---------- DMV log-likelihood ----------
         //

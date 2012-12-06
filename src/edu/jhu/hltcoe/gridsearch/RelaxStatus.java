@@ -3,6 +3,7 @@
  */
 package edu.jhu.hltcoe.gridsearch;
 
+import ilog.cplex.IloCplex.CplexStatus;
 import ilog.cplex.IloCplex.Status;
 
 public enum RelaxStatus {
@@ -32,9 +33,12 @@ public enum RelaxStatus {
     /**
      * Gets the relaxation status for an LP relaxation.
      * This method returns optimal if CPLEX returns optimal.
+     * @param cplexStatus 
      */
-    public static RelaxStatus getForLp(Status status) {
-        if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded
+    public static RelaxStatus getForLp(Status status, CplexStatus cplexStatus) {
+        if (cplexStatus == CplexStatus.AbortObjLim) {
+            return Pruned;
+        } else if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded
                 || status == Status.Bounded) {
             return Infeasible;
         } else if (status == Status.Error || status == Status.Unknown) {

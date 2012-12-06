@@ -70,13 +70,12 @@ public class IndexedDmvModel implements IndexedCpt {
     private int numTotalParams;
     private int numNZUnsupMaxFreqCms;
     private Alphabet<Label> alphabet;
-    private Set<Label> vocab;
-    private SentenceCollection sentences; 
+    private DmvTrainCorpus corpus;
+    private int[][][] sentMaxFreqCms; 
     
     public IndexedDmvModel(DmvTrainCorpus corpus) {
-        this.sentences = corpus.getSentences();
-        this.alphabet = sentences.getLabelAlphabet();
-        this.vocab = sentences.getVocab();
+        this.corpus = corpus;
+        this.alphabet = corpus.getLabelAlphabet();
 
         numTags = alphabet.size();
         log.trace("numTags: " + numTags);
@@ -97,20 +96,19 @@ public class IndexedDmvModel implements IndexedCpt {
         rhsToC.stopGrowth();
         log.trace("rhsToC: size=" + rhsToC.size() + " alphabet=" + rhsToC);
         
-        // Create the sentence max frequency counts for c,m
-        int[][][] sentMaxFreqCm = new int[sentences.size()][][];
-        for (int s=0; s<sentences.size(); s++) {
-            sentMaxFreqCm[s] = getSentMaxFreqCm(sentences.get(s)); 
+        sentMaxFreqCms = new int[corpus.size()][][];
+        for (int s=0; s<corpus.size(); s++) {
+            sentMaxFreqCms[s] = getSentMaxFreqCm(corpus.getSentence(s)); 
         }
         
         // Create a map of individual parameters to sentence indices
         sentParamToI = new ArrayList<Alphabet<ParamId>>();
-        for (int s=0; s<sentences.size(); s++) {
+        for (int s=0; s<corpus.size(); s++) {
             Alphabet<ParamId> paramToI = new Alphabet<ParamId>();
             for (int c=0; c<getNumConds(); c++) {
                 Rhs rhs = rhsToC.lookupIndex(c);
                 for (int m=0; m<getNumParams(c); m++) {
-                    if (sentMaxFreqCm[s][c][m] > 0) {
+                    if (sentMaxFreqCms[s][c][m] > 0) {
                         paramToI.lookupObject(new ParamId(rhs,m));
                     }
                 }
@@ -122,7 +120,7 @@ public class IndexedDmvModel implements IndexedCpt {
         
         // Create a map from c,m indices to sentence variable indices using the previous two maps
         sentCmToI = new ArrayList<Alphabet<CM>>();
-        for (int s=0; s<sentences.size(); s++) {
+        for (int s=0; s<corpus.size(); s++) {
             Alphabet<ParamId> paramToI = sentParamToI.get(s);
             Alphabet<CM> cmToI = new Alphabet<CM>();
             for (int i=0; i<paramToI.size(); i++) {
@@ -137,15 +135,15 @@ public class IndexedDmvModel implements IndexedCpt {
         }
         
         // Create the count of max frequencies for each model parameter in term of sentence indices
-        sentMaxFreqSi = new int[sentences.size()][];
-        for (int s=0; s<sentences.size(); s++) {
+        sentMaxFreqSi = new int[corpus.size()][];
+        for (int s=0; s<corpus.size(); s++) {
             // Create the sentence solution 
             sentMaxFreqSi[s] = new int[getNumSentVars(s)];
             for (int c = 0; c < getNumConds(); c++) {
                 for (int m = 0; m < getNumParams(c); m++) {
-                    if (sentMaxFreqCm[s][c][m] > 0) {
+                    if (sentMaxFreqCms[s][c][m] > 0) {
                         int i = getSi(s, c, m);
-                        sentMaxFreqSi[s][i] = sentMaxFreqCm[s][c][m];
+                        sentMaxFreqSi[s][i] = sentMaxFreqCms[s][c][m];
                     }
                 }
             }
@@ -158,7 +156,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 numTotalParams++;
             }
         }
-        // Create the count of total max frequencies for each model parameter in term of c,m
+        // Create the count of total max frequencies for each model parameter in terms of c,m
         // and count the total number of non-zero max frequencies.
         numNZUnsupMaxFreqCms = 0;
         unsupMaxTotFreqCm = new int[getNumConds()][];
@@ -167,7 +165,7 @@ public class IndexedDmvModel implements IndexedCpt {
             for (int m = 0; m < getNumParams(c); m++) {
                 for (int s = 0; s < sentMaxFreqSi.length; s++) {
                     if (!corpus.isLabeled(s)) {
-                        unsupMaxTotFreqCm[c][m] += sentMaxFreqCm[s][c][m];
+                        unsupMaxTotFreqCm[c][m] += sentMaxFreqCms[s][c][m];
                     }
                 }
               
@@ -308,13 +306,29 @@ public class IndexedDmvModel implements IndexedCpt {
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
      */
     public int[][] getTotalMaxFreqCm() {
+        int[][] totMaxFreqCm = new int[getNumConds()][];
+        for (int c = 0; c < getNumConds(); c++) {
+            totMaxFreqCm[c] = new int[getNumParams(c)];
+            for (int m = 0; m < getNumParams(c); m++) {
+                for (int s = 0; s < sentMaxFreqSi.length; s++) {
+                    totMaxFreqCm[c][m] += sentMaxFreqCms[s][c][m];
+                }                
+            }
+        }
+        return totMaxFreqCm;
+    }
+    
+    /* (non-Javadoc)
+     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
+     */
+    public int[][] getTotUnsupervisedMaxFreqCm() {
         return unsupMaxTotFreqCm;
     }
 
     /* (non-Javadoc)
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm(int, int)
      */
-    public int getUnsupervisedMaxTotalFreqCm(int c, int m) {
+    public int getTotUnsupervisedMaxFreqCm(int c, int m) {
         return unsupMaxTotFreqCm[c][m];
     }
     
@@ -427,6 +441,10 @@ public class IndexedDmvModel implements IndexedCpt {
         }
     }
     
+    public int[][] getTotSupervisedFreqCm() {
+        return getTotSupervisedFreqCm(corpus);
+    }
+    
     public int[][] getTotSupervisedFreqCm(DmvTrainCorpus corpus) {
         int[][] totFreqCm = new int[getNumConds()][];
         for (int c = 0; c < getNumConds(); c++) {
@@ -513,7 +531,7 @@ public class IndexedDmvModel implements IndexedCpt {
      *  and allow it to be passed in for that case.
      */
     public int[] getSentSol(Sentence sentence, int s, DepTree depTree) {
-        assert(sentence == this.sentences.get(s));
+        assert(sentence == this.corpus.getSentence(s));
         int[] tags = sentence.getLabelIds();
         int[] parents = depTree.getParents();
         Alphabet<ParamId> paramToI = sentParamToI.get(s);

@@ -10,12 +10,13 @@ public interface IndexedCpt {
 
     public String getName(int c, int m);
 
-    /**
-     * Used by DmvBoundsFactory
-     */
     public int[][] getTotalMaxFreqCm();
 
-    public int getUnsupervisedMaxTotalFreqCm(int c, int m);
+    public int[][] getTotSupervisedFreqCm();
+    
+    public int[][] getTotUnsupervisedMaxFreqCm();
+    
+    public int getTotUnsupervisedMaxFreqCm(int c, int m);
 
     public int getNumNonZeroUnsupMaxFreqCms();
 

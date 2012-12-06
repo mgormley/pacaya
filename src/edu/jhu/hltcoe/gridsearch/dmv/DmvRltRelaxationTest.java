@@ -171,7 +171,7 @@ public class DmvRltRelaxationTest {
         RelaxedDmvSolution relaxSol;
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
-        assertEquals(-1.4750472192095685, relaxSol.getScore(), 1e-13);
+        assertEquals(-1.481, relaxSol.getScore(), 1e-3);
 
         newL = origLower;
         newU = origUpper;
@@ -252,6 +252,17 @@ public class DmvRltRelaxationTest {
         }
     }
     
+    public static class NumCutCountComputer extends CutCountComputer {
+        private int numCuts;
+        public NumCutCountComputer(int numCuts) {
+            this.numCuts = numCuts;
+        }
+        @Override
+        public int getNumCuts(int numParams) {
+            return numCuts;
+        }
+    }
+    
     @Test
     public void testAdditionalCuttingPlanes() {
         SentenceCollection sentences = new SentenceCollection();
@@ -260,12 +271,24 @@ public class DmvRltRelaxationTest {
         sentences.addSentenceFromString("N V");
         sentences.addSentenceFromString("N V N N");
         sentences.addSentenceFromString("D N");
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
 
         int maxCuts = 5;
         double[] maxSums = new double[maxCuts];
         double prevSum = Double.POSITIVE_INFINITY;
         for (int numCuts=1; numCuts<maxCuts; numCuts++) {
             Prng.seed(12345);
+            CutCountComputer ccc = new NumCutCountComputer(numCuts);
+            DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
+            rrPrm.maxCutRounds = 0;
+            rrPrm.stoPrm.initCutCountComp = ccc;      
+            rrPrm.stoPrm.maxSetSizeToConstrain = 0;
+            
+            // RLT
+            DmvRltRelaxation rltRelax = new DmvRltRelaxation(rrPrm);
+            rltRelax.init1(corpus);
+            rltRelax.init2(null);
+            
             DmvRltRelaxation dw = getLp(sentences, numCuts);
             RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
             assertEquals(0.0, relaxSol.getScore(), 1e-13);
@@ -280,7 +303,7 @@ public class DmvRltRelaxationTest {
             }
             maxSums[numCuts] = maxSum;
             System.out.println("maxSums=" + Arrays.toString(maxSums));
-            Assert.assertTrue(maxSum <= prevSum);
+            Assert.assertTrue(Utilities.lte(maxSum, prevSum, 1e-13));
             prevSum = maxSum;
         }
         System.out.println("maxSums=" + Arrays.toString(maxSums));
@@ -481,7 +504,7 @@ public class DmvRltRelaxationTest {
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        assertEquals(-14.813, relaxSol.getScore(), 1e-3);
+        assertEquals(-280.085, relaxSol.getScore(), 1e-3);
     }
     
     @Test
@@ -494,6 +517,7 @@ public class DmvRltRelaxationTest {
 
         // Get the relaxed solution.
         DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), false);
+        prm.tempDir = new File(".");
         prm.stoPrm.minSumForCuts = 1.000001;
         DmvRltRelaxation dwRelax = new DmvRltRelaxation(prm);
         dwRelax.init1(corpus);
@@ -508,102 +532,6 @@ public class DmvRltRelaxationTest {
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
         Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
-    }
-    
-    @Test
-    public void testQualityOfRelaxation() throws IOException {
-        
-        
-        // TODO: use real model and real trees to compute a better
-        // lower bound
-        
-        DmvModel goldModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, Prng.nextInt(1000000));
-        DepTreebank goldTreebank = generator.getTreebank(100);
-        DmvTrainCorpus corpus = new DmvTrainCorpus(goldTreebank, 0.0);
-        System.out.println(goldTreebank);
-        System.out.println(goldModel);
-        SentenceCollection sentences = goldTreebank.getSentences();
-                
-        DmvRltRelaxation dw = getLp(sentences, 100);
-        IndexedDmvModel idm = dw.getIdm();
-
-        double[][] goldLogProbs = idm.getCmLogProbs(goldModel);
-        DmvSolution goldSol = new DmvSolution(goldLogProbs, idm, goldTreebank, dw.computeTrueObjective(goldLogProbs, goldTreebank));            
-        
-        InitSol opt = InitSol.GOLD;
-        DmvSolution initSol = LocalBnBDmvTrainer.getInitSol(opt, corpus, dw, goldTreebank, goldSol);
-
-        StringBuilder sb = new StringBuilder();        
-        sb.append("gold score: " + goldSol.getScore() + "\n");
-        sb.append("init score: " + initSol.getScore());
-        sb.append("\n");
-                        
-//        for (double offsetProb = 0.0; offsetProb < 0.5; offsetProb += 0.01) {
-//            double probOfSkipCm = 0.00;
-//            setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
-//            RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation();
-//            
-//            sb.append(String.format("offset: +/-%.2f", offsetProb));
-//            sb.append(String.format(" skip: %.2f%%", probOfSkipCm*100));
-//            sb.append(String.format(" relax bound: %7.2f", relaxSol.getScore()));
-//            sb.append(String.format(" relative: %.2f", Math.abs(relaxSol.getScore() - initSol.getScore()) / Math.abs(initSol.getScore())));
-//            sb.append("\n");
-//        }
-//        sb.append("\n");
-
-        RDataFrame df = new RDataFrame();
-        Stopwatch timer = new Stopwatch();
-        for (double offsetProb = 10e-13; offsetProb <= 1.001; offsetProb += 0.2) {
-            for (double probOfSkipCm = 0.0; probOfSkipCm <= 0.2; probOfSkipCm += 0.1) {
-                int numTimes = 1; // TODO: revert 2
-                double avgScore = 0.0;
-                for (int i=0; i<numTimes; i++) {
-                    timer.start();
-                    LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
-                    RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation();
-                    avgScore += relaxSol.getScore();
-                    timer.stop();
-                    System.out.println("Time remaining: " + Time.avgMs(timer)*(numTimes*0.5/0.01*1.0/0.1 - i*offsetProb/0.01*probOfSkipCm/0.1)/1000);
-                }
-                avgScore /= (double)numTimes;
-                
-                RRow row = new RRow();
-                row.put("offset", offsetProb);
-                row.put("skip", probOfSkipCm*100);
-                row.put("relaxBound", avgScore);
-                row.put("relative", Math.abs(avgScore - initSol.getScore()) / Math.abs(initSol.getScore()));
-                row.put("containsGoldSol", containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
-                df.add(row);
-//                sb.append(String.format("offset: +/-%.2f", offsetProb));
-//                sb.append(String.format(" skip: %.2f%%", probOfSkipCm*100));
-//                sb.append(String.format(" relax bound: %7.2f", avgScore));
-//                sb.append(String.format(" relative: %.2f", Math.abs(avgScore - initSol.getScore()) / Math.abs(initSol.getScore())));
-//                sb.append("\n");
-            }
-        }
-        System.out.println(df);
-        System.out.println(sb);
-        System.out.println("Avg time (ms) per relaxation: " + Time.totMs(timer)/df.getNumRows());
-
-        FileWriter writer = new FileWriter("relax-quality.data");
-        df.write(writer);
-        writer.close();
-    }
-
-    private boolean containsInitSol(CptBounds bounds, double[][] logProbs) {
-        for (int c=0; c<logProbs.length; c++) {
-            for (int m=0; m<logProbs[c].length; m++) {
-                double logProb = logProbs[c][m];
-                if (logProb < CptBounds.DEFAULT_LOWER_BOUND) {
-                    logProb = CptBounds.DEFAULT_LOWER_BOUND;
-                }
-                if (bounds.getLb(Type.PARAM, c, m) > logProb || bounds.getUb(Type.PARAM, c, m) < logProb) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     private DmvRltRelaxation getLp(SentenceCollection sentences) {

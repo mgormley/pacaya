@@ -448,7 +448,7 @@ public class Rlt {
     /**
      * @return The number of rows added to the RLT matrix.
      */
-    public int addRows(List<Integer> rowIds) throws IloException {
+    public int addRowsAsFactors(List<Integer> rowIds) throws IloException {
         if (prm.envelopeOnly) {
             // Don't add the rows.
             return 0;
