@@ -109,7 +109,7 @@ class DPScraper(Scraper):
                 scraper.scrape_exp_dirs(exp_dirs)
             # Run bnb-time-estimate.R 
             estimate_file = os.path.join(exp_dir, "bnb-time-estimate.out")
-            cmd = 'bash -c "Rscript %s/scripts/plot/bnb-time-estimate.R %s > %s"' % (self.root_dir, status_file, estimate_file)
+            cmd = 'bash -c "Rscript %s/scripts/plot/bnb-time-estimate.R %s &> %s"' % (self.root_dir, status_file, estimate_file)
             print "Running:", cmd
             subprocess.check_call(shlex.split(cmd))
             # Get the estimated time to complete a full run of branch and bound.
