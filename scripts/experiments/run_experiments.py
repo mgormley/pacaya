@@ -401,7 +401,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             for x in extra_relaxes: 
                 x.update(maxCutRounds=1, timeoutSeconds=3*60*60)
             exps = []
-            for maxNumSentences in [4]:
+            for maxNumSentences in [50]:
                 for varSelection in ["rand-uniform", "regret"]:
                     for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
                         experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
