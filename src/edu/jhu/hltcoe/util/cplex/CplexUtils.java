@@ -218,6 +218,9 @@ public class CplexUtils {
      * problem where we can do early stopping as we do in RLT. Then we could
      * compare against the objective value given by the dual simplex algorithm,
      * which (it turns out) is exactly what we want anyway.
+     * 
+     * This might help: 
+     * http://www.or-exchange.com/questions/1113/cplex-attributing-dual-values-to-lhsrhs-constraints
      */
     @Deprecated
     public static double getDualObjectiveValue(IloCplex cplex, IloLPMatrix mat) throws IloException {
