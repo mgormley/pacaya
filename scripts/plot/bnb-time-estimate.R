@@ -4,6 +4,12 @@ library(plyr)
 library(stringr)
 library(Hmisc) ## For Pearson correlation: rcorr()
 
+safe.as.numeric <- function(x) {
+  x <- as.character(x)
+  x <- str_replace(x, "Infinity", "Inf")
+  as.numeric(x)
+}
+
 ## Read data
 args <- commandArgs(TRUE)
 if (file.exists(args[1])) {
@@ -18,6 +24,17 @@ print(sprintf("Using results file %s", results.file))
 df <- read.table(results.file, header=TRUE)
 df.orig <- df
 
+## Print out incumbent scores and upper bounds.
+## print("Incumbent scores:")
+## print(unique(df$incumbentScore))
+## print("Upper bounds:")
+## print(unique(df$upperBound))
+
+print("Coercing infinities to numerics.")
+df$incumbentScore <- safe.as.numeric(df$incumbentScore)
+df$upperBound <- safe.as.numeric(df$upperBound)
+
+print("Adding columns.")
 df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitProp, df$varSelection, df$rltCutProp, sep=".")
 incumbentScore <- max(df$incumbentScore)
 df$relaxStatus2 <- ifelse(df$upperBound < incumbentScore, "Pruned", "Not-pruned")
@@ -85,7 +102,8 @@ for (m in unique(depths.orig$method)) {
   print.noquote(sprintf("Method: %s", m))
   print.noquote(sprintf("Estimated number of nodes: %f", est.pop.tot))
   print.noquote(sprintf("Standard deviation: %f", se.tot))
-  print.noquote(sprintf("Confidence interval: %f", ci))
+  print.noquote(sprintf("Confidence interval min: %f", ci[1]))
+  print.noquote(sprintf("Confidence interval max: %f", ci[2]))
   print.noquote(sprintf("Number of samples: %d", nrow(df.subset)))
   print.noquote(sprintf("Average time(ms) per node: %f", time.per.node))
   print.noquote(sprintf("Estimated number of B&B hours: %f", est.time.tot))
