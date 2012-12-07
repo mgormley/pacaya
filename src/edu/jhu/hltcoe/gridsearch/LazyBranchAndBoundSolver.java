@@ -135,8 +135,8 @@ public class LazyBranchAndBoundSolver {
             }
             RelaxedSolution relax = curNode.getRelaxedSolution();
             relaxTimer.stop();
-            log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s", curNode.getId(),
-                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString()));
+            log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
+                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, Time.totMs(nodeTimer) / numProcessed));
             if (curNodeLowerBound <= incumbentScore && !disableFathoming) {
                 // Fathom this node: it is either infeasible or was pruned.
                 if (relax.getStatus() == RelaxStatus.Infeasible) {
@@ -194,6 +194,7 @@ public class LazyBranchAndBoundSolver {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
         printSummary(upperBound, relativeDiff, numProcessed, fathom);
+        printTimers(numProcessed);
         leafNodePQ.clear();
         upperBoundPQ.clear();
 

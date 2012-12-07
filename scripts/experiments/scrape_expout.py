@@ -15,19 +15,31 @@ from experiments.core.util import get_all_following, get_following, get_time, ge
     to_str, to_int, get_group1, head
 from experiments.core.scrape import Scraper
 from experiments.core.util import tail
+from experiments import scrape_statuses
+import shlex
+from experiments.core import scrape
+
+def get_root_dir():
+    scripts_dir =  os.path.abspath(sys.path[0])
+    root_dir =  os.path.dirname(os.path.dirname(scripts_dir))
+    print "Using root_dir: " + root_dir
+    return root_dir;
 
 class DPScraper(Scraper):
     
     def __init__(self, options):
-        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, options.out_file)
-    
+        Scraper.__init__(self, options)
+        self.root_dir = os.path.abspath(get_root_dir())
+
     def get_exp_params_instance(self):
         return DPExpParams()
     
     def get_column_order(self):
-        hs = "dataset maxNumSentences maxSentenceLength parser model formulation"
-        hs += " deltaGenerator factor interval numPerSide"
+        hs = "dataset maxNumSentences maxSentenceLength propSupervised parser model formulation"
+        hs += " algorithm varSelection relaxation envelopeOnly rltInitProp rltCutProp"
         hs += " accuracy elapsed error iterations timeRemaining"
+        hs += " avgNodeTime estNumNodes estNumNodesStddev estBnbHours estNumSamples"
+        hs += " deltaGenerator factor interval numPerSide"
         return hs.split()
     
     def scrape_exp(self, exp, exp_dir, stdout_file):
@@ -46,7 +58,7 @@ class DPScraper(Scraper):
         
         numWords = to_int(get_following_literal(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
-        
+
         if "relaxOnly" in exp.keys():
             exp.update(relaxTime = get_following_literal(stdout_lines, "relaxTime(ms): ", -1))
             exp.update(relaxBound = get_following_literal(stdout_lines, "relaxBound: ", -1))
@@ -69,6 +81,9 @@ class DPScraper(Scraper):
             exp.update(numSeen = get_group1(stdout_lines, "#seen=(\S+)", -1))
             exp.update(propRootSpaceRemain = get_following_literal(stdout_lines, "Proportion of root space remaining: ", -1))
             exp.update(bnbStatus = get_following_literal(stdout_lines, "B&B search status: ", -1))
+            exp.update(avgNodeTime = get_following_literal(stdout_lines, "Avg time(ms) per node: ", -1))
+            exp.update(avgRelaxTime = get_following_literal(stdout_lines, "Avg relax time(ms) per node: ", -1))
+
              
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
@@ -81,16 +96,34 @@ class DPScraper(Scraper):
             elif len(tot_parse_times) > 0:
                 exp.update(totalParseTime = tot_parse_times[0])
                 exp.update(avgPerWordParseTime = tot_parse_times[0]/numWords)
-         
+        if exp.get("disableFathoming") == "True":
+            # Scrape stdout to create a curnode_status.data file.
+            status_file = os.path.join(exp_dir, "curnode-status.data")
+            if not os.path.exists(status_file):
+                _, options, _ = scrape_statuses.parse_options([])
+                options.type = "curnode"
+                options.tsv_file = status_file
+                exp_dirs = [exp_dir]
+                print "Creating status file", options, exp_dirs
+                scraper = scrape_statuses.DpSingleScraper(options)
+                scraper.scrape_exp_dirs(exp_dirs)
+            # Run bnb-time-estimate.R 
+            estimate_file = os.path.join(exp_dir, "bnb-time-estimate.out")
+            cmd = 'bash -c "Rscript %s/scripts/plot/bnb-time-estimate.R %s > %s"' % (self.root_dir, status_file, estimate_file)
+            print "Running:", cmd
+            subprocess.check_call(shlex.split(cmd))
+            # Get the estimated time to complete a full run of branch and bound.
+            estimate_lines = self.read_stdout_lines(estimate_file)
+            exp.update(estNumNodes = get_following_literal(estimate_lines, "Estimated number of nodes: ", -1))
+            exp.update(estNumNodesStddev = get_following_literal(estimate_lines, "Standard deviation: ", -1))
+            exp.update(estBnbHours = get_following_literal(estimate_lines, "Estimated number of B&B hours: ", -1))
+            exp.update(estNumSamples = get_following_literal(estimate_lines, "Number of samples: ", -1))
+            
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
 
     parser = OptionParser(usage=usage)
-    parser.add_option('--remain', action="store_true", help="Scrape for time remaining only")
-    parser.add_option('--rproj', action="store_true", help="Print out for R-project")
-    parser.add_option('--csv', action="store_true", help="Print out for CSV")
-    parser.add_option('--google', action="store_true", help="Print out for Google Docs")
-    parser.add_option('--out_file', help="Output file [optional, defaults to stdout]")
+    scrape.add_options(parser)
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) < 2:

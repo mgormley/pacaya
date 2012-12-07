@@ -107,10 +107,10 @@ class SvnCommitResults(pipeline.NamedStage):
         # before committing. 
         top_dir = os.path.dirname(exp_dir)
         results_exp_dir = "%s/results/%s" % (self.root_dir, self.expname)
-        # Copy results files ending in .data to results/<expname>
+        # Copy results files ending in .data or .csv to results/<expname>
         script = ""
         script += "mkdir %s\n" % (results_exp_dir)
-        script += "find %s -name '*.data' "  % (top_dir)
+        script += "find %s | grep -P '.data$|.csv$' "  % (top_dir)
         # We use -I and -n with xargs because cp's -t is not supported on Mac OS X.
         script += " | xargs -I %% -n 1 cp %% %s/ \n" % (results_exp_dir)
         # Add all new results to svn
@@ -300,7 +300,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     setup.set("randomRestartId", randomRestartId, True, False)
                     experiment = all + setup + DPExpParams()
                     root.add_dependent(experiment)
-            scrape = ScrapeExpout(rproj=None, out_file="results.data")
+            scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)
@@ -347,11 +347,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             experiment = all + dataset + msl + mns + algo
                             root.add_dependent(experiment)
             # Scrape all results.
-            scrape = ScrapeExpout(rproj=None, out_file="results.data")
+            scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             #Scrape status information from a subset of the experiments.
             subset = get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300)
-            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="bnb-status.data", type="bnb")
+            scrape_stat = ScrapeStatuses(subset, tsv_file="bnb-status.data", type="bnb")
             scrape_stat.add_prereqs(subset)
             # Commit results to svn
             svnco = SvnCommitResults(self.expname)
@@ -400,18 +400,27 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.2, 1.01, 0.2)]
             for x in extra_relaxes: 
                 x.update(maxCutRounds=1, timeoutSeconds=3*60*60)
+            exps = []
             for maxNumSentences in [4]:
                 for varSelection in ["rand-uniform", "regret"]:
                     for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
                         experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
                                                                          maxNumSentences=maxNumSentences)
-                        root.add_dependent(experiment)
+                        exps.append(experiment)
+            if self.fast:
+                # Drop all but 3 experiments for a fast run.
+                exps = exps[:3]
+            root.add_dependents(exps)
             #Scrape status information from a subset of the experiments.
-            scrape_stat = ScrapeStatuses(root.dependents, rproj=None, out_file="curnode-status.data", type="curnode")
+            scrape_stat = ScrapeStatuses(root.dependents, tsv_file="curnode-status.data", type="curnode")
             scrape_stat.add_prereqs(root.dependents)
-            # Commit results to svn
-            svnco = SvnCommitResults(self.expname)
-            svnco.add_prereq(scrape_stat)
+            # Scrape all results.
+            scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            if not self.fast:
+                # Commit results to svn
+                svnco = SvnCommitResults(self.expname)
+                svnco.add_prereq(scrape_stat)
             return root
         elif self.expname == "bnb-supervised":
             root = RootStage()
@@ -485,12 +494,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         else:
                             root.add_dependent(all + dataset + msl + mns + algo)
             # Scrape all results.
-            scrape = ScrapeExpout(rproj=None, out_file="results.data")
+            scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             #Scrape status information from a subset of the experiments.
             #TODO: maybe a subset? #get_subset(root.dependents, offsetProb=1.0, maxSentenceLength=10, maxNumSentences=300) 
             subset = root.dependents
-            scrape_stat = ScrapeStatuses(subset, rproj=None, out_file="incumbent-status.data", type="incumbent")
+            scrape_stat = ScrapeStatuses(subset, tsv_file="incumbent-status.data", type="incumbent")
             scrape_stat.add_prereqs(subset)
             # Commit results to svn
             svnco = SvnCommitResults(self.expname)
@@ -619,6 +628,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     # Add some extra time in case some other part of the experiment
                     # (e.g. evaluation) takes excessively long.
                     stage.minutes = (stage.minutes * 2.0) + 10
+            if isinstance(stage, DPExpParams) and self.fast:
+                stage.update(iterations=1,
+                             maxSentenceLength=7,
+                             maxNumSentences=3,
+                             numRestarts=1,
+                             timeoutSeconds=6,   
+                             bnbTimeoutSeconds=2)
 
 if __name__ == "__main__":
     usage = "%prog "

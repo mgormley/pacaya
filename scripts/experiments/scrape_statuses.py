@@ -17,6 +17,7 @@ from experiments.core.scrape import Scraper, RprojResultsWriter,\
     GoogleResultsWriter, CsvResultsWriter
 from experiments.core.util import tail
 from random import sample
+from experiments.core import scrape
 
 
 _re_stat_elem = re.compile('\S+=(\S+)')
@@ -60,7 +61,9 @@ class CurNodeStatus(DPExpParams):
                     depth = int(matches[1].group(1)),
                     side = int(matches[2].group(1)),
                     upperBound = float(matches[3].group(1)),
-                    relaxStatus = matches[4].group(1))
+                    relaxStatus = matches[4].group(1),
+                    incumbentScore = matches[5].group(1),
+                    avgNodeTime = float(matches[6].group(1)))
        
        
 def get_curnode_status_list(stdout_lines):
@@ -100,7 +103,7 @@ def get_incumbent_status_list(stdout_lines):
 class DpSingleScraper(Scraper):
     
     def __init__(self, options):
-        Scraper.__init__(self, options.csv, options.google, options.remain, options.rproj, options.out_file)
+        Scraper.__init__(self, options)
         self.type = options.type
 
     def get_exp_params_instance(self):
@@ -129,19 +132,19 @@ class DpSingleScraper(Scraper):
         # Combine the status objects with the experiment definition. 
         return [exp + status for status in status_list]
 
-
-if __name__ == "__main__":
+def parse_options(argv):
     usage = "%prog [top_dir...]"
 
     parser = OptionParser(usage=usage)
-    parser.add_option('--remain', action="store_true", help="Scrape for time remaining only")
-    parser.add_option('--rproj', action="store_true", help="Print out for R-project")
-    parser.add_option('--csv', action="store_true", help="Print out for CSV")
-    parser.add_option('--google', action="store_true", help="Print out for Google Docs")
-    parser.add_option('--out_file', help="Output file [optional, defaults to stdout]")
+    scrape.add_options(parser)
     parser.add_option('--type', help="The type of status info to scrape [bnb, curnode, incumbent]")
-    (options, args) = parser.parse_args(sys.argv)
+    (options, args) = parser.parse_args(argv)
+    
+    return parser, options, args
 
+if __name__ == "__main__":
+    parser, options, args = parse_options(sys.argv)
+    
     if len(args) < 2 or options.type is None:
         parser.print_help()
         sys.exit(1)
