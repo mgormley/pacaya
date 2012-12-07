@@ -30,26 +30,26 @@ public class LazyBranchAndBoundSolver {
     
     public static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
-    private double incumbentScore;
-    private Solution incumbentSolution;
+    protected double incumbentScore;
+    protected Solution incumbentSolution;
 
-    private SearchStatus status;
+    protected SearchStatus status;
 
     // Storage of active nodes
-    private final NodeOrderer leafNodePQ;
-    private final PriorityQueue<ProblemNode> upperBoundPQ;
+    protected final NodeOrderer leafNodePQ;
+    protected final PriorityQueue<ProblemNode> upperBoundPQ;
     
-    private final double epsilon;
-    private final double timeoutSeconds;
-    private Stopwatch nodeTimer;
-    private Stopwatch switchTimer;
-    private Stopwatch relaxTimer;
-    private Stopwatch feasTimer;
-    private Stopwatch branchTimer;
+    protected final double epsilon;
+    protected final double timeoutSeconds;
+    protected Stopwatch nodeTimer;
+    protected Stopwatch switchTimer;
+    protected Stopwatch relaxTimer;
+    protected Stopwatch feasTimer;
+    protected Stopwatch branchTimer;
 
     // If true, fathoming is disabled. This enables random sampling of the
     // branch and bound tree.
-    private boolean disableFathoming;
+    protected boolean disableFathoming;
     
     public LazyBranchAndBoundSolver(double epsilon, NodeOrderer leafNodeOrderer, double timeoutSeconds) {
         this.epsilon = epsilon;
@@ -268,7 +268,7 @@ public class LazyBranchAndBoundSolver {
         log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
     }
 
-    private void printTimers(int numProcessed) {
+    protected void printTimers(int numProcessed) {
         // Print timers.
         log.debug("Avg time(ms) per node: " + Time.totMs(nodeTimer) / numProcessed);
         log.debug("Avg switch time(ms) per node: " + Time.totMs(switchTimer) / numProcessed);

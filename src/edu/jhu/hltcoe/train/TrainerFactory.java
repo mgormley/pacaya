@@ -9,6 +9,7 @@ import org.apache.commons.cli.ParseException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
+import edu.jhu.hltcoe.gridsearch.DepthStratifiedBnbNodeSampler;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
 import edu.jhu.hltcoe.gridsearch.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.DfsRandWalkNodeOrderer;
@@ -332,8 +333,13 @@ public class TrainerFactory {
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
         } else if (algorithm.equals("bnb")) {
-            LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
-            bnbSolver.setDisableFathoming(disableFathoming);
+            LazyBranchAndBoundSolver bnbSolver;
+            if (disableFathoming) {
+                bnbSolver = new DepthStratifiedBnbNodeSampler(60, timeoutSeconds, parserEvaluator);
+            } else {
+                bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
+                bnbSolver.setDisableFathoming(disableFathoming);
+            }
             trainer = new BnBDmvTrainer(bnbSolver, brancher, relax);
         }
         
