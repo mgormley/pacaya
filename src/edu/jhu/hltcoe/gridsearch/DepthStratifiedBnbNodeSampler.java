@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.jboss.dna.common.statistic.Stopwatch;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
+import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Time;
@@ -13,11 +14,15 @@ import edu.jhu.hltcoe.util.Time;
 public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(DepthStratifiedBnbNodeSampler.class);
     
-    private int maxDepth;
+    public static class DepthStratifiedBnbSamplerPrm {
+        public int maxDepth = 60;
+    }
+    
+    private DepthStratifiedBnbSamplerPrm prm;
 
-    public DepthStratifiedBnbNodeSampler(int maxDepth, double timeoutSeconds, DependencyParserEvaluator evaluator) {
+    public DepthStratifiedBnbNodeSampler(DepthStratifiedBnbSamplerPrm prm, double timeoutSeconds, DependencyParserEvaluator evaluator) {
         super(0, null, timeoutSeconds, evaluator);
-        this.maxDepth = maxDepth;
+        this.prm = prm;
     }
 
     @Override
@@ -92,7 +97,7 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             curNode.branch();
             branchTimer.stop();
             
-            curDiveDepth = (curDiveDepth + 1) % maxDepth;
+            curDiveDepth = (curDiveDepth + 1) % prm.maxDepth;
         }
         
         // Print summary

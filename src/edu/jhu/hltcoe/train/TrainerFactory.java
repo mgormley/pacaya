@@ -17,6 +17,7 @@ import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
@@ -335,7 +336,9 @@ public class TrainerFactory {
         } else if (algorithm.equals("bnb")) {
             LazyBranchAndBoundSolver bnbSolver;
             if (disableFathoming) {
-                bnbSolver = new DepthStratifiedBnbNodeSampler(60, timeoutSeconds, parserEvaluator);
+                DepthStratifiedBnbSamplerPrm prm = new DepthStratifiedBnbSamplerPrm();
+                prm.maxDepth = 60;
+                bnbSolver = new DepthStratifiedBnbNodeSampler(prm, timeoutSeconds, parserEvaluator);
             } else {
                 bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
                 bnbSolver.setDisableFathoming(disableFathoming);
