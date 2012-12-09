@@ -24,4 +24,6 @@ public interface ProblemNode {
 
     RelaxedSolution getRelaxedSolution();
 
+    void updateTimeRemaining(double timeoutSeconds);
+
 }

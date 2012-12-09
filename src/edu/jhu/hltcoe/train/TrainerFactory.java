@@ -112,6 +112,7 @@ public class TrainerFactory {
         options.addOption("eo", "rltInitProp", true, "(prop only) Proportion of initial rows to accept.");
         options.addOption("eo", "rltCutProp", true, "(prop only) Proportion of cut rows to accept.");
         options.addOption("eo", "rltNames", true, "Whether to set RLT variable/constraint names.");
+        options.addOption("eo", "addBindingCons", true, "Whether to add binding constraints as factors to RLT.");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -153,6 +154,7 @@ public class TrainerFactory {
         final double rltInitProp = Command.getOptionValue(cmd, "rltInitProp", 0.1);
         final double rltCutProp = Command.getOptionValue(cmd, "rltCutProp", 0.1);
         final boolean rltNames = Command.getOptionValue(cmd, "rltNames", false);
+        final boolean addBindingCons = Command.getOptionValue(cmd, "addBindingCons", false);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -193,6 +195,7 @@ public class TrainerFactory {
                 DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
                 rrPrm.tempDir = dwTemp;
                 rrPrm.maxCutRounds = maxCutRounds;
+                rrPrm.addBindingCons = addBindingCons;
                 rrPrm.cplexPrm = cplexPrm;
                 rrPrm.rltPrm = rltPrm;
                 rrPrm.stoPrm = stoPrm;

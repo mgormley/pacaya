@@ -396,12 +396,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(numRestarts=1000000000, epsilon=0.0,
                        timeoutSeconds=40*60)
             dataset = synth_alt_three
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.2, 1.01, 0.2)]
-            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.2, 1.01, 0.2)]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.02, 0.21, 0.02)]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.02, 0.21, 0.02)]
             for x in extra_relaxes: 
                 x.update(maxCutRounds=1, timeoutSeconds=3*60*60)
             exps = []
-            for maxNumSentences in [50]:
+            for maxNumSentences in [20]:
                 for varSelection in ["rand-uniform", "regret"]:
                     for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
                         experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,

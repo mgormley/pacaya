@@ -102,4 +102,13 @@ public class CplexPrm {
         // cplex.setWarning(out);
     }
 
+    public static void updateTimeoutSeconds(IloCplex cplex, double timeoutSeconds) {
+        try {
+            timeoutSeconds = Math.max(0.1, timeoutSeconds);
+            cplex.setParam(DoubleParam.TiLim, timeoutSeconds);
+        } catch (IloException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

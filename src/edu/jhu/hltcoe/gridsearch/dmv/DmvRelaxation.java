@@ -1,6 +1,5 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import ilog.concert.IloException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -31,6 +30,7 @@ public interface DmvRelaxation {
 
     CptBounds getBounds();
 
+    void updateTimeRemaining(double timeoutSeconds);
     void end();
 
 }

@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.cpt;
 
+import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
@@ -8,13 +9,12 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Sets;
@@ -25,6 +25,7 @@ public class LpSumToOneBuilder {
         public int maxSetSizeToConstrain = 2;
         public double minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
         public CutCountComputer initCutCountComp = new CutCountComputer();
+        public ProjectionsPrm projPrm = new ProjectionsPrm();
     }
     
     public static class CutCountComputer {
@@ -43,13 +44,16 @@ public class LpSumToOneBuilder {
     private IloLPMatrix lpMatrix;
     private IndexedCpt idm;
     private CptBounds bounds;
+    private Projections projections;
     
     // TODO: this shouldn't be public, but it's a convenient hack for now.
     public IloNumVar[][] modelParamVars;
     private int numStoCons;
 
+
     public LpSumToOneBuilder(LpStoBuilderPrm prm) {
         this.prm = prm;
+        this.projections = new Projections(prm.projPrm);
     }
 
     public void init(IloCplex cplex, IloLPMatrix lpMatrix, IndexedCpt idm, CptBounds bounds) throws IloException {
@@ -123,9 +127,8 @@ public class LpSumToOneBuilder {
     }
 
     private int addSumToOneConstraint(int c, double[] point) throws IloException {
-        // TODO: should this respect the bounds?
-        //double[] probs = projections.getProjectedParams(bounds, c, point);
-        double[] probs = Projections.getProjectedParams(point);
+        double[] probs;
+        probs = projections.getDefaultProjection(bounds, c, point);
         double[] logProbs = Vectors.getLog(probs);
         
         double vectorSum = 1.0;
@@ -171,7 +174,7 @@ public class LpSumToOneBuilder {
      * @param newRows
      * @return The number of new constraints added.
      */
-    public List<Integer> projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
+    public TIntArrayList projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
         // Add a cut for each distribution by projecting the model
         // parameters
         // back onto the simplex.
@@ -180,7 +183,7 @@ public class LpSumToOneBuilder {
             // Here the params are log probs
             params[c] = cplex.getValues(modelParamVars[c]);
         }
-        ArrayList<Integer> rows = new ArrayList<Integer>();
+        TIntArrayList rows = new TIntArrayList();
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs

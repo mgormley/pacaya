@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import gnu.trove.TDoubleArrayList;
+import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -53,6 +54,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public File tempDir = null;
         public int maxCutRounds = 1;
         public boolean objVarFilter = true;
+        public boolean addBindingCons = false;
         public CplexPrm cplexPrm = new CplexPrm();
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
@@ -379,8 +381,24 @@ public class DmvRltRelaxation implements DmvRelaxation {
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
-         List<Integer> rows = sto.projectModelParamsAndAddCuts();
-         return rows.size() + mp.rlt.addRowsAsFactors(rows);
+        TIntArrayList rows = new TIntArrayList(); 
+
+        if (prm.addBindingCons) {
+            // Binding constraints have a slack of zero.
+            double[] slacks = cplex.getSlacks(mp.origMatrix);
+            for (int i=0; i<slacks.length; i++) {
+                if (Utilities.equals(slacks[i], 0.0, 1e-8)) {
+                    // This is a binding constraint.
+                    rows.add(i);
+                }
+            }
+            log.debug(String.format("Proportion of constraints binding: %f (%d / %d)", 
+                        (double) rows.size() / slacks.length, rows.size(), slacks.length));
+        }
+        
+        rows.add(sto.projectModelParamsAndAddCuts().toNativeArray());
+        
+        return rows.size() + mp.rlt.addRowsAsFactors(rows);
     }
     
     // Copied from DmvDantzigWolfeRelaxation.
@@ -546,4 +564,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         }
     }
     
+    @Override
+    public void updateTimeRemaining(double timeoutSeconds) {
+        CplexPrm.updateTimeoutSeconds(cplex, timeoutSeconds);
+    }
 }

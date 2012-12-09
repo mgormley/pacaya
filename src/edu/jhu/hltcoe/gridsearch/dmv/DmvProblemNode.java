@@ -339,5 +339,10 @@ public class DmvProblemNode implements ProblemNode {
         activeNode = null;
         atomicIntId = new AtomicInteger(0);
     }
+
+    @Override
+    public void updateTimeRemaining(double timeoutSeconds) {
+        dwRelax.updateTimeRemaining(timeoutSeconds);
+    }
     
 }

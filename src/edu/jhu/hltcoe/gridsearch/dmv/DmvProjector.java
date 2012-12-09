@@ -1,21 +1,37 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import ilog.concert.IloException;
+import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.cky.DepInstance;
+import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProjector implements Projector {
 
+    // TODO: put this to use.
+    public static class DmvProjectorPrm {
+        public ProjectionsPrm projPrm = new ProjectionsPrm();
+        public CptBounds rootBounds = null; 
+    }
+    private DmvProjectorPrm prm;
+    
     private DmvTrainCorpus corpus;
     private IndexedDmvModel idm;
     private DmvObjective obj;
+    private Projections projector;
     
     public DmvProjector(DmvTrainCorpus corpus) {
         super();
@@ -23,6 +39,10 @@ public class DmvProjector implements Projector {
         // TODO: we shouldn't have to create a new IndexedDmvModel here.
         this.idm = new IndexedDmvModel(this.corpus);
         this.obj = new DmvObjective(this.corpus);
+        this.prm = new DmvProjectorPrm();
+        // TODO: pass this in.
+        this.prm.rootBounds = new CptBounds(idm);
+        this.projector = new Projections(prm.projPrm);
     }
 
     @Override
@@ -34,7 +54,7 @@ public class DmvProjector implements Projector {
         if (!relaxSol.getStatus().hasSolution()) {
             return null;
         }
-        // Project the Dantzig-Wolfe model parameters back into the bounded
+        // Project the relaxed model parameters back into the bounded
         // sum-to-exactly-one space
         // TODO: must use bounds here?
    
@@ -44,7 +64,11 @@ public class DmvProjector implements Projector {
         // there's no reason to constrain it.
         for (int c = 0; c < logProbs.length; c++) {
             double[] probs = Vectors.getExp(logProbs[c]);
-            probs = Projections.getProjectedParams(probs);
+            try {
+                probs = projector.getDefaultProjection(prm.rootBounds, c, probs);
+            } catch (IloException e) {
+                throw new RuntimeException(e);
+            }
             logProbs[c] = Vectors.getLog(probs); 
         }
         // Create a new DmvModel from these model parameters
@@ -76,7 +100,7 @@ public class DmvProjector implements Projector {
                 double[][] fracChild = fracChildren[s];
     
                 // For projective case we use a DP parser
-                DepTree tree = Projections.getProjectiveParse(sentence, fracRoot, fracChild);
+                DepTree tree = DmvProjector.getProjectiveParse(sentence, fracRoot, fracChild);
                 treebank.add(tree);
                 
                 // For non-projective case we'd do something like this.
@@ -87,6 +111,16 @@ public class DmvProjector implements Projector {
             }
         }
         return treebank;
+    }
+
+    public static DepTree getProjectiveParse(Sentence sentence, double[] fracRoot, double[][] fracChild) {
+        DmvCkyParser parser = new DmvCkyParser();
+        int[] tags = new int[sentence.size()];
+        DepInstance depInstance = new DepInstance(tags);
+        DepSentenceDist sd = new DepSentenceDist(depInstance, new NonterminalMap(2, 1), fracRoot, fracChild);
+        Pair<DepTree, Double> pair = parser.parse(sentence, sd);
+        DepTree tree = pair.get1();
+        return tree;
     }
 
 }

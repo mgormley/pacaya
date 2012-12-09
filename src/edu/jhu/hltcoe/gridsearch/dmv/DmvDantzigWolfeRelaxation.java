@@ -613,5 +613,10 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     public IndexedDmvModel getIdm() {
         return idm;
     }
+
+    @Override
+    public void updateTimeRemaining(double timeoutSeconds) {
+        CplexPrm.updateTimeoutSeconds(cplex, timeoutSeconds);
+    }
     
 }

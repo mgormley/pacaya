@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
+import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -10,9 +11,7 @@ import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
@@ -407,7 +406,7 @@ public class RltTest {
             Rlt rlt = new Rlt(cplex, mat, RltPrm.getFirstOrderRlt());
             
             // Then add two more.
-            List<Integer> newCons = new ArrayList<Integer>();
+            TIntArrayList newCons = new TIntArrayList();
             newCons.add(mat.addRow(c2));
             newCons.add(mat.addRow(c4));
             rlt.addRowsAsFactors(newCons);
@@ -447,7 +446,7 @@ public class RltTest {
         assertEquals(11, rltMat.getNrows());
 
         // Then add two more.
-        List<Integer> newCons = new ArrayList<Integer>();
+        TIntArrayList newCons = new TIntArrayList();
         newCons.add(mat.addRow(c2));
         newCons.add(mat.addRow(c4));
         rlt.addRowsAsFactors(newCons);

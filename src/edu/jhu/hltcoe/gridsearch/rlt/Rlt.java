@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.rlt;
 
+import gnu.trove.TIntArrayList;
 import gnu.trove.TIntIntHashMap;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -448,7 +449,7 @@ public class Rlt {
     /**
      * @return The number of rows added to the RLT matrix.
      */
-    public int addRowsAsFactors(List<Integer> rowIds) throws IloException {
+    public int addRowsAsFactors(TIntArrayList rowIds) throws IloException {
         if (prm.envelopeOnly) {
             // Don't add the rows.
             return 0;
@@ -468,7 +469,7 @@ public class Rlt {
     /**
      * Returns true iff the list of integers is a consecutive list.
      */
-    private static boolean areConsecutive(List<Integer> rows) {
+    private static boolean areConsecutive(TIntArrayList rows) {
         if (rows.size() <= 1) {
             return true;
         }

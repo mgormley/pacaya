@@ -68,6 +68,7 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
                 // Timeout reached.
                 break;
             }
+            curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
             
             // The active node can compute a tighter upper bound instead of
             // using its parent's bound

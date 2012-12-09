@@ -26,6 +26,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
@@ -46,6 +47,7 @@ import edu.jhu.hltcoe.util.Utilities;
 public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
     public static class ResDmvDwRelaxPrm extends DmvDwRelaxPrm {
+        private ProjectionsPrm projPrm = new ProjectionsPrm();
         public ResDmvDwRelaxPrm() {
             super();
             this.stoPrm = null;
@@ -66,7 +68,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     public ResDmvDantzigWolfeRelaxation(ResDmvDwRelaxPrm prm) {
         super(prm);
         this.prm = prm;
-        this.projections = new Projections(prm.tempDir);
+        this.projections = new Projections(prm.projPrm);
         this.hasInfeasibleBounds = false;
         this.parsingTimer = new Stopwatch();
         this.stoTimer = new Stopwatch();
@@ -335,7 +337,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             for (int c = 0; c < numConds; c++) {
                 // Project the initial solution onto the feasible region
                 double[] params = Vectors.getExp(initLogProbs[c]);
-                params = projections.getProjectedParams(bounds, c, params);
+                params = projections.getBoundedProjection(bounds, c, params);
                 if (params == null) {
                     throw new IllegalStateException("The initial bounds are infeasible");
                 }
@@ -625,7 +627,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                 if (gv.logProbs[c][m] < newLb || newUb < gv.logProbs[c][m]) {
                     // TODO: This isn't blazing fast, but we could make it faster if necessary
                     double[] params = Vectors.getExp(gv.logProbs[c]);
-                    params = projections.getProjectedParams(bounds, c, params);
+                    params = projections.getBoundedProjection(bounds, c, params);
                     if (params == null) {
                         //throw new IllegalStateException("The bounds are infeasible");
                         hasInfeasibleBounds = true;

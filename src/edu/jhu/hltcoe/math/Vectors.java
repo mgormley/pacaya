@@ -149,4 +149,10 @@ public class Vectors {
         }
     }
 
+    public static void add(double[] params, double lambda) {
+        for (int i=0; i<params.length; i++) {
+            params[i] += lambda;
+        }
+    }
+
 }

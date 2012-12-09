@@ -10,6 +10,8 @@ import org.junit.Test;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModelTest;
 import edu.jhu.hltcoe.math.Vectors;
@@ -23,8 +25,21 @@ public class ProjectionsTest {
 
     @Before
     public void setUp() {
-        projections = new Projections();
+        projections = new Projections(new ProjectionsPrm());
     }
+    
+    @Test
+    public void testNormalizedProjection() {
+        validateNormalizedProjection(new double[]{0.1, 1.7, 0.3});
+        validateNormalizedProjection(new double[]{0.2, 0.1, 0.3});
+        validateNormalizedProjection(new double[]{14.2, 10.1, 17.3});        
+    }
+    
+    private void validateNormalizedProjection(double[] params) {
+        double[] x = Projections.getNormalizedProjection(params, 0.1);        
+        System.out.println(Arrays.toString(x));
+        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+    }    
     
     @Test
     public void testUnboundedProjection() {
@@ -34,7 +49,7 @@ public class ProjectionsTest {
     }
 
     private void validateUnboundedProjection(double[] params) {
-        double[] x = Projections.getProjectedParams(params);        
+        double[] x = Projections.getUnboundedProjection(params);        
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
     }
@@ -54,7 +69,7 @@ public class ProjectionsTest {
     }
 
     private void validateBoundedProjection(double[] params, double[] lbs, double[] ubs) throws Exception {
-        double[] x = projections.getProjectedParams(params, lbs, ubs);        
+        double[] x = projections.getBoundedProjection(params, lbs, ubs);        
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         
@@ -90,7 +105,7 @@ public class ProjectionsTest {
             logBounds.set(Type.PARAM, c, m, Utilities.log(lbs[m]), Utilities.log(ubs[m]));
         }
         
-        double[] x = projections.getProjectedParams(logBounds, c, params);
+        double[] x = projections.getBoundedProjection(logBounds, c, params);
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         
@@ -131,7 +146,7 @@ public class ProjectionsTest {
         CptBounds logBounds = new CptBounds(idm);
         
         int c = 0;
-        double[] x = projections.getProjectedParams(logBounds, c, params);
+        double[] x = projections.getBoundedProjection(logBounds, c, params);
         System.out.println(Arrays.toString(x));
         Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
         
@@ -147,7 +162,7 @@ public class ProjectionsTest {
         sentences.addSentenceFromString("cat ate hat");
         double[] fracRoot = new double[]{0.3, 0.6, 0.1};
         double[][] fracChild = new double[][]{{0.0, 0.3, 0.25},{0.5, 0.0, 0.5}, {0.25, 0.1, 0.0}};
-        DepTree t = Projections.getProjectiveParse(sentences.get(0), fracRoot, fracChild);
+        DepTree t = DmvProjector.getProjectiveParse(sentences.get(0), fracRoot, fracChild);
         System.out.println(t);
         JUnitUtils.assertArrayEquals(new int[]{1,-1,1}, t.getParents());
     }

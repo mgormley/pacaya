@@ -121,6 +121,7 @@ public class LazyBranchAndBoundSolver {
                 // Timeout reached.
                 break;
             }
+            curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
             // TODO: else if, ran out of memory or disk space, break
 
             // The active node can compute a tighter upper bound instead of

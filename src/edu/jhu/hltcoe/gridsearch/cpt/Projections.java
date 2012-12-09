@@ -12,47 +12,81 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import depparsing.model.NonterminalMap;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
-import edu.jhu.hltcoe.parse.cky.DepInstance;
-import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.hltcoe.math.Multinomials;
+import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class Projections {
 
+    public static class ProjectionsPrm {
+        public static enum ProjectionType { BOUNDED_MIN_EUCLIDEAN, UNBOUNDED_MIN_EUCLIDEAN, NORMALIZE };
+        public ProjectionType type = ProjectionType.NORMALIZE;
+        public File tempDir = null;
+        public double lambdaSmoothing = 0.0;
+    }
+    
     private static final Logger log = Logger.getLogger(Projections.class);
 
     private IloCplex cplex;
-    private File tempDir;
+    private ProjectionsPrm prm;
 
-    public Projections() {
-        this(null);
-    }
-    
-    public Projections(File tempDir) {
-        this.tempDir = tempDir;
+    public Projections(ProjectionsPrm prm) {
+        this.prm = prm;
         try {
             cplex = new IloCplex();
             // Turn off stdout but not stderr
             cplex.setOut(null);
         } catch (IloException e) {
             throw new RuntimeException(e);
-        }    
+        }
+    }
+    
+    /**
+     * @param logBounds Bounds for log probabilities
+     * @param c Index of distribution which has bounds
+     * @param params Vector to project onto (params.length - 1)-simplex in probability space 
+     * @return The projected parameters or null if infeasible
+     */
+    public double[] getDefaultProjection(CptBounds logBounds, int c, double[] params) throws IloException {
+        if (prm.lambdaSmoothing != 0) {
+            params = Arrays.copyOf(params, params.length);
+            Vectors.add(params, prm.lambdaSmoothing);
+        }
+        if (prm.type == ProjectionType.BOUNDED_MIN_EUCLIDEAN) {
+            return getBoundedProjection(logBounds, c, params);
+        } else if (prm.type == ProjectionType.UNBOUNDED_MIN_EUCLIDEAN) {
+            return getUnboundedProjection(params);
+        } else if (prm.type == ProjectionType.NORMALIZE) {
+            return getNormalizedProjection(params, prm.lambdaSmoothing);
+        } else {
+            throw new IllegalStateException("Unhandled projection type: " + prm.type);
+        }
+        
+    }
+
+    /**
+     * Projects the vector onto the simplex by renormalizing it, optionally with smoothing.
+     * 
+     * @param params Vector to project onto (params.length - 1)-simplex in probability space
+     * @param lambda Add-lambda smoothing parameter. 
+     * @return The parameters projected onto the simplex
+     */
+    public static double[] getNormalizedProjection(double[] params, double lambda) {
+        params = Arrays.copyOf(params, params.length);
+        Multinomials.normalizeProps(params);
+        return params;
     }
 
     /**
      * Implementation of Algorithm 1 (projsplx) from "Projection Onto A Simplex"
      * http://arxiv.org/abs/1101.6081
      * 
-     * @param params
-     *            The input parameters
+     * @param params Vector to project onto (params.length - 1)-simplex in probability space 
      * @return The parameters projected onto the simplex
      */
-    public static double[] getProjectedParams(double[] params) {
+    public static double[] getUnboundedProjection(double[] params) {
         double[] sortedParams = Arrays.copyOf(params, params.length);
         Arrays.sort(sortedParams);
         int n = params.length;
@@ -88,10 +122,10 @@ public class Projections {
     /**
      * @param logBounds Bounds for log probabilities
      * @param c Index of distribution which has bounds
-     * @param params Vector to project onto (param.length - 1)-simplex in probability space
+     * @param params Vector to project onto (params.length - 1)-simplex in probability space 
      * @return The projected parameters or null if infeasible
      */
-    public double[] getProjectedParams(CptBounds logBounds, int c, double[] params) throws IloException {
+    public double[] getBoundedProjection(CptBounds logBounds, int c, double[] params) throws IloException {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
@@ -99,16 +133,16 @@ public class Projections {
             ubs[m] = Utilities.exp(logBounds.getUb(Type.PARAM, c, m));
         }
         
-        return getProjectedParams(params, lbs, ubs);
+        return getBoundedProjection(params, lbs, ubs);
     }
 
     /**
-     * @param params Vector to project onto (param.length - 1)-simplex in probability space
+     * @param params Vector to project onto (params.length - 1)-simplex in probability space 
      * @param lbs Lower bounds in probability space
      * @param ubs Upper bounds in probability space
      * @return The projected parameters or null if infeasible
      */
-    public double[] getProjectedParams(double[] params, double[] lbs, double[] ubs) throws IloException,
+    public double[] getBoundedProjection(double[] params, double[] lbs, double[] ubs) throws IloException,
             UnknownObjectException {
         cplex.clearModel();
         
@@ -128,8 +162,8 @@ public class Projections {
         cplex.addMinimize(cplex.sum(squaredDiffs), "obj");
 
 
-        if (tempDir != null) {
-            cplex.exportModel(new File(tempDir, "proj.lp").getAbsolutePath());
+        if (prm.tempDir != null) {
+            cplex.exportModel(new File(prm.tempDir, "proj.lp").getAbsolutePath());
         }
         try {
             if (!cplex.solve()) {
@@ -153,20 +187,6 @@ public class Projections {
             }
         }
         return values;
-    }
-
-    public static DepTree getProjectiveParse(Sentence sentence, double[] fracRoot, double[][] fracChild) {
-        DmvCkyParser parser = new DmvCkyParser();
-        int[] tags = new int[sentence.size()];
-        DepInstance depInstance = new DepInstance(tags);
-        DepSentenceDist sd = new DepSentenceDist(depInstance, new NonterminalMap(2, 1), fracRoot, fracChild);
-        Pair<DepTree, Double> pair = parser.parse(sentence, sd);
-        DepTree tree = pair.get1();
-        return tree;
-    }
-
-    public void setTempDir(File tempDir) {
-        this.tempDir = tempDir;
     }
 
 }
