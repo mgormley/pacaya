@@ -51,6 +51,7 @@ import edu.jhu.hltcoe.util.cplex.CplexUtils;
 public class DmvRltRelaxation implements DmvRelaxation {
 
     public static class DmvRltRelaxPrm {
+        public final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
         public File tempDir = null;
         public int maxCutRounds = 1;
         public boolean objVarFilter = true;
@@ -58,6 +59,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public CplexPrm cplexPrm = new CplexPrm();
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
+        public double timeoutSeconds = Double.MAX_VALUE;
         public DmvRltRelaxPrm() { 
             // We have to use the Dual simplex algorithm in order to 
             // stop early and fathom a node.
@@ -74,7 +76,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
     
     private static final Logger log = Logger.getLogger(DmvRltRelaxation.class);
 
-    private static final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
     private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
     
@@ -275,19 +276,22 @@ public class DmvRltRelaxation implements DmvRelaxation {
         
         RelaxStatus status = RelaxStatus.Unknown;
         TDoubleArrayList cutIterLowerBounds = new TDoubleArrayList();
-        TDoubleArrayList cutIterObjVals = new TDoubleArrayList();
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
-
+        
         // Ensures that we stop early if we can fathom the node. We use the
         // upper limit because the dual problem (which we're solving) is a
         // maximization.
         cplex.setParam(DoubleParam.ObjULim, upperBound);
         
+        // Time from the start, stopping early if we run out of time.
+        Stopwatch timer = new Stopwatch();
         int cut;
         // Solve the full LP problem
         for (cut = 0; ;) {
+            timer.start();
+
             if (prm.tempDir != null) {
                 cplex.exportModel(new File(prm.tempDir, "rlt.lp").getAbsolutePath());
             }
@@ -299,68 +303,72 @@ public class DmvRltRelaxation implements DmvRelaxation {
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
+
+            // Get CPLEX status.
             status = RelaxStatus.getForLp(cplex.getStatus(), cplex.getCplexStatus());
-            double objVal;
+            log.trace("LP solution status: " + cplex.getStatus());
+            log.trace("LP CPLEX status: " + cplex.getCplexStatus());
+            
+            // Get the lower bound. 
             double lowerBound;
             if (status == RelaxStatus.Unknown) {
-                objVal = INTERNAL_BEST_SCORE;
                 lowerBound = INTERNAL_BEST_SCORE;
-            } else {
-                log.trace("LP solution status: " + cplex.getStatus());
-                log.trace("LP CPLEX status: " + cplex.getCplexStatus());
-                if (status == RelaxStatus.Infeasible) {
-                    return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
-                }
+            } else if (status == RelaxStatus.Infeasible) {
+                lowerBound = INTERNAL_WORST_SCORE;
+            } else { // if (status == RelaxStatus.Optimal || status == RelaxStatus.Feasible || status == RelaxStatus.Pruned) {                
                 if (prm.tempDir != null) {
                     cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
                 }
                 warmStart = getWarmStart();
-                objVal = cplex.getObjValue();
-                log.trace("Simplex solution value: " + objVal);
-                double prevObjVal = cutIterObjVals.size() > 0 ? cutIterObjVals.get(cutIterObjVals.size() - 1)
-                        : INTERNAL_WORST_SCORE;
-                if (objVal > prevObjVal + OBJ_VAL_DECREASE_TOLERANCE) {
-                    Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterObjVals.size() - 1)
-                            : Status.Unknown;
-                    log.warn(String.format("LP objective should monotonically decrease: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevObjVal, objVal, prevStatus, cplex.getStatus()));
-                }
     
-                // Get the lower bound. Because we explicitly use the Dual simplex
+                // Get the lower bound from CPLEX. Because we explicitly use the Dual simplex
                 // algorithm, the objective value is the lower bound, even if we
                 // terminate early.
-                lowerBound = objVal;
+                lowerBound = cplex.getObjValue();
+                log.trace("Simplex solution value: " + lowerBound);
+                double prevLowerBound = cutIterLowerBounds.size() > 0 ? cutIterLowerBounds.get(cutIterLowerBounds.size() - 1)
+                        : INTERNAL_WORST_SCORE;
+                if (!Utilities.lte(prevLowerBound, lowerBound, prm.OBJ_VAL_DECREASE_TOLERANCE)) {
+                    Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterLowerBounds.size() - 1)
+                            : Status.Unknown;
+                    log.warn(String.format("Lower bound should monotonically increase: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevLowerBound, lowerBound, prevStatus, cplex.getStatus()));
+                }
                 if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
                     log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
                 }
             } 
-            
-            cutIterObjVals.add(objVal);
-            cutIterStatuses.add(cplex.getStatus());
-            cutIterLowerBounds.add(lowerBound);
 
-            // Check whether to continue
+            // Update status if this node can be fathomed.
             if (lowerBound >= upperBound) {
-                // We can fathom this node
                 status = RelaxStatus.Pruned;
+            }
+            
+            cutIterLowerBounds.add(lowerBound);
+            cutIterStatuses.add(cplex.getStatus());
+            log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
+
+            timer.stop();
+            if (status == RelaxStatus.Unknown || status == RelaxStatus.Infeasible 
+                    || status == RelaxStatus.Pruned || Time.totSec(timer) > prm.timeoutSeconds) {
+                // Terminate because we have either:
+                // - Hit a CPLEX error.
+                // - Found an infeasible solution.
+                // - Are able to fathom this node. 
+                // - Run out of time. 
                 break;
-            } else {
-                // Optimal solution found
-                status = RelaxStatus.Optimal;
-                
-                if (cut < prm.maxCutRounds) {
-                    log.debug(String.format("Iteration objective values (cut=%d): %s", cut, cutIterObjVals));
-                    int numCutAdded = addCuts(cplex, cut);
-                    log.debug("Added cuts " + numCutAdded + ", round " + cut);
-                    if (numCutAdded == 0) {
-                        // No new cuts are needed
-                        log.debug("No more cut rounds needed after " + cut + " rounds");
-                        break;
-                    }
-                    cut++;
-                } else {
-                    // Optimal solution found and no more cut rounds left
+            } else if (cut < prm.maxCutRounds) {
+                // Try to add cuts based on the optimal or feasible solution found.
+                int numCutAdded = addCuts(cplex, cut);
+                log.debug("Added cuts " + numCutAdded + ", round " + cut);
+                if (numCutAdded == 0) {
+                    // Terminate: no new cuts are needed
+                    log.debug("No more cut rounds needed after " + cut + " rounds");
                     break;
                 }
+                cut++;
+            } else {
+                // Terminate: Optimal or feasible solution found, but no cut rounds left.
+                break;
             }
         }
         
@@ -370,8 +378,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         
         log.debug("Number of cut rounds: " + cut);
         log.debug("Final lower bound: " + lowerBound);
-        log.debug(String.format("Iteration objective values (cut=%d): %s", cut, cutIterObjVals));
-        log.debug("Iteration lower bounds: " + cutIterLowerBounds);
+        log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
         log.debug("Iteration statuses: " + cutIterStatuses);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
@@ -566,6 +573,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     
     @Override
     public void updateTimeRemaining(double timeoutSeconds) {
+        prm.timeoutSeconds = timeoutSeconds;
         CplexPrm.updateTimeoutSeconds(cplex, timeoutSeconds);
     }
 }
