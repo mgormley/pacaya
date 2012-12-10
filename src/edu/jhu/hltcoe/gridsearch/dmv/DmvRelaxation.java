@@ -16,7 +16,7 @@ public interface DmvRelaxation {
     void addFeasibleSolution(DmvSolution initFeasSol);
 
     RelaxedSolution solveRelaxation();
-    RelaxedSolution solveRelaxation(double incumbentScore);
+    RelaxedSolution solveRelaxation(double incumbentScore, int depth);
 
     WarmStart getWarmStart();
     void setWarmStart(WarmStart warmStart);

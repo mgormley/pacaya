@@ -100,6 +100,7 @@ public class TrainerFactory {
         options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
         options.addOption("rx", "maxSetSizeToConstrain", true, "(D-W only) The maximum size of sets to contrain to be <= 1.0");
         options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
+        options.addOption("rx", "rootMaxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts for the root node");
         options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
         options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
         options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
@@ -142,6 +143,7 @@ public class TrainerFactory {
         final int maxDwIterations = Command.getOptionValue(cmd, "maxDwIterations", 1000);
         final int maxSetSizeToConstrain = Command.getOptionValue(cmd, "maxSetSizeToConstrain", 2);
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
+        final int rootMaxCutRounds = Command.getOptionValue(cmd, "rootMaxCutRounds", maxCutRounds);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
         final double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
@@ -175,6 +177,7 @@ public class TrainerFactory {
                 DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
                 dwPrm.tempDir = dwTemp;
                 dwPrm.maxCutRounds = maxCutRounds;
+                dwPrm.rootMaxCutRounds = rootMaxCutRounds;
                 dwPrm.cplexPrm = cplexPrm;
                 dwPrm.maxDwIterations = maxDwIterations;
                 dwPrm.stoPrm = stoPrm;
@@ -183,6 +186,7 @@ public class TrainerFactory {
                 ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
                 dwPrm.tempDir = dwTemp;
                 dwPrm.maxCutRounds = maxCutRounds;
+                dwPrm.rootMaxCutRounds = rootMaxCutRounds;
                 dwPrm.cplexPrm = cplexPrm;
                 dwPrm.maxDwIterations = maxDwIterations;
                 relax = new ResDmvDantzigWolfeRelaxation(dwPrm);
@@ -195,6 +199,7 @@ public class TrainerFactory {
                 DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
                 rrPrm.tempDir = dwTemp;
                 rrPrm.maxCutRounds = maxCutRounds;
+                rrPrm.rootMaxCutRounds = rootMaxCutRounds;
                 rrPrm.addBindingCons = addBindingCons;
                 rrPrm.cplexPrm = cplexPrm;
                 rrPrm.rltPrm = rltPrm;

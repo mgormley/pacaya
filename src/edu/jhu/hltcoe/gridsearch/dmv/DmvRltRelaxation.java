@@ -60,6 +60,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public double timeoutSeconds = Double.MAX_VALUE;
+        public int rootMaxCutRounds = 1;
         public DmvRltRelaxPrm() { 
             // We have to use the Dual simplex algorithm in order to 
             // stop early and fathom a node.
@@ -223,17 +224,17 @@ public class DmvRltRelaxation implements DmvRelaxation {
     // Copied from DantzigWolfeRelaxation.
     @Override
     public RelaxedSolution solveRelaxation() {
-        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE);
+        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE, 0);
     }
     
     // Copied from DantzigWolfeRelaxation.
     @Override
-    public RelaxedSolution solveRelaxation(double incumbentScore) {
+    public RelaxedSolution solveRelaxation(double incumbentScore, int depth) {
         try {
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runSimplexAlgo(cplex, upperBound);
+            Pair<RelaxStatus,Double> pair = runSimplexAlgo(cplex, upperBound, depth);
             RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
@@ -269,10 +270,12 @@ public class DmvRltRelaxation implements DmvRelaxation {
         }
     }
 
-    private Pair<RelaxStatus, Double> runSimplexAlgo(IloCplex cplex2, double upperBound) throws IloException {
+    private Pair<RelaxStatus, Double> runSimplexAlgo(IloCplex cplex2, double upperBound, int depth) throws IloException {
         if (!isFeasible()) {
             return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
         }
+        
+        int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds  : prm.maxCutRounds;
         
         RelaxStatus status = RelaxStatus.Unknown;
         TDoubleArrayList cutIterLowerBounds = new TDoubleArrayList();
@@ -356,7 +359,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 // - Are able to fathom this node. 
                 // - Run out of time. 
                 break;
-            } else if (cut < prm.maxCutRounds) {
+            } else if (cut < maxCutRounds) {
                 // Try to add cuts based on the optimal or feasible solution found.
                 int numCutAdded = addCuts(cplex, cut);
                 log.debug("Added cuts " + numCutAdded + ", round " + cut);

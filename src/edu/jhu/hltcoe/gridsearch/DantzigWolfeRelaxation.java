@@ -51,6 +51,7 @@ public abstract class DantzigWolfeRelaxation {
         public int maxCutRounds = 1;
         public File tempDir = null;
         public CplexPrm cplexPrm = new CplexPrm();
+        public int rootMaxCutRounds = 1;
         public DwRelaxPrm() {
             cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Primal;
         }
@@ -88,15 +89,15 @@ public abstract class DantzigWolfeRelaxation {
     }
 
     public RelaxedSolution solveRelaxation() {
-        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE);
+        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE, 0);
     }
 
-    public RelaxedSolution solveRelaxation(double incumbentScore) {
+    public RelaxedSolution solveRelaxation(double incumbentScore, int depth) {
         try {
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, upperBound);
+            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, upperBound, depth);
             RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
@@ -166,7 +167,7 @@ public abstract class DantzigWolfeRelaxation {
         }
     }
 
-    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, double upperBound) throws UnknownObjectException, IloException {
+    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, double upperBound, int depth) throws UnknownObjectException, IloException {
         if (!isFeasible()) {
             return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
         }
@@ -185,7 +186,8 @@ public abstract class DantzigWolfeRelaxation {
             if (prm.tempDir != null) {
                 cplex.exportModel(new File(prm.tempDir, String.format("dw.%d.lp", dwIter)).getAbsolutePath());
             }
-            
+            int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds   : prm.maxCutRounds;
+
             // Solve the master problem
             if (warmStart != null) {
                 setWarmStart(warmStart);
@@ -237,7 +239,7 @@ public abstract class DantzigWolfeRelaxation {
                 lowerBound = cplex.getObjValue();
                 status = RelaxStatus.Optimal;
                 
-                if (cut < prm.maxCutRounds) {
+                if (cut < maxCutRounds) {
                     int numCutAdded = addCuts(cplex, iterationObjVals, iterationStatus, cut);
                     log.debug("Added cuts " + numCutAdded + ", round " + cut);
                     if (numCutAdded == 0) {

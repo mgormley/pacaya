@@ -339,7 +339,7 @@ public class DmvRltRelaxationTest {
         double probOfSkip = 0.5;
         LocalBnBDmvTrainer.setBoundsFromInitSol(relax, initSol, offsetProb, probOfSkip);
 
-        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) relax.solveRelaxation(incumbentScore);
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) relax.solveRelaxation(incumbentScore, 0);
         Assert.assertTrue(relaxSol.getScore() <= incumbentScore);
     }
 
