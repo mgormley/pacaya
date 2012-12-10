@@ -319,7 +319,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxDwIterations=1000000000,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       disableFathoming=True,
                        threads=1,
                        initWeights="uniform",
                        epsilon=0.1)
@@ -367,7 +366,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxDwIterations=1000000000,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       disableFathoming=True,
                        threads=1,
                        initWeights="uniform",
                        epsilon=0.1)
