@@ -327,7 +327,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in [0.001, 0.01, 0.1]]
             extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in [0.001, 0.01, 0.1]]
             exps = []
-            for dataset in [synth_alt_three, brown]:
+            for dataset in [brown]:
                 for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 500, 6*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
