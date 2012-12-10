@@ -384,8 +384,11 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
         log.debug("Iteration statuses: " + cutIterStatuses);
         log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
+        
+        // Subtract off the STO cuts b/c they are in the same matrix.
+        int origCons = mp.origMatrix.getNrows() - sto.getNumStoCons();
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
-                sto.getNumStoCons(), mp.origMatrix.getNrows(), mp.rlt.getRltMatrix().getNrows()));
+                sto.getNumStoCons(), origCons, mp.rlt.getRltMatrix().getNrows()));
     
         return new Pair<RelaxStatus,Double>(status, lowerBound);
     }

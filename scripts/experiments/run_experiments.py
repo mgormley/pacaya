@@ -323,8 +323,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        initWeights="uniform",
                        epsilon=0.1)
             all.set("lambda", 1.0)
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in [0.001, 0.01, 0.1]]
-            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in [0.001, 0.01, 0.1]]
+            rltAllRelax.update(rltFilter="max")
+            maxes = [5000, 10000, 50000, 100000, 500000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
+            extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [brown]:
                 for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 500, 6*60*60)]:
@@ -370,8 +372,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        initWeights="uniform",
                        epsilon=0.1)
             all.set("lambda", 1.0)
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in [0.01, 0.1]]
-            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in [0.01, 0.1]]
+            rltAllRelax.update(rltFilter="max")
+            maxes = [1000, 5000, 10000, 50000, 100000, 500000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
+            extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [synth_alt_three, brown]:
                 for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 6*60*60)]:

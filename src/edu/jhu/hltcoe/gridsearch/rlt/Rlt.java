@@ -153,7 +153,8 @@ public class Rlt {
         log.debug("# unfiltered input variables: " + inputMatrix.getNcols());
         log.debug("# unfiltered RLT variables: " + inputMatrix.getNcols() * inputMatrix.getNcols());
         log.debug("# unfiltered input factors: " + newFactors.size());
-        log.debug("# unfiltered RLT rows: " + FactorBuilder.getNumRows(newFactors, inputMatrix));
+        int numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
+        log.debug("# unfiltered RLT rows: " + numUnfilteredRows);
         
         // Reformulate and linearize the constraints.
 
@@ -188,10 +189,10 @@ public class Rlt {
             prm.factorFilter.init(this);
         }
         if (prm.rowFilter != null) {
-            prm.rowFilter.init(this);
+            prm.rowFilter.init(this, numUnfilteredRows);
         }
         if (prm.alwaysKeepRowFilter != null && prm.rowFilter != prm.alwaysKeepRowFilter) {
-            prm.alwaysKeepRowFilter.init(this);
+            prm.alwaysKeepRowFilter.init(this, numUnfilteredRows);
         }
         
         // Store RLT constraints' row indices.
@@ -302,8 +303,8 @@ public class Rlt {
                 
                 String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d,%d}", i, k) : null;
                 SparseVector row = getRltRowForEq(facI, k, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k, type)
-                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k, type))) {
+                if ((prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k, type))
+                        || prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k, type)) {
                     // Add the complete constraint.
                     rows.addRow(0.0, row, 0.0, rowName);
                 }
@@ -324,8 +325,8 @@ public class Rlt {
 
                 String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
                 SparseVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
-                if (prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ, type)
-                        || (prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ, type))) {
+                if ((prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ, type))
+                        || prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ, type)) {
                     // Add the complete constraint.
                     rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
                 }

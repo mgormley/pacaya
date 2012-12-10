@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowFilter;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
@@ -458,6 +459,41 @@ public class RltTest {
         for (int i=0; i<vals[0].length; i++) {
             Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
         }
+    }
+    
+
+    @Test
+    public void testMaxNumRltFilter() throws IloException {
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(2, 3, "x1");
+        IloNumVar x2 = cplex.numVar(5, 7, "x2");
+        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
+        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
+        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48);
+        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120);
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+        IloRange[] cons = new IloRange[] { c1, c3};
+        mat.addRows(cons);
+        RltPrm prm = RltPrm.getFirstOrderRlt();
+        prm.rowFilter = new MaxNumRltRowFilter(4, 1);
+        Rlt rlt = new Rlt(cplex, mat, prm);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        System.out.println(rltMat);
+        assertEquals(4, rltMat.getNrows());
+
+        // Then add two more.
+        TIntArrayList newCons = new TIntArrayList();
+        newCons.add(mat.addRow(c2));
+        newCons.add(mat.addRow(c4));
+        rlt.addRowsAsFactors(newCons);
+        assertEquals(5, rltMat.getNrows());
     }
         
     @Test

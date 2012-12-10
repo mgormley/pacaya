@@ -39,6 +39,7 @@ import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowFilter;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
@@ -112,6 +113,8 @@ public class TrainerFactory {
         options.addOption("eo", "rltFilter", true, "RLT filter type [obj-var, prop]");
         options.addOption("eo", "rltInitProp", true, "(prop only) Proportion of initial rows to accept.");
         options.addOption("eo", "rltCutProp", true, "(prop only) Proportion of cut rows to accept.");
+        options.addOption("eo", "rltInitMax", true, "(max only) Max number of initial rows to accept.");
+        options.addOption("eo", "rltCutMax", true, "(max only) Max number of cut rows to accept.");
         options.addOption("eo", "rltNames", true, "Whether to set RLT variable/constraint names.");
         options.addOption("eo", "addBindingCons", true, "Whether to add binding constraints as factors to RLT.");
     }
@@ -155,6 +158,8 @@ public class TrainerFactory {
         final String rltFilter = Command.getOptionValue(cmd, "rltFilter", "obj-var");
         final double rltInitProp = Command.getOptionValue(cmd, "rltInitProp", 0.1);
         final double rltCutProp = Command.getOptionValue(cmd, "rltCutProp", 0.1);
+        final int rltInitMax = Command.getOptionValue(cmd, "rltInitMax", 10000);
+        final int rltCutMax = Command.getOptionValue(cmd, "rltCutMax", 1000);
         final boolean rltNames = Command.getOptionValue(cmd, "rltNames", false);
         final boolean addBindingCons = Command.getOptionValue(cmd, "addBindingCons", false);
         
@@ -212,6 +217,8 @@ public class TrainerFactory {
                     rltPrm.rowFilter = null;
                 } else if (rltFilter.equals("prop")) {
                     rltPrm.rowFilter = new RandPropRltRowFilter(rltInitProp, rltCutProp);
+                } else if (rltFilter.equals("max")) {
+                    rltPrm.rowFilter = new MaxNumRltRowFilter(rltInitMax, rltCutMax);
                 } else {
                     throw new ParseException("RLT filter type not supported: " + rltFilter);
                 }

@@ -20,7 +20,7 @@ public interface RltRowFilter {
         CUT
     }
 
-    void init(Rlt rlt) throws IloException;
+    void init(Rlt rlt, int numUnfilteredRows) throws IloException;
 
     boolean acceptEq(SparseVector row, String rowName, Factor facI, int k, RowType type);
 
