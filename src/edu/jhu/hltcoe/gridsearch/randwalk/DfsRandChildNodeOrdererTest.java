@@ -1,10 +1,11 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.hltcoe.gridsearch.randwalk;
 
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
 

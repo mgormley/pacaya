@@ -1,10 +1,11 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.hltcoe.gridsearch.randwalk;
+
+import java.io.File;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
@@ -17,8 +18,8 @@ import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Prng;
 
 
 public class DepthStratifiedBnbNodeSamplerTest {
@@ -35,6 +36,12 @@ public class DepthStratifiedBnbNodeSamplerTest {
         prm.maxDepth = 10;
         DepthStratifiedBnbNodeSampler sampler = new DepthStratifiedBnbNodeSampler(prm, 3, null);
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
+        
+        // -- temp --
+        rrPrm.tempDir = new File(".");
+        rrPrm.rltPrm.nameRltVarsAndCons = true;
+        // --  --
+        
         DmvRltRelaxation relax = new DmvRltRelaxation(rrPrm);
         BnBDmvTrainer trainer = new BnBDmvTrainer(sampler, BnBDmvTrainerTest.getDefaultBrancher(), relax);
 
