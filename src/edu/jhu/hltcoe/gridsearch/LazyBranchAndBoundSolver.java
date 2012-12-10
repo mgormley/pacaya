@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -92,7 +93,6 @@ public class LazyBranchAndBoundSolver {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
             nodeTimer.start();
             
-            switchTimer.start();
             // The upper bound can only decrease
             if (upperBoundPQ.peek().getOptimisticBound() > upperBound + 1e-8) {
                 log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", upperBoundPQ.peek().getOptimisticBound(), upperBound));
@@ -100,20 +100,9 @@ public class LazyBranchAndBoundSolver {
             upperBound = upperBoundPQ.peek().getOptimisticBound();
             assert (!Double.isNaN(upperBound));
             
-            curNode = getNextLeafNode();
             numProcessed++;
             double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
-             
-            // Logging
-            printSummary(upperBound, relativeDiff, numProcessed, fathom);
-            if (log.isDebugEnabled() && numProcessed % 100 == 0) {
-                printLeafNodeBoundHistogram();
-                printTimers(numProcessed);
-                printSpaceRemaining(numProcessed, rootLogSpace, logSpaceRemain);
-            }
             
-            curNode.setAsActiveNode();
-            switchTimer.stop();
             if (relativeDiff <= epsilon) {
                 // Optimal solution found.
                 break;
@@ -121,73 +110,30 @@ public class LazyBranchAndBoundSolver {
                 // Timeout reached.
                 break;
             }
-            curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
-            // TODO: else if, ran out of memory or disk space, break
-
-            // The active node can compute a tighter upper bound instead of
-            // using its parent's bound
-            relaxTimer.start();
-            double curNodeLowerBound;
-            if (disableFathoming) {
-                // If not fathoming, don't stop the relaxation early.
-                curNodeLowerBound = curNode.getOptimisticBound();
-            } else {
-                curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
-            }
-            RelaxedSolution relax = curNode.getRelaxedSolution();
-            relaxTimer.stop();
-            log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, Time.totMs(nodeTimer) / numProcessed));
-            if (curNodeLowerBound <= incumbentScore && !disableFathoming) {
-                // Fathom this node: it is either infeasible or was pruned.
-                if (relax.getStatus() == RelaxStatus.Infeasible) {
-                    fathom.fathom(curNode, FathomStatus.Infeasible);
-                } else if (relax.getStatus() == RelaxStatus.Pruned) {
-                    fathom.fathom(curNode, FathomStatus.Pruned);
-                } else {
-                    log.warn("Unhandled status for relaxed solution: " + relax.getStatus());
-                }
-                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
-                continue;
-            }
-
-            // Check if the child node offers a better feasible solution
-            feasTimer.start();
-            Solution sol = curNode.getFeasibleSolution();
-            assert (sol == null || !Double.isNaN(sol.getScore()));
-            if (sol != null && sol.getScore() > incumbentScore) {
-                incumbentScore = sol.getScore();
-                incumbentSolution = sol;
-                evalIncumbent(incumbentSolution);
-                // TODO: pruneActiveNodes();
-                // We could store a priority queue in the opposite order (or
-                // just a sorted list)
-                // and remove nodes from it while their optimisticBound is
-                // worse than the
-                // new incumbentScore.
-            }
-            feasTimer.stop();
             
-            if (sol != null && Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)  && !disableFathoming) {
-                // Fathom this node: the optimal solution for this subproblem was found.
-                fathom.fathom(curNode, FathomStatus.CompletelySolved);
-                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
-                continue;
+            // Logging.
+            printSummary(upperBound, relativeDiff, numProcessed, fathom);
+            if (log.isDebugEnabled() && numProcessed % 100 == 0) {
+                printLeafNodeBoundHistogram();
+                printTimers(numProcessed);
+                printSpaceRemaining(numProcessed, rootLogSpace, logSpaceRemain);
             }
             
-            branchTimer.start();
-            List<ProblemNode> children = curNode.branch();
-            if (children.size() == 0) {
-                // Fathom this node: no more branches can be made.
-                fathom.fathom(curNode, FathomStatus.BottomedOut);
+            // Process the next node.
+            curNode = getNextLeafNode();
+
+            NodeResult result = processNode(curNode, numProcessed);
+            fathom.fathom(curNode, result.status);
+            if (result.status != FathomStatus.NotFathomed) {
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
             }
-            for (ProblemNode childNode : children) {
+
+            for (ProblemNode childNode : result.children) {
                 addToLeafNodes(childNode);
             }
-            branchTimer.stop();
         }
-        
+        if (nodeTimer.isRunning()) { nodeTimer.stop(); }
+
         // Print summary
         evalIncumbent(incumbentSolution);
         double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
@@ -203,6 +149,85 @@ public class LazyBranchAndBoundSolver {
         
         // Return epsilon optimal solution
         return status;
+    }
+
+    public static class NodeResult {
+        public FathomStatus status;
+        public List<ProblemNode> children;
+        public NodeResult(FathomStatus status) {
+            this.status = status;
+            this.children = Collections.emptyList();
+        }
+        public NodeResult(FathomStatus status, List<ProblemNode> children) {
+            this.status = status;
+            this.children = children;
+        }
+    }
+    
+    protected NodeResult processNode(ProblemNode curNode, int numProcessed) {
+        switchTimer.start();
+        curNode.setAsActiveNode();
+        switchTimer.stop();
+        
+        curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
+        // TODO: else if, ran out of memory or disk space, break
+
+        // The active node can compute a tighter upper bound instead of
+        // using its parent's bound
+        relaxTimer.start();
+        double curNodeLowerBound;
+        if (disableFathoming) {
+            // If not fathoming, don't stop the relaxation early.
+            curNodeLowerBound = curNode.getOptimisticBound();
+        } else {
+            curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+        }
+        RelaxedSolution relax = curNode.getRelaxedSolution();
+        relaxTimer.stop();
+        log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
+                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, Time.totMs(nodeTimer) / numProcessed));
+        if (curNodeLowerBound <= incumbentScore && !disableFathoming) {
+            // Fathom this node: it is either infeasible or was pruned.
+            if (relax.getStatus() == RelaxStatus.Infeasible) {
+                return new NodeResult(FathomStatus.Infeasible);
+            } else if (relax.getStatus() == RelaxStatus.Pruned) {
+                return new NodeResult(FathomStatus.Pruned);
+            } else {
+                log.warn("Unhandled status for relaxed solution: " + relax.getStatus() + " Treating as pruned.");
+                return new NodeResult(FathomStatus.Pruned);
+            }
+        }
+
+        // Check if the child node offers a better feasible solution
+        feasTimer.start();
+        Solution sol = curNode.getFeasibleSolution();
+        assert (sol == null || !Double.isNaN(sol.getScore()));
+        if (sol != null && sol.getScore() > incumbentScore) {
+            incumbentScore = sol.getScore();
+            incumbentSolution = sol;
+            evalIncumbent(incumbentSolution);
+            // TODO: pruneActiveNodes();
+            // We could store a priority queue in the opposite order (or
+            // just a sorted list)
+            // and remove nodes from it while their optimisticBound is
+            // worse than the
+            // new incumbentScore.
+        }
+        feasTimer.stop();
+        
+        if (sol != null && Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)  && !disableFathoming) {
+            // Fathom this node: the optimal solution for this subproblem was found.
+            return new NodeResult(FathomStatus.CompletelySolved);
+        }
+        
+        branchTimer.start();
+        List<ProblemNode> children = curNode.branch();
+        if (children.size() == 0) {
+            // Fathom this node: no more branches can be made.
+            return new NodeResult(FathomStatus.BottomedOut);
+        }
+        branchTimer.stop();
+        return new NodeResult(FathomStatus.NotFathomed, children);
     }
 
     private static double computeRelativeDiff(double upperBound, double lowerBound) {

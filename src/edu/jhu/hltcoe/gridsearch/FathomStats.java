@@ -6,7 +6,7 @@ package edu.jhu.hltcoe.gridsearch;
 public class FathomStats {
     
     public enum FathomStatus {
-        Infeasible, Pruned, CompletelySolved, BottomedOut;
+        Infeasible, Pruned, CompletelySolved, BottomedOut, NotFathomed;
     }
     
     private int numCompletelySolved = 0;
