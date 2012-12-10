@@ -9,15 +9,11 @@ import org.apache.commons.cli.ParseException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
-import edu.jhu.hltcoe.gridsearch.DepthStratifiedBnbNodeSampler;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
-import edu.jhu.hltcoe.gridsearch.DfsRandChildAtDepthNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
@@ -38,6 +34,10 @@ import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler;
+import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowFilter;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
@@ -338,7 +338,7 @@ public class TrainerFactory {
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
         } else if (algorithm.equals("bnb")) {
             LazyBranchAndBoundSolver bnbSolver;
-            if (disableFathoming) {
+            if (false && disableFathoming) {
                 DepthStratifiedBnbSamplerPrm prm = new DepthStratifiedBnbSamplerPrm();
                 prm.maxDepth = 60;
                 bnbSolver = new DepthStratifiedBnbNodeSampler(prm, timeoutSeconds, parserEvaluator);
