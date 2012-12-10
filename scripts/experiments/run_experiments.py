@@ -231,8 +231,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    seed=random.getrandbits(63))
         all.set("lambda",0.1)
         all.update(printModel="./model.txt")
-        # Only keeping sentences that contain a verb
-        all.update(mustContainVerb=None)
                 
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
@@ -274,6 +272,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj = wsj_full if not self.fast else wsj_00
         brown = brown_full if not self.fast else brown_cf
         
+        # Only keeping sentences that contain a verb
+        all.update(mustContainVerb=None)
+        
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
             ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
@@ -306,26 +307,98 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco.add_prereq(scrape)
             return root
         elif self.expname == "viterbi-vs-bnb":
-            for dataset in datasets:
-                for maxSentenceLength in [3,5]:
-                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [10,100]:
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for algorithm in ["viterbi", "bnb"]:
-                            for varSelection in ["regret"]:
-                                experiments.append(all + dataset + msl + mns + DPExpParams(algorithm=algorithm, varSelection=varSelection))
-        elif self.expname == "bnb":
-            all.update(algorithm="bnb")
-            for dataset in datasets:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(-1, 10, 6*60*60), (-1, 100, 6*60*60)]:
+            root = RootStage()
+            all.update(nodeOrder="bfs",
+                       algorithm="bnb",
+                       varSelection="regret",
+                       varSplit="half-prob",
+                       propSupervised=0.0,
+                       maxSimplexIterations=1000000000,
+                       maxDwIterations=1000000000,
+                       maxCutRounds=1,
+                       minSumForCuts=1.00001,
+                       disableFathoming=True,
+                       threads=1,
+                       initWeights="uniform",
+                       epsilon=0.1)
+            all.set("lambda", 1.0)
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in [0.001, 0.01, 0.1]]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in [0.001, 0.01, 0.1]]
+            exps = []
+            for dataset in [synth_alt_three, brown]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 500, 6*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
                         # Run for some fixed amount of time.                
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
-                    for varSelection in ["regret", "rand-uniform", "rand-weighted", "full", "pseudocost"]:
-                        experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection))
+                    for algorithm in ["viterbi", "bnb"]:
+                        for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                            experiment = all + dataset + msl + mns + relax + DPExpParams(algorithm=algorithm)
+                            exps.append(experiment)
+                            if algorithm == "viterbi":
+                                break
+            if self.fast:
+                # Drop all but 3 experiments for a fast run.
+                exps = exps[:3]
+            root.add_dependents(exps)
+            # Scrape all results.
+            scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            #Scrape status information from a subset of the experiments.
+            scrape_stat = ScrapeStatuses(root.dependents, tsv_file="bnb-status.data", type="bnb")
+            scrape_stat.add_prereqs(root.dependents)
+            if not self.fast:
+                # Commit results to svn
+                svnco = SvnCommitResults(self.expname)
+                svnco.add_prereqs([scrape, scrape_stat])
+            return root
+        elif self.expname == "bnb":
+            root = RootStage()
+            all.update(nodeOrder="bfs",
+                       algorithm="bnb",
+                       varSelection="regret",
+                       varSplit="half-prob",
+                       propSupervised=0.0,
+                       maxSimplexIterations=1000000000,
+                       maxDwIterations=1000000000,
+                       maxCutRounds=1,
+                       minSumForCuts=1.00001,
+                       disableFathoming=True,
+                       threads=1,
+                       initWeights="uniform",
+                       epsilon=0.1)
+            all.set("lambda", 1.0)
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in [0.01, 0.1]]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in [0.01, 0.1]]
+            exps = []
+            for dataset in [synth_alt_three, brown]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 6*60*60)]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    mns = DPExpParams(maxNumSentences=maxNumSentences)
+                    if not self.fast:
+                        # Run for some fixed amount of time.                
+                        all.update(numRestarts=1000000000)
+                        all.update(timeoutSeconds=timeoutSeconds)
+                    for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                        experiment = all + dataset + msl + mns + relax
+                        exps.append(experiment)
+            if self.fast:
+                # Drop all but 3 experiments for a fast run.
+                exps = exps[:3]
+            root.add_dependents(exps)
+            # Scrape all results.
+            scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            #Scrape status information from a subset of the experiments.
+            scrape_stat = ScrapeStatuses(root.dependents, tsv_file="bnb-status.data", type="bnb")
+            scrape_stat.add_prereqs(root.dependents)
+            if not self.fast:
+                # Commit results to svn
+                svnco = SvnCommitResults(self.expname)
+                svnco.add_prereqs([scrape, scrape_stat])
+            return root
         elif self.expname == "bnb-semi":
             root = RootStage()
             all.update(algorithm="bnb",
@@ -385,28 +458,29 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        propSupervised=0.0,
                        maxSimplexIterations=1000000000,
                        maxDwIterations=1000000000,
-                       maxCutRounds=1000000000,
+                       maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       maxSentenceLength=10,
+                       maxSentenceLength=7,
                        maxNumSentences=50,
                        disableFathoming=True,
-                       threads=1)
+                       threads=1,
+                       initWeights="uniform")
             all.set("lambda", 0.0)
             # Run for some fixed amount of time.
             all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=40*60)
-            dataset = synth_alt_three
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.02, 0.21, 0.02)]
-            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.02, 0.21, 0.02)]
+                       timeoutSeconds=60*60)
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.01, 0.21, 0.01)]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.01, 0.21, 0.01)]
             for x in extra_relaxes: 
-                x.update(maxCutRounds=1, timeoutSeconds=3*60*60)
+                x.update(timeoutSeconds=4*60*60)
             exps = []
-            for maxNumSentences in [20]:
-                for varSelection in ["rand-uniform", "regret"]:
-                    for relax in [dwRelax, lpRelax, rltObjVarRelax] + extra_relaxes:
-                        experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
-                                                                         maxNumSentences=maxNumSentences)
-                        exps.append(experiment)
+            for dataset in [synth_alt_three, brown]:
+                for maxNumSentences in [20]:
+                    for varSelection in ["regret"]:
+                        for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                            experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
+                                                                             maxNumSentences=maxNumSentences)
+                            exps.append(experiment)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:3]
@@ -420,7 +494,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             if not self.fast:
                 # Commit results to svn
                 svnco = SvnCommitResults(self.expname)
-                svnco.add_prereq(scrape_stat)
+                svnco.add_prereqs([scrape, scrape_stat])
             return root
         elif self.expname == "bnb-supervised":
             root = RootStage()
