@@ -267,7 +267,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         wsj_full = self.get_data(data_dir, "treebank_3/wsj")
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
+        
         synth_alt_three = DPExpParams(synthetic="alt-three")
+        synth_alt_three.set("dataset", "alt-three", True, False)
 
         wsj = wsj_full if not self.fast else wsj_00
         brown = brown_full if not self.fast else brown_cf
