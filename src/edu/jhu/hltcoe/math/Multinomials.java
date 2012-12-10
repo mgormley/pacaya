@@ -56,7 +56,7 @@ public class Multinomials {
         double partialSum = 0;
         for (d = 0; d < dProp.length; d++) {
             partialSum += dProp[d];
-            if (rand <= partialSum) {
+            if (rand <= partialSum && dProp[d] != 0.0) {
                 break;
             }
         }
