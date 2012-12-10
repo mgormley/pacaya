@@ -99,10 +99,11 @@ public class TrainerFactory {
         options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,rlt]");
         options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
         options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
-        options.addOption("rx", "maxSetSizeToConstrain", true, "(D-W only) The maximum size of sets to contrain to be <= 1.0");
+        options.addOption("rx", "maxSetSizeToConstrain", true, "(STO only) The maximum size of sets to contrain to be <= 1.0");
         options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
         options.addOption("rx", "rootMaxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts for the root node");
-        options.addOption("rx", "minSumForCuts", true, "(D-W only) The minimum threshold at which to stop adding cuts");
+        options.addOption("rx", "minSumForCuts", true, "(STO only) The minimum threshold at which to stop adding cuts");
+        options.addOption("rx", "maxStoCuts", true, "(STO only) The maximum number of sum-to-one cuts");
         options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
         options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
         options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
@@ -148,6 +149,7 @@ public class TrainerFactory {
         final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
         final int rootMaxCutRounds = Command.getOptionValue(cmd, "rootMaxCutRounds", maxCutRounds);
         final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
+        final int maxStoCuts = Command.getOptionValue(cmd, "maxStoCuts", 1000);
         final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
         final double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
         final double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
@@ -174,6 +176,7 @@ public class TrainerFactory {
         stoPrm.initCutCountComp = new CutCountComputer();
         stoPrm.maxSetSizeToConstrain = maxSetSizeToConstrain;
         stoPrm.minSumForCuts = minSumForCuts;
+        stoPrm.maxStoCuts = maxStoCuts;
         
         DmvRelaxation relax = null;
         if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {

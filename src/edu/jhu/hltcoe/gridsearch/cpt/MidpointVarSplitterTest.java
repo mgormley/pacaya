@@ -74,11 +74,11 @@ public class MidpointVarSplitterTest {
         }
         @Override
         public int[][] getTotalMaxFreqCm() {
-            int[][] totMaxFreqCm = new int[numConds][numParams];
-            for (int i=0; i<totMaxFreqCm.length; i++) {
-                Arrays.fill(totMaxFreqCm[i], 1);
+            int[][] totMaxFreqCms = new int[numConds][numParams];
+            for (int i=0; i<totMaxFreqCms.length; i++) {
+                Arrays.fill(totMaxFreqCms[i], 1);
             }
-            return totMaxFreqCm;
+            return totMaxFreqCms;
         }
         @Override
         public String getName(int c, int m) {
@@ -98,7 +98,12 @@ public class MidpointVarSplitterTest {
         }
         @Override
         public int[][] getTotSupervisedFreqCm() {
-            throw new RuntimeException("This method not be called");
+            // All zeros.
+            int[][] totMaxFreqCms = new int[numConds][numParams];
+            for (int i=0; i<totMaxFreqCms.length; i++) {
+                Arrays.fill(totMaxFreqCms[i], 0);
+            }
+            return totMaxFreqCms;
         }
         @Override
         public int[][] getTotUnsupervisedMaxFreqCm() {

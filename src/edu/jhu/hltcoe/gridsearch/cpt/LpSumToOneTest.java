@@ -6,11 +6,13 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloObjective;
 import ilog.cplex.IloCplex;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.Utilities;
 
 
 public class LpSumToOneTest {
@@ -44,7 +46,44 @@ public class LpSumToOneTest {
             Vectors.exp(logProbs[c]);
             double sum = Vectors.sum(logProbs[c]);
             System.out.println(sum);
+            Assert.assertTrue(Utilities.lte(sum, 1.128, 1e-8));
         }
     }
     
+    @Test
+    public void testMaxStoCuts() throws IloException {
+        
+        IloCplex cplex = new IloCplex();
+        IloLPMatrix lpMatrix = cplex.addLPMatrix("couplingMatrix");
+        IndexedCpt icpt = new MockIndexedCpt(2, 3) {
+            public String getName(int c, int m) {
+                return String.format("param_{%d,%d}", c, m);
+            }
+        };
+        CptBounds bounds = new CptBounds(icpt);
+        
+        LpStoBuilderPrm prm = new LpStoBuilderPrm();
+        prm.maxStoCuts = 1;
+        LpSumToOneBuilder sto = new LpSumToOneBuilder(prm);
+        sto.init(cplex, lpMatrix, icpt, bounds);
+        sto.createModelParamVars();
+        sto.addModelParamConstraints();
+        
+        IloObjective obj = cplex.addMaximize();
+        IloLinearNumExpr expr = cplex.linearNumExpr();
+        expr.addTerms(new double[] { 1.0, 1.0, 1.0 }, sto.modelParamVars[0]);
+        expr.addTerms(new double[] { 1.0, 1.0, 1.0 }, sto.modelParamVars[1]);
+        obj.setExpr(expr);
+        cplex.solve();
+        
+        sto.projectModelParamsAndAddCuts();
+        
+        double[][] logProbs = sto.extractRelaxedLogProbs();
+        for (int c=0; c<logProbs.length; c++) {
+            Vectors.exp(logProbs[c]);
+            double sum = Vectors.sum(logProbs[c]);
+            System.out.println(sum);
+            Assert.assertTrue(Utilities.lte(sum, 1.128, 1e-8));
+        }
+    }
 }

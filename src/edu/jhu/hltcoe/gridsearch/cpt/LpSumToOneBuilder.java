@@ -24,6 +24,7 @@ public class LpSumToOneBuilder {
     public static class LpStoBuilderPrm {
         public int maxSetSizeToConstrain = 2;
         public double minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
+        public int maxStoCuts = 10000;
         public CutCountComputer initCutCountComp = new CutCountComputer();
         public ProjectionsPrm projPrm = new ProjectionsPrm();
     }
@@ -175,6 +176,10 @@ public class LpSumToOneBuilder {
      * @return The number of new constraints added.
      */
     public TIntArrayList projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
+        if (numStoCons >= prm.maxStoCuts) {
+            return new TIntArrayList();
+        }
+        
         // Add a cut for each distribution by projecting the model
         // parameters
         // back onto the simplex.
@@ -187,7 +192,7 @@ public class LpSumToOneBuilder {
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs
-            if (Vectors.sum(params[c]) > prm.minSumForCuts) {
+            if (Vectors.sum(params[c]) > prm.minSumForCuts && numStoCons < prm.maxStoCuts) {
                 rows.add(addSumToOneConstraint(c, params[c]));
             }
         }

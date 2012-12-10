@@ -216,20 +216,23 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         all.update(formulation="deptree-flow-nonproj",
                    parser="cky",
                    model="dmv",
-                   algorithm="viterbi",
+                   algorithm="bnb",
                    ilpSolver="cplex",
                    convergenceRatio=0.99999,
                    epsilon=0.1,
                    varSelection="regret",
                    varSplit="half-prob",
-                   maxDwIterations=3, 
+                   maxSimplexIterations=1000000000,
+                   maxDwIterations=1000000000, 
                    maxSetSizeToConstrain=3, 
-                   maxCutRounds=1, 
+                   maxCutRounds=1,
                    minSumForCuts=1.01, 
                    initWeights="uniform",
                    nodeOrder="bfs",
-                   seed=random.getrandbits(63))
-        all.set("lambda",0.1)
+                   seed=random.getrandbits(63),
+                   propSupervised=0.0,
+                   threads=1)
+        all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -312,17 +315,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(nodeOrder="bfs",
                        algorithm="bnb",
-                       varSelection="regret",
-                       varSplit="half-prob",
-                       propSupervised=0.0,
-                       maxSimplexIterations=1000000000,
-                       maxDwIterations=1000000000,
+                       rootMaxCutRounds=1,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       threads=1,
-                       initWeights="uniform",
+                       maxStoCuts=1e4,
                        epsilon=0.1)
-            all.set("lambda", 1.0)
             rltAllRelax.update(rltFilter="max")
             maxes = [5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
@@ -337,11 +334,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for algorithm in ["viterbi", "bnb"]:
-                        for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
-                            experiment = all + dataset + msl + mns + relax + DPExpParams(algorithm=algorithm)
+                        experiment = all + dataset + msl + mns + DPExpParams(algorithm=algorithm)
+                        if algorithm == "viterbi":
                             exps.append(experiment)
-                            if algorithm == "viterbi":
-                                break
+                        else:
+                            for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                                exps.append(experiment + relax)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:3]
@@ -361,17 +359,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(nodeOrder="bfs",
                        algorithm="bnb",
-                       varSelection="regret",
-                       varSplit="half-prob",
-                       propSupervised=0.0,
-                       maxSimplexIterations=1000000000,
-                       maxDwIterations=1000000000,
+                       rootMaxCutRounds=1,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       threads=1,
-                       initWeights="uniform",
+                       maxStoCuts=1000,
                        epsilon=0.1)
-            all.set("lambda", 1.0)
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
@@ -456,28 +448,21 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-depth-test":
             root = RootStage()
             all.update(nodeOrder="dfs-randwalk",
-                       algorithm="bnb",
-                       varSelection="regret",
-                       varSplit="half-prob",
-                       propSupervised=0.0,
-                       maxSimplexIterations=1000000000,
-                       maxDwIterations=1000000000,
+                       rootMaxCutRounds=1,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       maxSentenceLength=7,
-                       maxNumSentences=50,
-                       disableFathoming=True,
-                       threads=1,
-                       initWeights="uniform")
-            all.set("lambda", 0.0)
-            # Run for some fixed amount of time.
-            all.update(numRestarts=1000000000, epsilon=0.0,
-                       timeoutSeconds=60*60)
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=p) for p in frange(0.01, 0.21, 0.01)]
-            extra_relaxes += [rltAllRelax + DPExpParams(rltInitProp=p, rltCutProp=0.0) for p in frange(0.01, 0.21, 0.01)]
-            for x in extra_relaxes: 
-                x.update(timeoutSeconds=4*60*60)
+                       maxStoCuts=1000,
+                       disableFathoming=True)
+            if not self.fast:
+                # Run for some fixed amount of time.
+                all.update(numRestarts=1000000000, epsilon=0.0,
+                           timeoutSeconds=60*60)
+            rltAllRelax.update(rltFilter="max")
+            maxes = [1000, 5000, 10000, 50000, 100000, 500000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
+            extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
+            all.update(maxSentenceLength=7)
             for dataset in [synth_alt_three, brown]:
                 for maxNumSentences in [20]:
                     for varSelection in ["regret"]:
