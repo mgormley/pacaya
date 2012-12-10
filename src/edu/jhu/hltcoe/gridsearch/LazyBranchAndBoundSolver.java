@@ -237,7 +237,7 @@ public class LazyBranchAndBoundSolver {
 
     private void printSummary(double upperBound, double relativeDiff, int numProcessed, FathomStats fathom) {
         int numFathomed = fathom.getNumFathomed();
-        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d, avgFathomDepth=%.0f #seen=%d", 
+        log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d avgFathomDepth=%.0f #seen=%d", 
                 upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, fathom.getAverageDepth(), numProcessed));
     }
 
