@@ -18,10 +18,10 @@ public enum RelaxStatus {
      * This method returns feasible even if CPLEX has found the optimal solution to the master.
      */
     public static RelaxStatus getForDw(Status status) {
-        if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded
-                || status == Status.Bounded) {
+        if (status == Status.Infeasible) {
             return Infeasible;
-        } else if (status == Status.Error || status == Status.Unknown) {
+        } else if (status == Status.Error || status == Status.Unknown || status == Status.InfeasibleOrUnbounded
+                || status == Status.Unbounded || status == Status.Bounded) {
             return Unknown;
         } else if (status == Status.Optimal || status == Status.Feasible){
             return Feasible;
@@ -36,12 +36,14 @@ public enum RelaxStatus {
      * @param cplexStatus 
      */
     public static RelaxStatus getForLp(Status status, CplexStatus cplexStatus) {
-        if (cplexStatus == CplexStatus.AbortObjLim) {
-            return Pruned;
-        } else if (status == Status.Infeasible || status == Status.InfeasibleOrUnbounded || status == Status.Unbounded
-                || status == Status.Bounded) {
+        // We used to return Pruned under the condition below, but this seems
+        // too unstable. We should only prune if we know the problem is feasible or optimal.
+        // if (cplexStatus == CplexStatus.AbortObjLim) {  return Pruned; }
+        
+        if (status == Status.Infeasible) {
             return Infeasible;
-        } else if (status == Status.Error || status == Status.Unknown) {
+        } else if (status == Status.Error || status == Status.Unknown || status == Status.InfeasibleOrUnbounded
+                || status == Status.Unbounded || status == Status.Bounded) {
             return Unknown;
         } else if (status == Status.Optimal) {
             return Optimal;

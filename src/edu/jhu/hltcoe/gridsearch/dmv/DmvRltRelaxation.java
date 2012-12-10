@@ -336,12 +336,12 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
                     log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
                 }
-            } 
 
-            // Update status if this node can be fathomed.
-            if (lowerBound >= upperBound) {
-                status = RelaxStatus.Pruned;
-            }
+                // Update status if this node can be fathomed.
+                if (lowerBound >= upperBound) {
+                    status = RelaxStatus.Pruned;
+                }
+            } 
             
             cutIterLowerBounds.add(lowerBound);
             cutIterStatuses.add(cplex.getStatus());
@@ -391,6 +391,13 @@ public class DmvRltRelaxation implements DmvRelaxation {
         TIntArrayList rows = new TIntArrayList(); 
 
         if (prm.addBindingCons) {
+            // TODO: add binding bounds as factors too.
+            double[] vars = cplex.getValues(mp.origMatrix);
+            IloNumVar[] numVars = mp.origMatrix.getNumVars();
+            numVars[0].getLB();
+//            cplex.
+//            cplex.getSlacks(double );
+            
             // Binding constraints have a slack of zero.
             double[] slacks = cplex.getSlacks(mp.origMatrix);
             for (int i=0; i<slacks.length; i++) {
