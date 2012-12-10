@@ -97,7 +97,6 @@ public class RandomVariableSelector implements VariableSelector {
         }
         
         do {
-            System.out.println(numNonZeros + " " + Arrays.toString(adjusted));
             int cmId = Multinomials.sampleFromProportions(adjusted);
             c = cms[cmId].get1();
             m = cms[cmId].get2();
