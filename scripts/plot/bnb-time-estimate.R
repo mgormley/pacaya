@@ -29,6 +29,8 @@ df.orig <- df
 ## print(unique(df$incumbentScore))
 ## print("Upper bounds:")
 ## print(unique(df$upperBound))
+## print("Depths:")
+## print(unique(df$depth))
 
 print("Coercing infinities to numerics.")
 df$incumbentScore <- safe.as.numeric(df$incumbentScore)
@@ -59,7 +61,7 @@ mysummary <- function(df) {
 }
 
 depths <- ddply(df, .(depth, method), mysummary)
-
+print(depths)
 ## Print out the estimated number of nodes in the pruned B&B tree
 ##
 ## As input this requires:
