@@ -62,4 +62,8 @@ public class RelaxedDmvSolution implements RelaxedSolution {
         return trueRelaxObj;
     }
 
+    public void setScore(double optimisticBound) {
+        score = optimisticBound;
+    }
+
 }

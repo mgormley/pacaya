@@ -134,6 +134,10 @@ public class DmvProblemNode implements ProblemNode {
                     dwRelax.setWarmStart(warmStart);
                 }
                 relaxSol = (RelaxedDmvSolution) dwRelax.solveRelaxation(incumbentScore, depth);
+                if (optimisticBound < relaxSol.getScore()) {
+                    // If CPLEX gets a worse bound, then keep the parent's bound.
+                    relaxSol.setScore(optimisticBound);
+                }
                 optimisticBound = relaxSol.getScore();
                 isOptimisticBoundCached = true;
                 warmStart = dwRelax.getWarmStart();
