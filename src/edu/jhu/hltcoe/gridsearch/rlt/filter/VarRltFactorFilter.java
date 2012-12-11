@@ -1,13 +1,12 @@
 package edu.jhu.hltcoe.gridsearch.rlt.filter;
 
-import gnu.trove.TIntHashSet;
+import gnu.trove.TLongHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 
 import java.util.List;
 
-import no.uib.cipr.matrix.VectorEntry;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder;
+import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Utilities;
@@ -17,7 +16,7 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class VarRltFactorFilter implements RltFactorFilter {
     
-    private TIntHashSet cols;
+    private TLongHashSet cols;
     private List<IloNumVar> vars;
 
     public VarRltFactorFilter(List<IloNumVar> vars) {
@@ -26,7 +25,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
 
     @Override
     public void init(Rlt rlt) throws IloException {
-        cols = new TIntHashSet();
+        cols = new TLongHashSet();
         for (IloNumVar var : vars) {
             cols.add(rlt.getInputMatrix().getIndex(var));
         }
@@ -35,7 +34,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
 
     @Override
     public boolean accept(Factor f) {
-        for (VectorEntry ve : f.G) {
+        for (LVectorEntry ve : f.G) {
             if (!Utilities.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
                 return true;
             }

@@ -7,12 +7,13 @@ import ilog.concert.IloNumVar;
 import java.util.ArrayList;
 import java.util.List;
 
-import no.uib.cipr.matrix.sparse.FastSparseVector;
+import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
@@ -22,12 +23,13 @@ public class FactorBuilder {
 
     public abstract static class Factor {
         public double g;
-        public FastSparseVector G;
+        // TODO: This should really be a FastSparseVector without longs.
+        public FastSparseLVector G;
         protected IloLPMatrix mat;
         
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {
             this.g = g;
-            this.G = new FastSparseVector(Gind, Gval);
+            this.G = new FastSparseLVector(SafeCast.toLong(Gind), Gval);
             this.mat = mat;
         }
         

@@ -142,8 +142,13 @@ public class Vectors {
         }
     }
 
-
     public static void scale(int[] array, int alpha) {
+        for (int i=0; i<array.length; i++) {
+            array[i] *= alpha;
+        }
+    }
+    
+    public static void scale(long[] array, int alpha) {
         for (int i=0; i<array.length; i++) {
             array[i] *= alpha;
         }

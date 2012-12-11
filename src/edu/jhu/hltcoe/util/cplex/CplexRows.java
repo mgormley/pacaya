@@ -3,6 +3,7 @@
  */
 package edu.jhu.hltcoe.util.cplex;
 
+import edu.jhu.hltcoe.util.SafeCast;
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -10,24 +11,24 @@ import ilog.concert.IloRange;
 
 import java.util.ArrayList;
 
-import no.uib.cipr.matrix.sparse.SparseVector;
+import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 
 public class CplexRows {
     private TDoubleArrayList lbs;
     private TDoubleArrayList ubs;
-    private ArrayList<SparseVector> coefs;
+    private ArrayList<SparseLVector> coefs;
     private ArrayList<String> names;
     private boolean setNames;
 
     public CplexRows(boolean setNames) {
         lbs = new TDoubleArrayList();
-        coefs = new ArrayList<SparseVector>();
+        coefs = new ArrayList<SparseLVector>();
         ubs = new TDoubleArrayList();
         names = new ArrayList<String>();
         this.setNames = setNames;
     }
 
-    public int addRow(double lb, SparseVector coef, double ub) {
+    public int addRow(double lb, SparseLVector coef, double ub) {
         return addRow(lb, coef, ub, null);
     }
 
@@ -35,7 +36,7 @@ public class CplexRows {
         addRow(row.getLb(), row.getCoefs(), row.getUb(), row.getName());
     }
 
-    public int addRow(double lb, SparseVector coef, double ub, String name) {
+    public int addRow(double lb, SparseLVector coef, double ub, String name) {
         lbs.add(lb);
         coefs.add(coef);
         ubs.add(ub);
@@ -59,7 +60,7 @@ public class CplexRows {
         int[][] ind = new int[coefs.size()][];
         double[][] val = new double[coefs.size()][];
         for (int i = 0; i < coefs.size(); i++) {
-            ind[i] = coefs.get(i).getIndex();
+            ind[i] = SafeCast.safeToInt(coefs.get(i).getIndex());
             val[i] = coefs.get(i).getData();
         }
         int startRow = mat.addRows(lbs.toNativeArray(), ubs.toNativeArray(), ind, val);
@@ -79,11 +80,11 @@ public class CplexRows {
         return lbs.size();
     }
 
-    public ArrayList<SparseVector> getAllCoefs() {
+    public ArrayList<SparseLVector> getAllCoefs() {
         return coefs;
     }
 
-    public void setAllCoefs(ArrayList<SparseVector> coefs) {
+    public void setAllCoefs(ArrayList<SparseLVector> coefs) {
         this.coefs = coefs;
     }
 

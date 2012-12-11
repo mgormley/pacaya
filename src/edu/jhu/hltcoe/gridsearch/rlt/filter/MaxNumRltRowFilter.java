@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
-import no.uib.cipr.matrix.sparse.SparseVector;
+import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Prng;
@@ -39,12 +39,12 @@ public class MaxNumRltRowFilter implements RltRowFilter {
     }
 
     @Override
-    public boolean acceptEq(SparseVector row, String rowName, Factor facI, int k, RowType type) {
+    public boolean acceptEq(SparseLVector row, String rowName, Factor facI, int k, RowType type) {
         return accept(type);
     }
 
     @Override
-    public boolean acceptLeq(SparseVector row, String rowName, Factor facI, Factor facJ, RowType type) {
+    public boolean acceptLeq(SparseLVector row, String rowName, Factor facI, Factor facJ, RowType type) {
         return accept(type);
     }
 

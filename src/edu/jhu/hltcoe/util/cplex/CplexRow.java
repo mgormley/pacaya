@@ -3,15 +3,15 @@
  */
 package edu.jhu.hltcoe.util.cplex;
 
-import no.uib.cipr.matrix.sparse.SparseVector;
+import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 
 public class CplexRow {
     private double lb;
     private double ub;
-    private SparseVector coefs;
+    private SparseLVector coefs;
     private String name;
 
-    public CplexRow(double lb, SparseVector coefs, double ub, String name) {
+    public CplexRow(double lb, SparseLVector coefs, double ub, String name) {
         super();
         this.lb = lb;
         this.coefs = coefs;
@@ -27,7 +27,7 @@ public class CplexRow {
         return ub;
     }
 
-    public SparseVector getCoefs() {
+    public SparseLVector getCoefs() {
         return coefs;
     }
 
