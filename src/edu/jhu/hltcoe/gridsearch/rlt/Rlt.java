@@ -152,9 +152,9 @@ public class Rlt {
 
         List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
         log.debug("# unfiltered input variables: " + inputMatrix.getNcols());
-        log.debug("# unfiltered RLT variables: " + inputMatrix.getNcols() * inputMatrix.getNcols());
+        log.debug("# unfiltered RLT variables: " + (long) inputMatrix.getNcols() * inputMatrix.getNcols());
         log.debug("# unfiltered input factors: " + newFactors.size());
-        int numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
+        long numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
         log.debug("# unfiltered RLT rows: " + numUnfilteredRows);
         
         // Reformulate and linearize the constraints.
@@ -545,7 +545,7 @@ public class Rlt {
         row.add(k, facI.g);
 
         // Add sum_{l=1}^n - G_{il} w_{kl}
-        for (int idx = 0; idx < facI.G.getUsed(); idx++) {
+        for (int idx = 0; idx < facI.   G.getUsed(); idx++) {
             int l = SafeCast.safeToInt(facI.G.getIndex()[idx]);
             double val = - facI.G.getData()[idx];
             row.add(rltVarsInd.get(k, l), val);

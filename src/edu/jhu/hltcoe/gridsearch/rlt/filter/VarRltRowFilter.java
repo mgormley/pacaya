@@ -27,7 +27,7 @@ public class VarRltRowFilter implements RltRowFilter {
     }
 
     @Override
-    public void init(Rlt rlt, int numUnfilteredRows) throws IloException {
+    public void init(Rlt rlt, long numUnfilteredRows) throws IloException {
         rltVarIds = new TLongHashSet();
         for (Pair<IloNumVar, IloNumVar> pair : pairs) {
             rltVarIds.add(rlt.getIdForRltVar(pair.get1(), pair.get2()));

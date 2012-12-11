@@ -191,15 +191,15 @@ public class FactorBuilder {
     /**
      * Gets the number of (unfiltered) rows that would be produced by this set of factors.
      */
-    public static int getNumRows(List<Factor> newFactors, IloLPMatrix inputMatrix) throws IloException {
-        int numEqFactors = 0;
+    public static long getNumRows(List<Factor> newFactors, IloLPMatrix inputMatrix) throws IloException {
+        long numEqFactors = 0;
         for (Factor f : newFactors) {
             if (f.isEq()) {
                 numEqFactors++;
             }
         }
-        int numLeFactors = newFactors.size() - numEqFactors;
-        int numRows = (numLeFactors * (numLeFactors+1)) / 2 + numEqFactors*inputMatrix.getNcols();
+        long numLeFactors = newFactors.size() - numEqFactors;
+        long numRows = (numLeFactors * (numLeFactors+1)) / 2 + numEqFactors*inputMatrix.getNcols();
         return numRows;
     }
 }

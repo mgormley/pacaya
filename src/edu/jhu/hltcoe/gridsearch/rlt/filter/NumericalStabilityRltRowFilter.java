@@ -19,7 +19,7 @@ public class NumericalStabilityRltRowFilter implements RltRowFilter {
     }
     
     @Override
-    public void init(Rlt rlt, int numUnfilteredRows) throws IloException {
+    public void init(Rlt rlt, long numUnfilteredRows) throws IloException {
         // Do nothing.
     }
     
