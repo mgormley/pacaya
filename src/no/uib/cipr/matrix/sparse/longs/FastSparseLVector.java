@@ -32,7 +32,7 @@ public class FastSparseLVector extends SparseLVector {
     double norm2Value;
 
     public FastSparseLVector() {
-        super(Integer.MAX_VALUE);
+        super(Long.MAX_VALUE);
     }
 
     public FastSparseLVector(long size) {
@@ -48,11 +48,11 @@ public class FastSparseLVector extends SparseLVector {
     }
 
     public FastSparseLVector(long[] index, double[] data) {
-        this(Integer.MAX_VALUE, index, data);
+        this(Long.MAX_VALUE, index, data);
     }
 
     public FastSparseLVector(double[] denseData) {
-        super(Integer.MAX_VALUE, LongSort.getIndexArray(denseData), denseData);
+        super(Long.MAX_VALUE, LongSort.getIndexArray(denseData), denseData);
     }
 
     /**
