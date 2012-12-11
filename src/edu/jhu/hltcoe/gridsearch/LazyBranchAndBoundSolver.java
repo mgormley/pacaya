@@ -6,11 +6,10 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.hltcoe.math.Vectors;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -42,11 +41,11 @@ public class LazyBranchAndBoundSolver {
     
     protected final double epsilon;
     protected final double timeoutSeconds;
-    protected Stopwatch nodeTimer;
-    protected Stopwatch switchTimer;
-    protected Stopwatch relaxTimer;
-    protected Stopwatch feasTimer;
-    protected Stopwatch branchTimer;
+    protected Timer nodeTimer;
+    protected Timer switchTimer;
+    protected Timer relaxTimer;
+    protected Timer feasTimer;
+    protected Timer branchTimer;
 
     // If true, fathoming is disabled. This enables random sampling of the
     // branch and bound tree.
@@ -60,11 +59,11 @@ public class LazyBranchAndBoundSolver {
         this.disableFathoming = false;
         
         // Timers
-        nodeTimer = new Stopwatch();
-        switchTimer = new Stopwatch();
-        relaxTimer = new Stopwatch();
-        feasTimer = new Stopwatch();
-        branchTimer = new Stopwatch();
+        nodeTimer = new Timer();
+        switchTimer = new Timer();
+        relaxTimer = new Timer();
+        feasTimer = new Timer();
+        branchTimer = new Timer();
     }
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode) {
@@ -106,7 +105,7 @@ public class LazyBranchAndBoundSolver {
             if (relativeDiff <= epsilon) {
                 // Optimal solution found.
                 break;
-            } else if (Time.totSec(nodeTimer) > timeoutSeconds) {
+            } else if (nodeTimer.totSec() > timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
@@ -169,24 +168,24 @@ public class LazyBranchAndBoundSolver {
         curNode.setAsActiveNode();
         switchTimer.stop();
         
-        curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
+        curNode.updateTimeRemaining(timeoutSeconds - nodeTimer.totSec());
         // TODO: else if, ran out of memory or disk space, break
 
         // The active node can compute a tighter upper bound instead of
         // using its parent's bound
         relaxTimer.start();
-        double curNodeLowerBound;
+        double curNodeUb;
         if (disableFathoming) {
             // If not fathoming, don't stop the relaxation early.
-            curNodeLowerBound = curNode.getOptimisticBound();
+            curNodeUb = curNode.getOptimisticBound();
         } else {
-            curNodeLowerBound = curNode.getOptimisticBound(incumbentScore);
+            curNodeUb = curNode.getOptimisticBound(incumbentScore);
         }
         RelaxedSolution relax = curNode.getRelaxedSolution();
         relaxTimer.stop();
         log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, Time.totMs(nodeTimer) / numProcessed));
-        if (curNodeLowerBound <= incumbentScore && !disableFathoming) {
+                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.totMs() / numProcessed));
+        if (incumbentScore >= curNodeUb && !disableFathoming) {
             // Fathom this node: it is either infeasible or was pruned.
             if (relax.getStatus() == RelaxStatus.Infeasible) {
                 return new NodeResult(FathomStatus.Infeasible);
@@ -297,11 +296,11 @@ public class LazyBranchAndBoundSolver {
 
     protected void printTimers(int numProcessed) {
         // Print timers.
-        log.debug("Avg time(ms) per node: " + Time.totMs(nodeTimer) / numProcessed);
-        log.debug("Avg switch time(ms) per node: " + Time.totMs(switchTimer) / numProcessed);
-        log.debug("Avg relax time(ms) per node: " + Time.totMs(relaxTimer) / numProcessed);
-        log.debug("Avg project time(ms) per node: " + Time.totMs(feasTimer) / numProcessed);
-        log.debug("Avg branch time(ms) per node: " + Time.totMs(branchTimer) / numProcessed);
+        log.debug("Avg time(ms) per node: " + nodeTimer.totMs() / numProcessed);
+        log.debug("Avg switch time(ms) per node: " + switchTimer.totMs() / numProcessed);
+        log.debug("Avg relax time(ms) per node: " + relaxTimer.totMs() / numProcessed);
+        log.debug("Avg project time(ms) per node: " + feasTimer.totMs() / numProcessed);
+        log.debug("Avg branch time(ms) per node: " + branchTimer.totMs() / numProcessed);
     }
 
     private void printLeafNodeBoundHistogram() {

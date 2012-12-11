@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -41,7 +41,6 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
@@ -66,7 +65,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     protected DmvTrainCorpus corpus;
     protected IndexedDmvModel idm;
     protected CptBounds bounds;
-    protected Stopwatch parsingTimer;
+    protected Timer parsingTimer;
     protected MasterProblem mp;
     
     private LpSumToOneBuilder sto;    
@@ -78,7 +77,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         super(prm);
         this.prm = prm;
         this.sto = new LpSumToOneBuilder(prm.stoPrm);
-        this.parsingTimer = new Stopwatch();
+        this.parsingTimer = new Timer();
     }
     
     public void init1(DmvTrainCorpus corpus) {
@@ -432,7 +431,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     }
     
     protected void printSummary() {
-        log.debug("Avg parsing time(ms) per solve: " + Time.totMs(parsingTimer) / getNumSolves());
+        log.debug("Avg parsing time(ms) per solve: " + parsingTimer.totMs() / getNumSolves());
         log.info(String.format("Summary: #lambdas=%d #cuts=%d", mp.lambdaVars.size(), sto.getNumStoCons()));
     }
 

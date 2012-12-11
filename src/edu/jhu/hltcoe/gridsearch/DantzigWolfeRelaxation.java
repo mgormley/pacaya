@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
@@ -27,7 +27,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Time;
 
 public abstract class DantzigWolfeRelaxation {
     
@@ -64,14 +63,14 @@ public abstract class DantzigWolfeRelaxation {
     private static final double INTERNAL_BEST_SCORE = Double.NEGATIVE_INFINITY;
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
     private int numSolves;
-    private Stopwatch simplexTimer;
+    private Timer simplexTimer;
 
     private DwRelaxPrm prm;
     
     public DantzigWolfeRelaxation(DwRelaxPrm prm) {
         this.prm = prm;
         this.numSolves = 0;
-        this.simplexTimer = new Stopwatch();
+        this.simplexTimer = new Timer();
     }
 
     public void init2(DmvSolution initFeasSol) {
@@ -266,7 +265,7 @@ public abstract class DantzigWolfeRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
-        log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
+        log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
         printSummary();
     
         return new Pair<RelaxStatus,Double>(status, lowerBound);

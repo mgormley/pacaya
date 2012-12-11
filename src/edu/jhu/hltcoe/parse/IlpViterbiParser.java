@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -27,7 +27,6 @@ import edu.jhu.hltcoe.parse.relax.RelaxedParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
@@ -64,7 +63,7 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
     
     @Override
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model model) {
-        Stopwatch stopwatch = new Stopwatch();
+        Timer stopwatch = new Timer();
         stopwatch.start();
         
         // Encode the model/sentences as an ILP and solve
@@ -75,9 +74,9 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
         
         stopwatch.stop();
         log.debug(String.format("Avg parse time: %.3f", 
-                Time.totMs(stopwatch) / sentences.size()));
+                stopwatch.totMs() / sentences.size()));
         log.debug(String.format("Tot parse time: %.3f", 
-                Time.totMs(stopwatch)));
+                stopwatch.totMs()));
         
         return depTreebank;
     }
@@ -92,7 +91,7 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
     }
 
     public RelaxedDepTreebank getRelaxedParse(SentenceCollection sentences, Model model) {
-        Stopwatch stopwatch = new Stopwatch();
+        Timer stopwatch = new Timer();
         stopwatch.start();
         
         // Encode the model/sentences as an ILP and solve.
@@ -103,9 +102,9 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
         
         stopwatch.stop();
         log.debug(String.format("Avg parse time: %.3f", 
-                Time.totMs(stopwatch) / sentences.size()));
+                stopwatch.totMs() / sentences.size()));
         log.debug(String.format("Tot parse time: %.3f", 
-                Time.totMs(stopwatch)));
+                stopwatch.totMs()));
         
         return depTreebank;
     }

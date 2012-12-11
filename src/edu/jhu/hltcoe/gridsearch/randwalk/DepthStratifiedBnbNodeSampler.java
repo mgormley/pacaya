@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.gridsearch.randwalk;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
@@ -15,7 +15,6 @@ import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Time;
 
 public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(DepthStratifiedBnbNodeSampler.class);
@@ -40,7 +39,7 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
         
         evalIncumbent(initialSolution);
         int curDiveDepth = 0;
-        Stopwatch totalTimer = new Stopwatch();
+        Timer totalTimer = new Timer();
         totalTimer.start();
         while (true) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
@@ -70,11 +69,11 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             
             totalTimer.stop();
             totalTimer.start();
-            if (Time.totSec(totalTimer) > timeoutSeconds) {
+            if (totalTimer.totSec() > timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
-            curNode.updateTimeRemaining(timeoutSeconds - Time.totSec(nodeTimer));
+            curNode.updateTimeRemaining(timeoutSeconds - nodeTimer.totSec());
             
             // The active node can compute a tighter upper bound instead of
             // using its parent's bound
@@ -86,7 +85,7 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             relaxTimer.stop();
             
             log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, Time.totMs(nodeTimer) / numProcessed));
+                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.totMs() / numProcessed));
 
             // Check if the child node offers a better feasible solution
             feasTimer.start();

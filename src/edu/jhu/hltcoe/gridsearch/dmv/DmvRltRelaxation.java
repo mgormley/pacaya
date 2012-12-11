@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
@@ -44,7 +44,6 @@ import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
@@ -82,7 +81,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     
     private IloCplex cplex;
     private int numSolves;
-    private Stopwatch simplexTimer;
+    private Timer simplexTimer;
 
     private DmvTrainCorpus corpus;
     private IndexedDmvModel idm;
@@ -96,7 +95,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     public DmvRltRelaxation(DmvRltRelaxPrm prm) {
         this.prm = prm;
         this.numSolves = 0;
-        this.simplexTimer = new Stopwatch();
+        this.simplexTimer = new Timer();
         this.sto = new LpSumToOneBuilder(prm.stoPrm);        
     }
     
@@ -289,7 +288,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         cplex.setParam(DoubleParam.ObjULim, upperBound);
         
         // Time from the start, stopping early if we run out of time.
-        Stopwatch timer = new Stopwatch();
+        Timer timer = new Timer();
         int cut;
         // Solve the full LP problem
         for (cut = 0; ;) {
@@ -352,7 +351,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
 
             timer.stop();
             if (status == RelaxStatus.Unknown || status == RelaxStatus.Infeasible 
-                    || status == RelaxStatus.Pruned || Time.totSec(timer) > prm.timeoutSeconds) {
+                    || status == RelaxStatus.Pruned || timer.totSec() > prm.timeoutSeconds) {
                 // Terminate because we have either:
                 // - Hit a CPLEX error.
                 // - Found an infeasible solution.
@@ -383,7 +382,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
         log.debug("Iteration statuses: " + cutIterStatuses);
-        log.debug("Avg simplex time(ms) per solve: " + Time.totMs(simplexTimer) / numSolves);
+        log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
         
         // Subtract off the STO cuts b/c they are in the same matrix.
         int origCons = mp.origMatrix.getNrows() - sto.getNumStoCons();

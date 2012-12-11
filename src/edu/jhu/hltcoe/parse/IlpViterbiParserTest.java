@@ -4,7 +4,6 @@ import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;
 
 import org.apache.log4j.BasicConfigurator;
-import org.jboss.dna.common.statistic.Stopwatch;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,6 +17,7 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 
 public class IlpViterbiParserTest {
 
@@ -67,21 +67,21 @@ public class IlpViterbiParserTest {
         Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
         double expectedParseWeight = -53.392;
 
-        Stopwatch timer;
+        Timer timer;
 
         // explicit projective parsing
-        timer = new Stopwatch();
+        timer = new Timer();
         timer.start();
         DepTreebank expTrees = getIlpParses(model, sentences, IlpFormulation.EXPLICIT_PROJ, expectedParseWeight);
         timer.stop();
-        System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
+        System.out.println(timer.avgMs());
         
         // flow projective parsing
-        timer = new Stopwatch();
+        timer = new Timer();
         timer.start();
         DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
         timer.stop();
-        System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
+        System.out.println(timer.avgMs());
 
         for (int i=0; i<expTrees.size(); i++) {
             int[] expTree = expTrees.get(i).getParents();
@@ -97,22 +97,22 @@ public class IlpViterbiParserTest {
         // This is too slow to be useful
         if (false) {
             // DP projective parsing        
-            timer = new Stopwatch();
+            timer = new Timer();
             timer.start();
             DepTreebank dpTrees = getIlpParses(model, sentences, IlpFormulation.DP_PROJ, expectedParseWeight);
             timer.stop();
-            System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
+            System.out.println(timer.avgMs());
             
             for (int i=0; i<expTrees.size(); i++) {
                 assertArrayEquals(expTrees.get(i).getParents(), dpTrees.get(i).getParents());
             }
             
             // multi-c flow projective parsing
-            timer = new Stopwatch();
+            timer = new Timer();
             timer.start();
             DepTreebank mflowTrees = getIlpParses(model, sentences, IlpFormulation.MFLOW_PROJ, expectedParseWeight);
             timer.stop();
-            System.out.println(timer.getAverageDuration().getDurationInMilliseconds());
+            System.out.println(timer.avgMs());
             
             for (int i=0; i<expTrees.size(); i++) {
                 assertArrayEquals(expTrees.get(i).getParents(), mflowTrees.get(i).getParents());

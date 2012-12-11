@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -17,7 +17,6 @@ import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Time;
 
 /**
  * TODO: switch this to be a wrapper class for an object implementing the ViterbiParser interface
@@ -35,7 +34,7 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model genericModel) {
         DmvModel model = (DmvModel) genericModel;
         // TODO: could be a field
-        Stopwatch stopwatch = new Stopwatch();
+        Timer stopwatch = new Timer();
         
         DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
         double totalParseWeight = 0.0;
@@ -46,11 +45,11 @@ public class IlpViterbiSentenceParser extends IlpViterbiParser implements Viterb
             stopwatch.stop();
             treebank.add(tree);
             log.debug(String.format("Avg parse time: %.3f Num sents: %d", 
-                    Time.avgMs(stopwatch),
+                    stopwatch.avgMs(),
                     stopwatch.getCount()));
         }
         log.debug(String.format("Tot parse time: %.3f", 
-                Time.totMs(stopwatch)));
+                stopwatch.totMs()));
         
         parseWeight = totalParseWeight;
         return treebank;

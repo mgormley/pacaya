@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.train;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
@@ -26,7 +26,6 @@ import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
@@ -68,7 +67,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         IndexedDmvModel idm = new IndexedDmvModel(corpus);
         DmvProblemNode rootNode = new DmvProblemNode(corpus, brancher, relax);
 
-        Stopwatch timer = new Stopwatch();
+        Timer timer = new Timer();
         timer.start();
         for (int r=0; r<=numRestarts; r++) {
             // Run Viterbi EM with no random restarts.
@@ -107,7 +106,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             }
 	    
 	    timer.stop();
-            if (Time.totSec(timer) > timeoutSeconds) {
+            if (timer.totSec() > timeoutSeconds) {
                 // Timeout reached.
                 break;
             }

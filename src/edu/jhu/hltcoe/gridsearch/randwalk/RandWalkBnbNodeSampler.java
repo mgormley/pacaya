@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.gridsearch.randwalk;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
@@ -19,7 +19,6 @@ import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -72,7 +71,7 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             
             numProcessed++;
             
-            if (Time.totSec(nodeTimer) > timeoutSeconds) {
+            if (nodeTimer.totSec() > timeoutSeconds) {
                 // Timeout reached.
                 break;
             } else if (numSamples >= prm.maxSamples) {
@@ -86,14 +85,14 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             }
             
             // Process the next node.
-            Stopwatch timer = new Stopwatch();
+            Timer timer = new Timer();
             timer.start();
             NodeResult result = processNode(curNode, numProcessed);
             timer.stop();
             
             // Update cost estimators.
             nodeCountEst.add(curNode, 1);
-            solTimeEst.add(curNode, Time.totMs(timer));
+            solTimeEst.add(curNode, timer.totMs());
             
             // Get the next node.
             if (result.status != FathomStatus.NotFathomed) {

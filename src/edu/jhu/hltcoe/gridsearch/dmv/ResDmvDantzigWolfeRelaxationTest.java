@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,7 +30,6 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.rproj.RDataFrame;
 import edu.jhu.hltcoe.util.rproj.RRow;
@@ -349,7 +348,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         //adjustBounds(dw, DmvBounds.DEFAULT_LOWER_BOUND, DmvBounds.DEFAULT_UPPER_BOUND, true);
         
         RDataFrame df = new RDataFrame();
-        Stopwatch timer = new Stopwatch();
+        Timer timer = new Timer();
         for (double offsetProb = 10e-7; offsetProb <= 1.001; offsetProb += 0.2) {
         //for (double offsetProb = 0.05; offsetProb <= 1.001; offsetProb += 0.05) {
             for (double probOfSkipCm = 0.0; probOfSkipCm <= 0.2; probOfSkipCm += 0.1) {
@@ -361,7 +360,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
                     RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation();
                     avgScore += relaxSol.getScore();
                     timer.stop();
-                    System.out.println("Time remaining: " + Time.avgMs(timer)*(numTimes*0.5/0.01*1.0/0.1 - i*offsetProb/0.01*probOfSkipCm/0.1)/1000);
+                    System.out.println("Time remaining: " + timer.avgMs()*(numTimes*0.5/0.01*1.0/0.1 - i*offsetProb/0.01*probOfSkipCm/0.1)/1000);
                 }
                 avgScore /= (double)numTimes;
                 
@@ -381,7 +380,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         }
         System.out.println(df);
         System.out.println(sb);
-        System.out.println("Avg time (ms) per relaxation: " + Time.totMs(timer)/df.getNumRows());
+        System.out.println("Avg time (ms) per relaxation: " + timer.totMs()/df.getNumRows());
         FileWriter writer = new FileWriter("relax-quality.data");
         df.write(writer);
         writer.close();

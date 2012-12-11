@@ -1,12 +1,11 @@
 package edu.jhu.hltcoe.train;
 
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Time;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -47,7 +46,7 @@ public class EMTrainer<C> implements Trainer<C> {
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
         Model bestModel = null;
         C bestCounts = null;
-        Stopwatch roundTimer = new Stopwatch();
+        Timer roundTimer = new Timer();
         for (int r=0; r<=numRestarts; r++) {
             roundTimer.start();
             trainOnce(corpus);
@@ -57,7 +56,7 @@ public class EMTrainer<C> implements Trainer<C> {
                 bestCounts = counts;
                 evalIncumbent(bestModel, bestCounts, bestLogLikelihood);
             }
-            if (Time.totSec(roundTimer) > timeoutSeconds) {
+            if (roundTimer.totSec() > timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
@@ -83,7 +82,7 @@ public class EMTrainer<C> implements Trainer<C> {
         
         // Run iterations of EM
         iterCount = 0;
-        Stopwatch iterTimer = new Stopwatch();
+        Timer iterTimer = new Timer();
         double prevLogLikelihood = Double.NEGATIVE_INFINITY;
 
         while (true) {
@@ -110,7 +109,7 @@ public class EMTrainer<C> implements Trainer<C> {
             // M-step
             model = mStep.getModel(corpus, counts);
             
-            log.debug("Time remaining: " + Time.durAsStr(Time.avgMs(iterTimer)*(iterations - iterCount)));
+            log.debug("Time remaining: " + Timer.durAsStr(iterTimer.avgMs()*(iterations - iterCount)));
             iterTimer.stop();
             iterCount++;
         }

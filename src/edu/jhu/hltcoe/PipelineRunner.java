@@ -13,7 +13,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import org.jboss.dna.common.statistic.Stopwatch;
+import edu.jhu.hltcoe.util.Timer;
 
 import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
@@ -45,7 +45,6 @@ import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Time;
 
 public class PipelineRunner {
 
@@ -121,11 +120,11 @@ public class PipelineRunner {
             dw.init1(trainCorpus);
             dw.init2(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, trainCorpus, null, null, null));
             DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank, trueModel);
-            Stopwatch timer = new Stopwatch();
+            Timer timer = new Timer();
             timer.start();
             RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation();
             timer.stop();
-            log.info("relaxTime(ms): " + Time.totMs(timer));
+            log.info("relaxTime(ms): " + timer.totMs());
             log.info("relaxBound: " + relaxSol.getScore());
             if (initBoundsSol != null) {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
