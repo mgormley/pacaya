@@ -283,13 +283,14 @@ public class LazyBranchAndBoundSolver {
     private void printSpaceRemaining(int numProcessed, double rootLogSpace, double logSpaceRemain) {
         // Print stats about the space remaining.
         log.info("Log space remaining (sub): " + logSpaceRemain);
-        if (numProcessed % 10000 == 0) {
-            double logSpaceRemainAdd = computeLogSpaceRemain();
-            log.info("Log space remaining (add): " + logSpaceRemainAdd);
-            if (!Utilities.equals(logSpaceRemain, logSpaceRemainAdd, 1e-4)) {
-                log.warn("Log space remaining differs between subtraction and addition versions.");
-            }
-        }
+        // TODO: Maybe remove. This is slow and causes a NullPointerException.
+        //        if (numProcessed % 2 == 0) {
+        //            double logSpaceRemainAdd = computeLogSpaceRemain();
+        //            log.info("Log space remaining (add): " + logSpaceRemainAdd);
+        //            if (!Utilities.equals(logSpaceRemain, logSpaceRemainAdd, 1e-4)) {
+        //                log.warn("Log space remaining differs between subtraction and addition versions.");
+        //            }
+        //        }
         log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
         log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
     }
