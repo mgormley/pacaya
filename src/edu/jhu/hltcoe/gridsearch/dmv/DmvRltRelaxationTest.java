@@ -374,7 +374,8 @@ public class DmvRltRelaxationTest {
         rltPrm.factorFilter = null;
         rltPrm.rowFilter = null; //new NumericalStabilityRltRowFilter(0.0, 1e6);
         rltPrm.nameRltVarsAndCons = true;
-
+        rltPrm.envelopeOnly = false;
+        
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
         rrPrm.tempDir = new File(".");
         rrPrm.maxCutRounds = 1;
@@ -384,7 +385,6 @@ public class DmvRltRelaxationTest {
         rrPrm.rltPrm = rltPrm;
         
         // RLT
-        rrPrm.rltPrm.envelopeOnly = false;
         DmvRltRelaxation rltRelax = new DmvRltRelaxation(rrPrm);
         rltRelax.init1(corpus);
         rltRelax.init2(null);
