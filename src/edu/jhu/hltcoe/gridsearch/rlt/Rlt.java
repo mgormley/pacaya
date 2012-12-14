@@ -150,6 +150,7 @@ public class Rlt {
 
         numVars = inputMatrix.getNumVars();
 
+        log.debug("Building RLT bound and constraint factors.");
         List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
         log.debug("# unfiltered input variables: " + inputMatrix.getNcols());
         log.debug("# unfiltered RLT variables: " + (long) inputMatrix.getNcols() * inputMatrix.getNcols());
