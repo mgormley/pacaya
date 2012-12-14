@@ -13,12 +13,39 @@ myplot <- function(p, filename) {
   print(p)
   ggsave(filename, width=stdwidth, height=stdheight)
 }
+safe.as.numeric <- function(x) {
+  x <- as.character(x)
+  x <- str_replace(x, "Infinity", "Inf")
+  as.numeric(x)
+}
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb-depth-test/curnode-status.data"
+args <- commandArgs(TRUE)
+if (file.exists(args[1])) {
+  results.file <- args[1]
+} else {
+  localWorkDir <- "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb-depth-test"
+  setwd(localWorkDir)
+  results.file <- "curnode-status.data"
+}
+
+print(sprintf("Using results file %s", results.file))
 df <- read.table(results.file, header=TRUE)
 df.orig <- df
 
+## Print out incumbent scores and upper bounds.
+## print("Incumbent scores:")
+## print(unique(df$incumbentScore))
+## print("Upper bounds:")
+## print(unique(df$upperBound))
+## print("Depths:")
+## print(unique(df$depth))
+
+print("Coercing infinities to numerics.")
+df$incumbentScore <- safe.as.numeric(df$incumbentScore)
+df$upperBound <- safe.as.numeric(df$upperBound)
+
+print("Adding columns.")
 df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitProp, df$varSelection, df$rltCutProp, sep=".")
 incumbentScore <- max(df$incumbentScore)
 df$relaxStatus2 <- ifelse(df$upperBound < incumbentScore, "Pruned", "Not-pruned")
@@ -93,9 +120,12 @@ mysummary <- function(df) {
   return(mydf)
 }
 
-depths <- ddply(subset(df, varSelection=="rand-uniform" & (rltCutProp == 0.2 | envelopeOnly == "True") & depth < 40), .(depth, method), mysummary)
+df.subset <- subset(df, dataset == "alt-three")
+depths <- ddply(df.subset, .(depth, method), mysummary)
+depths.subset <- subset(depths, numSampled > 50)
+## For 4 sentences: depths <- ddply(subset(df, varSelection=="rand-uniform" & (rltCutProp == 0.2 | envelopeOnly == "True") & depth < 40), .(depth, method), mysummary)
 ## Rand-uniform: depths <- ddply(subset(df, varSelection=="rand-uniform"), .(depth, method), mysummary)
 ## Other summary: depths <- ddply(df, .(depth, relaxStatus2), summarise, count=length(depth))
-myplot(plotProportionVsDepth(depths),
+myplot(plotProportionVsDepth(depths.subset),
        str_c(results.file, "propvdepth", "pdf", sep="."))
 
