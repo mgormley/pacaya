@@ -119,6 +119,22 @@ public class FastSparseLVector extends SparseLVector {
             return super.dot(y);
         }
     }
+    
+    @Override
+    public SparseLVector copy() {
+        return new FastSparseLVector(this);
+    }
+    
+    /**
+     * Here we override the zero method so that it doesn't set the number of
+     * used values to 0. This ensures that we keep explicit zeros in.
+     */
+    @Override
+    public SparseLVector zero() {
+        java.util.Arrays.fill(data, 0);
+        //used = 0;
+        return this;
+    }
 
     /**
      * TODO: Consider removing this since it's specific to the SCTM usage.
