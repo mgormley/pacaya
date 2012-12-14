@@ -371,7 +371,7 @@ public class SparseLVector extends AbstractLVector implements ILSparseVector {
 
     @Override
     public Iterator<LVectorEntry> iterator() {
-        return new SparseVectorIterator();
+        return new SparseLVectorIterator();
     }
 
     @Override
@@ -398,11 +398,11 @@ public class SparseLVector extends AbstractLVector implements ILSparseVector {
     /**
      * Iterator over a sparse vector
      */
-    private class SparseVectorIterator implements Iterator<LVectorEntry> {
+    private class SparseLVectorIterator implements Iterator<LVectorEntry> {
 
         private int cursor;
 
-        private final SparseVectorEntry entry = new SparseVectorEntry();
+        private final SparseLVectorEntry entry = new SparseLVectorEntry();
 
         public boolean hasNext() {
             return cursor < used;
@@ -425,7 +425,7 @@ public class SparseLVector extends AbstractLVector implements ILSparseVector {
     /**
      * Entry of a sparse vector
      */
-    private class SparseVectorEntry implements LVectorEntry {
+    private class SparseLVectorEntry implements LVectorEntry {
 
         private int cursor;
 
