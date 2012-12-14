@@ -126,6 +126,8 @@ public class FastSparseLVector extends SparseLVector {
     }
     
     /**
+     * TODO: Make a FastSparseLVectorWithExplicitZeros class and move this method there.
+     * 
      * Here we override the zero method so that it doesn't set the number of
      * used values to 0. This ensures that we keep explicit zeros in.
      */
