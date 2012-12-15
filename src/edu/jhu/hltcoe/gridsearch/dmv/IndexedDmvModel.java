@@ -14,6 +14,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
+import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.DepInstance;
 import edu.jhu.hltcoe.parse.cky.DepProbMatrix;
@@ -302,17 +303,18 @@ public class IndexedDmvModel implements IndexedCpt {
         return rhsToC.lookupObject(new Rhs(DECISION, pTag, lr, dv));
     }
 
-    /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
+    /**
+     * Gets the upper bound for each feature count in the corpus.
      */
-    public int[][] getTotalMaxFreqCm() {
+    public int[][] getTotMaxFreqCm() {
+        int[][] supFreqCm = getTotSupervisedFreqCm();
+        int[][] unsupMaxFreqCm = getTotUnsupervisedMaxFreqCm();
+        
         int[][] totMaxFreqCm = new int[getNumConds()][];
         for (int c = 0; c < getNumConds(); c++) {
             totMaxFreqCm[c] = new int[getNumParams(c)];
             for (int m = 0; m < getNumParams(c); m++) {
-                for (int s = 0; s < sentMaxFreqSi.length; s++) {
-                    totMaxFreqCm[c][m] += sentMaxFreqCms[s][c][m];
-                }                
+                totMaxFreqCm[c][m] = supFreqCm[c][m] + unsupMaxFreqCm[c][m];              
             }
         }
         return totMaxFreqCm;
@@ -441,6 +443,9 @@ public class IndexedDmvModel implements IndexedCpt {
         }
     }
     
+    /**
+     * Gets the lower bound for each feature count in the corpus.
+     */
     public int[][] getTotSupervisedFreqCm() {
         return getTotSupervisedFreqCm(corpus);
     }

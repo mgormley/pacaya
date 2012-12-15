@@ -30,7 +30,7 @@ public class CptBounds {
 
     public CptBounds(IndexedCpt icpt) {
         int[][] supFreqCm = icpt.getTotSupervisedFreqCm();
-        int[][] totMaxFreqCm = icpt.getTotalMaxFreqCm();
+        int[][] totMaxFreqCm = icpt.getTotMaxFreqCm();
 
         lbs = new double[2][icpt.getNumConds()][];
         ubs = new double[2][icpt.getNumConds()][];
@@ -45,14 +45,13 @@ public class CptBounds {
                     Arrays.fill(lbs[t][c], DEFAULT_LOWER_BOUND);
                     Arrays.fill(ubs[t][c], DEFAULT_UPPER_BOUND);
 
-                    double totMaxFreqC = Vectors.sum(totMaxFreqCm[c]);
+                    double totMaxFreqCmVal = Vectors.sum(totMaxFreqCm[c]);
                     for (int m = 0; m < lbs[t][c].length; m++) {
-                        if (totMaxFreqCm[c][m] == 0 && totMaxFreqC > 0) {
+                        if (totMaxFreqCm[c][m] == 0 && totMaxFreqCmVal > 0) {
                             // Upper bound by zero(ish) if this parameter
                             // can't be used in the corpus AND if there are
                             // other parameters in its conditional probability
-                            // table that
-                            // won't be forced to zero.
+                            // table that won't be forced to zero.
                             ubs[t][c][m] = lbs[t][c][m];
                         }
                     }

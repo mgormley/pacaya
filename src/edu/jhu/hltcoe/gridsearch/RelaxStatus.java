@@ -3,6 +3,8 @@
  */
 package edu.jhu.hltcoe.gridsearch;
 
+import ilog.concert.IloException;
+import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.CplexStatus;
 import ilog.cplex.IloCplex.Status;
 
@@ -34,13 +36,16 @@ public enum RelaxStatus {
      * Gets the relaxation status for an LP relaxation.
      * This method returns optimal if CPLEX returns optimal.
      * @param cplexStatus 
+     * @throws IloException 
      */
-    public static RelaxStatus getForLp(Status status, CplexStatus cplexStatus) {
+    public static RelaxStatus getForLp(IloCplex cplex) throws IloException {
+        Status status = cplex.getStatus();
+        CplexStatus cplexStatus = cplex.getCplexStatus();
         // We used to return Pruned under the condition below, but this seems
         // too unstable. We should only prune if we know the problem is feasible or optimal.
-        // if (cplexStatus == CplexStatus.AbortObjLim) {  return Pruned; }
-        
-        if (status == Status.Infeasible) {
+        if (cplexStatus == CplexStatus.AbortObjLim && (cplex.isDualFeasible() || cplex.isPrimalFeasible())) {  
+            return Pruned;
+        } else if (status == Status.Infeasible) {
             return Infeasible;
         } else if (status == Status.Error || status == Status.Unknown || status == Status.InfeasibleOrUnbounded
                 || status == Status.Unbounded || status == Status.Bounded) {

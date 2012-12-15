@@ -307,13 +307,17 @@ public class DmvRltRelaxation implements DmvRelaxation {
             simplexTimer.stop();
 
             // Get CPLEX status.
-            status = RelaxStatus.getForLp(cplex.getStatus(), cplex.getCplexStatus());
+            status = RelaxStatus.getForLp(cplex);
             log.trace("LP solution status: " + cplex.getStatus());
             log.trace("LP CPLEX status: " + cplex.getCplexStatus());
             
+            log.debug("Proven dual feasibility? " +  cplex.isDualFeasible());
+            log.debug("Proven primal feasibility? " +  cplex.isPrimalFeasible());
+
             // Get the lower bound. 
             double lowerBound;
             if (status == RelaxStatus.Unknown) {
+                log.debug("Unknown objective value: " + cplex.getObjValue());
                 lowerBound = INTERNAL_BEST_SCORE;
             } else if (status == RelaxStatus.Infeasible) {
                 lowerBound = INTERNAL_WORST_SCORE;
@@ -322,7 +326,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
                     cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
                 }
                 warmStart = getWarmStart();
-    
+
                 // Get the lower bound from CPLEX. Because we explicitly use the Dual simplex
                 // algorithm, the objective value is the lower bound, even if we
                 // terminate early.

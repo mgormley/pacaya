@@ -10,7 +10,7 @@ public interface IndexedCpt {
 
     public String getName(int c, int m);
 
-    public int[][] getTotalMaxFreqCm();
+    public int[][] getTotMaxFreqCm();
 
     public int[][] getTotSupervisedFreqCm();
     

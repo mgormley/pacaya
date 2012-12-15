@@ -61,7 +61,7 @@ public class RegretVariableSelector implements VariableSelector {
         return new VariableId(c, m);
     }
 
-    private static double[][] getRegretCm(RelaxedDmvSolution relaxSol) {
+    public static double[][] getRegretCm(RelaxedDmvSolution relaxSol) {
         return getRegretCm(relaxSol.getLogProbs(), relaxSol.getFeatCounts(), relaxSol.getObjVals());
     }
 

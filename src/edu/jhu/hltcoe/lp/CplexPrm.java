@@ -14,6 +14,7 @@ public class CplexPrm {
     public int maxSimplexIterations = 2100000000;
     public int simplexAlgorithm = IloCplex.Algorithm.Auto;   
     public double timeoutSeconds = 1e+75;
+    public int simplexDisplay = 1;
     
     public CplexPrm() { }
 
@@ -81,9 +82,10 @@ public class CplexPrm {
         //    optimization on the presolved problem.
         cplex.setParam(IntParam.AdvInd, 1);
 
-        
+        // Value 0, will display no iteration messages until solved.
+        // Value 1, will display iteration information after each refactoring (default).
         // When set to 2, will display at each iteration.
-        //cplex.setParam(IntParam.SimDisplay, 2);
+        cplex.setParam(IntParam.SimDisplay, simplexDisplay);
         
         // Whether or not to presolve (default true).
         // cplex.setParam(BooleanParam.PreInd, false);

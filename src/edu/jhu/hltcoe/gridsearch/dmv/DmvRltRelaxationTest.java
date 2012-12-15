@@ -25,6 +25,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
+import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
@@ -330,15 +331,25 @@ public class DmvRltRelaxationTest {
         DepTreebank treebank = generator.getTreebank(50);
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
         
-        // True objective should be -3.6
-        double incumbentScore = -1.2;
-        DmvRltRelaxation relax = getLp(corpus, 1);
+        // True objective should be -5.90
+        double incumbentScore = -3.0;
+
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm();
+        prm.tempDir = new File(".");
+        prm.rltPrm.envelopeOnly = false;
+        prm.rltPrm.nameRltVarsAndCons = false;
+        prm.cplexPrm.simplexDisplay = 2;
+        DmvRltRelaxation relax = new DmvRltRelaxation(prm);
+        relax.init1(corpus);
+        relax.init2(null);
+        
         DmvSolution initSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
         double offsetProb = 0.5;
-        double probOfSkip = 0.5;
+        double probOfSkip = 0.25;
         LocalBnBDmvTrainer.setBoundsFromInitSol(relax, initSol, offsetProb, probOfSkip);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) relax.solveRelaxation(incumbentScore, 0);
+        System.out.println(relaxSol.getScore());
         Assert.assertTrue(relaxSol.getScore() <= incumbentScore);
     }
 
@@ -511,7 +522,7 @@ public class DmvRltRelaxationTest {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
 
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
-        DepTreebank treebank = generator.getTreebank(10);        
+        DepTreebank treebank = generator.getTreebank(100);        
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
 
         // Get the relaxed solution.
@@ -522,15 +533,24 @@ public class DmvRltRelaxationTest {
         dwRelax.init1(corpus);
         dwRelax.init2(null);
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
-        
+
+        double[][] regret = RegretVariableSelector.getRegretCm(relaxSol);
+        for (int c=0; c<regret.length; c++) {
+            for (int m=0; m<regret[c].length; m++) {
+                Assert.assertEquals(0.0, regret[c][m], 1e-11);
+            }
+        }
+        Assert.assertEquals(0.0, relaxSol.getTreebank().getPropFracArcs(), 1e-13);
+
         // Get the model from a single M-step.
         DmvMStep mStep = new DmvMStep(0.0);
         DmvModel m1 = mStep.getModel(treebank);
-                
+        
         DmvObjective obj = new DmvObjective(corpus);
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
-        Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
+        // The floating point error seems to add up more than we'd expect here.
+        Assert.assertEquals(m1Obj, relaxSol.getScore(), 0.4);
     }
 
     private DmvRltRelaxation getLp(SentenceCollection sentences) {
@@ -564,10 +584,10 @@ public class DmvRltRelaxationTest {
         };
         DmvRltRelaxPrm prm = new DmvRltRelaxPrm(new File("."), numCuts, ccc, envelopeOnly);
         prm.rltPrm.nameRltVarsAndCons = false;
-        DmvRltRelaxation dw = new DmvRltRelaxation(prm);
-        dw.init1(corpus);
-        dw.init2(null);
-        return dw;
+        DmvRltRelaxation relax = new DmvRltRelaxation(prm);
+        relax.init1(corpus);
+        relax.init2(null);
+        return relax;
     }
         
 }

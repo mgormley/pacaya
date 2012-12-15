@@ -73,7 +73,7 @@ public class MidpointVarSplitterTest {
             return numParams;
         }
         @Override
-        public int[][] getTotalMaxFreqCm() {
+        public int[][] getTotMaxFreqCm() {
             int[][] totMaxFreqCms = new int[numConds][numParams];
             for (int i=0; i<totMaxFreqCms.length; i++) {
                 Arrays.fill(totMaxFreqCms[i], 1);

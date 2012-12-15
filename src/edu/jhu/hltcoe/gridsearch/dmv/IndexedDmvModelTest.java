@@ -106,7 +106,7 @@ public class IndexedDmvModelTest {
         s=2;
         assertEquals(1, idm.getMaxFreq(s, idm.getSi(s, c, m)));
         
-        int[][] maxFreqCm = idm.getTotalMaxFreqCm();
+        int[][] maxFreqCm = idm.getTotMaxFreqCm();
         assertEquals(2, maxFreqCm[0][1]);
     }
 
