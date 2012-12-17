@@ -76,7 +76,10 @@ public class LpSumToOneTest {
         obj.setExpr(expr);
         cplex.solve();
         
+        int nRowsBefore = lpMatrix.getNrows();
         sto.projectModelParamsAndAddCuts();
+        int nRowsAfter = lpMatrix.getNrows();
+        Assert.assertEquals(nRowsBefore+1, nRowsAfter);
         
         double[][] logProbs = sto.extractRelaxedLogProbs();
         for (int c=0; c<logProbs.length; c++) {

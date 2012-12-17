@@ -171,7 +171,7 @@ public class DmvRltRelaxationTest {
         RelaxedDmvSolution relaxSol;
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
-        assertEquals(-1.481, relaxSol.getScore(), 1e-3);
+        assertEquals(-1.484, relaxSol.getScore(), 1e-3);
 
         newL = origLower;
         newU = origUpper;
@@ -263,6 +263,9 @@ public class DmvRltRelaxationTest {
         }
     }
     
+    /**
+     * TODO: This is a very finicky unit test. It should really be improved.
+     */
     @Test
     public void testAdditionalCuttingPlanes() {
         SentenceCollection sentences = new SentenceCollection();
@@ -273,16 +276,18 @@ public class DmvRltRelaxationTest {
         sentences.addSentenceFromString("D N");
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
 
-        int maxCuts = 5;
+        int maxCuts = 4;
         double[] maxSums = new double[maxCuts];
         double prevSum = Double.POSITIVE_INFINITY;
         for (int numCuts=1; numCuts<maxCuts; numCuts++) {
-            Prng.seed(12345);
+            Prng.seed(123456);
             CutCountComputer ccc = new NumCutCountComputer(numCuts);
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.maxCutRounds = 0;
             rrPrm.stoPrm.initCutCountComp = ccc;      
             rrPrm.stoPrm.maxSetSizeToConstrain = 0;
+            rrPrm.stoPrm.minSumForCuts = 1.000001;
+            rrPrm.stoPrm.maxStoCuts = numCuts * 1;
             
             // RLT
             DmvRltRelaxation rltRelax = new DmvRltRelaxation(rrPrm);
@@ -514,25 +519,25 @@ public class DmvRltRelaxationTest {
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        assertEquals(-280.085, relaxSol.getScore(), 1e-3);
+        assertEquals(-284.462, relaxSol.getScore(), 1e-3);
     }
     
     @Test
-    public void testSupervised() {
+    public void testSupervised() {        
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
 
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
-        DepTreebank treebank = generator.getTreebank(100);        
+        DepTreebank treebank = generator.getTreebank(10);        
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
 
         // Get the relaxed solution.
         DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), false);
         prm.tempDir = new File(".");
         prm.stoPrm.minSumForCuts = 1.000001;
-        DmvRltRelaxation dwRelax = new DmvRltRelaxation(prm);
-        dwRelax.init1(corpus);
-        dwRelax.init2(null);
-        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)dwRelax.solveRelaxation();
+        DmvRltRelaxation relax = new DmvRltRelaxation(prm);
+        relax.init1(corpus);
+        relax.init2(null);
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)relax.solveRelaxation();
 
         double[][] regret = RegretVariableSelector.getRegretCm(relaxSol);
         for (int c=0; c<regret.length; c++) {
@@ -549,8 +554,34 @@ public class DmvRltRelaxationTest {
         DmvObjective obj = new DmvObjective(corpus);
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
-        // The floating point error seems to add up more than we'd expect here.
-        Assert.assertEquals(m1Obj, relaxSol.getScore(), 0.4);
+        // Compare the feature counts from the treebank to the relaxation.
+        int[][] treebankFeatCounts = relax.getIdm().getTotSupervisedFreqCm(corpus);
+        for (int c=0; c<regret.length; c++) {
+            for (int m=0; m<regret[c].length; m++) {
+                Assert.assertEquals(treebankFeatCounts[c][m], relaxSol.getFeatCounts()[c][m], 1e-13);
+            }
+        }
+        // Compare the log-probabilities from the M-step to the relaxation.
+        double[][] mstepLogProbs = relax.getIdm().getCmLogProbs(m1);
+        System.out.println("\tname : c m: mstepLogProb relaxLogProb : featCount : mstepSum relaxSum");
+        for (int c=0; c<regret.length; c++) {
+            for (int m = 0; m < regret[c].length; m++) {
+                System.out.println(String.format("%20s %d %d : %f %f : %d : %f %f", relax.getIdm().getName(c, m), c, m,
+                        mstepLogProbs[c][m], relaxSol.getLogProbs()[c][m], treebankFeatCounts[c][m],
+                        Vectors.sum(Vectors.getExp(mstepLogProbs[c])), 
+                        Vectors.sum(Vectors.getExp(relaxSol.getLogProbs()[c]))));
+                if (treebankFeatCounts[c][m] > 0) {
+                double mslp = mstepLogProbs[c][m];
+                mslp = Double.isInfinite(mslp) ? CptBounds.DEFAULT_LOWER_BOUND : mslp;
+                Assert.assertEquals(mslp, relaxSol.getLogProbs()[c][m], 1e-2);
+                }
+            }
+        }
+        
+        System.out.println("Exact objective: " + m1Obj);
+        System.out.println("RLT objective: " + relaxSol.getScore());
+        
+        Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-3);
     }
 
     private DmvRltRelaxation getLp(SentenceCollection sentences) {

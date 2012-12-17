@@ -71,6 +71,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             this.maxCutRounds = maxCutRounds;
             this.stoPrm.initCutCountComp = ccc;
             this.rltPrm.envelopeOnly = envelopeOnly;
+            this.rootMaxCutRounds = maxCutRounds;
         }
     }
     
