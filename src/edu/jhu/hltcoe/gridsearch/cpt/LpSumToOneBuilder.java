@@ -35,7 +35,7 @@ public class LpSumToOneBuilder {
         }
     }
 
-    static Logger log = Logger.getLogger(LpSumToOneBuilder.class);
+    public final static Logger log = Logger.getLogger(LpSumToOneBuilder.class);
     
     public static final double DEFAULT_MIN_SUM_FOR_CUTS = 1.01;
     
@@ -192,10 +192,13 @@ public class LpSumToOneBuilder {
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs
-            if (Vectors.sum(params[c]) > prm.minSumForCuts && numStoCons < prm.maxStoCuts) {
+            double sum = Vectors.sum(params[c]);
+            if (sum > prm.minSumForCuts && numStoCons < prm.maxStoCuts) {
+                log.debug(String.format("Adding cuts for c=%d with sum=%f", c, sum));
                 rows.add(addSumToOneConstraint(c, params[c]));
             }
         }
+        log.debug("STO cuts added: " + rows.size());
         return rows;
     }
     

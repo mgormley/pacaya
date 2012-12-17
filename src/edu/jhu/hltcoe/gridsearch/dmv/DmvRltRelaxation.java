@@ -282,6 +282,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
+        int totalSimplexIterations = 0;
         
         // Ensures that we stop early if we can fathom the node. We use the
         // upper limit because the dual problem (which we're solving) is a
@@ -350,8 +351,10 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 }
             } 
             
+            // Record the values for this iteration.
             cutIterLowerBounds.add(lowerBound);
             cutIterStatuses.add(cplex.getStatus());
+            totalSimplexIterations += cplex.getNiterations();
             log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
 
             timer.stop();
@@ -388,6 +391,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
         log.debug("Iteration statuses: " + cutIterStatuses);
         log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
+        log.debug("Total # simplex iterations: " + totalSimplexIterations);
         
         // Subtract off the STO cuts b/c they are in the same matrix.
         int origCons = mp.origMatrix.getNrows() - sto.getNumStoCons();

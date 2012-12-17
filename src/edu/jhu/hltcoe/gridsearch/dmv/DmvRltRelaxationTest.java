@@ -120,11 +120,15 @@ public class DmvRltRelaxationTest {
         }
     }
 
+    /**
+     * TODO: This test is very slow if we don't set envelopeOnly = true.
+     */
     @Test
     public void testCutsOnManyPosTags() {
+        LpSumToOneBuilder.log.setLevel(Level.TRACE);
         // This seed is just to give us a smaller number of cut rounds, so 
         // that the test runs faster.
-        Prng.seed(3);
+        Prng.seed(4);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("Det N");
@@ -134,7 +138,15 @@ public class DmvRltRelaxationTest {
         sentences.addSentenceFromString("Adj N a c d f e b g");
         sentences.addSentenceFromString("Adj N g f e d c b a");
 
-        DmvRltRelaxation dw = getLp(sentences, 20);
+
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm();
+        prm.rltPrm.envelopeOnly = true;
+        prm.objVarFilter = true;
+        prm.maxCutRounds = 20;
+        prm.rootMaxCutRounds = 20;        
+        DmvRltRelaxation dw = new DmvRltRelaxation(prm);
+        dw.init1(new DmvTrainCorpus(sentences));
+        dw.init2(null);
 
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);

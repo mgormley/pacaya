@@ -55,6 +55,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             this();
             this.tempDir = tempDir;
             this.maxCutRounds = maxCutRounds;
+            this.rootMaxCutRounds = maxCutRounds;
             this.stoPrm.initCutCountComp = ccc;
         }
     }
