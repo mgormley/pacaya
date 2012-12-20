@@ -11,40 +11,43 @@ import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.IlpFormulation;
+import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class LpDmvRelaxedParser implements RelaxedParser {
 
+    public static class LpDmvRelaxedParserPrm {
+        public File tempDir = null;
+        public CplexPrm cplexPrm = new CplexPrm();
+        public DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
+    }
+    
     static Logger log = Logger.getLogger(LpDmvRelaxedParser.class);
 
+    private LpDmvRelaxedParserPrm prm;
     private IloCplex cplex;
-    private File tempDir;
-    private CplexPrm cplexFactory;
-    private IlpFormulation formulation;
     private double lastParseWeight;
-
-    public LpDmvRelaxedParser(CplexPrm cplexFactory, IlpFormulation formulation) {
-        this.cplexFactory = cplexFactory;
-        this.formulation = formulation;
+        
+    public LpDmvRelaxedParser(LpDmvRelaxedParserPrm prm) {
+        this.prm = prm;
     }
 
     @Override
     public RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model model) {
         DmvModel dmv = (DmvModel) model;
         try {
-            this.cplex = cplexFactory.getIloCplexInstance();
-            DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, formulation);
+            this.cplex = prm.cplexPrm.getIloCplexInstance();
+            DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
 
             DmvParsingProgram pp = builder.buildParsingProgram(corpus, dmv);
 
             cplex.add(pp.mat);
             cplex.add(pp.obj);
 
-            if (tempDir != null) {
-                cplex.exportModel(new File(tempDir, "lpParser.lp").getAbsolutePath());
+            if (prm.tempDir != null) {
+                cplex.exportModel(new File(prm.tempDir, "lpParser.lp").getAbsolutePath());
             }
             if (!cplex.solve()) {
                 throw new RuntimeException("unable to parse");
@@ -67,10 +70,6 @@ public class LpDmvRelaxedParser implements RelaxedParser {
     @Override
     public double getLastParseWeight() {
         return lastParseWeight;
-    }
-
-    public void setTempDir(File tempDir) {
-        this.tempDir = tempDir;
     }
 
 }

@@ -1,23 +1,19 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static org.junit.Assert.assertEquals;
-
 import ilog.cplex.IloCplex;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
@@ -43,10 +39,9 @@ import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
+import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.rproj.RDataFrame;
-import edu.jhu.hltcoe.util.rproj.RRow;
 
 
 public class DmvRltRelaxationTest {
@@ -594,6 +589,45 @@ public class DmvRltRelaxationTest {
         System.out.println("RLT objective: " + relaxSol.getScore());
         
         Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-3);
+    }
+
+    @Test
+    public void testPosteriorConstraintsOnSupervised() {        
+        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(6);        
+        DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
+
+        // Get the relaxed solution.
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), false);
+        prm.tempDir = new File(".");
+        prm.stoPrm.minSumForCuts = 1.000001;
+        prm.parsePrm.universalPostCons = true;
+        prm.parsePrm.universalMinProp = 0.5;
+        DmvRltRelaxation relax = new DmvRltRelaxation(prm);
+        relax.init1(corpus);
+        relax.init2(null);
+        RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)relax.solveRelaxation();
+        Assert.assertEquals(RelaxStatus.Optimal, relaxSol.getStatus());
+        
+        DmvProjector projector = new DmvProjector(corpus);
+        DmvSolution projSol = projector.getProjectedDmvSolution(relaxSol);
+        
+        System.out.println("RLT objective: " + relaxSol.getScore());
+        Assert.assertEquals(0.0, relaxSol.getScore(), 1e-3);
+        
+        DepTreebank projTrees = projSol.getTreebank();
+        for (DepTree tree : projTrees) {
+            System.out.println(tree);
+        }
+        // These contain a mix of shiny and non-shiny edges.
+        JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, projTrees.get(0).getParents());
+        JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, projTrees.get(1).getParents());
+        JUnitUtils.assertArrayEquals(new int[]{1, -1, 3, 1}, projTrees.get(2).getParents());
+        JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, projTrees.get(3).getParents());
+        JUnitUtils.assertArrayEquals(new int[]{1, -1, 1, 2}, projTrees.get(4).getParents());
+        JUnitUtils.assertArrayEquals(new int[]{1, 2, 3, 7, 6, 4, 7, -1}, projTrees.get(5).getParents());
     }
 
     private DmvRltRelaxation getLp(SentenceCollection sentences) {

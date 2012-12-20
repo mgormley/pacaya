@@ -1,18 +1,12 @@
 package edu.jhu.hltcoe.data;
 
 
-public class TaggedWord extends AbstractLabel implements Label {
+public class Tag extends AbstractLabel implements Label {
 
-    private String word;
     private String tag;
     
-    public TaggedWord(String word, String tag) {
-        this.word = word.intern();
+    public Tag(String tag) {
         this.tag = tag.intern();
-    }
-
-    public String getWord() {
-        return word;
     }
 
     public String getTag() {
@@ -27,12 +21,13 @@ public class TaggedWord extends AbstractLabel implements Label {
     }
     
     public String getLabel() {
+        // Must also update hashCode and equals if changing this
         return tag;
     }
     
     @Override
     public String toString() {
         return getLabel();
-    }    
+    }
 
 }

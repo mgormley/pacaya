@@ -12,11 +12,13 @@ import java.util.Arrays;
 
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
@@ -25,19 +27,32 @@ import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DmvParseLpBuilder {
 
-    private IloMPModeler cplex;
-    private IlpFormulation formulation;
+    public static class DmvParseLpBuilderPrm {
+        public IlpFormulation formulation = IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ;
+        
+        // Parameters for universal linguistic posterior constraint.
+        public boolean universalPostCons = false;
+        public double universalMinProp = 0.8;
+        public ShinyEdges shinyEdges = null;
+        
+        // TODO: add a parameter for whether we want the LP relaxation, rather
+        // than pushing it into the IlpFormulation enum.
+    }
     
-    public DmvParseLpBuilder(IloMPModeler cplex, IlpFormulation formulation) {
+    private IloMPModeler cplex;
+    private DmvParseLpBuilderPrm prm;
+    
+    public DmvParseLpBuilder(DmvParseLpBuilderPrm prm, IloMPModeler cplex) {
         this.cplex = cplex;
-        if (!formulation.isLpRelaxation()) {
+        this.prm = prm;
+        if (!prm.formulation.isLpRelaxation()) {
             throw new IllegalStateException("must be LP relaxation");
-        } else if (formulation != IlpFormulation.FLOW_NONPROJ_LPRELAX
-                && formulation != IlpFormulation.FLOW_PROJ_LPRELAX
-                && formulation != IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
-            throw new IllegalStateException("Formulation not implemented: " + formulation);
+        } else if (prm.formulation != IlpFormulation.FLOW_NONPROJ_LPRELAX
+                && prm.formulation != IlpFormulation.FLOW_PROJ_LPRELAX
+                && prm.formulation != IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
+            throw new IllegalStateException("Formulation not implemented: " + prm.formulation);
         }
-        this.formulation = formulation;    
+        this.prm.formulation = prm.formulation;
     }
 
     public static class DmvTreeProgram {
@@ -81,6 +96,7 @@ public class DmvParseLpBuilder {
         // Feature count constraints.
         public IloRange[][] featCountCons;
         public IloRange[][][] oneArcPerPair;
+        public IloRange universalPostCons;
     }
     
     public static class DmvParsingProgram extends DmvTreeProgram {
@@ -100,7 +116,7 @@ public class DmvParseLpBuilder {
         addConsToMatrix(pp, pp.mat);
         
         // Add DMV objective.
-        if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
+        if (prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
             IndexedDmvModel idm = new IndexedDmvModel(corpus);
             addFeatCountDmvObj(corpus, idm, model, pp);
         } else {
@@ -129,8 +145,8 @@ public class DmvParseLpBuilder {
         // Add flow constraints.
         addSingleCommodityFlowCons(corpus, pp);
 
-        if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX || 
-                formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
+        if (prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX || 
+                prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
             // Add projectivity constraint.
             addProjectivityCons(corpus, pp);
         }
@@ -138,7 +154,7 @@ public class DmvParseLpBuilder {
         // Add DMV objective support constraints.
         addDmvObjSupportCons(corpus, pp);
         
-        if (formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
+        if (prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
             // Add feature count variables and constraints.
             IndexedDmvModel idm = new IndexedDmvModel(corpus);
             addFeatCountVarsAndCons(corpus, idm, pp);
@@ -146,6 +162,12 @@ public class DmvParseLpBuilder {
         
         // Fix the supervised sentences to have the gold tree.
         addSupervision(corpus, pp);
+        
+        // Add posterior constraints.
+        if (prm.universalPostCons) {
+            IndexedDmvModel idm = new IndexedDmvModel(corpus);
+            addUniversalPostCons(corpus, idm, pp);
+        }
     }
 
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
@@ -168,6 +190,9 @@ public class DmvParseLpBuilder {
         CplexUtils.addRows(mat, pp.stopAdjCons);
         if (pp.featCountCons != null) {
             CplexUtils.addRows(mat, pp.featCountCons);
+        }
+        if (pp.universalPostCons != null) {
+            mat.addRow(pp.universalPostCons);
         }
     }
 
@@ -665,6 +690,37 @@ public class DmvParseLpBuilder {
                 }
             }
         }
+    }
+
+    /**
+     * Adds universal linguistic constraints such that prm.universalMinProp of
+     * arcs are shiny edges in prm.shinyEdges.
+     */
+    private void addUniversalPostCons(DmvTrainCorpus corpus, IndexedDmvModel idm, DmvTreeProgram pp) throws IloException {
+        if (prm.shinyEdges == null) {
+            // Default to the universal linguistic constraint.
+            prm.shinyEdges = ShinyEdges.getUniversalSet(corpus.getLabelAlphabet());
+        }
+        
+        IloLinearNumExpr expr = cplex.linearNumExpr();
+        for (int s = 0; s < corpus.size(); s++) {
+            Sentence sent = corpus.getSentence(s);
+            for (int c = 0; c < sent.size(); c++) {
+                Label cTag = sent.get(c);
+                if (prm.shinyEdges.isShiny(WallDepTreeNode.WALL_LABEL, cTag)) {
+                    expr.addTerm(1.0, pp.arcRoot[s][c]);
+                }
+                for (int p = 0; p < sent.size(); p++) {
+                    if (p == c) { continue; }
+                    Label pTag = sent.get(p);
+                    if (prm.shinyEdges.isShiny(pTag, cTag)) {
+                        expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                    }
+                }
+            }
+        }
+        int numTokens = corpus.getSentences().getNumTokens();
+        pp.universalPostCons = cplex.range(prm.universalMinProp  * numTokens, expr, CplexUtils.CPLEX_POS_INF, "universalPostCons");
     }
 
     private void addDmvObj(DmvTrainCorpus corpus, DmvModel model, DmvParsingProgram pp) throws IloException {

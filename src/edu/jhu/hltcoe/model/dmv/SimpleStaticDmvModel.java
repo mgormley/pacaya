@@ -38,9 +38,9 @@ public class SimpleStaticDmvModel {
         return dmvModel;
     }
 
-    public static final TaggedWord noun = new TaggedWord("Noun", "N");
-    public static final TaggedWord adj = new TaggedWord("Adj", "Adj");
-    public static final TaggedWord verb = new TaggedWord("Verb", "V");
+    public static final TaggedWord noun = new TaggedWord("noun", "NOUN");
+    public static final TaggedWord adj = new TaggedWord("adj", "ADJ");
+    public static final TaggedWord verb = new TaggedWord("verb", "VERB");
     
     public static DmvModel getThreePosTagInstance() {
         DmvModelFactory modelFactory = new UniformDmvModelFactory();

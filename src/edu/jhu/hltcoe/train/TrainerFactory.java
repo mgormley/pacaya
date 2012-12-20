@@ -61,6 +61,7 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.util.Command;
 
 /**
@@ -118,6 +119,8 @@ public class TrainerFactory {
         options.addOption("eo", "rltCutMax", true, "(max only) Max number of cut rows to accept.");
         options.addOption("eo", "rltNames", true, "Whether to set RLT variable/constraint names.");
         options.addOption("eo", "addBindingCons", true, "Whether to add binding constraints as factors to RLT.");
+        options.addOption("eo", "universalPostCons", true, "Whether to add the universal linguistic constraints.");
+        options.addOption("eo", "universalMinProp", true, "The proportion of edges that must be from the shiny set.");
     }
 
     public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
@@ -164,6 +167,8 @@ public class TrainerFactory {
         final int rltCutMax = Command.getOptionValue(cmd, "rltCutMax", 1000);
         final boolean rltNames = Command.getOptionValue(cmd, "rltNames", false);
         final boolean addBindingCons = Command.getOptionValue(cmd, "addBindingCons", false);
+        final boolean universalPostCons = Command.getOptionValue(cmd, "universalPostCons", false);
+        final double universalMinProp = Command.getOptionValue(cmd, "universalMinProp", 0.8);
         
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -204,6 +209,10 @@ public class TrainerFactory {
                 rltPrm.envelopeOnly = envelopeOnly;
                 rltPrm.nameRltVarsAndCons = rltNames;    
                 
+                DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
+                parsePrm.universalMinProp = universalMinProp;
+                parsePrm.universalPostCons = universalPostCons;
+                
                 DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
                 rrPrm.tempDir = dwTemp;
                 rrPrm.maxCutRounds = maxCutRounds;
@@ -212,6 +221,7 @@ public class TrainerFactory {
                 rrPrm.cplexPrm = cplexPrm;
                 rrPrm.rltPrm = rltPrm;
                 rrPrm.stoPrm = stoPrm;
+                rrPrm.parsePrm = parsePrm;
                 
                 rrPrm.objVarFilter = false;
                 if (rltFilter.equals("obj-var")) {

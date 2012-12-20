@@ -41,6 +41,7 @@ import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
+import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
@@ -55,15 +56,18 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public int maxCutRounds = 1;
         public boolean objVarFilter = true;
         public boolean addBindingCons = false;
+        public double timeoutSeconds = Double.MAX_VALUE;
+        public int rootMaxCutRounds = 1;
         public CplexPrm cplexPrm = new CplexPrm();
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
-        public double timeoutSeconds = Double.MAX_VALUE;
-        public int rootMaxCutRounds = 1;
+        public DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
         public DmvRltRelaxPrm() { 
             // We have to use the Dual simplex algorithm in order to 
             // stop early and fathom a node.
             cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Dual;
+            // For now we always use this formulation.
+            parsePrm.formulation = IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ;
         }
         public DmvRltRelaxPrm(File tempDir, int maxCutRounds, CutCountComputer ccc, boolean envelopeOnly) {
             this();
@@ -155,7 +159,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         sto.addModelParamConstraints();
         
         // Add the parsing constraints.
-        DmvParseLpBuilder builder = new DmvParseLpBuilder(cplex, IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ);
+        
+        DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
