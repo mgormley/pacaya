@@ -450,12 +450,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 experiments.append(all + dataset + mns + algo)
         elif self.expname == "bnb-depth-test":
             root = RootStage()
-            all.update(nodeOrder="dfs-randwalk",
+            all.update(algorithm="bnb-rand-walk",
+                       disableFathoming=False,
+                       nodeOrder="dfs-randwalk",
                        rootMaxCutRounds=1,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       maxStoCuts=1000,
-                       disableFathoming=True)
+                       maxStoCuts=1000)
             if not self.fast:
                 # Run for some fixed amount of time.
                 all.update(numRestarts=1000000000, epsilon=0.0,

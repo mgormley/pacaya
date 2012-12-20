@@ -37,7 +37,9 @@ import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxP
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
+import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowFilter;
@@ -361,15 +363,24 @@ public class TrainerFactory {
             bnbSolver.setDisableFathoming(disableFathoming);
             trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,
                     offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
-        } else if (algorithm.equals("bnb")) {
+        } else if (algorithm.equals("bnb") || algorithm.equals("bnb-rand-walk") || algorithm.equals("bnb-depth-stratified")) {
             LazyBranchAndBoundSolver bnbSolver;
-            if (false && disableFathoming) {
+            if (algorithm.equals("bnb-rand-walk")) {
+                RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
+                prm.epsilon = epsilon;
+                prm.maxSamples = 10000;
+                prm.evaluator = parserEvaluator;
+                prm.timeoutSeconds = timeoutSeconds;
+                bnbSolver = new RandWalkBnbNodeSampler(prm);
+            } else if (algorithm.equals("bnb-depth-stratified")) {
                 DepthStratifiedBnbSamplerPrm prm = new DepthStratifiedBnbSamplerPrm();
                 prm.maxDepth = 60;
                 bnbSolver = new DepthStratifiedBnbNodeSampler(prm, timeoutSeconds, parserEvaluator);
-            } else {
+            } else if (algorithm.equals("bnb")){
                 bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
                 bnbSolver.setDisableFathoming(disableFathoming);
+            } else {
+                throw new ParseException("Algorithm not supported: " + algorithm);
             }
             trainer = new BnBDmvTrainer(bnbSolver, brancher, relax);
         }

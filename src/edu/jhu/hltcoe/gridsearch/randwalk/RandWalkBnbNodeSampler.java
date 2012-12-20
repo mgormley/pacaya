@@ -70,7 +70,7 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
         public int maxSamples = 10000;
         // TODO: push these parameters into superclass.
         public double epsilon = 0.1;
-        public int timeoutSeconds = 100;
+        public double timeoutSeconds = 100;
         public DependencyParserEvaluator evaluator = null;
     }
 
