@@ -133,10 +133,16 @@ public class LazyBranchAndBoundSolver {
         }
         if (nodeTimer.isRunning()) { nodeTimer.stop(); }
 
+        // If we have fathomed all the nodes, then the global solution is within
+        // epsilon of the current incumbent.
+        if (!hasNextLeafNode()) {
+            upperBound = incumbentScore + epsilon*Math.abs(incumbentScore);
+        }
+        
         // Print summary
         evalIncumbent(incumbentSolution);
         double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
-        if (relativeDiff <= epsilon) {
+        if (Utilities.lte(relativeDiff, epsilon, 1e-13)) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
         printSummary(upperBound, relativeDiff, numProcessed, fathom);
@@ -179,13 +185,13 @@ public class LazyBranchAndBoundSolver {
             // If not fathoming, don't stop the relaxation early.
             curNodeUb = curNode.getOptimisticBound();
         } else {
-            curNodeUb = curNode.getOptimisticBound(incumbentScore);
+            curNodeUb = curNode.getOptimisticBound(incumbentScore + epsilon*Math.abs(incumbentScore));
         }
         RelaxedSolution relax = curNode.getRelaxedSolution();
         relaxTimer.stop();
         log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
                 curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.totMs() / numProcessed));
-        if (incumbentScore >= curNodeUb && !disableFathoming) {
+        if (curNodeUb <= incumbentScore + epsilon*Math.abs(incumbentScore) && !disableFathoming) {
             // Fathom this node: it is either infeasible or was pruned.
             if (relax.getStatus() == RelaxStatus.Infeasible) {
                 return new NodeResult(FathomStatus.Infeasible);
@@ -230,6 +236,7 @@ public class LazyBranchAndBoundSolver {
     }
 
     private static double computeRelativeDiff(double upperBound, double lowerBound) {
+        // $(UB - LB) / |LB| <= \epsilon$ implies that $UB <= LB + \epsilon|LB|$, which is our fathoming criteria. 
         // TODO: This is incorrect if the bounds are positive.
         return Math.abs(upperBound - lowerBound) / Math.abs(lowerBound);
     }

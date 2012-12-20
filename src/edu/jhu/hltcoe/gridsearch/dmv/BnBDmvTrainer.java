@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -31,9 +32,10 @@ public class BnBDmvTrainer implements Trainer<DepTreebank> {
         rootNode = new DmvProblemNode(corpus, brancher, relax);
     }
     
-    public void train() {
-        bnbSolver.runBranchAndBound(rootNode);
+    public SearchStatus train() {
+        SearchStatus status = bnbSolver.runBranchAndBound(rootNode);
         rootNode.end();
+        return status;
     }
     
     @Override

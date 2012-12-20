@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import junit.framework.Assert;
+
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,13 +12,13 @@ import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -41,7 +43,7 @@ public class BnBDmvTrainerTest {
     
     @Test
     public void testTwo() {
-        double epsilon = 0.4;
+        double epsilon = 0.1;
         DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
         prm.maxCutRounds = 100;
         DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
@@ -50,7 +52,9 @@ public class BnBDmvTrainerTest {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
         sentences.addSentenceFromString("the hat");
-        trainer.train(new DmvTrainCorpus(sentences));
+        trainer.init(new DmvTrainCorpus(sentences));
+        SearchStatus status = trainer.train();
+        Assert.assertEquals(SearchStatus.OPTIMAL_SOLUTION_FOUND, status);
     }
     
     //@Test
