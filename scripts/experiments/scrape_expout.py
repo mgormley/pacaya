@@ -83,7 +83,12 @@ class DPScraper(Scraper):
             exp.update(bnbStatus = get_following_literal(stdout_lines, "B&B search status: ", -1))
             exp.update(avgNodeTime = get_following_literal(stdout_lines, "Avg time(ms) per node: ", -1))
             exp.update(avgRelaxTime = get_following_literal(stdout_lines, "Avg relax time(ms) per node: ", -1))
-
+        if exp.get("algorithm").find("bnb-rand-walk") != -1:
+            exp.update(estNumNodes = get_following_literal(stdout_lines, "Node count estimate mean: ", -1))
+            exp.update(estNumNodesStddev = get_following_literal(stdout_lines, "Node count estimate stddev: ", -1))
+            exp.update(estBnbHours = get_following_literal(stdout_lines, "Solution time (ms) estimate mean: ", -1))
+            exp.update(estBnbHoursStddev = get_following_literal(stdout_lines, "Solution time (ms) estimate stddev: ", -1))  
+            exp.update(estNumSamples = get_following_literal(stdout_lines, "Num samples for estimates: ", -1))
              
         if exp.get("expname") == "corpus-size":
             tot_parse_times = get_all_following(stdout_lines, "Tot parse time: ")
