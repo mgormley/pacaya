@@ -159,5 +159,22 @@ public class Vectors {
             params[i] += lambda;
         }
     }
+    
+    public static double mean(double[] array) {
+        return sum(array) / array.length;
+    }
+    
+    public static double variance(double[] array) {
+        double mean = mean(array);
+        double sumOfSquares = 0;
+        for (int i=0; i<array.length; i++) {
+            sumOfSquares += (array[i] - mean)*(array[i] - mean);
+        }
+        return sumOfSquares / (array.length - 1);
+    }
+
+    public static double stdDev(double[] array) {
+        return Math.sqrt(variance(array));
+    }
 
 }
