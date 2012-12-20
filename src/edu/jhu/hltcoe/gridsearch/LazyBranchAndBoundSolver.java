@@ -121,7 +121,7 @@ public class LazyBranchAndBoundSolver {
             // Process the next node.
             curNode = getNextLeafNode();
 
-            NodeResult result = processNode(curNode, numProcessed);
+            NodeResult result = processNode(curNode);
             fathom.fathom(curNode, result.status);
             if (result.status != FathomStatus.NotFathomed) {
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
@@ -169,7 +169,7 @@ public class LazyBranchAndBoundSolver {
         }
     }
     
-    protected NodeResult processNode(ProblemNode curNode, int numProcessed) {
+    protected NodeResult processNode(ProblemNode curNode) {
         switchTimer.start();
         curNode.setAsActiveNode();
         switchTimer.stop();
@@ -190,7 +190,7 @@ public class LazyBranchAndBoundSolver {
         RelaxedSolution relax = curNode.getRelaxedSolution();
         relaxTimer.stop();
         log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.totMs() / numProcessed));
+                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.avgMs()));
         if (curNodeUb <= incumbentScore + epsilon*Math.abs(incumbentScore) && !disableFathoming) {
             // Fathom this node: it is either infeasible or was pruned.
             if (relax.getStatus() == RelaxStatus.Infeasible) {

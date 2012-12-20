@@ -3,18 +3,14 @@ package edu.jhu.hltcoe.gridsearch.randwalk;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
-import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 
 public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(DepthStratifiedBnbNodeSampler.class);
@@ -47,7 +43,7 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             // Starting at the root, randomly dive to curDiveDepth.
             ProblemNode curNode = rootNode;
             ((DmvProblemNode)curNode).clear();
-            while (curNode.getDepth() < curDiveDepth) {
+            while (curNode.getDepth() < curDiveDepth && totalTimer.totSec() < timeoutSeconds) {
                 curNode.setAsActiveNode();
                 curNode.getOptimisticBound();
                 // Branch.
@@ -55,54 +51,23 @@ public class DepthStratifiedBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
                 // Get a random child as the new current node.
                 curNode = children.get(Prng.nextInt(children.size()));
             }            
+
+            if (totalTimer.totSec() > timeoutSeconds) {
+                // Done: Timeout reached.
+                break;
+            }
             
             nodeTimer.start();
-
-            switchTimer.start();
-            numProcessed++;
+            
             // Logging
             if (log.isDebugEnabled() && numProcessed % 100 == 0) {
                 printTimers(numProcessed);
             }
-            curNode.setAsActiveNode();
-            switchTimer.stop();
             
-            totalTimer.stop();
-            totalTimer.start();
-            if (totalTimer.totSec() > timeoutSeconds) {
-                // Timeout reached.
-                break;
-            }
-            curNode.updateTimeRemaining(timeoutSeconds - nodeTimer.totSec());
-            
-            // The active node can compute a tighter upper bound instead of
-            // using its parent's bound
-            relaxTimer.start();
-            // Get but discard the lower bound. If not fathoming, don't use the
-            // incumbent score to stop the relaxation early.
-            curNode.getOptimisticBound();
-            RelaxedSolution relax = curNode.getRelaxedSolution();
-            relaxTimer.stop();
-            
-            log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                    curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.totMs() / numProcessed));
+            // Process and discard the result.
+            processNode(curNode);
 
-            // Check if the child node offers a better feasible solution
-            feasTimer.start();
-            Solution sol = curNode.getFeasibleSolution();
-            assert (sol == null || !Double.isNaN(sol.getScore()));
-            if (sol != null && sol.getScore() > incumbentScore) {
-                incumbentScore = sol.getScore();
-                incumbentSolution = sol;
-                evalIncumbent(incumbentSolution);
-            }
-            feasTimer.stop();
-            
-            branchTimer.start();
-            // Branch so that we expend the time, but just discard the children.
-            curNode.branch();
-            branchTimer.stop();
-            
+            // Update the dive depth for the next dive.
             curDiveDepth = (curDiveDepth + 1) % prm.maxDepth;
         }
         

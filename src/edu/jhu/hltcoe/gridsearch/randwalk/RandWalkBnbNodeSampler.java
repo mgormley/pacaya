@@ -68,6 +68,8 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
     
     public static class RandWalkBnbSamplerPrm {
         public int maxSamples = 10000;
+        // TODO: push these parameters into superclass.
+        public double epsilon = 0.1;
         public int timeoutSeconds = 100;
         public DependencyParserEvaluator evaluator = null;
     }
@@ -75,7 +77,7 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
     private RandWalkBnbSamplerPrm prm;
 
     public RandWalkBnbNodeSampler(RandWalkBnbSamplerPrm prm) {
-        super(0, null, prm.timeoutSeconds, prm.evaluator);
+        super(prm.epsilon, null, prm.timeoutSeconds, prm.evaluator);
         this.prm = prm;
     }
 
@@ -112,7 +114,7 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             // Process the next node.
             Timer timer = new Timer();
             timer.start();
-            NodeResult result = processNode(curNode, numProcessed);
+            NodeResult result = processNode(curNode);
             timer.stop();
             
             // Update cost estimators.
