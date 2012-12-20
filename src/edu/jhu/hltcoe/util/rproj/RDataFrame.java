@@ -12,7 +12,9 @@ public class RDataFrame {
 
     LinkedHashSet<String> colNames;
     List<RRow> rows;
-
+    private String colSep = "\t";
+    private String rowSep = "\n";
+    
     public RDataFrame() {
         colNames = new LinkedHashSet<String>();
         rows = new ArrayList<RRow>();
@@ -36,19 +38,25 @@ public class RDataFrame {
     }
 
     public void write(Writer writer) {
-        String sep = " ";
+        ArrayList<String> colNames = new ArrayList<String>(this.colNames);
         try {
-            for (String colName : colNames) {
+            for (int i = 0; i < colNames.size(); i++) {
+                String colName = colNames.get(i);
                 writer.write(colName);
-                writer.write(sep);
-            }
-            writer.write("\n");
-            for (RRow row : rows) {
-                for (String colName : colNames) {
-                    writer.write(row.get(colName).toString());
-                    writer.write(sep);
+                if (i < colNames.size() - 1) {
+                    writer.write(colSep);
                 }
-                writer.write("\n");
+            }
+            writer.write(rowSep);
+            for (RRow row : rows) {
+                for (int i = 0; i < colNames.size(); i++) {
+                    String colName = colNames.get(i);
+                    writer.write(row.get(colName).toString());
+                    if (i < colNames.size() - 1) {
+                        writer.write(colSep);
+                    }
+                }
+                writer.write(rowSep);
             }
             writer.flush();
         } catch (IOException e) {
