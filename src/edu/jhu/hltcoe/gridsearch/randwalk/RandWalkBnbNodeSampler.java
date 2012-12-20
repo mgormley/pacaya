@@ -1,25 +1,17 @@
 package edu.jhu.hltcoe.gridsearch.randwalk;
 
-import java.util.List;
-
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.FathomStats;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.RelaxStatus;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
-import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.Timer;
+import gnu.trove.TDoubleArrayList;
 
 /**
  * Implementation of the random walk algorithm (Knuth, 1975) for estimating tree
@@ -32,24 +24,58 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
 
     public static class CostEstimator {
 
+        private TDoubleArrayList estimates = new TDoubleArrayList();
+        private double weight = 1;
+        private double sum = 0;
         
-        public void add(ProblemNode curNode, double cost) {
-            if (curNode.getDepth() == 0) {
-                // Reset for new sample.
-            }
-            
+        public void add(ProblemNode node, NodeResult result, double cost) {
+            add(node.getDepth(), result.children.size(), cost);
         }
         
+        public void add(int depth, int numSuccesors, double cost) {
+            if (depth == 0 && sum > 0) {
+                log.warn("sum = " + sum + ". Maybe CostEstimator::doneWithSample() should have been called.");
+            }
+            sum += cost * weight;
+            weight *= numSuccesors;
+        }
+
+        /**
+         * Cache the current, completed sample.
+         */
+        public void doneWithSample() {
+            estimates.add(sum);
+            weight = 1;
+            sum = 0;
+        }
+
+        public double getMean() {
+            return Vectors.mean(estimates.toNativeArray());
+        }
+        
+        public double getVariance() {
+            return Vectors.variance(estimates.toNativeArray());
+        }
+        
+        public double getStdDev() {
+            return Vectors.stdDev(estimates.toNativeArray());
+        }
+        
+        public int getNumSamples() {
+            return estimates.size();
+        }
     }
     
     public static class RandWalkBnbSamplerPrm {
         public int maxSamples = 10000;
+        public int timeoutSeconds = 100;
+        public DependencyParserEvaluator evaluator = null;
     }
 
     private RandWalkBnbSamplerPrm prm;
 
-    public RandWalkBnbNodeSampler(RandWalkBnbSamplerPrm prm, double timeoutSeconds, DependencyParserEvaluator evaluator) {
-        super(0, null, timeoutSeconds, evaluator);
+    public RandWalkBnbNodeSampler(RandWalkBnbSamplerPrm prm) {
+        super(0, null, prm.timeoutSeconds, prm.evaluator);
         this.prm = prm;
     }
 
@@ -63,7 +89,6 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
         
         ProblemNode curNode = rootNode;
 
-        int numSamples = 0;
         evalIncumbent(initialSolution);
         while (true) {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
@@ -72,10 +97,10 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             numProcessed++;
             
             if (nodeTimer.totSec() > timeoutSeconds) {
-                // Timeout reached.
+                // Done: Timeout reached.
                 break;
-            } else if (numSamples >= prm.maxSamples) {
-                // Collected all the samples.
+            } else if (nodeCountEst.getNumSamples() >= prm.maxSamples) {
+                // Done: Collected all the samples.
                 break;
             }
             
@@ -91,22 +116,30 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             timer.stop();
             
             // Update cost estimators.
-            nodeCountEst.add(curNode, 1);
-            solTimeEst.add(curNode, timer.totMs());
+            nodeCountEst.add(curNode, result, 1);
+            solTimeEst.add(curNode, result, timer.totMs());
             
             // Get the next node.
-            if (result.status != FathomStatus.NotFathomed) {
+            if (result.status == FathomStatus.NotFathomed) {
                 // Get a random child node.
                 curNode = result.children.get(Prng.nextInt(result.children.size()));
             } else {
                 // Start the next sample at the root.
                 curNode = rootNode;
                 ((DmvProblemNode)curNode).clear();
-                numSamples++;
+                nodeCountEst.doneWithSample();
+                solTimeEst.doneWithSample();
             }
         }
         if (nodeTimer.isRunning()) { nodeTimer.stop(); }
 
+        // Print cost estimator summaries. 
+        log.info("Num samples for estimates: " + nodeCountEst.getNumSamples());
+        log.info("Node count estimate mean: " + nodeCountEst.getMean());
+        log.info("Node count estimate stddev: " + nodeCountEst.getStdDev());
+        log.info("Solution time (ms) estimate mean: " + solTimeEst.getMean());
+        log.info("Solution time (ms) estimate stddev: " + solTimeEst.getStdDev());
+        
         // Print summary
         evalIncumbent(incumbentSolution);
         printTimers(numProcessed);
