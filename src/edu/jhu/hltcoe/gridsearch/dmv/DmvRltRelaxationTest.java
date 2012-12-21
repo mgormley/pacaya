@@ -27,6 +27,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.lp.CplexPrm;
@@ -330,7 +331,7 @@ public class DmvRltRelaxationTest {
         
         DmvRltRelaxation dw = getLp(corpus, 1);
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation(); 
-        DmvProjector projector = new DmvProjector(corpus);
+        DmvProjector projector = new DmvProjector(new DmvProjectorPrm(), corpus);
         projector.getProjectedDmvSolution(relaxSol);
     }
 
@@ -611,7 +612,7 @@ public class DmvRltRelaxationTest {
         RelaxedDmvSolution relaxSol = (RelaxedDmvSolution)relax.solveRelaxation();
         Assert.assertEquals(RelaxStatus.Optimal, relaxSol.getStatus());
         
-        DmvProjector projector = new DmvProjector(corpus);
+        DmvProjector projector = new DmvProjector(new DmvProjectorPrm(), corpus);
         DmvSolution projSol = projector.getProjectedDmvSolution(relaxSol);
         
         System.out.println("RLT objective: " + relaxSol.getScore());

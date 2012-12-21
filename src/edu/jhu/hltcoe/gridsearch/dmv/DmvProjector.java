@@ -21,28 +21,28 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProjector implements Projector {
 
-    // TODO: put this to use.
     public static class DmvProjectorPrm {
         public ProjectionsPrm projPrm = new ProjectionsPrm();
         public CptBounds rootBounds = null; 
     }
-    private DmvProjectorPrm prm;
     
+    private DmvProjectorPrm prm;
+
     private DmvTrainCorpus corpus;
     private IndexedDmvModel idm;
     private DmvObjective obj;
     private Projections projector;
     
-    public DmvProjector(DmvTrainCorpus corpus) {
-        super();
+    public DmvProjector(DmvProjectorPrm prm, DmvTrainCorpus corpus) {
+        this.prm = prm;
+        if (prm.rootBounds == null) {
+            this.prm.rootBounds = new CptBounds(idm);
+        }
+        this.projector = new Projections(prm.projPrm);
         this.corpus = corpus;
         // TODO: we shouldn't have to create a new IndexedDmvModel here.
         this.idm = new IndexedDmvModel(this.corpus);
         this.obj = new DmvObjective(this.corpus);
-        this.prm = new DmvProjectorPrm();
-        // TODO: pass this in.
-        this.prm.rootBounds = new CptBounds(idm);
-        this.projector = new Projections(prm.projPrm);
     }
 
     @Override

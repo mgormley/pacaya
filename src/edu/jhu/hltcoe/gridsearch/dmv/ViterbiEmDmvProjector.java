@@ -11,20 +11,27 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.cky.DepProbMatrix;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class ViterbiEmDmvProjector implements Projector {
 
+    public static class ViterbiEmDmvProjectorPrm {
+        public double proportionViterbiImproveTreebank = 0.05;
+        public double proportionViterbiImproveModel = 0.05;
+        public DmvProjectorPrm projPrm = new DmvProjectorPrm();
+    }
+    
     private final class DmvSolutionComparator implements Comparator<DmvSolution> {
         /**
          * This will only return nulls if there are no non-null entries
@@ -45,13 +52,15 @@ public class ViterbiEmDmvProjector implements Projector {
 
     private static final Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
 
+    private ViterbiEmDmvProjectorPrm prm;
     private DmvProjector dmvProjector;
     private DmvTrainCorpus corpus;
     private DmvRelaxation dwRelax;
     private DmvSolution initFeasSol;
 
-    public ViterbiEmDmvProjector(DmvTrainCorpus corpus, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
-        dmvProjector = new DmvProjector(corpus);
+    public ViterbiEmDmvProjector(ViterbiEmDmvProjectorPrm prm, DmvTrainCorpus corpus, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
+        this.prm = prm;
+        dmvProjector = new DmvProjector(prm.projPrm, corpus);
         this.corpus = corpus;
         this.dwRelax = dwRelax;
         this.initFeasSol = initFeasSol;
@@ -78,19 +87,16 @@ public class ViterbiEmDmvProjector implements Projector {
         solutions.add(projectedSol);
         if (projectedSol != null) {
             // TODO: These solutions might not be feasible according to the
-            // bounds.
-            // TODO: Decide on a better heuristic for when to do this (e.g.
-            // depth >
-            // dwRelax.getIdm().getNumTotalParams())
-            double random = Prng.nextDouble();
-            double proportionViterbiImprove = 0.1;
-            if (random < proportionViterbiImprove) {
-                // Run Viterbi EM starting from the randomly rounded solution.
-                if (random < proportionViterbiImprove / 2.0) {
-                    solutions.add(getImprovedSol(projectedSol.getTreebank()));
-                } else {
-                    solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
-                }
+            // root bounds.
+            // TODO: Decide on a better heuristic for when to do this 
+            // (e.g. depth > dwRelax.getIdm().getNumTotalParams())
+
+            // Run Viterbi EM starting from the randomly rounded solution.
+            if (Prng.nextDouble() < prm.proportionViterbiImproveTreebank) {
+                solutions.add(getImprovedSol(projectedSol.getTreebank()));
+            }
+            if (Prng.nextDouble() < prm.proportionViterbiImproveModel) {
+                solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
             }
         }
 
@@ -121,14 +127,16 @@ public class ViterbiEmDmvProjector implements Projector {
 
     private DmvSolution runViterbiEmHelper(DmvModelFactory modelFactory, 
             int numRestarts) {
-        // Run Viterbi EM to get a reasonable starting incumbent solution
-        int iterations = 25;        
-        double lambda = 0.1;
-        double convergenceRatio = 0.99999;
-
+        // Run Viterbi EM to improve the projected solution.
         ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, Double.POSITIVE_INFINITY, null);
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        prm.emPrm.iterations = 25;        
+        prm.emPrm.convergenceRatio = 0.99999;
+        prm.emPrm.numRestarts = numRestarts;
+        prm.emPrm.timeoutSeconds = Double.NEGATIVE_INFINITY;
+        prm.lambda = 0.1;
+        prm.evaluator = null;
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();

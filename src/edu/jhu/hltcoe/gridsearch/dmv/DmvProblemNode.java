@@ -11,10 +11,9 @@ import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
@@ -23,6 +22,7 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
@@ -73,7 +73,9 @@ public class DmvProblemNode implements ProblemNode {
         this.isOptimisticBoundCached = false;
         
         this.dwRelax.init2(initFeasSol);
-        this.dmvProjector = new ViterbiEmDmvProjector(this.corpus, this.dwRelax, this.initFeasSol);
+        // TODO: pass these params in.
+        ViterbiEmDmvProjectorPrm projPrm = new ViterbiEmDmvProjectorPrm();
+        this.dmvProjector = new ViterbiEmDmvProjector(projPrm, this.corpus, this.dwRelax, this.initFeasSol);
 
         if (activeNode != null) {
             throw new IllegalStateException("Multiple trees not allowed");
@@ -293,13 +295,15 @@ public class DmvProblemNode implements ProblemNode {
     private DmvSolution runViterbiEmHelper(TrainCorpus corpus, 
             DmvModelFactory modelFactory, int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
-        int iterations = 25;        
-        double lambda = 0.1;
-        double convergenceRatio = 0.99999;
-
         ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, Double.POSITIVE_INFINITY, null);
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        prm.emPrm.iterations = 25;        
+        prm.emPrm.convergenceRatio = 0.99999;
+        prm.emPrm.numRestarts = numRestarts;
+        prm.emPrm.timeoutSeconds = Double.NEGATIVE_INFINITY;
+        prm.lambda = 0.1;
+        prm.evaluator = null;
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();

@@ -16,6 +16,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -34,11 +35,12 @@ public class ViterbiTrainerTest {
     @Test
     public void testLogLikelihood() {
         double lambda = 0.1;
-        int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999);
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        prm.emPrm.iterations = 25;
+        prm.emPrm.convergenceRatio = 0.99999;
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -51,12 +53,13 @@ public class ViterbiTrainerTest {
     @Test
     public void testConvergence() {
         double lambda = 0.1;
-        int iterations = 25;
         IlpSolverFactory ilpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
         ViterbiParser parser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
-        DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999);
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        prm.emPrm.iterations = 25;
+        prm.emPrm.convergenceRatio = 0.99999;
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -81,11 +84,10 @@ public class ViterbiTrainerTest {
 
     public static ViterbiTrainer getDefaultCkyViterbiTrainer() {
         double lambda = 0.1;
-        int iterations = 5;
         ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, 0.99999, 9, 5, null);
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm(5, 0.99999, 9, 5, lambda, null);
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         return trainer;
     }
     

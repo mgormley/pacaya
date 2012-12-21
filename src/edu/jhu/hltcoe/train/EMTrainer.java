@@ -16,29 +16,37 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class EMTrainer<C> implements Trainer<C> {
 
+    public static class EMTrainerPrm {
+        public int iterations = 50;
+        public double convergenceRatio = 0.99999;
+        public int numRestarts = 0;
+        public double timeoutSeconds = Double.POSITIVE_INFINITY;
+        public EMTrainerPrm() { }
+        public EMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds) {
+            this.iterations = iterations;
+            this.convergenceRatio = convergenceRatio;
+            this.numRestarts = numRestarts;
+            this.timeoutSeconds = timeoutSeconds;
+        }
+    }
+    
     private Logger log = Logger.getLogger(EMTrainer.class);
 
+    private EMTrainerPrm prm;
+    
     private EStep<C> eStep;
     private MStep<C> mStep;
     private ModelFactory modelFactory;
-    private int iterations;
-    private double convergenceRatio;
     private Model model;
     private int iterCount;
     private Double logLikelihood;
     private C counts;
-    private int numRestarts;
-    private double timeoutSeconds;
-
-    public EMTrainer(EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory, int iterations, 
-            double convergenceRatio, int numRestarts, double timeoutSeconds) {
+    
+    public EMTrainer(EMTrainerPrm prm, EStep<C> eStep, MStep<C> mStep, ModelFactory modelFactory) {
+        this.prm = prm;
         this.eStep = eStep;
         this.mStep = mStep;
         this.modelFactory = modelFactory;
-        this.iterations = iterations;
-        this.convergenceRatio = convergenceRatio;
-        this.numRestarts = numRestarts;
-        this.timeoutSeconds = timeoutSeconds;
     }
     
     @Override
@@ -47,7 +55,7 @@ public class EMTrainer<C> implements Trainer<C> {
         Model bestModel = null;
         C bestCounts = null;
         Timer roundTimer = new Timer();
-        for (int r=0; r<=numRestarts; r++) {
+        for (int r=0; r<=prm.numRestarts; r++) {
             roundTimer.start();
             trainOnce(corpus);
             if (logLikelihood > bestLogLikelihood) {
@@ -56,7 +64,7 @@ public class EMTrainer<C> implements Trainer<C> {
                 bestCounts = counts;
                 evalIncumbent(bestModel, bestCounts, bestLogLikelihood);
             }
-            if (roundTimer.totSec() > timeoutSeconds) {
+            if (roundTimer.totSec() > prm.timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
@@ -97,10 +105,10 @@ public class EMTrainer<C> implements Trainer<C> {
             // Check for convergence or iteration limit
             log.info("logLikelihood = " + logLikelihood);
             log.info("likelihood ratio = " + Utilities.exp(prevLogLikelihood - logLikelihood));
-            if (prevLogLikelihood - logLikelihood > Utilities.log(convergenceRatio)) {
+            if (prevLogLikelihood - logLikelihood > Utilities.log(prm.convergenceRatio)) {
                 log.info("Stopping training due to convergence");
                 break;
-            } else if ( iterCount >= iterations) {
+            } else if ( iterCount >= prm.iterations) {
                 log.info("Stopping training at max iterations");
                 break;
             }
@@ -109,7 +117,7 @@ public class EMTrainer<C> implements Trainer<C> {
             // M-step
             model = mStep.getModel(corpus, counts);
             
-            log.debug("Time remaining: " + Timer.durAsStr(iterTimer.avgMs()*(iterations - iterCount)));
+            log.debug("Time remaining: " + Timer.durAsStr(iterTimer.avgMs()*(prm.iterations - iterCount)));
             iterTimer.stop();
             iterCount++;
         }

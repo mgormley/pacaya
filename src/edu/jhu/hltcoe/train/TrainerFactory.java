@@ -64,6 +64,7 @@ import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
+import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
 import edu.jhu.hltcoe.util.Command;
 
 /**
@@ -288,9 +289,6 @@ public class TrainerFactory {
                 throw new ParseException("Parser not supported: " + parserName);
             }
 
-            MStep<DepTreebank> mStep;
-            mStep = new DmvMStep(lambda);
-
             ModelFactory modelFactory;
             if (initWeights.equals("uniform")) {
                 modelFactory = new UniformDmvModelFactory();
@@ -306,13 +304,16 @@ public class TrainerFactory {
             }
 
             if (algorithm.equals("viterbi")) {
-                trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts,
-                        timeoutSeconds, parserEvaluator);
+                ViterbiTrainerPrm vtPrm = new ViterbiTrainerPrm(iterations, convergenceRatio, numRestarts,
+                        timeoutSeconds, lambda, parserEvaluator);
+                trainer = new ViterbiTrainer(vtPrm, parser, modelFactory);
             }
             if (algorithm.equals("viterbi-bnb")) {
-                // Use zero random restarts and no timeout for local search.
-                viterbiTrainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, 0,
-                        Double.POSITIVE_INFINITY, null);
+                // Use zero random restarts, no timeout, and no evaluator for
+                // local search with large neighborhoods.
+                ViterbiTrainerPrm vtPrm = new ViterbiTrainerPrm(iterations, convergenceRatio, 0,
+                        Double.POSITIVE_INFINITY, lambda, null);
+                viterbiTrainer = new ViterbiTrainer(vtPrm, parser, modelFactory); 
             }
         }
         

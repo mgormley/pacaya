@@ -42,10 +42,9 @@ public class DeltaViterbiTrainerTest {
         DeltaGenerator deltaGen = new FixedIntervalDeltaGenerator(0.1, 3);
         ViterbiParser deltaParser = new IlpViterbiParserWithDeltas(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory,
                 deltaGen);
-        DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        DeltaViterbiTrainer trainer = new DeltaViterbiTrainer(deltaParser, fastParser, mStep, modelFactory, iterations,
-                convergenceRatio);
+        DeltaViterbiTrainer trainer = new DeltaViterbiTrainer(deltaParser, fastParser, modelFactory, iterations,
+                convergenceRatio, lambda);
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the man ate the pizza with a fork");

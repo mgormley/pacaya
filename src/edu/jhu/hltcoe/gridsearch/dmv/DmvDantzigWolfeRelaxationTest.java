@@ -38,6 +38,7 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.ViterbiTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
+import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.rproj.RDataFrame;
@@ -461,9 +462,10 @@ public class DmvDantzigWolfeRelaxationTest {
         double timeoutSeconds = 5;
         
         ViterbiParser parser = new DmvCkyParser();
-        DmvMStep mStep = new DmvMStep(lambda);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainer trainer = new ViterbiTrainer(parser, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, null);
+
+        ViterbiTrainerPrm prm = new ViterbiTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null);
+        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
         // TODO: use random restarts
         trainer.train(corpus);
         

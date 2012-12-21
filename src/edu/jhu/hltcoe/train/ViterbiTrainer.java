@@ -6,35 +6,36 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
 public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
+    public static class ViterbiTrainerPrm {
+        public double lambda = 0.1;
+        public DependencyParserEvaluator evaluator = null;
+        public EMTrainerPrm emPrm = new EMTrainerPrm();
+        public ViterbiTrainerPrm() { }
+        public ViterbiTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
+                double lambda, DependencyParserEvaluator evaluator) {
+            
+        }
+    }
+        
     private static final Logger log = Logger.getLogger(ViterbiTrainer.class);
-    private DependencyParserEvaluator evaluator;
+    private ViterbiTrainerPrm prm;
     
-    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio) {
-        this(parser, mStep, modelFactory, iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY, null);
-    }
-    
-    public ViterbiTrainer(ViterbiParser parser, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, DependencyParserEvaluator evaluator) {
-        this(new ViterbiEStep(parser), mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds, evaluator);
-    }
-    
-    protected ViterbiTrainer(EStep<DepTreebank> eStep, MStep<DepTreebank> mStep, ModelFactory modelFactory, 
-            int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, DependencyParserEvaluator evaluator) {
-        super(eStep, mStep, modelFactory, iterations, convergenceRatio, numRestarts, timeoutSeconds);
-        this.evaluator = evaluator;
+    public ViterbiTrainer(ViterbiTrainerPrm prm, ViterbiParser parser, ModelFactory modelFactory) { 
+        super(prm.emPrm, new ViterbiEStep(parser), new DmvMStep(prm.lambda), modelFactory);
+        this.prm = prm;
     }
 
     @Override
     protected void evalIncumbent(Model bestModel, DepTreebank bestParses, double bestLogLikelihood) {
-        if (evaluator != null) {
+        if (prm.evaluator != null) {
             log.info("Incumbent logLikelihood: " + bestLogLikelihood);
-            log.info("Incumbent accuracy: " + evaluator.evaluate(bestParses));
+            log.info("Incumbent accuracy: " + prm.evaluator.evaluate(bestParses));
         }
     }
 

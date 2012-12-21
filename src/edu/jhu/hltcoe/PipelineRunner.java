@@ -33,6 +33,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -130,8 +131,9 @@ public class PipelineRunner {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
+            // TODO: use the command line flags to initialize the projector.
             // TODO: use add-lambda smoothing here.
-            DmvProjector dmvProjector = new DmvProjector(trainCorpus);
+            DmvProjector dmvProjector = new DmvProjector(new DmvProjectorPrm(), trainCorpus);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             log.info("projLogLikelihood: " + projSol.getScore());
             // TODO: Remove this hack. It's only to setup for getEvalParser().
