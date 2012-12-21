@@ -21,8 +21,8 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.TrainCorpus;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
-import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
@@ -296,14 +296,14 @@ public class DmvProblemNode implements ProblemNode {
             DmvModelFactory modelFactory, int numRestarts) {
         // Run Viterbi EM to get a reasonable starting incumbent solution
         ViterbiParser parser = new DmvCkyParser();
-        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
         prm.emPrm.iterations = 25;        
         prm.emPrm.convergenceRatio = 0.99999;
         prm.emPrm.numRestarts = numRestarts;
         prm.emPrm.timeoutSeconds = Double.NEGATIVE_INFINITY;
         prm.lambda = 0.1;
         prm.evaluator = null;
-        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();

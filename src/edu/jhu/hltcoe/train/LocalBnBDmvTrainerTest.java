@@ -37,7 +37,7 @@ public class LocalBnBDmvTrainerTest {
         double probOfSkipCm = 0.1;
         double bnbTimeoutSeconds = 2;
         double timeoutSeconds = 10;
-        ViterbiTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
+        DmvViterbiEMTrainer viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
         DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(new DmvDwRelaxPrm());
         CptBoundsDeltaFactory brancher = BnBDmvTrainerTest.getDefaultBrancher();
         LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new PqNodeOrderer(new BfsComparator()), bnbTimeoutSeconds, null);

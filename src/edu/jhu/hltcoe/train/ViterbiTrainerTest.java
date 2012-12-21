@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -37,10 +37,10 @@ public class ViterbiTrainerTest {
         double lambda = 0.1;
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
         prm.emPrm.iterations = 25;
         prm.emPrm.convergenceRatio = 0.99999;
-        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -56,10 +56,10 @@ public class ViterbiTrainerTest {
         IlpSolverFactory ilpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
         ViterbiParser parser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainerPrm prm = new ViterbiTrainerPrm();
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
         prm.emPrm.iterations = 25;
         prm.emPrm.convergenceRatio = 0.99999;
-        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -71,7 +71,7 @@ public class ViterbiTrainerTest {
 
     @Test
     public void testRestarts() {
-        ViterbiTrainer trainer = getDefaultCkyViterbiTrainer();
+        DmvViterbiEMTrainer trainer = getDefaultCkyViterbiTrainer();
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -82,12 +82,12 @@ public class ViterbiTrainerTest {
         Assert.assertEquals(-2.284, trainer.getLogLikelihood(), 1e-3);
     }
 
-    public static ViterbiTrainer getDefaultCkyViterbiTrainer() {
+    public static DmvViterbiEMTrainer getDefaultCkyViterbiTrainer() {
         double lambda = 0.1;
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainerPrm prm = new ViterbiTrainerPrm(5, 0.99999, 9, 5, lambda, null);
-        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(5, 0.99999, 9, 5, lambda, null);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
         return trainer;
     }
     

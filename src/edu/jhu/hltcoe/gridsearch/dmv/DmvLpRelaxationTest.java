@@ -40,7 +40,7 @@ import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;

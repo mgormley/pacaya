@@ -64,7 +64,7 @@ import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
-import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Command;
 
 /**
@@ -251,7 +251,7 @@ public class TrainerFactory {
         DependencyParserEvaluator parserEvaluator = new DependencyParserEvaluator(evalParser, trainTreebank, "train"); 
         
         Trainer trainer = null;
-        ViterbiTrainer viterbiTrainer = null;
+        DmvViterbiEMTrainer viterbiTrainer = null;
         if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
             ViterbiParser parser;
             IlpSolverFactory ilpSolverFactory = null;
@@ -304,16 +304,16 @@ public class TrainerFactory {
             }
 
             if (algorithm.equals("viterbi")) {
-                ViterbiTrainerPrm vtPrm = new ViterbiTrainerPrm(iterations, convergenceRatio, numRestarts,
+                DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts,
                         timeoutSeconds, lambda, parserEvaluator);
-                trainer = new ViterbiTrainer(vtPrm, parser, modelFactory);
+                trainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
             }
             if (algorithm.equals("viterbi-bnb")) {
                 // Use zero random restarts, no timeout, and no evaluator for
                 // local search with large neighborhoods.
-                ViterbiTrainerPrm vtPrm = new ViterbiTrainerPrm(iterations, convergenceRatio, 0,
+                DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, 0,
                         Double.POSITIVE_INFINITY, lambda, null);
-                viterbiTrainer = new ViterbiTrainer(vtPrm, parser, modelFactory); 
+                viterbiTrainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory); 
             }
         }
         

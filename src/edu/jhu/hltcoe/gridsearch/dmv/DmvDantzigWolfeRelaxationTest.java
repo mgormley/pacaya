@@ -36,9 +36,9 @@ import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
-import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.rproj.RDataFrame;
@@ -464,8 +464,8 @@ public class DmvDantzigWolfeRelaxationTest {
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
 
-        ViterbiTrainerPrm prm = new ViterbiTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null);
-        ViterbiTrainer trainer = new ViterbiTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
         // TODO: use random restarts
         trainer.train(corpus);
         

@@ -10,23 +10,23 @@ import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
-public class ViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
+public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
-    public static class ViterbiTrainerPrm {
+    public static class DmvViterbiEMTrainerPrm {
         public double lambda = 0.1;
         public DependencyParserEvaluator evaluator = null;
         public EMTrainerPrm emPrm = new EMTrainerPrm();
-        public ViterbiTrainerPrm() { }
-        public ViterbiTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
+        public DmvViterbiEMTrainerPrm() { }
+        public DmvViterbiEMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
                 double lambda, DependencyParserEvaluator evaluator) {
             
         }
     }
         
-    private static final Logger log = Logger.getLogger(ViterbiTrainer.class);
-    private ViterbiTrainerPrm prm;
+    private static final Logger log = Logger.getLogger(DmvViterbiEMTrainer.class);
+    private DmvViterbiEMTrainerPrm prm;
     
-    public ViterbiTrainer(ViterbiTrainerPrm prm, ViterbiParser parser, ModelFactory modelFactory) { 
+    public DmvViterbiEMTrainer(DmvViterbiEMTrainerPrm prm, ViterbiParser parser, ModelFactory modelFactory) { 
         super(prm.emPrm, new ViterbiEStep(parser), new DmvMStep(prm.lambda), modelFactory);
         this.prm = prm;
     }

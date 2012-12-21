@@ -25,8 +25,8 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.ViterbiTrainer;
-import edu.jhu.hltcoe.train.ViterbiTrainer.ViterbiTrainerPrm;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -221,8 +221,8 @@ public class IndexedDmvModelTest {
         int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        ViterbiTrainerPrm vtPrm = new ViterbiTrainerPrm(iterations, 0.99999, 9, 5, lambda, null);
-        ViterbiTrainer trainer = new ViterbiTrainer(vtPrm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, 0.99999, 9, 5, lambda, null);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
         // TODO: use random restarts
         trainer.train(corpus);
         double trainerLogLikelihood = trainer.getLogLikelihood();

@@ -32,7 +32,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
     private static final Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
 
-    ViterbiTrainer viterbiTrainer;
+    DmvViterbiEMTrainer viterbiTrainer;
     private LazyBranchAndBoundSolver bnbSolver;
     private CptBoundsDeltaFactory brancher;
     private DmvRelaxation relax;
@@ -44,7 +44,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     private double timeoutSeconds;
     private DependencyParserEvaluator evaluator;
     
-    public LocalBnBDmvTrainer(ViterbiTrainer viterbiTrainer, LazyBranchAndBoundSolver bnbSolver, CptBoundsDeltaFactory brancher,
+    public LocalBnBDmvTrainer(DmvViterbiEMTrainer viterbiTrainer, LazyBranchAndBoundSolver bnbSolver, CptBoundsDeltaFactory brancher,
             DmvRelaxation relax, int numRestarts, double offsetProb, double probOfSkipCm, 
             double timeoutSeconds, DependencyParserEvaluator evaluator) {
         this.viterbiTrainer = viterbiTrainer;
