@@ -78,8 +78,8 @@ public class RandWalkBnbNodeSamplerTest {
     @Test
     public void testRegretSampling() {
         RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
-        prm.maxSamples = 100;
-        prm.bnbPrm.timeoutSeconds = 300;
+        prm.maxSamples = 10;
+        prm.bnbPrm.timeoutSeconds = 3;
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
         rrPrm.rootMaxCutRounds = 0;
         rrPrm.maxCutRounds = 0;
