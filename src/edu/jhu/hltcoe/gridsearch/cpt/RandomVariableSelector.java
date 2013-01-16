@@ -6,7 +6,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
@@ -60,12 +62,12 @@ public class RandomVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
         if (freqs == null) {
-            init(node.getIdm());
+            init(relax.getIdm());
         }
         
-        CptBounds origBounds = node.getBounds();
+        CptBounds origBounds = relax.getBounds();
 
         // Choose a model parameter with probability proportional to its 
         // possible occurrence in the corpus -- or uniformly from the used parameters.
@@ -102,7 +104,7 @@ public class RandomVariableSelector implements VariableSelector {
             m = cms[cmId].get2();
         } while(!origBounds.canBranch(Type.PARAM, c, m));
 
-        String name = node.getIdm().getName(c, m);
+        String name = relax.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s", c, m, name));
         return new VariableId(c, m);
     }

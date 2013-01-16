@@ -22,7 +22,7 @@ public class Projections {
 
     public static class ProjectionsPrm {
         public static enum ProjectionType { BOUNDED_MIN_EUCLIDEAN, UNBOUNDED_MIN_EUCLIDEAN, NORMALIZE };
-        public ProjectionType type = ProjectionType.NORMALIZE;
+        public ProjectionType type = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
         public File tempDir = null;
         public double lambdaSmoothing = 0.0;
     }

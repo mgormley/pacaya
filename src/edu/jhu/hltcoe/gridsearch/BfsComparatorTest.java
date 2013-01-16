@@ -15,7 +15,6 @@ public class BfsComparatorTest {
         public MockDmvProblemNode(double bound) {
             super();
             this.optimisticBound = bound;
-            this.isOptimisticBoundCached = true;
         }
         
     }

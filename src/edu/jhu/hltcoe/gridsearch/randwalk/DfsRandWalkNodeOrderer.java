@@ -3,7 +3,6 @@ package edu.jhu.hltcoe.gridsearch.randwalk;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
 

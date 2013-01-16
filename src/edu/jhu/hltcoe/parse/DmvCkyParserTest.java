@@ -21,6 +21,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -133,20 +134,43 @@ public class DmvCkyParserTest {
     
     @Test
     public void testSemiSupervisedOnSynthetic() {
-        DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
-        DmvTrainCorpus trainCorpus = getSemiSupervisedSyntheticCorpus(dmvModel);
+        // Generate trees from a gold model.
+        DmvModel goldModel = SimpleStaticDmvModel.getThreePosTagInstance();
+        System.out.println(goldModel.toString());
+
+        DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, Prng.nextInt(1000000));
+        DepTreebank treebank = generator.getTreebank(100);
+        DependencyParserEvaluator eval = new DependencyParserEvaluator(new DmvCkyParser(), treebank, "test");
+
+        // Parse with a random model.
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model dmvModel = modelFactory.getInstance(goldModel.getTagAlphabet());
         
-        System.out.println(dmvModel.toString());
+        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 1.0);
         System.out.println(trainCorpus);
-        
-        double expectedParseWeight = -31.278;
-        getDpParses(dmvModel, trainCorpus, expectedParseWeight);
+        double expectedParseWeight = -1574.426;
+        DepTreebank parses = getDpParses(dmvModel, trainCorpus, expectedParseWeight);
+        Assert.assertEquals(1.0, eval.evaluate(parses));
+                        
+        trainCorpus = new DmvTrainCorpus(treebank, 0.8);
+        expectedParseWeight = -1538.890;
+        parses = getDpParses(dmvModel, trainCorpus, expectedParseWeight);
+        Assert.assertEquals(0.871, eval.evaluate(parses), 1e-3);
+
+        trainCorpus = new DmvTrainCorpus(treebank, 0.4);
+        expectedParseWeight = -1442.570;
+        parses = getDpParses(dmvModel, trainCorpus, expectedParseWeight);
+        Assert.assertEquals(0.511, eval.evaluate(parses), 1e-3);
     }
 
-    public static DmvTrainCorpus getSemiSupervisedSyntheticCorpus(DmvModel dmvModel) {
+    public static DmvTrainCorpus getDefaultSemiSupervisedSyntheticCorpus(DmvModel dmvModel) {
+        return getSemiSupervisedSyntheticCorpus(dmvModel, 0.9);
+    }
+    
+    public static DmvTrainCorpus getSemiSupervisedSyntheticCorpus(DmvModel dmvModel, double propSupervised) {
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
         DepTreebank treebank = generator.getTreebank(100);
-        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, 0.9);
+        DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, propSupervised);
         System.out.println("Fully supervised logProb: " + (new DmvObjective(trainCorpus)).computeTrueObjective(dmvModel, treebank));
         return trainCorpus;
     }

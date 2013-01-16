@@ -7,7 +7,9 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 
 public class FullStrongVariableSelector implements VariableSelector {
 
@@ -25,12 +27,12 @@ public class FullStrongVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
         // Cache the regret based deltas in case we need them as a fallback
-        VariableId regretVarId = regretFactory.select(node);
+        VariableId regretVarId = regretFactory.select(node, relax, relaxSol);
         
-        IndexedDmvModel idm = node.getIdm();
-        CptBounds origBounds = node.getBounds();
+        IndexedDmvModel idm = relax.getIdm();
+        CptBounds origBounds = relax.getBounds();
         //RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
 
         // TODO: consider using regret to filter this down
@@ -44,7 +46,7 @@ public class FullStrongVariableSelector implements VariableSelector {
                     continue;
                 }
                 
-                double score = getStrongScore(node, c, m);
+                double score = getStrongScore(node, c, m, relax);
                 
                 if (score > maxScore) {
                     maxScore = score;
@@ -64,26 +66,23 @@ public class FullStrongVariableSelector implements VariableSelector {
         return new VariableId(maxC, maxM);
     }
 
-    public double getStrongScore(DmvProblemNode node, int c, int m) {
-        CptBounds origBounds = node.getBounds();
+    public double getStrongScore(DmvProblemNode node, int c, int m, DmvRelaxation relax) {
+        CptBounds origBounds = relax.getBounds();
         double parentBound = node.getOptimisticBound();
 
-        node.setAsActiveNode();
         List<CptBoundsDeltaList> deltas = varSplitter.split(origBounds, new VariableId(c, m));
         List<ProblemNode> children = node.branch(deltas);
         assert(children.size() == 2);
         
         // Left child
         DmvProblemNode child1 = (DmvProblemNode)children.get(0);
-        child1.setAsActiveNode();
+        relax.getRelaxedSolution(child1);
         double c1Bound = child1.getOptimisticBound();
 
         // Right child
         DmvProblemNode child2 = (DmvProblemNode)children.get(1);
-        child2.setAsActiveNode();
+        relax.getRelaxedSolution(child2);
         double c2Bound = child2.getOptimisticBound();
-
-        node.setAsActiveNode();
         
         // Since we're doing maximization...
         double c1Delta = parentBound - c1Bound;
@@ -91,7 +90,7 @@ public class FullStrongVariableSelector implements VariableSelector {
         // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
         double score = computeScore(c1Delta, c2Delta);
 
-        String name = node.getIdm().getName(c, m);
+        String name = relax.getIdm().getName(c, m);
         log.trace(String.format("Probing: c=%d m=%d name=%s score=%f", c, m, name, score));
 
         return score;

@@ -2,15 +2,11 @@ package edu.jhu.hltcoe.gridsearch;
 
 import java.util.List;
 
+import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
+
 public interface ProblemNode {
 
-    double getOptimisticBound();
-
-    double getOptimisticBound(double incumbentScore);
-
-    Solution getFeasibleSolution();
-
-    List<ProblemNode> branch();
+    List<ProblemNode> branch(Relaxation relax, RelaxedSolution relaxSol);
     
     int getId();
     
@@ -18,12 +14,12 @@ public interface ProblemNode {
 
     int getSide();
 
-    void setAsActiveNode();
+    double getOptimisticBound();
 
-    double getLogSpace();
+    WarmStart getWarmStart();
 
-    RelaxedSolution getRelaxedSolution();
+    void setWarmStart(WarmStart warmStart);
 
-    void updateTimeRemaining(double timeoutSeconds);
+    void setOptimisticBound(double optimisticBound);
 
 }

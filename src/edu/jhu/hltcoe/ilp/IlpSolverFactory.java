@@ -84,7 +84,7 @@ public class IlpSolverFactory {
             throw new IllegalArgumentException("Unrecognized IlpSolverId id: " + id);
         }
         
-        public static List<String> getIdList() {
+        public static final List<String> getIdList() {
             List<String> idList = new ArrayList<String>();
             for (IlpSolverId f : values()) {
                 idList.add(f.id);

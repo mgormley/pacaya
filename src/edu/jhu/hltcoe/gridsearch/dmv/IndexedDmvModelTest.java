@@ -59,7 +59,7 @@ public class IndexedDmvModelTest {
         // Decision
         assertEquals(2, idm.getNumParams(10));
         
-        assertEquals("child_{0,0,0}(2)", idm.getName(1,2));
+        assertEquals("child_{N,l,0}(D)", idm.getName(1,2));
         
 
         
@@ -130,7 +130,7 @@ public class IndexedDmvModelTest {
         int s=0;
         double[] sentParams = new double[idm.getNumSentVars(s)];
 
-        assertEquals("child_{0,1,0}(1)", idm.getName(2,1));
+        assertEquals("child_{N,r,0}(V)", idm.getName(2,1));
         Arrays.fill(sentParams, 0.5);
         // Root --> Verb
         sentParams[idm.getSi(s, 0, 1)] = 0.1;

@@ -19,7 +19,6 @@ public class DfsBfcComparatorTest {
         public MockDmvProblemNode(double bound, DmvProblemNode parent, int side) {
             super(null, null, parent, side);
             this.optimisticBound = bound;
-            this.isOptimisticBoundCached = true;
         }
         
     }

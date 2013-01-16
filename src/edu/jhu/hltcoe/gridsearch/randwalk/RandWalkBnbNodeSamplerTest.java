@@ -17,8 +17,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.CostEstimator;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
@@ -29,7 +28,6 @@ public class RandWalkBnbNodeSamplerTest {
 
     @Before
     public void setUp() {
-        DmvProblemNode.clearActiveNode();
         //Prng.seed(1234567890);
     }
     
@@ -81,8 +79,7 @@ public class RandWalkBnbNodeSamplerTest {
     public void testRegretSampling() {
         RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
         prm.maxSamples = 100;
-        prm.timeoutSeconds = 300;
-        RandWalkBnbNodeSampler sampler = new RandWalkBnbNodeSampler(prm);
+        prm.bnbPrm.timeoutSeconds = 300;
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
         rrPrm.rootMaxCutRounds = 0;
         rrPrm.maxCutRounds = 0;
@@ -91,10 +88,13 @@ public class RandWalkBnbNodeSamplerTest {
         rrPrm.tempDir = new File(".");
         rrPrm.rltPrm.nameRltVarsAndCons = true;
         // --  --
-        
-        DmvRltRelaxation relax = new DmvRltRelaxation(rrPrm);
-        BnBDmvTrainer trainer = new BnBDmvTrainer(sampler, BnBDmvTrainerTest.getDefaultBrancher(), relax);
 
+        BnBDmvTrainerPrm bnbtPrm = new BnBDmvTrainerPrm();
+        bnbtPrm.bnbSolverFactory = prm;
+        bnbtPrm.brancher = BnBDmvTrainerTest.getDefaultBrancher();
+        bnbtPrm.relaxFactory = rrPrm;
+        BnBDmvTrainer trainer = new BnBDmvTrainer(bnbtPrm);
+        
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate");
         sentences.addSentenceFromString("the mouse ate");
@@ -105,14 +105,17 @@ public class RandWalkBnbNodeSamplerTest {
     public void testRandomSampling() {
         RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
         prm.maxSamples = 10;
-        prm.timeoutSeconds = 3;
-        RandWalkBnbNodeSampler sampler = new RandWalkBnbNodeSampler(prm);
+        prm.bnbPrm.timeoutSeconds = 3;
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
         rrPrm.rootMaxCutRounds = 0;
         rrPrm.maxCutRounds = 0;
-        DmvRltRelaxation relax = new DmvRltRelaxation(rrPrm);
-        BnBDmvTrainer trainer = new BnBDmvTrainer(sampler, getRandomBrancher(), relax);
 
+        BnBDmvTrainerPrm bnbtPrm = new BnBDmvTrainerPrm();
+        bnbtPrm.bnbSolverFactory = prm;
+        bnbtPrm.brancher = getRandomBrancher();
+        bnbtPrm.relaxFactory = rrPrm;
+        BnBDmvTrainer trainer = new BnBDmvTrainer(bnbtPrm);
+        
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         sentences.addSentenceFromString("the hat with the mouse ate by the cat");

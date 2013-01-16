@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
@@ -18,15 +19,14 @@ public class RegretVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node) {
-        CptBounds origBounds = node.getBounds();
-        RelaxedDmvSolution relaxSol = node.getRelaxedSolution();
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+        CptBounds origBounds = relax.getBounds();
         double[][] regret = getRegretCm(relaxSol);
 
         if (regret == null) {
             // Back off to random branching.
             log.warn("Regret not available. Backing off to random.");
-            return randBrancher.select(node);
+            return randBrancher.select(node, relax, relaxSol);
         }
         
         // Don't branch on variables that have bottomed out
@@ -49,7 +49,7 @@ public class RegretVariableSelector implements VariableSelector {
             return new VariableId();
         }
         
-        String name = node.getIdm().getName(c, m);
+        String name = relax.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s regret=%f", c, m, name, regret[c][m]));
         assert(!Double.isInfinite(regret[c][m]));
         

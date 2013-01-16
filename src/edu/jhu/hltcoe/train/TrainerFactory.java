@@ -2,18 +2,16 @@ package edu.jhu.hltcoe.train;
 
 import java.io.File;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
-import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
@@ -26,18 +24,21 @@ import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolutionEvaluator;
+import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler;
+import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
@@ -48,7 +49,6 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
@@ -65,191 +65,203 @@ import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
+import edu.jhu.hltcoe.util.cli.Opt;
 
 /**
- * TODO: Consider switching to annotations
- * http://docs.oracle.com/javase/tutorial/java/javaOO/annotations.html
- * http://tutorials.jenkov.com/java-reflection/annotations.html
+ * Factory for constructing trainers (and other related objects).
  * 
  * @author mgormley
- * 
  */
 public class TrainerFactory {
 
-    private static ViterbiParser evalParser = null;
+    @Opt(name = "algorithm", hasArg = true, description = "Inference algorithm")
+    public static String algorithm = "viterbi";
+    @Opt(name = "iterations", hasArg = true, description = "Number of iterations")
+    public static int iterations = 10;
+    @Opt(name = "convergenceRatio", hasArg = true, description = "Convergence ratio")
+    public static double convergenceRatio = 0.99999;
+    @Opt(name = "numRestarts", hasArg = true, description = "Number of random restarts")
+    public static int numRestarts = 0;
+    @Opt(name = "model", hasArg = true, description = "Model")
+    public static String modelName = "dmv";
+    @Opt(name = "parser", hasArg = true, description = "Parser")
+    public static String parserName = "ilp-sentence";
+    @Opt(name = "initWeights", hasArg = true, description = "Method for initializing the weights [uniform, random, supervised]")
+    public static String initWeights = "uniform";
+    @Opt(name = "deltaGenerator", hasArg = true, description = "Delta generator")
+    public static String deltaGenerator = "fixed";
+    @Opt(name = "interval", hasArg = true, description = "Only for fixed-interval delta generator")
+    public static double interval = 0.01;
+    @Opt(name = "factor", hasArg = true, description = "Only for factor delta generator")
+    public static double factor = 1.1;
+    @Opt(name = "numPerSide", hasArg = true, description = "For symmetric delta generators")
+    public static int numPerSide = 2;
+    @Opt(name = "formulation", hasArg = true, description = "ILP formulation for parsing")
+    public static IlpFormulation formulation = IlpFormulation.DP_PROJ;
+    @Opt(name = "lambda", hasArg = true, description = "Value for add-lambda smoothing")
+    public static double lambda = 0.1;
+    @Opt(name = "threads", hasArg = true, description = "Number of threads for parallel impl")
+    public static int numThreads = 2;
+    @Opt(name = "ilpSolver", hasArg = true, description = "The ILP solver to use")
+    public static String ilpSolver = "cplex";
+    @Opt(name = "ilpWorkMemMegs", hasArg = true, description = "The working memory allotted for the ILP solver in megabytes")
+    public static double ilpWorkMemMegs = 512.0;
+    @Opt(name = "epsilon", hasArg = true, description = "Suboptimality convergence criterion for branch-and-bound")
+    public static double epsilon = 0.1;
+    @Opt(name = "varSelection", hasArg = true, description = "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]")
+    public static String varSelection = "regret";
+    @Opt(name = "varSplit", hasArg = true, description = "Variable splitting strategy for branching [half-prob, half-logprob]")
+    public static String varSplit = "half-prob";
+    @Opt(name = "nodeOrder", hasArg = true, description = "Strategy for node selection [bfs, dfs]")
+    public static String nodeOrder = "bfs";
+    @Opt(name = "relaxation", hasArg = true, description = "Relaxation [dw,dw-res,rlt]")
+    public static String relaxation = "dw";
+    @Opt(name = "maxSimplexIterations", hasArg = true, description = "(D-W only) The maximum number of simplex iterations")
+    public static int maxSimplexIterations = 2100000000;
+    @Opt(name = "maxDwIterations", hasArg = true, description = "(D-W only) The maximum number of dantzig-wolfe algorithm iterations")
+    public static int maxDwIterations = 1000;
+    @Opt(name = "maxSetSizeToConstrain", hasArg = true, description = "(STO only) The maximum size of sets to contrain to be <= 1.0")
+    public static int maxSetSizeToConstrain = 2;
+    @Opt(name = "maxCutRounds", hasArg = true, description = "(D-W only) The maximum number of rounds to add cuts")
+    public static int maxCutRounds = 100;
+    @Opt(name = "rootMaxCutRounds", hasArg = true, description = "(D-W only) The maximum number of rounds to add cuts for the root node")
+    public static int rootMaxCutRounds = maxCutRounds;
+    @Opt(name = "minSumForCuts", hasArg = true, description = "(STO only) The minimum threshold at which to stop adding cuts")
+    public static double minSumForCuts = 1.01;
+    @Opt(name = "maxStoCuts", hasArg = true, description = "(STO only) The maximum number of sum-to-one cuts")
+    public static int maxStoCuts = 1000;
+    @Opt(name = "dwTempDir", hasArg = true, description = "(D-W only) For testing only. The temporary directory to which CPLEX files should be written")
+    public static String dwTempDir = "";
+    @Opt(name = "offsetProb", hasArg = true, description = "How much to offset the bounds in probability space from the initial bounds point")
+    public static double offsetProb = 1.0;
+    @Opt(name = "probOfSkipCm", hasArg = true, description = "The probability of not bounding a particular variable")
+    public static double probOfSkipCm = 0.0;
+    @Opt(name = "timeoutSeconds", hasArg = true, description = "The timeout in seconds for training run")
+    public static double timeoutSeconds = Double.POSITIVE_INFINITY;
+    @Opt(name = "bnbTimeoutSeconds", hasArg = true, description = "[Viterbi-B&B only] The timeout in seconds for branch-and-bound")
+    public static double bnbTimeoutSeconds = Double.POSITIVE_INFINITY;
+    @Opt(name = "disableFathoming", hasArg = true, description = "Disables fathoming in branch-and-bound")
+    public static boolean disableFathoming = false;
+    @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
+    public static boolean envelopeOnly = true;
+    @Opt(name = "rltFilter", hasArg = true, description = "RLT filter type [obj-var, prop]")
+    public static String rltFilter = "obj-var";
+    @Opt(name = "rltInitProp", hasArg = true, description = "(prop only) Proportion of initial rows to accept.")
+    public static double rltInitProp = 0.1;
+    @Opt(name = "rltCutProp", hasArg = true, description = "(prop only) Proportion of cut rows to accept.")
+    public static double rltCutProp = 0.1;
+    @Opt(name = "rltInitMax", hasArg = true, description = "(max only) Max number of initial rows to accept.")
+    public static int rltInitMax = 10000;
+    @Opt(name = "rltCutMax", hasArg = true, description = "(max only) Max number of cut rows to accept.")
+    public static int rltCutMax = 1000;
+    @Opt(name = "rltNames", hasArg = true, description = "Whether to set RLT variable/constraint names.")
+    public static boolean rltNames = false;
+    @Opt(name = "addBindingCons", hasArg = true, description = "Whether to add binding constraints as factors to RLT.")
+    public static boolean addBindingCons = false;
+    @Opt(name = "universalPostCons", hasArg = true, description = "Whether to add the universal linguistic constraints.")
+    public static boolean universalPostCons = false;
+    @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
+    public static double universalMinProp = 0.8;
+    @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
+    private static int initSolNumRestarts = 9;
+    @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
+    private static int vemProjNumRestarts = 0;
+    @Opt(name = "vemProjPropImproveTreebank", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the treebank projection with viterbi EM.")
+    private static int vemProjPropImproveTreebank = 0;
+    @Opt(name = "vemProjPropImproveModel", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the model projection with viterbi EM.")
+    private static int vemProjPropImproveModel = 0;
+    @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
+    private static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
 
-    public static void addOptions(Options options) {
-        options.addOption("a", "algorithm", true, "Inference algorithm");
-        options.addOption("i", "iterations", true, "Number of iterations");
-        options.addOption("i", "convergenceRatio", true, "Convergence ratio");
-        options.addOption("nr", "numRestarts", true, "Number of random restarts");
-        options.addOption("m", "model", true, "Model");
-        options.addOption("p", "parser", true, "Parser");
-        options.addOption("d", "initWeights", true, "Method for initializing the weights [uniform, random, supervised]");
-        options.addOption("d", "deltaGenerator", true, "Delta generator");
-        options.addOption("in", "interval", true, "Only for fixed-interval delta generator");
-        options.addOption("fa", "factor", true, "Only for factor delta generator");
-        options.addOption("nps", "numPerSide", true, "For symmetric delta generators");
-        options.addOption("f", "formulation", true, "ILP formulation for parsing");
-        options.addOption("l", "lambda", true, "Value for add-lambda smoothing");
-        options.addOption("t", "threads", true, "Number of threads for parallel impl");
-        options.addOption("ilp", "ilpSolver", true, "The ILP solver to use " + IlpSolverId.getIdList());
-        options.addOption("ilpwmm", "ilpWorkMemMegs", true, "The working memory allotted for the ILP solver in megabytes");
-        options.addOption("e", "epsilon", true, "Suboptimality convergence criterion for branch-and-bound");
-        options.addOption("vse", "varSelection", true, "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]");
-        options.addOption("vsp", "varSplit", true, "Variable splitting strategy for branching [half-prob, half-logprob]");
-        options.addOption("no", "nodeOrder", true, "Strategy for node selection [bfs, dfs]");
-        options.addOption("rx", "relaxation", true, "Relaxation [dw,dw-res,rlt]");
-        options.addOption("rx", "maxSimplexIterations", true, "(D-W only) The maximum number of simplex iterations");
-        options.addOption("rx", "maxDwIterations", true, "(D-W only) The maximum number of dantzig-wolfe algorithm iterations");
-        options.addOption("rx", "maxSetSizeToConstrain", true, "(STO only) The maximum size of sets to contrain to be <= 1.0");
-        options.addOption("rx", "maxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts");
-        options.addOption("rx", "rootMaxCutRounds", true, "(D-W only) The maximum number of rounds to add cuts for the root node");
-        options.addOption("rx", "minSumForCuts", true, "(STO only) The minimum threshold at which to stop adding cuts");
-        options.addOption("rx", "maxStoCuts", true, "(STO only) The maximum number of sum-to-one cuts");
-        options.addOption("dwt", "dwTempDir", true, "(D-W only) For testing only. The temporary directory to which CPLEX files should be written");
-        options.addOption("op", "offsetProb", true, "How much to offset the bounds in probability space from the initial bounds point");
-        options.addOption("op", "probOfSkipCm", true, "The probability of not bounding a particular variable");
-        options.addOption("op", "timeoutSeconds", true, "The timeout in seconds for training run");
-        options.addOption("op", "bnbTimeoutSeconds", true, "[Viterbi-B&B only] The timeout in seconds for branch-and-bound");
-        options.addOption("df", "disableFathoming", true, "Disables fathoming in branch-and-bound");
-        options.addOption("eo", "envelopeOnly", true, "Whether to use only the convex/concave envelope for the RLT relaxation");
-        options.addOption("eo", "rltFilter", true, "RLT filter type [obj-var, prop]");
-        options.addOption("eo", "rltInitProp", true, "(prop only) Proportion of initial rows to accept.");
-        options.addOption("eo", "rltCutProp", true, "(prop only) Proportion of cut rows to accept.");
-        options.addOption("eo", "rltInitMax", true, "(max only) Max number of initial rows to accept.");
-        options.addOption("eo", "rltCutMax", true, "(max only) Max number of cut rows to accept.");
-        options.addOption("eo", "rltNames", true, "Whether to set RLT variable/constraint names.");
-        options.addOption("eo", "addBindingCons", true, "Whether to add binding constraints as factors to RLT.");
-        options.addOption("eo", "universalPostCons", true, "Whether to add the universal linguistic constraints.");
-        options.addOption("eo", "universalMinProp", true, "The proportion of edges that must be from the shiny set.");
+    public static ViterbiParser getEvalParser() {
+        return new DmvCkyParser();
     }
-
-    public static Object getTrainer(CommandLine cmd, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
-
-        final String algorithm = Command.getOptionValue(cmd, "algorithm", "viterbi");
-        final int iterations = Command.getOptionValue(cmd, "iterations", 10);
-        final double convergenceRatio = Command.getOptionValue(cmd, "convergenceRatio", 0.99999);
-        final int numRestarts = Command.getOptionValue(cmd, "numRestarts", 0);
-        final String modelName = Command.getOptionValue(cmd, "model", "dmv");
-        final String parserName = Command.getOptionValue(cmd, "parser", "ilp-sentence");
-        final String initWeights = Command.getOptionValue(cmd, "initWeights", "uniform");
-        final String deltaGenerator = Command.getOptionValue(cmd, "deltaGenerator", "fixed");
-        final double interval = Command.getOptionValue(cmd, "interval", 0.01);
-        final double factor = Command.getOptionValue(cmd, "factor", 1.1);
-        final int numPerSide = Command.getOptionValue(cmd, "numPerSide", 2);
-        final IlpFormulation formulation = getOptionValue(cmd, "formulation", IlpFormulation.DP_PROJ);
-        final double lambda = Command.getOptionValue(cmd, "lambda", 0.1);
-        final int numThreads = Command.getOptionValue(cmd, "threads", 2);
-        final String ilpSolver = Command.getOptionValue(cmd, "ilpSolver", "cplex");
-        final double ilpWorkMemMegs = Command.getOptionValue(cmd, "ilpWorkMemMegs", 512.0);
-        final double epsilon = Command.getOptionValue(cmd, "epsilon", 0.1);
-        final String varSelection = Command.getOptionValue(cmd, "varSelection", "regret");
-        final String varSplit = Command.getOptionValue(cmd, "varSplit", "half-prob");
-        final String nodeOrder = Command.getOptionValue(cmd, "nodeOrder", "bfs");
-        final String relaxation = Command.getOptionValue(cmd, "relaxation", "dw");
-        final int maxSimplexIterations = Command.getOptionValue(cmd, "maxSimplexIterations", 2100000000);
-        final int maxDwIterations = Command.getOptionValue(cmd, "maxDwIterations", 1000);
-        final int maxSetSizeToConstrain = Command.getOptionValue(cmd, "maxSetSizeToConstrain", 2);
-        final int maxCutRounds = Command.getOptionValue(cmd, "maxCutRounds", 100);
-        final int rootMaxCutRounds = Command.getOptionValue(cmd, "rootMaxCutRounds", maxCutRounds);
-        final double minSumForCuts = Command.getOptionValue(cmd, "minSumForCuts", 1.01);
-        final int maxStoCuts = Command.getOptionValue(cmd, "maxStoCuts", 1000);
-        final String dwTempDir = Command.getOptionValue(cmd, "dwTempDir", "");
-        final double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
-        final double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
-        final double timeoutSeconds = Command.getOptionValue(cmd, "timeoutSeconds", Double.POSITIVE_INFINITY);
-        final double bnbTimeoutSeconds = Command.getOptionValue(cmd, "bnbTimeoutSeconds", Double.POSITIVE_INFINITY);
-        final boolean disableFathoming = Command.getOptionValue(cmd, "disableFathoming", false);
-        final boolean envelopeOnly = Command.getOptionValue(cmd, "envelopeOnly", true);
-        final String rltFilter = Command.getOptionValue(cmd, "rltFilter", "obj-var");
-        final double rltInitProp = Command.getOptionValue(cmd, "rltInitProp", 0.1);
-        final double rltCutProp = Command.getOptionValue(cmd, "rltCutProp", 0.1);
-        final int rltInitMax = Command.getOptionValue(cmd, "rltInitMax", 10000);
-        final int rltCutMax = Command.getOptionValue(cmd, "rltCutMax", 1000);
-        final boolean rltNames = Command.getOptionValue(cmd, "rltNames", false);
-        final boolean addBindingCons = Command.getOptionValue(cmd, "addBindingCons", false);
-        final boolean universalPostCons = Command.getOptionValue(cmd, "universalPostCons", false);
-        final double universalMinProp = Command.getOptionValue(cmd, "universalMinProp", 0.8);
-        
-        if (!modelName.equals("dmv")) {
-            throw new ParseException("Model not supported: " + modelName);
-        }
-
+    
+    public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
         double simplexTimeout = algorithm.equals("viterbi-bnb") ? bnbTimeoutSeconds : timeoutSeconds;
         CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, simplexTimeout);
+
+        ProjectionsPrm projPrm = getProjectionsPrm(); 
 
         LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         stoPrm.initCutCountComp = new CutCountComputer();
         stoPrm.maxSetSizeToConstrain = maxSetSizeToConstrain;
         stoPrm.minSumForCuts = minSumForCuts;
         stoPrm.maxStoCuts = maxStoCuts;
+        stoPrm.projPrm = projPrm;
         
-        DmvRelaxation relax = null;
-        if (cmd.hasOption("relaxOnly") || algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
-            File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
-            if (relaxation.equals("dw")) {
-                DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
-                dwPrm.tempDir = dwTemp;
-                dwPrm.maxCutRounds = maxCutRounds;
-                dwPrm.rootMaxCutRounds = rootMaxCutRounds;
-                dwPrm.cplexPrm = cplexPrm;
-                dwPrm.maxDwIterations = maxDwIterations;
-                dwPrm.stoPrm = stoPrm;
-                relax = new DmvDantzigWolfeRelaxation(dwPrm);
-            } else if (relaxation.equals("dw-res")) {
-                ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
-                dwPrm.tempDir = dwTemp;
-                dwPrm.maxCutRounds = maxCutRounds;
-                dwPrm.rootMaxCutRounds = rootMaxCutRounds;
-                dwPrm.cplexPrm = cplexPrm;
-                dwPrm.maxDwIterations = maxDwIterations;
-                relax = new ResDmvDantzigWolfeRelaxation(dwPrm);
-            } else if (relaxation.equals("rlt")) {
-                RltPrm rltPrm = new RltPrm();
-                rltPrm.nameRltVarsAndCons = false;
-                rltPrm.envelopeOnly = envelopeOnly;
-                rltPrm.nameRltVarsAndCons = rltNames;    
-                
-                DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
-                parsePrm.universalMinProp = universalMinProp;
-                parsePrm.universalPostCons = universalPostCons;
-                
-                DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
-                rrPrm.tempDir = dwTemp;
-                rrPrm.maxCutRounds = maxCutRounds;
-                rrPrm.rootMaxCutRounds = rootMaxCutRounds;
-                rrPrm.addBindingCons = addBindingCons;
-                rrPrm.cplexPrm = cplexPrm;
-                rrPrm.rltPrm = rltPrm;
-                rrPrm.stoPrm = stoPrm;
-                rrPrm.parsePrm = parsePrm;
-                
-                rrPrm.objVarFilter = false;
-                if (rltFilter.equals("obj-var")) {
-                    rrPrm.objVarFilter = true;
-                    rltPrm.factorFilter = null;
-                    rltPrm.rowFilter = null;
-                } else if (rltFilter.equals("prop")) {
-                    rltPrm.rowFilter = new RandPropRltRowFilter(rltInitProp, rltCutProp);
-                } else if (rltFilter.equals("max")) {
-                    rltPrm.rowFilter = new MaxNumRltRowFilter(rltInitMax, rltCutMax);
-                } else {
-                    throw new ParseException("RLT filter type not supported: " + rltFilter);
-                }
-                relax = new DmvRltRelaxation(rrPrm);
+        DmvRelaxationFactory relaxFactory;
+        File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
+        if (relaxation.equals("dw")) {
+            DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
+            dwPrm.tempDir = dwTemp;
+            dwPrm.maxCutRounds = maxCutRounds;
+            dwPrm.rootMaxCutRounds = rootMaxCutRounds;
+            dwPrm.cplexPrm = cplexPrm;
+            dwPrm.maxDwIterations = maxDwIterations;
+            dwPrm.stoPrm = stoPrm;
+            relaxFactory = dwPrm;
+        } else if (relaxation.equals("dw-res")) {
+            ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
+            dwPrm.tempDir = dwTemp;
+            dwPrm.maxCutRounds = maxCutRounds;
+            dwPrm.rootMaxCutRounds = rootMaxCutRounds;
+            dwPrm.cplexPrm = cplexPrm;
+            dwPrm.maxDwIterations = maxDwIterations;
+            dwPrm.projPrm = projPrm;
+            relaxFactory = dwPrm;
+        } else if (relaxation.equals("rlt")) {
+            RltPrm rltPrm = new RltPrm();
+            rltPrm.nameRltVarsAndCons = false;
+            rltPrm.envelopeOnly = envelopeOnly;
+            rltPrm.nameRltVarsAndCons = rltNames;
+
+            DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
+            parsePrm.universalMinProp = universalMinProp;
+            parsePrm.universalPostCons = universalPostCons;
+
+            DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
+            rrPrm.tempDir = dwTemp;
+            rrPrm.maxCutRounds = maxCutRounds;
+            rrPrm.rootMaxCutRounds = rootMaxCutRounds;
+            rrPrm.addBindingCons = addBindingCons;
+            rrPrm.cplexPrm = cplexPrm;
+            rrPrm.rltPrm = rltPrm;
+            rrPrm.stoPrm = stoPrm;
+            rrPrm.parsePrm = parsePrm;
+
+            rrPrm.objVarFilter = false;
+            if (rltFilter.equals("obj-var")) {
+                rrPrm.objVarFilter = true;
+                rltPrm.factorFilter = null;
+                rltPrm.rowFilter = null;
+            } else if (rltFilter.equals("prop")) {
+                rltPrm.rowFilter = new RandPropRltRowFilter(rltInitProp, rltCutProp);
+            } else if (rltFilter.equals("max")) {
+                rltPrm.rowFilter = new MaxNumRltRowFilter(rltInitMax, rltCutMax);
             } else {
-                throw new ParseException("Relaxation not supported: " + relaxation);
+                throw new ParseException("RLT filter type not supported: " + rltFilter);
             }
-            if (cmd.hasOption("relaxOnly")) {
-                return relax;
-            }
+            relaxFactory = rrPrm;
+        } else {
+            throw new ParseException("Relaxation not supported: " + relaxation);
+        }
+        return relaxFactory;
+    }
+
+    public static Trainer getTrainer(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {
+        if (!modelName.equals("dmv")) {
+            throw new ParseException("Model not supported: " + modelName);
         }
 
-        evalParser = new DmvCkyParser();
-        DependencyParserEvaluator parserEvaluator = new DependencyParserEvaluator(evalParser, trainTreebank, "train"); 
-        
+        DmvRelaxationFactory relaxFactory = null;
+        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
+            relaxFactory = getDmvRelaxationFactory();
+        }
+
+        DependencyParserEvaluator parserEvaluator = new DependencyParserEvaluator(getEvalParser(), goldTreebank, "train");
+
         Trainer trainer = null;
         DmvViterbiEMTrainer viterbiTrainer = null;
         if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
@@ -259,7 +271,8 @@ public class TrainerFactory {
                 IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
                 ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
                 // TODO: make this an option
-                //ilpSolverFactory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
+                // ilpSolverFactory.setBlockFileWriter(new
+                // DeltaParseBlockFileWriter(formulation));
             }
 
             if (parserName.equals("cky")) {
@@ -295,10 +308,10 @@ public class TrainerFactory {
             } else if (initWeights.equals("random")) {
                 modelFactory = new RandomDmvModelFactory(lambda);
             } else if (initWeights.equals("supervised")) {
-                modelFactory = new SupervisedDmvModelFactory(trainTreebank);
+                modelFactory = new SupervisedDmvModelFactory(goldTreebank);
             } else if (initWeights.equals("gold")) {
                 modelFactory = new FixableModelFactory(null);
-                ((FixableModelFactory)modelFactory).fixModel(trueModel);
+                ((FixableModelFactory) modelFactory).fixModel(goldModel);
             } else {
                 throw new ParseException("initWeights not supported: " + initWeights);
             }
@@ -313,13 +326,13 @@ public class TrainerFactory {
                 // local search with large neighborhoods.
                 DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, 0,
                         Double.POSITIVE_INFINITY, lambda, null);
-                viterbiTrainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory); 
+                viterbiTrainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
             }
         }
-        
+
         CptBoundsDeltaFactory brancher = null;
         if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
-            
+
             VariableSplitter varSplitter;
             if (varSplit.equals("half-prob")) {
                 varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
@@ -343,8 +356,8 @@ public class TrainerFactory {
             } else {
                 throw new ParseException("Variable selection strategy not supported: " + varSelection);
             }
-            
-            brancher =  new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
+
+            brancher = new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
         }
 
         NodeOrderer nodeOrderer = null;
@@ -357,35 +370,52 @@ public class TrainerFactory {
         } else if (nodeOrder.equals("dfs-randwalk")) {
             nodeOrderer = new DfsRandWalkNodeOrderer(60);
         }
-        
+        DmvSolFactoryPrm initSolPrm = getDmvSolFactoryPrm();
+
+        DmvProjectorFactory projectorFactory = getDmvProjectorFactory();
+
+        LazyBnbSolverPrm bnbPrm = new LazyBnbSolverPrm();
+        bnbPrm.disableFathoming = disableFathoming;
+        bnbPrm.epsilon = epsilon;
+        bnbPrm.evaluator = new DmvSolutionEvaluator(parserEvaluator);
+        bnbPrm.leafNodeOrderer = nodeOrderer;
+        bnbPrm.timeoutSeconds = timeoutSeconds;
+
         if (algorithm.equals("viterbi-bnb")) {
-            // Use a null evaluator so that the incumbent is not repeatedly printed out.
-            LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, bnbTimeoutSeconds, null);
-            bnbSolver.setDisableFathoming(disableFathoming);
-            trainer = new LocalBnBDmvTrainer(viterbiTrainer, bnbSolver, brancher, relax, numRestarts,
-                    offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator);
-        } else if (algorithm.equals("bnb") || algorithm.equals("bnb-rand-walk") || algorithm.equals("bnb-depth-stratified")) {
-            LazyBranchAndBoundSolver bnbSolver;
+            // Use a null evaluator so that the incumbent is not repeatedly
+            // printed out.
+            bnbPrm.evaluator = null;
+            bnbPrm.timeoutSeconds = bnbTimeoutSeconds;
+            LocalBnBDmvTrainerPrm lbPrm = new LocalBnBDmvTrainerPrm(viterbiTrainer, bnbPrm, brancher, relaxFactory,
+                    projectorFactory, numRestarts, offsetProb, probOfSkipCm, timeoutSeconds, parserEvaluator, initSolPrm);
+            trainer = new LocalBnBDmvTrainer(lbPrm);
+        } else if (algorithm.equals("bnb") || algorithm.equals("bnb-rand-walk")
+                || algorithm.equals("bnb-depth-stratified")) {
+
+            LazyBnbSolverFactory bnbSolverFactory;
             if (algorithm.equals("bnb-rand-walk")) {
                 RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
-                prm.epsilon = epsilon;
                 prm.maxSamples = 10000;
-                prm.evaluator = parserEvaluator;
-                prm.timeoutSeconds = timeoutSeconds;
-                bnbSolver = new RandWalkBnbNodeSampler(prm);
+                bnbSolverFactory = prm;
             } else if (algorithm.equals("bnb-depth-stratified")) {
                 DepthStratifiedBnbSamplerPrm prm = new DepthStratifiedBnbSamplerPrm();
                 prm.maxDepth = 60;
-                bnbSolver = new DepthStratifiedBnbNodeSampler(prm, timeoutSeconds, parserEvaluator);
-            } else if (algorithm.equals("bnb")){
-                bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, nodeOrderer, timeoutSeconds, parserEvaluator);
-                bnbSolver.setDisableFathoming(disableFathoming);
+                bnbSolverFactory = prm;
+            } else if (algorithm.equals("bnb")) {
+                bnbSolverFactory = bnbPrm;
             } else {
                 throw new ParseException("Algorithm not supported: " + algorithm);
             }
-            trainer = new BnBDmvTrainer(bnbSolver, brancher, relax);
+            
+            BnBDmvTrainerPrm bnbtPrm = new BnBDmvTrainerPrm();
+            bnbtPrm.initSolPrm = initSolPrm;
+            bnbtPrm.brancher = brancher;
+            bnbtPrm.bnbSolverFactory = bnbSolverFactory;
+            bnbtPrm.relaxFactory = relaxFactory;
+            bnbtPrm.projectorFactory = projectorFactory;
+            trainer = new BnBDmvTrainer(bnbtPrm);
         }
-        
+
         if (trainer == null) {
             throw new ParseException("Algorithm not supported: " + algorithm);
         }
@@ -393,15 +423,39 @@ public class TrainerFactory {
         return trainer;
     }
 
-    public static IlpFormulation getOptionValue(CommandLine cmd, String name, IlpFormulation defaultValue) {
-        return cmd.hasOption(name) ? IlpFormulation.getById(cmd.getOptionValue(name)) : defaultValue;
+    public static DmvProjectorFactory getDmvProjectorFactory() {
+        // Other constants.
+        final double vemProjTimeoutSeconds = timeoutSeconds / 10.0;
+        
+        ProjectionsPrm projPrm = getProjectionsPrm();
+        
+        DmvProjectorPrm dprojPrm = new DmvProjectorPrm();
+        dprojPrm.projPrm = projPrm;
+        
+        ViterbiEmDmvProjectorPrm vedpPrm = new ViterbiEmDmvProjectorPrm();
+        vedpPrm.proportionViterbiImproveTreebank = vemProjPropImproveTreebank;
+        vedpPrm.proportionViterbiImproveModel = vemProjPropImproveModel;
+        vedpPrm.dprojPrm = dprojPrm;
+        vedpPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, vemProjNumRestarts,
+                vemProjTimeoutSeconds, lambda, null);
+        return vedpPrm;
     }
 
-    /**
-     * TODO: This is a bit hacky, but convenient.
-     */
-    public static ViterbiParser getEvalParser() {
-        return evalParser;
+    public static DmvSolFactoryPrm getDmvSolFactoryPrm() {        
+        // Other constants.
+        final double initSolTimeoutSeconds = timeoutSeconds / 2.0;
+        
+        DmvSolFactoryPrm initSolPrm = new DmvSolFactoryPrm();
+        initSolPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, initSolNumRestarts,
+                initSolTimeoutSeconds, lambda, null);
+        return initSolPrm;
+    }
+
+    private static ProjectionsPrm getProjectionsPrm() {
+        ProjectionsPrm projPrm = new ProjectionsPrm();
+        projPrm.lambdaSmoothing = lambda;
+        projPrm.type = projType;
+        return projPrm;
     }
 
 }

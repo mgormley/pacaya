@@ -6,14 +6,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree;
@@ -28,12 +24,15 @@ import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -46,6 +45,8 @@ import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.hltcoe.util.cli.ArgParser;
 
 public class PipelineRunner {
 
@@ -58,7 +59,7 @@ public class PipelineRunner {
         
         // Get the training data
         DepTreebank trainTreebank;
-        DmvModel trueModel = null;
+        DmvModel goldModel = null;
         if (cmd.hasOption("train")) {
             // Read the data and (maybe) reduce size of treebank
             String trainPath = cmd.getOptionValue("train");
@@ -69,11 +70,11 @@ public class PipelineRunner {
         } else if (cmd.hasOption("synthetic")) {
             String synthetic = cmd.getOptionValue("synthetic");
             if (synthetic.equals("two")) {
-                trueModel = SimpleStaticDmvModel.getTwoPosTagInstance();
+                goldModel = SimpleStaticDmvModel.getTwoPosTagInstance();
             } else if (synthetic.equals("three")) {
-                trueModel = SimpleStaticDmvModel.getThreePosTagInstance();
+                goldModel = SimpleStaticDmvModel.getThreePosTagInstance();
             } else if (synthetic.equals("alt-three")) {
-                trueModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
+                goldModel = SimpleStaticDmvModel.getAltThreePosTagInstance();
             } else {
                 throw new ParseException("Unknown synthetic type: " + synthetic);
             }
@@ -81,7 +82,7 @@ public class PipelineRunner {
             if (cmd.hasOption("syntheticSeed")) {
                 syntheticSeed = Long.parseLong(cmd.getOptionValue("syntheticSeed"));
             }
-            DmvDepTreeGenerator generator = new DmvDepTreeGenerator(trueModel, syntheticSeed);
+            DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, syntheticSeed);
             int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", 100); 
             trainTreebank = generator.getTreebank(maxNumSentences);
         } else {
@@ -117,13 +118,15 @@ public class PipelineRunner {
         }
         
         if (cmd.hasOption("relaxOnly")) {
-            DmvRelaxation dw = (DmvRelaxation)TrainerFactory.getTrainer(cmd, trainTreebank, trueModel); 
-            dw.init1(trainCorpus);
-            dw.init2(LocalBnBDmvTrainer.getInitSol(InitSol.UNIFORM, trainCorpus, null, null, null));
-            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, dw, trainTreebank, trueModel);
+            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm());
+            DmvSolution initSol = initSolFactory.getInitFeasSol(trainCorpus);
+            DmvRelaxationFactory relaxFactory = TrainerFactory.getDmvRelaxationFactory();
+            DmvRelaxation relax = relaxFactory.getInstance(trainCorpus, initSol);
+            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, relax, trainTreebank, goldModel);
             Timer timer = new Timer();
             timer.start();
-            RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) dw.solveRelaxation();
+            DmvProblemNode rootNode = new DmvProblemNode(null);
+            RelaxedDmvSolution relaxSol = (RelaxedDmvSolution) relax.getRelaxedSolution(rootNode);
             timer.stop();
             log.info("relaxTime(ms): " + timer.totMs());
             log.info("relaxBound: " + relaxSol.getScore());
@@ -131,28 +134,23 @@ public class PipelineRunner {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
-            // TODO: use the command line flags to initialize the projector.
-            // TODO: use add-lambda smoothing here.
-            DmvProjector dmvProjector = new DmvProjector(new DmvProjectorPrm(), trainCorpus);
+            // TODO: add a flag to choose the type of projector (i.e. not ViterbiEM)
+            DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory();
+            DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             log.info("projLogLikelihood: " + projSol.getScore());
-            // TODO: Remove this hack. It's only to setup for getEvalParser().
-            //            TrainerFactory.getTrainer(cmd, trainTreebank);
-            //            DependencyParserEvaluator dpEval = new DependencyParserEvaluator(TrainerFactory.getEvalParser(), trainTreebank, "train");
-            //            dpEval.evaluate(projSol)
-            //            TODO: log.info("containsGoldSol: " + containsInitSol(dw.getBounds(), goldSol.getLogProbs()));
         } else {
             // Train the model
             log.info("Training model");
-            Trainer trainer = (Trainer)TrainerFactory.getTrainer(cmd, trainTreebank, trueModel);
+            Trainer trainer = TrainerFactory.getTrainer(trainTreebank, goldModel);
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(trainCorpus);
-                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank, trueModel);
+                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank, goldModel);
                 bnb.train();
             } else {
                 trainer.train(trainCorpus);
-            }
+            }   
             Model model = trainer.getModel();
             
             // Evaluate the model on the training data
@@ -212,6 +210,7 @@ public class PipelineRunner {
         return trainTreebank;
     }
 
+    // TODO: This should update the deltas of the root node.
     private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) {
         if (cmd.hasOption("initBounds")) {
             // Initialize the bounds as a hypercube around some initial solution.
@@ -272,11 +271,8 @@ public class PipelineRunner {
         }
     }
 
-    public static Options createOptions() {
-        Options options = new Options();
-        
+    public static void addOptions(Options options) {
         // Options not specific to the model
-
         options.addOption("s", "seed", true, "Pseudo random number generator seed for everything else.");
         options.addOption("pm", "printModel", true, "File to which we should print the model.");
         options.addOption("ro", "relaxOnly", false, "Flag indicating that only a relaxation should be run");
@@ -298,9 +294,6 @@ public class PipelineRunner {
         
         // Options to restrict the initialization
         options.addOption("ib", "initBounds", true, "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]");
-        
-        TrainerFactory.addOptions(options);
-        return options;
     }
 
     private static void configureLogging() {
@@ -310,26 +303,16 @@ public class PipelineRunner {
     public static void main(String[] args) throws IOException {
         configureLogging();
         
-        String usage = "java " + PipelineRunner.class.getName() + " [OPTIONS]";
-        CommandLineParser parser = new PosixParser();
-        Options options = createOptions();
-        String[] requiredOptions = new String[] { };
-
+        ArgParser parser = new ArgParser(PipelineRunner.class);
+        parser.addClass(TrainerFactory.class);
+        addOptions(parser.getOptions());
         CommandLine cmd = null;
-        final HelpFormatter formatter = new HelpFormatter();
         try {
-            cmd = parser.parse(options, args);
-        } catch (ParseException e1) {
-            log.error(e1.getMessage());
-            formatter.printHelp(usage, options, true);
+            cmd = parser.parseArgs(args);
+        } catch (ParseException e) {
+            log.error(e.getMessage());
+            parser.printUsage();
             System.exit(1);
-        }
-        for (String requiredOption : requiredOptions) {
-            if (!cmd.hasOption(requiredOption)) {
-                log.error("Missing required option: " + requiredOption);
-                formatter.printHelp(usage, options, true);
-                System.exit(1);
-            }
         }
         
         Prng.seed(Command.getOptionValue(cmd, "seed", Prng.DEFAULT_SEED));
@@ -339,7 +322,7 @@ public class PipelineRunner {
             pipeline.run(cmd);
         } catch (ParseException e1) {
             log.error(e1.getMessage());
-            formatter.printHelp(usage, options, true);
+            parser.printUsage();
             System.exit(1);
         }
     }

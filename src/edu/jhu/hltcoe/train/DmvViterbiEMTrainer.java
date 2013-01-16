@@ -7,6 +7,8 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -26,6 +28,11 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
     private static final Logger log = Logger.getLogger(DmvViterbiEMTrainer.class);
     private DmvViterbiEMTrainerPrm prm;
     
+    public DmvViterbiEMTrainer(DmvViterbiEMTrainerPrm prm) {
+        this(prm, new DmvCkyParser(), new UniformDmvModelFactory());
+    }
+    
+    // TODO: push parser and modelFactory into prm. This will probably require copying the prm.
     public DmvViterbiEMTrainer(DmvViterbiEMTrainerPrm prm, ViterbiParser parser, ModelFactory modelFactory) { 
         super(prm.emPrm, new ViterbiEStep(parser), new DmvMStep(prm.lambda), modelFactory);
         this.prm = prm;

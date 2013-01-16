@@ -19,12 +19,12 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.DantzigWolfeRelaxation;
+import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -35,17 +35,21 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
+
+    public static interface DmvRelaxationFactory {
+        public DmvRelaxation getInstance(DmvTrainCorpus corpus, DmvSolution initFeasSol);
+    }
     
-    public static class DmvDwRelaxPrm extends DwRelaxPrm {
+    public static class DmvDwRelaxPrm extends DwRelaxPrm implements DmvRelaxationFactory {
         public CplexPrm cplexPrm = new CplexPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public DmvDwRelaxPrm() {
@@ -58,6 +62,13 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
             this.rootMaxCutRounds = maxCutRounds;
             this.stoPrm.initCutCountComp = ccc;
         }
+        @Override
+        public DmvRelaxation getInstance(DmvTrainCorpus corpus, DmvSolution initFeasSol) {
+            DmvDantzigWolfeRelaxation relax = new DmvDantzigWolfeRelaxation(this);
+            relax.init1(corpus);
+            relax.init2(initFeasSol);
+            return relax;
+        }
     }
     
     static Logger log = Logger.getLogger(DmvDantzigWolfeRelaxation.class);
@@ -68,10 +79,11 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     protected CptBounds bounds;
     protected Timer parsingTimer;
     protected MasterProblem mp;
+    protected LpSumToOneBuilder sto;
     
-    private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
-
+    private DmvProblemNode activeNode;
+    
     private DmvDwRelaxPrm prm;
     
     public DmvDantzigWolfeRelaxation(DmvDwRelaxPrm prm) {
@@ -87,6 +99,36 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         this.dmvObj = new DmvObjective(this.corpus);
     }
 
+    protected void setAsActiveNode(ProblemNode pn) {
+        DmvProblemNode curNode = (DmvProblemNode)pn;
+
+        if (activeNode == curNode) {
+            return;
+        } else if (activeNode == null) {
+            // This is the root node.
+            assert(curNode.getDepth() == 0);
+            // TODO: add support for deltas at the root node.
+            assert(curNode.getDeltas() == null);
+            activeNode = curNode;
+            return;
+        }
+        DmvProblemNode prevNode = activeNode;
+        activeNode = curNode;
+
+        // Get sequence of deltas to be forward applied to the current relaxation.
+        List<CptBoundsDeltaList> deltasList = DmvProblemNode.getDeltasBetween(prevNode, curNode);
+
+        // Forward apply the deltas.
+        for (CptBoundsDeltaList deltas : deltasList) {
+            forwardApply(deltas);
+        }
+    }
+    
+    @Override
+    public DmvProblemNode getActiveNode() {
+        return activeNode;
+    }
+    
     protected RelaxedSolution extractSolution(RelaxStatus status, double objective) throws UnknownObjectException, IloException {
         // Store optimal model parameters
         double[][] optimalLogProbs = extractRelaxedLogProbs();

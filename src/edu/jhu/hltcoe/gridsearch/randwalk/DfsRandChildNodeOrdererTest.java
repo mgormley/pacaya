@@ -23,7 +23,6 @@ public class DfsRandChildNodeOrdererTest {
             super();
             this.depth = depth;
             this.optimisticBound = depth;
-            this.isOptimisticBoundCached = true;
         }
         
     }

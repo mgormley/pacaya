@@ -1,15 +1,15 @@
 package edu.jhu.hltcoe.gridsearch;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -22,45 +22,62 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class LazyBranchAndBoundSolver {
 
-    private static final Logger log = Logger.getLogger(LazyBranchAndBoundSolver.class);
-
+    public static interface LazyBnbSolverFactory {
+        public LazyBranchAndBoundSolver getInstance(Relaxation relaxation, Projector projector);
+    }
+    
+    public static class LazyBnbSolverPrm implements LazyBnbSolverFactory {
+        // Required:
+        public Relaxation relaxation = null;
+        public Projector projector = null;
+        public NodeOrderer leafNodeOrderer = new PqNodeOrderer(new BfsComparator());
+        // Optional:
+        public double epsilon = 0.1;
+        public double timeoutSeconds = 1e+75;
+        // If true, fathoming is disabled. This enables random sampling of the
+        // branch and bound tree.
+        public boolean disableFathoming = false;
+        public SolutionEvaluator evaluator = null;
+        @Override
+        public LazyBranchAndBoundSolver getInstance(Relaxation relaxation, Projector projector) {
+            this.relaxation = relaxation;
+            this.projector = projector;
+            return new LazyBranchAndBoundSolver(this);
+        }
+    }
+    
     public enum SearchStatus {
         OPTIMAL_SOLUTION_FOUND, NON_OPTIMAL_SOLUTION_FOUND
     }
     
+    private static final Logger log = Logger.getLogger(LazyBranchAndBoundSolver.class);
     public static final double WORST_SCORE = Double.NEGATIVE_INFINITY;
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
+
+    private LazyBnbSolverPrm prm;
     protected double incumbentScore;
     protected Solution incumbentSolution;
 
     protected SearchStatus status;
 
     // Storage of active nodes
-    protected final NodeOrderer leafNodePQ;
     protected final PriorityQueue<ProblemNode> upperBoundPQ;
     
-    protected final double epsilon;
-    protected final double timeoutSeconds;
+    // Timers
     protected Timer nodeTimer;
-    protected Timer switchTimer;
     protected Timer relaxTimer;
     protected Timer feasTimer;
     protected Timer branchTimer;
-
-    // If true, fathoming is disabled. This enables random sampling of the
-    // branch and bound tree.
-    protected boolean disableFathoming;
     
-    public LazyBranchAndBoundSolver(double epsilon, NodeOrderer leafNodeOrderer, double timeoutSeconds) {
-        this.epsilon = epsilon;
-        this.leafNodePQ = leafNodeOrderer;
+    public LazyBranchAndBoundSolver(LazyBnbSolverPrm prm) {
+        if (prm.relaxation == null || prm.projector == null || prm.leafNodeOrderer == null) {
+            throw new IllegalStateException("Required parameters are not set.");
+        }
+        this.prm = prm;
         this.upperBoundPQ = new PriorityQueue<ProblemNode>(11, new BfsComparator());
-        this.timeoutSeconds = timeoutSeconds;
-        this.disableFathoming = false;
         
         // Timers
         nodeTimer = new Timer();
-        switchTimer = new Timer();
         relaxTimer = new Timer();
         feasTimer = new Timer();
         branchTimer = new Timer();
@@ -68,7 +85,7 @@ public class LazyBranchAndBoundSolver {
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode) {
         return runBranchAndBound(rootNode, null, WORST_SCORE);
-    }    
+    }
 
     public SearchStatus runBranchAndBound(ProblemNode rootNode, Solution initialSolution, double initialScore) {
         // Initialize
@@ -76,15 +93,15 @@ public class LazyBranchAndBoundSolver {
         this.incumbentScore = initialScore;
         double upperBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
-        leafNodePQ.clear();
+        prm.leafNodeOrderer.clear();
         upperBoundPQ.clear();
         int numProcessed = 0;
         FathomStats fathom = new FathomStats();
         
         addToLeafNodes(rootNode);
 
-        double rootLogSpace = rootNode.getLogSpace();
-        double logSpaceRemain = rootLogSpace;
+        double rootLogSpace = Double.NaN;
+        double logSpaceRemain = Double.NaN;
         ProblemNode curNode = null;
 
         evalIncumbent(initialSolution);
@@ -102,10 +119,10 @@ public class LazyBranchAndBoundSolver {
             numProcessed++;
             double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
             
-            if (relativeDiff <= epsilon) {
+            if (relativeDiff <= prm.epsilon) {
                 // Optimal solution found.
                 break;
-            } else if (nodeTimer.totSec() > timeoutSeconds) {
+            } else if (nodeTimer.totSec() > prm.timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
@@ -123,8 +140,14 @@ public class LazyBranchAndBoundSolver {
 
             NodeResult result = processNode(curNode);
             fathom.fathom(curNode, result.status);
-            if (result.status != FathomStatus.NotFathomed) {
-                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, curNode.getLogSpace());
+            if (result.status != FathomStatus.NotFathomed && prm.relaxation instanceof DmvRelaxation) {
+                // TODO: Remove this after we've implemented structured logging that can produce the log-space statistics post-hoc.
+                DmvRelaxation relax = (DmvRelaxation) prm.relaxation;
+                if (numProcessed == 1) {
+                    rootLogSpace = relax.getBounds().getLogSpace();
+                    logSpaceRemain = rootLogSpace;
+                }
+                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
             for (ProblemNode childNode : result.children) {
@@ -136,24 +159,30 @@ public class LazyBranchAndBoundSolver {
         // If we have fathomed all the nodes, then the global solution is within
         // epsilon of the current incumbent.
         if (!hasNextLeafNode()) {
-            upperBound = incumbentScore + epsilon*Math.abs(incumbentScore);
+            upperBound = incumbentScore + prm.epsilon*Math.abs(incumbentScore);
         }
         
         // Print summary
         evalIncumbent(incumbentSolution);
         double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
-        if (Utilities.lte(relativeDiff, epsilon, 1e-13)) {
+        if (Utilities.lte(relativeDiff, prm.epsilon, 1e-13)) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
         printSummary(upperBound, relativeDiff, numProcessed, fathom);
         printTimers(numProcessed);
-        leafNodePQ.clear();
+        prm.leafNodeOrderer.clear();
         upperBoundPQ.clear();
 
         log.info("B&B search status: " + status);
         
         // Return epsilon optimal solution
         return status;
+    }
+
+    protected void evalIncumbent(Solution sol) {
+        if (prm.evaluator != null && sol != null) {
+            prm.evaluator.evalIncumbent(sol);
+        }
     }
 
     public static class NodeResult {
@@ -170,46 +199,41 @@ public class LazyBranchAndBoundSolver {
     }
     
     protected NodeResult processNode(ProblemNode curNode) {
-        switchTimer.start();
-        curNode.setAsActiveNode();
-        switchTimer.stop();
-        
-        curNode.updateTimeRemaining(timeoutSeconds - nodeTimer.totSec());
+        prm.relaxation.updateTimeRemaining(prm.timeoutSeconds - nodeTimer.totSec());
         // TODO: else if, ran out of memory or disk space, break
 
         // The active node can compute a tighter upper bound instead of
         // using its parent's bound
         relaxTimer.start();
-        double curNodeUb;
-        if (disableFathoming) {
+        RelaxedSolution relaxSol;
+        if (prm.disableFathoming) {
             // If not fathoming, don't stop the relaxation early.
-            curNodeUb = curNode.getOptimisticBound();
+            relaxSol = prm.relaxation.getRelaxedSolution(curNode);
         } else {
-            curNodeUb = curNode.getOptimisticBound(incumbentScore + epsilon*Math.abs(incumbentScore));
+            relaxSol = prm.relaxation.getRelaxedSolution(curNode, incumbentScore + prm.epsilon*Math.abs(incumbentScore));
         }
-        RelaxedSolution relax = curNode.getRelaxedSolution();
         relaxTimer.stop();
         log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                curNode.getDepth(), curNode.getSide(), relax.getScore(), relax.getStatus().toString(), incumbentScore, nodeTimer.avgMs()));
-        if (curNodeUb <= incumbentScore + epsilon*Math.abs(incumbentScore) && !disableFathoming) {
+                curNode.getDepth(), curNode.getSide(), relaxSol.getScore(), relaxSol.getStatus().toString(), incumbentScore, nodeTimer.avgMs()));
+        if (relaxSol.getScore() <= incumbentScore + prm.epsilon*Math.abs(incumbentScore) && !prm.disableFathoming) {
             // Fathom this node: it is either infeasible or was pruned.
-            if (relax.getStatus() == RelaxStatus.Infeasible) {
+            if (relaxSol.getStatus() == RelaxStatus.Infeasible) {
                 return new NodeResult(FathomStatus.Infeasible);
-            } else if (relax.getStatus() == RelaxStatus.Pruned) {
+            } else if (relaxSol.getStatus() == RelaxStatus.Pruned) {
                 return new NodeResult(FathomStatus.Pruned);
             } else {
-                log.warn("Unhandled status for relaxed solution: " + relax.getStatus() + " Treating as pruned.");
+                log.warn("Unhandled status for relaxed solution: " + relaxSol.getStatus() + " Treating as pruned.");
                 return new NodeResult(FathomStatus.Pruned);
             }
         }
 
         // Check if the child node offers a better feasible solution
         feasTimer.start();
-        Solution sol = curNode.getFeasibleSolution();
-        assert (sol == null || !Double.isNaN(sol.getScore()));
-        if (sol != null && sol.getScore() > incumbentScore) {
-            incumbentScore = sol.getScore();
-            incumbentSolution = sol;
+        Solution feasSol = prm.projector.getProjectedSolution(relaxSol);
+        assert (feasSol == null || !Double.isNaN(feasSol.getScore()));
+        if (feasSol != null && feasSol.getScore() > incumbentScore) {
+            incumbentScore = feasSol.getScore();
+            incumbentSolution = feasSol;
             evalIncumbent(incumbentSolution);
             // TODO: pruneActiveNodes();
             // We could store a priority queue in the opposite order (or
@@ -220,13 +244,13 @@ public class LazyBranchAndBoundSolver {
         }
         feasTimer.stop();
         
-        if (sol != null && Utilities.equals(sol.getScore(), relax.getScore(), 1e-13)  && !disableFathoming) {
+        if (feasSol != null && Utilities.equals(feasSol.getScore(), relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
             // Fathom this node: the optimal solution for this subproblem was found.
             return new NodeResult(FathomStatus.CompletelySolved);
         }
         
         branchTimer.start();
-        List<ProblemNode> children = curNode.branch();
+        List<ProblemNode> children = curNode.branch(prm.relaxation, relaxSol);
         if (children.size() == 0) {
             // Fathom this node: no more branches can be made.
             return new NodeResult(FathomStatus.BottomedOut);
@@ -244,29 +268,22 @@ public class LazyBranchAndBoundSolver {
     private void printSummary(double upperBound, double relativeDiff, int numProcessed, FathomStats fathom) {
         int numFathomed = fathom.getNumFathomed();
         log.info(String.format("Summary: upBound=%f lowBound=%f relativeDiff=%f #leaves=%d #fathom=%d #prune=%d #infeasible=%d avgFathomDepth=%.0f #seen=%d", 
-                upperBound, incumbentScore, relativeDiff, leafNodePQ.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, fathom.getAverageDepth(), numProcessed));
-    }
-
-    /**
-     * Override this method.
-     */
-    protected void evalIncumbent(Solution incumbentSolution) {
-        return;
+                upperBound, incumbentScore, relativeDiff, prm.leafNodeOrderer.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, fathom.getAverageDepth(), numProcessed));
     }
 
     private boolean hasNextLeafNode() {
-        return !leafNodePQ.isEmpty();
+        return !prm.leafNodeOrderer.isEmpty();
     }
 
     private ProblemNode getNextLeafNode() {
-        ProblemNode node = leafNodePQ.remove();
+        ProblemNode node = prm.leafNodeOrderer.remove();
         upperBoundPQ.remove(node);
         return node;
     }
 
     private void addToLeafNodes(ProblemNode node) {
-        leafNodePQ.add(node);
-        if (disableFathoming && upperBoundPQ.size() > 0) {
+        prm.leafNodeOrderer.add(node);
+        if (prm.disableFathoming && upperBoundPQ.size() > 0) {
             // This is a hack to ensure that we don't populate the upperBoundPQ.
             return;
         } else {
@@ -280,10 +297,6 @@ public class LazyBranchAndBoundSolver {
     
     public double getIncumbentScore() {
         return incumbentScore;
-    }
-    
-    public void setDisableFathoming(boolean disableFathoming) {
-        this.disableFathoming = disableFathoming;
     }
     
     private void printSpaceRemaining(int numProcessed, double rootLogSpace, double logSpaceRemain) {
@@ -304,7 +317,6 @@ public class LazyBranchAndBoundSolver {
     protected void printTimers(int numProcessed) {
         // Print timers.
         log.debug("Avg time(ms) per node: " + nodeTimer.totMs() / numProcessed);
-        log.debug("Avg switch time(ms) per node: " + switchTimer.totMs() / numProcessed);
         log.debug("Avg relax time(ms) per node: " + relaxTimer.totMs() / numProcessed);
         log.debug("Avg project time(ms) per node: " + feasTimer.totMs() / numProcessed);
         log.debug("Avg branch time(ms) per node: " + branchTimer.totMs() / numProcessed);
@@ -312,26 +324,13 @@ public class LazyBranchAndBoundSolver {
 
     private void printLeafNodeBoundHistogram() {
         // Print Histogram
-        double[] bounds = new double[leafNodePQ.size()];
+        double[] bounds = new double[prm.leafNodeOrderer.size()];
         int i = 0;
-        for (ProblemNode node : leafNodePQ) {
+        for (ProblemNode node : prm.leafNodeOrderer) {
             bounds[i] = node.getOptimisticBound();
             i++;
         }
         log.debug(getHistogram(bounds));
-    }
-    
-    /** 
-     * This VERY SLOWLY computes the log space remaining by 
-     * adding up all the bounds of the leaf nodes.
-     */
-    private double computeLogSpaceRemain() {
-        double logSpaceRemain = Double.NEGATIVE_INFINITY;
-        for (ProblemNode node : leafNodePQ) {
-            node.setAsActiveNode();
-            logSpaceRemain = Utilities.logAdd(logSpaceRemain, node.getLogSpace());
-        }
-        return logSpaceRemain;
     }
 
     private String getHistogram(double[] bounds) {
@@ -356,6 +355,10 @@ public class LazyBranchAndBoundSolver {
             sb.append(String.format("\t[%.3f, %.3f) : %d\n", binWidth*i + min, binWidth*(i+1) + min, hist[i]));
         }
         return sb.toString();
+    }
+
+    public Relaxation getRelaxation() {
+        return prm.relaxation;
     }
     
 }

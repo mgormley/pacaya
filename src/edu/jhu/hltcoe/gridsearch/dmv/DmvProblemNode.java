@@ -6,24 +6,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
+import edu.jhu.hltcoe.gridsearch.Relaxation;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
-import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.TrainCorpus;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvProblemNode implements ProblemNode {
 
@@ -36,51 +24,24 @@ public class DmvProblemNode implements ProblemNode {
     protected int depth;
     private int side;
     private CptBoundsDeltaList deltas;
+    protected double optimisticBound;
     
     // For active node only:
     private CptBoundsDeltaFactory deltasFactory;
-    private DmvRelaxation dwRelax;
-    protected boolean isOptimisticBoundCached;
-    protected double optimisticBound;
-    private DmvTrainCorpus corpus;
-    private RelaxedDmvSolution relaxSol;
     
     // For "fork" nodes only (i.e. nodes that store warm-start information)
     private WarmStart warmStart;
-    
-    // For root node only
-    private DmvSolution initFeasSol;
-
-    private ViterbiEmDmvProjector dmvProjector;
-
-    private static DmvProblemNode activeNode;
 
     /**
      * Root node constructor
      */
-    public DmvProblemNode(DmvTrainCorpus corpus, CptBoundsDeltaFactory brancher, DmvRelaxation dwRelax) {
-        this.corpus = corpus;
-        this.dwRelax = dwRelax;
-        this.dwRelax.init1(corpus);
-        // Save and use this solution as the first incumbent
-        this.initFeasSol = getInitFeasSol(corpus);
-        log.info("Initial solution score: " + initFeasSol.getScore());
+    public DmvProblemNode(CptBoundsDeltaFactory brancher) {
         this.id = getNextId();
         this.parent = null;
         this.depth = 0;
         this.side = 0;
         this.deltasFactory = brancher;
-        this.isOptimisticBoundCached = false;
-        
-        this.dwRelax.init2(initFeasSol);
-        // TODO: pass these params in.
-        ViterbiEmDmvProjectorPrm projPrm = new ViterbiEmDmvProjectorPrm();
-        this.dmvProjector = new ViterbiEmDmvProjector(projPrm, this.corpus, this.dwRelax, this.initFeasSol);
-
-        if (activeNode != null) {
-            throw new IllegalStateException("Multiple trees not allowed");
-        }
-        setAsActiveNode();
+        this.optimisticBound = LazyBranchAndBoundSolver.BEST_SCORE;
     }
 
     /**
@@ -93,12 +54,10 @@ public class DmvProblemNode implements ProblemNode {
         this.parent = parent;
         this.depth = parent.depth + 1;
         this.side = side;
-        isOptimisticBoundCached = false;
         // Take the warm start information from the parent
         this.warmStart = parent.warmStart;
-        // The relaxation is set only when this node is set to be the active one
-        this.dwRelax = null;
-        this.corpus = parent.corpus;
+        // Take the optimistic bound from the parent.
+        this.optimisticBound = parent.optimisticBound;
     }
     
 
@@ -108,10 +67,6 @@ public class DmvProblemNode implements ProblemNode {
     protected DmvProblemNode() {
         
     }
-
-    public RelaxedDmvSolution getRelaxedSolution() {
-        return relaxSol;
-    }
     
     /**
      * @return negative infinity if the problem is infeasible, and an upper
@@ -119,50 +74,14 @@ public class DmvProblemNode implements ProblemNode {
      */
     @Override
     public double getOptimisticBound() {
-        return getOptimisticBound(LazyBranchAndBoundSolver.WORST_SCORE);
-    }
-
-    /**
-     * @return negative infinity if the problem is infeasible, and an upper
-     *         bound otherwise
-     */
-    @Override
-    public double getOptimisticBound(double incumbentScore) {
-        if (!isOptimisticBoundCached) {
-            if (dwRelax != null) {
-                // Run the Dantzig-Wolfe algorithm on the relaxation of the main
-                // problem
-                if (warmStart != null) {
-                    dwRelax.setWarmStart(warmStart);
-                }
-                relaxSol = (RelaxedDmvSolution) dwRelax.solveRelaxation(incumbentScore, depth);
-                if (optimisticBound < relaxSol.getScore()) {
-                    // If CPLEX gets a worse bound, then keep the parent's bound.
-                    relaxSol.setScore(optimisticBound);
-                }
-                optimisticBound = relaxSol.getScore();
-                isOptimisticBoundCached = true;
-                warmStart = dwRelax.getWarmStart();
-            } else if (parent != null){
-                return parent.getOptimisticBound();
-            } else {
-                return LazyBranchAndBoundSolver.BEST_SCORE;
-            }
-        }
         return optimisticBound;
     }
 
     @Override
-    public Solution getFeasibleSolution() {
-        if (relaxSol == null) {
-            throw new IllegalStateException("No relaxed solution cached.");
-        }
-        return dmvProjector.getProjectedDmvSolution(relaxSol);
-    }
-
-    @Override
-    public List<ProblemNode> branch() {
-        List<CptBoundsDeltaList> deltasForChildren = deltasFactory.getDmvBounds(this);
+    public List<ProblemNode> branch(Relaxation relaxation, RelaxedSolution relaxSol) {
+        DmvRelaxation relax = (DmvRelaxation)relaxation;
+        assert(this == relax.getActiveNode());        
+        List<CptBoundsDeltaList> deltasForChildren = deltasFactory.getDeltas(this, relax, (RelaxedDmvSolution)relaxSol);
         return branch(deltasForChildren);
     }
 
@@ -202,56 +121,36 @@ public class DmvProblemNode implements ProblemNode {
         return atomicIntId.getAndIncrement();
     }
 
-    @Override
-    public void setAsActiveNode() {
-        if (activeNode == null || activeNode == this) {
-            activeNode = this;
-            return;
-        } 
-        DmvProblemNode prevNode = activeNode;
-        activeNode = this;
-        
-        if (prevNode.dwRelax == null) {
-            throw new IllegalStateException("prevNode is not active");
-        }
-        if (this.dwRelax != null) {
-            throw new IllegalStateException("this node is already active");
-        }
-        
-        // Switch the relaxation over to the new node
-        this.dwRelax = prevNode.dwRelax;
-        this.deltasFactory = prevNode.deltasFactory;
-        this.dmvProjector = prevNode.dmvProjector;
-        
-        // Deactivate the previous node
-        prevNode.dwRelax = null;
-        prevNode.relaxSol = null;
-        prevNode.initFeasSol = null;
-        prevNode.deltasFactory = null;
-        
+    public static List<CptBoundsDeltaList> getDeltasBetween(DmvProblemNode prevNode, DmvProblemNode curNode) {
+
+        // Get sequence of deltas to be forward applied to the current relaxation.
+        List<CptBoundsDeltaList> deltas = new ArrayList<CptBoundsDeltaList>();
+
         // Find the least common ancestor
-        DmvProblemNode lca = findLeastCommonAncestor(prevNode);
+        DmvProblemNode lca = curNode.findLeastCommonAncestor(prevNode);
+        
         // Reverse apply changes to the bounds moving from prevNode to the LCA
         for (DmvProblemNode node = prevNode; node != lca; node = node.parent) { 
-            dwRelax.reverseApply(node.deltas);
+            deltas.add(CptBoundsDeltaList.getReverse(node.deltas));
         }
         // Create a list of the ancestors of the current node up to, but not including the LCA
-        List<DmvProblemNode> ancestors = new ArrayList<DmvProblemNode>(depth - lca.depth);
-        for (DmvProblemNode node = this; node != lca; node = node.parent) { 
+        List<DmvProblemNode> ancestors = new ArrayList<DmvProblemNode>(curNode.depth - lca.depth);
+        for (DmvProblemNode node = curNode; node != lca; node = node.parent) { 
             ancestors.add(node);
         }
         // Forward apply the bounds moving from the LCA to this
         for (int i=ancestors.size()-1; i>=0; i--) {
-            dwRelax.forwardApply(ancestors.get(i).deltas);
+            deltas.add(ancestors.get(i).deltas);
         }
-    }
-
-    public void clear() {
-        this.isOptimisticBoundCached = false;
-        this.relaxSol = null;
+        
+        return deltas;
     }
     
-    private DmvProblemNode findLeastCommonAncestor(DmvProblemNode prevNode) {
+    /**
+     * @return The least common ancestor of this node with prevNode.
+     * @throws IllegalStateException if no LCA exists.
+     */
+    public DmvProblemNode findLeastCommonAncestor(DmvProblemNode prevNode) {
         DmvProblemNode tmp1 = this;
         DmvProblemNode tmp2 = prevNode;
         // Move tmp nodes to same depth
@@ -266,91 +165,45 @@ public class DmvProblemNode implements ProblemNode {
             tmp2 = tmp2.parent;
             tmp1 = tmp1.parent;
         }
+        if (tmp1 != tmp2 || tmp1 == null || tmp2 == null) {
+            // No LCA found.
+            throw new IllegalStateException("No LCA found");
+        }
         return tmp1;
     }
 
-    public CptBounds getBounds() {
-        return dwRelax.getBounds();
-    }
-
-    public void end() {
-        setAsActiveNode();
-        dwRelax.end();
-    }
-    
     @Override
     public String toString() {
-        if (isOptimisticBoundCached) {
-            return String.format("DmvProblemNode[upperBound=%f]", optimisticBound);
-        } else {
-            return String.format("DmvProblemNode[upperBound=?]");
-        }
-    }
-    
-    private DmvSolution getInitFeasSol(TrainCorpus corpus) {        
-        DmvModelFactory modelFactory = new UniformDmvModelFactory();
-        return runViterbiEmHelper(corpus, modelFactory, 9);
-    }
-
-    private DmvSolution runViterbiEmHelper(TrainCorpus corpus, 
-            DmvModelFactory modelFactory, int numRestarts) {
-        // Run Viterbi EM to get a reasonable starting incumbent solution
-        ViterbiParser parser = new DmvCkyParser();
-        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
-        prm.emPrm.iterations = 25;        
-        prm.emPrm.convergenceRatio = 0.99999;
-        prm.emPrm.numRestarts = numRestarts;
-        prm.emPrm.timeoutSeconds = Double.NEGATIVE_INFINITY;
-        prm.lambda = 0.1;
-        prm.evaluator = null;
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
-        trainer.train(corpus);
-        
-        DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = dwRelax.getIdm();
-        double[][] logProbs = idm.getCmLogProbs((DmvModel)trainer.getModel());
-        
-        // Compute the score for the solution
-        double score = dwRelax.computeTrueObjective(logProbs, treebank);
-        log.debug("Computed true objective: " + score);
-        assert Utilities.equals(score, trainer.getLogLikelihood(), 1e-5) : "difference = " + (score - trainer.getLogLikelihood());
-                
-        // We let the DmvProblemNode compute the score
-        DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
-        return sol;
-    }
-
-    @Override
-    public double getLogSpace() {
-        if (dwRelax == null) {
-            throw new IllegalStateException("This is not the active node");
-        }
-        return dwRelax.getBounds().getLogSpace();
-    }
-
-    public IndexedDmvModel getIdm() {
-        return dwRelax.getIdm();
-    }
-    
-    public DmvRelaxation getRelaxation() {
-        return dwRelax;
+        return String.format("DmvProblemNode[upperBound=%f]", optimisticBound);
     }
 
     public CptBoundsDeltaList getDeltas() {
         return deltas;
     }
 
-    /**
-     * For testing only.
-     */
-    public static void clearActiveNode() {
-        activeNode = null;
-        atomicIntId = new AtomicInteger(0);
+    @Override
+    public WarmStart getWarmStart() {
+        return warmStart;
     }
 
     @Override
-    public void updateTimeRemaining(double timeoutSeconds) {
-        dwRelax.updateTimeRemaining(timeoutSeconds);
+    public void setWarmStart(WarmStart warmStart) {
+        this.warmStart = warmStart;
+    }
+
+    @Override
+    public void setOptimisticBound(double optimisticBound) {
+        this.optimisticBound = optimisticBound;
+    }
+
+    public void clear() {
+        this.optimisticBound = LazyBranchAndBoundSolver.BEST_SCORE;
+        this.warmStart = null;
+    }    
+    
+    // For testing only.
+    public static void resetIdCounter() {
+        atomicIntId = new AtomicInteger(0);
     }
     
 }

@@ -23,6 +23,7 @@ import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -33,6 +34,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltFactorFilter;
@@ -50,7 +52,7 @@ import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DmvRltRelaxation implements DmvRelaxation {
 
-    public static class DmvRltRelaxPrm {
+    public static class DmvRltRelaxPrm implements DmvRelaxationFactory {
         public final double OBJ_VAL_DECREASE_TOLERANCE = 1.0;
         public File tempDir = null;
         public int maxCutRounds = 1;
@@ -77,6 +79,13 @@ public class DmvRltRelaxation implements DmvRelaxation {
             this.rltPrm.envelopeOnly = envelopeOnly;
             this.rootMaxCutRounds = maxCutRounds;
         }
+        @Override
+        public DmvRelaxation getInstance(DmvTrainCorpus corpus, DmvSolution initFeasSol) {
+            DmvRltRelaxation relax = new DmvRltRelaxation(this);
+            relax.init1(corpus);
+            relax.init2(initFeasSol);
+            return relax;
+        }
     }
     
     private static final Logger log = Logger.getLogger(DmvRltRelaxation.class);
@@ -94,7 +103,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
     private LpProblem mp;
     private LpSumToOneBuilder sto;    
     private DmvObjective dmvObj;
- 
+    private DmvProblemNode activeNode;
+    
     private DmvRltRelaxPrm prm;
     
     public DmvRltRelaxation(DmvRltRelaxPrm prm) {
@@ -228,18 +238,39 @@ public class DmvRltRelaxation implements DmvRelaxation {
 
     // Copied from DantzigWolfeRelaxation.
     @Override
-    public RelaxedSolution solveRelaxation() {
-        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE, 0);
+    public RelaxedSolution getRelaxedSolution(ProblemNode curNode) {
+        return getRelaxedSolution(curNode, LazyBranchAndBoundSolver.WORST_SCORE);
     }
     
     // Copied from DantzigWolfeRelaxation.
     @Override
-    public RelaxedSolution solveRelaxation(double incumbentScore, int depth) {
-        try {
+    public RelaxedSolution getRelaxedSolution(ProblemNode curNode, double incumbentScore) {
+        setAsActiveNode(curNode);
+
+        if (curNode.getWarmStart() != null) {
+            setWarmStart(curNode.getWarmStart());
+        }
+
+        RelaxedSolution relaxSol = solveRelaxation(curNode, incumbentScore);
+        
+        if (curNode.getOptimisticBound() < relaxSol.getScore()) {
+            // If CPLEX gets a worse bound, then keep the parent's bound.
+            relaxSol.setScore(curNode.getOptimisticBound());
+        } else {
+            curNode.setOptimisticBound(relaxSol.getScore());
+        }
+        curNode.setWarmStart(getWarmStart());
+
+        return relaxSol;
+    }
+    
+    // Copied from DantzigWolfeRelaxation.
+    private RelaxedSolution solveRelaxation(ProblemNode curNode, double incumbentScore) {
+        try {            
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runSimplexAlgo(cplex, upperBound, depth);
+            Pair<RelaxStatus,Double> pair = runSimplexAlgo(cplex, upperBound, curNode.getDepth());
             RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
@@ -275,6 +306,38 @@ public class DmvRltRelaxation implements DmvRelaxation {
         }
     }
 
+    // Copied from DmvDantzigWolfeRelaxation.
+    protected void setAsActiveNode(ProblemNode pn) {
+        DmvProblemNode curNode = (DmvProblemNode)pn;
+
+        if (activeNode == curNode) {
+            return;
+        } else if (activeNode == null) {
+            // This is the root node.
+            assert(curNode.getDepth() == 0);
+            // TODO: add support for deltas at the root node.
+            assert(curNode.getDeltas() == null);
+            activeNode = curNode;
+            return;
+        }
+        DmvProblemNode prevNode = activeNode;
+        activeNode = curNode;
+
+        // Get sequence of deltas to be forward applied to the current relaxation.
+        List<CptBoundsDeltaList> deltasList = DmvProblemNode.getDeltasBetween(prevNode, curNode);
+
+        // Forward apply the deltas.
+        for (CptBoundsDeltaList deltas : deltasList) {
+            forwardApply(deltas);
+        }
+    }
+
+    // Copied from DmvDantzigWolfeRelaxation.
+    @Override
+    public DmvProblemNode getActiveNode() {
+        return activeNode;
+    }
+    
     private Pair<RelaxStatus, Double> runSimplexAlgo(IloCplex cplex2, double upperBound, int depth) throws IloException {
         if (!isFeasible()) {
             return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);

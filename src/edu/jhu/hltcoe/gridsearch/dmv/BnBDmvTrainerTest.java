@@ -8,10 +8,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.BfsComparator;
-import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
@@ -20,7 +17,9 @@ import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
@@ -38,7 +37,6 @@ public class BnBDmvTrainerTest {
     @Before
     public void setUp() {
         Prng.seed(1234567890);
-        DmvProblemNode.clearActiveNode();
     }
     
     @Test
@@ -46,8 +44,7 @@ public class BnBDmvTrainerTest {
         double epsilon = 0.1;
         DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
         prm.maxCutRounds = 100;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
-        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, prm);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat");
@@ -57,13 +54,12 @@ public class BnBDmvTrainerTest {
         Assert.assertEquals(SearchStatus.OPTIMAL_SOLUTION_FOUND, status);
     }
     
-    //@Test
+    //DISABLED: @Test
     public void testOne() {
         double epsilon = 0.5;
         DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
         prm.maxCutRounds = 100;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
-        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, prm);
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -71,13 +67,12 @@ public class BnBDmvTrainerTest {
         trainer.train(new DmvTrainCorpus(sentences));
     }
     
-    //@Test
+    //DISABLED: @Test
     public void testSynthetic() {
         double epsilon = 0.9;
         DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
         prm.maxDwIterations = 3;
-        DmvDantzigWolfeRelaxation dwRelax = new DmvDantzigWolfeRelaxation(prm);
-        BnBDmvTrainer trainer = getDefaultBnb(epsilon, dwRelax);
+        BnBDmvTrainer trainer = getDefaultBnb(epsilon, prm);
 
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
 
@@ -90,10 +85,14 @@ public class BnBDmvTrainerTest {
         trainer.train(new DmvTrainCorpus(sentences));
     }
 
-    private BnBDmvTrainer getDefaultBnb(double epsilon, DmvDantzigWolfeRelaxation dwRelax) {
-        LazyBranchAndBoundSolver bnbSolver = new DmvLazyBranchAndBoundSolver(epsilon, new PqNodeOrderer(new BfsComparator()), 5, null);
-        BnBDmvTrainer trainer = new BnBDmvTrainer(bnbSolver, getDefaultBrancher(), dwRelax);
-        return trainer;
+    private BnBDmvTrainer getDefaultBnb(double epsilon, DmvRelaxationFactory relaxFactory) {
+        LazyBnbSolverPrm bnbPrm = new LazyBnbSolverPrm();
+        bnbPrm.epsilon = epsilon;
+        bnbPrm.timeoutSeconds = 5;
+        BnBDmvTrainerPrm prm = new BnBDmvTrainerPrm();
+        prm.bnbSolverFactory = bnbPrm;
+        prm.relaxFactory = relaxFactory;
+        return new BnBDmvTrainer(prm);
     }
     
     public static CptBoundsDeltaFactory getDefaultBrancher() {

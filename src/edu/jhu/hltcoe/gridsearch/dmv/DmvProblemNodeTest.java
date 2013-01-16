@@ -2,7 +2,6 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static junit.framework.Assert.assertEquals;
 
-import java.io.File;
 import java.util.List;
 
 import org.apache.log4j.BasicConfigurator;
@@ -12,6 +11,8 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.Relaxation;
+import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
@@ -20,9 +21,8 @@ import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -36,10 +36,14 @@ public class DmvProblemNodeTest {
 
     @Before
     public void setUp() {
-        DmvProblemNode.clearActiveNode();
         Prng.seed(1234567890);
+        DmvProblemNode.resetIdCounter();
     }
     
+    /**
+     * This is an overly complicated test that checks the interaction between
+     * DmvProblemNode and DmvRelaxation.
+     */
     @Test
     public void testBranch() {
         SentenceCollection sentences = new SentenceCollection();
@@ -49,17 +53,14 @@ public class DmvProblemNodeTest {
 //        sentences.addSentenceFromString("N V P N");
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
 
-
-        DmvDwRelaxPrm prm = new DmvDwRelaxPrm();
-        prm.tempDir = new File(".");
-        prm.maxCutRounds = 100;
-        DmvRelaxation relax = new DmvDantzigWolfeRelaxation(prm);
-
         VariableSelector varSelector = new RandomVariableSelector(true);
         VariableSplitter varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
         CptBoundsDeltaFactory brancher = new BasicCptBoundsDeltaFactory(varSelector, varSplitter);
-        DmvProblemNode node = new DmvProblemNode(corpus, brancher, relax);
-        List<ProblemNode> children = node.branch();
+        DmvProblemNode node = new DmvProblemNode(brancher);
+        DmvRelaxation relax = new DmvRltRelaxPrm().getInstance(corpus, DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
+        RelaxedSolution relaxSol = null;
+        relax.getRelaxedSolution(node);
+        List<ProblemNode> children = node.branch(relax, relaxSol);
         assertEquals(2, children.size());
         DmvProblemNode c1 = (DmvProblemNode)children.get(0);
         DmvProblemNode c2 = (DmvProblemNode)children.get(1);
@@ -76,57 +77,63 @@ public class DmvProblemNodeTest {
         for (int c=0; c<idm.getNumConds(); c++) {
             bounds[c] = new double[idm.getNumParams(c)][2];
             for (int m=0; m<idm.getNumParams(c); m++) {
-                CptBounds b = node.getBounds();
+                CptBounds b = getBounds(relax, node);
                 bounds[c][m][0] = b.getLb(Type.PARAM, c, m);
                 bounds[c][m][1] = b.getUb(Type.PARAM, c, m);
             }
         }
-        
-        checkedSetActive(c1, node);
+                
+        checkedSetActive(relax, c1, node);
         for (int c=0; c<idm.getNumConds(); c++) {
-            CptBounds b = c1.getBounds();                
+            CptBounds b = getBounds(relax, c1);                
              for (int m=0; m<idm.getNumParams(c); m++) {
                 Assert.assertTrue(bounds[c][m][0] <= b.getLb(Type.PARAM, c, m));
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(Type.PARAM, c, m));
             }
         }
-        assertEquals(Math.log(0.5), c1.getBounds().getLb(Type.PARAM, 2, 1), 1e-7);
+        assertEquals(Math.log(0.5), getBounds(relax, c1).getLb(Type.PARAM, 2, 1), 1e-7);
         
         
-        List<ProblemNode> c1Children = c1.branch();
+        List<ProblemNode> c1Children = c1.branch(relax, relaxSol);
         DmvProblemNode c3 = (DmvProblemNode)c1Children.get(0);
         
-        checkedSetActive(c3, c1);
+        checkedSetActive(relax, c3, c1);
         
-        checkedSetActive(c2, c3);
-        assertEquals(Math.log(0.5), c2.getBounds().getUb(Type.PARAM, 2, 1), 1e-7);
-        DmvProblemNode c4 = (DmvProblemNode)c2.branch().get(1);
-        checkedSetActive(c4, c2);
+        checkedSetActive(relax, c2, c3);
+        assertEquals(Math.log(0.5), getBounds(relax, c2).getUb(Type.PARAM, 2, 1), 1e-7);
+        DmvProblemNode c4 = (DmvProblemNode)c2.branch(relax, relaxSol).get(1);
+        checkedSetActive(relax, c4, c2);
         for (int c=0; c<idm.getNumConds(); c++) {
             for (int m=0; m<idm.getNumParams(c); m++) {
-                CptBounds b = c4.getBounds();                
+                CptBounds b = getBounds(relax, c4);                
                 Assert.assertTrue(bounds[c][m][0] <= b.getLb(Type.PARAM, c, m));
                 Assert.assertTrue(bounds[c][m][1] >= b.getUb(Type.PARAM, c, m));
             }
         }
 
-        checkedSetActive(c3, c4);
+        checkedSetActive(relax, c3, c4);
         
         DmvProblemNode prev = c3;
         for (int i=0; i<10; i++) {
-            DmvProblemNode cur = (DmvProblemNode)prev.branch().get(0);
-            checkedSetActive(cur, prev);
+            DmvProblemNode cur = (DmvProblemNode)prev.branch(relax, relaxSol).get(0);
+            checkedSetActive(relax, cur, prev);
             prev = cur;
         }
-        prev.end();
+        if (relax != null) {
+            relax.end();
+        }
     }
 
-    private void checkedSetActive(DmvProblemNode nextNode, DmvProblemNode prevNode) {
+    private CptBounds getBounds(DmvRelaxation relax, DmvProblemNode node) {
+        return relax.getBounds();
+    }
+
+    private void checkedSetActive(DmvRelaxation relax, DmvProblemNode nextNode, DmvProblemNode prevNode) {
         if (nextNode.getParent() != prevNode) {
-            nextNode.setAsActiveNode();
+            relax.getRelaxedSolution(nextNode);
         } else {
             double prevBound = prevNode.getOptimisticBound();
-            nextNode.setAsActiveNode();
+            relax.getRelaxedSolution(nextNode);
             double nextBound = nextNode.getOptimisticBound();
             System.out.println("parent: " + prevBound + " child: " + nextBound);
             Assert.assertTrue(prevBound >= nextBound);

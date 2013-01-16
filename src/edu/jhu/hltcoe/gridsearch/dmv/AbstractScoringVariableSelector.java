@@ -17,11 +17,11 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
     }
 
     @Override
-    public VariableId select(DmvProblemNode node) {
-        double[][] scores = getScores(node);
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+        double[][] scores = getScores(node, relax);
 
         // Don't branch on variables that have bottomed out
-        CptBounds origBounds = node.getBounds();
+        CptBounds origBounds = relax.getBounds();
         for (int c=0; c<scores.length; c++) {
             for (int m=0; m<scores[c].length; m++) {
                 if (!origBounds.canBranch(Type.PARAM, c, m)) {
@@ -40,11 +40,11 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
             return new VariableId();
         }
         
-        String name = node.getIdm().getName(c, m);
+        String name = relax.getIdm().getName(c, m);
         log.info(String.format("Branching: c=%d m=%d name=%s score=%f", c, m, name, scores[c][m]));
         return new VariableId(c, m);
     }
 
-    protected abstract double[][] getScores(DmvProblemNode node);
+    protected abstract double[][] getScores(DmvProblemNode node, DmvRelaxation relax);
     
 }

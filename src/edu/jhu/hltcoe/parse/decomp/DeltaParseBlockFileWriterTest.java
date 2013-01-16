@@ -22,6 +22,10 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltasTest.MockIlpViterbiParserW
 import edu.jhu.hltcoe.util.Prng;
 
 
+/**
+ * TODO: These tests are currently disabled because they are too slow. 
+ * @author mgormley
+ */
 public class DeltaParseBlockFileWriterTest {
 
     private double lambda = 0.1;
@@ -29,10 +33,9 @@ public class DeltaParseBlockFileWriterTest {
     @Before
     public void setUp() {
         Prng.seed(1234567890);
-        Assert.fail("Turning these tests off for now. They are too slow to be useful.");
     }
     
-    @Test
+    // DISABLED: @Test
     public void testBranchPriceAndCutPC() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
@@ -52,7 +55,7 @@ public class DeltaParseBlockFileWriterTest {
         getParsesMilpBlockPc(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
     }    
     
-    @Test
+    // DISABLED: @Test
     public void testBranchPriceAndCutParsePC() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");
@@ -73,7 +76,7 @@ public class DeltaParseBlockFileWriterTest {
         getParsesParsePc(model, sentences, IlpFormulation.FLOW_PROJ, deltaGen, expectedParseWeight);
     }   
     
-    @Test
+    // DISABLED: @Test
     public void testBranchAndCutCPM() {
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("cat ate mouse");

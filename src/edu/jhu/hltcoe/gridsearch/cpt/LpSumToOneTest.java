@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -28,8 +29,10 @@ public class LpSumToOneTest {
             }
         };
         CptBounds bounds = new CptBounds(icpt);
-        
-        LpSumToOneBuilder sto = new LpSumToOneBuilder(new LpStoBuilderPrm());
+
+        LpStoBuilderPrm prm = new LpStoBuilderPrm();
+        prm.projPrm.type = ProjectionType.NORMALIZE;
+        LpSumToOneBuilder sto = new LpSumToOneBuilder(prm);
         sto.init(cplex, lpMatrix, icpt, bounds);
         sto.createModelParamVars();
         sto.addModelParamConstraints();
@@ -63,7 +66,8 @@ public class LpSumToOneTest {
         CptBounds bounds = new CptBounds(icpt);
         
         LpStoBuilderPrm prm = new LpStoBuilderPrm();
-        prm.maxStoCuts = 1;
+        prm.maxStoCuts = 19;
+        prm.projPrm.type = ProjectionType.NORMALIZE;
         LpSumToOneBuilder sto = new LpSumToOneBuilder(prm);
         sto.init(cplex, lpMatrix, icpt, bounds);
         sto.createModelParamVars();
@@ -77,10 +81,13 @@ public class LpSumToOneTest {
         cplex.solve();
         
         int nRowsBefore = lpMatrix.getNrows();
+        System.out.println("nRowsBefore: " + nRowsBefore);
+        Assert.assertEquals(24, nRowsBefore);
         sto.projectModelParamsAndAddCuts();
         int nRowsAfter = lpMatrix.getNrows();
-        Assert.assertEquals(nRowsBefore+1, nRowsAfter);
+        Assert.assertEquals(25, nRowsAfter);
         
+        cplex.solve();
         double[][] logProbs = sto.extractRelaxedLogProbs();
         for (int c=0; c<logProbs.length; c++) {
             Vectors.exp(logProbs[c]);

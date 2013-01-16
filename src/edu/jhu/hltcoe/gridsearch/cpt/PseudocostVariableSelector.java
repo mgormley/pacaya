@@ -8,6 +8,7 @@ import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.dmv.AbstractScoringVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 
 public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
@@ -25,9 +26,9 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
     }
     
     @Override
-    public double[][] getScores(DmvProblemNode node) {
+    public double[][] getScores(DmvProblemNode node, DmvRelaxation relax) {
         if (scores == null) {
-            idm = node.getIdm();
+            idm = relax.getIdm();
 
             scores = new double[idm.getNumConds()][];
             deltaSum = new double[idm.getNumConds()][][];
@@ -41,12 +42,11 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
         }
         
         // Initialize unreliable pseudocost values with strong branching.
-        CptBounds origBounds = node.getBounds();
+        CptBounds origBounds = relax.getBounds();
         double parentBound = node.getOptimisticBound();
         for (int c = 0; c < idm.getNumConds(); c++) {
             for (int m = 0; m < idm.getNumParams(c); m++) {
                 if (numObserved[c][m][0] < RELIABILITY_THRESHOLD || numObserved[c][m][1] < RELIABILITY_THRESHOLD) {
-                    node.setAsActiveNode();
                     List<CptBoundsDeltaList> deltas = varSplitter.split(origBounds, new VariableId(c, m));
                     List<ProblemNode> children = node.branch(deltas);
                     assert(children.size() == 2);
@@ -54,7 +54,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
                         if (numObserved[c][m][lu] < RELIABILITY_THRESHOLD) {
                             DmvProblemNode child = (DmvProblemNode)children.get(lu);
                             assert(child.getDeltas().getPrimary().getLu().getAsInt() == lu);
-                            child.setAsActiveNode();
+                            relax.getRelaxedSolution(child);
                             double cBound = child.getOptimisticBound();
                             double cDelta = parentBound - cBound;
                             deltaSum[c][m][lu] += cDelta;
@@ -65,7 +65,6 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
                         }
                     }
                     updateScore(c, m);
-                    node.setAsActiveNode();
                 }
             }
         }

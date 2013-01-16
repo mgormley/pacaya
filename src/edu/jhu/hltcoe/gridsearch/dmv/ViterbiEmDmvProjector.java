@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -26,10 +27,24 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class ViterbiEmDmvProjector implements Projector {
 
-    public static class ViterbiEmDmvProjectorPrm {
+    public static class ViterbiEmDmvProjectorPrm implements DmvProjectorFactory {
         public double proportionViterbiImproveTreebank = 0.05;
         public double proportionViterbiImproveModel = 0.05;
-        public DmvProjectorPrm projPrm = new DmvProjectorPrm();
+        public DmvProjectorPrm dprojPrm = new DmvProjectorPrm();
+        // EM Parameters for improving the projected solutions.
+        public DmvViterbiEMTrainerPrm vemPrm = new DmvViterbiEMTrainerPrm();
+        public ViterbiEmDmvProjectorPrm() {
+            vemPrm.emPrm.iterations = 25;        
+            vemPrm.emPrm.convergenceRatio = 0.99999;
+            vemPrm.emPrm.numRestarts = 0;
+            vemPrm.emPrm.timeoutSeconds = Double.POSITIVE_INFINITY;
+            vemPrm.lambda = 0.1;
+            vemPrm.evaluator = null;
+        }
+        @Override
+        public Projector getInstance(DmvTrainCorpus corpus, DmvRelaxation relax) {
+            return new ViterbiEmDmvProjector(this, corpus, relax);
+        }
     }
     
     private final class DmvSolutionComparator implements Comparator<DmvSolution> {
@@ -55,15 +70,13 @@ public class ViterbiEmDmvProjector implements Projector {
     private ViterbiEmDmvProjectorPrm prm;
     private DmvProjector dmvProjector;
     private DmvTrainCorpus corpus;
-    private DmvRelaxation dwRelax;
-    private DmvSolution initFeasSol;
+    private DmvRelaxation relax;
 
-    public ViterbiEmDmvProjector(ViterbiEmDmvProjectorPrm prm, DmvTrainCorpus corpus, DmvRelaxation dwRelax, DmvSolution initFeasSol) {
+    public ViterbiEmDmvProjector(ViterbiEmDmvProjectorPrm prm, DmvTrainCorpus corpus, DmvRelaxation dwRelax) {
         this.prm = prm;
-        dmvProjector = new DmvProjector(prm.projPrm, corpus);
+        dmvProjector = new DmvProjector(prm.dprojPrm, corpus);
         this.corpus = corpus;
-        this.dwRelax = dwRelax;
-        this.initFeasSol = initFeasSol;
+        this.relax = dwRelax;
     }
     
     @Override
@@ -76,11 +89,6 @@ public class ViterbiEmDmvProjector implements Projector {
             throw new IllegalStateException("No relaxed solution cached.");
         }
         List<DmvSolution> solutions = new ArrayList<DmvSolution>();
-        if (initFeasSol != null) {
-            // Only consider this solution once at the root.
-            solutions.add(initFeasSol);
-            initFeasSol = null;
-        }
         
         DmvSolution projectedSol = dmvProjector.getProjectedDmvSolution(relaxSol);
         // Add the null solution, so that the collection isn't empty.
@@ -101,8 +109,7 @@ public class ViterbiEmDmvProjector implements Projector {
         }
 
         return Collections.max(solutions, new DmvSolutionComparator());
-    }
-    
+    }    
 
     private DmvSolution getImprovedSol(double[][] logProbs, IndexedDmvModel idm) {
         double lambda = 1e-6;
@@ -112,40 +119,32 @@ public class ViterbiEmDmvProjector implements Projector {
         model.backoff(Utilities.log(lambda));
         model.logNormalize();
         DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
-        return runViterbiEmHelper(modelFactory, 0);
+        return runViterbiEmHelper(modelFactory);
     }
     
     private DmvSolution getImprovedSol(DepTreebank treebank) {  
-        double lambda = 0.1;
+        double lambda = prm.vemPrm.lambda;
         // Do one M-step to create a model
         DmvMStep mStep = new DmvMStep(lambda);
         DmvModel model = (DmvModel) mStep.getModel(corpus, treebank);
         DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
         // Then run Viterbi EM
-        return runViterbiEmHelper(modelFactory, 0);
+        return runViterbiEmHelper(modelFactory);
     }
 
-    private DmvSolution runViterbiEmHelper(DmvModelFactory modelFactory, 
-            int numRestarts) {
+    private DmvSolution runViterbiEmHelper(DmvModelFactory modelFactory) {
         // Run Viterbi EM to improve the projected solution.
         ViterbiParser parser = new DmvCkyParser();
-        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
-        prm.emPrm.iterations = 25;        
-        prm.emPrm.convergenceRatio = 0.99999;
-        prm.emPrm.numRestarts = numRestarts;
-        prm.emPrm.timeoutSeconds = Double.NEGATIVE_INFINITY;
-        prm.lambda = 0.1;
-        prm.evaluator = null;
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm.vemPrm, parser, modelFactory);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = dwRelax.getIdm();
+        IndexedDmvModel idm = relax.getIdm();
         DmvModel dmv = (DmvModel)trainer.getModel();
         double[][] logProbs = idm.getCmLogProbs(dmv);
         
         // Compute the score for the solution
-        double score = dwRelax.computeTrueObjective(logProbs, treebank);
+        double score = relax.computeTrueObjective(logProbs, treebank);
         log.debug("Computed true objective: " + score);
         assert Utilities.equals(score, trainer.getLogLikelihood(), 1e-5) : "difference = " + (score - trainer.getLogLikelihood());
                 

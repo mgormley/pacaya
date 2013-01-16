@@ -2,24 +2,18 @@ package edu.jhu.hltcoe.gridsearch;
 
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
-import ilog.concert.IloMPModeler;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.BasisStatus;
-import ilog.cplex.IloCplex.DoubleParam;
-import ilog.cplex.IloCplex.IntParam;
 import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
@@ -27,8 +21,9 @@ import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Timer;
 
-public abstract class DantzigWolfeRelaxation {
+public abstract class DantzigWolfeRelaxation implements Relaxation {
     
     public static class SubproblemRetVal {
         public double sumReducedCosts;
@@ -64,13 +59,16 @@ public abstract class DantzigWolfeRelaxation {
     private static final double INTERNAL_WORST_SCORE = Double.POSITIVE_INFINITY;
     private int numSolves;
     private Timer simplexTimer;
+    private Timer switchTimer;
 
     private DwRelaxPrm prm;
+
     
     public DantzigWolfeRelaxation(DwRelaxPrm prm) {
         this.prm = prm;
         this.numSolves = 0;
         this.simplexTimer = new Timer();
+        this.switchTimer = new Timer();
     }
 
     public void init2(DmvSolution initFeasSol) {
@@ -87,16 +85,41 @@ public abstract class DantzigWolfeRelaxation {
         }
     }
 
-    public RelaxedSolution solveRelaxation() {
-        return solveRelaxation(LazyBranchAndBoundSolver.WORST_SCORE, 0);
+    @Override
+    public RelaxedSolution getRelaxedSolution(ProblemNode curNode) {
+        return getRelaxedSolution(curNode, LazyBranchAndBoundSolver.WORST_SCORE);
     }
 
-    public RelaxedSolution solveRelaxation(double incumbentScore, int depth) {
-        try {
+    @Override
+    public RelaxedSolution getRelaxedSolution(ProblemNode curNode, double incumbentScore) {
+        switchTimer.start();
+        setAsActiveNode(curNode);
+
+        if (curNode.getWarmStart() != null) {
+            setWarmStart(curNode.getWarmStart());
+        }
+        switchTimer.stop();
+
+
+        RelaxedSolution relaxSol = solveRelaxation(curNode, incumbentScore);
+                
+        if (curNode.getOptimisticBound() < relaxSol.getScore()) {
+            // If CPLEX gets a worse bound, then keep the parent's bound.
+            relaxSol.setScore(curNode.getOptimisticBound());
+        } else {
+            curNode.setOptimisticBound(relaxSol.getScore());
+        }
+        curNode.setWarmStart(getWarmStart());
+
+        return relaxSol;
+    }
+
+    private RelaxedSolution solveRelaxation(ProblemNode curNode, double incumbentScore) {
+        try {            
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, upperBound, depth);
+            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, upperBound, curNode.getDepth());
             RelaxStatus status = pair.get1();
             double lowerBound = pair.get2();
             
@@ -121,6 +144,7 @@ public abstract class DantzigWolfeRelaxation {
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
             log.info("True obj for relaxed vars: " + relaxSol.getTrueObjectiveForRelaxedSolution());
+
             return relaxSol;
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
@@ -265,6 +289,7 @@ public abstract class DantzigWolfeRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration objective values (cut=%d): %s", cut, iterationObjVals));
         log.debug("Iteration lower bounds: " + iterationLowerBounds);
+        log.debug("Avg switch time(ms) per solve: " + switchTimer.totMs() / numSolves);
         log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
         printSummary();
     
@@ -294,5 +319,7 @@ public abstract class DantzigWolfeRelaxation {
     protected abstract boolean isFeasible();
 
     protected abstract void buildModel(IloCplex cplex, DmvSolution initFeasSol) throws IloException;
+    
+    protected abstract void setAsActiveNode(ProblemNode pn);
 
 }

@@ -14,6 +14,12 @@ import org.junit.Test;
 import edu.jhu.hltcoe.util.Files;
 
 
+/**
+ * The Gurobi tests are disabled because the license is out of date.
+ * 
+ * @author mgormley
+ *
+ */
 public class ZimplSolverTest {
     
     private File tempDir; 
@@ -32,12 +38,12 @@ public class ZimplSolverTest {
         tempDir = Files.createTempDir("workspace", new File("."));
     }
 
-    @Test
+    //DISABLED: @Test
     public void testClGurobiIlpSolver() throws IOException {
         runZimplSolver(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
     }
     
-    @Test
+    // DISABLED: @Test
     public void testJavaGurobiIlpSolver() throws IOException {
         runZimplSolver(tempDir, new JavaGurobiIlpSolver(tempDir));
     }
@@ -52,11 +58,12 @@ public class ZimplSolverTest {
         runZimplInfeasible(tempDir, new CplexIlpSolver(tempDir, 2, 128));
     }
     
-    @Test
+    // DISABLED: @Test
     public void testJavaGurobiInfeasible() {
         runZimplInfeasible(tempDir, new JavaGurobiIlpSolver(tempDir));
     }
-    @Test
+    
+    // DISABLED: @Test
     public void testClGurobiInfeasible() {
         runZimplInfeasible(tempDir, new ClGurobiIlpSolver(tempDir, 2, 128));
     }

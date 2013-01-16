@@ -2,9 +2,10 @@ package edu.jhu.hltcoe.gridsearch.randwalk;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.DmvLazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
+import edu.jhu.hltcoe.gridsearch.Projector;
+import edu.jhu.hltcoe.gridsearch.Relaxation;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
@@ -19,7 +20,7 @@ import gnu.trove.TDoubleArrayList;
  * 
  * @author mgormley
  */
-public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
+public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(RandWalkBnbNodeSampler.class);
 
     public static class CostEstimator {
@@ -66,18 +67,21 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
         }
     }
     
-    public static class RandWalkBnbSamplerPrm {
+    public static class RandWalkBnbSamplerPrm implements LazyBnbSolverFactory {
         public int maxSamples = 10000;
-        // TODO: push these parameters into superclass.
-        public double epsilon = 0.1;
-        public double timeoutSeconds = 100;
-        public DependencyParserEvaluator evaluator = null;
+        public LazyBnbSolverPrm bnbPrm = new LazyBnbSolverPrm();
+        @Override
+        public LazyBranchAndBoundSolver getInstance(Relaxation relaxation, Projector projector) {
+            this.bnbPrm.relaxation = relaxation;
+            this.bnbPrm.projector = projector;
+            return new RandWalkBnbNodeSampler(this);
+        }
     }
 
     private RandWalkBnbSamplerPrm prm;
 
     public RandWalkBnbNodeSampler(RandWalkBnbSamplerPrm prm) {
-        super(prm.epsilon, null, prm.timeoutSeconds, prm.evaluator);
+        super(prm.bnbPrm);
         this.prm = prm;
     }
 
@@ -98,7 +102,7 @@ public class RandWalkBnbNodeSampler extends DmvLazyBranchAndBoundSolver {
             
             numProcessed++;
             
-            if (nodeTimer.totSec() > timeoutSeconds) {
+            if (nodeTimer.totSec() > prm.bnbPrm.timeoutSeconds) {
                 // Done: Timeout reached.
                 break;
             } else if (nodeCountEst.getNumSamples() >= prm.maxSamples) {

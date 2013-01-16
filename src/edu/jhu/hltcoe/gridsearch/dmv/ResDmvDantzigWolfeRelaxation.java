@@ -18,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
@@ -32,6 +31,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -45,11 +45,17 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation implements DmvRelaxation {
 
-    public static class ResDmvDwRelaxPrm extends DmvDwRelaxPrm {
-        private ProjectionsPrm projPrm = new ProjectionsPrm();
+    public static class ResDmvDwRelaxPrm extends DmvDwRelaxPrm implements DmvRelaxationFactory {
+        public ProjectionsPrm projPrm = new ProjectionsPrm();
         public ResDmvDwRelaxPrm() {
             super();
-            this.stoPrm = null;
+        }
+        @Override
+        public DmvRelaxation getInstance(DmvTrainCorpus corpus, DmvSolution initFeasSol) {
+            ResDmvDantzigWolfeRelaxation relax = new ResDmvDantzigWolfeRelaxation(this);
+            relax.init1(corpus);
+            relax.init2(initFeasSol);
+            return relax;
         }
     }
     
@@ -66,6 +72,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     
     public ResDmvDantzigWolfeRelaxation(ResDmvDwRelaxPrm prm) {
         super(prm);
+        this.sto = null;
         this.prm = prm;
         this.projections = new Projections(prm.projPrm);
         this.hasInfeasibleBounds = false;

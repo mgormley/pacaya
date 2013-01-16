@@ -79,7 +79,7 @@ public class ViterbiTrainerTest {
         trainer.train(new DmvTrainCorpus(sentences));
         
         System.out.println("logLikelihood: " + trainer.getLogLikelihood());
-        Assert.assertEquals(-2.284, trainer.getLogLikelihood(), 1e-3);
+        Assert.assertEquals(-2.517, trainer.getLogLikelihood(), 1e-3);
     }
 
     public static DmvViterbiEMTrainer getDefaultCkyViterbiTrainer() {

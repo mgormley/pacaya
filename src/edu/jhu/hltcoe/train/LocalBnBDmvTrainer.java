@@ -1,22 +1,33 @@
 package edu.jhu.hltcoe.train;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.hltcoe.gridsearch.Projector;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
+import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest;
+import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
@@ -25,57 +36,90 @@ import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
     private static final Logger log = Logger.getLogger(LocalBnBDmvTrainer.class);
 
-    DmvViterbiEMTrainer viterbiTrainer;
-    private LazyBranchAndBoundSolver bnbSolver;
-    private CptBoundsDeltaFactory brancher;
-    private DmvRelaxation relax;
-    private int numRestarts;
-    private double offsetProb;
-    private double probOfSkipCm;
+    // TODO: Add defaults.
+    public static class LocalBnBDmvTrainerPrm {
+        public DmvViterbiEMTrainer viterbiTrainer = new DmvViterbiEMTrainer(new DmvViterbiEMTrainerPrm()); // TODO: switch to just the prm, not the trainer.
+        public CptBoundsDeltaFactory brancher = new BasicCptBoundsDeltaFactory(new RegretVariableSelector(), new MidpointVarSplitter(MidpointChoice.HALF_PROB));
+        public LazyBnbSolverFactory bnbSolverFactory = new LazyBnbSolverPrm();
+        public DmvRelaxationFactory relaxFactory = new DmvDwRelaxPrm(); 
+        public DmvProjectorFactory projectorFactory = new ViterbiEmDmvProjectorPrm();
+        
+        public int numRestarts = 10;
+        public double offsetProb = 0.1;
+        public double probOfSkipCm = 0.1;
+        public double timeoutSeconds = 1e+75;
+        public DependencyParserEvaluator evaluator = null;
+        public DmvSolFactoryPrm initSolPrm = new DmvSolFactoryPrm();
+
+        public LocalBnBDmvTrainerPrm() { }
+        
+        public LocalBnBDmvTrainerPrm(DmvViterbiEMTrainer viterbiTrainer, LazyBnbSolverFactory bnbSolverFactory, CptBoundsDeltaFactory brancher,
+                DmvRelaxationFactory relaxFactory, DmvProjectorFactory projectorFactory, int numRestarts, double offsetProb, double probOfSkipCm, 
+                double timeoutSeconds, DependencyParserEvaluator evaluator, DmvSolFactoryPrm initSolPrm) {
+            this.viterbiTrainer = viterbiTrainer;
+            this.brancher = brancher;
+            this.bnbSolverFactory = bnbSolverFactory;
+            this.relaxFactory = relaxFactory;
+            this.projectorFactory = projectorFactory;
+            this.numRestarts = numRestarts;
+            this.offsetProb = offsetProb;
+            this.probOfSkipCm = probOfSkipCm;
+            this.timeoutSeconds = timeoutSeconds;
+            this.evaluator = evaluator;
+            this.initSolPrm = initSolPrm;
+        }
+    }
+
+    public LazyBranchAndBoundSolver bnbSolver = null;
+    public DmvRelaxation relax = null;
     private double incumbentScore;
     private DmvSolution incumbentSolution;
-    private double timeoutSeconds;
-    private DependencyParserEvaluator evaluator;
     
-    public LocalBnBDmvTrainer(DmvViterbiEMTrainer viterbiTrainer, LazyBranchAndBoundSolver bnbSolver, CptBoundsDeltaFactory brancher,
-            DmvRelaxation relax, int numRestarts, double offsetProb, double probOfSkipCm, 
-            double timeoutSeconds, DependencyParserEvaluator evaluator) {
-        this.viterbiTrainer = viterbiTrainer;
-        this.bnbSolver = bnbSolver;
-        this.brancher = brancher;
-        this.relax = relax;
-        this.numRestarts = numRestarts;
-        this.offsetProb = offsetProb;
-        this.probOfSkipCm = probOfSkipCm;
-        this.timeoutSeconds = timeoutSeconds;
-        this.evaluator = evaluator;
+    private LocalBnBDmvTrainerPrm prm;
+    
+    public LocalBnBDmvTrainer(LocalBnBDmvTrainerPrm prm) {
+        this.prm = prm;
     }
 
     @Override
     public void train(TrainCorpus c) {
         DmvTrainCorpus corpus = (DmvTrainCorpus)c;
-        // Initialize
-        this.incumbentSolution = null;
-        this.incumbentScore = LazyBranchAndBoundSolver.WORST_SCORE;
-        IndexedDmvModel idm = new IndexedDmvModel(corpus);
-        DmvProblemNode rootNode = new DmvProblemNode(corpus, brancher, relax);
 
+        // Get initial solution for B&B and (sometimes) the relaxation.
+        DmvSolFactory dsf = new DmvSolFactory(prm.initSolPrm);
+        this.incumbentSolution =  dsf.getInitFeasSol(corpus);
+        this.incumbentScore = incumbentSolution.getScore();
+        log.info("Initial solution score: " + incumbentSolution.getScore());
+
+//      DmvRelaxation relax = (DmvRelaxation) prm.bnbSolver.getRelaxation();
+//      prm.relax.init1(corpus);
+//      prm.relax.init2(incumbentSolution);
+        relax = prm.relaxFactory.getInstance(corpus, incumbentSolution);
+        Projector projector = prm.projectorFactory.getInstance(corpus, relax);
+        bnbSolver = prm.bnbSolverFactory.getInstance(relax, projector);
+        
+        // Initialize B&B.
+        IndexedDmvModel idm = new IndexedDmvModel(corpus);
+        DmvProblemNode rootNode = new DmvProblemNode(prm.brancher);
+        
         Timer timer = new Timer();
         timer.start();
-        for (int r=0; r<=numRestarts; r++) {
+        for (int r=0; r<=prm.numRestarts; r++) {
             // Run Viterbi EM with no random restarts.
-            viterbiTrainer.train(corpus);
+            prm.viterbiTrainer.train(corpus);
             
             // Construct the solution object.
-            DepTreebank treebank = viterbiTrainer.getCounts();
-            double[][] logProbs = idm.getCmLogProbs((DmvModel)viterbiTrainer.getModel());
+            DepTreebank treebank = prm.viterbiTrainer.getCounts();
+            double[][] logProbs = idm.getCmLogProbs((DmvModel)prm.viterbiTrainer.getModel());
             double vemScore = relax.computeTrueObjective(logProbs, treebank);
             DmvSolution vemSol = new DmvSolution(logProbs, idm, treebank, vemScore);
             
@@ -87,14 +131,13 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             }
             
             // Set bounds on the root node from the resulting solution.
-            setBoundsFromInitSol(rootNode.getRelaxation(), vemSol, offsetProb, probOfSkipCm);
+            setBoundsFromInitSol(relax, vemSol, prm.offsetProb, prm.probOfSkipCm);
             // Add the Viterbi EM solution to the root node.
-            rootNode.getRelaxation().addFeasibleSolution(vemSol);
+            relax.addFeasibleSolution(vemSol);
             
             // Run branch-and-bound.
             bnbSolver.runBranchAndBound(rootNode, incumbentSolution, incumbentScore);
             // Clear any cached information.
-            rootNode.setAsActiveNode();
             rootNode.clear();
             
             // Update the incumbent solution.
@@ -106,20 +149,20 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             }
 	    
 	    timer.stop();
-            if (timer.totSec() > timeoutSeconds) {
+            if (timer.totSec() > prm.timeoutSeconds) {
                 // Timeout reached.
                 break;
             }
 	    timer.start();
         }
         evalIncumbent();
-        rootNode.end();
+        relax.end();
     }
 
     private void evalIncumbent() {
-        if (evaluator != null) {
+        if (prm.evaluator != null) {
             log.info("Incumbent logLikelihood: " + incumbentScore);
-            log.info("Incumbent accuracy: " + evaluator.evaluate(incumbentSolution.getTreebank()));
+            log.info("Incumbent accuracy: " + prm.evaluator.evaluate(incumbentSolution.getTreebank()));
         }
     }
     
@@ -185,22 +228,19 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         }
     }
 
-    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation dw, DepTreebank trainTreebank) {
-        return getInitSol(opt, corpus, dw, trainTreebank, null);
-    }
-    
-    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvSolution goldSol) {
+    // TODO: move to DmvSolFactory.
+    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation relax, DepTreebank trainTreebank, DmvSolution goldSol) {
         IndexedDmvModel idm;
-        if (dw != null) {
-            idm = dw.getIdm();
+        if (relax != null) {
+            idm = relax.getIdm();
         } else {
             idm = new IndexedDmvModel(corpus);
         }
     
         DmvSolution initBoundsSol;
         if (opt == InitSol.VITERBI_EM) {
-            // TODO: hacky to call a test method and Trainer ignore parameters
-            initBoundsSol = DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus);
+            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm());
+            initBoundsSol = initSolFactory.getInitFeasSol(corpus);
         } else if (opt == InitSol.GOLD) {
             initBoundsSol = goldSol;
         } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM || opt == InitSol.SUPERVISED){
@@ -218,8 +258,8 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
             ViterbiParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(corpus, randModel);
             double score;
-            if (dw != null) {
-                score = dw.computeTrueObjective(logProbs, treebank);
+            if (relax != null) {
+                score = relax.computeTrueObjective(logProbs, treebank);
             } else {
                 score = parser.getLastParseWeight();
             }
@@ -230,6 +270,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         return initBoundsSol;
     }
 
+    // TODO: move to DmvSolFactory.
     public enum InitSol {
         VITERBI_EM("viterbi-em"), 
         GOLD("gold"), 
