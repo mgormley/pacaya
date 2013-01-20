@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.util.cli;
 
+import java.io.File;
+
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.BasicConfigurator;
 import org.junit.Assert;
@@ -20,6 +22,12 @@ public class ArgParserTest {
     @Opt(hasArg = false, description = "my boolNoArg")
     public static boolean boolNoArg = false;
 
+    @Opt(hasArg = true, description = "my strVal")
+    public static String strVal = "1";
+
+    @Opt(hasArg = true, description = "my fileVal")
+    public static File fileVal = new File("1/1");
+    
     @BeforeClass
     public static void setUp() {
         BasicConfigurator.configure();
@@ -46,6 +54,16 @@ public class ArgParserTest {
 
             Assert.assertEquals(3, intVal);
             Assert.assertEquals(3e10, doubleVal, 1e-13);
+        }
+        {
+            String[] args = "--strVal=4 --fileVal=4/4".split(" ");
+
+            ArgParser parser = new ArgParser();
+            parser.addClass(ArgParserTest.class);
+            parser.parseArgs(args);
+
+            Assert.assertEquals("4", strVal);
+            Assert.assertEquals(new File("4/4"), fileVal);
         }
     }
 

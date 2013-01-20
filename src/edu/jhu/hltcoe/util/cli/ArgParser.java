@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.util.cli;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -131,6 +132,10 @@ public class ArgParser {
             field.setShort(null, Short.parseShort(value));
         } else if (type.isEnum()) {
             field.set(null, Enum.valueOf((Class<Enum>) field.getType(), value));
+        } else if (type.equals(String.class)) {
+            field.set(field, value);
+        } else if (type.equals(File.class)) {
+            field.set(field, new File(value));
         } else {
             throw new RuntimeException("Field type not supported: " + type.getName());
         }
