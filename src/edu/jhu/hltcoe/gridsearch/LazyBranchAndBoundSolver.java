@@ -93,8 +93,7 @@ public class LazyBranchAndBoundSolver {
         this.incumbentScore = initialScore;
         double upperBound = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
-        prm.leafNodeOrderer.clear();
-        upperBoundPQ.clear();
+        clearLeafNodes();
         int numProcessed = 0;
         FathomStats fathom = new FathomStats();
         
@@ -110,10 +109,11 @@ public class LazyBranchAndBoundSolver {
             nodeTimer.start();
             
             // The upper bound can only decrease
-            if (upperBoundPQ.peek().getOptimisticBound() > upperBound + 1e-8) {
-                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", upperBoundPQ.peek().getOptimisticBound(), upperBound));
+            ProblemNode worstLeaf = getWorstLeaf();
+            if (worstLeaf.getOptimisticBound() > upperBound + 1e-8) {
+                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", worstLeaf.getOptimisticBound(), upperBound));
             }
-            upperBound = upperBoundPQ.peek().getOptimisticBound();
+            upperBound = worstLeaf.getOptimisticBound();
             assert (!Double.isNaN(upperBound));
             
             numProcessed++;
@@ -170,8 +170,7 @@ public class LazyBranchAndBoundSolver {
         }
         printSummary(upperBound, relativeDiff, numProcessed, fathom);
         printTimers(numProcessed);
-        prm.leafNodeOrderer.clear();
-        upperBoundPQ.clear();
+        clearLeafNodes();
 
         log.info("B&B search status: " + status);
         
@@ -289,6 +288,15 @@ public class LazyBranchAndBoundSolver {
         } else {
             upperBoundPQ.add(node);
         }
+    }
+
+    private ProblemNode getWorstLeaf() {
+        return upperBoundPQ.peek();
+    }
+
+    private void clearLeafNodes() {
+        prm.leafNodeOrderer.clear();
+        upperBoundPQ.clear();
     }
 
     public Solution getIncumbentSolution() {
