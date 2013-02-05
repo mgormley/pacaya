@@ -75,7 +75,7 @@ public class IndexedDmvModelTest {
         c = 0;
         m = 2;
         s = 2;
-        assertEquals("root(2)", idm.getName(c,m));
+        assertEquals("root(D)", idm.getName(c,m));
         // Should exist in sent 2
         assertEquals(1, idm.getMaxFreq(s, idm.getSi(s, c, m)));
         // Should not exists in sent 0 or 1

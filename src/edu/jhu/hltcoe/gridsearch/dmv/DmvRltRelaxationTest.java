@@ -180,7 +180,7 @@ public class DmvRltRelaxationTest {
         RelaxedDmvSolution relaxSol;
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
-        assertEquals(-1.484, relaxSol.getScore(), 1e-3);
+        assertEquals(-1.481, relaxSol.getScore(), 1e-3);
 
         newL = origLower;
         newU = origUpper;

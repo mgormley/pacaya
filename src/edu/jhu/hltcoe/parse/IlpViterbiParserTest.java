@@ -62,10 +62,10 @@ public class IlpViterbiParserTest {
         // Below is the full sentence, but the DP_PROJ is too slow to parse it. Instead we use
         // just a part of it.
         //sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
-        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
+        sentences.addSentenceFromString("NNP , CD NNS JJ , MD VB DT NN IN DT");
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
-        double expectedParseWeight = -53.392;
+        double expectedParseWeight = -49.376;
 
         Timer timer;
 
@@ -86,11 +86,6 @@ public class IlpViterbiParserTest {
         for (int i=0; i<expTrees.size(); i++) {
             int[] expTree = expTrees.get(i).getParents();
             int[] flowTree = flowTrees.get(i).getParents();
-            // Canonicalize heads that point at NNP.
-            if (expTree[7] == 0 && expTree[9] == 0) {
-                expTree[7] = 1;
-                expTree[9] = 1;
-            }
             assertArrayEquals(expTree, flowTree);
         }
         

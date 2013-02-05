@@ -117,10 +117,10 @@ public class DmvCkyParserTest {
         // Below is the full sentence, but the DP_PROJ is too slow to parse it. Instead we use
         // just a part of it.
         //sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .");
-        sentences.addSentenceFromString("NNP NNP , CD NNS JJ , MD VB DT NN IN DT");
+        sentences.addSentenceFromString("NNP , CD NNS JJ , MD VB DT NN IN DT");
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
-        double expectedParseWeight = -53.392;
+        double expectedParseWeight = -49.376;
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
