@@ -158,8 +158,8 @@ class DPExpParams(experiment_runner.JavaExpParams):
         java_args = self._get_java_args(java_mem)  
         if True: 
             # HACK: revert back to this if-clause after adding real parser for eval: self.get("ilpSolver") == "cplex":  
-            mac_jlp = "/Users/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_darwin9_gcc4.0"
-            coe_jlp = "/home/hltcoe/mgormley/installed/ILOG/CPLEX_Studio_AcademicResearch122/cplex/bin/x86-64_sles10_4.1"
+            mac_jlp = "/Users/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_darwin"
+            coe_jlp = "/home/hltcoe/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_sles10_4.1"
             if os.path.exists(mac_jlp): jlp = mac_jlp
             elif os.path.exists(coe_jlp): jlp = coe_jlp
             else: raise Exception("Could not find java.library.path for CPLEX")
@@ -196,7 +196,7 @@ class HProfHeapExpParams(DPExpParams):
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        ExpParamsRunner.__init__(self, options.expname, options.queue)
+        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=False)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
