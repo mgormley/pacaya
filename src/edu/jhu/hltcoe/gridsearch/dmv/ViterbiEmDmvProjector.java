@@ -11,8 +11,8 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -25,7 +25,7 @@ import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class ViterbiEmDmvProjector implements Projector {
+public class ViterbiEmDmvProjector implements DmvProjector {
 
     public static class ViterbiEmDmvProjectorPrm implements DmvProjectorFactory {
         public double proportionViterbiImproveTreebank = 0.05;
@@ -68,13 +68,13 @@ public class ViterbiEmDmvProjector implements Projector {
     private static final Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
 
     private ViterbiEmDmvProjectorPrm prm;
-    private DmvProjector dmvProjector;
+    private BasicDmvProjector dmvProjector;
     private DmvTrainCorpus corpus;
     private DmvRelaxation relax;
 
     public ViterbiEmDmvProjector(ViterbiEmDmvProjectorPrm prm, DmvTrainCorpus corpus, DmvRelaxation dwRelax) {
         this.prm = prm;
-        dmvProjector = new DmvProjector(prm.dprojPrm, corpus);
+        dmvProjector = new BasicDmvProjector(prm.dprojPrm, corpus);
         this.corpus = corpus;
         this.relax = dwRelax;
     }

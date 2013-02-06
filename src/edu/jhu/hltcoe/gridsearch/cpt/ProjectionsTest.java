@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModelTest;
 import edu.jhu.hltcoe.math.Vectors;
@@ -162,7 +162,7 @@ public class ProjectionsTest {
         sentences.addSentenceFromString("cat ate hat");
         double[] fracRoot = new double[]{0.3, 0.6, 0.1};
         double[][] fracChild = new double[][]{{0.0, 0.3, 0.25},{0.5, 0.0, 0.5}, {0.25, 0.1, 0.0}};
-        DepTree t = DmvProjector.getProjectiveParse(sentences.get(0), fracRoot, fracChild);
+        DepTree t = BasicDmvProjector.getProjectiveParse(sentences.get(0), fracRoot, fracChild);
         System.out.println(t);
         JUnitUtils.assertArrayEquals(new int[]{1,-1,1}, t.getParents());
     }

@@ -15,10 +15,10 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.Tag;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector.DmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
@@ -180,7 +180,7 @@ public class LpDmvRelaxedParserTest {
         RelaxedDepTreebank trees = parser.getRelaxedParse(corpus, model);
         checkFractionalTrees(trees);
         
-        DmvProjector projector = new DmvProjector(new DmvProjectorPrm(), corpus);
+        BasicDmvProjector projector = new BasicDmvProjector(new DmvProjectorPrm(), corpus);
         projector.getProjectedParses(trees);
     }
     
@@ -232,7 +232,7 @@ public class LpDmvRelaxedParserTest {
         RelaxedDepTreebank trees = parser.getRelaxedParse(corpus, model);
         checkFractionalTrees(trees);
         
-        DmvProjector projector = new DmvProjector(new DmvProjectorPrm(), corpus);
+        BasicDmvProjector projector = new BasicDmvProjector(new DmvProjectorPrm(), corpus);
         DepTreebank projTrees = projector.getProjectedParses(trees);
         for (DepTree tree : projTrees) {
             System.out.println(tree);
