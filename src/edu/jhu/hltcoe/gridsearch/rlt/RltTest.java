@@ -23,8 +23,8 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowAdder;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowAdder;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
@@ -42,7 +42,7 @@ public class RltTest {
     @AfterClass
     public static void classTearDown() {
         Logger.getRootLogger().setLevel(Level.DEBUG);
-    }
+    }    
 
     /**
      * Testing the RLT constraints are as given in Sherali & Tuncbilek (1995) in
@@ -391,7 +391,7 @@ public class RltTest {
 
         assertEquals(mat1.getNrows(), mat2.getNrows());
         
-        assertEquals(mat1.toString(), mat2.toString());
+        assertMatrixEquals(mat1, mat2);
     }
 
     private Rlt getRlt(boolean addRows) throws IloException {
@@ -440,10 +440,10 @@ public class RltTest {
 
         IloNumVar x1 = cplex.numVar(2, 3, "x1");
         IloNumVar x2 = cplex.numVar(5, 7, "x2");
-        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48);
-        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120);
-        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48);
-        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120);
+        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48, "c1");
+        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120, "c2");
+        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48, "c3");
+        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120, "c4");
 
         IloNumVar[] vars = new IloNumVar[] { x1, x2 };
         IloLPMatrix mat = cplex.LPMatrix("lpmat");
@@ -451,7 +451,7 @@ public class RltTest {
         IloRange[] cons = new IloRange[] { c1, c3};
         mat.addRows(cons);
         RltPrm prm = RltPrm.getFirstOrderRlt();
-        prm.rowFilter = new VarRltRowFilter(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
+        prm.rowAdder = new VarRltRowAdder(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
         Rlt rlt = new Rlt(cplex, mat, prm);
         IloLPMatrix rltMat = rlt.getRltMatrix();
         System.out.println(rltMat);
@@ -493,7 +493,7 @@ public class RltTest {
         IloRange[] cons = new IloRange[] { c1, c3};
         mat.addRows(cons);
         RltPrm prm = RltPrm.getFirstOrderRlt();
-        prm.rowFilter = new MaxNumRltRowFilter(4, 1);
+        prm.rowAdder = new MaxNumRltRowAdder(4, 1);
         Rlt rlt = new Rlt(cplex, mat, prm);
         IloLPMatrix rltMat = rlt.getRltMatrix();
         System.out.println(rltMat);
@@ -545,6 +545,16 @@ public class RltTest {
             Assert.fail("Program not solved");
         }
         assertEquals(-216, cplex.getObjValue(), 1e-13);
+    }
+
+    private static void assertMatrixEquals(IloLPMatrix mat1, IloLPMatrix mat2) {
+        String[] matRows1 = mat1.toString().split("\n");
+        String[] matRows2 = mat2.toString().split("\n");
+        Arrays.sort(matRows1);
+        Arrays.sort(matRows2);
+        for (int i=0; i<matRows1.length; i++) {
+            assertEquals(matRows1[i], matRows2[i]);
+        }
     }
 
     private static void assertContainsRow(IloLPMatrix rltMat, double[] row, int numVars) throws IloException {

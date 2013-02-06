@@ -9,6 +9,7 @@ import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -22,23 +23,25 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.BoundFactor;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.AllRltRowAdder;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RltFactorFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowFilter.RowType;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowAdder;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RowType;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.cplex.CplexRowUpdates;
 import edu.jhu.hltcoe.util.cplex.CplexRows;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.hltcoe.util.tuple.OrderedPair;
+import edu.jhu.hltcoe.util.tuple.UnorderedPair;
 
 public class Rlt {
 
     public static class RltPrm {
         public boolean envelopeOnly = true;
-        public boolean nameRltVarsAndCons = true;
         public RltFactorFilter factorFilter = null;
-        public RltRowFilter rowFilter = null;
-        public RltRowFilter alwaysKeepRowFilter = null;
+        public RltRowAdder rowAdder = new AllRltRowAdder();
+        public boolean nameRltVarsAndCons = true;
         public int maxRowsToCache = 10000;
         
         public static RltPrm getConvexConcaveEnvelope() {
@@ -101,7 +104,8 @@ public class Rlt {
             log.trace("Adding RLT constraints to matrix.");
             int startRow = rows.addRowsToMatrix(rltMat);
             tempRltConsInd.incrementAll(startRow);
-            rltConsIdx.setAll(tempRltConsInd);
+            // Update the constraint mapping stored in the parent Rlt object. 
+            rltLeqConsIdx.setAll(tempRltConsInd);
             log.debug("RLT rows added: " + numRowsAdded);
             reset();
         }
@@ -116,7 +120,8 @@ public class Rlt {
 
     private IloLPMatrix rltMat;
     IloLPMatrix inputMatrix;
-    private List<Factor> factors;
+    private List<Factor> eqFactors;
+    private List<Factor> leqFactors;
     private HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap;
     private IloCplex cplex;
     private RltPrm prm;
@@ -136,7 +141,7 @@ public class Rlt {
     // index of the constraint formed by multiplying factors.get(i) *
     // factors.get(j). Only includes row indices for <= constraints, not 
     // for == constraints.
-    private SymIntMat rltConsIdx;
+    private SymIntMat rltLeqConsIdx;
 
     // The variables from the original inputMatrix.
     private IloNumVar[] numVars;
@@ -150,13 +155,8 @@ public class Rlt {
 
         numVars = inputMatrix.getNumVars();
 
-        log.debug("Building RLT bound and constraint factors.");
-        List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
         log.debug("# unfiltered input variables: " + inputMatrix.getNcols());
         log.debug("# unfiltered RLT variables: " + (long) inputMatrix.getNcols() * inputMatrix.getNcols());
-        log.debug("# unfiltered input factors: " + newFactors.size());
-        long numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
-        log.debug("# unfiltered RLT rows: " + numUnfilteredRows);
         
         // Reformulate and linearize the constraints.
 
@@ -186,31 +186,239 @@ public class Rlt {
         // in the RLT matrix.
         rltVarsIdx = new SymIntMat();
 
-        // Initialize the filter with this RLT object.
+        // Store <= RLT constraints' row indices.
+        rltLeqConsIdx = new SymIntMat();
+
+        // Initialize the factor filter with this RLT object.
         if (prm.factorFilter != null) {
             prm.factorFilter.init(this);
         }
-        if (prm.rowFilter != null) {
-            prm.rowFilter.init(this, numUnfilteredRows);
-        }
-        if (prm.alwaysKeepRowFilter != null && prm.rowFilter != prm.alwaysKeepRowFilter) {
-            prm.alwaysKeepRowFilter.init(this, numUnfilteredRows);
-        }
-        
-        // Store RLT constraints' row indices.
-        rltConsIdx = new SymIntMat();
 
+        // Create the factors.
+        log.debug("Building RLT bound and constraint factors.");
+        List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
+        log.debug("# unfiltered input factors: " + newFactors.size());
+        long numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
+        log.debug("# unfiltered RLT rows: " + numUnfilteredRows);
+
+        // Initialize the row adder with this RLT object.
+        if (prm.rowAdder != null) {
+            prm.rowAdder.init(this, numUnfilteredRows);
+        }
+
+        // Add each new factor, possibly filtering unwanted ones.
+        this.eqFactors = new ArrayList<Factor>();
+        this.leqFactors = new ArrayList<Factor>();
         // Build the RLT constraints by adding each factor one at a time.
         log.debug("Creating RLT constraints.");
-        this.factors = new ArrayList<Factor>();
         addNewFactors(newFactors, RowType.INITIAL);
-        
-        log.debug("# filtered RLT factors: " + factors.size());
+        log.debug("# filtered RLT factors: " + (eqFactors.size() + leqFactors.size()));
         log.debug("# filtered RLT rows: " + rltMat.getNrows());
 
         // This can be initialized only after all the bounds factors have been
-        // added to the RLT matrix, rltMat.
-        this.boundsFactorMap = getBoundsFactorMap(rltMat, factors);
+        // added.
+        this.boundsFactorMap = getBoundsFactorMap(rltMat, leqFactors);
+    }
+
+    public IloLPMatrix getRltMatrix() {
+        return rltMat;
+    }
+
+    public IloLPMatrix getInputMatrix() {
+        return inputMatrix;
+    }
+
+    public IloNumVar getRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
+        int idx1 = inputMatrix.getIndex(var1);
+        int idx2 = inputMatrix.getIndex(var2);
+        
+        long id = idsForRltVars.get(idx1, idx2);
+        int index = idToColIdx.get(id);
+        return rltMatVars.get(index);
+    }
+
+    /**
+     * Gets the column index for the RLT variable formed by the product var1 * var2.
+     */
+    public int getRltVarIdx(IloNumVar var1, IloNumVar var2) throws IloException {
+        int idx1 = inputMatrix.getIndex(var1);
+        int idx2 = inputMatrix.getIndex(var2);
+        return rltVarsIdx.get(idx1, idx2);
+    }
+    
+    /**
+     * Gets the identifier for the RLT variable formed by the product var1 * var2.
+     */
+    public long getIdForRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
+        int idx1 = inputMatrix.getIndex(var1);
+        int idx2 = inputMatrix.getIndex(var2);
+        return idsForRltVars.get(idx1, idx2);
+    }
+
+    /**
+     * Gets the identifier for the input variable corresponding to a column in the input matrix.
+     */
+    public long getIdForInputVar(IloNumVar var) throws IloException {
+        return inputMatrix.getIndex(var);
+    }
+
+    /**
+     * For testing only.
+     */
+    public double[][] getRltVarVals(IloCplex cplex) throws IloException {
+        int n = rltMat.getNcols();
+        IloNumVar[] allVars = rltMat.getNumVars();
+        // Create the first-order RLT variables.
+        SymVarMat rltVars = new SymVarMat();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j <= i; j++) {
+                if (rltVarsIdx.contains(i,j)) {
+                    rltVars.set(i, j, allVars[rltVarsIdx.get(i, j)]);
+                }
+            }
+        }
+        return CplexUtils.getValues(cplex, rltVars);
+    }
+
+    /**
+     * 
+     * @param newFactors
+     * @param type
+     * @return The number of rows added to the RLT matrix.
+     */
+    private int addNewFactors(List<Factor> newFactors, RowType type) throws IloException {
+        int eqStart = eqFactors.size();
+        int leqStart = leqFactors.size();        
+        for (Factor factor : newFactors) {
+            if (prm.factorFilter == null || prm.factorFilter.accept(factor)) {
+                if (factor.isEq()) {
+                    this.eqFactors.add(factor);
+                } else {
+                    this.leqFactors.add(factor);
+                }
+            }
+        }
+        int eqEnd = eqFactors.size();
+        int leqEnd = leqFactors.size();
+        
+        int n = inputMatrix.getNcols();
+
+        // Add the RLT rows by constructing a full set of rows and then adding the rows
+        // all at once to the CPLEX modeling object.
+        RltRows rows = new RltRows(prm.maxRowsToCache);
+        if (prm.rowAdder != null) {
+            for (OrderedPair fvp : prm.rowAdder.getRltRowsForEq(eqStart, eqEnd, n, type)) {
+                // Add an equality factor by multiplying factor i it with each variable k.
+                addRltRowForEq(fvp.get1(), fvp.get2(), rows);
+            }
+            for (UnorderedPair up : prm.rowAdder.getRltRowsForLeq(0, leqFactors.size(), leqStart, leqEnd, type)) {
+                // Add a standard <= factor by multiplying factor i with factor j.
+                addRltRowForLeq(up.get1(), up.get2(), rows);
+            }
+        }
+        rows.pushRowsToCplex();
+        return rows.getNumRows();
+    }
+
+    private void addRltRowForEq(int i, int k, RltRows rows) throws IloException {
+        Factor facI = eqFactors.get(i);
+        if (!facI.isEq()) {
+            throw new IllegalStateException("The index i must correspond to an equality factor.");
+        } else if (k < 0 || k >= numVars.length) {
+            throw new IllegalStateException("The index k must correspond to an input variable.");
+        }
+        
+        // k is the column index of the kth column variable.
+        if (log.isTraceEnabled()) {
+            assert (inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
+        }
+        
+        String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%s,%s}", facI.getName(), inputMatrix.getNumVar(k).getName()) : null;
+        SparseLVector row = getRltRowForEq(facI, k, idsForRltVars);
+        // Add the complete constraint.
+        rows.addRow(0.0, row, 0.0, rowName);
+    }
+
+    // TODO: check for duplicates?
+    private void addRltRowForLeq(int iIdx, int jIdx, RltRows rows) throws IloException {
+        int i = Math.min(iIdx, jIdx);
+        int j = Math.max(iIdx, jIdx);
+        Factor facI = leqFactors.get(i);
+        Factor facJ = leqFactors.get(j);
+
+        if (facI.isEq() || facJ.isEq()) {
+            throw new IllegalStateException("The indices i and j must correspond to inequality factors.");
+        } else if (prm.envelopeOnly && ((BoundFactor) facI).colIdx == ((BoundFactor) facJ).colIdx) {
+            // Don't multiply the constraint with itself for the
+            // envelope.
+            return;
+        } else if (rltLeqConsIdx.contains(i, j)) {
+            // TODO: this won't catch any duplicates within this set.
+            log.warn(String.format("Attempt to add duplicate row (%d, %d). Skipping.", i, j));
+            return;
+        }
+
+        String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
+        SparseLVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
+        // Add the complete constraint.
+        rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
+    }
+
+    /**
+     * Recreate the RLT constraints that used the bounds factor for the
+     * specified variable and bound type (upper/lower).
+     */
+    public void updateBound(IloNumVar var, Lu lu) throws IloException {
+        // Find the factor corresponding to this variable and lower/upper bound.
+        int factorIdx = getFactorIdx(var, lu);
+
+        // Update the factor.
+        BoundFactor origBf = (BoundFactor) leqFactors.get(factorIdx);
+        Factor newBj;
+        if (origBf.lu == Lu.LOWER) {
+            newBj = FactorBuilder.getBoundFactorLower(numVars, origBf.colIdx, inputMatrix);
+        } else {
+            newBj = FactorBuilder.getBoundFactorUpper(numVars, origBf.colIdx, inputMatrix);
+        }
+        leqFactors.set(factorIdx, newBj);
+
+        // For each row:
+        // - Update the coefficients.
+        // - Update the upper bound.
+        // This requires adding an auxiliary variable that is fixed to equal
+        // 1.0.
+        CplexRowUpdates rows = new CplexRowUpdates();
+        for (int i = 0; i < leqFactors.size(); i++) {
+            Factor facI = leqFactors.get(i);
+            if (rltLeqConsIdx.contains(factorIdx, i)) {
+                // A bound will have only been added if it passed the filter. 
+                SparseLVector row = getRltRowForLeq(newBj, facI, constantVarColIdx, idsForRltVars);
+                int rowind = rltLeqConsIdx.get(factorIdx, i);
+                rows.add(rowind, row);
+            }
+        }
+        convertRltVarIdsToColumIndices(rows);
+        rows.updateRowsInMatrix(rltMat);
+    }
+    
+    /**
+     * @return The number of rows added to the RLT matrix.
+     */
+    public int addRowsAsFactors(TIntArrayList rowIds) throws IloException {
+        if (prm.envelopeOnly) {
+            // Don't add the rows.
+            return 0;
+        }
+        if (!areConsecutive(rowIds)) {
+            throw new IllegalStateException("Expecting a consecutive list: " + rowIds);
+        }
+        if (rowIds.size() > 0) {
+            List<Factor> newFactors = new ArrayList<Factor>();
+            FactorBuilder.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix, newFactors);
+            return addNewFactors(newFactors, RowType.CUT);
+        } else {
+            return 0;
+        }
     }
 
     private void convertRltVarIdsToColumIndices(CplexRows rows)  throws IloException {
@@ -267,151 +475,10 @@ public class Rlt {
         }
         return rowsWithColIdx;
     }
-    
-    /**
-     * Adds a list of factors by constructing a full set of rows and then adding the rows
-     * all at once to the CPLEX modeling object.
-     * @param type TODO
-     * @return The number of rows added to the RLT matrix.
-     */
-    private int addNewFactors(List<Factor> newFactors, RowType type) throws IloException {
-        RltRows rows = new RltRows(prm.maxRowsToCache );
-        for (Factor factor : newFactors) {
-            addFactor(cplex, factor, rows, type);
-        }
-        rows.pushRowsToCplex();
-        return rows.getNumRows();
-    }
-    
-    /**
-     * Adds a new factor to the RLT program by appending new rows to the CplexRows object.
-     * @param type TODO
-     */
-    private void addFactor(IloCplex cplex, Factor facI, RltRows rows, RowType type) throws IloException {
-        if (prm.factorFilter != null && !prm.factorFilter.accept(facI)) {
-            return;
-        }
-        int n = inputMatrix.getNcols();
-        // Index of the factor we are adding.
-        int i = factors.size();
-        // Add the new factor so we multiply it with itself.
-        this.factors.add(facI);
-        if (facI.isEq()) {
-            // Add an equality factor by multiplying it with each variable.
-            for (int k = 0; k < n; k++) {
-                // k is the column index of the kth column variable.
-                if (log.isTraceEnabled()) {
-                    assert (inputMatrix.getNumVar(k) == rltMat.getNumVar(k));
-                }
-                
-                String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%d,%d}", i, k) : null;
-                SparseLVector row = getRltRowForEq(facI, k, idsForRltVars);
-                if ((prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptEq(row, rowName, facI, k, type))
-                        || prm.rowFilter == null || prm.rowFilter.acceptEq(row, rowName, facI, k, type)) {
-                    // Add the complete constraint.
-                    rows.addRow(0.0, row, 0.0, rowName);
-                }
-            }
-        } else {
-            // Add a standard <= factor by multiplying it with each factor.
-            for (int j = 0; j < factors.size(); j++) {
-                Factor facJ = factors.get(j);
-
-                if (facI.isEq() || facJ.isEq()) {
-                    // Skip the equality constraints.
-                    continue;
-                } else if (prm.envelopeOnly && ((BoundFactor) facI).colIdx == ((BoundFactor) facJ).colIdx) {
-                    // Don't multiply the constraint with itself for the
-                    // envelope.
-                    continue;
-                }
-
-                String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
-                SparseLVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
-                if ((prm.alwaysKeepRowFilter != null && prm.alwaysKeepRowFilter.acceptLeq(row, rowName, facI, facJ, type))
-                        || prm.rowFilter == null || prm.rowFilter.acceptLeq(row, rowName, facI, facJ, type)) {
-                    // Add the complete constraint.
-                    rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
-                }
-            }
-        }
-    }
-
-    public IloLPMatrix getRltMatrix() {
-        return rltMat;
-    }
-
-    public IloLPMatrix getInputMatrix() {
-        return inputMatrix;
-    }
-
-    public IloNumVar getRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
-        int idx1 = inputMatrix.getIndex(var1);
-        int idx2 = inputMatrix.getIndex(var2);
-        
-        long id = idsForRltVars.get(idx1, idx2);
-        int index = idToColIdx.get(id);
-        return rltMatVars.get(index);
-    }
-
-    /**
-     * Gets the column index for the RLT variable formed by the product var1 * var2.
-     */
-    public int getRltVarIdx(IloNumVar var1, IloNumVar var2) throws IloException {
-        int idx1 = inputMatrix.getIndex(var1);
-        int idx2 = inputMatrix.getIndex(var2);
-        return rltVarsIdx.get(idx1, idx2);
-    }
-    
-    /**
-     * Gets the identifier for the RLT variable formed by the product var1 * var2.
-     */
-    public long getIdForRltVar(IloNumVar var1, IloNumVar var2) throws IloException {
-        int idx1 = inputMatrix.getIndex(var1);
-        int idx2 = inputMatrix.getIndex(var2);
-        return idsForRltVars.get(idx1, idx2);
-    }
-
-    /**
-     * Recreate the RLT constraints that used the bounds factor for the
-     * specified variable and bound type (upper/lower).
-     */
-    public void updateBound(IloNumVar var, Lu lu) throws IloException {
-        // Find the factor corresponding to this variable and lower/upper bound.
-        int factorIdx = getFactorIdx(var, lu);
-
-        // Update the factor.
-        BoundFactor bf = (BoundFactor) factors.get(factorIdx);
-        Factor factor;
-        if (bf.lu == Lu.LOWER) {
-            factor = FactorBuilder.getBoundFactorLower(inputMatrix.getNumVars(), bf.colIdx, inputMatrix);
-        } else {
-            factor = FactorBuilder.getBoundFactorUpper(inputMatrix.getNumVars(), bf.colIdx, inputMatrix);
-        }
-        factors.set(factorIdx, factor);
-
-        // For each row:
-        // - Update the coefficients.
-        // - Update the upper bound.
-        // This requires adding an auxiliary variable that is fixed to equal
-        // 1.0.
-        CplexRowUpdates rows = new CplexRowUpdates();
-        for (int i = 0; i < factors.size(); i++) {
-            Factor facI = factors.get(i);
-            if (rltConsIdx.contains(factorIdx, i)) {
-                // A bound will have only been added if it passed the filter. 
-                SparseLVector row = getRltRowForLeq(factor, facI, constantVarColIdx, idsForRltVars);
-                int rowind = rltConsIdx.get(factorIdx, i);
-                rows.add(rowind, row);
-            }
-        }
-        convertRltVarIdsToColumIndices(rows);
-        rows.updateRowsInMatrix(rltMat);
-    }
 
     private int getFactorIdx(IloNumVar var, Lu lu) throws IloException {
         int fIdx = boundsFactorMap.get(new Pair<IloNumVar, Lu>(var, lu));
-        BoundFactor bf = (BoundFactor) factors.get(fIdx);
+        BoundFactor bf = (BoundFactor) leqFactors.get(fIdx);
         assert (bf.lu == lu);
         if (log.isTraceEnabled()) {
             assert (bf.colIdx == rltMat.getIndex(var));
@@ -430,44 +497,6 @@ public class Rlt {
             }
         }
         return boundsFactorMap;
-    }
-
-    /**
-     * For testing only.
-     */
-    public double[][] getRltVarVals(IloCplex cplex) throws IloException {
-        int n = rltMat.getNcols();
-        IloNumVar[] allVars = rltMat.getNumVars();
-        // Create the first-order RLT variables.
-        SymVarMat rltVars = new SymVarMat();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                if (rltVarsIdx.contains(i,j)) {
-                    rltVars.set(i, j, allVars[rltVarsIdx.get(i, j)]);
-                }
-            }
-        }
-        return CplexUtils.getValues(cplex, rltVars);
-    }
-
-    /**
-     * @return The number of rows added to the RLT matrix.
-     */
-    public int addRowsAsFactors(TIntArrayList rowIds) throws IloException {
-        if (prm.envelopeOnly) {
-            // Don't add the rows.
-            return 0;
-        }
-        if (!areConsecutive(rowIds)) {
-            throw new IllegalStateException("Expecting a consecutive list: " + rowIds);
-        }
-        if (rowIds.size() > 0) {
-            List<Factor> newFactors = new ArrayList<Factor>();
-            FactorBuilder.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix, newFactors);
-            return addNewFactors(newFactors, RowType.CUT);
-        } else {
-            return 0;
-        }
     }
 
     /**
@@ -553,4 +582,13 @@ public class Rlt {
         }
         return row;
     }
+    
+    public List<Factor> getEqFactors() {
+        return Collections.unmodifiableList(eqFactors);
+    }
+
+    public List<Factor> getLeqFactors() {
+        return Collections.unmodifiableList(leqFactors);
+    }
+    
 }

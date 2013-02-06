@@ -91,6 +91,22 @@ public class Utilities {
     }
     
     /**
+     * @return The resulting list.
+     */
+    public static <X,Y> List<Y> addToList(Map<X,List<Y>> map, X key, Y value) {
+        List<Y> values;
+        if (map.containsKey(key)) {
+            values = map.get(key);
+            values.add(value);
+        } else {
+            values = new ArrayList<Y>();
+            values.add(value);
+            map.put(key, values);
+        }
+        return values;
+    }
+    
+    /**
      * Choose the <X> with the greatest number of votes.
      * @param <X> The type of the thing being voted for.
      * @param votes Maps <X> to a Double representing the number of votes
@@ -114,6 +130,21 @@ public class Utilities {
             }
         }
         return maxTickets;
+    }
+
+    /**
+     * Creates a new list containing a slice of the original list.
+     * @param list The original list.
+     * @param start The index of the first element of the slice (inclusive).
+     * @param end The index of the last element of the slice (exclusive).
+     * @return A sublist containing elements [start, end).
+     */
+    public static <X> List<X> sublist(List<X> list, int start, int end) {
+        ArrayList<X> sublist = new ArrayList<X>();
+        for (int i=start; i<end; i++) {
+            sublist.add(list.get(i));
+        }
+        return sublist;
     }
     
     public static int factorial(int n)
