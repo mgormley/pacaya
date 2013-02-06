@@ -196,7 +196,7 @@ class HProfHeapExpParams(DPExpParams):
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=False)
+        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
@@ -213,7 +213,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         all = DPExpParams()
         all.set("expname", self.expname, False, False)
         all.update(threads=self.threads)
-        all.update(formulation="deptree-flow-nonproj",
+        all.update(formulation="FLOW_NONPROJ",
                    parser="cky",
                    model="dmv",
                    algorithm="bnb",
