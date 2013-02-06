@@ -583,6 +583,36 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for initBounds in ["random"]:
                                 for offsetProb in frange(10e-13, 1.001,0.05):
                                     experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=None))
+        elif self.expname == "relax-root-rlt":
+            root = RootStage()
+            all.update(nodeOrder="bfs",
+                       relaxOnly=None,
+                       rootMaxCutRounds=10,
+                       maxCutRounds=10,
+                       minSumForCuts=1.00001,
+                       maxStoCuts=1000,
+                       epsilon=0.1)
+            if not self.fast:
+                # Run for some fixed amount of time.
+                all.update(timeoutSeconds=10*60)
+            relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
+            dataset = synth_alt_three + DPExpParams(maxSentenceLength=10, maxNumSentences=5)
+            exps = []
+            for rltInitProp in frange(0.0, 1.0, 0.1):
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
+                exps.append(experiment)
+            if self.fast:
+                # Drop all but 3 experiments for a fast run.
+                exps = exps[:3]
+            root.add_dependents(exps)
+            # Scrape all results.
+            scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            if not self.fast:
+                # Commit results to svn
+                svnco = SvnCommitResults(self.expname)
+                svnco.add_prereqs([scrape])
+            return root
         elif self.expname == "relax-quality":
             # Fixed seed
             all.update(seed=112233)
