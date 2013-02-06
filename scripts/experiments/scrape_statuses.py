@@ -19,8 +19,9 @@ from experiments.core.util import tail
 from random import sample
 from experiments.core import scrape
 
-
-_re_stat_elem = re.compile('\S+=(\S+)')
+# Commented out to deal with a stray comma.
+#_re_stat_elem = re.compile('\S+=(\S+)')
+_re_stat_elem = re.compile('\S+=([^,\s]+)')
 _re_logging_time = re.compile('^(\d+)\s')
 
 
@@ -37,7 +38,8 @@ class BnbStatus(DPExpParams):
                     numFathom = int(matches[4].group(1)),
                     numPrune = int(matches[5].group(1)),
                     numInfeasible = int(matches[6].group(1)),
-                    numSeen = int(matches[7].group(1)))
+                    avgFathomDepth = float(matches[7].group(1)),
+                    numSeen = int(matches[8].group(1)))
         
         
 def get_bnb_status_list(stdout_lines):

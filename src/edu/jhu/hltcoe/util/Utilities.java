@@ -21,13 +21,13 @@ public class Utilities {
     private static final Double DOUBLE_ZERO = Double.valueOf(0.0);
     public static final double LOG2 = log(2);
     
-    public static <X> Integer safeGet(Map<X,Integer> map, X key) {
-        Integer value = map.get(key);
-        if (value == null) {
-            return INTEGER_ZERO;
-        }
-        return value;
-    }
+    // public static <X> Integer safeGet(Map<X,Integer> map, X key) {
+    //     Integer value = map.get(key);
+    //     if (value == null) {
+    //         return INTEGER_ZERO;
+    //     }
+    //     return value;
+    // }
     
     public static <X> Double safeGet(Map<X,Double> map, X key) {
         Double value = map.get(key);

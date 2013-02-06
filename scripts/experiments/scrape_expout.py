@@ -101,7 +101,7 @@ class DPScraper(Scraper):
             elif len(tot_parse_times) > 0:
                 exp.update(totalParseTime = tot_parse_times[0])
                 exp.update(avgPerWordParseTime = tot_parse_times[0]/numWords)
-        if exp.get("disableFathoming") == "True":
+        if exp.get("disableFathoming") == "True" and exp.get("expname") != "viterbi-vs-bnb":
             # Scrape stdout to create a curnode_status.data file.
             status_file = os.path.join(exp_dir, "curnode-status.data")
             if not os.path.exists(status_file):
