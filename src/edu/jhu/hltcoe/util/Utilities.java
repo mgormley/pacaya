@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -104,6 +105,15 @@ public class Utilities {
             map.put(key, values);
         }
         return values;
+    }
+
+    public static <X,Y> List<Y> safeGet(Map<X, List<Y>> map, X key) {
+        List<Y> list = map.get(key);
+        if (list == null) {
+            return Collections.emptyList();
+        } else {
+            return list;
+        }
     }
     
     /**
