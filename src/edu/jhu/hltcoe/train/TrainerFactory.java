@@ -28,11 +28,11 @@ import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolutionEvaluator;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
@@ -42,8 +42,8 @@ import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowAdder;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowAdder;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.lp.CplexPrm;
@@ -235,11 +235,11 @@ public class TrainerFactory {
             if (rltFilter.equals("obj-var")) {
                 rrPrm.objVarFilter = true;
                 rltPrm.factorFilter = null;
-                rltPrm.rowFilter = null;
+                rltPrm.rowAdder = null;
             } else if (rltFilter.equals("prop")) {
-                rltPrm.rowFilter = new RandPropRltRowFilter(rltInitProp, rltCutProp);
+                rltPrm.rowAdder = new RandPropRltRowAdder(rltInitProp, rltCutProp);
             } else if (rltFilter.equals("max")) {
-                rltPrm.rowFilter = new MaxNumRltRowFilter(rltInitMax, rltCutMax);
+                rltPrm.rowAdder = new MaxNumRltRowAdder(rltInitMax, rltCutMax);
             } else {
                 throw new ParseException("RLT filter type not supported: " + rltFilter);
             }

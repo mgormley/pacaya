@@ -134,11 +134,14 @@ public class PipelineRunner {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
-            // TODO: add a flag to choose the type of projector (i.e. not ViterbiEM)
             DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory();
             DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
-            log.info("projLogLikelihood: " + projSol.getScore());
+            if (projSol == null) {
+                log.info("projLogLikelihood: " + projSol.getScore());
+            } else {
+                log.warn("projLogLikelihood: UNAVAILABLE");
+            }
         } else {
             // Train the model
             log.info("Training model");

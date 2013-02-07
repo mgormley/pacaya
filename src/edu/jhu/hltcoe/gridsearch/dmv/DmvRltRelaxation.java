@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
@@ -37,8 +36,9 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.UnionRltRowAdder;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltFactorFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowFilter;
+import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowAdder;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -47,6 +47,7 @@ import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
@@ -177,14 +178,16 @@ public class DmvRltRelaxation implements DmvRelaxation {
         RltPrm rltPrm = prm.rltPrm;
         // We always keep the convex/concave envelope on the objective variables
         // so that the problem isn't unbounded.
-        rltPrm.alwaysKeepRowFilter = new VarRltRowFilter(getObjVarPairs());
         if (prm.objVarFilter) {
-            if (rltPrm.rowFilter != null && rltPrm.factorFilter != null) {
+            if (rltPrm.rowAdder != null && rltPrm.factorFilter != null) {
                 log.warn("Overriding existing filters");
             }
             // Accept only RLT rows/factors that have a non-zero coefficient for some objective variable.
-            rltPrm.rowFilter = new VarRltRowFilter(getObjVarPairs());
             rltPrm.factorFilter = new VarRltFactorFilter(getObjVarCols());
+            rltPrm.rowAdder = new VarRltRowAdder(getObjVarPairs());
+        } else {
+            // Always add the convex/concave envelope.
+            rltPrm.rowAdder = new UnionRltRowAdder(new VarRltRowAdder(getObjVarPairs()), rltPrm.rowAdder);
         }
         
         // Add the RLT constraints.

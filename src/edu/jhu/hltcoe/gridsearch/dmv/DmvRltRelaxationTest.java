@@ -1,7 +1,7 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
-import static org.junit.Assert.assertEquals;
 import static edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest.solveRelaxation;
+import static org.junit.Assert.assertEquals;
 import ilog.cplex.IloCplex;
 
 import java.io.File;
@@ -27,8 +27,8 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.lp.CplexPrm;
@@ -397,7 +397,6 @@ public class DmvRltRelaxationTest {
         
         RltPrm rltPrm = new RltPrm();
         rltPrm.factorFilter = null;
-        rltPrm.rowFilter = null; //new NumericalStabilityRltRowFilter(0.0, 1e6);
         rltPrm.nameRltVarsAndCons = true;
         rltPrm.envelopeOnly = false;
         
@@ -452,7 +451,6 @@ public class DmvRltRelaxationTest {
         // RLT
         RltPrm rltPrm = new RltPrm();
         rltPrm.factorFilter = null;
-        rltPrm.rowFilter = null;
 
         DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
         // -- temp --
@@ -476,7 +474,6 @@ public class DmvRltRelaxationTest {
         // LP:
         rltPrm = new RltPrm();
         rltPrm.factorFilter = null;
-        rltPrm.rowFilter = null;
 
         rrPrm = new DmvRltRelaxPrm();
         rrPrm.maxCutRounds = numCuts;
