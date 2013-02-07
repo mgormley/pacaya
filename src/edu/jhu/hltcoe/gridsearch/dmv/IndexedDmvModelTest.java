@@ -86,7 +86,7 @@ public class IndexedDmvModelTest {
         c = 1;
         m = 0;
         s = 1;
-        assertEquals("child_{0,0,0}(0)", idm.getName(c,m));
+        assertEquals("child_{N,l,0}(N)", idm.getName(c,m));
         // Should exist in sent 1
         assertEquals(3, idm.getMaxFreq(s, idm.getSi(s, c, m)));
         // Should not exist in sent 0 or 2 (sent 2 should only have the right edge)
@@ -97,7 +97,7 @@ public class IndexedDmvModelTest {
         c = 1+6;
         m = 0;
         s = 1;
-        assertEquals("dec_{0,0,0}(0)", idm.getName(c,m));
+        assertEquals("dec_{N,l,0}(N)", idm.getName(c,m));
         // Should exist in sent 1
         assertEquals(3, idm.getMaxFreq(s, idm.getSi(s, c, m)));
         s=0;
