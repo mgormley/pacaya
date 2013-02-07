@@ -60,12 +60,12 @@ public class VarRltRowAdder implements RltRowAdder {
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<OrderedPair> rltRows = new HashSet<OrderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            for (Integer consId1 : Utilities.safeGet(varConsMap, varIdPair.get1())) {
+            for (Integer consId1 : Utilities.safeGetList(varConsMap, varIdPair.get1())) {
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the second variable in this pair.
                 rltRows.add(new OrderedPair(consId1, varIdPair.get2()));
             }
-            for (Integer consId2 : Utilities.safeGet(varConsMap, varIdPair.get2())) {
+            for (Integer consId2 : Utilities.safeGetList(varConsMap, varIdPair.get2())) {
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the first variable in this pair.
                 rltRows.add(new OrderedPair(consId2, varIdPair.get1()));
@@ -86,8 +86,8 @@ public class VarRltRowAdder implements RltRowAdder {
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            for (Integer i : Utilities.safeGet(varConsMap, varIdPair.get1())) {
-                for (Integer j : Utilities.safeGet(varConsMap, varIdPair.get2())) {
+            for (Integer i : Utilities.safeGetList(varConsMap, varIdPair.get1())) {
+                for (Integer j : Utilities.safeGetList(varConsMap, varIdPair.get2())) {
                     if ((startFac1 <= i && i < endFac1 && startFac2 <= j && j < endFac2) ||
                             (startFac2 <= i && i < endFac2 && startFac1 <= j && j < endFac1)) {
                         // Add a RLT row, for each pair of factors.

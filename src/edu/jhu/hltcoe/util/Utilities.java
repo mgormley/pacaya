@@ -22,15 +22,15 @@ public class Utilities {
     private static final Double DOUBLE_ZERO = Double.valueOf(0.0);
     public static final double LOG2 = log(2);
     
-    // public static <X> Integer safeGet(Map<X,Integer> map, X key) {
-    //     Integer value = map.get(key);
-    //     if (value == null) {
-    //         return INTEGER_ZERO;
-    //     }
-    //     return value;
-    // }
+     public static <X> Integer safeGetInt(Map<X,Integer> map, X key) {
+         Integer value = map.get(key);
+         if (value == null) {
+             return INTEGER_ZERO;
+         }
+         return value;
+     }
     
-    public static <X> Double safeGet(Map<X,Double> map, X key) {
+    public static <X> Double safeGetDouble(Map<X,Double> map, X key) {
         Double value = map.get(key);
         if (value == null) {
             return DOUBLE_ZERO;
@@ -107,7 +107,7 @@ public class Utilities {
         return values;
     }
 
-    public static <X,Y> List<Y> safeGet(Map<X, List<Y>> map, X key) {
+    public static <X,Y> List<Y> safeGetList(Map<X, List<Y>> map, X key) {
         List<Y> list = map.get(key);
         if (list == null) {
             return Collections.emptyList();
