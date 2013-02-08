@@ -285,7 +285,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
             #ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
-            ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb-plus-aux.map" % (self.root_dir))
+            ptbdata.update(reduceTags="%s/data/tag_maps/en-ptb-plus-aux.map" % (self.root_dir))
         
         # Printing synthetic data with fixed synthetic seed.
         for synthdata in [synth_alt_three]: 
