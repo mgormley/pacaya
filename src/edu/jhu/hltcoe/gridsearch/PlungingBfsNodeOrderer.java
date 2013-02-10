@@ -5,7 +5,10 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Stack;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.IterIterator;
 
 /**
@@ -25,6 +28,8 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
         public double maxPlungeDepthProp = 0.5;
         public ChildOrderer childOrderer = new RelaxSolChildOrderer();
     }
+
+    private static final Logger log = Logger.getLogger(PlungingBfsNodeOrderer.class);
 
     private PlungingBfsNodeOrdererPrm prm;
     private PriorityQueue<ProblemNode> pq;
@@ -49,7 +54,7 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
         if (isRoot) {
             this.rootSol = result.relaxSol;
         }
-        double localUb = Math.max(globalUb, result.relaxSol.getScore());
+        double localUb = result.relaxSol.getScore();
         double localRelativeGap = (globalUb - localUb) / (globalUb - globalLb);
         // Check whether we've exceed the number of plunging steps or if we're
         // over the minimum number of steps whether the local relative gap
@@ -57,6 +62,7 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
         if ((plungeSteps > prm.maxPlungeDepthProp * maxDepthProcessed)
                 || (plungeSteps > prm.minPlungeDepthProp * maxDepthProcessed 
                         && localRelativeGap > prm.localRelativeGapThreshold)) {
+            log.debug("Resetting plunge");
             // Clean up / Reset plunge.
             plungeSteps = 0;
 
@@ -67,6 +73,8 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
             // Add the new children to the priority queue.
             pq.addAll(result.children);
         } else {
+            log.debug("Continuing plunge");
+
             List<ProblemNode> children = prm.childOrderer.orderChildren(result.relaxSol, rootSol, result.children);
             
             // Add the new children to the stack for plunging.
