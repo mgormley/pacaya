@@ -4,7 +4,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
-public class PqNodeOrderer implements NodeOrderer {
+public class PqNodeOrderer extends AbstractNodeOrderer implements NodeOrderer {
 
     private PriorityQueue<ProblemNode> pq;
     

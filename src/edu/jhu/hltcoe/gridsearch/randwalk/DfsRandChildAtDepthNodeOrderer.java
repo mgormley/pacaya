@@ -8,11 +8,12 @@ import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.gridsearch.AbstractNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.util.Prng;
 
-public class DfsRandChildAtDepthNodeOrderer implements NodeOrderer {
+public class DfsRandChildAtDepthNodeOrderer extends AbstractNodeOrderer implements NodeOrderer {
 
     private static class NodeWithJitter {
         private double jitter;

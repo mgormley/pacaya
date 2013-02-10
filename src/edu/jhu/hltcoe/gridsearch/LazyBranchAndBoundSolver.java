@@ -55,8 +55,15 @@ public class LazyBranchAndBoundSolver {
     public static final double BEST_SCORE = Double.POSITIVE_INFINITY;
 
     private LazyBnbSolverPrm prm;
-    protected double incumbentScore;
     protected Solution incumbentSolution;
+    /**
+     * The global lower bound.
+     */
+    protected double incumbentScore;
+    /**
+     * The global upper bound.
+     */
+    private double globalUb;
 
     protected SearchStatus status;
 
@@ -91,13 +98,13 @@ public class LazyBranchAndBoundSolver {
         // Initialize
         this.incumbentSolution = initialSolution;
         this.incumbentScore = initialScore;
-        double upperBound = BEST_SCORE;
+        globalUb = BEST_SCORE;
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
         clearLeafNodes();
         int numProcessed = 0;
         FathomStats fathom = new FathomStats();
         
-        addToLeafNodes(rootNode);
+        addRootToLeafNodes(rootNode);
 
         double rootLogSpace = Double.NaN;
         double logSpaceRemain = Double.NaN;
@@ -110,14 +117,14 @@ public class LazyBranchAndBoundSolver {
             
             // The upper bound can only decrease
             ProblemNode worstLeaf = getWorstLeaf();
-            if (worstLeaf.getOptimisticBound() > upperBound + 1e-8) {
-                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", worstLeaf.getOptimisticBound(), upperBound));
+            if (worstLeaf.getOptimisticBound() > globalUb + 1e-8) {
+                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", worstLeaf.getOptimisticBound(), globalUb));
             }
-            upperBound = worstLeaf.getOptimisticBound();
-            assert (!Double.isNaN(upperBound));
+            globalUb = worstLeaf.getOptimisticBound();
+            assert (!Double.isNaN(globalUb));
             
             numProcessed++;
-            double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
+            double relativeDiff = computeRelativeDiff(globalUb, incumbentScore);
             
             if (relativeDiff <= prm.epsilon) {
                 // Optimal solution found.
@@ -128,7 +135,7 @@ public class LazyBranchAndBoundSolver {
             }
             
             // Logging.
-            printSummary(upperBound, relativeDiff, numProcessed, fathom);
+            printSummary(globalUb, relativeDiff, numProcessed, fathom);
             if (log.isDebugEnabled() && numProcessed % 100 == 0) {
                 printLeafNodeBoundHistogram();
                 printTimers(numProcessed);
@@ -150,25 +157,23 @@ public class LazyBranchAndBoundSolver {
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
-            for (ProblemNode childNode : result.children) {
-                addToLeafNodes(childNode);
-            }
+            addToLeafNodes(result, curNode == rootNode);
         }
         if (nodeTimer.isRunning()) { nodeTimer.stop(); }
 
         // If we have fathomed all the nodes, then the global solution is within
         // epsilon of the current incumbent.
         if (!hasNextLeafNode()) {
-            upperBound = incumbentScore + prm.epsilon*Math.abs(incumbentScore);
+            globalUb = incumbentScore + prm.epsilon*Math.abs(incumbentScore);
         }
         
         // Print summary
         evalIncumbent(incumbentSolution);
-        double relativeDiff = computeRelativeDiff(upperBound, incumbentScore);
+        double relativeDiff = computeRelativeDiff(globalUb, incumbentScore);
         if (Utilities.lte(relativeDiff, prm.epsilon, 1e-13)) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
-        printSummary(upperBound, relativeDiff, numProcessed, fathom);
+        printSummary(globalUb, relativeDiff, numProcessed, fathom);
         printTimers(numProcessed);
         clearLeafNodes();
 
@@ -187,52 +192,52 @@ public class LazyBranchAndBoundSolver {
     public static class NodeResult {
         public FathomStatus status;
         public List<ProblemNode> children;
-        public NodeResult(FathomStatus status) {
-            this.status = status;
-            this.children = Collections.emptyList();
-        }
-        public NodeResult(FathomStatus status, List<ProblemNode> children) {
-            this.status = status;
-            this.children = children;
+        public RelaxedSolution relaxSol;
+        public Solution feasSol; 
+        public NodeResult() {
+            
         }
     }
     
     protected NodeResult processNode(ProblemNode curNode) {
+        NodeResult r = new NodeResult();
         prm.relaxation.updateTimeRemaining(prm.timeoutSeconds - nodeTimer.totSec());
         // TODO: else if, ran out of memory or disk space, break
 
         // The active node can compute a tighter upper bound instead of
         // using its parent's bound
         relaxTimer.start();
-        RelaxedSolution relaxSol;
         if (prm.disableFathoming) {
             // If not fathoming, don't stop the relaxation early.
-            relaxSol = prm.relaxation.getRelaxedSolution(curNode);
+            r.relaxSol = prm.relaxation.getRelaxedSolution(curNode);
         } else {
-            relaxSol = prm.relaxation.getRelaxedSolution(curNode, incumbentScore + prm.epsilon*Math.abs(incumbentScore));
+            r.relaxSol = prm.relaxation.getRelaxedSolution(curNode, incumbentScore + prm.epsilon*Math.abs(incumbentScore));
         }
         relaxTimer.stop();
         log.info(String.format("CurrentNode: id=%d depth=%d side=%d relaxScore=%f relaxStatus=%s incumbScore=%f avgNodeTime=%f", curNode.getId(),
-                curNode.getDepth(), curNode.getSide(), relaxSol.getScore(), relaxSol.getStatus().toString(), incumbentScore, nodeTimer.avgMs()));
-        if (relaxSol.getScore() <= incumbentScore + prm.epsilon*Math.abs(incumbentScore) && !prm.disableFathoming) {
+                curNode.getDepth(), curNode.getSide(), r.relaxSol.getScore(), r.relaxSol.getStatus().toString(), incumbentScore, nodeTimer.avgMs()));
+        if (r.relaxSol.getScore() <= incumbentScore + prm.epsilon*Math.abs(incumbentScore) && !prm.disableFathoming) {
             // Fathom this node: it is either infeasible or was pruned.
-            if (relaxSol.getStatus() == RelaxStatus.Infeasible) {
-                return new NodeResult(FathomStatus.Infeasible);
-            } else if (relaxSol.getStatus() == RelaxStatus.Pruned) {
-                return new NodeResult(FathomStatus.Pruned);
+            if (r.relaxSol.getStatus() == RelaxStatus.Infeasible) {
+                r.status = FathomStatus.Infeasible;
+                return r;
+            } else if (r.relaxSol.getStatus() == RelaxStatus.Pruned) {
+                r.status = FathomStatus.Pruned;
+                return r;
             } else {
-                log.warn("Unhandled status for relaxed solution: " + relaxSol.getStatus() + " Treating as pruned.");
-                return new NodeResult(FathomStatus.Pruned);
+                log.warn("Unhandled status for relaxed solution: " + r.relaxSol.getStatus() + " Treating as pruned.");
+                r.status = FathomStatus.Pruned;
+                return r;
             }
         }
 
         // Check if the child node offers a better feasible solution
         feasTimer.start();
-        Solution feasSol = prm.projector.getProjectedSolution(relaxSol);
-        assert (feasSol == null || !Double.isNaN(feasSol.getScore()));
-        if (feasSol != null && feasSol.getScore() > incumbentScore) {
-            incumbentScore = feasSol.getScore();
-            incumbentSolution = feasSol;
+        r.feasSol = prm.projector.getProjectedSolution(r.relaxSol);
+        assert (r.feasSol == null || !Double.isNaN(r.feasSol.getScore()));
+        if (r.feasSol != null && r.feasSol.getScore() > incumbentScore) {
+            incumbentScore = r.feasSol.getScore();
+            incumbentSolution = r.feasSol;
             evalIncumbent(incumbentSolution);
             // TODO: pruneActiveNodes();
             // We could store a priority queue in the opposite order (or
@@ -243,19 +248,22 @@ public class LazyBranchAndBoundSolver {
         }
         feasTimer.stop();
         
-        if (feasSol != null && Utilities.equals(feasSol.getScore(), relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
+        if (r.feasSol != null && Utilities.equals(r.feasSol.getScore(), r.relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
             // Fathom this node: the optimal solution for this subproblem was found.
-            return new NodeResult(FathomStatus.CompletelySolved);
+            r.status = FathomStatus.CompletelySolved;
+            return r;
         }
         
         branchTimer.start();
-        List<ProblemNode> children = curNode.branch(prm.relaxation, relaxSol);
-        if (children.size() == 0) {
+        r.children = curNode.branch(prm.relaxation, r.relaxSol);
+        if (r.children.size() == 0) {
             // Fathom this node: no more branches can be made.
-            return new NodeResult(FathomStatus.BottomedOut);
+            r.status = FathomStatus.BottomedOut;
+            return r;
         }
         branchTimer.stop();
-        return new NodeResult(FathomStatus.NotFathomed, children);
+        r.status = FathomStatus.NotFathomed;
+        return r;
     }
 
     private static double computeRelativeDiff(double upperBound, double lowerBound) {
@@ -270,6 +278,8 @@ public class LazyBranchAndBoundSolver {
                 upperBound, incumbentScore, relativeDiff, prm.leafNodeOrderer.size(), numFathomed, fathom.numPruned, fathom.numInfeasible, fathom.getAverageDepth(), numProcessed));
     }
 
+    /* ------------ Start Leaf Methods ------------- */
+    
     private boolean hasNextLeafNode() {
         return !prm.leafNodeOrderer.isEmpty();
     }
@@ -280,14 +290,21 @@ public class LazyBranchAndBoundSolver {
         return node;
     }
 
-    private void addToLeafNodes(ProblemNode node) {
-        prm.leafNodeOrderer.add(node);
+    private void addToLeafNodes(NodeResult result, boolean isRoot) {
+        prm.leafNodeOrderer.addChildrenOfResult(result, globalUb, incumbentScore, isRoot);
         if (prm.disableFathoming && upperBoundPQ.size() > 0) {
             // This is a hack to ensure that we don't populate the upperBoundPQ.
             return;
         } else {
-            upperBoundPQ.add(node);
+            for (ProblemNode child : result.children) {
+                upperBoundPQ.add(child);
+            }
         }
+    }
+
+    private void addRootToLeafNodes(ProblemNode root) {
+        prm.leafNodeOrderer.addRoot(root);
+        upperBoundPQ.add(root);
     }
 
     private ProblemNode getWorstLeaf() {
@@ -298,6 +315,8 @@ public class LazyBranchAndBoundSolver {
         prm.leafNodeOrderer.clear();
         upperBoundPQ.clear();
     }
+    
+    /* ------------ End Leaf Methods ------------- */
 
     public Solution getIncumbentSolution() {
         return incumbentSolution;

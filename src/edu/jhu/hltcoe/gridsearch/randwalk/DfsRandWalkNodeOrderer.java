@@ -6,12 +6,13 @@ import java.util.NoSuchElementException;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.gridsearch.AbstractNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
 import edu.jhu.hltcoe.gridsearch.ProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.util.Prng;
 
-public class DfsRandWalkNodeOrderer implements NodeOrderer {
+public class DfsRandWalkNodeOrderer extends AbstractNodeOrderer implements NodeOrderer {
 
     private static final Logger log = Logger.getLogger(DfsRandWalkNodeOrderer.class);
 
