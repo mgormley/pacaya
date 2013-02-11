@@ -166,17 +166,17 @@ public class TrainerFactory {
     @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
     public static double universalMinProp = 0.8;
     @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
-    private static int initSolNumRestarts = 9;
+    public static int initSolNumRestarts = 9;
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
-    private static int vemProjNumRestarts = 0;
+    public static int vemProjNumRestarts = 0;
     @Opt(name = "vemProjPropImproveTreebank", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the treebank projection with viterbi EM.")
-    private static int vemProjPropImproveTreebank = 0;
+    public static int vemProjPropImproveTreebank = 0;
     @Opt(name = "vemProjPropImproveModel", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the model projection with viterbi EM.")
-    private static int vemProjPropImproveModel = 0;
+    public static int vemProjPropImproveModel = 0;
     @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
-    private static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
+    public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
-    private static double localRelativeGapThreshold;
+    public static double localRelativeGapThreshold;
 
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
