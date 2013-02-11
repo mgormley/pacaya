@@ -589,8 +589,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                            maxNumSentences=15,
                            timeoutSeconds=15*60)
             exps = []
-            for nodeOrder in ["bfs", "dfs", "plunging-bfs"]:
+            for nodeOrder in ["bfs", "dfs"]:
                 experiment = all + dataset + relax + DPExpParams(nodeOrder=nodeOrder)
+                exps.append(experiment)
+            for localRelativeGapThreshold in [0.25, 0.5, 0.75, 1.0]:
+                experiment = all + dataset + relax + DPExpParams(nodeOrder="plunging-bfs", 
+                                                                 localRelativeGapThreshold=localRelativeGapThreshold)
                 exps.append(experiment)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.

@@ -57,6 +57,7 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
         }
         double localUb = result.relaxSol.getScore();
         double localRelativeGap = (globalUb - localUb) / (globalUb - globalLb);
+        log.debug("Local relative gap: " + localRelativeGap);
         // Check whether we've exceed the number of plunging steps or if we're
         // over the minimum number of steps whether the local relative gap
         // exceeds the threshold.

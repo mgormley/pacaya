@@ -175,6 +175,8 @@ public class TrainerFactory {
     private static int vemProjPropImproveModel = 0;
     @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
     private static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
+    @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
+    private static double localRelativeGapThreshold;
 
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -370,6 +372,7 @@ public class TrainerFactory {
             nodeOrderer = new DfsNodeOrderer(prm);
         } else if (nodeOrder.equals("plunging-bfs")) {
             PlungingBfsNodeOrdererPrm prm = new PlungingBfsNodeOrdererPrm();
+            prm.localRelativeGapThreshold = localRelativeGapThreshold;
             nodeOrderer = new PlungingBfsNodeOrderer(prm);
         } else if (nodeOrder.equals("dfs-rand")) {
             nodeOrderer = new DfsRandChildAtDepthNodeOrderer(60);
