@@ -115,12 +115,13 @@ public class LazyBranchAndBoundSolver {
             if (nodeTimer.isRunning()) { nodeTimer.stop(); }
             nodeTimer.start();
             
-            // The upper bound can only decrease
-            ProblemNode worstLeaf = getWorstLeaf();
-            if (worstLeaf.getOptimisticBound() > globalUb + 1e-8) {
-                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", worstLeaf.getOptimisticBound(), globalUb));
+            // Update the global upper bound.
+            // (The upper bound can only decrease.)
+            ProblemNode globalUbLeaf = getGlobalUbLeaf();
+            if (globalUbLeaf.getLocalUb() > globalUb + 1e-8) {
+                log.warn(String.format("Upper bound should be strictly decreasing: peekUb = %e\tprevUb = %e", globalUbLeaf.getLocalUb(), globalUb));
             }
-            globalUb = worstLeaf.getOptimisticBound();
+            globalUb = globalUbLeaf.getLocalUb();
             assert (!Double.isNaN(globalUb));
             
             numProcessed++;
@@ -144,8 +145,9 @@ public class LazyBranchAndBoundSolver {
             
             // Process the next node.
             curNode = getNextLeafNode();
-
             NodeResult result = processNode(curNode);
+            
+            // Update stats and logging.
             fathom.add(curNode, result.status);
             if (result.status != FathomStatus.NotFathomed && prm.relaxation instanceof DmvRelaxation) {
                 // TODO: Remove this after we've implemented structured logging that can produce the log-space statistics post-hoc.
@@ -157,6 +159,7 @@ public class LazyBranchAndBoundSolver {
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
+            // Update state of the tree with this nodes children.
             if (result.status == FathomStatus.NotFathomed) {
                 addToLeafNodes(result, curNode == rootNode);
             }
@@ -233,21 +236,11 @@ public class LazyBranchAndBoundSolver {
             }
         }
 
-        // Check if the child node offers a better feasible solution
+        // Project the relaxed solution back onto the feasible region.
         feasTimer.start();
         r.feasSol = prm.projector.getProjectedSolution(r.relaxSol);
-        assert (r.feasSol == null || !Double.isNaN(r.feasSol.getScore()));
-        if (r.feasSol != null && r.feasSol.getScore() > incumbentScore) {
-            incumbentScore = r.feasSol.getScore();
-            incumbentSolution = r.feasSol;
-            evalIncumbent(incumbentSolution);
-            // TODO: pruneActiveNodes();
-            // We could store a priority queue in the opposite order (or
-            // just a sorted list)
-            // and remove nodes from it while their optimisticBound is
-            // worse than the
-            // new incumbentScore.
-        }
+        // Check if this node offers a better feasible solution
+        updateIncumbent(r.feasSol);
         feasTimer.stop();
         
         if (r.feasSol != null && Utilities.equals(r.feasSol.getScore(), r.relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
@@ -309,7 +302,7 @@ public class LazyBranchAndBoundSolver {
         upperBoundPQ.add(root);
     }
 
-    private ProblemNode getWorstLeaf() {
+    private ProblemNode getGlobalUbLeaf() {
         return upperBoundPQ.peek();
     }
 
@@ -326,6 +319,21 @@ public class LazyBranchAndBoundSolver {
     
     public double getIncumbentScore() {
         return incumbentScore;
+    }
+
+    private void updateIncumbent(Solution feasSol) {
+        assert (feasSol == null || !Double.isNaN(feasSol.getScore()));
+        if (feasSol != null && feasSol.getScore() > incumbentScore) {
+            incumbentScore = feasSol.getScore();
+            incumbentSolution = feasSol;
+            evalIncumbent(incumbentSolution);
+            // TODO: pruneActiveNodes();
+            // We could store a priority queue in the opposite order (or
+            // just a sorted list)
+            // and remove nodes from it while their optimisticBound is
+            // worse than the
+            // new incumbentScore.
+        }
     }
     
     private void printSpaceRemaining(int numProcessed, double rootLogSpace, double logSpaceRemain) {
@@ -356,7 +364,7 @@ public class LazyBranchAndBoundSolver {
         double[] bounds = new double[prm.leafNodeOrderer.size()];
         int i = 0;
         for (ProblemNode node : prm.leafNodeOrderer) {
-            bounds[i] = node.getOptimisticBound();
+            bounds[i] = node.getLocalUb();
             i++;
         }
         log.debug(getHistogram(bounds));

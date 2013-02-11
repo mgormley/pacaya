@@ -19,9 +19,9 @@ public class BfsComparator implements Comparator<ProblemNode> {
         // argument is less than, equal to, or greater than the second.
 
         // Compare the optimistic bounds
-        if (node1.getOptimisticBound() > node2.getOptimisticBound()) {
+        if (node1.getLocalUb() > node2.getLocalUb()) {
             return -1;
-        } else if (node1.getOptimisticBound() < node2.getOptimisticBound()) {
+        } else if (node1.getLocalUb() < node2.getLocalUb()) {
             return 1;
         } else {
             return 0;

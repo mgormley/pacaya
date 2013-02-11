@@ -44,7 +44,7 @@ public class PlungingBfsNodeOrdererTest {
 
         public MockNodeResult(MockDmvProblemNode node1) {
             this.children = node1.getChildren();
-            this.relaxSol = new DmvRelaxedSolution(null, null, node1.getOptimisticBound(), null, null, null, Double.NaN);
+            this.relaxSol = new DmvRelaxedSolution(null, null, node1.getLocalUb(), null, null, null, Double.NaN);
         }
         
     }

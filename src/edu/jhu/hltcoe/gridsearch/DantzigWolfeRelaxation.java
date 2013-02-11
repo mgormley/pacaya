@@ -103,9 +103,9 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
 
         RelaxedSolution relaxSol = solveRelaxation(curNode, incumbentScore);
                 
-        if (curNode.getOptimisticBound() < relaxSol.getScore()) {
+        if (curNode.getLocalUb() < relaxSol.getScore()) {
             // If CPLEX gets a worse bound, then keep the parent's bound.
-            relaxSol.setScore(curNode.getOptimisticBound());
+            relaxSol.setScore(curNode.getLocalUb());
         } else {
             curNode.setOptimisticBound(relaxSol.getScore());
         }

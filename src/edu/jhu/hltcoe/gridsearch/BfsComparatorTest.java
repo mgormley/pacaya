@@ -28,10 +28,10 @@ public class BfsComparatorTest {
         leafNodePQ.add(new MockDmvProblemNode(-1));
         leafNodePQ.add(new MockDmvProblemNode(-3));
 
-        Assert.assertEquals(-1.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
-        Assert.assertEquals(-2.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
-        Assert.assertEquals(-3.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
-        Assert.assertEquals(-4.0, leafNodePQ.remove().getOptimisticBound(), 1e-13);
+        Assert.assertEquals(-1.0, leafNodePQ.remove().getLocalUb(), 1e-13);
+        Assert.assertEquals(-2.0, leafNodePQ.remove().getLocalUb(), 1e-13);
+        Assert.assertEquals(-3.0, leafNodePQ.remove().getLocalUb(), 1e-13);
+        Assert.assertEquals(-4.0, leafNodePQ.remove().getLocalUb(), 1e-13);
     }
     
     

@@ -14,7 +14,7 @@ public interface ProblemNode {
 
     int getSide();
 
-    double getOptimisticBound();
+    double getLocalUb();
 
     WarmStart getWarmStart();
 

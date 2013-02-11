@@ -73,7 +73,7 @@ public class DmvProblemNode implements ProblemNode {
      *         bound otherwise
      */
     @Override
-    public double getOptimisticBound() {
+    public double getLocalUb() {
         return optimisticBound;
     }
 

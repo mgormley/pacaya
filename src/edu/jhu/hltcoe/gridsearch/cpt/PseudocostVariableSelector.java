@@ -43,7 +43,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
         
         // Initialize unreliable pseudocost values with strong branching.
         CptBounds origBounds = relax.getBounds();
-        double parentBound = node.getOptimisticBound();
+        double parentBound = node.getLocalUb();
         for (int c = 0; c < idm.getNumConds(); c++) {
             for (int m = 0; m < idm.getNumParams(c); m++) {
                 if (numObserved[c][m][0] < RELIABILITY_THRESHOLD || numObserved[c][m][1] < RELIABILITY_THRESHOLD) {
@@ -55,7 +55,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
                             DmvProblemNode child = (DmvProblemNode)children.get(lu);
                             assert(child.getDeltas().getPrimary().getLu().getAsInt() == lu);
                             relax.getRelaxedSolution(child);
-                            double cBound = child.getOptimisticBound();
+                            double cBound = child.getLocalUb();
                             double cDelta = parentBound - cBound;
                             deltaSum[c][m][lu] += cDelta;
                             numObserved[c][m][lu]++;
@@ -76,7 +76,7 @@ public class PseudocostVariableSelector extends AbstractScoringVariableSelector 
             int m = primaryDelta.getM();
             int lu = primaryDelta.getLu().getAsInt();
             // Since we're doing maximization...
-            deltaSum[c][m][lu] += node.getParent().getOptimisticBound() - node.getOptimisticBound();
+            deltaSum[c][m][lu] += node.getParent().getLocalUb() - node.getLocalUb();
             numObserved[c][m][lu]++;
             updateScore(c, m);
         }

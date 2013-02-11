@@ -68,7 +68,7 @@ public class FullStrongVariableSelector implements VariableSelector {
 
     public double getStrongScore(DmvProblemNode node, int c, int m, DmvRelaxation relax) {
         CptBounds origBounds = relax.getBounds();
-        double parentBound = node.getOptimisticBound();
+        double parentBound = node.getLocalUb();
 
         List<CptBoundsDeltaList> deltas = varSplitter.split(origBounds, new VariableId(c, m));
         List<ProblemNode> children = node.branch(deltas);
@@ -77,12 +77,12 @@ public class FullStrongVariableSelector implements VariableSelector {
         // Left child
         DmvProblemNode child1 = (DmvProblemNode)children.get(0);
         relax.getRelaxedSolution(child1);
-        double c1Bound = child1.getOptimisticBound();
+        double c1Bound = child1.getLocalUb();
 
         // Right child
         DmvProblemNode child2 = (DmvProblemNode)children.get(1);
         relax.getRelaxedSolution(child2);
-        double c2Bound = child2.getOptimisticBound();
+        double c2Bound = child2.getLocalUb();
         
         // Since we're doing maximization...
         double c1Delta = parentBound - c1Bound;

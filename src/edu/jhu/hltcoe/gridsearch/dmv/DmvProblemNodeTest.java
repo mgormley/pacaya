@@ -132,9 +132,9 @@ public class DmvProblemNodeTest {
         if (nextNode.getParent() != prevNode) {
             relax.getRelaxedSolution(nextNode);
         } else {
-            double prevBound = prevNode.getOptimisticBound();
+            double prevBound = prevNode.getLocalUb();
             relax.getRelaxedSolution(nextNode);
-            double nextBound = nextNode.getOptimisticBound();
+            double nextBound = nextNode.getLocalUb();
             System.out.println("parent: " + prevBound + " child: " + nextBound);
             Assert.assertTrue(prevBound >= nextBound);
         }
