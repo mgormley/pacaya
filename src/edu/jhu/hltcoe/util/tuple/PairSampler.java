@@ -136,7 +136,6 @@ public class PairSampler {
                 }
             }
         }
-        System.out.println("Max pairs: " + maxPairs);
         return maxPairs;
     }
     
