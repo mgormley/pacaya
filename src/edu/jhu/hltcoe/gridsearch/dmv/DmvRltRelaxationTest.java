@@ -353,6 +353,8 @@ public class DmvRltRelaxationTest {
         prm.rltPrm.envelopeOnly = false;
         prm.rltPrm.nameRltVarsAndCons = false;
         prm.cplexPrm.simplexDisplay = 2;
+        //prm.cplexPrm.barrierDisplay = 2;
+        //prm.cplexPrm.simplexAlgorithm = IloCplex.Algorithm.Barrier;
         DmvRltRelaxation relax = new DmvRltRelaxation(prm);
         relax.init1(corpus);
         relax.init2(null);
@@ -362,7 +364,8 @@ public class DmvRltRelaxationTest {
         double probOfSkip = 0.25;
         LocalBnBDmvTrainer.setBoundsFromInitSol(relax, initSol, offsetProb, probOfSkip);
 
-        DmvRelaxedSolution relaxSol = solveRelaxation(relax);
+
+        DmvRelaxedSolution relaxSol = (DmvRelaxedSolution) relax.getRelaxedSolution(new DmvProblemNode(null), incumbentScore);
         System.out.println(relaxSol.getScore());
         Assert.assertTrue(relaxSol.getScore() <= incumbentScore);
     }

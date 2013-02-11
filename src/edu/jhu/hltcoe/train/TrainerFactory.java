@@ -48,6 +48,7 @@ import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowAdder;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.lp.CplexPrm;
+import edu.jhu.hltcoe.lp.CplexPrm.SimplexAlgorithm;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -177,14 +178,17 @@ public class TrainerFactory {
     public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
     public static double localRelativeGapThreshold;
-
+    @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
+    public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
+    
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
     }
     
     public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
         double simplexTimeout = algorithm.equals("viterbi-bnb") ? bnbTimeoutSeconds : timeoutSeconds;
-        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, simplexTimeout);
+        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, 
+                simplexTimeout, simplexAlgorithm.cplexId);
 
         ProjectionsPrm projPrm = getProjectionsPrm(); 
 

@@ -616,7 +616,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(nodeOrder="bfs",
                        relaxOnly=None,
                        rootMaxCutRounds=10,
-                       maxCutRounds=10,
+                       maxCutRounds=1,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
                        epsilon=0.1)
@@ -627,6 +627,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
+                exps.append(experiment)                
+            for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "BARRIER", "SIFTING"]:
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=1.0, maxCutRounds=1, simplexAlgorithm=simplexAlgorithm)
                 exps.append(experiment)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.

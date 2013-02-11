@@ -9,20 +9,30 @@ import java.io.FileNotFoundException;
 
 public class CplexPrm {
 
+    public enum SimplexAlgorithm { 
+        AUTO(0), PRIMAL(1), DUAL(2), NETWORK(3), BARRIER(4), SIFTING(5), CONCURRENT(6);
+        public int cplexId;
+        private SimplexAlgorithm(int cplexId) {
+            this.cplexId = cplexId;
+        }
+    }
+    
     public double workMemMegs = 1024;
     public int numThreads = 1;
     public int maxSimplexIterations = 2100000000;
     public int simplexAlgorithm = IloCplex.Algorithm.Auto;   
     public double timeoutSeconds = 1e+75;
     public int simplexDisplay = 1;
+    public int barrierDisplay = 1;
     
     public CplexPrm() { }
 
-    public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations, double timeoutSeconds) {
+    public CplexPrm(double workMemMegs, int numThreads, int maxSimplexIterations, double timeoutSeconds, int simplexAlgorithm) {
         this.workMemMegs = workMemMegs;
         this.numThreads = numThreads;
         this.maxSimplexIterations = maxSimplexIterations;
         this.timeoutSeconds = timeoutSeconds;
+        this.simplexAlgorithm = simplexAlgorithm;
     }
 
     public IloCplex getIloCplexInstance() {
@@ -86,14 +96,17 @@ public class CplexPrm {
         // Value 1, will display iteration information after each refactoring (default).
         // When set to 2, will display at each iteration.
         cplex.setParam(IntParam.SimDisplay, simplexDisplay);
+        cplex.setParam(IntParam.BarDisplay, barrierDisplay);
         
         // Whether or not to presolve (default true).
         // cplex.setParam(BooleanParam.PreInd, false);
 
         // Parameter for increasing optimality tolerance:
-        // cplex.setParam(DoubleParam.EpOpt, 1e-1);
+        //cplex.setParam(DoubleParam.EpOpt, 1e-06);
         // Parameter for increasing feasibility tolerance:
-        // cplex.setParam(DoubleParam.EpRHS, 1e-1);
+        // cplex.setParam(DoubleParam.EpRHS, 1e-06);
+        // Sets the tolerance on complementarity for convergence. The barrier algorithm terminates with an optimal solution if the relative complementarity is smaller than this value.
+        // cplex.setParam(DoubleParam.BarEpComp, 1e-08);
         
         // Numerical precision emphasis (default false)
         // cplex.setParam(BooleanParam.NumericalEmphasis, true);
