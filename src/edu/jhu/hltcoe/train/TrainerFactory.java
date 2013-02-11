@@ -7,11 +7,14 @@ import org.apache.commons.cli.ParseException;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
-import edu.jhu.hltcoe.gridsearch.DfsBfcComparator;
+import edu.jhu.hltcoe.gridsearch.DfsNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.NodeOrderer;
+import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
+import edu.jhu.hltcoe.gridsearch.DfsNodeOrderer.DfsNodeOrdererPrm;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer.PlungingBfsNodeOrdererPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
@@ -364,7 +367,11 @@ public class TrainerFactory {
         if (nodeOrder.equals("bfs")) {
             nodeOrderer = new PqNodeOrderer(new BfsComparator());
         } else if (nodeOrder.equals("dfs")) {
-            nodeOrderer = new PqNodeOrderer(new DfsBfcComparator());
+            DfsNodeOrdererPrm prm = new DfsNodeOrdererPrm();
+            nodeOrderer = new DfsNodeOrderer(prm);
+        } else if (nodeOrder.equals("plunging-bfs")) {
+            PlungingBfsNodeOrdererPrm prm = new PlungingBfsNodeOrdererPrm();
+            nodeOrderer = new PlungingBfsNodeOrderer(prm);
         } else if (nodeOrder.equals("dfs-rand")) {
             nodeOrderer = new DfsRandChildAtDepthNodeOrderer(60);
         } else if (nodeOrder.equals("dfs-randwalk")) {

@@ -119,8 +119,8 @@ public class MidpointVarSplitterTest {
         List<CptBoundsDeltaList> deltas = splitAtProb(bounds, 0, 0, 0.4);
         assertEquals(2, deltas.size());
         
-        CptBoundsDeltaList lDeltas = deltas.get(0);
-        CptBoundsDeltaList uDeltas = deltas.get(1);
+        CptBoundsDeltaList uDeltas = deltas.get(0);
+        CptBoundsDeltaList lDeltas = deltas.get(1);
         assertEquals(Lu.LOWER, lDeltas.getPrimary().getLu());
         assertEquals(Lu.UPPER, uDeltas.getPrimary().getLu());
         
@@ -153,8 +153,8 @@ public class MidpointVarSplitterTest {
         List<CptBoundsDeltaList> deltas = splitAtProb(bounds, 0, 0, 0.4);
         assertEquals(2, deltas.size());
         
-        CptBoundsDeltaList lDeltas = deltas.get(0);
-        CptBoundsDeltaList uDeltas = deltas.get(1);
+        CptBoundsDeltaList uDeltas = deltas.get(0);
+        CptBoundsDeltaList lDeltas = deltas.get(1);
         assertEquals(Lu.LOWER, lDeltas.getPrimary().getLu());
         assertEquals(Lu.UPPER, uDeltas.getPrimary().getLu());
         
@@ -193,9 +193,9 @@ public class MidpointVarSplitterTest {
         
         List<CptBoundsDeltaList> deltas = splitAtProb(bounds, 0, 0, 0.4);
         assertEquals(2, deltas.size());
-        
-        CptBoundsDeltaList lDeltas = deltas.get(0);
-        CptBoundsDeltaList uDeltas = deltas.get(1);
+
+        CptBoundsDeltaList uDeltas = deltas.get(0);
+        CptBoundsDeltaList lDeltas = deltas.get(1);
         assertEquals(Lu.LOWER, lDeltas.getPrimary().getLu());
         assertEquals(Lu.UPPER, uDeltas.getPrimary().getLu());
         
@@ -231,9 +231,9 @@ public class MidpointVarSplitterTest {
         
         List<CptBoundsDeltaList> deltas = splitAtProb(bounds, 0, 0, 0.4);
         assertEquals(2, deltas.size());
-        
-        CptBoundsDeltaList lDeltas = deltas.get(0);
-        CptBoundsDeltaList uDeltas = deltas.get(1);
+
+        CptBoundsDeltaList uDeltas = deltas.get(0);
+        CptBoundsDeltaList lDeltas = deltas.get(1);
         assertEquals(Lu.LOWER, lDeltas.getPrimary().getLu());
         assertEquals(Lu.UPPER, uDeltas.getPrimary().getLu());
         

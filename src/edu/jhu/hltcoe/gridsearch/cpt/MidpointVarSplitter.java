@@ -135,8 +135,8 @@ public class MidpointVarSplitter implements VariableSplitter {
         // forced to sum to > 1.0.
             
         List<CptBoundsDeltaList> deltasList = new ArrayList<CptBoundsDeltaList>();
-        deltasList.add(lDeltas);
         deltasList.add(uDeltas);
+        deltasList.add(lDeltas);
         return deltasList;
     }
 

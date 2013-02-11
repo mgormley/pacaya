@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxSolChildOrderer;
 import edu.jhu.hltcoe.util.IterIterator;
 
 /**
