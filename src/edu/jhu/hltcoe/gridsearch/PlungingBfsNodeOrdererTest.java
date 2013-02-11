@@ -10,7 +10,7 @@ import org.junit.Test;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
 import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer.PlungingBfsNodeOrdererPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 
 
 public class PlungingBfsNodeOrdererTest {
@@ -44,7 +44,7 @@ public class PlungingBfsNodeOrdererTest {
 
         public MockNodeResult(MockDmvProblemNode node1) {
             this.children = node1.getChildren();
-            this.relaxSol = new RelaxedDmvSolution(null, null, node1.getOptimisticBound(), null, null, null, Double.NaN);
+            this.relaxSol = new DmvRelaxedSolution(null, null, node1.getOptimisticBound(), null, null, null, Double.NaN);
         }
         
     }

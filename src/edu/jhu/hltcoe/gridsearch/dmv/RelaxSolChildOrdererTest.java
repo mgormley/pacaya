@@ -76,8 +76,8 @@ public class RelaxSolChildOrdererTest {
         int c = ((DmvProblemNode)c1Children.get(0)).getDeltas().getPrimary().getC();
         int m = ((DmvProblemNode)c1Children.get(0)).getDeltas().getPrimary().getM();
         Type type = ((DmvProblemNode)c1Children.get(0)).getDeltas().getPrimary().getType();
-        double rootCmLogProb = ((RelaxedDmvSolution)rootSol).getLogProbs()[c][m];
-        double c1CmLogProb = ((RelaxedDmvSolution)c1Sol).getLogProbs()[c][m];
+        double rootCmLogProb = ((DmvRelaxedSolution)rootSol).getLogProbs()[c][m];
+        double c1CmLogProb = ((DmvRelaxedSolution)c1Sol).getLogProbs()[c][m];
         Assert.assertEquals(c1CmLogProb, rootCmLogProb, 1e-10);
 
         {
@@ -92,7 +92,7 @@ public class RelaxSolChildOrdererTest {
         }
 
         {
-            ((RelaxedDmvSolution) c1Sol).getLogProbs()[c][m] = rootCmLogProb - 10;
+            ((DmvRelaxedSolution) c1Sol).getLogProbs()[c][m] = rootCmLogProb - 10;
 
             // Order the children of child 1 (c1).
             RelaxSolChildOrderer co = new RelaxSolChildOrderer();
@@ -105,7 +105,7 @@ public class RelaxSolChildOrdererTest {
         }
 
         {
-            ((RelaxedDmvSolution) c1Sol).getLogProbs()[c][m] = rootCmLogProb + 10;
+            ((DmvRelaxedSolution) c1Sol).getLogProbs()[c][m] = rootCmLogProb + 10;
 
             // Order the children of child 1 (c1).
             RelaxSolChildOrderer co = new RelaxSolChildOrderer();

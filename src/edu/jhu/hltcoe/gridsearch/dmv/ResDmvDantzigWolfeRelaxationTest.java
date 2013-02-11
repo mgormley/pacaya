@@ -81,7 +81,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
         
         double[][] logProbs = relaxSol.getLogProbs();
@@ -101,7 +101,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -122,7 +122,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -144,7 +144,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -179,7 +179,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         newL = Utilities.log(0.11);
         newU = Utilities.log(0.90);
         
-        RelaxedDmvSolution relaxSol;
+        DmvRelaxedSolution relaxSol;
         
         // Do an initial bounds adjustment so that we don't step through any infeasible bounds
         //adjustBounds(dw, DmvBounds.DEFAULT_LOWER_BOUND, DmvBounds.DEFAULT_UPPER_BOUND, true);
@@ -199,11 +199,11 @@ public class ResDmvDantzigWolfeRelaxationTest {
         
     }
 
-    private RelaxedDmvSolution testBoundsHelper(ResDmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
+    private DmvRelaxedSolution testBoundsHelper(ResDmvDantzigWolfeRelaxation dw, double newL, double newU, boolean forward) {
         
         DmvDantzigWolfeRelaxationTest.adjustBounds(dw, newL, newU, forward);
         
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
 
         System.out.println("Printing probabilities");
         double[][] logProbs = relaxSol.getLogProbs();
@@ -231,7 +231,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         for (int s = 0; s < sentences.size(); s++) {
@@ -254,7 +254,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         Prng.seed(12345);
         ResDmvDantzigWolfeRelaxation dw = getDw(sentences);
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), DEFAULT_SOLUTION_TOLERANCE);
         double maxSum = 0.0;
         double[][] logProbs = relaxSol.getLogProbs();
@@ -275,7 +275,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         DmvDantzigWolfeRelaxation dw = getDw(trainCorpus);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(-267.521, relaxSol.getScore(), 1e-3);
     }
 
@@ -291,7 +291,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         ResDmvDantzigWolfeRelaxation dwRelax = new ResDmvDantzigWolfeRelaxation(new ResDmvDwRelaxPrm());
         dwRelax.init1(corpus);
         dwRelax.init2(DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
-        RelaxedDmvSolution relaxSol = solveRelaxation(dwRelax);
+        DmvRelaxedSolution relaxSol = solveRelaxation(dwRelax);
         
         // Get the model from a single M-step.
         DmvMStep mStep = new DmvMStep(0.0);
@@ -359,7 +359,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
                 for (int i=0; i<numTimes; i++) {
                     timer.start();
                     LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initSol, offsetProb, probOfSkipCm);
-                    RelaxedDmvSolution relaxSol = solveRelaxation(dw);
+                    DmvRelaxedSolution relaxSol = solveRelaxation(dw);
                     avgScore += relaxSol.getScore();
                     timer.stop();
                     System.out.println("Time remaining: " + timer.avgMs()*(numTimes*0.5/0.01*1.0/0.1 - i*offsetProb/0.01*probOfSkipCm/0.1)/1000);

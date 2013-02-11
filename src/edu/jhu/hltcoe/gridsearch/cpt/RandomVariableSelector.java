@@ -8,7 +8,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
@@ -62,7 +62,7 @@ public class RandomVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, DmvRelaxedSolution relaxSol) {
         if (freqs == null) {
             init(relax.getIdm());
         }

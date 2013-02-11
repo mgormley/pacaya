@@ -9,7 +9,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 
 public class FullStrongVariableSelector implements VariableSelector {
 
@@ -27,7 +27,7 @@ public class FullStrongVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, DmvRelaxedSolution relaxSol) {
         // Cache the regret based deltas in case we need them as a fallback
         VariableId regretVarId = regretFactory.select(node, relax, relaxSol);
         

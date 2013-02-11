@@ -16,7 +16,7 @@ import java.util.HashSet;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
 import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
@@ -135,7 +135,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new RelaxedDmvSolution(null, null, objective, status, null, null, Double.NaN);
+                return new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
             }
             
             if (prm.tempDir != null) {

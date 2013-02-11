@@ -15,13 +15,13 @@ import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer;
-import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainerTest;
-import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.CostEstimator;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
+import edu.jhu.hltcoe.train.BnBDmvTrainer;
+import edu.jhu.hltcoe.train.BnBDmvTrainerTest;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 
 
 public class RandWalkBnbNodeSamplerTest {

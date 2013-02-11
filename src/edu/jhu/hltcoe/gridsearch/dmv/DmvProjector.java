@@ -4,6 +4,6 @@ import edu.jhu.hltcoe.gridsearch.Projector;
 
 public interface DmvProjector extends Projector {
 
-    DmvSolution getProjectedDmvSolution(RelaxedDmvSolution relaxSol);
+    DmvSolution getProjectedDmvSolution(DmvRelaxedSolution relaxSol);
     
 }

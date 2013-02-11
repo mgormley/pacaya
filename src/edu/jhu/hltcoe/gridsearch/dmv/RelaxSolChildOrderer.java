@@ -42,8 +42,8 @@ public class RelaxSolChildOrderer implements ChildOrderer {
                     "Expecting the first child to be (var <= const) and the second child to be (var >= const).");
         }
         
-        RelaxedDmvSolution root = (RelaxedDmvSolution) rootSol;
-        RelaxedDmvSolution parent = (RelaxedDmvSolution) relaxSol;
+        DmvRelaxedSolution root = (DmvRelaxedSolution) rootSol;
+        DmvRelaxedSolution parent = (DmvRelaxedSolution) relaxSol;
                 
         int c = d1.getC();
         int m = d1.getM();

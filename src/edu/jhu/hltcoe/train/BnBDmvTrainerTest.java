@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.hltcoe.train;
 
 import junit.framework.Assert;
 
@@ -17,13 +17,13 @@ import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
 
 

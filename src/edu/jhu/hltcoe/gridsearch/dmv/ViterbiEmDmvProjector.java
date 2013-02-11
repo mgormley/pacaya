@@ -81,10 +81,10 @@ public class ViterbiEmDmvProjector implements DmvProjector {
     
     @Override
     public Solution getProjectedSolution(RelaxedSolution relaxSol) {
-        return getProjectedDmvSolution((RelaxedDmvSolution) relaxSol);
+        return getProjectedDmvSolution((DmvRelaxedSolution) relaxSol);
     }
 
-    public DmvSolution getProjectedDmvSolution(RelaxedDmvSolution relaxSol) {
+    public DmvSolution getProjectedDmvSolution(DmvRelaxedSolution relaxSol) {
         if (relaxSol == null) {
             throw new IllegalStateException("No relaxed solution cached.");
         }

@@ -163,7 +163,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
 
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
+        return new DmvRelaxedSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
                 .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
     }
 

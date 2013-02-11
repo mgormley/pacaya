@@ -5,9 +5,9 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 
-public class RelaxedDmvSolution implements RelaxedSolution {
+public class DmvRelaxedSolution implements RelaxedSolution {
 
-    private static final Logger log = Logger.getLogger(RelaxedDmvSolution.class);
+    private static final Logger log = Logger.getLogger(DmvRelaxedSolution.class);
 
     private double score;
     private double[][] logProbs;
@@ -17,7 +17,7 @@ public class RelaxedDmvSolution implements RelaxedSolution {
     private double[][] objVals;
     private double trueRelaxObj;
 
-    public RelaxedDmvSolution(double[][] logProbs, RelaxedDepTreebank treebank, double score, RelaxStatus status,
+    public DmvRelaxedSolution(double[][] logProbs, RelaxedDepTreebank treebank, double score, RelaxStatus status,
             double[][] featCounts, double[][] objVals, double trueRelaxObj) {
         super();
         this.score = score;

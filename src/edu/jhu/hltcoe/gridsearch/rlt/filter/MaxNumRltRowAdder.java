@@ -44,6 +44,8 @@ public class MaxNumRltRowAdder implements RltRowAdder {
     @Override
     public void init(Rlt rlt, long numUnfilteredRows) throws IloException {
         this.initProp = initMax / numUnfilteredRows;
+        initCount = 0;
+        cutCount = 0;
     }
 
     @Override

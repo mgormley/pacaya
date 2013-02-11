@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDmvSolution;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -19,7 +19,7 @@ public class RegretVariableSelector implements VariableSelector {
     }
 
     @Override
-    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, DmvRelaxedSolution relaxSol) {
         CptBounds origBounds = relax.getBounds();
         double[][] regret = getRegretCm(relaxSol);
 
@@ -61,7 +61,7 @@ public class RegretVariableSelector implements VariableSelector {
         return new VariableId(c, m);
     }
 
-    public static double[][] getRegretCm(RelaxedDmvSolution relaxSol) {
+    public static double[][] getRegretCm(DmvRelaxedSolution relaxSol) {
         return getRegretCm(relaxSol.getLogProbs(), relaxSol.getFeatCounts(), relaxSol.getObjVals());
     }
 

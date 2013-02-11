@@ -289,7 +289,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new RelaxedDmvSolution(null, null, objective, status, null, null, Double.NaN);
+                return new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
             }
             
             if (prm.tempDir != null) {
@@ -524,7 +524,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
         
-        return new RelaxedDmvSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
+        return new DmvRelaxedSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
                 .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
     }
 

@@ -66,7 +66,7 @@ public class DmvRltRelaxationTest {
 
         DmvRltRelaxation dw = getLp(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(RelaxStatus.Optimal, relaxSol.getStatus());
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
@@ -86,7 +86,7 @@ public class DmvRltRelaxationTest {
 
         DmvRltRelaxation dw = getLp(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -107,7 +107,7 @@ public class DmvRltRelaxationTest {
 
         DmvRltRelaxation dw = getLp(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -145,7 +145,7 @@ public class DmvRltRelaxationTest {
         dw.init1(new DmvTrainCorpus(sentences));
         dw.init2(null);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         double[][] logProbs = relaxSol.getLogProbs();
@@ -177,7 +177,7 @@ public class DmvRltRelaxationTest {
         newL = Utilities.log(0.11);
         newU = Utilities.log(0.90);
         
-        RelaxedDmvSolution relaxSol;
+        DmvRelaxedSolution relaxSol;
         
         relaxSol = testBoundsHelper(dw, newL, newU, true);
         assertEquals(-1.481, relaxSol.getScore(), 1e-3);
@@ -192,11 +192,11 @@ public class DmvRltRelaxationTest {
         
     }
 
-    private RelaxedDmvSolution testBoundsHelper(DmvRltRelaxation dw, double newL, double newU, boolean forward) {
+    private DmvRelaxedSolution testBoundsHelper(DmvRltRelaxation dw, double newL, double newU, boolean forward) {
         
         adjustBounds(dw, newL, newU, forward);
         
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
 
         System.out.println("Printing probabilities");
         double[][] logProbs = relaxSol.getLogProbs();
@@ -249,7 +249,7 @@ public class DmvRltRelaxationTest {
 
         DmvRltRelaxation dw = getLp(sentences);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(0.0, relaxSol.getScore(), 1e-13);
 
         for (int s = 0; s < sentences.size(); s++) {
@@ -304,7 +304,7 @@ public class DmvRltRelaxationTest {
             rltRelax.init2(null);
             
             DmvRltRelaxation dw = getLp(sentences, numCuts);
-            RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+            DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
             assertEquals(0.0, relaxSol.getScore(), 1e-13);
             double maxSum = 0.0;
             double[][] logProbs = relaxSol.getLogProbs();
@@ -331,7 +331,7 @@ public class DmvRltRelaxationTest {
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 0.0);
         
         DmvRltRelaxation dw = getLp(corpus, 1);
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         BasicDmvProjector projector = new BasicDmvProjector(new DmvProjectorPrm(), corpus);
         projector.getProjectedDmvSolution(relaxSol);
     }
@@ -362,7 +362,7 @@ public class DmvRltRelaxationTest {
         double probOfSkip = 0.25;
         LocalBnBDmvTrainer.setBoundsFromInitSol(relax, initSol, offsetProb, probOfSkip);
 
-        RelaxedDmvSolution relaxSol = solveRelaxation(relax);
+        DmvRelaxedSolution relaxSol = solveRelaxation(relax);
         System.out.println(relaxSol.getScore());
         Assert.assertTrue(relaxSol.getScore() <= incumbentScore);
     }
@@ -414,7 +414,7 @@ public class DmvRltRelaxationTest {
         rltRelax.init2(null);
         Prng.seed(888);
         LocalBnBDmvTrainer.setBoundsFromInitSol(rltRelax, initSol, offsetProb, probOfSkip);
-        RelaxedDmvSolution rltSol = solveRelaxation(rltRelax);
+        DmvRelaxedSolution rltSol = solveRelaxation(rltRelax);
 
         System.out.println("rlt: " + rltSol.getScore());
         Assert.assertEquals(RelaxStatus.Optimal, rltSol.getStatus());
@@ -468,7 +468,7 @@ public class DmvRltRelaxationTest {
         rltRelax.init2(null);
         Prng.seed(888);
         LocalBnBDmvTrainer.setBoundsFromInitSol(rltRelax, initSol, offsetProb, probOfSkip);
-        RelaxedDmvSolution rltSol = solveRelaxation(rltRelax);
+        DmvRelaxedSolution rltSol = solveRelaxation(rltRelax);
         Assert.assertEquals(RelaxStatus.Optimal, rltSol.getStatus());
         
         // LP:
@@ -487,7 +487,7 @@ public class DmvRltRelaxationTest {
         lpRelax.init2(null);
         Prng.seed(888);
         LocalBnBDmvTrainer.setBoundsFromInitSol(lpRelax, initSol, offsetProb, probOfSkip);
-        RelaxedDmvSolution lpSol = solveRelaxation(lpRelax);
+        DmvRelaxedSolution lpSol = solveRelaxation(lpRelax);
         Assert.assertEquals(RelaxStatus.Optimal, lpSol.getStatus());
 
         // DW
@@ -501,7 +501,7 @@ public class DmvRltRelaxationTest {
         dwRelax.init2(initSol);
         Prng.seed(888);
         LocalBnBDmvTrainer.setBoundsFromInitSol(dwRelax, initSol, offsetProb, probOfSkip);
-        RelaxedDmvSolution dwSol = DmvDantzigWolfeRelaxationTest.solveRelaxation(dwRelax); 
+        DmvRelaxedSolution dwSol = DmvDantzigWolfeRelaxationTest.solveRelaxation(dwRelax); 
         Assert.assertEquals(RelaxStatus.Optimal, dwSol.getStatus());
 
         // SUMMARIZE
@@ -524,7 +524,7 @@ public class DmvRltRelaxationTest {
         LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, 0.1, 0.0);
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
-        RelaxedDmvSolution relaxSol = solveRelaxation(dw); 
+        DmvRelaxedSolution relaxSol = solveRelaxation(dw); 
         assertEquals(-284.462, relaxSol.getScore(), 1e-3);
     }
     
@@ -543,7 +543,7 @@ public class DmvRltRelaxationTest {
         DmvRltRelaxation relax = new DmvRltRelaxation(prm);
         relax.init1(corpus);
         relax.init2(null);
-        RelaxedDmvSolution relaxSol = solveRelaxation(relax);
+        DmvRelaxedSolution relaxSol = solveRelaxation(relax);
 
         double[][] regret = RegretVariableSelector.getRegretCm(relaxSol);
         for (int c=0; c<regret.length; c++) {
@@ -607,7 +607,7 @@ public class DmvRltRelaxationTest {
         DmvRltRelaxation relax = new DmvRltRelaxation(prm);
         relax.init1(corpus);
         relax.init2(null);
-        RelaxedDmvSolution relaxSol = solveRelaxation(relax);
+        DmvRelaxedSolution relaxSol = solveRelaxation(relax);
         Assert.assertEquals(RelaxStatus.Optimal, relaxSol.getStatus());
         
         BasicDmvProjector projector = new BasicDmvProjector(new DmvProjectorPrm(), corpus);

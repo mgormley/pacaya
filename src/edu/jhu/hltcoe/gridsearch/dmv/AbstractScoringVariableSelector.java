@@ -17,7 +17,7 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
     }
 
     @Override
-    public VariableId select(DmvProblemNode node, DmvRelaxation relax, RelaxedDmvSolution relaxSol) {
+    public VariableId select(DmvProblemNode node, DmvRelaxation relax, DmvRelaxedSolution relaxSol) {
         double[][] scores = getScores(node, relax);
 
         // Don't branch on variables that have bottomed out

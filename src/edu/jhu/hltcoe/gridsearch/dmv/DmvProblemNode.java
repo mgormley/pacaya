@@ -81,7 +81,7 @@ public class DmvProblemNode implements ProblemNode {
     public List<ProblemNode> branch(Relaxation relaxation, RelaxedSolution relaxSol) {
         DmvRelaxation relax = (DmvRelaxation)relaxation;
         assert(this == relax.getActiveNode());        
-        List<CptBoundsDeltaList> deltasForChildren = deltasFactory.getDeltas(this, relax, (RelaxedDmvSolution)relaxSol);
+        List<CptBoundsDeltaList> deltasForChildren = deltasFactory.getDeltas(this, relax, (DmvRelaxedSolution)relaxSol);
         return branch(deltasForChildren);
     }
 
