@@ -157,7 +157,9 @@ public class LazyBranchAndBoundSolver {
                 logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
-            addToLeafNodes(result, curNode == rootNode);
+            if (result.status == FathomStatus.NotFathomed) {
+                addToLeafNodes(result, curNode == rootNode);
+            }
         }
         if (nodeTimer.isRunning()) { nodeTimer.stop(); }
 

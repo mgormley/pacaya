@@ -572,6 +572,41 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereqs([scrape, scrape_stat])
             return root
+        elif self.expname == "node-orders":
+            root = RootStage()
+            all.update(algorithm="bnb",
+                       rootMaxCutRounds=1,
+                       maxCutRounds=0,
+                       minSumForCuts=1.00001,
+                       maxStoCuts=1000,
+                       epsilon=0.01)
+            relax = rltAllRelax + DPExpParams()
+            relax.update(rltFilter="max",
+                         rltInitMax=10000,
+                         rltCutMax=0)
+            dataset = synth_alt_three + DPExpParams()
+            dataset.update(maxSentenceLength=5,
+                           maxNumSentences=15,
+                           timeoutSeconds=15*60)
+            exps = []
+            for nodeOrder in ["bfs", "dfs", "plunging-bfs"]:
+                experiment = all + dataset + relax + DPExpParams(nodeOrder=nodeOrder)
+                exps.append(experiment)
+            if self.fast:
+                # Drop all but 3 experiments for a fast run.
+                exps = exps[:3]
+            root.add_dependents(exps)
+            # Scrape all results.
+            scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
+            scrape.add_prereqs(root.dependents)
+            #Scrape status information from a subset of the experiments.
+            scrape_stat = ScrapeStatuses(root.dependents, tsv_file="bnb-status.data", type="bnb")
+            scrape_stat.add_prereqs(root.dependents)
+            if not self.fast:
+                # Commit results to svn
+                svnco = SvnCommitResults(self.expname)
+                svnco.add_prereqs([scrape, scrape_stat])
+            return root
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:
@@ -713,6 +748,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         qsub parameters given its experimental parameters.
         '''
         for stage in self.get_stages_as_list(root_stage):
+            # First make sure that the "fast" setting is actually fast.
+            if isinstance(stage, DPExpParams) and self.fast:
+                stage.update(iterations=1,
+                             maxSentenceLength=7,
+                             maxNumSentences=3,
+                             numRestarts=1,
+                             timeoutSeconds=6,   
+                             bnbTimeoutSeconds=2)
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")
@@ -725,13 +768,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     # Add some extra time in case some other part of the experiment
                     # (e.g. evaluation) takes excessively long.
                     stage.minutes = (stage.minutes * 2.0) + 10
-            if isinstance(stage, DPExpParams) and self.fast:
-                stage.update(iterations=1,
-                             maxSentenceLength=7,
-                             maxNumSentences=3,
-                             numRestarts=1,
-                             timeoutSeconds=6,   
-                             bnbTimeoutSeconds=2)
 
 if __name__ == "__main__":
     usage = "%prog "

@@ -63,7 +63,7 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
         if ((plungeSteps > prm.maxPlungeDepthProp * maxDepthProcessed)
                 || (plungeSteps > prm.minPlungeDepthProp * maxDepthProcessed 
                         && localRelativeGap > prm.localRelativeGapThreshold)) {
-            log.debug("Resetting plunge");
+            log.debug(String.format("Resetting plunge after %d steps", plungeSteps));
             // Clean up / Reset plunge.
             plungeSteps = 0;
 
@@ -74,8 +74,6 @@ public class PlungingBfsNodeOrderer implements NodeOrderer {
             // Add the new children to the priority queue.
             pq.addAll(result.children);
         } else {
-            log.debug("Continuing plunge");
-
             List<ProblemNode> children = prm.childOrderer.orderChildren(result.relaxSol, rootSol, result.children);
             
             // Add the new children to the stack for plunging.

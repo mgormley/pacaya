@@ -495,9 +495,13 @@ public class DmvRltRelaxation implements DmvRelaxation {
                         (double) rows.size() / slacks.length, rows.size(), slacks.length));
         }
         
+        // Add sum-to-one cuts.
         rows.add(sto.projectModelParamsAndAddCuts().toNativeArray());
         
-        return rows.size() + mp.rlt.addRowsAsFactors(rows);
+        // Add RLT cuts.
+        int rltCuts = mp.rlt.addRowsAsFactors(rows);
+        
+        return rows.size() + rltCuts;
     }
     
     // Copied from DmvDantzigWolfeRelaxation.
