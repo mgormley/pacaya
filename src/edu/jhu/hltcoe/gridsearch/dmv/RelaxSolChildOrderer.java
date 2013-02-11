@@ -52,7 +52,8 @@ public class RelaxSolChildOrderer implements ChildOrderer {
         List<ProblemNode> order = new ArrayList<ProblemNode>(children.size());
         assert type == Type.PARAM || type == Type.COUNT;
         
-        if ((type == Type.PARAM && Utilities.equals(parent.getLogProbs()[c][m], root.getLogProbs()[c][m], equalityTolerance)) ||
+        if (!parent.getStatus().hasSolution() ||
+                (type == Type.PARAM && Utilities.equals(parent.getLogProbs()[c][m], root.getLogProbs()[c][m], equalityTolerance)) ||
                 (type == Type.COUNT && Utilities.equals(parent.getFeatCounts()[c][m], root.getFeatCounts()[c][m], equalityTolerance))) {
             // Break ties randomly.
             if (Prng.nextBoolean()) {
