@@ -146,7 +146,7 @@ public class LazyBranchAndBoundSolver {
             curNode = getNextLeafNode();
 
             NodeResult result = processNode(curNode);
-            fathom.fathom(curNode, result.status);
+            fathom.add(curNode, result.status);
             if (result.status != FathomStatus.NotFathomed && prm.relaxation instanceof DmvRelaxation) {
                 // TODO: Remove this after we've implemented structured logging that can produce the log-space statistics post-hoc.
                 DmvRelaxation relax = (DmvRelaxation) prm.relaxation;

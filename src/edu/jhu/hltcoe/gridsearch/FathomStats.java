@@ -19,7 +19,7 @@ public class FathomStats {
         return numPruned + numInfeasible + numCompletelySolved + numBottomedOut;
     }
     
-    public void fathom(ProblemNode node, FathomStatus status) {
+    public void add(ProblemNode node, FathomStatus status) {
         switch (status) {
         case NotFathomed:
             return;
