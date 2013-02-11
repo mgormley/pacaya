@@ -10,6 +10,10 @@ import org.junit.Test;
 
 public class ArgParserTest {
 
+    public enum MockEnum {
+        OPT1, OPT2
+    }
+    
     @Opt(hasArg = true, description = "my intVal")
     public static int intVal = 1;
 
@@ -27,6 +31,9 @@ public class ArgParserTest {
 
     @Opt(hasArg = true, description = "my fileVal")
     public static File fileVal = new File("1/1");
+    
+    @Opt(hasArg = true, description = "my enumVal")
+    public static MockEnum enumVal = MockEnum.OPT1;
     
     @BeforeClass
     public static void setUp() {
@@ -64,6 +71,15 @@ public class ArgParserTest {
 
             Assert.assertEquals("4", strVal);
             Assert.assertEquals(new File("4/4"), fileVal);
+        }
+        {
+            String[] args = "--enumVal=OPT2".split(" ");
+
+            ArgParser parser = new ArgParser();
+            parser.addClass(ArgParserTest.class);
+            parser.parseArgs(args);
+
+            Assert.assertEquals(MockEnum.OPT2, enumVal);
         }
     }
 

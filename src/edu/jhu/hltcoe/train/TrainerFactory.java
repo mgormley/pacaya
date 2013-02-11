@@ -178,7 +178,7 @@ public class TrainerFactory {
     public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
     public static double localRelativeGapThreshold;
-    @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
+    @Opt(name = "simplexAlgorithm", hasArg = true, description = "The simplex algorithm to use in CPLEX.")
     public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
     
     public static ViterbiParser getEvalParser() {
