@@ -611,17 +611,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape, scrape_stat])
             return root
-        elif self.expname == "relax-percent-pruned":
-            for dataset in datasets:
-                for maxSentenceLength in [10]:
-                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    for maxNumSentences in [300]:
-                        mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        experiments.append(all + dataset + msl + mns + DPExpParams(algorithm="viterbi",parser="cky"))
-                        for i in range(0,100):
-                            for initBounds in ["random"]:
-                                for offsetProb in frange(10e-13, 1.001,0.05):
-                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=None))
         elif self.expname == "relax-root-rlt":
             root = RootStage()
             all.update(nodeOrder="bfs",
@@ -631,11 +620,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
                        epsilon=0.1)
-            if not self.fast:
-                # Run for some fixed amount of time.
-                all.update(timeoutSeconds=10*60)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
-            dataset = synth_alt_three + DPExpParams(maxSentenceLength=10, maxNumSentences=5)
+            dataset = synth_alt_three + DPExpParams(maxSentenceLength=10, 
+                                                    maxNumSentences=5,
+                                                    timeoutSeconds=10*60)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
@@ -652,6 +640,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape])
             return root
+        elif self.expname == "relax-percent-pruned":
+            for dataset in datasets:
+                for maxSentenceLength in [10]:
+                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
+                    for maxNumSentences in [300]:
+                        mns = DPExpParams(maxNumSentences=maxNumSentences)
+                        experiments.append(all + dataset + msl + mns + DPExpParams(algorithm="viterbi",parser="cky"))
+                        for i in range(0,100):
+                            for initBounds in ["random"]:
+                                for offsetProb in frange(10e-13, 1.001,0.05):
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=None))
         elif self.expname == "relax-quality":
             # Fixed seed
             all.update(seed=112233)
