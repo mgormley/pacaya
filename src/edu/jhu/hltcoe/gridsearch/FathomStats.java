@@ -21,6 +21,8 @@ public class FathomStats {
     
     public void fathom(ProblemNode node, FathomStatus status) {
         switch (status) {
+        case NotFathomed:
+            return;
         case Infeasible:
             numInfeasible++;
             break;
