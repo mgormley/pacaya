@@ -264,7 +264,8 @@ public class TrainerFactory {
         }
 
         DmvRelaxationFactory relaxFactory = null;
-        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
+        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb") || algorithm.equals("bnb-depth-stratified")
+                || algorithm.equals("bnb-rand-walk")) {
             relaxFactory = getDmvRelaxationFactory();
         }
 
