@@ -137,7 +137,7 @@ public class PipelineRunner {
             DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory();
             DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
-            if (projSol == null) {
+            if (projSol != null) {
                 log.info("projLogLikelihood: " + projSol.getScore());
             } else {
                 log.warn("projLogLikelihood: UNAVAILABLE");

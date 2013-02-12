@@ -623,10 +623,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=10, 
                                                     maxNumSentences=5,
-                                                    timeoutSeconds=10*60)
+                                                    timeoutSeconds=1*60*60)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
                 exps.append(experiment)                
             for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "BARRIER", "SIFTING"]:
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=1.0, maxCutRounds=1, simplexAlgorithm=simplexAlgorithm)
