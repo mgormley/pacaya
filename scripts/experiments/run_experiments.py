@@ -366,14 +366,15 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
-                       epsilon=0.1)
+                       epsilon=0.1,
+                       simplexAlgorithm="BARRIER")
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [synth_alt_three, brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 10, 4*60*60)]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 10, 8*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
@@ -456,11 +457,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        rootMaxCutRounds=1,
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
-                       maxStoCuts=1000)
+                       maxStoCuts=1000,
+                       simplexAlgorithm="BARRIER")
             if not self.fast:
                 # Run for some fixed amount of time.
                 all.update(numRestarts=1000000000, epsilon=0.0,
-                           timeoutSeconds=60*60)
+                           timeoutSeconds=8*60*60)
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
