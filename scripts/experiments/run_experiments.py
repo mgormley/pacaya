@@ -627,7 +627,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                                     maxNumSentences=5,
                                                     timeoutSeconds=1*60*60)
             exps = []
-            for rltInitProp in frange(0.0, 1.0, 0.1):
+            for rltInitProp in frange(0.0, 0.9, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
                 exps.append(experiment)                
             for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "BARRIER", "SIFTING"]:
