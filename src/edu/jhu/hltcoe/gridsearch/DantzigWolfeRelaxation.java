@@ -22,6 +22,7 @@ import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.hltcoe.util.Triple;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     
@@ -100,28 +101,31 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
         }
         switchTimer.stop();
 
-
-        RelaxedSolution relaxSol = solveRelaxation(curNode, incumbentScore);
-                
+        Pair<RelaxedSolution, WarmStart> pair = solveRelaxation(curNode, incumbentScore); 
+        RelaxedSolution relaxSol = pair.get1();
+        WarmStart warmStart = pair.get2();
+        
         if (curNode.getLocalUb() < relaxSol.getScore()) {
             // If CPLEX gets a worse bound, then keep the parent's bound.
             relaxSol.setScore(curNode.getLocalUb());
         } else {
             curNode.setOptimisticBound(relaxSol.getScore());
         }
-        curNode.setWarmStart(getWarmStart());
+        curNode.setWarmStart(warmStart);
 
         return relaxSol;
     }
 
-    private RelaxedSolution solveRelaxation(ProblemNode curNode, double incumbentScore) {
+    private Pair<RelaxedSolution, WarmStart> solveRelaxation(ProblemNode curNode, double incumbentScore) {
         try {            
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runDWAlgo(cplex, upperBound, curNode.getDepth());
-            RelaxStatus status = pair.get1();
-            double lowerBound = pair.get2();
+
+            Triple<RelaxStatus,Double,WarmStart> triple = runDWAlgo(cplex, upperBound, curNode.getDepth());
+            RelaxStatus status = triple.get1();
+            double lowerBound = triple.get2();
+            WarmStart warmStart = triple.get3();
             
             // Negate the objective since we were minimizing 
             double objective = -lowerBound;
@@ -135,8 +139,8 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
-            }
+                DmvRelaxedSolution relaxSol = new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
+                return new Pair<RelaxedSolution, WarmStart>(relaxSol, warmStart);            }
             
             if (prm.tempDir != null) {
                 cplex.writeSolution(new File(prm.tempDir, "dw.sol").getAbsolutePath());
@@ -144,8 +148,8 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
             log.info("True obj for relaxed vars: " + relaxSol.getTrueObjectiveForRelaxedSolution());
-
-            return relaxSol;
+            
+            return new Pair<RelaxedSolution, WarmStart>(relaxSol, warmStart);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -190,9 +194,9 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
         }
     }
 
-    public Pair<RelaxStatus, Double> runDWAlgo(IloCplex cplex, double upperBound, int depth) throws UnknownObjectException, IloException {
+    public Triple<RelaxStatus,Double,WarmStart> runDWAlgo(IloCplex cplex, double upperBound, int depth) throws UnknownObjectException, IloException {
         if (!isFeasible()) {
-            return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
+            return new Triple<RelaxStatus,Double,WarmStart>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE, null);
         }
         
         RelaxStatus status = RelaxStatus.Unknown;
@@ -212,9 +216,6 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
             int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds   : prm.maxCutRounds;
 
             // Solve the master problem
-            if (warmStart != null) {
-                setWarmStart(warmStart);
-            }
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
@@ -222,7 +223,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
             
             log.trace("Master solution status: " + cplex.getStatus());
             if (status == RelaxStatus.Infeasible || status == RelaxStatus.Unknown) {
-                return new Pair<RelaxStatus,Double>(status, INTERNAL_WORST_SCORE);
+                return new Triple<RelaxStatus,Double,WarmStart>(status, INTERNAL_WORST_SCORE, null);
             }
             if (dwIter>=prm.maxDwIterations) {
                 break;
@@ -246,7 +247,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
     
             SubproblemRetVal sprv = addColumns(cplex);
             if (sprv.isInfeasible) {
-                return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
+                return new Triple<RelaxStatus,Double,WarmStart>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE, null);
             }
             
             double lowerBound = objVal + sprv.sumReducedCosts;
@@ -293,7 +294,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
         log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
         printSummary();
     
-        return new Pair<RelaxStatus,Double>(status, lowerBound);
+        return new Triple<RelaxStatus,Double,WarmStart>(status, lowerBound, warmStart);
     }
     
     public void end() {

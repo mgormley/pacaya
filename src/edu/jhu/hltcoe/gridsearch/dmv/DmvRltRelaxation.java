@@ -48,6 +48,7 @@ import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
@@ -97,6 +98,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     private IloCplex cplex;
     private int numSolves;
     private Timer simplexTimer;
+    private Timer switchTimer;
 
     private DmvTrainCorpus corpus;
     private IndexedDmvModel idm;
@@ -112,6 +114,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         this.prm = prm;
         this.numSolves = 0;
         this.simplexTimer = new Timer();
+        this.switchTimer = new Timer();
         this.sto = new LpSumToOneBuilder(prm.stoPrm);        
     }
     
@@ -248,13 +251,17 @@ public class DmvRltRelaxation implements DmvRelaxation {
     // Copied from DantzigWolfeRelaxation.
     @Override
     public RelaxedSolution getRelaxedSolution(ProblemNode curNode, double incumbentScore) {
+        switchTimer.start();
         setAsActiveNode(curNode);
 
         if (curNode.getWarmStart() != null) {
             setWarmStart(curNode.getWarmStart());
         }
+        switchTimer.stop();
 
-        RelaxedSolution relaxSol = solveRelaxation(curNode, incumbentScore);
+        Pair<RelaxedSolution, WarmStart> pair = solveRelaxation(curNode, incumbentScore); 
+        RelaxedSolution relaxSol = pair.get1();
+        WarmStart warmStart = pair.get2();
         
         if (curNode.getLocalUb() < relaxSol.getScore()) {
             // If CPLEX gets a worse bound, then keep the parent's bound.
@@ -262,20 +269,21 @@ public class DmvRltRelaxation implements DmvRelaxation {
         } else {
             curNode.setOptimisticBound(relaxSol.getScore());
         }
-        curNode.setWarmStart(getWarmStart());
+        curNode.setWarmStart(warmStart);
 
         return relaxSol;
     }
     
     // Copied from DantzigWolfeRelaxation.
-    private RelaxedSolution solveRelaxation(ProblemNode curNode, double incumbentScore) {
+    private Pair<RelaxedSolution, WarmStart> solveRelaxation(ProblemNode curNode, double incumbentScore) {
         try {            
             numSolves++;
             // Negate since we're minimizing internally
             double upperBound = -incumbentScore;
-            Pair<RelaxStatus,Double> pair = runSimplexAlgo(cplex, upperBound, curNode.getDepth());
-            RelaxStatus status = pair.get1();
-            double lowerBound = pair.get2();
+            Triple<RelaxStatus,Double,WarmStart> triple = runSimplexAlgo(cplex, upperBound, curNode.getDepth());
+            RelaxStatus status = triple.get1();
+            double lowerBound = triple.get2();
+            WarmStart warmStart = triple.get3();
             
             // Negate the objective since we were minimizing 
             double objective = -lowerBound;
@@ -289,7 +297,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
             
             log.info("Solution status: " + status);
             if (!status.hasSolution()) {
-                return new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
+                DmvRelaxedSolution relaxSol = new DmvRelaxedSolution(null, null, objective, status, null, null, Double.NaN);
+                return new Pair<RelaxedSolution, WarmStart>(relaxSol, warmStart);
             }
             
             if (prm.tempDir != null) {
@@ -298,7 +307,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
             log.info("Lower bound: " + lowerBound);
             RelaxedSolution relaxSol = extractSolution(status, objective);
             log.info("True obj for relaxed vars: " + relaxSol.getTrueObjectiveForRelaxedSolution());
-            return relaxSol;
+            
+            return new Pair<RelaxedSolution, WarmStart>(relaxSol, warmStart);
         } catch (IloException e) {
             if (e instanceof ilog.cplex.CpxException) {
                 ilog.cplex.CpxException cpxe = (ilog.cplex.CpxException) e;
@@ -341,9 +351,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
         return activeNode;
     }
     
-    private Pair<RelaxStatus, Double> runSimplexAlgo(IloCplex cplex2, double upperBound, int depth) throws IloException {
+    private Triple<RelaxStatus,Double,WarmStart> runSimplexAlgo(IloCplex cplex2, double upperBound, int depth) throws IloException {
         if (!isFeasible()) {
-            return new Pair<RelaxStatus,Double>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE);
+            return new Triple<RelaxStatus,Double,WarmStart>(RelaxStatus.Infeasible, INTERNAL_WORST_SCORE, null);
         }
         
         int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds  : prm.maxCutRounds;
@@ -372,25 +382,21 @@ public class DmvRltRelaxation implements DmvRelaxation {
             }
             
             // Solve the master problem
-            if (warmStart != null) {
-                setWarmStart(warmStart);
-            }
             simplexTimer.start();
             cplex.solve();
             simplexTimer.stop();
 
             // Get CPLEX status.
             status = RelaxStatus.getForLp(cplex);
-            log.trace("LP solution status: " + cplex.getStatus());
-            log.trace("LP CPLEX status: " + cplex.getCplexStatus());
-            
+            log.debug("LP solution status: " + cplex.getStatus());
+            log.debug("LP CPLEX status: " + cplex.getCplexStatus());
             log.debug("Proven dual feasibility? " +  cplex.isDualFeasible());
             log.debug("Proven primal feasibility? " +  cplex.isPrimalFeasible());
 
             // Get the lower bound. 
             double lowerBound;
             if (status == RelaxStatus.Unknown) {
-                log.debug("Unknown objective value: " + cplex.getObjValue());
+                // Do not call cplex.getObjValue() because that it might throw an error.
                 lowerBound = INTERNAL_BEST_SCORE;
             } else if (status == RelaxStatus.Infeasible) {
                 lowerBound = INTERNAL_WORST_SCORE;
@@ -461,6 +467,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.debug("Final lower bound: " + lowerBound);
         log.debug(String.format("Iteration lower bounds (cut=%d): %s", cut, cutIterLowerBounds));
         log.debug("Iteration statuses: " + cutIterStatuses);
+        log.debug("Avg switch time(ms) per solve: " + switchTimer.totMs() / numSolves);
         log.debug("Avg simplex time(ms) per solve: " + simplexTimer.totMs() / numSolves);
         log.debug("Total # simplex iterations: " + totalSimplexIterations);
         
@@ -469,7 +476,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         log.info(String.format("Summary: #cuts=%d #origCons=%d #rltCons=%d", 
                 sto.getNumStoCons(), origCons, mp.rlt.getRltMatrix().getNrows()));
     
-        return new Pair<RelaxStatus,Double>(status, lowerBound);
+        return new Triple<RelaxStatus,Double,WarmStart>(status, lowerBound, warmStart);
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
