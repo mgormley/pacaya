@@ -30,7 +30,8 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
         private double sum = 0;
         
         public void add(ProblemNode node, NodeResult result, double cost) {
-            add(node.getDepth(), result.children.size(), cost);
+            int numSuccessors = result.children == null ? 0 : result.children.size();
+            add(node.getDepth(), numSuccessors, cost);
         }
         
         public void add(int depth, int numSuccesors, double cost) {

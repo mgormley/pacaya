@@ -263,9 +263,10 @@ public class TrainerFactory {
             throw new ParseException("Model not supported: " + modelName);
         }
 
+        boolean isBnbAlgorithm = (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")
+                || algorithm.equals("bnb-depth-stratified") || algorithm.equals("bnb-rand-walk"));
         DmvRelaxationFactory relaxFactory = null;
-        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb") || algorithm.equals("bnb-depth-stratified")
-                || algorithm.equals("bnb-rand-walk")) {
+        if (isBnbAlgorithm) {
             relaxFactory = getDmvRelaxationFactory();
         }
 
@@ -340,8 +341,7 @@ public class TrainerFactory {
         }
 
         CptBoundsDeltaFactory brancher = null;
-        if (algorithm.equals("bnb") || algorithm.equals("viterbi-bnb")) {
-
+        if (isBnbAlgorithm) {
             VariableSplitter varSplitter;
             if (varSplit.equals("half-prob")) {
                 varSplitter = new MidpointVarSplitter(MidpointChoice.HALF_PROB);
@@ -410,10 +410,12 @@ public class TrainerFactory {
             if (algorithm.equals("bnb-rand-walk")) {
                 RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
                 prm.maxSamples = 10000;
+                prm.bnbPrm = bnbPrm;
                 bnbSolverFactory = prm;
             } else if (algorithm.equals("bnb-depth-stratified")) {
                 DepthStratifiedBnbSamplerPrm prm = new DepthStratifiedBnbSamplerPrm();
                 prm.maxDepth = 60;
+                prm.bnbPrm = bnbPrm;
                 bnbSolverFactory = prm;
             } else if (algorithm.equals("bnb")) {
                 bnbSolverFactory = bnbPrm;
