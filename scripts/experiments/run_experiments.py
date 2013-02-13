@@ -461,8 +461,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        simplexAlgorithm="BARRIER")
             if not self.fast:
                 # Run for some fixed amount of time.
-                all.update(numRestarts=1000000000, epsilon=0.0,
-                           timeoutSeconds=8*60*60)
+                all.update(numRestarts=1000000000,
+                           timeoutSeconds=30*60)
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
