@@ -462,7 +462,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             if not self.fast:
                 # Run for some fixed amount of time.
                 all.update(numRestarts=1000000000,
-                           timeoutSeconds=30*60)
+                           timeoutSeconds=4*60*60)
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
@@ -470,7 +470,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             exps = []
             all.update(maxSentenceLength=5)
             for dataset in [synth_alt_three, brown]:
-                for maxNumSentences in [5]:
+                for maxNumSentences in [10]:
                     for varSelection in ["regret"]:
                         for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
                             experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
