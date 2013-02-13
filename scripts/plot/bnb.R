@@ -19,7 +19,7 @@ getDataset <- function(mydata) {
 }
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb/results.data"
+results.file = "/Users/mgormley/research/dep_parse/results/bnb/results.data"
 
 df <- read.table(results.file, header=TRUE)
 
@@ -125,12 +125,17 @@ for(dfsubset in groups) {
 
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/bnb/bnb-status.data"
+results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data.5"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
 print("Adding columns.")
-df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitProp, df$varSelection, df$rltCutProp, sep=".")
+# If using rltFilter="prop":
+#  df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitProp, df$varSelection, df$rltCutProp, sep=".")
+# If using rltFilter="max"
+df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection, df$rltCutMax, sep=".")
+
+df <- subset(df, rltCutMax == 0)
 
 dfLow <- df
 dfLow$bound <- df$lowBound
@@ -145,7 +150,7 @@ dfBoth <- rbind(dfUp, dfLow)
 dfBoth.subset <- subset(dfBoth, dataset == "alt-three"
                         & bound != -Inf)
                         
-plotbnbbounds <- function(mydata) {
+plotbnbboundsvnodes <- function(mydata) {
   title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Number of nodes processed"
   ylab = "Bounds on log-likelihood"
@@ -156,7 +161,21 @@ plotbnbbounds <- function(mydata) {
   p <- p + scale_linetype_discrete(name="Bound type")
   p <- p + scale_color_discrete(name="Proportion supervised")
 }
-myplot(plotbnbbounds(dfBoth.subset), str_c(results.file, "ul-bounds", "pdf", sep="."))
+myplot(plotbnbboundsvnodes(dfBoth.subset), str_c(results.file, "ul-bounds-node", "pdf", sep="."))
+
+plotbnbboundsvtime <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Time (minutes)"
+  ylab = "Bounds on log-likelihood"
+  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=bound, color=factor(method)))
+  p <- p + geom_line(aes(linetype=boundType))
+  #p <- p + geom_point(aes(shape=boundType))
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_linetype_discrete(name="Bound type")
+  p <- p + scale_color_discrete(name="Proportion supervised")
+}
+myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
+
 
 plotnumfathom <- function(mydata) {
   title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
@@ -180,5 +199,6 @@ plotnumtrees <- function(mydata) {
   p <- p + scale_color_discrete(name="Proportion supervised")
 }
 myplot(plotnumfathom(dfBoth), str_c(results.file, "fathom-rate", "pdf", sep="."))
+
 
 
