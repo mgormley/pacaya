@@ -146,6 +146,9 @@ public class LazyBranchAndBoundSolver {
             // Process the next node.
             curNode = getNextLeafNode();
             NodeResult result = processNode(curNode);
+
+            // Check if this node offers a better feasible solution
+            updateIncumbent(result.feasSol);
             
             // Update stats and logging.
             fathom.add(curNode, result.status);
@@ -239,8 +242,6 @@ public class LazyBranchAndBoundSolver {
         // Project the relaxed solution back onto the feasible region.
         feasTimer.start();
         r.feasSol = prm.projector.getProjectedSolution(r.relaxSol);
-        // Check if this node offers a better feasible solution
-        updateIncumbent(r.feasSol);
         feasTimer.stop();
         
         if (r.feasSol != null && Utilities.equals(r.feasSol.getScore(), r.relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
@@ -321,7 +322,7 @@ public class LazyBranchAndBoundSolver {
         return incumbentScore;
     }
 
-    private void updateIncumbent(Solution feasSol) {
+    protected void updateIncumbent(Solution feasSol) {
         assert (feasSol == null || !Double.isNaN(feasSol.getScore()));
         if (feasSol != null && feasSol.getScore() > incumbentScore) {
             incumbentScore = feasSol.getScore();

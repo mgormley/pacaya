@@ -120,6 +120,9 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
             Timer timer = new Timer();
             timer.start();
             NodeResult result = processNode(curNode);
+
+            // Check if this node offers a better feasible solution
+            updateIncumbent(result.feasSol);
             timer.stop();
             
             // Update cost estimators.
@@ -136,16 +139,15 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
                 ((DmvProblemNode)curNode).clear();
                 nodeCountEst.doneWithSample();
                 solTimeEst.doneWithSample();
+
+                // Print cost estimator summaries. 
+                printEstimatorSummaries(nodeCountEst, solTimeEst);
             }
         }
         if (nodeTimer.isRunning()) { nodeTimer.stop(); }
 
         // Print cost estimator summaries. 
-        log.info("Num samples for estimates: " + nodeCountEst.getNumSamples());
-        log.info("Node count estimate mean: " + nodeCountEst.getMean());
-        log.info("Node count estimate stddev: " + nodeCountEst.getStdDev());
-        log.info("Solution time (ms) estimate mean: " + solTimeEst.getMean());
-        log.info("Solution time (ms) estimate stddev: " + solTimeEst.getStdDev());
+        printEstimatorSummaries(nodeCountEst, solTimeEst);
         
         // Print summary
         evalIncumbent(incumbentSolution);
@@ -154,6 +156,14 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
         status = SearchStatus.NON_OPTIMAL_SOLUTION_FOUND;
         log.info("B&B search status: " + status);
         return status;
+    }
+
+    private void printEstimatorSummaries(CostEstimator nodeCountEst, CostEstimator solTimeEst) {
+        log.info("Num samples for estimates: " + nodeCountEst.getNumSamples());
+        log.info("Node count estimate mean: " + nodeCountEst.getMean());
+        log.info("Node count estimate stddev: " + nodeCountEst.getStdDev());
+        log.info("Solution time (ms) estimate mean: " + solTimeEst.getMean());
+        log.info("Solution time (ms) estimate stddev: " + solTimeEst.getStdDev());
     }
 
 }

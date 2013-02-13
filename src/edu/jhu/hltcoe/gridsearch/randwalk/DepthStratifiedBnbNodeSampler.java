@@ -80,8 +80,12 @@ public class DepthStratifiedBnbNodeSampler extends LazyBranchAndBoundSolver {
                 printTimers(numProcessed);
             }
             
-            // Process and discard the result.
-            processNode(curNode);
+            // Process node.
+            NodeResult result = processNode(curNode);
+
+            // Check if this node offers a better feasible solution
+            updateIncumbent(result.feasSol);
+            
             numProcessed++;
 
             // Update the dive depth for the next dive.
