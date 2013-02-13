@@ -580,8 +580,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        rootMaxCutRounds=1,
                        maxCutRounds=0,
                        minSumForCuts=1.00001,
-                       maxStoCuts=1000,
-                       epsilon=0.01)
+                       maxStoCuts=1000)
             relax = rltAllRelax + DPExpParams()
             relax.update(rltFilter="max",
                          rltInitMax=10000,
