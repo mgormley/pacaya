@@ -63,6 +63,7 @@ class DPScraper(Scraper):
             exp.update(relaxTime = get_following_literal(stdout_lines, "relaxTime(ms): ", -1))
             exp.update(relaxBound = get_following_literal(stdout_lines, "relaxBound: ", -1))
             exp.update(relative = get_following_literal(stdout_lines, "relative: ", -1))
+            exp.update(projLogLikelihood = get_following_literal(stdout_lines, "projLogLikelihood: ", -1))
         else:
             exp.update(trainAccuracy = get_following_literal(stdout_lines, "Accuracy on train: ", -1))
             exp.update(trainLogLikelihood = get_following_literal(stdout_lines, "LogLikelihood on train: ", -1))
