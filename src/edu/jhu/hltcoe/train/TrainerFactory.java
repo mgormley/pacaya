@@ -180,6 +180,8 @@ public class TrainerFactory {
     public static double localRelativeGapThreshold;
     @Opt(name = "simplexAlgorithm", hasArg = true, description = "The simplex algorithm to use in CPLEX.")
     public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
+    @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
+    public static int maxRandWalkSamples = 10000;
     
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -409,7 +411,7 @@ public class TrainerFactory {
             LazyBnbSolverFactory bnbSolverFactory;
             if (algorithm.equals("bnb-rand-walk")) {
                 RandWalkBnbSamplerPrm prm = new RandWalkBnbSamplerPrm();
-                prm.maxSamples = 10000;
+                prm.maxSamples = maxRandWalkSamples ;
                 prm.bnbPrm = bnbPrm;
                 bnbSolverFactory = prm;
             } else if (algorithm.equals("bnb-depth-stratified")) {
