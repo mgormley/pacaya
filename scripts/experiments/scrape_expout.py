@@ -46,7 +46,7 @@ class DPScraper(Scraper):
         if not os.path.exists(stdout_file):
             return
         
-        if exp.get("expname") == "bnb-semi":
+        if exp.get("expname") == "bnb-semi" or exp.get("expname") == "bnb-depth-test":
             stdout_lines = head(stdout_file, window=500)
             stdout_lines += tail(stdout_file, window=500)
         else:
