@@ -377,7 +377,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [synth_alt_three, brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 5, 8*60*60)]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 10, 8*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
@@ -626,7 +626,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        epsilon=0.1)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
-                                                    maxNumSentences=5,
+                                                    maxNumSentences=10,
                                                     timeoutSeconds=1*60*60)
             exps = []
             for rltInitProp in frange(0.0, 0.9, 0.1):
