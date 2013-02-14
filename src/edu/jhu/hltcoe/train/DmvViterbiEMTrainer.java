@@ -21,7 +21,12 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         public DmvViterbiEMTrainerPrm() { }
         public DmvViterbiEMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
                 double lambda, DependencyParserEvaluator evaluator) {
-            
+            this.lambda = lambda;
+            this.evaluator = evaluator;
+            this.emPrm.iterations = iterations;
+            this.emPrm.convergenceRatio = convergenceRatio;
+            this.emPrm.numRestarts = numRestarts;
+            this.emPrm.timeoutSeconds = timeoutSeconds;
         }
     }
         
