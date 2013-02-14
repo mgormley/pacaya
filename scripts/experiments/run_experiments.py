@@ -231,7 +231,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    nodeOrder="bfs",
                    seed=random.getrandbits(63),
                    propSupervised=0.0,
-                   threads=1)
+                   threads=1,
+                   initSolNumRestarts=10,
+                   vemProjPropImproveTreebank=1.0,
+                   vemProjPropImproveModel=1.0)
         all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 
