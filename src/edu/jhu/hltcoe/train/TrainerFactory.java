@@ -39,6 +39,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
@@ -183,8 +184,22 @@ public class TrainerFactory {
     public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
     @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
     public static int maxRandWalkSamples = 10000;
-    @Opt(name = "drMaxCons", hasArg = true, description = "The max number of dimensionality reduced constraints.")
+    
+    // Dimensionality Reduction parameters.
+    @Opt(hasArg = true, description = "The max number of dimensionality reduced constraints.")
     public static int drMaxCons = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "The max number of nonzeros in the projection matrix.")
+    public static int drMaxNonZeros = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "The sampling distribution to use for nonzeros in the projection matrix.")
+    public static SamplingDistribution drSamplingDist = SamplingDistribution.ALL_ONES;
+    @Opt(hasArg = true, description = "The alpha parameter for the Beta/Gamma distributions.")
+    public static double drAlpha = 1;
+    @Opt(hasArg = true, description = "The beta parameter for the Beta/Gamma distributions.")
+    public static double drBeta = 1;
+    @Opt(hasArg = true, description = "The delta for testing equality with zero when creating the projection matrix.")
+    public static double drMultZeroDelta = 1e-2;
+    @Opt(hasArg = true, description = "Whether to renormalize the rows before projecting.")
+    public static boolean drRenormalize = true;
     
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -235,7 +250,13 @@ public class TrainerFactory {
             parsePrm.universalPostCons = universalPostCons;
 
             DimReducerPrm drPrm = new DimReducerPrm();
-            drPrm.drMaxCons = drMaxCons;          
+            drPrm.drMaxCons = drMaxCons;
+            drPrm.multZeroDelta = drMultZeroDelta;
+            drPrm.renormalize = drRenormalize;
+            drPrm.maxNonZeros = drMaxNonZeros;
+            drPrm.dist = drSamplingDist;
+            drPrm.alpha = drAlpha;
+            drPrm.beta = drBeta;
             
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.tempDir = dwTemp;
@@ -246,6 +267,7 @@ public class TrainerFactory {
             rrPrm.rltPrm = rltPrm;
             rrPrm.stoPrm = stoPrm;
             rrPrm.parsePrm = parsePrm;
+            rrPrm.drPrm = drPrm;
 
             rrPrm.objVarFilter = false;
             if (rltFilter.equals("obj-var")) {

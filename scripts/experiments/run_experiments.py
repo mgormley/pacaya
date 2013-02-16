@@ -234,7 +234,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    threads=1,
                    initSolNumRestarts=10,
                    vemProjPropImproveTreebank=1.0,
-                   vemProjPropImproveModel=1.0)
+                   vemProjPropImproveModel=1.0,
+                   drRenormalize=True)
         all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 
@@ -626,15 +627,25 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        epsilon=0.1)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
-                                                    maxNumSentences=10,
+                                                    maxNumSentences=5,
                                                     timeoutSeconds=1*60*60)
             exps = []
-            for rltInitProp in frange(0.0, 0.9, 0.1):
+            for rltInitProp in frange(0.0, 1.0, 0.1):
+                for drMaxNonZeros in [100, 1000, 10000]:
+                    extra = DPExpParams(drMaxCons=100,
+                                        drMaxNonZeros=drMaxNonZeros,
+                                        drSamplingDist="ALL_ONES",
+                                        rltInitProp=rltInitProp, 
+                                        simplexAlgorithm="BARRIER")
+                    experiment = all + dataset + relax + extra
+                    exps.append(experiment)
+            for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
-                exps.append(experiment)                
-            for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "BARRIER", "SIFTING"]:
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=1.0, maxCutRounds=1, simplexAlgorithm=simplexAlgorithm)
                 exps.append(experiment)
+            # Uncomment to test different simplex algorithms.
+            #for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "SIFTING"]:
+            #    experiment = all + dataset + relax + DPExpParams(rltInitProp=1.0, maxCutRounds=1, simplexAlgorithm=simplexAlgorithm)
+            #    exps.append(experiment)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:3]
