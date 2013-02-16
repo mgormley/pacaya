@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.util.cplex;
+package edu.jhu.hltcoe.lp;
 
 import edu.jhu.hltcoe.util.SafeCast;
 import gnu.trove.TDoubleArrayList;

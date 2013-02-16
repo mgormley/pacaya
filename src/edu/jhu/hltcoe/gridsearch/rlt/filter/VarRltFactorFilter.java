@@ -8,7 +8,7 @@ import java.util.List;
 
 import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
+import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**

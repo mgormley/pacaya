@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.util.cplex;
+package edu.jhu.hltcoe.lp;
 
 import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 

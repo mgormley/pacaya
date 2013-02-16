@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dr;
+package edu.jhu.hltcoe.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -8,8 +8,7 @@ import org.apache.log4j.Logger;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorList;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
+import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.SafeCast;
 
 /**
@@ -19,8 +18,8 @@ import edu.jhu.hltcoe.util.SafeCast;
 public class CcLeqConstraints {
     private static final Logger log = Logger.getLogger(CcLeqConstraints.class);
 
-    SparseCCDoubleMatrix2D A;
-    DenseDoubleMatrix2D b;
+    public SparseCCDoubleMatrix2D A;
+    public DenseDoubleMatrix2D b;
     
     private CcLeqConstraints(SparseCCDoubleMatrix2D A, DenseDoubleMatrix2D b) {
         this.A = A;

@@ -9,11 +9,12 @@ import org.apache.log4j.Logger;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorList;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
+import edu.jhu.hltcoe.lp.CcLeqConstraints;
+import edu.jhu.hltcoe.lp.FactorList;
+import edu.jhu.hltcoe.lp.LpRows;
+import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cplex.LpRows;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 /**

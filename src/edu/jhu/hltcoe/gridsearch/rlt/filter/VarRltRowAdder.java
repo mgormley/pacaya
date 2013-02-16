@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorList;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
+import edu.jhu.hltcoe.lp.FactorList;
+import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.Utilities;

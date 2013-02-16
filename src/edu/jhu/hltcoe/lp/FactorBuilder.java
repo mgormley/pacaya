@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.hltcoe.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -51,7 +51,7 @@ public class FactorBuilder {
     }
     
     public static class RowFactor extends Factor {
-        int rowIdx;
+        public int rowIdx;
         RowFactorType type;
         public RowFactor(double g, int[] Gind, double[] Gval, int rowIdx, RowFactorType type, IloLPMatrix mat) {
             super(g, Gind, Gval, mat);
@@ -76,8 +76,8 @@ public class FactorBuilder {
     }
     
     public static class BoundFactor extends Factor {
-        int colIdx;
-        Lu lu;
+        public int colIdx;
+        public Lu lu;
         public BoundFactor(double g, int[] Gind, double[] Gval, int colIdx, Lu lu, IloLPMatrix mat) {
             super(g, Gind, Gval, mat);
             this.colIdx = colIdx;
