@@ -14,11 +14,21 @@ import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 
-public class CplexRowUpdates {
+/**
+ * Represents a set of updates to linear programming matrix rows (e.g. the
+ * matrix A in Ax <= b).
+ * 
+ * These updates are stored as the new row and an index for that row
+ * corresponding to the row that should be updated.
+ * 
+ * @author mgormley
+ * 
+ */
+public class LpMatrixUpdates {
     private TIntArrayList rowIdxs;
     private ArrayList<SparseLVector> coefs;
 
-    public CplexRowUpdates() {
+    public LpMatrixUpdates() {
         rowIdxs = new TIntArrayList();
         coefs = new ArrayList<SparseLVector>();
     }

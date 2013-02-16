@@ -9,7 +9,6 @@ import ilog.cplex.IloCplex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -29,8 +28,8 @@ import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowAdder;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RowType;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.cplex.CplexRowUpdates;
-import edu.jhu.hltcoe.util.cplex.CplexRows;
+import edu.jhu.hltcoe.util.cplex.LpMatrixUpdates;
+import edu.jhu.hltcoe.util.cplex.LpRows;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 import edu.jhu.hltcoe.util.tuple.OrderedPair;
 import edu.jhu.hltcoe.util.tuple.UnorderedPair;
@@ -64,7 +63,7 @@ public class Rlt {
     private class RltRows {
 
         private int maxRowsToCache;
-        private CplexRows rows;
+        private LpRows rows;
         private int numRowsAdded;
         private SymIntMat tempRltConsInd;
         
@@ -75,7 +74,7 @@ public class Rlt {
         }
 
         private void reset() {
-            this.rows = new CplexRows(prm.nameRltVarsAndCons);
+            this.rows = new LpRows(prm.nameRltVarsAndCons);
             tempRltConsInd = new SymIntMat();
         }
 
@@ -120,8 +119,8 @@ public class Rlt {
 
     private IloLPMatrix rltMat;
     IloLPMatrix inputMatrix;
-    private List<Factor> eqFactors;
-    private List<Factor> leqFactors;
+    private FactorList eqFactors;
+    private FactorList leqFactors;
     private HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap;
     private IloCplex cplex;
     private RltPrm prm;
@@ -196,9 +195,9 @@ public class Rlt {
 
         // Create the factors.
         log.debug("Building RLT bound and constraint factors.");
-        List<Factor> newFactors = FactorBuilder.getFactors(inputMatrix, prm.envelopeOnly);
+        FactorList newFactors = FactorList.getFactors(inputMatrix, prm.envelopeOnly);
         log.debug("# unfiltered input factors: " + newFactors.size());
-        long numUnfilteredRows = FactorBuilder.getNumRows(newFactors, inputMatrix);
+        long numUnfilteredRows = Rlt.getNumRltRows(newFactors, inputMatrix);
         log.debug("# unfiltered RLT rows: " + numUnfilteredRows);
 
         // Initialize the row adder with this RLT object.
@@ -207,8 +206,8 @@ public class Rlt {
         }
 
         // Add each new factor, possibly filtering unwanted ones.
-        this.eqFactors = new ArrayList<Factor>();
-        this.leqFactors = new ArrayList<Factor>();
+        this.eqFactors = new FactorList();
+        this.leqFactors = new FactorList();
         // Build the RLT constraints by adding each factor one at a time.
         log.debug("Creating RLT constraints.");
         addNewFactors(newFactors, RowType.INITIAL);
@@ -286,7 +285,7 @@ public class Rlt {
      * @param type
      * @return The number of rows added to the RLT matrix.
      */
-    private int addNewFactors(List<Factor> newFactors, RowType type) throws IloException {
+    private int addNewFactors(FactorList newFactors, RowType type) throws IloException {
         int eqStart = eqFactors.size();
         int leqStart = leqFactors.size();        
         for (Factor factor : newFactors) {
@@ -387,7 +386,7 @@ public class Rlt {
         // - Update the upper bound.
         // This requires adding an auxiliary variable that is fixed to equal
         // 1.0.
-        CplexRowUpdates rows = new CplexRowUpdates();
+        LpMatrixUpdates rows = new LpMatrixUpdates();
         for (int i = 0; i < leqFactors.size(); i++) {
             Factor facI = leqFactors.get(i);
             if (rltLeqConsIdx.contains(factorIdx, i)) {
@@ -413,19 +412,19 @@ public class Rlt {
             throw new IllegalStateException("Expecting a consecutive list: " + rowIds);
         }
         if (rowIds.size() > 0) {
-            List<Factor> newFactors = new ArrayList<Factor>();
-            FactorBuilder.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix, newFactors);
+            FactorList newFactors = new FactorList();
+            newFactors.addRowFactors(rowIds.get(0), rowIds.size(), inputMatrix);
             return addNewFactors(newFactors, RowType.CUT);
         } else {
             return 0;
         }
     }
 
-    private void convertRltVarIdsToColumIndices(CplexRows rows)  throws IloException {
+    private void convertRltVarIdsToColumIndices(LpRows rows)  throws IloException {
         rows.setAllCoefs(convertRltVarIdsToColumIndices(rows.getAllCoefs()));
     }
 
-    private void convertRltVarIdsToColumIndices(CplexRowUpdates rows) throws IloException {
+    private void convertRltVarIdsToColumIndices(LpMatrixUpdates rows) throws IloException {
         rows.setAllCoefs(convertRltVarIdsToColumIndices(rows.getAllCoefs()));
     }
     
@@ -486,7 +485,7 @@ public class Rlt {
         return fIdx;
     }
 
-    private static HashMap<Pair<IloNumVar, Lu>, Integer> getBoundsFactorMap(IloLPMatrix rltMat, List<Factor> factors)
+    private static HashMap<Pair<IloNumVar, Lu>, Integer> getBoundsFactorMap(IloLPMatrix rltMat, FactorList factors)
             throws IloException {
         HashMap<Pair<IloNumVar, Lu>, Integer> boundsFactorMap = new HashMap<Pair<IloNumVar, Lu>, Integer>();
         for (int i = 0; i < factors.size(); i++) {
@@ -583,12 +582,27 @@ public class Rlt {
         return row;
     }
     
-    public List<Factor> getEqFactors() {
-        return Collections.unmodifiableList(eqFactors);
+    public FactorList getEqFactors() {
+        return FactorList.unmodifiableFactorList(eqFactors);
     }
 
-    public List<Factor> getLeqFactors() {
-        return Collections.unmodifiableList(leqFactors);
+    public FactorList getLeqFactors() {
+        return FactorList.unmodifiableFactorList(leqFactors);
+    }
+
+    /**
+     * Gets the number of (unfiltered) RLT rows that would be produced by this set of factors.
+     */
+    public static long getNumRltRows(FactorList newFactors, IloLPMatrix inputMatrix) throws IloException {
+        long numEqFactors = 0;
+        for (FactorBuilder.Factor f : newFactors) {
+            if (f.isEq()) {
+                numEqFactors++;
+            }
+        }
+        long numLeFactors = newFactors.size() - numEqFactors;
+        long numRows = (numLeFactors * (numLeFactors+1)) / 2 + numEqFactors*inputMatrix.getNcols();
+        return numRows;
     }
     
 }

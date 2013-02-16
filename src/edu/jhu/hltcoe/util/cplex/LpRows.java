@@ -13,14 +13,21 @@ import java.util.ArrayList;
 
 import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 
-public class CplexRows {
+/**
+ * Represents a set of linear programming constraints of the form d <= Ax <= b.
+ * This representation allows names to be given for each constraint.
+ * 
+ * @author mgormley
+ * 
+ */
+public class LpRows {
     private TDoubleArrayList lbs;
     private TDoubleArrayList ubs;
     private ArrayList<SparseLVector> coefs;
     private ArrayList<String> names;
     private boolean setNames;
 
-    public CplexRows(boolean setNames) {
+    public LpRows(boolean setNames) {
         lbs = new TDoubleArrayList();
         coefs = new ArrayList<SparseLVector>();
         ubs = new TDoubleArrayList();
@@ -32,7 +39,7 @@ public class CplexRows {
         return addRow(lb, coef, ub, null);
     }
 
-    public void addRow(CplexRow row) {
+    public void addRow(LpRow row) {
         addRow(row.getLb(), row.getCoefs(), row.getUb(), row.getName());
     }
 
@@ -47,8 +54,8 @@ public class CplexRows {
     /**
      * Construct and return the ith row.
      */
-    public CplexRow get(int i) {
-        return new CplexRow(lbs.get(i), coefs.get(i), ubs.get(i), names.get(i));
+    public LpRow get(int i) {
+        return new LpRow(lbs.get(i), coefs.get(i), ubs.get(i), names.get(i));
     }
 
     /**

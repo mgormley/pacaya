@@ -41,7 +41,6 @@ import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.UnionRltRowAdder;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltFactorFilter;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowAdder;
-import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder;
@@ -52,6 +51,7 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.cplex.CplexPrm;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DmvRltRelaxation implements DmvRelaxation {

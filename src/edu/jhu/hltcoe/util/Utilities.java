@@ -149,7 +149,7 @@ public class Utilities {
      * @param end The index of the last element of the slice (exclusive).
      * @return A sublist containing elements [start, end).
      */
-    public static <X> List<X> sublist(List<X> list, int start, int end) {
+    public static <X> ArrayList<X> sublist(List<X> list, int start, int end) {
         ArrayList<X> sublist = new ArrayList<X>();
         for (int i=start; i<end; i++) {
             sublist.add(list.get(i));

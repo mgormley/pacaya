@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
+import edu.jhu.hltcoe.gridsearch.rlt.FactorList;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Pair;
@@ -52,7 +53,7 @@ public class VarRltRowAdder implements RltRowAdder {
 
     @Override
     public Collection<OrderedPair> getRltRowsForEq(int startFac, int endFac, int numVars, RowType type) {
-        List<Factor> eqFactors = Utilities.sublist(rlt.getEqFactors(), startFac, endFac);
+        FactorList eqFactors = rlt.getEqFactors().sublist(startFac, endFac);
 
         // Get a mapping of variables ids to factors indices.
         Map<Integer, List<Integer>> varConsMap = getVarConsMap(eqFactors);
@@ -78,7 +79,7 @@ public class VarRltRowAdder implements RltRowAdder {
     @Override
     public Collection<UnorderedPair> getRltRowsForLeq(int startFac1, int endFac1, int startFac2, int endFac2,
             RowType type) {
-        List<Factor> leqFactors = rlt.getLeqFactors();
+        FactorList leqFactors = rlt.getLeqFactors();
 
         // Get a mapping of variables ids to factors indices.
         Map<Integer, List<Integer>> varConsMap = getVarConsMap(leqFactors);
@@ -105,7 +106,7 @@ public class VarRltRowAdder implements RltRowAdder {
      * containing a non-zero coefficient for variable k, add an entry for (k
      * --> i).
      */ 
-    private Map<Integer, List<Integer>> getVarConsMap(List<Factor> factors) {
+    private Map<Integer, List<Integer>> getVarConsMap(FactorList factors) {
         Map<Integer, List<Integer>> varConsMap = new HashMap<Integer, List<Integer>>();
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);

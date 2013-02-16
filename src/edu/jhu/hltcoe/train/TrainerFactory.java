@@ -48,8 +48,6 @@ import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowAdder;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowAdder;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
-import edu.jhu.hltcoe.lp.CplexPrm;
-import edu.jhu.hltcoe.lp.CplexPrm.SimplexAlgorithm;
 import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -71,6 +69,8 @@ import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
 import edu.jhu.hltcoe.util.cli.Opt;
+import edu.jhu.hltcoe.util.cplex.CplexPrm;
+import edu.jhu.hltcoe.util.cplex.CplexPrm.SimplexAlgorithm;
 
 /**
  * Factory for constructing trainers (and other related objects).

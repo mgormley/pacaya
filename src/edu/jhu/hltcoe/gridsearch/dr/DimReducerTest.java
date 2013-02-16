@@ -16,7 +16,6 @@ import org.junit.Test;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
-import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DimReducerTest {

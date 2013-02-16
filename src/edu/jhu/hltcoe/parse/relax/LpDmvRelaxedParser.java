@@ -8,12 +8,12 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.lp.CplexPrm;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.cplex.CplexPrm;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class LpDmvRelaxedParser implements RelaxedParser {

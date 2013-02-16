@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.hltcoe.util.cplex;
 
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
