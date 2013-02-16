@@ -115,7 +115,7 @@ public class DimReducer {
 
         // Convert to a compressed column store of the Ax <= b constraints.
         int nCols = origMatrix.getNcols(); //TODO: if we add variables this needs to change.
-        return CcLeqConstraints.getFactorsAsLeqConstraints(factors, nCols);
+        return CcLeqConstraints.getLeqFactorsAsLeqConstraints(factors, nCols);
     }
 
     public static DenseDoubleMatrix2D fastMultiply(DenseDoubleMatrix2D S, SparseCCDoubleMatrix2D A) {

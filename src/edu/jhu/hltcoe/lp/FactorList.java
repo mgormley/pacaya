@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
@@ -164,34 +162,20 @@ public class FactorList implements Iterable<Factor> {
         // Compute the average L2 norm for this matrix.
         double avgL2Norm = 0.0;
         for (Factor fac : this) {
-            avgL2Norm += Math.sqrt(getSumOfSquares(fac));
+            avgL2Norm += fac.getL2Norm();
         }
         avgL2Norm /= this.size();
         
         // Renormalize the factors, so that each one has an L2 norm of 
         // the average L2 norm.
         for (Factor fac : this) {
-            double ss = getSumOfSquares(fac);
-            fac.g = avgL2Norm * fac.g / Math.sqrt(ss);
+            double l2Norm = fac.getL2Norm();
+            fac.g = avgL2Norm * fac.g / l2Norm;
             double[] vals = fac.G.getData();
             for (int i=0; i<fac.G.getUsed(); i++) {
-                vals[i] = avgL2Norm * vals[i] / Math.sqrt(ss);
+                vals[i] = avgL2Norm * vals[i] / l2Norm;
             }
         }
-    }
-    
-    /**
-     * Gets the sum of squares of the coefficients of the factor:
-     * 
-     * @param fac Input factor.
-     * @return The value g^2 + \sum_{i} G_i^2
-     */
-    private static double getSumOfSquares(Factor fac) {
-        double ss = fac.g * fac.g;
-        for (LVectorEntry ve : fac.G) {
-            ss += ve.get() * ve.get();
-        }
-        return ss;
     }
     
     /**
@@ -212,6 +196,11 @@ public class FactorList implements Iterable<Factor> {
     
         // Use this new set of only LEQ factors.
         return leqFactors;
+    }
+
+    @Override
+    public String toString() {
+        return "FactorList [rows=" + rows + "]";
     }
 
     /**

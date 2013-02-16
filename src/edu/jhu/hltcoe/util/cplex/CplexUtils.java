@@ -124,6 +124,11 @@ public class CplexUtils {
     // -------- JUnit Assertions -----------
 
     public static void assertContainsRow(IloLPMatrix rltMat, double[] denseRow) throws IloException {
+        double delta = 1e-3;
+        assertContainsRow(rltMat, denseRow, delta);
+    }
+
+    public static void assertContainsRow(IloLPMatrix rltMat, double[] denseRow, double delta) throws IloException {
         int nCols = rltMat.getNcols();
         assertTrue(nCols == denseRow.length);
         int nRows = rltMat.getNrows();
@@ -139,7 +144,7 @@ public class CplexUtils {
             FastSparseVector row = new FastSparseVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, 1e-3)) {
+            if (row.equals(expectedRow, delta)) {
                 return;
             }
         }
@@ -147,6 +152,12 @@ public class CplexUtils {
     }
 
     public static void assertContainsRow(IloLPMatrix rltMat, double[] denseRow, double lb, double ub)
+            throws IloException {
+        double delta = 1e-3;
+        assertContainsRow(rltMat, denseRow, lb, ub, delta);
+    }
+
+    public static void assertContainsRow(IloLPMatrix rltMat, double[] denseRow, double lb, double ub, double delta)
             throws IloException {
         int nCols = rltMat.getNcols();
         assertTrue(nCols == denseRow.length);
@@ -163,8 +174,8 @@ public class CplexUtils {
             FastSparseVector row = new FastSparseVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, 1e-3) && Utilities.equals(lb, lbs[m], 1e-3)
-                    && Utilities.equals(ub, ubs[m], 1e-3)) {
+            if (row.equals(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)
+                    && Utilities.equals(ub, ubs[m], delta)) {
                 return;
             }
         }

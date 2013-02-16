@@ -11,11 +11,14 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class DimReducerTest {
@@ -24,6 +27,11 @@ public class DimReducerTest {
     public static void classSetUp() {
         BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.TRACE);
+    }
+
+    @Before
+    public void setUp() {
+        Prng.seed(123456789101112l);
     }
 
     private static class MockDimReducer extends DimReducer {
@@ -68,7 +76,7 @@ public class DimReducerTest {
 
         System.out.println(drMatrix);
 
-        CplexUtils.assertContainsRow(drMatrix, new double[]{1, 159.289}, CplexUtils.CPLEX_NEG_INF, 84.934);
+        CplexUtils.assertContainsRow(drMatrix, new double[]{9, 90}, CplexUtils.CPLEX_NEG_INF, -96);
     }
     
     @Test
@@ -93,8 +101,8 @@ public class DimReducerTest {
 
         System.out.println(drMatrix);
 
-        CplexUtils.assertContainsRow(drMatrix, new double[]{-59.211, 159.289}, CplexUtils.CPLEX_NEG_INF, 84.934);
-        CplexUtils.assertContainsRow(drMatrix, new double[]{-5.921, 15.928}, CplexUtils.CPLEX_NEG_INF, 8.493);
+        CplexUtils.assertContainsRow(drMatrix, new double[]{-41, 94}, CplexUtils.CPLEX_NEG_INF, 589, 1);
+        CplexUtils.assertContainsRow(drMatrix, new double[]{-4, 9}, CplexUtils.CPLEX_NEG_INF, 58, 1);
     }
 
     @Test
@@ -112,11 +120,21 @@ public class DimReducerTest {
         Assert.assertEquals(origMatrix.getNcols(), drMatrix.getNcols());
 
         System.out.println(drMatrix);
+
+        CplexUtils.assertContainsRow(drMatrix, new double[]{-17, 18}, CplexUtils.CPLEX_NEG_INF, 13, 1);
+        CplexUtils.assertContainsRow(drMatrix, new double[]{-22, 19}, CplexUtils.CPLEX_NEG_INF, 131, 1);
     }
 
     @Test
     public void testFastMultiply() {
-        // TODO
+        DenseDoubleMatrix2D A = new DenseDoubleMatrix2D(new double[][]{ {1, 2, 3}});
+        SparseCCDoubleMatrix2D B = new SparseCCDoubleMatrix2D(new double[][]{ {1}, {2}, {3}});
+        
+        DenseDoubleMatrix2D C1 = new DenseDoubleMatrix2D(1, 1);
+        A.zMult(B, C1);
+        DenseDoubleMatrix2D C2 = DimReducer.fastMultiply(A, B);
+        
+        Assert.assertEquals(C1, C2);
     }
 
     private IloLPMatrix getOrigMatrix(IloCplex cplex) throws IloException {

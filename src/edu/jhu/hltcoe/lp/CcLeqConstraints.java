@@ -28,11 +28,18 @@ public class CcLeqConstraints {
 
     /**
      * Factory method: Gets a compressed column representation of the factors.
-     * @param factors Input factors.
-     * @param nCols Number of columns in the input factors (deprecated). 
+     * @param factors Input EQ factors.
+     * @param nCols Number of columns in the input factors (deprecated).
+     * @throws IllegalStateException If any of the factors are EQ factors. 
      * @return The new Gx <= g constraints.
      */
-    public static CcLeqConstraints getFactorsAsLeqConstraints(FactorList factors, int nCols) {
+    public static CcLeqConstraints getLeqFactorsAsLeqConstraints(FactorList factors, int nCols) {
+        for (Factor f : factors) {
+            if (f.isEq()) {
+                throw new IllegalStateException("All factors must be inequalities");
+            }
+        }
+        
         // Count the number of non zeros in the factors.
         int numNonZerosInG = getNumNonZerosInG(factors);
 

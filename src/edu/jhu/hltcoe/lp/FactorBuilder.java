@@ -4,6 +4,7 @@ import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
 import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
+import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
 
 import org.apache.log4j.Logger;
 
@@ -44,6 +45,30 @@ public class FactorBuilder {
         
         public abstract boolean isEq();
         public abstract String getName() throws IloException;
+
+        /** 
+         * Gets the L2 norm of the coefficients of the factor, including the bound.
+         * 
+         * @param fac Input factor.
+         * @return The value sqrt(g^2 + \sum_{i} G_i^2).
+         */
+        public double getL2Norm() {
+            return Math.sqrt(getSumOfSquares());
+        }
+        
+        /**
+         * Gets the sum of squares of the coefficients of the factor, including the bound.
+         * 
+         * @param fac Input factor.
+         * @return The value (g^2 + \sum_{i} G_i^2).
+         */
+        private double getSumOfSquares() {
+            double ss = g * g;
+            for (LVectorEntry ve : G) {
+                ss += ve.get() * ve.get();
+            }
+            return ss;
+        }
     }
     
     public static enum RowFactorType {
@@ -140,6 +165,7 @@ public class FactorBuilder {
         Factor leq1;
         Factor leq2;
         FastSparseLVector negG = new FastSparseLVector(eq.G);
+        negG.scale(-1.0);
         if (eq instanceof RowFactor) {
             RowFactor rf = (RowFactor)eq;
             // (g - Gx) >= 0 ==> Gx <= g
