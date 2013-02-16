@@ -1,17 +1,18 @@
 package edu.jhu.hltcoe.gridsearch.dr;
 
-import java.util.Collection;
-
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
+
+import java.util.Collection;
+
 import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
 
 import org.apache.log4j.Logger;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
+import cern.jet.random.Gamma;
 import cern.jet.random.tdouble.Beta;
-import cern.jet.random.tdouble.Exponential;
 import edu.jhu.hltcoe.lp.CcLeqConstraints;
 import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.lp.LpRows;
@@ -40,17 +41,14 @@ public class DimReducer {
         public double samplingZeroCutoff = 1e-2;
         public SamplingDistribution dist = SamplingDistribution.UNIFORM;
         /**
-         * Parameter for Beta distribution.
+         * Parameter for Beta and Gamma distribution.
          */
         public double alpha = 0.01;
         /**
-         * Parameter for Beta distribution.
+         * Parameter for Beta and Gamma distribution.
+         * For Gamma, this is the rate parameter beta = 1 / lambda. 
          */
         public double beta = 100;
-        /**
-         * Rate parameter for Exponential distribution.
-         */
-        public double lambda = 0.1;
         /**
          * The delta for deciding what a zero is in the projected matrix, SA.
          * Care should be taken when changing this since it could produce an infeasibility.
@@ -70,7 +68,7 @@ public class DimReducer {
      * sampling distributions with negative numbers.
      */
     public enum SamplingDistribution {
-        UNIFORM, BETA, EXPONENTIAL, ALL_ONES
+        UNIFORM, BETA, GAMMA, ALL_ONES
     }
     
     private static final Logger log = Logger.getLogger(DimReducer.class);
@@ -93,6 +91,10 @@ public class DimReducer {
      */
     public void reduceDimensionality(IloLPMatrix origMatrix, IloLPMatrix drMatrix) throws IloException {
         if (prm.drMaxCons >= origMatrix.getNrows()) {
+            if (prm.drMaxCons != Integer.MAX_VALUE) {
+                log.warn(String.format("Parameter drMaxCons set to %d but matrix only has %d rows. " + 
+                        "Skipping dimentionality reduction.", prm.drMaxCons, origMatrix.getNrows()));
+            }
             // Do nothing.
             return;
         }
@@ -199,7 +201,7 @@ public class DimReducer {
         Collection<OrderedPair> pairs = PairSampler.sampleOrderedPairs(0, nRows, 0, nCols, prop);
         
         Beta betaDist = new Beta(prm.alpha, prm.beta, Prng.doubleMtColt);
-        Exponential expDist = new Exponential(prm.lambda, Prng.doubleMtColt);
+        Gamma gammaDist = new Gamma(prm.alpha, 1.0/prm.beta, Prng.mtColt);
         for (OrderedPair pair : pairs) {
             // Sample the value for this (potential) nonzero.
             double val;
@@ -207,8 +209,8 @@ public class DimReducer {
                 val = Prng.nextDouble();
             } else if (prm.dist == SamplingDistribution.BETA) {
                 val = betaDist.nextDouble();
-            } else if (prm.dist == SamplingDistribution.EXPONENTIAL) {
-                val = expDist.nextDouble();
+            } else if (prm.dist == SamplingDistribution.GAMMA) {
+                val = gammaDist.nextDouble();
             } else if (prm.dist == SamplingDistribution.ALL_ONES) {
                 val = 1;
             } else {
