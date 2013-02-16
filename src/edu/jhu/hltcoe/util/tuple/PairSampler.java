@@ -36,7 +36,7 @@ public class PairSampler {
     
             for (int i=minI; i<maxI; i++) {
                 for (int j=minJ; j<maxJ; j++) {
-                    if (Prng.nextDouble() < prop) {
+                    if (prop >= 1.0 || Prng.nextDouble() < prop) {
                         samples.add(new OrderedPair(i, j));
                     }
                 }
@@ -82,7 +82,7 @@ public class PairSampler {
                 for (int j=i; j<max; j++) {
                     if ((minI <= i && i < maxI && minJ <= j && j < maxJ) ||
                         (minJ <= i && i < maxJ && minI <= j && j < maxI)) {
-                        if (Prng.nextDouble() < prop) {
+                        if (prop >= 1.0 || Prng.nextDouble() < prop) {
                             samples.add(new UnorderedPair(i, j));
                         }
                     }
