@@ -30,6 +30,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -630,6 +631,33 @@ public class DmvRltRelaxationTest {
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, projTrees.get(3).getParents());
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1, 2}, projTrees.get(4).getParents());
         JUnitUtils.assertArrayEquals(new int[]{1, 2, 3, 7, 6, 4, 7, -1}, projTrees.get(5).getParents());
+    }
+
+    @Test
+    public void testDimensionalityReduction() {
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString("Det N");
+        sentences.addSentenceFromString("Adj N");
+
+        DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), false);
+        prm.drPrm.drMaxCons = 50;
+        
+        prm.drPrm.dist = SamplingDistribution.BETA;
+        prm.drPrm.alpha = 1;
+        prm.drPrm.beta = 1;
+        prm.drPrm.maxNonZeros = 500;
+        
+        prm.drPrm.samplingZeroCutoff = 1e-2;
+        prm.maxCutRounds = 0;
+        prm.rootMaxCutRounds = 0;
+        prm.rltPrm.envelopeOnly = false;
+        prm.objVarFilter = false;
+        DmvRltRelaxation relax = new DmvRltRelaxation(prm);
+        relax.init1(new DmvTrainCorpus(sentences));
+        relax.init2(null);
+        
+        DmvRelaxedSolution relaxSol = solveRelaxation(relax); 
+        assertEquals(0.0, relaxSol.getScore(), 1e-13);
     }
     
     private DmvRltRelaxation getLp(SentenceCollection sentences) {

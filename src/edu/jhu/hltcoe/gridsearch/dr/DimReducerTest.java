@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
+import cern.jet.random.tdouble.Beta;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
@@ -44,7 +45,7 @@ public class DimReducerTest {
         }
 
         @Override
-        protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) {
+        protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols, IloLPMatrix origMatrix) {
             Assert.assertEquals(svals.length, nRows);
             Assert.assertEquals(svals[0].length, nCols);
             return new DenseDoubleMatrix2D(svals);
@@ -135,6 +136,23 @@ public class DimReducerTest {
         DenseDoubleMatrix2D C2 = DimReducer.fastMultiply(A, B);
         
         Assert.assertEquals(C1, C2);
+    }
+    
+    @Test
+    public void testBeta() {
+        double alpha = 0.01;
+        double beta = 1;
+        int nRows = 3;
+        int nCols = 3;
+        
+        DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
+        Beta betaDist = new Beta(alpha, beta, Prng.doubleMtColt);
+        for (int i = 0; i < nRows; i++) {
+            for (int j = 0; j < nCols; j++) {
+                S.set(i, j, betaDist.nextDouble());
+            }
+        }
+        System.out.println(S);
     }
 
     private IloLPMatrix getOrigMatrix(IloCplex cplex) throws IloException {

@@ -1,21 +1,25 @@
 package edu.jhu.hltcoe.gridsearch.dr;
 
+import java.util.Collection;
+
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
 
 import org.apache.log4j.Logger;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
+import cern.jet.random.tdouble.Beta;
+import cern.jet.random.tdouble.Exponential;
 import edu.jhu.hltcoe.lp.CcLeqConstraints;
 import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.lp.LpRows;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.hltcoe.util.tuple.OrderedPair;
+import edu.jhu.hltcoe.util.tuple.PairSampler;
 
 /**
  * Reduces the dimensionality of a linear program.
@@ -26,11 +30,37 @@ import edu.jhu.hltcoe.util.cplex.CplexUtils;
 public class DimReducer {
     
     public static class DimReducerPrm {
-        public int drMaxCons = 10; //Integer.MAX_VALUE;
+        public int drMaxCons = Integer.MAX_VALUE;
         public boolean setNames = true;
-        public double zeroCutoff = 1e-8;
         public boolean renormalize = true;
         public boolean includeBounds = false;
+        /**
+         * The delta for checking zero in the sampled matrix.
+         */
+        public double samplingZeroCutoff = 1e-2;
+        public SamplingDistribution dist = SamplingDistribution.UNIFORM;
+        /**
+         * Parameter for Beta distribution.
+         */
+        public double alpha = 0.01;
+        /**
+         * Parameter for Beta distribution.
+         */
+        public double beta = 100;
+        /**
+         * Rate parameter for Exponential distribution.
+         */
+        public double lambda = 0.1;
+        /**
+         * The delta for deciding what a zero is in the projected matrix, SA.
+         * Care should be taken when changing this since it could produce an infeasibility.
+         */
+        public double multZeroDelta = 1e-13;
+        public int maxNonZeros = Integer.MAX_VALUE;
+    }
+    
+    public enum SamplingDistribution {
+        UNIFORM, BETA, EXPONENTIAL, ALL_ONES
     }
     
     private static final Logger log = Logger.getLogger(DimReducer.class);
@@ -61,8 +91,9 @@ public class DimReducer {
         CcLeqConstraints lc = getMatrixAsLeqConstraints(origMatrix);
 
         // Sample a random projection matrix.
-        DenseDoubleMatrix2D S = sampleMatrix(prm.drMaxCons, lc.A.rows());
-                
+        DenseDoubleMatrix2D S = sampleMatrix(prm.drMaxCons, lc.A.rows(), origMatrix);
+        log.debug("Number of nonzeros in S matrix: " + getNumNonZeros(S));        
+        
         // Multiply the random projection with A and b.
         DenseDoubleMatrix2D SA = fastMultiply(S, lc.A);
         DenseDoubleMatrix2D Sb = fastMultiply(S, lc.b);
@@ -76,7 +107,7 @@ public class DimReducer {
             FastSparseLVector coef = new FastSparseLVector();
             for (int j=0; j<SA.columns(); j++) {
                 double SA_ij = SA.getQuick(i, j);
-                if (!Utilities.equals(SA_ij, 0.0, prm.zeroCutoff)) {
+                if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
                     coef.set(j, SA_ij);
                 }
             }
@@ -84,7 +115,22 @@ public class DimReducer {
             String name = String.format("dr_%d", i);
             rows.addRow(CplexUtils.CPLEX_NEG_INF, coef, ub, name);
         }
-        rows.addRowsToMatrix(drMatrix);
+        rows.addRowsToMatrix(drMatrix);        
+        log.debug("Number of nonzeros in orig matrix: " + origMatrix.getNNZs());
+        log.debug("Number of nonzeros in DR matrix: " + drMatrix.getNNZs());
+    }
+
+    private int getNumNonZeros(DenseDoubleMatrix2D S) {
+        int count = 0;
+        for (int i=0; i<S.rows(); i++) {
+            for (int j=0; j<S.columns(); j++) {
+                double SA_ij = S.getQuick(i, j);
+                if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     /**
@@ -134,13 +180,37 @@ public class DimReducer {
     }
 
     // Allow this to be overriden in unit tests.
-    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) {
+    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols, IloLPMatrix origMatrix) throws IloException {
         DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
-        for (int i = 0; i < nRows; i++) {
-            for (int j = 0; j < nCols; j++) {
-                S.set(i, j, Prng.nextDouble());
+        
+        // Sample a subset of the matrix elements for which to sample a (potentially) nonzero value.
+        double prop = Math.min(1.0, (double) prm.maxNonZeros  / (nRows * nCols));
+        log.debug("Proportion of nonzeros in S matrix: " + prop);
+        Collection<OrderedPair> pairs = PairSampler.sampleOrderedPairs(0, nRows, 0, nCols, prop);
+        
+        Beta betaDist = new Beta(prm.alpha, prm.beta, Prng.doubleMtColt);
+        Exponential expDist = new Exponential(prm.lambda, Prng.doubleMtColt);
+        for (OrderedPair pair : pairs) {
+            // Sample the value for this (potential) nonzero.
+            double val;
+            if (prm.dist == SamplingDistribution.UNIFORM) {
+                val = Prng.nextDouble();
+            } else if (prm.dist == SamplingDistribution.BETA) {
+                val = betaDist.nextDouble();
+            } else if (prm.dist == SamplingDistribution.EXPONENTIAL) {
+                val = expDist.nextDouble();
+            } else if (prm.dist == SamplingDistribution.ALL_ONES) {
+                val = 1;
+            } else {
+                throw new IllegalStateException("Unhandled sampling distribution: " + prm.dist);
+            }
+            
+            if (!Utilities.equals(val, 0.0, prm.samplingZeroCutoff)) {
+                // Set the non-zero value in the matrix.
+                S.set(pair.get1(), pair.get2(), val);
             }
         }
+        
         return S;
     }
 

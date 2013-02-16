@@ -7,6 +7,7 @@ import org.uncommons.maths.random.SeedException;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.rng.RandomStream;
 import cern.jet.random.engine.MersenneTwister;
+import cern.jet.random.tdouble.engine.DoubleMersenneTwister;
 import ec.util.MersenneTwisterFast;
 import edu.jhu.hltcoe.util.random.DeterministicSeedGenerator;
 import edu.jhu.hltcoe.util.random.UnlockedCMWC4096RNG;
@@ -32,7 +33,8 @@ public class Prng {
     public static MersenneTwisterFast mtf;
     public static ec.util.MersenneTwister mt;
     public static MersenneTwister mtColt;
-    
+    public static DoubleMersenneTwister doubleMtColt;
+        
     public static Random curRandom;
     
     public static void seed(long seed) {
@@ -41,7 +43,8 @@ public class Prng {
         mtf = new MersenneTwisterFast(seed);
         mt = new ec.util.MersenneTwister(seed);
         mtColt = new MersenneTwister((int)seed);
-
+        doubleMtColt = new DoubleMersenneTwister((int)seed);
+        
         long value = seed % 4294944443l;
         long[] seedArray = new long[]{value,value,value,value,value,value};
         ((MRG32k3a)stream).setSeed(seedArray);
