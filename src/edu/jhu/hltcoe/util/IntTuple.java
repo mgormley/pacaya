@@ -5,7 +5,7 @@ package edu.jhu.hltcoe.util;
 
 import java.util.Arrays;
 
-public class IntTuple {
+public class IntTuple implements Comparable<IntTuple> {
     
     private final int[] x;
     
@@ -49,6 +49,11 @@ public class IntTuple {
     @Override
     public String toString() {
         return Arrays.toString(x);
+    }
+
+    @Override
+    public int compareTo(IntTuple other) {
+        return Utilities.compare(this.x, other.x);
     }
     
 }

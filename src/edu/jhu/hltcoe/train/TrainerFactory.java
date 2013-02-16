@@ -38,6 +38,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
@@ -182,6 +183,8 @@ public class TrainerFactory {
     public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
     @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
     public static int maxRandWalkSamples = 10000;
+    @Opt(name = "drMaxCons", hasArg = true, description = "The max number of dimensionality reduced constraints.")
+    public static int drMaxCons = Integer.MAX_VALUE;
     
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -231,6 +234,9 @@ public class TrainerFactory {
             parsePrm.universalMinProp = universalMinProp;
             parsePrm.universalPostCons = universalPostCons;
 
+            DimReducerPrm drPrm = new DimReducerPrm();
+            drPrm.drMaxCons = drMaxCons;          
+            
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.tempDir = dwTemp;
             rrPrm.maxCutRounds = maxCutRounds;

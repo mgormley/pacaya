@@ -139,7 +139,7 @@ public class CplexUtils {
             FastSparseVector row = new FastSparseVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, 1e-13)) {
+            if (row.equals(expectedRow, 1e-3)) {
                 return;
             }
         }
@@ -163,8 +163,8 @@ public class CplexUtils {
             FastSparseVector row = new FastSparseVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, 1e-13) && Utilities.equals(lb, lbs[m], 1e-13)
-                    && Utilities.equals(ub, ubs[m], 1e-13)) {
+            if (row.equals(expectedRow, 1e-3) && Utilities.equals(lb, lbs[m], 1e-3)
+                    && Utilities.equals(ub, ubs[m], 1e-3)) {
                 return;
             }
         }

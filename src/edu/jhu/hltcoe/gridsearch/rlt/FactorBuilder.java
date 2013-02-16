@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
@@ -21,6 +22,9 @@ public class FactorBuilder {
 
     private static final Logger log = Logger.getLogger(FactorBuilder.class);
 
+    /**
+     * Represents a constraint: as either (g - Gx) >= 0 or (g - Gx) == 0.
+     */
     public abstract static class Factor {
         public double g;
         // TODO: This should really be a FastSparseVector without longs.
@@ -30,6 +34,12 @@ public class FactorBuilder {
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {
             this.g = g;
             this.G = new FastSparseLVector(SafeCast.toLong(Gind), Gval);
+            this.mat = mat;
+        }
+        
+        public Factor(double g, FastSparseLVector G, IloLPMatrix mat) {
+            this.g = g;
+            this.G = G;
             this.mat = mat;
         }
         
@@ -54,6 +64,11 @@ public class FactorBuilder {
             this.rowIdx = rowIdx;
             this.type = type;
         }
+        public RowFactor(double g, FastSparseLVector G, int rowIdx, RowFactorType type, IloLPMatrix mat) {
+            super(g, G, mat);
+            this.rowIdx = rowIdx;
+            this.type = type;
+        }
         public boolean isEq() {
             return type == RowFactorType.EQ;
         }
@@ -71,6 +86,11 @@ public class FactorBuilder {
         Lu lu;
         public BoundFactor(double g, int[] Gind, double[] Gval, int colIdx, Lu lu, IloLPMatrix mat) {
             super(g, Gind, Gval, mat);
+            this.colIdx = colIdx;
+            this.lu = lu;
+        }
+        public BoundFactor(double g, FastSparseLVector G, int colIdx, Lu lu, IloLPMatrix mat) {
+            super(g, G, mat);
             this.colIdx = colIdx;
             this.lu = lu;
         }
@@ -124,6 +144,14 @@ public class FactorBuilder {
                 log.trace("\t" + f);
             }
         }
+        return factors;
+    }
+
+    public static List<Factor> getRowFactors(IloLPMatrix mat) throws IloException {
+        List<Factor> factors = new ArrayList<Factor>();
+        int startRow = 0;
+        int numRows = mat.getNrows();
+        addRowFactors(startRow, numRows, mat, factors);
         return factors;
     }
     
@@ -201,5 +229,34 @@ public class FactorBuilder {
         long numLeFactors = newFactors.size() - numEqFactors;
         long numRows = (numLeFactors * (numLeFactors+1)) / 2 + numEqFactors*inputMatrix.getNcols();
         return numRows;
+    }
+
+    /**
+     * Convert EQ factor into a pair of LEQ factors.
+     * A_i^T x == b_i becomes A_i^T x >= b_i and A_i^T x <= b_i.
+     * @param eq Equality constraint as a factor.
+     * @return Pair of inequality constraints equivalent to input factor.
+     */
+    public static Pair<Factor, Factor> getEqFactorAsLeqPair(Factor eq) {
+        if (!eq.isEq()) {
+            throw new IllegalStateException("Input factor must be an equality");
+        }
+
+        Factor leq1;
+        Factor leq2;
+        FastSparseLVector negG = new FastSparseLVector(eq.G);
+        if (eq instanceof RowFactor) {
+            RowFactor rf = (RowFactor)eq;
+            // (g - Gx) >= 0 ==> Gx <= g
+            leq1 = new RowFactor(rf.g, new FastSparseLVector(rf.G), rf.rowIdx, RowFactorType.UPPER, rf.mat);
+            // (g - Gx) <= 0 ==> g <= Gx ==> (-g + Gx) >= 0 
+            leq2 = new RowFactor(-rf.g, negG, rf.rowIdx, RowFactorType.LOWER, rf.mat);
+        } else if (eq instanceof BoundFactor) {
+            throw new IllegalStateException("Bounds factors are currently never equality constraints.");
+        } else {
+            throw new IllegalStateException("not implemented");
+        }
+        
+        return new Pair<Factor,Factor>(leq1, leq2);
     }
 }

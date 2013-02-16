@@ -34,6 +34,8 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.UnionRltRowAdder;
@@ -66,6 +68,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public RltPrm rltPrm = new RltPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
+        public DimReducerPrm drPrm = new DimReducerPrm();
         public DmvRltRelaxPrm() { 
             // We have to use the Dual simplex algorithm in order to 
             // stop early and fathom a node.
@@ -149,6 +152,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public IloObjective objective;
         public IloNumVar[][] objVars;
         public IloLPMatrix origMatrix;
+        public IloLPMatrix drMatrix;
         public Rlt rlt;
         public DmvTreeProgram pp;
     }
@@ -173,11 +177,20 @@ public class DmvRltRelaxation implements DmvRelaxation {
         sto.addModelParamConstraints();
         
         // Add the parsing constraints.
-        
         DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
         mp.pp = builder.buildDmvTreeProgram(corpus);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
+        // Reduce the dimensionality of the original matrix.
+        DimReducer dr = new DimReducer(prm.drPrm);
+        // Add an LP matrix that will contain the lower-dimensional constraints.
+        mp.drMatrix = cplex.LPMatrix("drMatrix");
+        dr.reduceDimensionality(mp.origMatrix, mp.drMatrix);
+        if (mp.drMatrix.getNrows() == 0) {
+            mp.drMatrix = null;
+        }
+        
+        // Configuration for RLT.
         RltPrm rltPrm = prm.rltPrm;
         // We always keep the convex/concave envelope on the objective variables
         // so that the problem isn't unbounded.
@@ -193,11 +206,22 @@ public class DmvRltRelaxation implements DmvRelaxation {
             rltPrm.rowAdder = new UnionRltRowAdder(new VarRltRowAdder(getObjVarPairs()), rltPrm.rowAdder);
         }
         
-        // Add the RLT constraints.
-        mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
-        IloLPMatrix rltMat = mp.rlt.getRltMatrix();
-        cplex.add(mp.origMatrix);
-        cplex.add(rltMat);
+        if (mp.drMatrix == null) {
+            log.info("Applying RLT to the original matrix");
+            // Add the RLT constraints using the original matrix as input.
+            mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
+            IloLPMatrix rltMat = mp.rlt.getRltMatrix();
+            cplex.add(mp.origMatrix);
+            cplex.add(rltMat);
+        } else {
+            log.info("Applying RLT to the lower-dimensional matrix");
+            // Add the RLT constraints using the lower-dimensional matrix as input.
+            mp.rlt = new Rlt(cplex, mp.drMatrix, rltPrm);
+            IloLPMatrix rltMat = mp.rlt.getRltMatrix();
+            cplex.add(mp.origMatrix);
+            cplex.add(mp.drMatrix);
+            cplex.add(rltMat);
+        }
         
         // Create the objective
         mp.objective = cplex.addMinimize();
@@ -505,8 +529,12 @@ public class DmvRltRelaxation implements DmvRelaxation {
         // Add sum-to-one cuts.
         rows.add(sto.projectModelParamsAndAddCuts().toNativeArray());
         
-        // Add RLT cuts.
-        int rltCuts = mp.rlt.addRowsAsFactors(rows);
+        int rltCuts = 0;
+        if (mp.drMatrix == null) {
+            // Add RLT cuts only if we are NOT reducing the dimensionality.
+            rltCuts = mp.rlt.addRowsAsFactors(rows);
+        }
+        // TODO: Update low-dimensional matrix with cuts, and then add to RLT.
         
         return rows.size() + rltCuts;
     }

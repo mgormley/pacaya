@@ -408,6 +408,27 @@ public class Utilities {
         }
         return Double.compare(a, b);
     }
+    
+    public static int compare(int a, int b) {
+        return a - b;
+    }
+    
+    public static int compare(int[] x, int[] y) {
+        for (int i=0; i<Math.min(x.length, y.length); i++) {
+            int diff = x[i] - y[i];
+            if (diff != 0) {
+                return diff;
+            }
+        }
+        
+        if (x.length < y.length) {
+            return -1;
+        } else if (x.length > y.length) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 
     /**
      * Gets the argmax breaking ties randomly.
