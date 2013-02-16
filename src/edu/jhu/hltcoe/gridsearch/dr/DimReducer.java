@@ -58,7 +58,17 @@ public class DimReducer {
         public double multZeroDelta = 1e-13;
         public int maxNonZeros = Integer.MAX_VALUE;
     }
-    
+
+    /**
+     * Enumeration of sampling distributions for populating the projection
+     * matrix.
+     * 
+     * Note that these all sample from the positive reals, since a negative
+     * number would flip the inequality.
+     * 
+     * TODO: If we switch to all equality constraints (Ax = b), we could use
+     * sampling distributions with negative numbers.
+     */
     public enum SamplingDistribution {
         UNIFORM, BETA, EXPONENTIAL, ALL_ONES
     }
