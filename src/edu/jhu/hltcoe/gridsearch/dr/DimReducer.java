@@ -9,6 +9,7 @@ import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
 
 import org.apache.log4j.Logger;
 
+import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import cern.jet.random.Gamma;
@@ -108,7 +109,13 @@ public class DimReducer {
         CcLeqConstraints lc = getMatrixAsLeqConstraints(origMatrix);
 
         // Sample a random projection matrix.
-        DenseDoubleMatrix2D S = sampleMatrix(prm.drMaxCons, lc.A.rows(), origMatrix);
+        DenseDoubleMatrix2D S;
+        if (prm.useIdentityMatrix) {
+            log.debug("Using identity matrix for projection.");
+            S = (DenseDoubleMatrix2D) DoubleFactory2D.dense.identity(lc.A.rows());
+        } else {
+            S = sampleMatrix(prm.drMaxCons, lc.A.rows(), origMatrix);
+        }
         log.debug("Number of nonzeros in S matrix: " + getNumNonZeros(S));        
         
         // Multiply the random projection with A and b.
