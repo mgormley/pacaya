@@ -55,6 +55,11 @@ public class DimReducer {
          */
         public double multZeroDelta = 1e-13;
         public int maxNonZeros = Integer.MAX_VALUE;
+        /**
+         * This parameter uses the identity matrix for S, overriding all other
+         * projection preferences. This is just used as a sanity check.
+         */
+        public boolean useIdentityMatrix = false;
     }
 
     /**

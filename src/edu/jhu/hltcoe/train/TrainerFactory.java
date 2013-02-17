@@ -200,6 +200,10 @@ public class TrainerFactory {
     public static double drMultZeroDelta = 1e-2;
     @Opt(hasArg = true, description = "Whether to renormalize the rows before projecting.")
     public static boolean drRenormalize = true;
+    @Opt(hasArg = true, description = "Whether to include the bounds in projection.")
+    public static boolean drIncludeBounds = false;
+    @Opt(hasArg = true, description = "Whether to use the identity matrix for projection (sanity check).")
+    public static boolean drUseIdentityMatrix = false;
     
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -257,6 +261,8 @@ public class TrainerFactory {
             drPrm.dist = drSamplingDist;
             drPrm.alpha = drAlpha;
             drPrm.beta = drBeta;
+            drPrm.includeBounds = drIncludeBounds;
+            drPrm.useIdentityMatrix = drUseIdentityMatrix;
             
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.tempDir = dwTemp;
