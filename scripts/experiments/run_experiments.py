@@ -640,6 +640,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiment = all + dataset + relax + extra
                     exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
+                experiment = all + dataset + relax + DPExpParams(drUseIdentityMatrix=True, rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
+                exps.append(experiment)
+            for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
                 exps.append(experiment)
             # Uncomment to test different simplex algorithms.
