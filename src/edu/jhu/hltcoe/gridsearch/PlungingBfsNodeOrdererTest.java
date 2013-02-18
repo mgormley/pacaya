@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.gridsearch;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,7 +16,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 public class PlungingBfsNodeOrdererTest {
 
     static {
-        BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
     

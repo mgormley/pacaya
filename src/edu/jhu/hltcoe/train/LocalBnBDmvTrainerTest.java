@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.train;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,7 +12,6 @@ import edu.jhu.hltcoe.util.Prng;
 public class LocalBnBDmvTrainerTest {
 
     static {
-        BasicConfigurator.configure();
         // Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

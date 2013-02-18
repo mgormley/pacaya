@@ -13,7 +13,7 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 import java.io.File;
 import java.util.Arrays;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
@@ -35,7 +35,6 @@ public class RltTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.TRACE);
     }
     

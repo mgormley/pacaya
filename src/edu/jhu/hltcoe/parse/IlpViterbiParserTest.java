@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.parse;
 import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,9 +21,6 @@ import edu.jhu.hltcoe.util.Timer;
 
 public class IlpViterbiParserTest {
 
-    static {
-        BasicConfigurator.configure();
-    }
     
     private final static double lambda = 0.1;
 

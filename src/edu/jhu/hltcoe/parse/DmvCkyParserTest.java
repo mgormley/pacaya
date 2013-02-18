@@ -10,7 +10,7 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,9 +36,6 @@ import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvCkyParserTest {
 
-    static {
-        BasicConfigurator.configure();
-    }
     
     private final static double lambda = 0.1;
 

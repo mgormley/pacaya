@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.parse.relax;
 
 import java.io.File;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,9 +32,6 @@ import edu.jhu.hltcoe.util.Prng;
 
 public class LpDmvRelaxedParserTest {
 
-    static {
-        BasicConfigurator.configure();
-    }
     
     private final static double lambda = 0.1;
 

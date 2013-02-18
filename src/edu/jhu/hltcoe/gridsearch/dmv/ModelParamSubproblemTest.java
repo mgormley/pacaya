@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import junit.framework.Assert;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +18,6 @@ public class ModelParamSubproblemTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
         // Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

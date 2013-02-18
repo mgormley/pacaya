@@ -7,7 +7,7 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.IntParam;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -27,7 +27,6 @@ public class DimReducerTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

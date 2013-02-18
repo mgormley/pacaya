@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.util.cli;
 import java.io.File;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,7 +37,6 @@ public class ArgParserTest {
     
     @BeforeClass
     public static void setUp() {
-        BasicConfigurator.configure();
     }
 
     @Test

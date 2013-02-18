@@ -7,7 +7,7 @@ import ilog.cplex.IloCplex;
 import java.io.File;
 import java.util.Arrays;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,7 +51,6 @@ public class DmvRltRelaxationTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

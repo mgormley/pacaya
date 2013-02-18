@@ -6,7 +6,7 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,9 +25,6 @@ import edu.jhu.hltcoe.util.Prng;
 
 public class InitializedIlpViterbiParserWithDeltasTest {
 
-    static {
-        BasicConfigurator.configure();
-    }
     
     private final static double lambda = 0.1;
 

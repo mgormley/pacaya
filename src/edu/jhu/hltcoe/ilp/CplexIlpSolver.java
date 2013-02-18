@@ -23,7 +23,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.util.Command;
@@ -161,7 +161,6 @@ public class CplexIlpSolver implements IlpSolver {
     }
     
     public static void main(String[] args) {
-        BasicConfigurator.configure();
         
         String usage = "java " + CplexIlpSolver.class.getName();
         CommandLineParser parser = new PosixParser();

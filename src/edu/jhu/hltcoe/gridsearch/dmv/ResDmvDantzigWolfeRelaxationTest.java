@@ -43,7 +43,6 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
     @BeforeClass
     public static void classSetUp() {
-        //BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

@@ -7,7 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.log4j.BasicConfigurator;
+
 import edu.jhu.hltcoe.util.Timer;
 import org.junit.Assert;
 import org.junit.Before;
@@ -49,7 +49,6 @@ public class DmvDantzigWolfeRelaxationTest {
 
     @BeforeClass
     public static void classSetUp() {
-        BasicConfigurator.configure();
         //Logger.getRootLogger().setLevel(Level.TRACE);
     }
 

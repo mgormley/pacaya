@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Logger;
 
 import util.Alphabet;
@@ -302,7 +302,6 @@ public class PipelineRunner {
     private static void configureLogging() {
         //ConsoleAppender cAppender = new ConsoleAppender(new EnhancedPatternLayout("%d{HH:mm:ss,SSS} [%t] %p %c %x - %m%n"));
         //BasicConfigurator.configure(cAppender); 
-        //BasicConfigurator.configure();
     }
     
     public static void main(String[] args) throws IOException {

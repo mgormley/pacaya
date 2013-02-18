@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-import org.apache.log4j.BasicConfigurator;
+
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -34,7 +34,6 @@ import edu.jhu.hltcoe.util.Utilities;
 public class IndexedDmvModelTest {
 
     static {
-        BasicConfigurator.configure();
         Logger.getRootLogger().setLevel(Level.TRACE);
     }
 
