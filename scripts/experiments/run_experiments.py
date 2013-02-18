@@ -621,8 +621,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(nodeOrder="bfs",
                        relaxOnly=None,
-                       rootMaxCutRounds=1, #TODO: maybe push this back up to 10?
-                       maxCutRounds=1,
+                       rootMaxCutRounds=0, #TODO: maybe push this back up to 1 after we support cutting in the projection?
+                       maxCutRounds=0,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
                        epsilon=0.1,
@@ -632,6 +632,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
                                                     maxNumSentences=5,
                                                     timeoutSeconds=5*60)
+            dataset = dataset + DPExpParams(initBounds="gold",
+                                            offsetProb=0.25,
+                                            probOfSkipCm=0.75)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 for drMaxNonZerosPerRow in [1, 2, 4, 8]:
