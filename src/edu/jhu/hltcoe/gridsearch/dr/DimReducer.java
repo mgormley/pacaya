@@ -58,6 +58,9 @@ public class DimReducer {
          * Care should be taken when changing this since it could produce an infeasibility.
          */
         public double multZeroDelta = 1e-13;
+        /**
+         * The max number of nonzeros in the projection matrices combined.
+         */
         public int maxNonZeros = Integer.MAX_VALUE;
         /**
          * This parameter uses the identity matrix for S, overriding all other
@@ -138,7 +141,7 @@ public class DimReducer {
         if (prm.conversion == ConstraintConversion.EQ_TO_LEQ_PAIR) {
             // Convert the original matrix to Ax <= b form.
             CcLpConstraints lc = getFactorsAsLeqConstraints(factors, nCols);
-            projectAndAddConstraints(lc, drMatrix, prm.drMaxCons);
+            projectAndAddConstraints(lc, drMatrix, prm.drMaxCons, prm.maxNonZeros);
         } else if (prm.conversion == ConstraintConversion.SEPARATE_EQ_AND_LEQ) {
             // Project the equality and inequality constraints separately.
             Pair<CcLpConstraints,CcLpConstraints> pair = getFactorsAsEqAndLeqConstraints(factors, nCols);
@@ -146,8 +149,10 @@ public class DimReducer {
             CcLpConstraints leqLc = pair.get2();
             double propEq = (double) eqLc.getNumRows() / (eqLc.getNumRows() + leqLc.getNumRows());
             log.info("Proportion equality constraints: " + propEq);
-            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeLongToInt(Math.round(propEq * prm.drMaxCons)));
-            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.drMaxCons)));
+            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeLongToInt(Math.round(propEq * prm.drMaxCons)), 
+                    SafeCast.safeLongToInt(Math.round(propEq * prm.maxNonZeros)));
+            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.drMaxCons)), 
+                    SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.maxNonZeros)));
         } else {
             throw new RuntimeException("Unhandled constraint conversion method: " + prm.conversion);
         }
@@ -162,7 +167,7 @@ public class DimReducer {
      * @param drMatrix Output matrix.
      * @param drMaxCons Maximum number of constraints to form.
      */
-    private void projectAndAddConstraints(CcLpConstraints lc, IloLPMatrix drMatrix, int drMaxCons)
+    private void projectAndAddConstraints(CcLpConstraints lc, IloLPMatrix drMatrix, int drMaxCons, int maxNonZeros)
             throws IloException {
         // Sample a random projection matrix.
         DenseDoubleMatrix2D S;
@@ -170,7 +175,7 @@ public class DimReducer {
             log.debug("Using identity matrix for projection.");
             S = (DenseDoubleMatrix2D) DoubleFactory2D.dense.identity(lc.A.rows());
         } else {
-            S = sampleMatrix(drMaxCons, lc.A.rows());
+            S = sampleMatrix(drMaxCons, lc.A.rows(), maxNonZeros);
         }
         log.debug("Number of nonzeros in S matrix: " + getNumNonZeros(S));        
         
@@ -289,11 +294,11 @@ public class DimReducer {
     }
 
     // Allow this to be overriden in unit tests.
-    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) throws IloException {
+    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols, int maxNonZeros) throws IloException {
         DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
         
         // Sample a subset of the matrix elements for which to sample a (potentially) nonzero value.
-        double prop = Math.min(1.0, (double) prm.maxNonZeros  / (nRows * nCols));
+        double prop = Math.min(1.0, (double) maxNonZeros  / (nRows * nCols));
         log.debug("Proportion of nonzeros in S matrix: " + prop);
         Collection<OrderedPair> pairs = PairSampler.sampleOrderedPairs(0, nRows, 0, nCols, prop);
         

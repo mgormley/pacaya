@@ -45,7 +45,7 @@ public class DimReducerTest {
         }
 
         @Override
-        protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) {
+        protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols, int maxNonZeros) {
             Assert.assertEquals(svals.length, nRows);
             Assert.assertEquals(svals[0].length, nCols);
             return new DenseDoubleMatrix2D(svals);
