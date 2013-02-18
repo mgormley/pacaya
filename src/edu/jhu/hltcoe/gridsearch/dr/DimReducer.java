@@ -146,8 +146,8 @@ public class DimReducer {
             CcLpConstraints leqLc = pair.get2();
             double propEq = (double) eqLc.getNumRows() / (eqLc.getNumRows() + leqLc.getNumRows());
             log.info("Proportion equality constraints: " + propEq);
-            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeDoubleToInt(propEq * prm.drMaxCons));
-            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeDoubleToInt((1.0 - propEq) * prm.drMaxCons));
+            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeLongToInt(Math.round(propEq * prm.drMaxCons)));
+            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.drMaxCons)));
         } else {
             throw new RuntimeException("Unhandled constraint conversion method: " + prm.conversion);
         }
