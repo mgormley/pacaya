@@ -30,7 +30,7 @@ plotrootbound <- function(mydata) {
   xlab = "Proportion of RLT rows included"
   ylab = "Upper bound on log-likelihood at root"
   p <- qplot(rltInitProp, relaxBound, data=mydata,
-             geom="jitter", xlab=xlab, ylab=ylab,
+             geom="point", xlab=xlab, ylab=ylab,
              color=factor(method), shape=factor(drUseIdentityMatrix)) +
                  opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
   p <- p + geom_line(aes(group=factor(method)))
@@ -75,7 +75,7 @@ df$drMaxNonZeros[is.na(df$drMaxNonZeros)] <- as.numeric("inf")
 df$method <- str_c(df$drMaxNonZeros, df$drMaxCons, df$drSamplingDist, sep=".")
 
 ## Plot data.
-myplot(plotrootbound(subset(df, relaxBound < 0.0 & relaxBound > -100)),
+myplot(plotrootbound(subset(df, relaxBound < 0.1 & relaxBound > -100)),
        str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
 
 myplot(plotrootbound(df),
