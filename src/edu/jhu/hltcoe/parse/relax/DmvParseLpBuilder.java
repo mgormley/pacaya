@@ -250,19 +250,20 @@ public class DmvParseLpBuilder {
     }
 
     private void addExtraTreeCons(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {
-        // # This constraint is optional, but we include it for all formulations
-        // # The wall has one outgoing arc
-        // subto one_child_for_wall:
-        // forall <s> in Sents:
-        // 1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
-        pp.oneArcPerWall = new IloRange[corpus.size()];
-        for (int s = 0; s < corpus.size(); s++) {
-            double[] ones = new double[pp.arcRoot[s].length];
-            Arrays.fill(ones, 1.0);
-            IloLinearNumExpr expr = cplex.scalProd(ones, pp.arcRoot[s]);
-            pp.oneArcPerWall[s] = cplex.eq(expr, 1.0, "oneArcPerWall");
+        if (prm.inclExtraCons) {
+            // # This constraint is optional, but we include it for all formulations
+            // # The wall has one outgoing arc
+            // subto one_child_for_wall:
+            // forall <s> in Sents:
+            // 1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
+            pp.oneArcPerWall = new IloRange[corpus.size()];
+            for (int s = 0; s < corpus.size(); s++) {
+                double[] ones = new double[pp.arcRoot[s].length];
+                Arrays.fill(ones, 1.0);
+                IloLinearNumExpr expr = cplex.scalProd(ones, pp.arcRoot[s]);
+                pp.oneArcPerWall[s] = cplex.eq(expr, 1.0, "oneArcPerWall");
+            }
         }
-
         // # Other tree constraints
         // # Each node should have a parent (except the wall)
         // subto one_incoming_arc:
@@ -319,6 +320,8 @@ public class DmvParseLpBuilder {
         // var flow[<s,i,j> in AllArcs] real >= 0 <= Length[s]; # No priority
         // because this is a real
         //
+        
+        // Root sends flow n:
         // subto flow_sum:
         // forall <s> in Sents:
         // Length[s] == sum <j> in { 1 to Length[s] }: flow[s,0,j];
@@ -331,6 +334,7 @@ public class DmvParseLpBuilder {
             pp.rootFlowIsSentLength[s] = cplex.eq(expr, sent.size(), "rootFlowIsSentLength");
         }
 
+        // Each node consumes one unit of flow:
         // Out-flow equals in-flow minus one.
         // subto flow_diff:
         // forall <s> in Sents:
@@ -356,6 +360,7 @@ public class DmvParseLpBuilder {
             }
         }
 
+        // Flow is zero on disabled arcs:
         // subto flow_bound:
         // forall <s,i,j> in AllArcs:
         // flow[s,i,j] <= Length[s] * arc[s,i,j];
