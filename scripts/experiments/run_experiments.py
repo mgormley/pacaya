@@ -626,8 +626,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
                        epsilon=0.1,
-                       drAlpha=0.01,
-                       drBeta=100,
+                       drAlpha=0.1,
                        drUseIdentityMatrix=False)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
@@ -635,11 +634,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                                     timeoutSeconds=5*60)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                for drMaxNonZeros in [101, 201, 401, 801]:
+                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
                     for drMaxCons in [50, 100, 200, 400]:
-                        for drSamplingDist in ["UNIFORM", "BETA"]:
+                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
                             extra = DPExpParams(drMaxCons=drMaxCons,
-                                                drMaxNonZeros=drMaxNonZeros,
+                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
                                                 drSamplingDist=drSamplingDist,
                                                 rltInitProp=rltInitProp, 
                                                 simplexAlgorithm="BARRIER")

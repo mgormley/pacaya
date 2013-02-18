@@ -1,6 +1,3 @@
-/**
- * 
- */
 package edu.jhu.hltcoe.util;
 
 import java.util.Arrays;

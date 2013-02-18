@@ -641,12 +641,10 @@ public class DmvRltRelaxationTest {
         DmvRltRelaxPrm prm = new DmvRltRelaxPrm(null, 100, new CutCountComputer(), false);
         prm.drPrm.drMaxCons = 50;
         
-        prm.drPrm.dist = SamplingDistribution.BETA;
-        prm.drPrm.alpha = 1;
-        prm.drPrm.beta = 1;
-        prm.drPrm.maxNonZeros = 500;
+        prm.drPrm.dist = SamplingDistribution.UNIFORM;
+        prm.drPrm.maxNonZerosPerRow = 3;
         
-        prm.drPrm.samplingZeroCutoff = 1e-2;
+        prm.drPrm.sampZeroDelta = 1e-2;
         prm.maxCutRounds = 0;
         prm.rootMaxCutRounds = 0;
         prm.rltPrm.envelopeOnly = false;

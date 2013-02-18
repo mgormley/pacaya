@@ -3,7 +3,10 @@ package edu.jhu.hltcoe.gridsearch.dr;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 
-import java.util.Collection;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Arrays;
 
 import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
 
@@ -12,19 +15,16 @@ import org.apache.log4j.Logger;
 import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import cern.jet.random.Gamma;
-import cern.jet.random.tdouble.Beta;
+import cern.colt.matrix.tdouble.impl.SparseRCDoubleMatrix2D;
 import edu.jhu.hltcoe.lp.CcLpConstraints;
 import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.lp.LpRows;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
-import edu.jhu.hltcoe.util.tuple.OrderedPair;
-import edu.jhu.hltcoe.util.tuple.PairSampler;
+import edu.jhu.hltcoe.util.dist.Dirichlet;
 
 /**
  * Reduces the dimensionality of a linear program.
@@ -40,28 +40,26 @@ public class DimReducer {
         public boolean renormalize = true;
         public boolean includeBounds = false;
         /**
-         * The delta for checking zero in the sampled matrix.
+         * The delta for cutting off zeros in the sampled matrix.
          */
-        public double samplingZeroCutoff = 1e-2;
-        public SamplingDistribution dist = SamplingDistribution.UNIFORM;
+        public double sampZeroDelta = 1e-2;
         /**
-         * Parameter for Beta and Gamma distribution.
-         */
-        public double alpha = 0.01;
-        /**
-         * Parameter for Beta and Gamma distribution.
-         * For Gamma, this is the rate parameter beta = 1 / lambda. 
-         */
-        public double beta = 100;
-        /**
-         * The delta for deciding what a zero is in the projected matrix, SA.
+         * The delta for cutting off zeros in the projected matrix.
          * Care should be taken when changing this since it could produce an infeasibility.
          */
         public double multZeroDelta = 1e-13;
         /**
-         * The max number of nonzeros in the projection matrices combined.
+         * The sampling distribution for each row of the projection matrix.
          */
-        public int maxNonZeros = Integer.MAX_VALUE;
+        public SamplingDistribution dist = SamplingDistribution.UNIFORM;
+        /**
+         * Parameter for symmetric Dirichlet distribution.
+         */
+        public double alpha = 1;
+        /**
+         * The max number of nonzeros in each row of the projection matrices.
+         */
+        public int maxNonZerosPerRow = Integer.MAX_VALUE;
         /**
          * This parameter uses the identity matrix for S, overriding all other
          * projection preferences. This is just used as a sanity check.
@@ -72,6 +70,7 @@ public class DimReducer {
          * <= b and Dx == d) into a set of constraints for projection.
          */
         public ConstraintConversion conversion = ConstraintConversion.EQ_TO_LEQ_PAIR;
+        public File tempDir = null;
     }
 
     /**
@@ -85,7 +84,7 @@ public class DimReducer {
      * sampling distributions with negative numbers.
      */
     public enum SamplingDistribution {
-        UNIFORM, BETA, GAMMA, ALL_ONES
+        UNIFORM, DIRICHLET, ALL_ONES
     }
     
     public enum ConstraintConversion {
@@ -141,7 +140,7 @@ public class DimReducer {
         if (prm.conversion == ConstraintConversion.EQ_TO_LEQ_PAIR) {
             // Convert the original matrix to Ax <= b form.
             CcLpConstraints lc = getFactorsAsLeqConstraints(factors, nCols);
-            projectAndAddConstraints(lc, drMatrix, prm.drMaxCons, prm.maxNonZeros);
+            projectAndAddConstraints(lc, drMatrix, prm.drMaxCons);
         } else if (prm.conversion == ConstraintConversion.SEPARATE_EQ_AND_LEQ) {
             // Project the equality and inequality constraints separately.
             Pair<CcLpConstraints,CcLpConstraints> pair = getFactorsAsEqAndLeqConstraints(factors, nCols);
@@ -149,10 +148,8 @@ public class DimReducer {
             CcLpConstraints leqLc = pair.get2();
             double propEq = (double) eqLc.getNumRows() / (eqLc.getNumRows() + leqLc.getNumRows());
             log.info("Proportion equality constraints: " + propEq);
-            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeLongToInt(Math.round(propEq * prm.drMaxCons)), 
-                    SafeCast.safeLongToInt(Math.round(propEq * prm.maxNonZeros)));
-            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.drMaxCons)), 
-                    SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.maxNonZeros)));
+            projectAndAddConstraints(eqLc, drMatrix, SafeCast.safeLongToInt(Math.round(propEq * prm.drMaxCons)));
+            projectAndAddConstraints(leqLc, drMatrix, SafeCast.safeLongToInt(Math.round((1.0 - propEq) * prm.drMaxCons)));
         } else {
             throw new RuntimeException("Unhandled constraint conversion method: " + prm.conversion);
         }
@@ -167,7 +164,7 @@ public class DimReducer {
      * @param drMatrix Output matrix.
      * @param drMaxCons Maximum number of constraints to form.
      */
-    private void projectAndAddConstraints(CcLpConstraints lc, IloLPMatrix drMatrix, int drMaxCons, int maxNonZeros)
+    private void projectAndAddConstraints(CcLpConstraints lc, IloLPMatrix drMatrix, int drMaxCons)
             throws IloException {
         // Sample a random projection matrix.
         DenseDoubleMatrix2D S;
@@ -175,7 +172,7 @@ public class DimReducer {
             log.debug("Using identity matrix for projection.");
             S = (DenseDoubleMatrix2D) DoubleFactory2D.dense.identity(lc.A.rows());
         } else {
-            S = sampleMatrix(drMaxCons, lc.A.rows(), maxNonZeros);
+            S = sampleMatrix(drMaxCons, lc.A.rows());
         }
         log.debug("Number of nonzeros in S matrix: " + getNumNonZeros(S));        
         
@@ -294,34 +291,58 @@ public class DimReducer {
     }
 
     // Allow this to be overriden in unit tests.
-    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols, int maxNonZeros) throws IloException {
+    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) throws IloException {
+        if (prm.maxNonZerosPerRow != Integer.MAX_VALUE && prm.maxNonZerosPerRow > nCols) {
+            log.warn(String.format("Parameter maxNonZerosPerRow set to %d but matrix only has %d columns. " + 
+                    "Ignoring parameter.", prm.maxNonZerosPerRow, nCols));
+        }
+        
         DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
         
-        // Sample a subset of the matrix elements for which to sample a (potentially) nonzero value.
-        double prop = Math.min(1.0, (double) maxNonZeros  / (nRows * nCols));
-        log.debug("Proportion of nonzeros in S matrix: " + prop);
-        Collection<OrderedPair> pairs = PairSampler.sampleOrderedPairs(0, nRows, 0, nCols, prop);
+        // Setup Dirichlet distribution.
+        double alphaVal = (prm.dist == SamplingDistribution.UNIFORM ? 1 : prm.alpha);
+        int numNonZerosPerRow = Math.min(S.columns(), prm.maxNonZerosPerRow);
+        Dirichlet dirichletDist = new Dirichlet(alphaVal, numNonZerosPerRow);
         
-        Beta betaDist = new Beta(prm.alpha, prm.beta, Prng.doubleMtColt);
-        Gamma gammaDist = new Gamma(prm.alpha, 1.0/prm.beta, Prng.mtColt);
-        for (OrderedPair pair : pairs) {
-            // Sample the value for this (potential) nonzero.
-            double val;
-            if (prm.dist == SamplingDistribution.UNIFORM) {
-                val = Prng.nextDouble();
-            } else if (prm.dist == SamplingDistribution.BETA) {
-                val = betaDist.nextDouble();
-            } else if (prm.dist == SamplingDistribution.GAMMA) {
-                val = gammaDist.nextDouble();
-            } else if (prm.dist == SamplingDistribution.ALL_ONES) {
-                val = 1;
-            } else {
-                throw new IllegalStateException("Unhandled sampling distribution: " + prm.dist);
+        // Initialize to all the column indices.
+        int[] colInds = Utilities.getIndexArray(numNonZerosPerRow);
+        // Initialize to all ones. This is for the case of prm.dist == SamplingDistribution.ALL_ONES.
+        double[] colVals = new double[numNonZerosPerRow];
+        Arrays.fill(colVals, 1.0);
+        
+        int numNonZeros = 0;
+        for (int i=0; i<S.rows(); i++) {
+            if (nCols > numNonZerosPerRow) {
+                // Choose a subset of columns to be nonzeros.
+                colInds = Utilities.sampleWithoutReplacement(numNonZerosPerRow, nCols);
+            }
+            if (prm.dist == SamplingDistribution.UNIFORM || prm.dist == SamplingDistribution.DIRICHLET) {
+                // Sample the values for the nonzeros.
+                colVals = dirichletDist.draw();
             }
             
-            if (!Utilities.equals(val, 0.0, prm.samplingZeroCutoff)) {
-                // Set the non-zero value in the matrix.
-                S.set(pair.get1(), pair.get2(), val);
+            // Add the row to the matrix.
+            for (int j=0; j<colInds.length; j++) {
+                if (!Utilities.equals(colVals[j], 0.0, prm.sampZeroDelta)) {
+                    // Set the non-zero value in the matrix.
+                    S.set(i, colInds[j], colVals[j]);
+                    numNonZeros++;
+                }
+            }
+        }
+        
+        double prop = (double) numNonZeros  / (nRows * nCols);
+        log.debug("Proportion of nonzeros in S matrix: " + prop);
+        
+        if (prm.tempDir != null) {
+            try {
+                File sFile = File.createTempFile("projectedMatrix", ".txt", prm.tempDir);
+                log.info("Writing projected matrix to file: " + sFile);
+                FileWriter writer = new FileWriter(sFile);
+                writer.write(new SparseRCDoubleMatrix2D(S.toArray()).toString());
+                writer.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         

@@ -9,9 +9,9 @@ import umontreal.iro.lecuyer.rng.RandomStream;
 import cern.jet.random.engine.MersenneTwister;
 import cern.jet.random.tdouble.engine.DoubleMersenneTwister;
 import ec.util.MersenneTwisterFast;
-import edu.jhu.hltcoe.util.random.DeterministicSeedGenerator;
-import edu.jhu.hltcoe.util.random.UnlockedCMWC4096RNG;
-import edu.jhu.hltcoe.util.random.UnlockedXORShiftRNG;
+import edu.jhu.hltcoe.util.prng.DeterministicSeedGenerator;
+import edu.jhu.hltcoe.util.prng.UnlockedCMWC4096RNG;
+import edu.jhu.hltcoe.util.prng.UnlockedXORShiftRNG;
 
 public class Prng {
     

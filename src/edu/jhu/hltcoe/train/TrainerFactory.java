@@ -189,16 +189,17 @@ public class TrainerFactory {
     // Dimensionality Reduction parameters.
     @Opt(hasArg = true, description = "The max number of dimensionality reduced constraints.")
     public static int drMaxCons = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "The max number of nonzeros in the projection matrix.")
-    public static int drMaxNonZeros = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "The max number of nonzeros per row of the projection matrix.")
+    public static int drMaxNonZerosPerRow = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "The sampling distribution to use for nonzeros in the projection matrix.")
     public static SamplingDistribution drSamplingDist = SamplingDistribution.ALL_ONES;
-    @Opt(hasArg = true, description = "The alpha parameter for the Beta/Gamma distributions.")
+    @Opt(hasArg = true, description = "The alpha parameter for the symmetric Dirichlet distributions.")
     public static double drAlpha = 1;
-    @Opt(hasArg = true, description = "The beta parameter for the Beta/Gamma distributions.")
-    public static double drBeta = 1;
-    @Opt(hasArg = true, description = "The delta for testing equality with zero when creating the projection matrix.")
-    public static double drMultZeroDelta = 1e-2;
+    @Opt(hasArg = true, description = "The delta for testing equality with zero after the multiplication for projection. " +
+    		"Caution should be used when adjusting this paramter as it may cause infeasibilities.")
+    public static double drMultZeroDelta = 1e-13;
+    @Opt(hasArg = true, description = "The delta for testing equality with zero when sampling the projection matrix.")
+    public static double drSampZeroDelta = 1e-2;
     @Opt(hasArg = true, description = "Whether to renormalize the rows before projecting.")
     public static boolean drRenormalize = true;
     @Opt(hasArg = true, description = "Whether to include the bounds in projection.")
@@ -259,14 +260,15 @@ public class TrainerFactory {
             DimReducerPrm drPrm = new DimReducerPrm();
             drPrm.drMaxCons = drMaxCons;
             drPrm.multZeroDelta = drMultZeroDelta;
+            drPrm.sampZeroDelta = drSampZeroDelta;
             drPrm.renormalize = drRenormalize;
-            drPrm.maxNonZeros = drMaxNonZeros;
+            drPrm.maxNonZerosPerRow = drMaxNonZerosPerRow;
             drPrm.dist = drSamplingDist;
             drPrm.alpha = drAlpha;
-            drPrm.beta = drBeta;
             drPrm.includeBounds = drIncludeBounds;
             drPrm.useIdentityMatrix = drUseIdentityMatrix;
             drPrm.conversion = drConversion;
+            drPrm.tempDir = dwTemp;
             
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.tempDir = dwTemp;

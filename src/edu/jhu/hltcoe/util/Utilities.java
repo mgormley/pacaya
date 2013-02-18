@@ -370,7 +370,30 @@ public class Utilities {
         array[j] = tmp;
       }
     }
-    
+
+    /**
+     * Samples a set of m integers without replacement from the range [0,...,n-1]. 
+     * @param m The number of integers to return.
+     * @param n The number of integers from which to sample.
+     * @return The sample as an unsorted integer array.
+     */
+    public static int[] sampleWithoutReplacement(int m, int n) {
+        // This implements a modified form of the genshuf() function from
+        // Programming Pearls pg. 129.
+        
+        // TODO: Design a faster method that only generates min(m, n-m) integers.
+        
+        int[] array = getIndexArray(n);
+        for (int i=0; i<m; i++) {
+            int j = Prng.nextInt(n - i) + i;
+            // Swap array[i] and array[j]
+            int tmp = array[i];
+            array[i] = array[j];
+            array[j] = tmp;
+        }
+        return Arrays.copyOf(array, m);
+    }
+        
     public static void assertDoubleEquals(double a, double b) {
         assert(Math.abs(a - b) < 0.000000000001);
     }
@@ -498,6 +521,19 @@ public class Utilities {
         for (int i=0; i<array.length; i++) {
             Arrays.fill(array[i], value);
         }
+    }
+
+    /**
+     * Gets an array where array[i] = i.
+     * @param length The length of the array.
+     * @return The new index array.
+     */
+    public static int[] getIndexArray(int length) {
+        int[] index = new int[length];
+        for (int i=0; i<index.length; i++) {
+            index[i] = i;
+        }
+        return index;
     }
     
 }

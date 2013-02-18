@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.random;
+package edu.jhu.hltcoe.util.prng;
 
 import java.util.Random;
 

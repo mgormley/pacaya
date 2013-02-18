@@ -57,11 +57,7 @@ public class Sort {
     }
     
     public static int[] getIndexArray(double[] main) {
-        int[] index = new int[main.length];
-        for (int i=0; i<index.length; i++) {
-            index[i] = i;
-        }
-        return index;
+        return Utilities.getIndexArray(main.length);
     }
 
     // Copied from: http://stackoverflow.com/questions/951848/java-array-sort-quick-way-to-get-a-sorted-list-of-indices-of-an-array

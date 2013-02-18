@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.util;
 import edu.jhu.hltcoe.util.Timer;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.random.MultiplywCarryRNG;
+import edu.jhu.hltcoe.util.prng.MultiplywCarryRNG;
 
 public class PrngTest {
 
