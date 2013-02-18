@@ -54,7 +54,7 @@ class DPScraper(Scraper):
         
         _, _, elapsed = get_time(stdout_lines)
         exp.update(elapsed = elapsed)
-        exp.update(hours = to_int(get_group1(stdout_lines, "^(\d+) \[main\]", -1)) / 1000.0 / 60.0 / 60.0)
+        exp.update(hours = to_int(get_group1(stdout_lines, "^(\d+) +[A-Z][A-Z]+", -1)) / 1000.0 / 60.0 / 60.0)
         
         numWords = to_int(get_following_literal(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
