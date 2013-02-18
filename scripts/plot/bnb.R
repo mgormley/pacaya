@@ -125,7 +125,7 @@ for(dfsubset in groups) {
 
 
 ## Read data
-results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data.5"
+results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 

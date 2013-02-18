@@ -26,20 +26,34 @@ safe.as.numeric <- function(x) {
 
 ## Plotting functions.
 plotrootbound <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Proportion of RLT rows included"
   ylab = "Upper bound on log-likelihood at root"
   p <- qplot(rltInitProp, relaxBound, data=mydata,
-             geom="point", xlab=xlab, ylab=ylab) +
-                 opts(axis.text.x=theme_text(angle=70, hjust=1.0))
-  p <- p + geom_line()
+             geom="jitter", xlab=xlab, ylab=ylab,
+             color=factor(method), shape=factor(drUseIdentityMatrix)) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
+  p <- p + geom_line(aes(group=factor(method)))
 }
 
 plotrelaxtime <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Proportion of RLT rows included"
   ylab = "Time (mins)"
   p <- qplot(rltInitProp, relaxTime / 1000 / 60, data=mydata,
-             geom="point", xlab=xlab, ylab=ylab) +
-                 opts(axis.text.x=theme_text(angle=70, hjust=1.0))
+             geom="point", xlab=xlab, ylab=ylab, color=drMaxNonZeros) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
+  p <- p + geom_line()
+  #p <- p + scale_color_discrete(name="Max")
+}
+
+plotrelaxproj <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Proportion of RLT rows included"
+  ylab = "Log-likelihood of projected solution"
+  p <- qplot(rltInitProp, projLogLikelihood, data=mydata,
+             geom="point", xlab=xlab, ylab=ylab, color=drMaxNonZeros) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
   p <- p + geom_line()
 }
 
@@ -51,9 +65,24 @@ df <- df.orig
 
 df <- subset(df, simplexAlgorithm == "BARRIER")
 df$relaxBound <- safe.as.numeric(df$relaxBound)
+df$projLogLikelihood <- safe.as.numeric(df$projLogLikelihood)
+
+groupLevel <- getDataset(mydata)
+
+df$drMaxNonZeros[is.na(df$drMaxNonZeros)] <- as.numeric("inf")
+##ifelse(is.na(df$drMaxNonZeros), df$drMaxNonZeros, "NA")
+
+df$method <- str_c(df$drMaxNonZeros, df$drMaxCons, df$drSamplingDist, sep=".")
+
+## Plot data.
+myplot(plotrootbound(subset(df, relaxBound < 0.0 & relaxBound > -100)),
+       str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
 
 myplot(plotrootbound(df),
        str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
 
 myplot(plotrelaxtime(df),
        str_c(results.file, groupLevel, "relaxTime", "pdf", sep="."))
+
+myplot(plotrelaxproj(df),
+       str_c(results.file, groupLevel, "projLL", "pdf", sep="."))
