@@ -250,20 +250,19 @@ public class DmvParseLpBuilder {
     }
 
     private void addExtraTreeCons(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {
-        if (prm.inclExtraCons) {
-            // # This constraint is optional, but we include it for all formulations
-            // # The wall has one outgoing arc
-            // subto one_child_for_wall:
-            // forall <s> in Sents:
-            // 1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
-            pp.oneArcPerWall = new IloRange[corpus.size()];
-            for (int s = 0; s < corpus.size(); s++) {
-                double[] ones = new double[pp.arcRoot[s].length];
-                Arrays.fill(ones, 1.0);
-                IloLinearNumExpr expr = cplex.scalProd(ones, pp.arcRoot[s]);
-                pp.oneArcPerWall[s] = cplex.eq(expr, 1.0, "oneArcPerWall");
-            }
+        // # This constraint is optional, but we include it for all formulations
+        // # The wall has one outgoing arc
+        // subto one_child_for_wall:
+        // forall <s> in Sents:
+        // 1 == sum <j> in { 1 to Length[s] }: arc[s,0,j];
+        pp.oneArcPerWall = new IloRange[corpus.size()];
+        for (int s = 0; s < corpus.size(); s++) {
+            double[] ones = new double[pp.arcRoot[s].length];
+            Arrays.fill(ones, 1.0);
+            IloLinearNumExpr expr = cplex.scalProd(ones, pp.arcRoot[s]);
+            pp.oneArcPerWall[s] = cplex.eq(expr, 1.0, "oneArcPerWall");
         }
+        
         // # Other tree constraints
         // # Each node should have a parent (except the wall)
         // subto one_incoming_arc:
