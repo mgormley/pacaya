@@ -26,10 +26,10 @@ import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.model.Model;
@@ -300,6 +300,8 @@ public class PipelineRunner {
     }
 
     private static void configureLogging() {
+        //ConsoleAppender cAppender = new ConsoleAppender(new EnhancedPatternLayout("%d{HH:mm:ss,SSS} [%t] %p %c %x - %m%n"));
+        //BasicConfigurator.configure(cAppender); 
         BasicConfigurator.configure();
     }
     

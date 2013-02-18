@@ -163,7 +163,7 @@ public class Rlt {
 
         // Add the columns to the matrix.
         log.debug("Adding columns to RLT matrix.");
-        rltMat = cplex.LPMatrix();
+        rltMat = cplex.LPMatrix("rltMatrix");
         // Add the input matrix's variables.
         rltMat.addCols(numVars);
         // Add a variable that is always 1.0. This enables us to update the

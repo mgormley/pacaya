@@ -1,9 +1,6 @@
 package edu.jhu.hltcoe.util.cplex;
 
 import static org.junit.Assert.assertTrue;
-import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
-import edu.jhu.hltcoe.math.Vectors;
-import edu.jhu.hltcoe.util.Utilities;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -16,6 +13,10 @@ import java.util.Arrays;
 import no.uib.cipr.matrix.sparse.FastSparseVector;
 
 import org.junit.Assert;
+
+import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.Utilities;
 
 public class CplexUtils {
 
@@ -308,6 +309,10 @@ public class CplexUtils {
         }
 
         return dualObjVal;
+    }
+
+    public static String getMatrixStats(IloLPMatrix mat) throws IloException {
+        return String.format("%s contains %d rows, %d columns, %d nonzeros", mat.getName(), mat.getNrows(), mat.getNcols(), mat.getNNZs());
     }
 
 }

@@ -163,7 +163,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         mp = new LpProblem();
         
         // Add the LP matrix that will contain all the constraints.
-        mp.origMatrix = cplex.LPMatrix("couplingMatrix");
+        mp.origMatrix = cplex.LPMatrix("origMatrix");
         
         // Initialize the model parameter variables and constraints.
         sto.init(cplex, mp.origMatrix, idm, bounds);
@@ -238,6 +238,11 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 cplex.setLinearCoef(mp.objective, -1.0, mp.objVars[c][m]);
             }
         }
+        
+        // Print out stats about the matrices.
+        log.info(CplexUtils.getMatrixStats(mp.origMatrix));
+        log.info(CplexUtils.getMatrixStats(mp.drMatrix));
+        log.info(CplexUtils.getMatrixStats(mp.rlt.getRltMatrix()));
     }
 
     private List<IloNumVar> getObjVarCols() {
