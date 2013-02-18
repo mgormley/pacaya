@@ -172,10 +172,10 @@ public class DmvParseLpBuilder {
     }
 
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
-        mat.addRows(pp.oneArcPerWall);
+        CplexUtils.addRows(mat, pp.oneArcPerWall);
         CplexUtils.addRows(mat, pp.oneParent);
         CplexUtils.addRows(mat, pp.oneArcPerPair);
-        mat.addRows(pp.rootFlowIsSentLength);
+        CplexUtils.addRows(mat, pp.rootFlowIsSentLength);
         CplexUtils.addRows(mat, pp.flowDiff);
         CplexUtils.addRows(mat, pp.flowBoundRoot);
         CplexUtils.addRows(mat, pp.flowBoundChild);
@@ -193,7 +193,7 @@ public class DmvParseLpBuilder {
             CplexUtils.addRows(mat, pp.featCountCons);
         }
         if (pp.universalPostCons != null) {
-            mat.addRow(pp.universalPostCons);
+            CplexUtils.addRow(mat, pp.universalPostCons);
         }
     }
 

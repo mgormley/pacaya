@@ -143,10 +143,15 @@ public class CplexUtils {
             return;
         }
         for (int i = 0; i < ranges.length; i++) {
-            if (ranges[i] != null) {
-                mat.addRow(ranges[i]);
-            }
+            addRow(mat, ranges[i]);
         }
+    }
+
+    public static void addRow(IloLPMatrix mat, IloRange range) throws IloException {
+        if (range == null) {
+            return;
+        }
+        mat.addRow(range);
     }
 
     // -------- JUnit Assertions -----------
