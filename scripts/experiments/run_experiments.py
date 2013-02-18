@@ -625,7 +625,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
-                       epsilon=0.1)
+                       epsilon=0.1,
+                       drUseIdentityMatrix=False)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
                                                     maxNumSentences=5,
