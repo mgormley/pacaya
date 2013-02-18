@@ -241,7 +241,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
         
         // Print out stats about the matrices.
         log.info(CplexUtils.getMatrixStats(mp.origMatrix));
-        log.info(CplexUtils.getMatrixStats(mp.drMatrix));
+        if (mp.drMatrix != null) {
+            log.info(CplexUtils.getMatrixStats(mp.drMatrix));
+        }
         log.info(CplexUtils.getMatrixStats(mp.rlt.getRltMatrix()));
     }
 
