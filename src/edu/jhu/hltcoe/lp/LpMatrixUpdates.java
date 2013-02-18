@@ -46,7 +46,7 @@ public class LpMatrixUpdates {
             int rowind = rowIdxs.get(i);
             SparseLVector row = coefs.get(i);
             rowInd.add(getRowIndArray(row, rowind));
-            colInd.add(SafeCast.safeToInt(row.getIndex()));
+            colInd.add(SafeCast.safeLongToInt(row.getIndex()));
             val.add(row.getData());
         }
         mat.setNZs(rowInd.toNativeArray(), colInd.toNativeArray(), val.toNativeArray());

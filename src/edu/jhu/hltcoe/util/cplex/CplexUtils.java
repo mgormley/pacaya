@@ -43,7 +43,25 @@ public class CplexUtils {
         }
         return false;
     }
+    
+    public static double safeGetBound(double bound) {
+        if (bound == Double.NEGATIVE_INFINITY) {
+            return CPLEX_NEG_INF;
+        } else if (bound == Double.POSITIVE_INFINITY) {
+            return CPLEX_POS_INF;
+        } else {
+            return bound;
+        }
+    }
 
+    public static double[] safeGetBounds(double[] bounds) {
+        double[] safeBounds = new double[bounds.length];
+        for (int i=0; i<bounds.length; i++) {
+            safeBounds[i] = safeGetBound(bounds[i]);
+        }
+        return safeBounds;
+    }
+    
     /**
      * Helper method for getting a 3D array of CPLEX variables.
      * 

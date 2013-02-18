@@ -235,7 +235,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    initSolNumRestarts=10,
                    vemProjPropImproveTreebank=1.0,
                    vemProjPropImproveModel=1.0,
-                   drRenormalize=True)
+                   drRenormalize=True,
+                   drConversion="SEPARATE_EQ_AND_LEQ")
         all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 

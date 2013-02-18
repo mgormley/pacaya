@@ -41,8 +41,8 @@ public class VarRltRowAdder implements RltRowAdder {
         varIdPairs = new HashSet<UnorderedPair>();
         inputVarIds = new TIntHashSet();
         for (Pair<IloNumVar, IloNumVar> pair : pairs) {
-            int varId1 = SafeCast.safeToInt(rlt.getIdForInputVar(pair.get1()));
-            int varId2 = SafeCast.safeToInt(rlt.getIdForInputVar(pair.get2()));
+            int varId1 = SafeCast.safeLongToInt(rlt.getIdForInputVar(pair.get1()));
+            int varId2 = SafeCast.safeLongToInt(rlt.getIdForInputVar(pair.get2()));
             varIdPairs.add(new UnorderedPair(varId1, varId2));
             inputVarIds.add(varId1);
             inputVarIds.add(varId2);
@@ -111,7 +111,7 @@ public class VarRltRowAdder implements RltRowAdder {
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);
             for (LVectorEntry ve : factor.G) {
-                int veIdx = SafeCast.safeToInt(ve.index());
+                int veIdx = SafeCast.safeLongToInt(ve.index());
                 if (inputVarIds.contains(veIdx)) {
                     Utilities.addToList(varConsMap, veIdx, i);
                 }

@@ -539,7 +539,7 @@ public class Rlt {
         ip = ip.scale(-1.0);
         SparseLVector shiftedIp = new FastSparseLVector();
         for (int idx = 0; idx < ip.getUsed(); idx++) {
-            int k = SafeCast.safeToInt(ip.getIndex()[idx]);
+            int k = SafeCast.safeLongToInt(ip.getIndex()[idx]);
             double val = ip.getData()[idx];
             shiftedIp.set(rltVarsInd.get(k, k), val);
         }
@@ -548,10 +548,10 @@ public class Rlt {
         // Part 3: + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il}
         // G_{jk}) w_{kl}
         for (int ii = 0; ii < facI.G.getUsed(); ii++) {
-            int k = SafeCast.safeToInt(facI.G.getIndex()[ii]);
+            int k = SafeCast.safeLongToInt(facI.G.getIndex()[ii]);
             double vi = facI.G.getData()[ii];
             for (int jj = 0; jj < facJ.G.getUsed(); jj++) {
-                int l = SafeCast.safeToInt(facJ.G.getIndex()[jj]);
+                int l = SafeCast.safeLongToInt(facJ.G.getIndex()[jj]);
                 double vj = facJ.G.getData()[jj];
                 if (k == l) {
                     continue;
@@ -577,7 +577,7 @@ public class Rlt {
 
         // Add sum_{l=1}^n - G_{il} w_{kl}
         for (int idx = 0; idx < facI.   G.getUsed(); idx++) {
-            int l = SafeCast.safeToInt(facI.G.getIndex()[idx]);
+            int l = SafeCast.safeLongToInt(facI.G.getIndex()[idx]);
             double val = - facI.G.getData()[idx];
             row.add(rltVarsInd.get(k, l), val);
         }

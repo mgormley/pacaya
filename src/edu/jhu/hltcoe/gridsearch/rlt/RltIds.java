@@ -27,10 +27,10 @@ public class RltIds {
     }
     
     public int getI(long id) {
-        return SafeCast.safeToInt((id - startId) / startId);
+        return SafeCast.safeLongToInt((id - startId) / startId);
     }
     
     public int getJ(long id) {
-        return SafeCast.safeToInt((id - startId) % startId);
+        return SafeCast.safeLongToInt((id - startId) % startId);
     }
 }

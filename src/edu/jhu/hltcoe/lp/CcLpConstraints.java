@@ -10,22 +10,36 @@ import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 /**
- * Represents constraints Ax <= b, where A is in compressed-column form and
- * is amenable to pre multiplication.
+ * Represents constraints d <= Ax <= b, where A is a matrix in compressed-column form and
+ * is amenable to pre multiplication, and where d and b are vectors.
  */
-public class CcLeqConstraints {
-    private static final Logger log = Logger.getLogger(CcLeqConstraints.class);
+public class CcLpConstraints {
+    private static final Logger log = Logger.getLogger(CcLpConstraints.class);
 
+    public DenseDoubleMatrix2D d;
     public SparseCCDoubleMatrix2D A;
     public DenseDoubleMatrix2D b;
-    
-    private CcLeqConstraints(SparseCCDoubleMatrix2D A, DenseDoubleMatrix2D b) {
+
+    /**
+     * Constructs a set of constraints representing d <= A <= b.
+     */
+    private CcLpConstraints(DenseDoubleMatrix2D d, SparseCCDoubleMatrix2D A, DenseDoubleMatrix2D b) {
+        this.d = d;
         this.A = A;
         this.b = b;
     }
 
+    public int getNumRows() {
+        return A.rows();
+    }
+    
+    public int getNumCols() {
+        return A.columns();
+    }
+    
     /**
      * Factory method: Gets a compressed column representation of the factors.
      * @param factors Input EQ factors.
@@ -33,20 +47,39 @@ public class CcLeqConstraints {
      * @throws IllegalStateException If any of the factors are EQ factors. 
      * @return The new Gx <= g constraints.
      */
-    public static CcLeqConstraints getLeqFactorsAsLeqConstraints(FactorList factors, int nCols) {
+    public static CcLpConstraints getLeqFactorsAsLeqConstraints(FactorList factors, int nCols) {
         for (Factor f : factors) {
             if (f.isEq()) {
                 throw new IllegalStateException("All factors must be inequalities");
             }
         }
-        
+        return getFactorsAsCcLpConstraints(factors, nCols);
+    }
+    
+    /**
+     * Factory method: Gets a compressed column representation of the factors.
+     * @param factors Input EQ factors.
+     * @param nCols Number of columns in the input factors (deprecated).
+     * @throws IllegalStateException If any of the factors are EQ factors. 
+     * @return The new Gx <= g constraints.
+     */
+    public static CcLpConstraints getEqFactorsAsEqConstraints(FactorList factors, int nCols) {
+        for (Factor f : factors) {
+            if (!f.isEq()) {
+                throw new IllegalStateException("All factors must be equalities");
+            }
+        }        
+        return getFactorsAsCcLpConstraints(factors, nCols);
+    }
+
+    private static CcLpConstraints getFactorsAsCcLpConstraints(FactorList factors, int nCols) {
         // Count the number of non zeros in the factors.
         int numNonZerosInG = getNumNonZerosInG(factors);
 
         // Set the number of rows and columns.
         int nRows = factors.size();
         
-        // Copy factors into sparse matrix representation: for G.
+        // Copy factors into sparse matrix representation: for A.
         int[] rowIndexes = new int[numNonZerosInG];
         int[] colIndexes = new int[numNonZerosInG];
         double[] values = new double[numNonZerosInG];
@@ -55,25 +88,32 @@ public class CcLeqConstraints {
         for (int i=0; i<factors.size(); i++) {
             for (LVectorEntry ve : factors.get(i).G) {
                 rowIndexes[count] = i;
-                colIndexes[count] = SafeCast.safeToInt(ve.index());
+                colIndexes[count] = SafeCast.safeLongToInt(ve.index());
                 values[count] = ve.get();
                 count++;
             }
         }
 
-        // Construct sparse matrix: G.
+        // Construct sparse matrix: A.
         log.debug("Constructing G matrix");
         boolean sortRowIndices = true;
-        SparseCCDoubleMatrix2D G = new SparseCCDoubleMatrix2D(nRows, nCols, rowIndexes, colIndexes, values, false, false, sortRowIndices);
+        SparseCCDoubleMatrix2D A = new SparseCCDoubleMatrix2D(nRows, nCols, rowIndexes, colIndexes, values, false, false, sortRowIndices);
         
-        // Construct constraint bounds: g.
+        // Construct constraint bounds: b.
         log.debug("Constructing g vector");
-        DenseDoubleMatrix2D g = new DenseDoubleMatrix2D(nRows, 1);
+        DenseDoubleMatrix2D d = new DenseDoubleMatrix2D(nRows, 1);
+        DenseDoubleMatrix2D b = new DenseDoubleMatrix2D(nRows, 1);
         for (int i=0; i<factors.size(); i++) {
-            g.setQuick(i, 0, factors.get(i).g);
+            Factor factor = factors.get(i);
+            if (factor.isEq()) {
+                d.setQuick(i, 0, factor.g);
+            } else {
+                d.setQuick(i, 0, Double.NEGATIVE_INFINITY);
+            }
+            b.setQuick(i, 0, factor.g);
         }
         
-        return new CcLeqConstraints(G, g);
+        return new CcLpConstraints(d, A, b);
     }
     
     /**

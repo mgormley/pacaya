@@ -4,6 +4,7 @@
 package edu.jhu.hltcoe.lp;
 
 import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.hltcoe.util.cplex.CplexUtils;
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -67,10 +68,12 @@ public class LpRows {
         int[][] ind = new int[coefs.size()][];
         double[][] val = new double[coefs.size()][];
         for (int i = 0; i < coefs.size(); i++) {
-            ind[i] = SafeCast.safeToInt(coefs.get(i).getIndex());
+            ind[i] = SafeCast.safeLongToInt(coefs.get(i).getIndex());
             val[i] = coefs.get(i).getData();
         }
-        int startRow = mat.addRows(lbs.toNativeArray(), ubs.toNativeArray(), ind, val);
+        double[] safeLbs = CplexUtils.safeGetBounds(lbs.toNativeArray());
+        double[] safeUbs = CplexUtils.safeGetBounds(ubs.toNativeArray());
+        int startRow = mat.addRows(safeLbs, safeUbs, ind, val);
         if (setNames) {
             IloRange[] ranges = mat.getRanges();
             for (int i = 1; i <= names.size(); i++) {

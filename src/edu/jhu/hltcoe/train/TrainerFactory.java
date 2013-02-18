@@ -38,6 +38,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
@@ -204,6 +205,8 @@ public class TrainerFactory {
     public static boolean drIncludeBounds = false;
     @Opt(hasArg = true, description = "Whether to use the identity matrix for projection (sanity check).")
     public static boolean drUseIdentityMatrix = false;
+    @Opt(hasArg = true, description = "The type of constraint conversion.")
+    public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
     
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
@@ -263,6 +266,7 @@ public class TrainerFactory {
             drPrm.beta = drBeta;
             drPrm.includeBounds = drIncludeBounds;
             drPrm.useIdentityMatrix = drUseIdentityMatrix;
+            drPrm.conversion = drConversion;
             
             DmvRltRelaxPrm rrPrm = new DmvRltRelaxPrm();
             rrPrm.tempDir = dwTemp;
