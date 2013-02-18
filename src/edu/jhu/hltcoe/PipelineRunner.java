@@ -302,7 +302,7 @@ public class PipelineRunner {
     private static void configureLogging() {
         //ConsoleAppender cAppender = new ConsoleAppender(new EnhancedPatternLayout("%d{HH:mm:ss,SSS} [%t] %p %c %x - %m%n"));
         //BasicConfigurator.configure(cAppender); 
-        BasicConfigurator.configure();
+        //BasicConfigurator.configure();
     }
     
     public static void main(String[] args) throws IOException {
