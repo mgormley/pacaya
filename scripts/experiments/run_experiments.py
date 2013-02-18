@@ -633,14 +633,24 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                                     timeoutSeconds=1*60*60)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                for drMaxNonZeros in [100, 1000, 10000]:
-                    extra = DPExpParams(drMaxCons=100,
-                                        drMaxNonZeros=drMaxNonZeros,
-                                        drSamplingDist="ALL_ONES",
-                                        rltInitProp=rltInitProp, 
-                                        simplexAlgorithm="BARRIER")
-                    experiment = all + dataset + relax + extra
-                    exps.append(experiment)
+                for drMaxNonZeros in [100, 500, 1000]:
+                    for drMaxCons in [50, 100, 500]:
+                        extra = DPExpParams(drMaxCons=drMaxCons,
+                                            drMaxNonZeros=drMaxNonZeros,
+                                            drSamplingDist="UNIFORM",
+                                            rltInitProp=rltInitProp, 
+                                            simplexAlgorithm="BARRIER")
+                        experiment = all + dataset + relax + extra
+                        exps.append(experiment)
+                        extra = DPExpParams(drMaxCons=drMaxCons,
+                                            drMaxNonZeros=drMaxNonZeros,
+                                            drSamplingDist="BETA",
+                                            drAlpha=0.01,
+                                            drBeta=100,
+                                            rltInitProp=rltInitProp, 
+                                            simplexAlgorithm="BARRIER")
+                        experiment = all + dataset + relax + extra
+                        exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(drUseIdentityMatrix=True, rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
                 exps.append(experiment)
