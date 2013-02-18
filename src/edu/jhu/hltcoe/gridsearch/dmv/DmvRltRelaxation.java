@@ -414,7 +414,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             
             // Solve the master problem
             simplexTimer.start();
-            cplex.solve();
+            boolean hasFeasSol = cplex.solve();
             simplexTimer.stop();
 
             // Get CPLEX status.
@@ -423,7 +423,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
             log.debug("LP CPLEX status: " + cplex.getCplexStatus());
             log.debug("Proven dual feasibility? " +  cplex.isDualFeasible());
             log.debug("Proven primal feasibility? " +  cplex.isPrimalFeasible());
-
+            log.debug("Has feasible solution? " + hasFeasSol);
+            
             // Get the lower bound. 
             double lowerBound;
             if (status == RelaxStatus.Unknown) {
@@ -432,11 +433,6 @@ public class DmvRltRelaxation implements DmvRelaxation {
             } else if (status == RelaxStatus.Infeasible) {
                 lowerBound = INTERNAL_WORST_SCORE;
             } else { // if (status == RelaxStatus.Optimal || status == RelaxStatus.Feasible || status == RelaxStatus.Pruned) {                
-                if (prm.tempDir != null) {
-                    cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
-                }
-                warmStart = getWarmStart();
-
                 // Get the lower bound from CPLEX. Because we explicitly use the Dual simplex
                 // algorithm, the objective value is the lower bound, even if we
                 // terminate early.
@@ -452,11 +448,19 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 if( cplex.getCplexStatus() == CplexStatus.AbortObjLim && lowerBound < upperBound) {
                     log.warn(String.format("Lower bound %f should >= upper bound %f.", lowerBound, upperBound));
                 }
-
+                
                 // Update status if this node can be fathomed.
                 if (lowerBound >= upperBound) {
                     status = RelaxStatus.Pruned;
                 }
+
+                if (prm.tempDir != null) {
+                    // Write solution to a file.
+                    cplex.writeSolution(new File(prm.tempDir, "rlt.sol").getAbsolutePath());
+                }
+                
+                // Store the warm start information.
+                warmStart = getWarmStart();
             } 
             
             // Record the values for this iteration.
