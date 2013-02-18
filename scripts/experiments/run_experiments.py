@@ -236,7 +236,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    vemProjPropImproveTreebank=1.0,
                    vemProjPropImproveModel=1.0,
                    drRenormalize=True,
-                   drConversion="SEPARATE_EQ_AND_LEQ")
+                   drConversion="SEPARATE_EQ_AND_LEQ",
+                   drAlpha=0.1,
+                   drUseIdentityMatrix=False, 
+                   inclExtraParseCons=False)
         all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 
@@ -625,33 +628,33 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        maxCutRounds=0,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
-                       epsilon=0.1,
-                       drAlpha=0.1,
-                       drUseIdentityMatrix=False)
+                       epsilon=0.1)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
                                                     maxNumSentences=5,
                                                     timeoutSeconds=5*60)
-            dataset = dataset + DPExpParams(initBounds="gold",
-                                            offsetProb=0.25,
-                                            probOfSkipCm=0.75)
+            # This is broken due to probOfSkipCm.
+            #            dataset = dataset + DPExpParams(initBounds="gold",
+            #                                            offsetProb=0.25,
+            #                                            probOfSkipCm=0.75)
             exps = []
-            for rltInitProp in frange(0.0, 1.0, 0.1):
-                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
-                    for drMaxCons in [50, 100, 200, 400]:
-                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
-                            extra = DPExpParams(drMaxCons=drMaxCons,
-                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
-                                                drSamplingDist=drSamplingDist,
-                                                rltInitProp=rltInitProp, 
-                                                simplexAlgorithm="BARRIER")
-                            experiment = all + dataset + relax + extra
-                            exps.append(experiment)
-            for rltInitProp in frange(0.0, 1.0, 0.1):
-                experiment = all + dataset + relax + DPExpParams(drUseIdentityMatrix=True, rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
-                exps.append(experiment)
+#            for rltInitProp in frange(0.0, 1.0, 0.1):
+#                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
+#                    for drMaxCons in [50, 100, 200, 400]:
+#                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
+#                            extra = DPExpParams(drMaxCons=drMaxCons,
+#                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
+#                                                drSamplingDist=drSamplingDist,
+#                                                rltInitProp=rltInitProp, 
+#                                                simplexAlgorithm="BARRIER")
+#                            experiment = all + dataset + relax + extra
+#                            exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
+                exps.append(experiment)
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER", drUseIdentityMatrix=True)
+                exps.append(experiment)
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER", inclExtraParseCons=True)
                 exps.append(experiment)
             # Uncomment to test different simplex algorithms.
             #for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "SIFTING"]:

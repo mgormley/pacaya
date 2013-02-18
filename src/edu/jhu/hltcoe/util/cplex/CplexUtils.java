@@ -121,18 +121,27 @@ public class CplexUtils {
     }
 
     public static void addRows(IloLPMatrix mat, IloRange[][][] ranges) throws IloException {
+        if (ranges == null) {
+            return;
+        }
         for (int i = 0; i < ranges.length; i++) {
             addRows(mat, ranges[i]);
         }
     }
 
     public static void addRows(IloLPMatrix mat, IloRange[][] ranges) throws IloException {
+        if (ranges == null) {
+            return;
+        }
         for (int i = 0; i < ranges.length; i++) {
             addRows(mat, ranges[i]);
         }
     }
 
     public static void addRows(IloLPMatrix mat, IloRange[] ranges) throws IloException {
+        if (ranges == null) {
+            return;
+        }
         for (int i = 0; i < ranges.length; i++) {
             if (ranges[i] != null) {
                 mat.addRow(ranges[i]);

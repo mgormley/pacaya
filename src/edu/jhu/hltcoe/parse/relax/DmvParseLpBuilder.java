@@ -29,6 +29,7 @@ public class DmvParseLpBuilder {
 
     public static class DmvParseLpBuilderPrm {
         public IlpFormulation formulation = IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ;
+        public boolean inclExtraCons = true;
         
         // Parameters for universal linguistic posterior constraint.
         public boolean universalPostCons = false;
@@ -285,25 +286,27 @@ public class DmvParseLpBuilder {
             }
         }
         
-        // MY NEW CONSTRAINT: Each arc should be on in only one direction.
-        // This was added after observing that some relaxed trees break this rule.
-        //
-        // forall <s> in Sents:
-        // forall <j> in { 1 to Length[s] }:
-        // sum <i> in { 1 to Length[s] } with i != j: arc[s,i,j] + arc[s,j,i] <= 1;
-        pp.oneArcPerPair = new IloRange[corpus.size()][][];
-        for (int s = 0; s < corpus.size(); s++) {
-            Sentence sent = corpus.getSentence(s);
-            pp.oneArcPerPair[s] = new IloRange[sent.size()][sent.size()];
-            for (int c = 0; c < sent.size(); c++) {
-                for (int p = 0; p < sent.size(); p++) {
-                    if (p == c) {
-                        continue;
+        if (prm.inclExtraCons) {
+            // MY NEW CONSTRAINT: Each arc should be on in only one direction.
+            // This was added after observing that some relaxed trees break this rule.
+            //
+            // forall <s> in Sents:
+            // forall <j> in { 1 to Length[s] }:
+            // sum <i> in { 1 to Length[s] } with i != j: arc[s,i,j] + arc[s,j,i] <= 1;
+            pp.oneArcPerPair = new IloRange[corpus.size()][][];
+            for (int s = 0; s < corpus.size(); s++) {
+                Sentence sent = corpus.getSentence(s);
+                pp.oneArcPerPair[s] = new IloRange[sent.size()][sent.size()];
+                for (int c = 0; c < sent.size(); c++) {
+                    for (int p = 0; p < sent.size(); p++) {
+                        if (p == c) {
+                            continue;
+                        }
+                        IloLinearNumExpr expr = cplex.linearNumExpr();
+                        expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                        expr.addTerm(1.0, pp.arcChild[s][c][p]);
+                        pp.oneArcPerPair[s][p][c] = cplex.le(expr, 1.0, "oneArcPerPair");
                     }
-                    IloLinearNumExpr expr = cplex.linearNumExpr();
-                    expr.addTerm(1.0, pp.arcChild[s][p][c]);
-                    expr.addTerm(1.0, pp.arcChild[s][c][p]);
-                    pp.oneArcPerPair[s][p][c] = cplex.le(expr, 1.0, "oneArcPerPair");
                 }
             }
         }
@@ -385,31 +388,33 @@ public class DmvParseLpBuilder {
             }
         }
         
-        // MY NEW CONSTRAINT: 
-        // forall <s,i,j> in AllArcs:
-        // arc[s,i,j] <= flow[s,i,j];
-        pp.arcFlowBoundRoot = new IloRange[corpus.size()][];
-        for (int s = 0; s < corpus.size(); s++) {
-            Sentence sent = corpus.getSentence(s);
-            pp.arcFlowBoundRoot[s] = new IloRange[sent.size()];
-            for (int c = 0; c < sent.size(); c++) {
-                IloLinearNumExpr expr = cplex.linearNumExpr();
-                expr.addTerm(-1.0, pp.flowRoot[s][c]);
-                expr.addTerm(1.0, pp.arcRoot[s][c]);
-                pp.arcFlowBoundRoot[s][c] = cplex.le(expr, 0.0, "flowBoundRoot");
-            }
-        }
-        pp.arcFlowBoundChild = new IloRange[corpus.size()][][];
-        for (int s = 0; s < corpus.size(); s++) {
-            Sentence sent = corpus.getSentence(s);
-            pp.arcFlowBoundChild[s] = new IloRange[sent.size()][sent.size()];
-            for (int c = 0; c < sent.size(); c++) {
-                for (int p = 0; p < sent.size(); p++) {
-                    if (p == c) { continue; }
+        if (prm.inclExtraCons) {
+            // MY NEW CONSTRAINT: 
+            // forall <s,i,j> in AllArcs:
+            // arc[s,i,j] <= flow[s,i,j];
+            pp.arcFlowBoundRoot = new IloRange[corpus.size()][];
+            for (int s = 0; s < corpus.size(); s++) {
+                Sentence sent = corpus.getSentence(s);
+                pp.arcFlowBoundRoot[s] = new IloRange[sent.size()];
+                for (int c = 0; c < sent.size(); c++) {
                     IloLinearNumExpr expr = cplex.linearNumExpr();
-                    expr.addTerm(-1.0, pp.flowChild[s][p][c]);
-                    expr.addTerm(1.0, pp.arcChild[s][p][c]);
-                    pp.arcFlowBoundChild[s][p][c] = cplex.le(expr, 0.0, "flowBoundChild");
+                    expr.addTerm(-1.0, pp.flowRoot[s][c]);
+                    expr.addTerm(1.0, pp.arcRoot[s][c]);
+                    pp.arcFlowBoundRoot[s][c] = cplex.le(expr, 0.0, "flowBoundRoot");
+                }
+            }
+            pp.arcFlowBoundChild = new IloRange[corpus.size()][][];
+            for (int s = 0; s < corpus.size(); s++) {
+                Sentence sent = corpus.getSentence(s);
+                pp.arcFlowBoundChild[s] = new IloRange[sent.size()][sent.size()];
+                for (int c = 0; c < sent.size(); c++) {
+                    for (int p = 0; p < sent.size(); p++) {
+                        if (p == c) { continue; }
+                        IloLinearNumExpr expr = cplex.linearNumExpr();
+                        expr.addTerm(-1.0, pp.flowChild[s][p][c]);
+                        expr.addTerm(1.0, pp.arcChild[s][p][c]);
+                        pp.arcFlowBoundChild[s][p][c] = cplex.le(expr, 0.0, "flowBoundChild");
+                    }
                 }
             }
         }

@@ -179,6 +179,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         // Add the parsing constraints.
         DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
         mp.pp = builder.buildDmvTreeProgram(corpus);
+//        IloLPMatrix tempCorpusMatrix = cplex.LPMatrix("corpusMatrix");
+//        builder.addConsToMatrix(mp.pp, tempCorpusMatrix);
         builder.addConsToMatrix(mp.pp, mp.origMatrix);
         
         // Reduce the dimensionality of the original matrix.

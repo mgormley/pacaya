@@ -149,6 +149,8 @@ public class TrainerFactory {
     public static double bnbTimeoutSeconds = Double.POSITIVE_INFINITY;
     @Opt(name = "disableFathoming", hasArg = true, description = "Disables fathoming in branch-and-bound")
     public static boolean disableFathoming = false;
+    
+    // RLT parameters.
     @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
     public static boolean envelopeOnly = true;
     @Opt(name = "rltFilter", hasArg = true, description = "RLT filter type [obj-var, prop]")
@@ -165,10 +167,14 @@ public class TrainerFactory {
     public static boolean rltNames = false;
     @Opt(name = "addBindingCons", hasArg = true, description = "Whether to add binding constraints as factors to RLT.")
     public static boolean addBindingCons = false;
+    
     @Opt(name = "universalPostCons", hasArg = true, description = "Whether to add the universal linguistic constraints.")
     public static boolean universalPostCons = false;
     @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
     public static double universalMinProp = 0.8;
+    @Opt(hasArg = true, description = "Whether to include extra parse constraints to tighten the relaxation.")
+    public static boolean inclExtraParseCons = false;
+    
     @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
     public static int initSolNumRestarts = 9;
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
@@ -256,6 +262,7 @@ public class TrainerFactory {
             DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
             parsePrm.universalMinProp = universalMinProp;
             parsePrm.universalPostCons = universalPostCons;
+            parsePrm.inclExtraCons = inclExtraParseCons;
 
             DimReducerPrm drPrm = new DimReducerPrm();
             drPrm.drMaxCons = drMaxCons;
