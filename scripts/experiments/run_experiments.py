@@ -621,36 +621,30 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(nodeOrder="bfs",
                        relaxOnly=None,
-                       rootMaxCutRounds=10,
+                       rootMaxCutRounds=1, #TODO: maybe push this back up to 10?
                        maxCutRounds=1,
                        minSumForCuts=1.00001,
                        maxStoCuts=1000,
                        epsilon=0.1,
+                       drAlpha=0.01,
+                       drBeta=100,
                        drUseIdentityMatrix=False)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
                                                     maxNumSentences=5,
-                                                    timeoutSeconds=1*60*60)
+                                                    timeoutSeconds=5*60)
             exps = []
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                for drMaxNonZeros in [100, 500, 1000]:
-                    for drMaxCons in [50, 100, 500]:
-                        extra = DPExpParams(drMaxCons=drMaxCons,
-                                            drMaxNonZeros=drMaxNonZeros,
-                                            drSamplingDist="UNIFORM",
-                                            rltInitProp=rltInitProp, 
-                                            simplexAlgorithm="BARRIER")
-                        experiment = all + dataset + relax + extra
-                        exps.append(experiment)
-                        extra = DPExpParams(drMaxCons=drMaxCons,
-                                            drMaxNonZeros=drMaxNonZeros,
-                                            drSamplingDist="BETA",
-                                            drAlpha=0.01,
-                                            drBeta=100,
-                                            rltInitProp=rltInitProp, 
-                                            simplexAlgorithm="BARRIER")
-                        experiment = all + dataset + relax + extra
-                        exps.append(experiment)
+                for drMaxNonZeros in [101, 201, 401, 801]:
+                    for drMaxCons in [50, 100, 200, 400]:
+                        for drSamplingDist in ["UNIFORM", "BETA"]:
+                            extra = DPExpParams(drMaxCons=drMaxCons,
+                                                drMaxNonZeros=drMaxNonZeros,
+                                                drSamplingDist=drSamplingDist,
+                                                rltInitProp=rltInitProp, 
+                                                simplexAlgorithm="BARRIER")
+                            experiment = all + dataset + relax + extra
+                            exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(drUseIdentityMatrix=True, rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
                 exps.append(experiment)
