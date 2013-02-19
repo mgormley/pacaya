@@ -18,15 +18,18 @@ public class UnionRltRowAdder implements RltRowAdder {
     List<RltRowAdder> adders;
     
     public UnionRltRowAdder(RltRowAdder... adders) {
-        this.adders = new ArrayList<RltRowAdder>(Arrays.asList(adders));
+        this.adders = new ArrayList<RltRowAdder>();
+        for (RltRowAdder adder : adders) {
+            if (adder != null) {
+                this.adders.add(adder);
+            }
+        }        
     }
 
     @Override
     public void init(Rlt rlt, long numUnfilteredRows) throws IloException {
         for (RltRowAdder adder : adders) {
-            if (adder != null) {
-                adder.init(rlt, numUnfilteredRows);
-            }
+            adder.init(rlt, numUnfilteredRows);
         }
     }
     

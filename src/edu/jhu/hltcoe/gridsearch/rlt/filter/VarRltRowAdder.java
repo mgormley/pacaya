@@ -13,6 +13,7 @@ import java.util.Set;
 import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.lp.FactorList;
+import edu.jhu.hltcoe.lp.FactorBuilder.BoundFactor;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
@@ -31,9 +32,11 @@ public class VarRltRowAdder implements RltRowAdder {
     private TIntHashSet inputVarIds;
     private List<Pair<IloNumVar, IloNumVar>> pairs;
     private Rlt rlt;
-
-    public VarRltRowAdder(List<Pair<IloNumVar,IloNumVar>> pairs) {
+    private boolean boundsOnly;
+    
+    public VarRltRowAdder(List<Pair<IloNumVar,IloNumVar>> pairs, boolean boundsOnly) {
         this.pairs = pairs;
+        this.boundsOnly = boundsOnly;
     }
 
     @Override
@@ -102,7 +105,7 @@ public class VarRltRowAdder implements RltRowAdder {
     }
 
     /**
-     * Construct a map of variable ids to factor indices. For each factor i
+     * Construct a multi-map of variable ids to factor indices. For each factor i
      * containing a non-zero coefficient for variable k, add an entry for (k
      * --> i).
      */ 
@@ -110,6 +113,9 @@ public class VarRltRowAdder implements RltRowAdder {
         Map<Integer, List<Integer>> varConsMap = new HashMap<Integer, List<Integer>>();
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);
+            if (boundsOnly && !(factor instanceof BoundFactor)){
+                continue;
+            }
             for (LVectorEntry ve : factor.G) {
                 int veIdx = SafeCast.safeLongToInt(ve.index());
                 if (inputVarIds.contains(veIdx)) {

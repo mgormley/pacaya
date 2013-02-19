@@ -202,10 +202,11 @@ public class DmvRltRelaxation implements DmvRelaxation {
             }
             // Accept only RLT rows/factors that have a non-zero coefficient for some objective variable.
             rltPrm.factorFilter = new VarRltFactorFilter(getObjVarCols());
-            rltPrm.rowAdder = new VarRltRowAdder(getObjVarPairs());
+            rltPrm.rowAdder = new VarRltRowAdder(getObjVarPairs(), false);
         } else {
-            // Always add the convex/concave envelope.
-            rltPrm.rowAdder = new UnionRltRowAdder(new VarRltRowAdder(getObjVarPairs()), rltPrm.rowAdder);
+            // Always add the convex/concave envelope. 
+            VarRltRowAdder envelopeAdder = new VarRltRowAdder(getObjVarPairs(), true);
+            rltPrm.rowAdder = new UnionRltRowAdder(envelopeAdder, rltPrm.rowAdder);
         }
         
         if (mp.drMatrix == null) {
@@ -224,7 +225,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             cplex.add(mp.drMatrix);
             cplex.add(rltMat);
         }
-        
+                
         // Create the objective
         mp.objective = cplex.addMinimize();
 

@@ -431,7 +431,7 @@ public class RltTest {
     }
     
     @Test
-    public void testRltFilter() throws IloException {
+    public void testRltFilterWithBounds() throws IloException {
         IloCplex cplex = new IloCplex();
         // Turn off stdout but not stderr
         // cplex.setOut(null);
@@ -450,7 +450,7 @@ public class RltTest {
         IloRange[] cons = new IloRange[] { c1, c3};
         mat.addRows(cons);
         RltPrm prm = RltPrm.getFirstOrderRlt();
-        prm.rowAdder = new VarRltRowAdder(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)));
+        prm.rowAdder = new VarRltRowAdder(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)), false);
         Rlt rlt = new Rlt(cplex, mat, prm);
         IloLPMatrix rltMat = rlt.getRltMatrix();
         System.out.println(rltMat);
@@ -471,6 +471,46 @@ public class RltTest {
         }
     }
     
+    @Test
+    public void testRltFilterWithoutBounds() throws IloException {
+        IloCplex cplex = new IloCplex();
+        // Turn off stdout but not stderr
+        // cplex.setOut(null);
+        cplex.setParam(IntParam.RootAlg, IloCplex.Algorithm.Primal);
+
+        IloNumVar x1 = cplex.numVar(2, 3, "x1");
+        IloNumVar x2 = cplex.numVar(5, 7, "x2");
+        IloRange c1 = cplex.eq(cplex.sum(cplex.prod(-6, x1), cplex.prod(8, x2)), 48, "c1");
+        IloRange c2 = cplex.eq(cplex.sum(cplex.prod(3, x1), cplex.prod(8, x2)), 120, "c2");
+        IloRange c3 = cplex.le(cplex.sum(cplex.prod(-9, x1), cplex.prod(-2, x2)), 48, "c3");
+        IloRange c4 = cplex.le(cplex.sum(cplex.prod(4, x1), cplex.prod(3, x2)), 120, "c4");
+
+        IloNumVar[] vars = new IloNumVar[] { x1, x2 };
+        IloLPMatrix mat = cplex.LPMatrix("lpmat");
+        mat.addCols(vars);
+        IloRange[] cons = new IloRange[] { c1, c3};
+        mat.addRows(cons);
+        RltPrm prm = RltPrm.getFirstOrderRlt();
+        prm.rowAdder = new VarRltRowAdder(Arrays.asList(new Pair<IloNumVar,IloNumVar>(x2, x1)), true);
+        Rlt rlt = new Rlt(cplex, mat, prm);
+        IloLPMatrix rltMat = rlt.getRltMatrix();
+        System.out.println(rltMat);
+        assertEquals(4, rltMat.getNrows());
+
+        // Then add two more.
+        TIntArrayList newCons = new TIntArrayList();
+        newCons.add(mat.addRow(c2));
+        newCons.add(mat.addRow(c4));
+        rlt.addRowsAsFactors(newCons);
+        System.out.println(rltMat);
+        assertEquals(4, rltMat.getNrows());
+        
+        double[][] vals = new double[1][];
+        rltMat.getCols(rlt.getRltVarIdx(x1, x2), 1, new int[1][], vals);
+        for (int i=0; i<vals[0].length; i++) {
+            Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
+        }
+    }
 
     @Test
     public void testMaxNumRltFilter() throws IloException {
