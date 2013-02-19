@@ -400,6 +400,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         // Add the initial feasible parse as the first lambda columns
         addFeasibleSolution(initFeasSol);
         
+        // TODO: For some strange reason...moving this method earlier breaks lots of unit tests.
         sto.addModelParamConstraints();
     }
 
