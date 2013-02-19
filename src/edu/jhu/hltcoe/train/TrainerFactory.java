@@ -128,7 +128,7 @@ public class TrainerFactory {
     @Opt(name = "maxDwIterations", hasArg = true, description = "(D-W only) The maximum number of dantzig-wolfe algorithm iterations")
     public static int maxDwIterations = 1000;
     @Opt(name = "maxSetSizeToConstrain", hasArg = true, description = "(STO only) The maximum size of sets to contrain to be <= 1.0")
-    public static int maxSetSizeToConstrain = 2;
+    public static int maxSetSizeToConstrain = 0;
     @Opt(name = "maxCutRounds", hasArg = true, description = "(D-W only) The maximum number of rounds to add cuts")
     public static int maxCutRounds = 100;
     @Opt(name = "rootMaxCutRounds", hasArg = true, description = "(D-W only) The maximum number of rounds to add cuts for the root node")

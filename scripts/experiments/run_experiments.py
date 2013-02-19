@@ -224,7 +224,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    varSplit="half-prob",
                    maxSimplexIterations=1000000000,
                    maxDwIterations=1000000000, 
-                   maxSetSizeToConstrain=3, 
+                   maxSetSizeToConstrain=0, 
                    maxCutRounds=1,
                    minSumForCuts=1.01, 
                    initWeights="uniform",

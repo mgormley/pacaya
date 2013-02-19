@@ -22,7 +22,7 @@ import edu.jhu.hltcoe.util.Sets;
 public class LpSumToOneBuilder {
     
     public static class LpStoBuilderPrm {
-        public int maxSetSizeToConstrain = 2;
+        public int maxSetSizeToConstrain = 0;
         public double minSumForCuts = DEFAULT_MIN_SUM_FOR_CUTS;
         public int maxStoCuts = 10000;
         public CutCountComputer initCutCountComp = new CutCountComputer();
@@ -99,10 +99,13 @@ public class LpSumToOneBuilder {
             }
         }
         
-        for (int setSize=2; setSize <= prm.maxSetSizeToConstrain; setSize++) {
-            for (int c = 0; c < numConds; c++) {
-                addSetContraints(setSize, c);
-            }
+        if (prm.maxSetSizeToConstrain > 1) {
+            log.warn("Ignoring parameter maxSetSizeToConstrain. This feature is deprecated.");
+            //        for (int setSize=2; setSize <= prm.maxSetSizeToConstrain; setSize++) {
+            //            for (int c = 0; c < numConds; c++) {
+            //                addSetContraints(setSize, c);
+            //            }
+            //        }
         }
     }
     
@@ -146,6 +149,9 @@ public class LpSumToOneBuilder {
         return lpMatrix.addRow(constraint);
     }
     
+    // TODO: This seems like it should be something like \sum_{m=1}^M \theta_m \leq -M log M.
+    // But the current setup of \sum_{m=1}^M \theta_m <= 1 doesn't make any sense, since theta_m is always negative.
+    @Deprecated
     private void addSetContraints(int setSize, int c) throws IloException {
 
         double[] ones = new double[setSize];
