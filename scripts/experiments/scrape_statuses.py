@@ -44,7 +44,7 @@ class BnbStatus(DPExpParams):
         
 def get_bnb_status_list(stdout_lines):
     '''Gets a list of BnbStatus objects from summary lines in stdout'''
-    status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver  - Summary: ", True)
+    status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver - Summary: ", True)
     if status_list == None:
         return None
     # Downsample the summaries if there are too many
@@ -125,7 +125,7 @@ class DpSingleScraper(Scraper):
             stdout_lines = self.read_grepped_lines(stdout_file, "Incumbent")
             status_list = get_incumbent_status_list(stdout_lines)
         elif self.type == "bnb":
-            stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver  - Summary")
+            stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver - Summary")
             status_list = get_bnb_status_list(stdout_lines)
         elif self.type == "curnode":
             stdout_lines = self.read_stdout_lines(stdout_file)
