@@ -43,7 +43,7 @@ class BnbStatus(DPExpParams):
         
         
 def get_bnb_status_list(stdout_lines):
-    '''Gets a list of BnbStatus objects from summary lines in stdout''' 
+    '''Gets a list of BnbStatus objects from summary lines in stdout'''
     status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver  - Summary: ", True)
     if status_list == None:
         return None
@@ -118,15 +118,19 @@ class DpSingleScraper(Scraper):
         return hs.split()
     
     def scrape_exp_statuses(self, exp, exp_dir, stdout_file):
-        stdout_lines = self.read_stdout_lines(stdout_file, 100000)
         
         # Get the status list of the appropriate type.
         status_list = None
         if self.type == "incumbent":
+            stdout_lines = self.read_stdout_lines(stdout_file)
             status_list = get_incumbent_status_list(stdout_lines)
         elif self.type == "bnb":
+            grepped_file = stdout_file + ".bnb_status_grep"
+            os.system('grep "LazyBranchAndBoundSolver  - Summary" %s > %s' % (stdout_file, grepped_file))
+            stdout_lines = self.read_stdout_lines(grepped_file)
             status_list = get_bnb_status_list(stdout_lines)
         elif self.type == "curnode":
+            stdout_lines = self.read_stdout_lines(stdout_file)
             status_list = get_curnode_status_list(stdout_lines)
         else:
             raise Exception()
