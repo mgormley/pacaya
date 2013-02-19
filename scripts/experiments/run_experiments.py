@@ -225,10 +225,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxSimplexIterations=1000000000,
                    maxDwIterations=1000000000, 
                    maxSetSizeToConstrain=0, 
-                   maxCutRounds=1,
-                   minSumForCuts=1.01, 
                    initWeights="uniform",
-                   nodeOrder="bfs",
+                   nodeOrder="plunging-bfs",
                    seed=random.getrandbits(63),
                    propSupervised=0.0,
                    threads=1,
@@ -239,7 +237,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    drConversion="SEPARATE_EQ_AND_LEQ",
                    drAlpha=0.1,
                    drUseIdentityMatrix=False, 
-                   inclExtraParseCons=False)
+                   inclExtraParseCons=False,
+                   simplexAlgorithm="BARRIER",
+                   rootMaxCutRounds=1,
+                   maxCutRounds=1,
+                   minSumForCuts=1.00001,
+                   maxStoCuts=1000)
         all.set("lambda", 1.0)
         all.update(printModel="./model.txt")
                 
@@ -324,20 +327,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "viterbi-vs-bnb":
             root = RootStage()
-            all.update(nodeOrder="bfs",
-                       algorithm="bnb",
-                       rootMaxCutRounds=1,
-                       maxCutRounds=1,
-                       minSumForCuts=1.00001,
-                       maxStoCuts=1e4,
-                       epsilon=0.1)
+            all.update(algorithm="bnb")
             rltAllRelax.update(rltFilter="max")
-            maxes = [5000, 10000, 50000, 100000, 500000]
+            maxes = [5000, 10000, 50000, 100000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(10, 500, 6*60*60)]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 8*60*60), (10, 500, 8*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
@@ -368,14 +365,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "bnb":
             root = RootStage()
-            all.update(nodeOrder="bfs",
-                       algorithm="bnb",
-                       rootMaxCutRounds=1,
-                       maxCutRounds=1,
-                       minSumForCuts=1.00001,
-                       maxStoCuts=1000,
-                       epsilon=0.1,
-                       simplexAlgorithm="BARRIER")
+            all.update(algorithm="bnb")
             rltAllRelax.update(rltFilter="max")
             maxes = [1000, 5000, 10000, 50000, 100000, 500000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
