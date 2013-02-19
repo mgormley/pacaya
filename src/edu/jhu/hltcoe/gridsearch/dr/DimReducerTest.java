@@ -133,6 +133,7 @@ public class DimReducerTest {
         CplexUtils.assertContainsRow(drMatrix, new double[]{-2, -1}, CplexUtils.CPLEX_NEG_INF, 58, 1);
     }
 
+    // TODO: update for DIRICHLET.
     @Test
     public void testFullDimReducer() throws IloException {
         IloCplex cplex = new IloCplex();

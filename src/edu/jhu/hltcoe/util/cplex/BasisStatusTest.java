@@ -25,6 +25,7 @@ public class BasisStatusTest {
         int i=0;
         try {
         while (true) {
+            // TODO: set the value of each entry.
             list.add(new BasisStatus[numVars]);
             i++;
         }

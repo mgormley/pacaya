@@ -112,6 +112,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
     private DmvProblemNode activeNode;
     
     private DmvRltRelaxPrm prm;
+
+    private boolean drOn;
     
     public DmvRltRelaxation(DmvRltRelaxPrm prm) {
         this.prm = prm;
@@ -159,37 +161,41 @@ public class DmvRltRelaxation implements DmvRelaxation {
 
     private void buildModel(IloCplex cplex, DmvSolution initFeasSol) throws IloException {
         this.bounds = new CptBounds(this.idm);
-
         mp = new LpProblem();
-        
-        // Add the LP matrix that will contain all the constraints.
+        int numConds = idm.getNumConds();
+        // Create the LP matrix that will contain all the constraints.
         mp.origMatrix = cplex.LPMatrix("origMatrix");
-        
+
         // Initialize the model parameter variables and constraints.
         sto.init(cplex, mp.origMatrix, idm, bounds);
-        
-        int numConds = idm.getNumConds();
-        
         // Create the model parameters variables.
         sto.createModelParamVars();
-
         // Add sum-to-one constraints on the model parameters.
         sto.addModelParamConstraints();
         
         // Add the parsing constraints.
         DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
         mp.pp = builder.buildDmvTreeProgram(corpus);
-//        IloLPMatrix tempCorpusMatrix = cplex.LPMatrix("corpusMatrix");
-//        builder.addConsToMatrix(mp.pp, tempCorpusMatrix);
-        builder.addConsToMatrix(mp.pp, mp.origMatrix);
+        builder.addConsToMatrix(mp.pp, mp.origMatrix);    
         
-        // Reduce the dimensionality of the original matrix.
+        // Add the parsing constraints to the input matrix for dim-reduction.
+        IloLPMatrix drInputMatrix = cplex.LPMatrix("drInputMatrix");
+        builder.addConsToMatrix(mp.pp, drInputMatrix);
+        
+        // Reduce the dimensionality of the matrix.
         DimReducer dr = new DimReducer(prm.drPrm);
         // Add an LP matrix that will contain the lower-dimensional constraints.
         mp.drMatrix = cplex.LPMatrix("drMatrix");
-        dr.reduceDimensionality(mp.origMatrix, mp.drMatrix);
-        if (mp.drMatrix.getNrows() == 0) {
+        dr.reduceDimensionality(drInputMatrix, mp.drMatrix);
+        drOn = mp.drMatrix.getNrows() > 0;
+        if (drOn) {
+            // Dimensionality reduced.
+            mp.origMatrix.addRows(mp.drMatrix.getRanges());
+        } else {
+            // Dimensionality NOT reduced.
             mp.drMatrix = null;
+            // Add the full corpus parse constraints to the original matrix.
+            mp.origMatrix.addRows(drInputMatrix.getRanges());
         }
         
         // Configuration for RLT.
@@ -208,22 +214,17 @@ public class DmvRltRelaxation implements DmvRelaxation {
             VarRltRowAdder envelopeAdder = new VarRltRowAdder(getObjVarPairs(), true);
             rltPrm.rowAdder = new UnionRltRowAdder(envelopeAdder, rltPrm.rowAdder);
         }
+
+        log.info("Applying RLT to the original matrix");
+        // Add the RLT constraints using the original matrix as input.
+        mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
+        IloLPMatrix rltMat = mp.rlt.getRltMatrix();
+        cplex.add(mp.origMatrix);
+        cplex.add(rltMat);
         
-        if (mp.drMatrix == null) {
-            log.info("Applying RLT to the original matrix");
-            // Add the RLT constraints using the original matrix as input.
-            mp.rlt = new Rlt(cplex, mp.origMatrix, rltPrm);
-            IloLPMatrix rltMat = mp.rlt.getRltMatrix();
-            cplex.add(mp.origMatrix);
-            cplex.add(rltMat);
-        } else {
-            log.info("Applying RLT to the lower-dimensional matrix");
-            // Add the RLT constraints using the lower-dimensional matrix as input.
-            mp.rlt = new Rlt(cplex, mp.drMatrix, rltPrm);
-            IloLPMatrix rltMat = mp.rlt.getRltMatrix();
-            cplex.add(mp.origMatrix);
-            cplex.add(mp.drMatrix);
-            cplex.add(rltMat);
+        if (drOn) {
+            // Add the full corpus parse constraints to the original matrix.
+            mp.origMatrix.addRows(drInputMatrix.getRanges());
         }
                 
         // Create the objective
