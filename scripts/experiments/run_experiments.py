@@ -212,12 +212,12 @@ class DepParseExpParamsRunner(ExpParamsRunner):
     def get_experiments(self):
         all = DPExpParams()
         all.set("expname", self.expname, False, False)
-        all.update(threads=self.threads)
         all.update(formulation="FLOW_NONPROJ",
                    parser="cky",
                    model="dmv",
                    algorithm="bnb",
                    ilpSolver="cplex",
+                   iterations=1000, 
                    convergenceRatio=0.99999,
                    epsilon=0.1,
                    varSelection="regret",
@@ -230,21 +230,23 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    seed=random.getrandbits(63),
                    propSupervised=0.0,
                    threads=1,
+                   numRestarts=10,
                    initSolNumRestarts=10,
-                   vemProjPropImproveTreebank=1.0,
-                   vemProjPropImproveModel=1.0,
+                   vemProjPropImproveTreebank=0.1,
+                   vemProjPropImproveModel=0.1,
                    drRenormalize=True,
                    drConversion="SEPARATE_EQ_AND_LEQ",
                    drAlpha=0.1,
                    drUseIdentityMatrix=False, 
                    inclExtraParseCons=False,
-                   simplexAlgorithm="BARRIER",
+                   simplexAlgorithm="DUAL", # BARRIER is inexplicably slow (135s) on 500 sentences vs. DUAL (3s).
                    rootMaxCutRounds=1,
                    maxCutRounds=1,
                    minSumForCuts=1.00001,
-                   maxStoCuts=1000)
+                   maxStoCuts=1000,
+                   printModel="./model.txt",
+                   bnbTimeoutSeconds=100)
         all.set("lambda", 1.0)
-        all.update(printModel="./model.txt")
                 
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
@@ -265,18 +267,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                   rltCutProp=1.0)
         universalPostCons = DPExpParams(universalPostCons=True,
                                         universalMinProp=0.8)
-        
-        # For --fast option
-        if self.fast:       all.update(iterations=1,
-                                       maxSentenceLength=7,
-                                       maxNumSentences=3,
-                                       numRestarts=1,
-                                       timeoutSeconds=10,   
-                                       bnbTimeoutSeconds=3)
-        else:               all.update(iterations=25,
-                                       numRestarts=10,
-                                       bnbTimeoutSeconds=100)
-        
+                
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
         wsj_00 = self.get_data(data_dir, "treebank_3/wsj/00")
@@ -400,15 +391,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-semi":
             root = RootStage()
             all.update(algorithm="bnb",
-                       initBounds="viterbi-em",                    
-                       varSelection="regret")
+                       initBounds="viterbi-em")
             dataset = brown
             for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 1*60*60)]:
                 msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                 mns = DPExpParams(maxNumSentences=maxNumSentences)
                 if not self.fast:
                     # Run for some fixed amount of time.                
-                    all.update(numRestarts=1000000000, epsilon=0.0)
+                    all.update(numRestarts=1000000000)
                     all.update(timeoutSeconds=timeoutSeconds)
                 for varSplit in ["half-prob", "half-logprob"]:
                     for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
@@ -438,7 +428,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 mns = DPExpParams(maxNumSentences=maxNumSentences)
                 if not self.fast:
                     # Run for some fixed amount of time.                
-                    all.update(numRestarts=1000000000, epsilon=0.0)
+                    all.update(numRestarts=1000000000)
                     all.update(timeoutSeconds=timeoutSeconds)
                 for varSplit in ["half-prob", "half-logprob"]:
                     for varSelection in ["regret", "pseudocost", "full"]:
@@ -451,12 +441,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(algorithm="bnb-rand-walk",
                        disableFathoming=False,
-                       nodeOrder="dfs-randwalk",
-                       rootMaxCutRounds=1,
-                       maxCutRounds=1,
-                       minSumForCuts=1.00001,
-                       maxStoCuts=1000,
-                       simplexAlgorithm="BARRIER")
+                       nodeOrder="dfs-randwalk")
             if not self.fast:
                 # Run for some fixed amount of time.
                 all.update(numRestarts=1000000000,
