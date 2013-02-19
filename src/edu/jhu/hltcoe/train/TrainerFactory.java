@@ -153,7 +153,7 @@ public class TrainerFactory {
     // RLT parameters.
     @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
     public static boolean envelopeOnly = true;
-    @Opt(name = "rltFilter", hasArg = true, description = "RLT filter type [obj-var, prop]")
+    @Opt(name = "rltFilter", hasArg = true, description = "RLT filter type [obj-var, prop, max]")
     public static String rltFilter = "obj-var";
     @Opt(name = "rltInitProp", hasArg = true, description = "(prop only) Proportion of initial rows to accept.")
     public static double rltInitProp = 0.1;
@@ -180,9 +180,9 @@ public class TrainerFactory {
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
     public static int vemProjNumRestarts = 0;
     @Opt(name = "vemProjPropImproveTreebank", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the treebank projection with viterbi EM.")
-    public static int vemProjPropImproveTreebank = 0;
+    public static double vemProjPropImproveTreebank = 0;
     @Opt(name = "vemProjPropImproveModel", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the model projection with viterbi EM.")
-    public static int vemProjPropImproveModel = 0;
+    public static double vemProjPropImproveModel = 0;
     @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
     public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
