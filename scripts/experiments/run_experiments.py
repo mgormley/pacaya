@@ -441,7 +441,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(algorithm="bnb-rand-walk",
                        disableFathoming=False,
-                       nodeOrder="dfs-randwalk")
+                       nodeOrder="dfs-randwalk",
+                       maxRandWalkSamples=10000)
             if not self.fast:
                 # Run for some fixed amount of time.
                 all.update(numRestarts=1000000000,
@@ -597,13 +598,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "relax-root-rlt":
             root = RootStage()
-            all.update(nodeOrder="bfs",
-                       relaxOnly=None,
+            all.update(relaxOnly=None,
                        rootMaxCutRounds=0, #TODO: maybe push this back up to 1 after we support cutting in the projection?
-                       maxCutRounds=0,
-                       minSumForCuts=1.00001,
-                       maxStoCuts=1000,
-                       epsilon=0.1)
+                       maxCutRounds=0)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
                                                     maxNumSentences=5,
@@ -613,26 +610,30 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             #                                            offsetProb=0.25,
             #                                            probOfSkipCm=0.75)
             exps = []
-#            for rltInitProp in frange(0.0, 1.0, 0.1):
-#                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
-#                    for drMaxCons in [50, 100, 200, 400]:
-#                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
-#                            extra = DPExpParams(drMaxCons=drMaxCons,
-#                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
-#                                                drSamplingDist=drSamplingDist,
-#                                                rltInitProp=rltInitProp, 
-#                                                simplexAlgorithm="BARRIER")
-#                            experiment = all + dataset + relax + extra
-#                            exps.append(experiment)
+            # Uncomment to compare with dimensionality-reduced relaxations.
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER")
+                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
+                    for drMaxCons in [50, 100, 200, 400]:
+                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
+                            extra = DPExpParams(drMaxCons=drMaxCons,
+                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
+                                                drSamplingDist=drSamplingDist,
+                                                rltInitProp=rltInitProp, 
+                                                simplexAlgorithm="BARRIER")
+                            experiment = all + dataset + relax + extra
+                            exps.append(experiment)
+            for rltInitProp in frange(0.0, 1.0, 0.1):
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
                 exps.append(experiment)
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER", drUseIdentityMatrix=True)
+                # Uncomment to compare with identity matrix.
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, drUseIdentityMatrix=True)
                 exps.append(experiment)
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, simplexAlgorithm="BARRIER", inclExtraParseCons=True)
-                exps.append(experiment)
+                # Uncomment to compare with my extra parse constraints.
+                #experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, inclExtraParseCons=True)
+                #exps.append(experiment)
             # Uncomment to test different simplex algorithms.
-            #for simplexAlgorithm in ["PRIMAL", "DUAL", "NETWORK", "SIFTING"]:
+            #for simplexAlgorithm in ["PRIMAL", "DUAL", "BARRIER", "NETWORK", "SIFTING"]:
+            #    if simplexAlgorithm == all.get("simplexAlgorithm"): continue
             #    experiment = all + dataset + relax + DPExpParams(rltInitProp=1.0, maxCutRounds=1, simplexAlgorithm=simplexAlgorithm)
             #    exps.append(experiment)
             if self.fast:
