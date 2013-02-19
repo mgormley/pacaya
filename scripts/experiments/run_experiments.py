@@ -79,7 +79,7 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
         return ScrapeStatuses()
     
     def get_name(self):
-        return "scrape_statuses"
+        return "scrape_statuses_" + str(self.get("type"))
     
     def create_experiment_script(self, exp_dir):
         # Add directories to scrape.
@@ -325,7 +325,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
             for dataset in [brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 8*60*60), (10, 500, 8*60*60)]:
+                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 8*60*60), (10, 200, 8*60*60)]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     mns = DPExpParams(maxNumSentences=maxNumSentences)
                     if not self.fast:
@@ -348,6 +348,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)
             #Scrape status information from a subset of the experiments.
             scrape_stat = ScrapeStatuses(root.dependents, tsv_file="bnb-status.data", type="bnb")
+            scrape_stat.add_prereqs(root.dependents)
+            scrape_stat = ScrapeStatuses(root.dependents, tsv_file="incumbent-status.data", type="incumbent")
             scrape_stat.add_prereqs(root.dependents)
             if not self.fast:
                 # Commit results to svn
@@ -618,8 +620,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             extra = DPExpParams(drMaxCons=drMaxCons,
                                                 drMaxNonZerosPerRow=drMaxNonZerosPerRow,
                                                 drSamplingDist=drSamplingDist,
-                                                rltInitProp=rltInitProp, 
-                                                simplexAlgorithm="BARRIER")
+                                                rltInitProp=rltInitProp)
                             experiment = all + dataset + relax + extra
                             exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):

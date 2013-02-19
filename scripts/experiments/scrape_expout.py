@@ -12,7 +12,7 @@ from optparse import OptionParser
 from experiments.run_experiments import DPExpParams
 from glob import glob
 from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
-    to_str, to_int, get_group1, head
+    to_str, to_int, get_group1, head, get_match
 from experiments.core.scrape import Scraper
 from experiments.core.util import tail
 from experiments import scrape_statuses
@@ -74,6 +74,18 @@ class DPScraper(Scraper):
             exp.update(timeRemaining = get_following_literal(stdout_lines, "Time remaining: ", -1))
         
         if exp.get("algorithm").find("bnb") != -1:
+            origMat = get_match(stdout_lines, "origMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
+            exp.update(origNRows = origMat.group(1))
+            exp.update(origNCols = origMat.group(2))
+            exp.update(origNNZs = origMat.group(3))
+            drMat = get_match(stdout_lines, "drMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
+            exp.update(drNRows = drMat.group(1))
+            exp.update(drNCols = drMat.group(2))
+            exp.update(drNNZs = drMat.group(3))
+            rltMat = get_match(stdout_lines, "rltMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
+            exp.update(rltNRows = rltMat.group(1))
+            exp.update(rltNCols = rltMat.group(2))
+            exp.update(rltNNZs = rltMat.group(3))
             exp.update(relativeDiff = get_group1(stdout_lines, "relativeDiff=(\S+)", -1))
             exp.update(lowBound = get_group1(stdout_lines, "lowBound=(\S+)", -1))
             exp.update(upBound = get_group1(stdout_lines, "upBound=(\S+)", -1))

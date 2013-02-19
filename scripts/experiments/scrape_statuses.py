@@ -122,12 +122,10 @@ class DpSingleScraper(Scraper):
         # Get the status list of the appropriate type.
         status_list = None
         if self.type == "incumbent":
-            stdout_lines = self.read_stdout_lines(stdout_file)
+            stdout_lines = self.read_grepped_lines(stdout_file, "Incumbent")
             status_list = get_incumbent_status_list(stdout_lines)
         elif self.type == "bnb":
-            grepped_file = stdout_file + ".bnb_status_grep"
-            os.system('grep "LazyBranchAndBoundSolver  - Summary" %s > %s' % (stdout_file, grepped_file))
-            stdout_lines = self.read_stdout_lines(grepped_file)
+            stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver  - Summary")
             status_list = get_bnb_status_list(stdout_lines)
         elif self.type == "curnode":
             stdout_lines = self.read_stdout_lines(stdout_file)
@@ -137,6 +135,13 @@ class DpSingleScraper(Scraper):
 
         # Combine the status objects with the experiment definition. 
         return [exp + status for status in status_list]
+    
+    def read_grepped_lines(self, stdout_file, pattern):
+        # TODO: maybe move this into Scraper.
+        grepped_file = stdout_file + ".bnb_status_grep"
+        os.system('grep "%s" %s > %s' % (pattern, stdout_file, grepped_file))
+        stdout_lines = self.read_stdout_lines(grepped_file)
+        return stdout_lines
 
 def parse_options(argv):
     usage = "%prog [top_dir...]"
