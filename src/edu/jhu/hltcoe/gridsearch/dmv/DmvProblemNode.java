@@ -184,11 +184,15 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public WarmStart getWarmStart() {
-        // Find the closest non-null warm start.
+        // Find the closest non-null warm start from the ancestors.
         DmvProblemNode cur = this;
+        return getWarmStart(cur);
+    }
+
+    private static WarmStart getWarmStart(DmvProblemNode cur) {
         while (cur != null) {
             if (cur.warmStart != null) {
-                WarmStart ws = warmStart.get();
+                WarmStart ws = cur.warmStart.get();
                 if (ws != null) {
                     return ws;
                 }
