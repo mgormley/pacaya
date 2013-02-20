@@ -325,7 +325,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 setup.update(initWeights=initWeights)
                 for randomRestartId in range(100):
                     setup.set("randomRestartId", randomRestartId, True, False)
-                    experiment = all + setup + DPExpParams()
+                    # Set the seed explicitly.
+                    experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
                     root.add_dependent(experiment)
                     root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
             scrape = ScrapeExpout(tsv_file="results.data")
