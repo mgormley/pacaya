@@ -245,7 +245,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxStoCuts=1000,
                    printModel="./model.txt",
                    bnbTimeoutSeconds=100,
-                   universalPostCons=False)
+                   universalPostCons=False,
+                   addBindingCons=False)
         all.set("lambda", 1.0)
         
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -466,15 +467,19 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             extra_relaxes += [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p, addBindingCons=True) for p in maxes]
             exps = []
             for dataset in [default_synth, default_brown]:
-                for varSplit in ["half-prob", "half-logprob"]:
+                # Add default case:
+                exps.append(all + dataset + default_relax)
+                # Add special cases:
+                # TODO: This is really HACKY.
+                for varSplit in ["half-logprob"]:#["half-prob", "half-logprob"]:
                     exps.append(all + dataset + default_relax + DPExpParams(varSplit=varSplit))
-                for varSelection in ["regret", "pseudocost", "full"]:
+                for varSelection in ["full"]:#["regret", "pseudocost", "full"]:
                     exps.append(all + dataset + default_relax +  DPExpParams(varSelection=varSelection))
-                for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                for relax in [rltObjVarRelax] + extra_relaxes: #[lpRelax, rltObjVarRelax] + extra_relaxes:
                     experiment = all + dataset + relax                        
                     exps.append(experiment)
                 # TODO: Testing projections in B&B depth test is a bit odd...
-                for proj in [norm_proj, euclid_proj, tree_proj, model_proj, all_proj]:
+                for proj in [norm_proj, euclid_proj, tree_proj, model_proj]: #[norm_proj, euclid_proj, tree_proj, model_proj, all_proj]:
                     exps.append(all + dataset + default_relax + proj)
                     
             if self.fast:
