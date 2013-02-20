@@ -245,6 +245,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxStoCuts=1000,
                    printModel="./model.txt",
                    bnbTimeoutSeconds=100,
+                   timeoutSeconds=8*60*60, # If we leave this out, CPLEX complains.
                    universalPostCons=False,
                    addBindingCons=False)
         all.set("lambda", 1.0)

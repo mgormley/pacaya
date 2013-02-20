@@ -21,7 +21,7 @@ public class CplexPrm {
     public int numThreads = 1;
     public int maxSimplexIterations = 2100000000;
     public int simplexAlgorithm = IloCplex.Algorithm.Auto;   
-    public double timeoutSeconds = 1e+75;
+    public double timeoutSeconds = 1e+75; //TODO: Invalid default.
     public int simplexDisplay = 1;
     public int barrierDisplay = 1;
     
