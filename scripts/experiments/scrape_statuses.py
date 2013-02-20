@@ -128,7 +128,7 @@ class DpSingleScraper(Scraper):
             stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver - Summary")
             status_list = get_bnb_status_list(stdout_lines)
         elif self.type == "curnode":
-            stdout_lines = self.read_stdout_lines(stdout_file)
+            stdout_lines = self.read_grepped_lines(stdout_file, "CurrentNode")
             status_list = get_curnode_status_list(stdout_lines)
         else:
             raise Exception()
