@@ -47,8 +47,8 @@ class DPScraper(Scraper):
             return
         
         if exp.get("expname") == "bnb-semi" or exp.get("expname") == "bnb-depth-test":
-            stdout_lines = head(stdout_file, window=500)
-            stdout_lines += tail(stdout_file, window=500)
+            stdout_lines = head(stdout_file, window=1000)
+            stdout_lines += tail(stdout_file, window=1000)
         else:
             stdout_lines = self.read_stdout_lines(stdout_file)
         
