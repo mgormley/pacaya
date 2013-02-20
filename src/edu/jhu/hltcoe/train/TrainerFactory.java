@@ -83,36 +83,38 @@ public class TrainerFactory {
 
     @Opt(name = "algorithm", hasArg = true, description = "Inference algorithm")
     public static String algorithm = "viterbi";
+    @Opt(name = "model", hasArg = true, description = "Model")
+    public static String modelName = "dmv";
+    @Opt(name = "parser", hasArg = true, description = "Parser")
+    public static String parserName = "ilp-sentence";
+    @Opt(name = "dwTempDir", hasArg = true, description = "(D-W only) For testing only. The temporary directory to which CPLEX files should be written")
+    public static String dwTempDir = "";
+    @Opt(name = "timeoutSeconds", hasArg = true, description = "The timeout in seconds for training run")
+    public static double timeoutSeconds = Double.POSITIVE_INFINITY;
+    
+    // EM parameters.
+    @Opt(name = "lambda", hasArg = true, description = "Value for add-lambda smoothing")
+    public static double lambda = 0.1;
     @Opt(name = "iterations", hasArg = true, description = "Number of iterations")
     public static int iterations = 10;
     @Opt(name = "convergenceRatio", hasArg = true, description = "Convergence ratio")
     public static double convergenceRatio = 0.99999;
     @Opt(name = "numRestarts", hasArg = true, description = "Number of random restarts")
     public static int numRestarts = 0;
-    @Opt(name = "model", hasArg = true, description = "Model")
-    public static String modelName = "dmv";
-    @Opt(name = "parser", hasArg = true, description = "Parser")
-    public static String parserName = "ilp-sentence";
+    
+    // Initialization parameters.
     @Opt(name = "initWeights", hasArg = true, description = "Method for initializing the weights [uniform, random, supervised]")
     public static String initWeights = "uniform";
-    @Opt(name = "deltaGenerator", hasArg = true, description = "Delta generator")
-    public static String deltaGenerator = "fixed";
-    @Opt(name = "interval", hasArg = true, description = "Only for fixed-interval delta generator")
-    public static double interval = 0.01;
-    @Opt(name = "factor", hasArg = true, description = "Only for factor delta generator")
-    public static double factor = 1.1;
-    @Opt(name = "numPerSide", hasArg = true, description = "For symmetric delta generators")
-    public static int numPerSide = 2;
-    @Opt(name = "formulation", hasArg = true, description = "ILP formulation for parsing")
-    public static IlpFormulation formulation = IlpFormulation.DP_PROJ;
-    @Opt(name = "lambda", hasArg = true, description = "Value for add-lambda smoothing")
-    public static double lambda = 0.1;
-    @Opt(name = "threads", hasArg = true, description = "Number of threads for parallel impl")
-    public static int numThreads = 2;
-    @Opt(name = "ilpSolver", hasArg = true, description = "The ILP solver to use")
-    public static String ilpSolver = "cplex";
-    @Opt(name = "ilpWorkMemMegs", hasArg = true, description = "The working memory allotted for the ILP solver in megabytes")
-    public static double ilpWorkMemMegs = 512.0;
+    @Opt(name = "offsetProb", hasArg = true, description = "How much to offset the bounds in probability space from the initial bounds point")
+    public static double offsetProb = 1.0;
+    @Opt(name = "probOfSkipCm", hasArg = true, description = "The probability of not bounding a particular variable")
+    public static double probOfSkipCm = 0.0;
+    
+    // Branch-and-bound parameters.
+    @Opt(name = "bnbTimeoutSeconds", hasArg = true, description = "[Viterbi-B&B only] The timeout in seconds for branch-and-bound")
+    public static double bnbTimeoutSeconds = Double.POSITIVE_INFINITY;
+    @Opt(name = "disableFathoming", hasArg = true, description = "Disables fathoming in branch-and-bound")
+    public static boolean disableFathoming = false;
     @Opt(name = "epsilon", hasArg = true, description = "Suboptimality convergence criterion for branch-and-bound")
     public static double epsilon = 0.1;
     @Opt(name = "varSelection", hasArg = true, description = "Variable selection strategy for branching [full,regret,rand-uniform,rand-weighted]")
@@ -121,6 +123,14 @@ public class TrainerFactory {
     public static String varSplit = "half-prob";
     @Opt(name = "nodeOrder", hasArg = true, description = "Strategy for node selection [bfs, dfs]")
     public static String nodeOrder = "bfs";
+    @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
+    public static double localRelativeGapThreshold;
+
+    // Knuth's random walk sampler parameters.
+    @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
+    public static int maxRandWalkSamples = 10000;
+    
+    // Relaxation parameters.
     @Opt(name = "relaxation", hasArg = true, description = "Relaxation [dw,dw-res,rlt]")
     public static String relaxation = "dw";
     @Opt(name = "maxSimplexIterations", hasArg = true, description = "(D-W only) The maximum number of simplex iterations")
@@ -137,18 +147,50 @@ public class TrainerFactory {
     public static double minSumForCuts = 1.01;
     @Opt(name = "maxStoCuts", hasArg = true, description = "(STO only) The maximum number of sum-to-one cuts")
     public static int maxStoCuts = 1000;
-    @Opt(name = "dwTempDir", hasArg = true, description = "(D-W only) For testing only. The temporary directory to which CPLEX files should be written")
-    public static String dwTempDir = "";
-    @Opt(name = "offsetProb", hasArg = true, description = "How much to offset the bounds in probability space from the initial bounds point")
-    public static double offsetProb = 1.0;
-    @Opt(name = "probOfSkipCm", hasArg = true, description = "The probability of not bounding a particular variable")
-    public static double probOfSkipCm = 0.0;
-    @Opt(name = "timeoutSeconds", hasArg = true, description = "The timeout in seconds for training run")
-    public static double timeoutSeconds = Double.POSITIVE_INFINITY;
-    @Opt(name = "bnbTimeoutSeconds", hasArg = true, description = "[Viterbi-B&B only] The timeout in seconds for branch-and-bound")
-    public static double bnbTimeoutSeconds = Double.POSITIVE_INFINITY;
-    @Opt(name = "disableFathoming", hasArg = true, description = "Disables fathoming in branch-and-bound")
-    public static boolean disableFathoming = false;
+    
+    // MILP / LP Solver parameters.
+    @Opt(name = "ilpSolver", hasArg = true, description = "The ILP solver to use")
+    public static String ilpSolver = "cplex";
+    @Opt(name = "simplexAlgorithm", hasArg = true, description = "The simplex algorithm to use in CPLEX.")
+    public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
+    @Opt(name = "threads", hasArg = true, description = "Number of threads for parallel impl")
+    public static int numThreads = 2;
+    @Opt(name = "ilpWorkMemMegs", hasArg = true, description = "The working memory allotted for the ILP solver in megabytes")
+    public static double ilpWorkMemMegs = 512.0;
+    
+    // Parse formulation parameters.
+    @Opt(name = "formulation", hasArg = true, description = "ILP formulation for parsing")
+    public static IlpFormulation formulation = IlpFormulation.DP_PROJ;
+    @Opt(name = "universalPostCons", hasArg = true, description = "Whether to add the universal linguistic constraints.")
+    public static boolean universalPostCons = false;
+    @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
+    public static double universalMinProp = 0.8;
+    @Opt(hasArg = true, description = "Whether to include extra parse constraints to tighten the relaxation.")
+    public static boolean inclExtraParseCons = false;
+
+    // Grid-search parse formulation parameters.
+    @Opt(name = "deltaGenerator", hasArg = true, description = "Delta generator")
+    public static String deltaGenerator = "fixed";
+    @Opt(name = "interval", hasArg = true, description = "Only for fixed-interval delta generator")
+    public static double interval = 0.01;
+    @Opt(name = "factor", hasArg = true, description = "Only for factor delta generator")
+    public static double factor = 1.1;
+    @Opt(name = "numPerSide", hasArg = true, description = "For symmetric delta generators")
+    public static int numPerSide = 2;
+    
+    // B&B initial solution parameters. 
+    @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
+    public static int initSolNumRestarts = 9;
+    
+    // Projection parameters.
+    @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
+    public static int vemProjNumRestarts = 0;
+    @Opt(name = "vemProjPropImproveTreebank", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the treebank projection with viterbi EM.")
+    public static double vemProjPropImproveTreebank = 0;
+    @Opt(name = "vemProjPropImproveModel", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the model projection with viterbi EM.")
+    public static double vemProjPropImproveModel = 0;
+    @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
+    public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     
     // RLT parameters.
     @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
@@ -167,30 +209,6 @@ public class TrainerFactory {
     public static boolean rltNames = false;
     @Opt(name = "addBindingCons", hasArg = true, description = "Whether to add binding constraints as factors to RLT.")
     public static boolean addBindingCons = false;
-    
-    @Opt(name = "universalPostCons", hasArg = true, description = "Whether to add the universal linguistic constraints.")
-    public static boolean universalPostCons = false;
-    @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
-    public static double universalMinProp = 0.8;
-    @Opt(hasArg = true, description = "Whether to include extra parse constraints to tighten the relaxation.")
-    public static boolean inclExtraParseCons = false;
-    
-    @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
-    public static int initSolNumRestarts = 9;
-    @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
-    public static int vemProjNumRestarts = 0;
-    @Opt(name = "vemProjPropImproveTreebank", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the treebank projection with viterbi EM.")
-    public static double vemProjPropImproveTreebank = 0;
-    @Opt(name = "vemProjPropImproveModel", hasArg = true, description = "(B&B only) The proportion of nodes at which to improve the model projection with viterbi EM.")
-    public static double vemProjPropImproveModel = 0;
-    @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
-    public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
-    @Opt(name = "localRelativeGapThreshold", hasArg = true, description = "The plunge's stopping threshold for local relative gap.")
-    public static double localRelativeGapThreshold;
-    @Opt(name = "simplexAlgorithm", hasArg = true, description = "The simplex algorithm to use in CPLEX.")
-    public static SimplexAlgorithm simplexAlgorithm = SimplexAlgorithm.AUTO;
-    @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
-    public static int maxRandWalkSamples = 10000;
     
     // Dimensionality Reduction parameters.
     @Opt(hasArg = true, description = "The max number of dimensionality reduced constraints.")
