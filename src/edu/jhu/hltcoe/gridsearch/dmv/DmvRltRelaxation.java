@@ -289,8 +289,9 @@ public class DmvRltRelaxation implements DmvRelaxation {
         switchTimer.start();
         setAsActiveNode(curNode);
 
-        if (curNode.getWarmStart() != null) {
-            setWarmStart(curNode.getWarmStart());
+        WarmStart ws = curNode.getWarmStart();
+        if (ws != null) {
+            setWarmStart(ws);
         }
         switchTimer.stop();
 
