@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.Projector;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
@@ -68,13 +69,28 @@ public class ViterbiEmDmvProjector implements DmvProjector {
     private static final Logger log = Logger.getLogger(ViterbiEmDmvProjector.class);
 
     private ViterbiEmDmvProjectorPrm prm;
-    private BasicDmvProjector dmvProjector;
+    private BasicDmvProjector normProjector;
+    private BasicDmvProjector euclidProjector;
     private DmvTrainCorpus corpus;
     private DmvRelaxation relax;
 
     public ViterbiEmDmvProjector(ViterbiEmDmvProjectorPrm prm, DmvTrainCorpus corpus, DmvRelaxation dwRelax) {
         this.prm = prm;
-        dmvProjector = new BasicDmvProjector(prm.dprojPrm, corpus);
+        
+        DmvProjectorPrm prm1 = new DmvProjectorPrm();
+        prm1.rootBounds = prm.dprojPrm.rootBounds;
+        prm1.projPrm.tempDir = prm.dprojPrm.projPrm.tempDir ;
+        prm1.projPrm.lambdaSmoothing =  prm.dprojPrm.projPrm.lambdaSmoothing;
+        prm1.projPrm.type =  ProjectionType.NORMALIZE;
+        normProjector = new BasicDmvProjector(prm1, corpus);
+        
+        DmvProjectorPrm prm2 = new DmvProjectorPrm();
+        prm2.rootBounds = prm.dprojPrm.rootBounds;
+        prm2.projPrm.tempDir = prm.dprojPrm.projPrm.tempDir ;
+        prm2.projPrm.lambdaSmoothing =  prm.dprojPrm.projPrm.lambdaSmoothing;
+        prm2.projPrm.type =  ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
+        euclidProjector = new BasicDmvProjector(prm2, corpus);
+
         this.corpus = corpus;
         this.relax = dwRelax;
     }
@@ -89,11 +105,18 @@ public class ViterbiEmDmvProjector implements DmvProjector {
             throw new IllegalStateException("No relaxed solution cached.");
         }
         List<DmvSolution> solutions = new ArrayList<DmvSolution>();
-        
-        DmvSolution projectedSol = dmvProjector.getProjectedDmvSolution(relaxSol);
+
         // Add the null solution, so that the collection isn't empty.
-        log.debug("Projected solution score: " + safeGetScore(projectedSol));
-        solutions.add(projectedSol);
+        
+        DmvSolution normSol = normProjector.getProjectedDmvSolution(relaxSol);
+        log.debug("Normalized projected solution score: " + safeGetScore(normSol));
+        solutions.add(normSol);
+        
+        DmvSolution euclidSol = euclidProjector.getProjectedDmvSolution(relaxSol);
+        log.debug("Euclidean projected solution score: " + safeGetScore(euclidSol));
+        solutions.add(euclidSol);
+        
+        DmvSolution projectedSol = Collections.max(solutions, new DmvSolutionComparator());
         if (projectedSol != null) {
             // TODO: These solutions might not be feasible according to the
             // root bounds.
