@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.train;
 
+import java.util.Random;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -23,9 +25,9 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.model.Model;
@@ -178,6 +180,9 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
         double[][] logProbs = initSol.getLogProbs();
         int[][] featCounts = initSol.getFeatCounts(); 
               
+        // We need a separate PRNG here so that the bounds are consistent across different methods.
+        Random rand = new Random(Prng.seed);
+        
         // Adjust bounds
         for (int c=0; c<dw.getIdm().getNumConds(); c++) {
             for (int m=0; m<dw.getIdm().getNumParams(c); m++) {
@@ -187,7 +192,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                 double lb = origBounds.getLb(Type.PARAM, c, m);
                 double ub = origBounds.getUb(Type.PARAM, c, m);
                 
-                if (Prng.nextDouble() < probOfSkipCm) {
+                if (rand.nextDouble() < probOfSkipCm) {
                     // Don't constrain this variable
                     newL = CptBounds.DEFAULT_LOWER_BOUND;
                     newU = CptBounds.DEFAULT_UPPER_BOUND;

@@ -37,7 +37,10 @@ public class Prng {
         
     public static Random curRandom;
     
+    public static long seed;
+    
     public static void seed(long seed) {
+        Prng.seed = seed;
         System.out.println("SEED="+seed);
         javaRandom = new Random(seed);
         mtf = new MersenneTwisterFast(seed);
