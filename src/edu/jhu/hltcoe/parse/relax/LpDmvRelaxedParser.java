@@ -24,7 +24,7 @@ public class LpDmvRelaxedParser implements RelaxedParser {
         public DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
     }
     
-    static Logger log = Logger.getLogger(LpDmvRelaxedParser.class);
+    private static Logger log = Logger.getLogger(LpDmvRelaxedParser.class);
 
     private LpDmvRelaxedParserPrm prm;
     private IloCplex cplex;

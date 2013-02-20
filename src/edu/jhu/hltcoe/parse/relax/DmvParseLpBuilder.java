@@ -10,6 +10,8 @@ import ilog.concert.IloRange;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Label;
@@ -39,7 +41,9 @@ public class DmvParseLpBuilder {
         // TODO: add a parameter for whether we want the LP relaxation, rather
         // than pushing it into the IlpFormulation enum.
     }
-    
+
+    private static Logger log = Logger.getLogger(DmvParseLpBuilder.class);
+
     private IloMPModeler cplex;
     private DmvParseLpBuilderPrm prm;
     
@@ -706,6 +710,7 @@ public class DmvParseLpBuilder {
      * arcs are shiny edges in prm.shinyEdges.
      */
     private void addUniversalPostCons(DmvTrainCorpus corpus, IndexedDmvModel idm, DmvTreeProgram pp) throws IloException {
+        log.debug("Adding posterior constraints");
         if (prm.shinyEdges == null) {
             // Default to the universal linguistic constraint.
             prm.shinyEdges = ShinyEdges.getUniversalSet(corpus.getLabelAlphabet());
