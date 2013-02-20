@@ -92,6 +92,7 @@ public class ViterbiEmDmvProjector implements DmvProjector {
         
         DmvSolution projectedSol = dmvProjector.getProjectedDmvSolution(relaxSol);
         // Add the null solution, so that the collection isn't empty.
+        log.debug("Projected solution score: " + safeGetScore(projectedSol));
         solutions.add(projectedSol);
         if (projectedSol != null) {
             // TODO: These solutions might not be feasible according to the
@@ -101,15 +102,26 @@ public class ViterbiEmDmvProjector implements DmvProjector {
 
             // Run Viterbi EM starting from the randomly rounded solution.
             if (Prng.nextDouble() < prm.proportionViterbiImproveTreebank) {
-                solutions.add(getImprovedSol(projectedSol.getTreebank()));
+                DmvSolution vemTreesSol = getImprovedSol(projectedSol.getTreebank());
+                log.debug("VEM on treebank score: " + safeGetScore(vemTreesSol));
+                solutions.add(vemTreesSol);
             }
             if (Prng.nextDouble() < prm.proportionViterbiImproveModel) {
-                solutions.add(getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm()));
+                DmvSolution vemModelSol = getImprovedSol(projectedSol.getLogProbs(), projectedSol.getIdm());
+                log.debug("VEM on model score: " + safeGetScore(vemModelSol));
+                solutions.add(vemModelSol);
             }
         }
 
         return Collections.max(solutions, new DmvSolutionComparator());
     }    
+
+    private String safeGetScore(DmvSolution projectedSol) {
+        if (projectedSol == null) {
+            return "";
+        }
+        return Double.toString(projectedSol.getScore());        
+    }
 
     private DmvSolution getImprovedSol(double[][] logProbs, IndexedDmvModel idm) {
         double lambda = 1e-6;
