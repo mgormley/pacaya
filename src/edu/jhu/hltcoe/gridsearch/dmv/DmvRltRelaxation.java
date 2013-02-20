@@ -523,6 +523,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
 
         if (prm.addBindingCons) {
             // TODO: add binding bounds as factors too.
+            // TODO: This will fail because it won't be a consecutive list of rows.
             double[] vars = cplex.getValues(mp.origMatrix);
             IloNumVar[] numVars = mp.origMatrix.getNumVars();
             numVars[0].getLB();
