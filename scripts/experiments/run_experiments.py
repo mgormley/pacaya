@@ -232,8 +232,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    threads=1,
                    numRestarts=10,
                    initSolNumRestarts=10,
-                   vemProjPropImproveTreebank=0.5,
-                   vemProjPropImproveModel=0.5,
+                   projType="UNBOUNDED_MIN_EUCLIDEAN", # This affects more than just the projection algorithm.
                    drRenormalize=True,
                    drConversion="SEPARATE_EQ_AND_LEQ",
                    drAlpha=0.1,
@@ -245,7 +244,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    minSumForCuts=1.00001,
                    maxStoCuts=1000,
                    printModel="./model.txt",
-                   bnbTimeoutSeconds=100)
+                   bnbTimeoutSeconds=100,
+                   universalPostCons=False)
         all.set("lambda", 1.0)
         
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -267,7 +267,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                   rltCutProp=1.0)
         universalPostCons = DPExpParams(universalPostCons=True,
                                         universalMinProp=0.8)
+        default_relax = lpRelax
                 
+        # Define commonly used projections:
+        norm_proj = DPExpParams(projAlgo="BASIC", projType="NORMALIZE")
+        euclid_proj = DPExpParams(projAlgo="BASIC", projType="UNBOUNDED_MIN_EUCLIDEAN")
+        tree_proj = DPExpParams(projAlgo="VEM", vemProjPropImproveModel=0.0, vemProjPropImproveTreebank=1.0)
+        model_proj = DPExpParams(projAlgo="VEM", vemProjPropImproveModel=1.0, vemProjPropImproveTreebank=0.0)
+        all_proj = DPExpParams(projAlgo="VEM", vemProjPropImproveModel=0.5, vemProjPropImproveTreebank=0.5)
+        # Set default projection.    
+        all = all + all_proj
+        
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
         wsj_00 = self.get_data(data_dir, "treebank_3/wsj/00")
@@ -280,9 +290,6 @@ class DepParseExpParamsRunner(ExpParamsRunner):
 
         wsj = wsj_full if not self.fast else wsj_00
         brown = brown_full if not self.fast else brown_cf
-        
-        # Only keeping sentences that contain a verb
-        all.update(mustContainVerb=None)
         
         # Reducing tagset explicitly
         for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
@@ -298,6 +305,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
         
+        # Default datasets.
+        default_brown = brown + DPExpParams(maxSentenceLength=10, 
+                                            maxNumSentences=200)
+        # Only keeping sentences that contain a verb
+        default_brown.update(mustContainVerb=None)
+        brown100 = default_brown + DPExpParams(maxNumSentences=100)
+        default_synth = synth_alt_three + DPExpParams(maxNumSentences=8)
+        
         experiments = []
         if self.expname == "viterbi-em":
             root = RootStage()
@@ -311,6 +326,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     setup.set("randomRestartId", randomRestartId, True, False)
                     experiment = all + setup + DPExpParams()
                     root.add_dependent(experiment)
+                    root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
@@ -319,29 +335,28 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "viterbi-vs-bnb":
             root = RootStage()
             all.update(algorithm="bnb")
+            # Run for some fixed amount of time.                
+            all.update(numRestarts=1000000000)
+            all.update(timeoutSeconds=8*60*60)
+            
             rltAllRelax.update(rltFilter="max")
-            maxes = [1000, 5000, 10000, 50000, 100000]
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
+            maxes = [1000, 10000, 100000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
-            for dataset in [brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(7, 20, 8*60*60), (10, 200, 8*60*60)]:
-                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    mns = DPExpParams(maxNumSentences=maxNumSentences)
-                    if not self.fast:
-                        # Run for some fixed amount of time.                
-                        all.update(numRestarts=1000000000)
-                        all.update(timeoutSeconds=timeoutSeconds)
-                    for algorithm in ["viterbi", "bnb"]:
-                        experiment = all + dataset + msl + mns + DPExpParams(algorithm=algorithm)
-                        if algorithm == "viterbi":
-                            exps.append(experiment)
-                        else:
-                            for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
-                                exps.append(experiment + relax)
+            for dataset in [brown100, default_brown]:
+                for algorithm in ["viterbi", "bnb"]:
+                    experiment = all + dataset + DPExpParams(algorithm=algorithm)
+                    if algorithm == "viterbi":
+                        exps.append(experiment)
+                        exps.append(experiment + universalPostCons + DPExpParams(parser="relaxed"))
+                    else:
+                        for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                            exps.append(experiment + relax)
+                            exps.append(experiment + relax + universalPostCons)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
-                exps = exps[:3]
+                exps = exps[:4]
             root.add_dependents(exps)
             # Scrape all results.
             scrape = ScrapeExpout(tsv_file="results.data", csv_file="results.csv")
@@ -359,22 +374,18 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb":
             root = RootStage()
             all.update(algorithm="bnb")
+            # Run for some fixed amount of time.                
+            all.update(numRestarts=1000000000)
+            all.update(timeoutSeconds=12*60*60)
             rltAllRelax.update(rltFilter="max")
-            maxes = [1000, 5000, 10000, 50000, 100000, 500000]
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
+            maxes = [1000, 10000, 100000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
-            for dataset in [synth_alt_three, brown]:
-                for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 10, 8*60*60)]:
-                    msl = DPExpParams(maxSentenceLength=maxSentenceLength)
-                    mns = DPExpParams(maxNumSentences=maxNumSentences)
-                    if not self.fast:
-                        # Run for some fixed amount of time.                
-                        all.update(numRestarts=1000000000)
-                        all.update(timeoutSeconds=timeoutSeconds)
-                    for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
-                        experiment = all + dataset + msl + mns + relax
-                        exps.append(experiment)
+            for dataset in [default_synth]:
+                for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                    experiment = all + dataset + relax
+                    exps.append(experiment)
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:3]
@@ -445,23 +456,27 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                        disableFathoming=False,
                        nodeOrder="dfs-randwalk",
                        maxRandWalkSamples=10000)
-            if not self.fast:
-                # Run for some fixed amount of time.
-                all.update(numRestarts=1000000000,
-                           timeoutSeconds=4*60*60)
+            # Run for some fixed amount of time.
+            all.update(numRestarts=1000000000,
+                       timeoutSeconds=8*60*60)
             rltAllRelax.update(rltFilter="max")
-            maxes = [1000, 5000, 10000, 50000, 100000, 500000]
-            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
-            extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
+            maxes = [1000, 10000, 100000]
+            extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p) for p in maxes]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=0) for p in maxes]
+            extra_relaxes += [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p, addBindingCons=True) for p in maxes]
             exps = []
-            all.update(maxSentenceLength=5)
-            for dataset in [synth_alt_three, brown]:
-                for maxNumSentences in [10]:
-                    for varSelection in ["regret"]:
-                        for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
-                            experiment = all + dataset + relax + DPExpParams(varSelection=varSelection,
-                                                                             maxNumSentences=maxNumSentences)
-                            exps.append(experiment)
+            for dataset in [default_synth, default_brown]:
+                for varSplit in ["half-prob", "half-logprob"]:
+                    exps.append(all + dataset + default_relax + DPExpParams(varSplit=varSplit))
+                for varSelection in ["regret", "pseudocost", "full"]:
+                    exps.append(all + dataset + default_relax +  DPExpParams(varSelection=varSelection))
+                for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
+                    experiment = all + dataset + relax                        
+                    exps.append(experiment)
+                # TODO: Testing projections in B&B depth test is a bit odd...
+                for proj in [norm_proj, euclid_proj, tree_proj, model_proj, all_proj]:
+                    exps.append(all + dataset + default_relax + proj)
+                    
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:3]
@@ -602,33 +617,32 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(relaxOnly=None,
                        rootMaxCutRounds=0, #TODO: maybe push this back up to 1 after we support cutting in the projection?
-                       maxCutRounds=0)
+                       maxCutRounds=0,
+                       timeoutSeconds=2*60*60)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
-            dataset = synth_alt_three + DPExpParams(maxSentenceLength=5, 
-                                                    maxNumSentences=5,
-                                                    timeoutSeconds=5*60)
+            dataset = default_synth
             # This is broken due to probOfSkipCm.
             #            dataset = dataset + DPExpParams(initBounds="gold",
             #                                            offsetProb=0.25,
             #                                            probOfSkipCm=0.75)
             exps = []
             # Uncomment to compare with dimensionality-reduced relaxations.
-            for rltInitProp in frange(0.0, 1.0, 0.1):
-                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
-                    for drMaxCons in [50, 100, 200, 400]:
-                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
-                            extra = DPExpParams(drMaxCons=drMaxCons,
-                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
-                                                drSamplingDist=drSamplingDist,
-                                                rltInitProp=rltInitProp)
-                            experiment = all + dataset + relax + extra
-                            exps.append(experiment)
+#            for rltInitProp in frange(0.0, 1.0, 0.1):
+#                for drMaxNonZerosPerRow in [1, 2, 4, 8]:
+#                    for drMaxCons in [50, 100, 200, 400]:
+#                        for drSamplingDist in ["UNIFORM", "DIRICHLET", "ALL_ONES"]:
+#                            extra = DPExpParams(drMaxCons=drMaxCons,
+#                                                drMaxNonZerosPerRow=drMaxNonZerosPerRow,
+#                                                drSamplingDist=drSamplingDist,
+#                                                rltInitProp=rltInitProp)
+#                            experiment = all + dataset + relax + extra
+#                            exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
                 experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
                 exps.append(experiment)
                 # Uncomment to compare with identity matrix.
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, drUseIdentityMatrix=True)
-                exps.append(experiment)
+                #experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, drUseIdentityMatrix=True)
+                #exps.append(experiment)
                 # Uncomment to compare with my extra parse constraints.
                 #experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, inclExtraParseCons=True)
                 #exps.append(experiment)
