@@ -25,11 +25,37 @@ safe.as.numeric <- function(x) {
 }
 
 ## Plotting functions.
+
+plotrootboundalone <- function(mydata) {
+  ## For ACL: 5 synthetic sentences.
+  viterbiEmScore <- -13.02
+  ##
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Proportion of RLT rows included"
+  ylab = "Upper bound on log-likelihood at root"
+  p <- qplot(rltInitProp, relaxBound, data=mydata,
+             geom="point", xlab=xlab, ylab=ylab, ymin=viterbiEmScore) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0))
+  p <- p + geom_line(aes(group=factor(method)))
+  p <- p + geom_abline(intercept = viterbiEmScore, slope=0)
+}
+
 plotrootbound <- function(mydata) {
   title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Proportion of RLT rows included"
   ylab = "Upper bound on log-likelihood at root"
   p <- qplot(rltInitProp, relaxBound, data=mydata,
+             geom="point", xlab=xlab, ylab=ylab,
+             color=factor(method), shape=factor(drUseIdentityMatrix)) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
+  p <- p + geom_line(aes(group=factor(method)))
+}
+
+plotrelaxboundvtime <- function(mydata) {
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Time (mins)"
+  ylab = "Upper bound on log-likelihood at root"
+  p <- qplot(relaxTime / 1000 / 60, relaxBound, data=mydata,
              geom="point", xlab=xlab, ylab=ylab,
              color=factor(method), shape=factor(drUseIdentityMatrix)) +
                  opts(axis.text.x=theme_text(angle=70, hjust=1.0), title=title)
@@ -59,30 +85,36 @@ plotrelaxproj <- function(mydata) {
 
 ## Read data.
 results.file = "/Users/mgormley/research/dep_parse/results/relax-root-rlt/results.data"
+results.file = "/Users/mgormley/research/dep_parse/results/relax-root-rlt/5 synthetic sentences (drUseIdentityMatrix, inclExtraParseCons)/results.data"
 
 df.orig <- read.table(results.file, header=TRUE, sep="\t")
 df <- df.orig
 
-df <- subset(df, simplexAlgorithm == "BARRIER")
 df$relaxBound <- safe.as.numeric(df$relaxBound)
 df$projLogLikelihood <- safe.as.numeric(df$projLogLikelihood)
-
 groupLevel <- getDataset(mydata)
-
 df$drMaxNonZeros[is.na(df$drMaxNonZeros)] <- as.numeric("inf")
-##ifelse(is.na(df$drMaxNonZeros), df$drMaxNonZeros, "NA")
 
 df$method <- str_c(df$drMaxNonZeros, df$drMaxCons, df$drSamplingDist, sep=".")
+df$method <- df$inclExtraParseCons
 
 ## Plot data.
+##myplot(plotrootbound(subset(df, relaxBound < 0.1 & relaxBound > -100 &
+##                            (drSamplingDist == "UNIFORM" | is.na(drSamplingDist)))),
+##       str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
+
+myplot(plotrootboundalone(subset(df, relaxBound < 0.1 & relaxBound > -100 & drUseIdentityMatrix=="False" & inclExtraParseCons == "False")),
+       str_c(results.file, groupLevel, "relaxBoundAlone", "pdf", sep="."))
+
 myplot(plotrootbound(subset(df, relaxBound < 0.1 & relaxBound > -100)),
        str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
 
-myplot(plotrootbound(df),
-       str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
+myplot(plotrelaxboundvtime(subset(df, relaxBound < 0.1 & relaxBound > -100)),
+       str_c(results.file, groupLevel, "relaxBoundVTime", "pdf", sep="."))
 
 myplot(plotrelaxtime(df),
        str_c(results.file, groupLevel, "relaxTime", "pdf", sep="."))
 
 myplot(plotrelaxproj(df),
        str_c(results.file, groupLevel, "projLL", "pdf", sep="."))
+

@@ -15,7 +15,7 @@ myplot <- function(p, filename) {
 }
 
 ## Read data
-results.file = "/Users/mgormley/Documents/JHU4_S10/dep_parse/results/viterbi-em/results.data"
+results.file = "/Users/mgormley/research/dep_parse/results/viterbi-em/results.data"
 df <- read.table(results.file, header=TRUE)
 
 plotaccuracyvslikelihood <- function(mydata) {
@@ -24,11 +24,13 @@ plotaccuracyvslikelihood <- function(mydata) {
   xlab = "Per token log-likelihood (train)"
   ylab = "Accuracy (train)"
   p <- ggplot(mydata, aes(x=trainLogLikelihood/numWords,
-                          y=trainAccuracy, color=initWeights))
+                          y=trainAccuracy, color=initWeights,
+                          shape=universalPostCons))
   p <- p + geom_point()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   p <- p + scale_color_discrete(name="Initialization")
-  p <- p + geom_smooth()
+  p <- p + scale_shape_discrete(name="Posterior\nConstraints")
+  ##p <- p + geom_smooth()
 }
 myplot(plotaccuracyvslikelihood(df),
        str_c(results.file, "accvlike", "pdf", sep="."))
