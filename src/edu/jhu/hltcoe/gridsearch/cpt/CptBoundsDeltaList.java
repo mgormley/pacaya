@@ -37,6 +37,10 @@ public class CptBoundsDeltaList implements Iterable<CptBoundsDelta> {
         return deltas.iterator();
     }
 
+    public void trimToSize() {
+        deltas.trimToSize();
+    }
+    
     /**
      * Gets the primary delta which corresponds to the variable on which
      * we branched.

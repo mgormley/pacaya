@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,7 @@ public class DmvProblemNode implements ProblemNode {
     private CptBoundsDeltaFactory deltasFactory;
     
     // For "fork" nodes only (i.e. nodes that store warm-start information)
-    private WarmStart warmStart;
+    private SoftReference<WarmStart> warmStart;
 
     /**
      * Root node constructor
@@ -54,10 +55,11 @@ public class DmvProblemNode implements ProblemNode {
         this.parent = parent;
         this.depth = parent.depth + 1;
         this.side = side;
-        // Take the warm start information from the parent
-        this.warmStart = parent.warmStart;
         // Take the optimistic bound from the parent.
         this.optimisticBound = parent.optimisticBound;
+        
+        // Conserve space on the internal list representation.
+        deltas.trimToSize();
     }
     
 
@@ -94,7 +96,6 @@ public class DmvProblemNode implements ProblemNode {
             CptBoundsDeltaList deltasForChild = deltasForChildren.get(i);
             children.add(new DmvProblemNode(deltasForChild, deltasFactory, this, i));
         }
-        warmStart = null;
         return children;
     }
 
@@ -183,12 +184,23 @@ public class DmvProblemNode implements ProblemNode {
 
     @Override
     public WarmStart getWarmStart() {
-        return warmStart;
+        // Find the closest non-null warm start.
+        DmvProblemNode cur = this;
+        while (cur != null) {
+            if (cur.warmStart != null) {
+                WarmStart ws = warmStart.get();
+                if (ws != null) {
+                    return ws;
+                }
+            }
+            cur = cur.parent;
+        }
+        return null;
     }
 
     @Override
     public void setWarmStart(WarmStart warmStart) {
-        this.warmStart = warmStart;
+        this.warmStart = new SoftReference<WarmStart>(warmStart);
     }
 
     @Override
