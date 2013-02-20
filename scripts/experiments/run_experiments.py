@@ -232,8 +232,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    threads=1,
                    numRestarts=10,
                    initSolNumRestarts=10,
-                   vemProjPropImproveTreebank=0.1,
-                   vemProjPropImproveModel=0.1,
+                   vemProjPropImproveTreebank=0.5,
+                   vemProjPropImproveModel=0.5,
                    drRenormalize=True,
                    drConversion="SEPARATE_EQ_AND_LEQ",
                    drAlpha=0.1,
@@ -247,7 +247,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    printModel="./model.txt",
                    bnbTimeoutSeconds=100)
         all.set("lambda", 1.0)
-                
+        
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
         
@@ -320,7 +320,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             all.update(algorithm="bnb")
             rltAllRelax.update(rltFilter="max")
-            maxes = [5000, 10000, 50000, 100000]
+            maxes = [1000, 5000, 10000, 50000, 100000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p/10) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
