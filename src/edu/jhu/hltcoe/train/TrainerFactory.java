@@ -66,7 +66,11 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
+import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedParserWrapperPrm;
 import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
@@ -191,6 +195,10 @@ public class TrainerFactory {
     public static double vemProjPropImproveModel = 0;
     @Opt(name = "projType", hasArg = true, description = "(B&B only) The type of projection to use.")
     public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
+    @Opt(hasArg = true, description = "(B&B only) The type of projection algorithm to use.")
+    public static ProjectionAlgo projAlgo = ProjectionAlgo.VEM;
+    
+    public static enum ProjectionAlgo { VEM, BASIC }
     
     // RLT parameters.
     @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
@@ -232,15 +240,13 @@ public class TrainerFactory {
     public static boolean drUseIdentityMatrix = false;
     @Opt(hasArg = true, description = "The type of constraint conversion.")
     public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
-    
+        
     public static ViterbiParser getEvalParser() {
         return new DmvCkyParser();
     }
     
     public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
-        double simplexTimeout = algorithm.equals("viterbi-bnb") ? bnbTimeoutSeconds : timeoutSeconds;
-        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, 
-                simplexTimeout, simplexAlgorithm.cplexId);
+        CplexPrm cplexPrm = getCplexPrm();
 
         ProjectionsPrm projPrm = getProjectionsPrm(); 
 
@@ -252,7 +258,7 @@ public class TrainerFactory {
         stoPrm.projPrm = projPrm;
         
         DmvRelaxationFactory relaxFactory;
-        File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
+        File dwTemp = getDwTempDir();
         if (relaxation.equals("dw")) {
             DmvDwRelaxPrm dwPrm = new DmvDwRelaxPrm();
             dwPrm.tempDir = dwTemp;
@@ -277,10 +283,7 @@ public class TrainerFactory {
             rltPrm.envelopeOnly = envelopeOnly;
             rltPrm.nameRltVarsAndCons = rltNames;
 
-            DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
-            parsePrm.universalMinProp = universalMinProp;
-            parsePrm.universalPostCons = universalPostCons;
-            parsePrm.inclExtraCons = inclExtraParseCons;
+            DmvParseLpBuilderPrm parsePrm = getDmvParseLpBuilderPrm();
 
             DimReducerPrm drPrm = new DimReducerPrm();
             drPrm.drMaxCons = drMaxCons;
@@ -325,6 +328,26 @@ public class TrainerFactory {
         return relaxFactory;
     }
 
+    private static DmvParseLpBuilderPrm getDmvParseLpBuilderPrm() {
+        DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
+        parsePrm.universalMinProp = universalMinProp;
+        parsePrm.universalPostCons = universalPostCons;
+        parsePrm.inclExtraCons = inclExtraParseCons;
+        return parsePrm;
+    }
+
+    private static File getDwTempDir() {
+        File dwTemp = dwTempDir.equals("") ? null : new File(dwTempDir);
+        return dwTemp;
+    }
+
+    private static CplexPrm getCplexPrm() {
+        double simplexTimeout = algorithm.equals("viterbi-bnb") ? bnbTimeoutSeconds : timeoutSeconds;
+        CplexPrm cplexPrm = new CplexPrm(ilpWorkMemMegs, numThreads, maxSimplexIterations, 
+                simplexTimeout, simplexAlgorithm.cplexId);
+        return cplexPrm;
+    }
+
     public static Trainer getTrainer(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {
         if (!modelName.equals("dmv")) {
             throw new ParseException("Model not supported: " + modelName);
@@ -354,6 +377,17 @@ public class TrainerFactory {
 
             if (parserName.equals("cky")) {
                 parser = new DmvCkyParser();
+            } else if (parserName.equals("relaxed")) {
+                LpDmvRelaxedParserPrm lpParsePrm = new LpDmvRelaxedParserPrm();
+                lpParsePrm.cplexPrm = getCplexPrm();
+                lpParsePrm.parsePrm = getDmvParseLpBuilderPrm();
+                lpParsePrm.tempDir = getDwTempDir();
+                
+                RelaxedParserWrapperPrm prm = new RelaxedParserWrapperPrm();
+                prm.projPrm = getDmvProjectorPrm();
+                prm.relaxedParser = new LpDmvRelaxedParser(lpParsePrm);
+                
+                parser = new RelaxedParserWrapper(prm);
             } else if (parserName.equals("ilp-sentence")) {
                 parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
             } else if (parserName.equals("ilp-corpus")) {
@@ -506,24 +540,6 @@ public class TrainerFactory {
         return trainer;
     }
 
-    public static DmvProjectorFactory getDmvProjectorFactory() {
-        // Other constants.
-        final double vemProjTimeoutSeconds = timeoutSeconds / 10.0;
-        
-        ProjectionsPrm projPrm = getProjectionsPrm();
-        
-        DmvProjectorPrm dprojPrm = new DmvProjectorPrm();
-        dprojPrm.projPrm = projPrm;
-        
-        ViterbiEmDmvProjectorPrm vedpPrm = new ViterbiEmDmvProjectorPrm();
-        vedpPrm.proportionViterbiImproveTreebank = vemProjPropImproveTreebank;
-        vedpPrm.proportionViterbiImproveModel = vemProjPropImproveModel;
-        vedpPrm.dprojPrm = dprojPrm;
-        vedpPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, vemProjNumRestarts,
-                vemProjTimeoutSeconds, lambda, null);
-        return vedpPrm;
-    }
-
     public static DmvSolFactoryPrm getDmvSolFactoryPrm() {        
         // Other constants.
         final double initSolTimeoutSeconds = timeoutSeconds / 2.0;
@@ -532,6 +548,34 @@ public class TrainerFactory {
         initSolPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, initSolNumRestarts,
                 initSolTimeoutSeconds, lambda, null);
         return initSolPrm;
+    }
+
+    public static DmvProjectorFactory getDmvProjectorFactory() {
+        DmvProjectorPrm dprojPrm = getDmvProjectorPrm();
+        
+        if (projAlgo == ProjectionAlgo.BASIC) {
+            return dprojPrm;
+        } else if (projAlgo == ProjectionAlgo.VEM) {
+            // Other constants.
+            final double vemProjTimeoutSeconds = timeoutSeconds / 10.0;
+            
+            ViterbiEmDmvProjectorPrm vedpPrm = new ViterbiEmDmvProjectorPrm();
+            vedpPrm.proportionViterbiImproveTreebank = vemProjPropImproveTreebank;
+            vedpPrm.proportionViterbiImproveModel = vemProjPropImproveModel;
+            vedpPrm.dprojPrm = dprojPrm;
+            vedpPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, vemProjNumRestarts,
+                    vemProjTimeoutSeconds, lambda, null);
+            return vedpPrm;
+        } else {
+            throw new RuntimeException("Unhandled projection algorithm: " + projAlgo);
+        }
+    }
+
+    private static DmvProjectorPrm getDmvProjectorPrm() {
+        ProjectionsPrm projPrm = getProjectionsPrm();
+        DmvProjectorPrm dprojPrm = new DmvProjectorPrm();
+        dprojPrm.projPrm = projPrm;
+        return dprojPrm;
     }
 
     private static ProjectionsPrm getProjectionsPrm() {
