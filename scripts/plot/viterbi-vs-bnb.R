@@ -107,7 +107,8 @@ df$method <- ""
 df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
 df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
 df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
-df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max ", df$rltInitMax), df$method)
+##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max ", df$rltInitMax), df$method)
+df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
 df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
 
 #df$method <- str_c(df$envelopeOnly, df$rltInitMax, sep=" / ")
@@ -130,11 +131,12 @@ plotLogLikeVsTime <- function(mydata) {
   ylab = "Log-likelihood (train)"
   p <- ggplot(mydata, aes(x=time / 1000 / 60,
                           y=incumbentLogLikelihood, color=method))
-  p <- p + geom_point()
+  p <- p + geom_point(aes(shape=method))
   p <- p + geom_line(aes(linetype=universalPostCons))
   p <- p + xlab(xlab) + ylab(ylab) 
   ## For ACL: p <- p + opts(title=title)
-  p <- p + scale_color_discrete(name=methodDescription)
+  p <- p + scale_color_discrete(name=methodDescription) 
+  p <- p + scale_shape_discrete(name=methodDescription)
   p <- p + scale_linetype_discrete(name="Posterior Constraints")
 }
 
@@ -144,12 +146,13 @@ plotAccVsTime <- function(mydata) {
   ylab = "Accuracy (train)"
   p <- ggplot(mydata, aes(x=time / 1000 / 60,
                           y=incumbentAccuracy, color=method))
-  p <- p + geom_point()
+  p <- p + geom_point(aes(shape=method))
   p <- p + geom_line(aes(linetype=universalPostCons))
   ##p <- p + geom_smooth(aes(linetype=universalPostCons))
   p <- p + xlab(xlab) + ylab(ylab)
   ## For ACL: p <- p + opts(title=title)
   p <- p + scale_color_discrete(name=methodDescription)
+  p <- p + scale_shape_discrete(name=methodDescription)
   p <- p + scale_linetype_discrete(name="Posterior Constraints")
 }
 

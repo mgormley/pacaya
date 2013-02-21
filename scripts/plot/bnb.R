@@ -21,6 +21,7 @@ getDataset <- function(mydata) {
 
 ## Read B&B status data.
 results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data"
+##results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data.r860"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
@@ -29,6 +30,17 @@ print("Adding columns.")
 #  df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitProp, df$varSelection, df$rltCutProp, sep=".")
 # If using rltFilter="max"
 df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection, df$rltCutMax, sep=".")
+## For ACL:
+df$method <- ""
+df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
+df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
+df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
+##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax), df$method)
+df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
+df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
+
+methodDescription <- "Relaxation"
+
 
 df <- subset(df, rltCutMax == 0 | is.na(rltCutMax))
 
@@ -44,7 +56,30 @@ dfBoth <- rbind(dfUp, dfLow)
 
 dfBoth.subset <- subset(dfBoth, dataset == "alt-three"
                         & bound != -Inf)
-                        
+
+
+max <- ddply(df, .(method), function(x) max(x$numSeen))
+print(max[order(max$V1),])
+
+plotbnbboundsvtime <- function(mydata) {
+  ## For ACL:
+  ##mydata$rltInitMax[which(is.na(mydata$rltInitMax))] <- as.numeric("+inf")
+  ##mydata$method = str_c(mydata$envelopeOnly, mydata$rltInitMax, sep=" / ")
+  mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
+
+  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Time (minutes)"
+  ylab = "Bounds on log-likelihood"
+  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=bound, color=factor(method)))
+  p <- p + geom_line(aes(linetype=boundType))
+  p <- p + geom_point(data=subset(mydata, (numSeen %% 25000 == 1)), aes(shape=method))
+  p <- p + xlab(xlab) + ylab(ylab) ##+ opts(title=title)
+  p <- p + scale_linetype_discrete(name="Bound type")
+  p <- p + scale_color_discrete(name=methodDescription) 
+  p <- p + scale_shape_discrete(name=methodDescription)
+}
+myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
+
 plotbnbboundsvnodes <- function(mydata) {
   title = "" ##str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Number of nodes processed"
@@ -70,25 +105,6 @@ plotbnbboundsvtime <- function(mydata) {
   p <- p + scale_color_discrete(name="Proportion supervised")
 }
 myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
-
-plotbnbboundsvtime <- function(mydata) {
-  ## For ACL:
-  mydata$rltInitMax[which(is.na(mydata$rltInitMax))] <- as.numeric("+inf")
-  mydata$method = str_c(mydata$envelopeOnly, mydata$rltInitMax, sep=" / ")
-  mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
-  
-  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
-  xlab = "Time (minutes)"
-  ylab = "Bounds on log-likelihood"
-  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=bound, color=factor(method)))
-  p <- p + geom_line(aes(linetype=boundType))
-  #p <- p + geom_point(aes(shape=boundType))
-  p <- p + xlab(xlab) + ylab(ylab) ##+ opts(title=title)
-  p <- p + scale_linetype_discrete(name="Bound type")
-  p <- p + scale_color_discrete(name="Envelope Only / \n Max RLT cuts")
-}
-myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
-
 
 plotnumfathom <- function(mydata) {
   title = "" ##str_c(getDataset(mydata), unique(df$offsetProb), sep=".")

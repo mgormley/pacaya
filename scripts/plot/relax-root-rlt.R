@@ -13,6 +13,12 @@ myplot <- function(p, filename) {
   ggsave(filename, width=stdwidth, height=stdheight)
 }
 
+myplotwh <- function(p, filename, stdwidth, stdheight) {
+  p <- p + theme_bw(12, base_family="serif")
+  print(p)
+  ggsave(filename, width=stdwidth, height=stdheight)
+}
+
 getDataset <- function(mydata) {
   colsubset <- df[,c("dataset", "maxNumSentences", "maxSentenceLength")]
   unique(str_c(df$dataset, df$maxNumSentences, df$maxSentenceLength, sep="."))
@@ -27,6 +33,19 @@ safe.as.numeric <- function(x) {
 ## Plotting functions.
 
 plotrootboundalone <- function(mydata) {
+  ## For ACL: 5 synthetic sentences.
+  viterbiEmScore <- -13.02
+  ##
+  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Proportion of RLT rows included"
+  ylab = "Upper bound on\nlog-likelihood at root"
+  p <- qplot(rltInitProp, relaxBound, data=mydata,
+             geom="point", xlab=xlab, ylab=ylab) +
+                 opts(axis.text.x=theme_text(angle=70, hjust=1.0))
+  p <- p + geom_line(aes(group=factor(method)))
+}
+
+plotrootboundwithline <- function(mydata) {
   ## For ACL: 5 synthetic sentences.
   viterbiEmScore <- -13.02
   ##
@@ -103,8 +122,10 @@ df$method <- df$inclExtraParseCons
 ##                            (drSamplingDist == "UNIFORM" | is.na(drSamplingDist)))),
 ##       str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))
 
-myplot(plotrootboundalone(subset(df, relaxBound < 0.1 & relaxBound > -100 & drUseIdentityMatrix=="False" & inclExtraParseCons == "False")),
-       str_c(results.file, groupLevel, "relaxBoundAlone", "pdf", sep="."))
+myplotwh(plotrootboundalone(subset(df, relaxBound < 0.1 & relaxBound > -100
+                                   & drUseIdentityMatrix=="False" & inclExtraParseCons == "False"
+                                   )),
+       str_c(results.file, groupLevel, "relaxBoundAlone", "pdf", sep="."), 4.7, 2.4)
 
 myplot(plotrootbound(subset(df, relaxBound < 0.1 & relaxBound > -100)),
        str_c(results.file, groupLevel, "relaxBound", "pdf", sep="."))

@@ -645,7 +645,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
 #                            experiment = all + dataset + relax + extra
 #                            exps.append(experiment)
             for rltInitProp in frange(0.0, 1.0, 0.1):
-                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp)
+                experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp) + DPExpParams(maxNumSentences=20)
                 exps.append(experiment)
                 # Uncomment to compare with identity matrix.
                 #experiment = all + dataset + relax + DPExpParams(rltInitProp=rltInitProp, drUseIdentityMatrix=True)
