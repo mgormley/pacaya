@@ -46,7 +46,7 @@ dfBoth.subset <- subset(dfBoth, dataset == "alt-three"
                         & bound != -Inf)
                         
 plotbnbboundsvnodes <- function(mydata) {
-  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  title = "" ##str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Number of nodes processed"
   ylab = "Bounds on log-likelihood"
   p <- ggplot(mydata, aes(x=numSeen, y=bound, color=factor(method)))
@@ -77,7 +77,7 @@ plotbnbboundsvtime <- function(mydata) {
   mydata$method = str_c(mydata$envelopeOnly, mydata$rltInitMax, sep=" / ")
   mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
   
-  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Time (minutes)"
   ylab = "Bounds on log-likelihood"
   p <- ggplot(mydata, aes(x=time / 1000 / 60, y=bound, color=factor(method)))
@@ -91,10 +91,10 @@ myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", 
 
 
 plotnumfathom <- function(mydata) {
-  title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  title = "" ##str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Time (minutes)"
   ylab = "# fathomed / # processed"
-  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=(numFathom / numSeen), color=factor(propSupervised)))
+  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=(numFathom / numSeen), color=factor(method)))
   p <- p + geom_line()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
   p <- p + scale_color_discrete(name="Proportion supervised")
