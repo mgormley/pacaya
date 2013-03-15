@@ -33,8 +33,8 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 
 	public SortedIntIntMap(SortedIntIntMap other) {
 		this.used = other.used;
-		this.indices = Utilities.copyOf(indices);
-		this.values = Utilities.copyOf(values);
+		this.indices = Utilities.copyOf(other.indices);
+		this.values = Utilities.copyOf(other.values);
 	}
 
 	public void clear() {

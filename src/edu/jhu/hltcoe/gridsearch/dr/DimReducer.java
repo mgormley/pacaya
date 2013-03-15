@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
+import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 import org.apache.log4j.Logger;
 
@@ -184,7 +184,7 @@ public class DimReducer {
         // Construct the lower-dimensional constraints: Sd <= SA x <= Sb.
         LpRows rows = new LpRows(prm.setNames);
         for (int i=0; i<SA.rows(); i++) {
-            FastSparseLVector coef = new FastSparseLVector();
+            SortedLongDoubleVector coef = new SortedLongDoubleVector();
             for (int j=0; j<SA.columns(); j++) {
                 double SA_ij = SA.getQuick(i, j);
                 if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {

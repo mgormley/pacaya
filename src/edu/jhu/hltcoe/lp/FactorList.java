@@ -171,7 +171,7 @@ public class FactorList implements Iterable<Factor> {
         for (Factor fac : this) {
             double l2Norm = fac.getL2Norm();
             fac.g = avgL2Norm * fac.g / l2Norm;
-            double[] vals = fac.G.getData();
+            double[] vals = fac.G.getValues();
             for (int i=0; i<fac.G.getUsed(); i++) {
                 vals[i] = avgL2Norm * vals[i] / l2Norm;
             }

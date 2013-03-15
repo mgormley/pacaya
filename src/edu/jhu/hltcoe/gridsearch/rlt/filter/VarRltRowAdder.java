@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
+import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.lp.FactorBuilder.BoundFactor;
@@ -116,7 +116,7 @@ public class VarRltRowAdder implements RltRowAdder {
             if (boundsOnly && !(factor instanceof BoundFactor)){
                 continue;
             }
-            for (LVectorEntry ve : factor.G) {
+            for (LongDoubleEntry ve : factor.G) {
                 int veIdx = SafeCast.safeLongToInt(ve.index());
                 if (inputVarIds.contains(veIdx)) {
                     Utilities.addToList(varConsMap, veIdx, i);

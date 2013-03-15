@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.util.vector;
 
+import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -8,39 +9,39 @@ import edu.jhu.hltcoe.util.Utilities;
  * @author mgormley
  *
  */
-public class SortedIntDoubleVector extends SortedIntDoubleMap {
+public class SortedLongDoubleVector extends SortedLongDoubleMap {
 
     boolean norm2Cached = false;
     double norm2Value;
     
-    public SortedIntDoubleVector() {
+    public SortedLongDoubleVector() {
         super();
     }
     
-    public SortedIntDoubleVector(int[] index, double[] data) {
+    public SortedLongDoubleVector(long[] index, double[] data) {
     	super(index, data);
 	}
     
-    public SortedIntDoubleVector(SortedIntDoubleVector vector) {
+    public SortedLongDoubleVector(SortedLongDoubleVector vector) {
     	super(vector);
     }
 
-	public SortedIntDoubleVector(double[] denseRow) {
-		this(Utilities.getIndexArray(denseRow.length), denseRow);
+	public SortedLongDoubleVector(double[] denseRow) {
+		this(Utilities.getLongIndexArray(denseRow.length), denseRow);
 	}
 
 	// TODO: This could be done with a single binary search instead of two.
-    public void add(int idx, double val) {
+    public void add(long idx, double val) {
     	double curVal = getWithDefault(idx, 0.0);
     	put(idx, curVal + val);
     }
     
-    public void set(int idx, double val) {
+    public void set(long idx, double val) {
     	put(idx, val);
     }
     
     @Override
-	public double get(int idx) {
+	public double get(long idx) {
 		return getWithDefault(idx, 0.0);
 	}
     
@@ -50,16 +51,23 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     	}
     }
 
-	public void set(SortedIntDoubleVector other) {
+	public void add(SortedLongDoubleVector other) {
 		// TODO: this could be done much faster with a merge of the two arrays.
-		for (IntDoubleEntry ve : other) {
+		for (LongDoubleEntry ve : other) {
+			add(ve.index(), ve.get());
+		}
+	}
+	
+	public void set(SortedLongDoubleVector other) {
+		// TODO: this could be done much faster with a merge of the two arrays.
+		for (LongDoubleEntry ve : other) {
 			set(ve.index(), ve.get());
 		}
 	}
 
-    public double dot(SortedIntDoubleVector y) {
-        if (y instanceof SortedIntDoubleVector) {
-            SortedIntDoubleVector other = ((SortedIntDoubleVector) y);
+    public double dot(SortedLongDoubleVector y) {
+        if (y instanceof SortedLongDoubleVector) {
+            SortedLongDoubleVector other = ((SortedLongDoubleVector) y);
             double ret = 0;
             int oc = 0;
             for (int c = 0; c < used; c++) {
@@ -84,8 +92,8 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     /**
      * @return A new vector without zeros OR the same vector if it has none.
      */
-    public static SortedIntDoubleVector getWithNoZeroValues(SortedIntDoubleVector row, double zeroThreshold) {
-        int[] origIndex = row.getIndices();
+    public static SortedLongDoubleVector getWithNoZeroValues(SortedLongDoubleVector row, double zeroThreshold) {
+        long[] origIndex = row.getIndices();
         double[] origData = row.getValues();
         
         // Count and keep track of nonzeros.
@@ -104,7 +112,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
         
         if (numZeros > 0) {
             // Create the new vector without the zeros.
-            int[] newIndex = new int[numNonZeros];
+            long[] newIndex = new long[numNonZeros];
             double[] newData = new double[numNonZeros];
 
             int newIdx = 0;
@@ -115,7 +123,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
                     newIdx++;
                 }
             }
-            return new SortedIntDoubleVector(newIndex, newData);
+            return new SortedLongDoubleVector(newIndex, newData);
         } else {
             return row;
         }
@@ -123,12 +131,12 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     
 
     /**
-     * TODO: Make a SortedIntLongVectorWithExplicitZeros class and move this method there.
+     * TODO: Make a SortedLongDoubleVectorWithExplicitZeros class and move this method there.
      * 
      * Here we override the zero method so that it doesn't set the number of
      * used values to 0. This ensures that we keep explicit zeros in.
      */
-    public SortedIntDoubleVector zero() {
+    public SortedLongDoubleVector zero() {
         java.util.Arrays.fill(values, 0);
         //used = 0;
         return this;
@@ -138,8 +146,8 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
      * Computes the Hadamard product (or entry-wise product) of this vector with
      * another.
      */
-    public SortedIntDoubleVector hadamardProd(SortedIntDoubleVector other) {
-    	SortedIntDoubleVector ip = new SortedIntDoubleVector();
+    public SortedLongDoubleVector hadamardProd(SortedLongDoubleVector other) {
+    	SortedLongDoubleVector ip = new SortedLongDoubleVector();
         int oc = 0;
         for (int c = 0; c < used; c++) {
             while (oc < other.used) {
@@ -175,17 +183,17 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedIntDoubleVector other, double delta) {
+    public boolean equals(SortedLongDoubleVector other, double delta) {
         if (other.size() != this.size()) {
             return false;
         }
         // This is slow, but correct.
-        for (IntDoubleEntry ve : this) {
+        for (LongDoubleEntry ve : this) {
             if (!Utilities.equals(ve.get(), other.get(ve.index()), delta)) {
                 return false;
             }
         }
-        for (IntDoubleEntry ve : other) {
+        for (LongDoubleEntry ve : other) {
             if (!Utilities.equals(ve.get(), this.get(ve.index()), delta)) {
                 return false;
             }

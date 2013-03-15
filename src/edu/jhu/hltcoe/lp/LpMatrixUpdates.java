@@ -12,7 +12,7 @@ import ilog.concert.IloLPMatrix;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import no.uib.cipr.matrix.sparse.longs.SparseLVector;
+import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 /**
  * Represents a set of updates to linear programming matrix rows (e.g. the
@@ -26,14 +26,14 @@ import no.uib.cipr.matrix.sparse.longs.SparseLVector;
  */
 public class LpMatrixUpdates {
     private TIntArrayList rowIdxs;
-    private ArrayList<SparseLVector> coefs;
+    private ArrayList<SortedLongDoubleVector> coefs;
 
     public LpMatrixUpdates() {
         rowIdxs = new TIntArrayList();
-        coefs = new ArrayList<SparseLVector>();
+        coefs = new ArrayList<SortedLongDoubleVector>();
     }
 
-    public void add(int rowIdx, SparseLVector coef) {
+    public void add(int rowIdx, SortedLongDoubleVector coef) {
         rowIdxs.add(rowIdx);
         coefs.add(coef);
     }
@@ -44,19 +44,19 @@ public class LpMatrixUpdates {
         TDoubleArrayList val = new TDoubleArrayList();
         for (int i = 0; i < rowIdxs.size(); i++) {
             int rowind = rowIdxs.get(i);
-            SparseLVector row = coefs.get(i);
+            SortedLongDoubleVector row = coefs.get(i);
             rowInd.add(getRowIndArray(row, rowind));
-            colInd.add(SafeCast.safeLongToInt(row.getIndex()));
-            val.add(row.getData());
+            colInd.add(SafeCast.safeLongToInt(row.getIndices()));
+            val.add(row.getValues());
         }
         mat.setNZs(rowInd.toNativeArray(), colInd.toNativeArray(), val.toNativeArray());
     }
 
-    public ArrayList<SparseLVector> getAllCoefs() {
+    public ArrayList<SortedLongDoubleVector> getAllCoefs() {
         return coefs;
     }
 
-    public void setAllCoefs(ArrayList<SparseLVector> coefs) {
+    public void setAllCoefs(ArrayList<SortedLongDoubleVector> coefs) {
         this.coefs = coefs;
     }
 
@@ -64,8 +64,8 @@ public class LpMatrixUpdates {
      * Gets an int array of the same length as row.getIndex() and filled
      * with rowind.
      */
-    private static int[] getRowIndArray(SparseLVector row, int rowind) {
-        int[] array = new int[row.getIndex().length];
+    private static int[] getRowIndArray(SortedLongDoubleVector row, int rowind) {
+        int[] array = new int[row.getIndices().length];
         Arrays.fill(array, rowind);
         return array;
     }

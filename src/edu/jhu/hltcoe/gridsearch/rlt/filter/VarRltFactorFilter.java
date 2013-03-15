@@ -6,7 +6,7 @@ import ilog.concert.IloNumVar;
 
 import java.util.List;
 
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
+import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.Utilities;
@@ -34,7 +34,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
 
     @Override
     public boolean accept(Factor f) {
-        for (LVectorEntry ve : f.G) {
+        for (LongDoubleEntry ve : f.G) {
             if (!Utilities.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
                 return true;
             }

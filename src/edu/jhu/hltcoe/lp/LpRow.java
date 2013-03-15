@@ -3,15 +3,15 @@
  */
 package edu.jhu.hltcoe.lp;
 
-import no.uib.cipr.matrix.sparse.longs.SparseLVector;
+import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 public class LpRow {
     private double lb;
     private double ub;
-    private SparseLVector coefs;
+    private SortedLongDoubleVector coefs;
     private String name;
 
-    public LpRow(double lb, SparseLVector coefs, double ub, String name) {
+    public LpRow(double lb, SortedLongDoubleVector coefs, double ub, String name) {
         super();
         this.lb = lb;
         this.coefs = coefs;
@@ -27,7 +27,7 @@ public class LpRow {
         return ub;
     }
 
-    public SparseLVector getCoefs() {
+    public SortedLongDoubleVector getCoefs() {
         return coefs;
     }
 

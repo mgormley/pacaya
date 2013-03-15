@@ -26,7 +26,7 @@ public class FactorListTest {
         
         // Simple check that nothing changes.
         Assert.assertEquals(1, f1.g, 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1,1,2,3}, f1.G.getData(), 1e-13);
+        JUnitUtils.assertArrayEquals(new double[]{1,1,2,3}, f1.G.getValues(), 1e-13);
     }
 
     @Test
@@ -42,15 +42,15 @@ public class FactorListTest {
         System.out.println(factors);
         
         Assert.assertEquals(1, factors.get(0).g, 1e-13);
-        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get(0).G.getIndex());
-        JUnitUtils.assertArrayEquals(new double[] {1, 1, 2, 3 }, factors.get(0).G.getData(), 1e-13);
+        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get(0).G.getIndices());
+        JUnitUtils.assertArrayEquals(new double[] {1, 1, 2, 3 }, factors.get(0).G.getValues(), 1e-13);
         Assert.assertEquals(-1, factors.get(1).g, 1e-13);
-        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get(1).G.getIndex());
-        JUnitUtils.assertArrayEquals(new double[] {-1, -1, -2, -3 }, factors.get(1).G.getData(), 1e-13);
+        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get(1).G.getIndices());
+        JUnitUtils.assertArrayEquals(new double[] {-1, -1, -2, -3 }, factors.get(1).G.getValues(), 1e-13);
         
         // Should be unchanged: 
         Assert.assertEquals(8, factors.get(2).g, 1e-13);
-        Assert.assertArrayEquals(new long[] {0, 1, 3, 7}, factors.get(2).G.getIndex());
-        JUnitUtils.assertArrayEquals(new double[] {4, 5, 6, 7 }, factors.get(2).G.getData(), 1e-13);
+        Assert.assertArrayEquals(new long[] {0, 1, 3, 7}, factors.get(2).G.getIndices());
+        JUnitUtils.assertArrayEquals(new double[] {4, 5, 6, 7 }, factors.get(2).G.getValues(), 1e-13);
     }
 }

@@ -166,5 +166,79 @@ public class Sort {
         index[i] = index[j];
         index[j] = b;
     }
+    
+
+    public static boolean isSortedAsc(int[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] > array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedAscAndUnique(int[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] >= array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedDesc(int[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] < array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedAsc(double[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] > array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedDesc(double[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] < array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedAsc(long[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] > array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedAscAndUnique(long[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] >= array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
+    public static boolean isSortedDesc(long[] array) {
+    	for (int i=0; i<array.length-1; i++) {
+    		if (array[i] < array[i+1]) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+
 
 }

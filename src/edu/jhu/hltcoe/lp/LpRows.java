@@ -12,7 +12,7 @@ import ilog.concert.IloRange;
 
 import java.util.ArrayList;
 
-import no.uib.cipr.matrix.sparse.longs.SparseLVector;
+import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 /**
  * Represents a set of linear programming constraints of the form d <= Ax <= b.
@@ -24,19 +24,19 @@ import no.uib.cipr.matrix.sparse.longs.SparseLVector;
 public class LpRows {
     private TDoubleArrayList lbs;
     private TDoubleArrayList ubs;
-    private ArrayList<SparseLVector> coefs;
+    private ArrayList<SortedLongDoubleVector> coefs;
     private ArrayList<String> names;
     private boolean setNames;
 
     public LpRows(boolean setNames) {
         lbs = new TDoubleArrayList();
-        coefs = new ArrayList<SparseLVector>();
+        coefs = new ArrayList<SortedLongDoubleVector>();
         ubs = new TDoubleArrayList();
         names = new ArrayList<String>();
         this.setNames = setNames;
     }
 
-    public int addRow(double lb, SparseLVector coef, double ub) {
+    public int addRow(double lb, SortedLongDoubleVector coef, double ub) {
         return addRow(lb, coef, ub, null);
     }
 
@@ -44,7 +44,7 @@ public class LpRows {
         addRow(row.getLb(), row.getCoefs(), row.getUb(), row.getName());
     }
 
-    public int addRow(double lb, SparseLVector coef, double ub, String name) {
+    public int addRow(double lb, SortedLongDoubleVector coef, double ub, String name) {
         lbs.add(lb);
         coefs.add(coef);
         ubs.add(ub);
@@ -68,8 +68,8 @@ public class LpRows {
         int[][] ind = new int[coefs.size()][];
         double[][] val = new double[coefs.size()][];
         for (int i = 0; i < coefs.size(); i++) {
-            ind[i] = SafeCast.safeLongToInt(coefs.get(i).getIndex());
-            val[i] = coefs.get(i).getData();
+            ind[i] = SafeCast.safeLongToInt(coefs.get(i).getIndices());
+            val[i] = coefs.get(i).getValues();
         }
         double[] safeLbs = CplexUtils.safeGetBounds(lbs.toNativeArray());
         double[] safeUbs = CplexUtils.safeGetBounds(ubs.toNativeArray());
@@ -90,11 +90,11 @@ public class LpRows {
         return lbs.size();
     }
 
-    public ArrayList<SparseLVector> getAllCoefs() {
+    public ArrayList<SortedLongDoubleVector> getAllCoefs() {
         return coefs;
     }
 
-    public void setAllCoefs(ArrayList<SparseLVector> coefs) {
+    public void setAllCoefs(ArrayList<SortedLongDoubleVector> coefs) {
         this.coefs = coefs;
     }
 

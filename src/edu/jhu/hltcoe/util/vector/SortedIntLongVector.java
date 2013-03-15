@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.util.vector;
 
+import edu.jhu.hltcoe.util.Utilities;
+
 
 /**
  * Infinite length sparse vector.
@@ -24,6 +26,10 @@ public class SortedIntLongVector extends SortedIntLongMap {
     	super(vector);
     }
 
+	public SortedIntLongVector(long[] denseRow) {
+		this(Utilities.getIndexArray(denseRow.length), denseRow);
+	}
+	
 	// TODO: This could be done with a single binary search instead of two.
     public void add(int idx, long val) {
     	long curVal = getWithDefault(idx, 0);
@@ -117,7 +123,7 @@ public class SortedIntLongVector extends SortedIntLongMap {
     
 
     /**
-     * TODO: Make a FastSparseLVectorWithExplicitZeros class and move this method there.
+     * TODO: Make a SortedIntLongVectorWithExplicitZeros class and move this method there.
      * 
      * Here we override the zero method so that it doesn't set the number of
      * used values to 0. This ensures that we keep explicit zeros in.

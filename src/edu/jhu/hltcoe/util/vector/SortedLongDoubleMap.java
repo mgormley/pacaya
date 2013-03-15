@@ -6,19 +6,19 @@ import java.util.Iterator;
 import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class SortedIntLongMap implements Iterable<IntLongEntry> {
+public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 
-	protected int[] indices;
-	protected long[] values;
+	protected long[] indices;
+	protected double[] values;
 	protected int used; // TODO: size
 	
-	public SortedIntLongMap() {
+	public SortedLongDoubleMap() {
 		this.used = 0;
-		this.indices= new int[0];
-		this.values = new long[0];	
+		this.indices= new long[0];
+		this.values = new double[0];	
 	}
 
-	public SortedIntLongMap(int[] index, long[] data) {
+	public SortedLongDoubleMap(long[] index, double[] data) {
 		if (!Sort.isSortedAscAndUnique(index)) {
 			throw new IllegalStateException("Indices are not sorted ascending");
 		}
@@ -31,7 +31,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		this.values = data;
 	}
 
-	public SortedIntLongMap(SortedIntLongMap other) {
+	public SortedLongDoubleMap(SortedLongDoubleMap other) {
 		this.used = other.used;
 		this.indices = Utilities.copyOf(other.indices);
 		this.values = Utilities.copyOf(other.values);
@@ -41,11 +41,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		this.used = 0;
 	}
 	
-	public boolean contains(int idx) {
+	public boolean contains(long idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
 	
-	public long get(int idx) {
+	public double get(long idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -53,7 +53,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return values[i];
 	}
 	
-	public long getWithDefault(int idx, long defaultVal) {
+	public double getWithDefault(long idx, double defaultVal) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			return defaultVal;
@@ -61,7 +61,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return values[i];
 	}
 	
-	public void remove(int idx) {
+	public void remove(long idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -72,7 +72,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		used--;
 	}
 	
-	public void put(int idx, long val) {
+	public void put(long idx, double val) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i >= 0) {
 			// Just update the value.
@@ -83,20 +83,6 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		indices = insert(indices, insertionPoint, idx);
 		values = insert(values, insertionPoint, val);
 		used++;
-	}
-	
-	private final int[] insert(int[] array, int i, int val) {
-		if (used >= array.length) {
-			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
-		}
-		if (i < used) {
-			// Shift the values over.
-			System.arraycopy(array, i, array, i+1, used - i);
-		}
-		// Insert the new index into the array.
-		array[i] = val;
-		return array;
 	}
 	
 	private final long[] insert(long[] array, int i, long val) {
@@ -113,20 +99,34 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return array;
 	}
 	
-	public class IntLongEntryImpl implements IntLongEntry {
+	private final double[] insert(double[] array, int i, double val) {
+		if (used >= array.length) {
+			// Increase the capacity of the array.
+			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+		}
+		if (i < used) {
+			// Shift the values over.
+			System.arraycopy(array, i, array, i+1, used - i);
+		}
+		// Insert the new index into the array.
+		array[i] = val;
+		return array;
+	}
+
+	public class LongDoubleEntryImpl implements LongDoubleEntry {
 		private int i;
-		public IntLongEntryImpl(int i) {
+		public LongDoubleEntryImpl(int i) {
 			this.i = i;
 		}
-		public int index() {
+		public long index() {
 			return indices[i];
 		}
-		public long get() {
+		public double get() {
 			return values[i];
 		}
 	}
 
-	public class IntLongIterator implements Iterator<IntLongEntry> {
+	public class LongDoubleIterator implements Iterator<LongDoubleEntry> {
 
 		private int i = 0;
 		
@@ -136,8 +136,8 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		}
 
 		@Override
-		public IntLongEntry next() {
-			return new IntLongEntryImpl(i);
+		public LongDoubleEntry next() {
+			return new LongDoubleEntryImpl(i);
 		}
 
 		@Override
@@ -148,8 +148,8 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 	}
 
 	@Override
-	public Iterator<IntLongEntry> iterator() {
-		return new IntLongIterator();
+	public Iterator<LongDoubleEntry> iterator() {
+		return new LongDoubleIterator();
 	}
 
 
@@ -164,11 +164,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
     /**
      * Returns the indices.
      */
-    public int[] getIndices() {
+    public long[] getIndices() {
         if (used == indices.length)
             return indices;
 
-        int[] tmpIndices = new int[used];
+        long[] tmpIndices = new long[used];
         for (int i = 0; i < used; i++) {
         	tmpIndices[i] = indices[i];
         }
@@ -178,11 +178,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
     /**
      * Returns the values.
      */
-    public long[] getValues() {
+    public double[] getValues() {
         if (used == values.length)
             return values;
 
-        long[] tmpValues = new long[used];
+        double[] tmpValues = new double[used];
         for (int i = 0; i < used; i++) {
         	tmpValues[i] = values[i];
         }

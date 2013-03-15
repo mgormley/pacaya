@@ -10,13 +10,12 @@ import ilog.cplex.IloCplex.BasisStatus;
 
 import java.util.Arrays;
 
-import no.uib.cipr.matrix.sparse.FastSparseVector;
-
 import org.junit.Assert;
 
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 
 public class CplexUtils {
 
@@ -171,10 +170,10 @@ public class CplexUtils {
         double[][] val = new double[nRows][];
         rltMat.getRows(0, nRows, lbs, ubs, ind, val);
 
-        FastSparseVector expectedRow = new FastSparseVector(denseRow);
+        SortedIntDoubleVector expectedRow = new SortedIntDoubleVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
-            FastSparseVector row = new FastSparseVector(ind[m], val[m]);
+            SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
             if (row.equals(expectedRow, delta)) {
@@ -201,10 +200,10 @@ public class CplexUtils {
         double[][] val = new double[nRows][];
         rltMat.getRows(0, nRows, lbs, ubs, ind, val);
 
-        FastSparseVector expectedRow = new FastSparseVector(denseRow);
+        SortedIntDoubleVector expectedRow = new SortedIntDoubleVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
-            FastSparseVector row = new FastSparseVector(ind[m], val[m]);
+            SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
             if (row.equals(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)

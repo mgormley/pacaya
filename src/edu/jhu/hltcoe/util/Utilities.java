@@ -297,6 +297,14 @@ public class Utilities {
         return Arrays.copyOf(original, original.length);
     }
 
+    public static long[] copyOf(long[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static long[] copyOf(long[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+    
     public static void copy(int[][] array, int[][] clone) {
         assert (array.length == clone.length);
         for (int i = 0; i < array.length; i++) {
@@ -530,6 +538,19 @@ public class Utilities {
      */
     public static int[] getIndexArray(int length) {
         int[] index = new int[length];
+        for (int i=0; i<index.length; i++) {
+            index[i] = i;
+        }
+        return index;
+    }
+    
+    /**
+     * Gets an array where array[i] = i.
+     * @param length The length of the array.
+     * @return The new index array.
+     */
+    public static long[] getLongIndexArray(int length) {
+        long[] index = new long[length];
         for (int i=0; i<index.length; i++) {
             index[i] = i;
         }

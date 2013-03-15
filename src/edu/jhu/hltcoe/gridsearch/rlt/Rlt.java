@@ -12,9 +12,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import no.uib.cipr.matrix.sparse.longs.FastSparseLVector;
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
-import no.uib.cipr.matrix.sparse.longs.SparseLVector;
+import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
@@ -80,13 +79,13 @@ public class Rlt {
             tempRltConsInd = new SymIntMat();
         }
 
-        public void addRow(double lb, SparseLVector coef, double ub, String name) throws IloException {
+        public void addRow(double lb, SortedLongDoubleVector coef, double ub, String name) throws IloException {
             rows.addRow(lb, coef, ub, name);
             numRowsAdded++;
             maybePush();
         }
 
-        public void addRow(double cplexNegInf, SparseLVector row, double d, String rowName, int i, int j) throws IloException {
+        public void addRow(double cplexNegInf, SortedLongDoubleVector row, double d, String rowName, int i, int j) throws IloException {
             int rowind = rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName);
             tempRltConsInd.set(i, j, rowind);
             numRowsAdded++;
@@ -335,7 +334,7 @@ public class Rlt {
         }
         
         String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%s,%s}", facI.getName(), inputMatrix.getNumVar(k).getName()) : null;
-        SparseLVector row = getRltRowForEq(facI, k, idsForRltVars);
+        SortedLongDoubleVector row = getRltRowForEq(facI, k, idsForRltVars);
         // Add the complete constraint.
         rows.addRow(0.0, row, 0.0, rowName);
     }
@@ -360,7 +359,7 @@ public class Rlt {
         }
 
         String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
-        SparseLVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
+        SortedLongDoubleVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
         // Add the complete constraint.
         rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
     }
@@ -393,7 +392,7 @@ public class Rlt {
             Factor facI = leqFactors.get(i);
             if (rltLeqConsIdx.contains(factorIdx, i)) {
                 // A bound will have only been added if it passed the filter. 
-                SparseLVector row = getRltRowForLeq(newBj, facI, constantVarColIdx, idsForRltVars);
+                SortedLongDoubleVector row = getRltRowForLeq(newBj, facI, constantVarColIdx, idsForRltVars);
                 int rowind = rltLeqConsIdx.get(factorIdx, i);
                 rows.add(rowind, row);
             }
@@ -430,13 +429,13 @@ public class Rlt {
         rows.setAllCoefs(convertRltVarIdsToColumIndices(rows.getAllCoefs()));
     }
     
-    private ArrayList<SparseLVector> convertRltVarIdsToColumIndices(List<SparseLVector> rows)  throws IloException {
+    private ArrayList<SortedLongDoubleVector> convertRltVarIdsToColumIndices(List<SortedLongDoubleVector> rows)  throws IloException {
         // Make sure all the IDs are added as columns.
         log.trace("Creating new first-order RLT variables.");
         int numRltCols = rltMat.getNcols();
         List<IloNumVar> newRltVars = new ArrayList<IloNumVar>();
         for (int m=0; m<rows.size(); m++) {
-            for (LVectorEntry ve : rows.get(m)) {
+            for (LongDoubleEntry ve : rows.get(m)) {
                 long id = ve.index();
                 if (!idToColIdx.contains(id)) {
                     int i = idsForRltVars.getI(id);
@@ -461,12 +460,12 @@ public class Rlt {
         
         // Convert the IDs to indices.
         log.trace("Converting IDs to column indices");
-        ArrayList<SparseLVector> rowsWithColIdx = new ArrayList<SparseLVector>();
+        ArrayList<SortedLongDoubleVector> rowsWithColIdx = new ArrayList<SortedLongDoubleVector>();
         for (int m=0; m<rows.size(); m++) {
-            SparseLVector oldCoefs = rows.get(m);
+            SortedLongDoubleVector oldCoefs = rows.get(m);
             // TODO: This should really be a FastSparseVector without longs.
-            SparseLVector newCoefs = new FastSparseLVector();
-            for (LVectorEntry ve : oldCoefs) {
+            SortedLongDoubleVector newCoefs = new SortedLongDoubleVector();
+            for (LongDoubleEntry ve : oldCoefs) {
                 long id = ve.index();
                 int index = idToColIdx.get(id);
                 assert (index != -1);
@@ -519,7 +518,7 @@ public class Rlt {
         return true;
     }
 
-    private static SparseLVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)
+    private static SortedLongDoubleVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)
             throws IloException {
         // Here we add the following constraint:
         // \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
@@ -527,20 +526,22 @@ public class Rlt {
         // + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il} G_{jk})
         // w_{kl} &\leq g_ig_j
 
-        FastSparseLVector row = new FastSparseLVector();
+        SortedLongDoubleVector row = new SortedLongDoubleVector();
         // Part 1: \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
-        SparseLVector facIG = facI.G.copy();
-        SparseLVector facJG = facJ.G.copy();
-        row.add(facIG.scale(facJ.g));
-        row.add(facJG.scale(facI.g));
+        SortedLongDoubleVector facIG = new SortedLongDoubleVector(facI.G);
+        SortedLongDoubleVector facJG = new SortedLongDoubleVector(facJ.G);
+        facIG.scale(facJ.g);
+        facJG.scale(facI.g);
+        row.add(facIG);
+        row.add(facJG);
 
         // Part 2: + \sum_{k=1}^n -G_{ik} G_{jk} w_{kk}
-        SparseLVector ip = facI.G.hadamardProd(facJ.G);
-        ip = ip.scale(-1.0);
-        SparseLVector shiftedIp = new FastSparseLVector();
+        SortedLongDoubleVector ip = facI.G.hadamardProd(facJ.G);
+        ip.scale(-1.0);
+        SortedLongDoubleVector shiftedIp = new SortedLongDoubleVector();
         for (int idx = 0; idx < ip.getUsed(); idx++) {
-            int k = SafeCast.safeLongToInt(ip.getIndex()[idx]);
-            double val = ip.getData()[idx];
+            int k = SafeCast.safeLongToInt(ip.getIndices()[idx]);
+            double val = ip.getValues()[idx];
             shiftedIp.set(rltVarsInd.get(k, k), val);
         }
         row.add(shiftedIp);
@@ -548,11 +549,11 @@ public class Rlt {
         // Part 3: + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il}
         // G_{jk}) w_{kl}
         for (int ii = 0; ii < facI.G.getUsed(); ii++) {
-            int k = SafeCast.safeLongToInt(facI.G.getIndex()[ii]);
-            double vi = facI.G.getData()[ii];
+            int k = SafeCast.safeLongToInt(facI.G.getIndices()[ii]);
+            double vi = facI.G.getValues()[ii];
             for (int jj = 0; jj < facJ.G.getUsed(); jj++) {
-                int l = SafeCast.safeLongToInt(facJ.G.getIndex()[jj]);
-                double vj = facJ.G.getData()[jj];
+                int l = SafeCast.safeLongToInt(facJ.G.getIndices()[jj]);
+                double vj = facJ.G.getValues()[jj];
                 if (k == l) {
                     continue;
                 }
@@ -566,8 +567,8 @@ public class Rlt {
         return row;
     }
 
-    private static SparseLVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
-        FastSparseLVector row = new FastSparseLVector();
+    private static SortedLongDoubleVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
+        SortedLongDoubleVector row = new SortedLongDoubleVector();
 
         // Original: x_k * g_i + sum_{l=1}^n - x_k * G_{il} * x_l = 0
         // Linearized: x_k * g_i + sum_{l=1}^n - G_{il} w_{kl} = 0
@@ -577,8 +578,8 @@ public class Rlt {
 
         // Add sum_{l=1}^n - G_{il} w_{kl}
         for (int idx = 0; idx < facI.   G.getUsed(); idx++) {
-            int l = SafeCast.safeLongToInt(facI.G.getIndex()[idx]);
-            double val = - facI.G.getData()[idx];
+            int l = SafeCast.safeLongToInt(facI.G.getIndices()[idx]);
+            double val = - facI.G.getValues()[idx];
             row.add(rltVarsInd.get(k, l), val);
         }
         return row;

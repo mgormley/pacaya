@@ -24,10 +24,10 @@ public class FactorBuilderTest {
         Pair<Factor, Factor> factors = FactorBuilder.getEqFactorAsLeqPair(f1);
                 
         Assert.assertEquals(1, factors.get1().g, 1e-13);
-        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get1().G.getIndex());
-        JUnitUtils.assertArrayEquals(new double[] {1, 1, 2, 3 }, factors.get1().G.getData(), 1e-13);
+        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get1().G.getIndices());
+        JUnitUtils.assertArrayEquals(new double[] {1, 1, 2, 3 }, factors.get1().G.getValues(), 1e-13);
         Assert.assertEquals(-1, factors.get2().g, 1e-13);
-        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get2().G.getIndex());
-        JUnitUtils.assertArrayEquals(new double[] {-1, -1, -2, -3 }, factors.get2().G.getData(), 1e-13);
+        Assert.assertArrayEquals(new long[] {0, 1, 2, 5}, factors.get2().G.getIndices());
+        JUnitUtils.assertArrayEquals(new double[] {-1, -1, -2, -3 }, factors.get2().G.getValues(), 1e-13);
     }
 }

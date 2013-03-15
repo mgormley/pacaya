@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
-import no.uib.cipr.matrix.sparse.longs.LVectorEntry;
+import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
@@ -10,7 +10,6 @@ import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 /**
  * Represents constraints d <= Ax <= b, where A is a matrix in compressed-column form and
@@ -86,7 +85,7 @@ public class CcLpConstraints {
 
         int count = 0;
         for (int i=0; i<factors.size(); i++) {
-            for (LVectorEntry ve : factors.get(i).G) {
+            for (LongDoubleEntry ve : factors.get(i).G) {
                 rowIndexes[count] = i;
                 colIndexes[count] = SafeCast.safeLongToInt(ve.index());
                 values[count] = ve.get();
