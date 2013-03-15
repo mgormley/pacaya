@@ -19,10 +19,10 @@ import com.joptimizer.optimizers.PrimalDualMethod;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class ModelParamSubproblem {
     

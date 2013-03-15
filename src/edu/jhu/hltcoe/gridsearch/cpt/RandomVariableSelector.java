@@ -10,8 +10,8 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.CM;
-import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Multinomials;
 
 public class RandomVariableSelector implements VariableSelector {
 

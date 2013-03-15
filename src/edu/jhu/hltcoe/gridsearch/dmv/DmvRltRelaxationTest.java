@@ -32,7 +32,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -45,6 +44,7 @@ import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexPrm;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 
 public class DmvRltRelaxationTest {

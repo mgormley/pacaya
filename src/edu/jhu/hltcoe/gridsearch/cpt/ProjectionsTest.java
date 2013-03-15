@@ -14,9 +14,9 @@ import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModelTest;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 
 public class ProjectionsTest {

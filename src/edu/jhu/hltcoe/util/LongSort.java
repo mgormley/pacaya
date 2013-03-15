@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class LongSort {
 

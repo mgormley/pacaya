@@ -9,9 +9,9 @@ import edu.jhu.hltcoe.gridsearch.Relaxation;
 import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.hltcoe.util.math.Vectors;
 import gnu.trove.TDoubleArrayList;
 
 /**

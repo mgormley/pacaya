@@ -15,9 +15,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Sets;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class LpSumToOneBuilder {
     

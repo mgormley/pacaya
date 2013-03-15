@@ -18,11 +18,11 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Triple;
 import edu.jhu.hltcoe.util.cplex.CplexPrm;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     

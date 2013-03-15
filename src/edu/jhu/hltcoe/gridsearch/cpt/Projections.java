@@ -14,9 +14,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.math.Multinomials;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Multinomials;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class Projections {
 

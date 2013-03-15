@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import cern.colt.Arrays;
-import edu.jhu.hltcoe.math.Vectors;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 
 public class DirichletTest {

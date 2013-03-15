@@ -8,7 +8,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.ProjDepTreeNode;
 import edu.jhu.hltcoe.data.ProjWallDepTreeNode;
-import edu.jhu.hltcoe.math.LabeledMultinomial;
+import edu.jhu.hltcoe.util.math.LabeledMultinomial;
 
 public class DmvDepTreeGenerator {
     

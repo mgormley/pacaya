@@ -7,10 +7,10 @@ import util.Alphabet;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.math.LabeledMultinomial;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.parse.cky.DepProbMatrix;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.LabeledMultinomial;
 
 public class DmvModel extends DepProbMatrix implements Model {
 

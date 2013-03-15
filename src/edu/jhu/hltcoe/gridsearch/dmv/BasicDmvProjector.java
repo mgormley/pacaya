@@ -11,13 +11,13 @@ import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.cky.DepInstance;
 import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class BasicDmvProjector implements DmvProjector {
 

@@ -4,8 +4,8 @@ import java.util.Arrays;
 
 import cern.jet.random.tdouble.Gamma;
 
-import edu.jhu.hltcoe.math.Multinomials;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.math.Multinomials;
 
 public class Dirichlet {
 

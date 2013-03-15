@@ -19,7 +19,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
@@ -29,6 +28,7 @@ import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 public class LpDmvRelaxedParserTest {
 

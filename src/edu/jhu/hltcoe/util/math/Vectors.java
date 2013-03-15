@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.math;
+package edu.jhu.hltcoe.util.math;
 
 import edu.jhu.hltcoe.util.Utilities;
 

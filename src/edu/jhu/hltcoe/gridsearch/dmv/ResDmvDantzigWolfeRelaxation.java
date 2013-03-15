@@ -26,13 +26,13 @@ import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 /**
  * Alternative to DmvDantzigWolfeRelaxation which doesn't use any cuts. This is accomplished by 

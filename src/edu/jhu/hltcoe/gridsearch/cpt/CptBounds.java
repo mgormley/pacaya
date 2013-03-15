@@ -3,8 +3,8 @@ package edu.jhu.hltcoe.gridsearch.cpt;
 import java.util.Arrays;
 
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 /**
  * Bounds for a conditional probability table.

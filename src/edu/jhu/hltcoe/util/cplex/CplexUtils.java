@@ -13,8 +13,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 
 import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 
 public class CplexUtils {

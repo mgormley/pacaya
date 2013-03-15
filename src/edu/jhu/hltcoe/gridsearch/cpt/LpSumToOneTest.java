@@ -12,8 +12,8 @@ import org.junit.Test;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 
 public class LpSumToOneTest {

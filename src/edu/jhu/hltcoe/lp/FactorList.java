@@ -13,10 +13,10 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
 import edu.jhu.hltcoe.lp.FactorBuilder.RowFactor;
 import edu.jhu.hltcoe.lp.FactorBuilder.RowFactorType;
-import edu.jhu.hltcoe.math.Vectors;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.hltcoe.util.math.Vectors;
 
 /**
  * Represents a set of constraints or variable bounds as Gx <= g, or
