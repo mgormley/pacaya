@@ -47,6 +47,10 @@ class DPScraper(Scraper):
             return
         
         if exp.get("expname") == "bnb-semi" or exp.get("expname") == "bnb-depth-test":
+            if exp.get("addBindingCons") == True or exp.get("addBindingCons") == "True":
+                print "WARN: skipping run with addBindingCons == True"
+                exp.set("error", "ERROR with long message")
+                return
             stdout_lines = head(stdout_file, window=1000)
             stdout_lines += tail(stdout_file, window=1000)
         else:
@@ -75,17 +79,20 @@ class DPScraper(Scraper):
         
         if exp.get("algorithm").find("bnb") != -1:
             origMat = get_match(stdout_lines, "origMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
-            exp.update(origNRows = origMat.group(1))
-            exp.update(origNCols = origMat.group(2))
-            exp.update(origNNZs = origMat.group(3))
+            if origMat:
+                exp.update(origNRows = origMat.group(1))
+                exp.update(origNCols = origMat.group(2))
+                exp.update(origNNZs = origMat.group(3))
             drMat = get_match(stdout_lines, "drMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
-            exp.update(drNRows = drMat.group(1))
-            exp.update(drNCols = drMat.group(2))
-            exp.update(drNNZs = drMat.group(3))
+            if drMat:
+                exp.update(drNRows = drMat.group(1))
+                exp.update(drNCols = drMat.group(2))
+                exp.update(drNNZs = drMat.group(3))
             rltMat = get_match(stdout_lines, "rltMatrix contains (\S+) rows, (\S+) columns, (\S+) nonzeros")
-            exp.update(rltNRows = rltMat.group(1))
-            exp.update(rltNCols = rltMat.group(2))
-            exp.update(rltNNZs = rltMat.group(3))
+            if rltMat:
+                exp.update(rltNRows = rltMat.group(1))
+                exp.update(rltNCols = rltMat.group(2))
+                exp.update(rltNNZs = rltMat.group(3))
             exp.update(relativeDiff = get_group1(stdout_lines, "relativeDiff=(\S+)", -1))
             exp.update(lowBound = get_group1(stdout_lines, "lowBound=(\S+)", -1))
             exp.update(upBound = get_group1(stdout_lines, "upBound=(\S+)", -1))

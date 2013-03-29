@@ -47,9 +47,20 @@ def get_bnb_status_list(stdout_lines):
     status_list = get_all_following(stdout_lines, ".*LazyBranchAndBoundSolver - Summary: ", True)
     if status_list == None:
         return None
+    print len(status_list)
+    # Choose every $n$th node.
+    nth_list = [status_list[i] for i in xrange(0, len(status_list), 1000)]
+    print len(nth_list)
+
     # Downsample the summaries if there are too many
-    if len(status_list) > 500:
-        status_list = sample(status_list, 500)
+    max_samples = 500
+    if len(status_list) > max_samples:
+        stride = len(status_list) / max_samples
+        status_list = [status_list[i] for i in xrange(0, len(status_list), stride)]
+        #status_list = sample(status_list, max_samples)
+    print len(status_list)
+
+    status_list = nth_list + status_list
     return map(lambda x: BnbStatus(x), status_list)
 
 

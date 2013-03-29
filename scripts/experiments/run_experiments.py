@@ -319,7 +319,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         if self.expname == "viterbi-em":
             root = RootStage()
             setup = brown
-            setup.update(maxSentenceLength=10, maxNumSentences=100000000)
+            setup.update(maxSentenceLength=10, maxNumSentences=200)
             setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
             setup.set("lambda", 1)
             for initWeights in ["uniform", "random"]:
