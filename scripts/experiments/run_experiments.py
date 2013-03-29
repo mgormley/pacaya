@@ -282,8 +282,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
-        wsj_00 = self.get_data(data_dir, "treebank_3/wsj/00")
-        wsj_full = self.get_data(data_dir, "treebank_3/wsj")
+        wsj_00 = self.get_data(data_dir, "treebank_3_sym/wsj/02")
+        wsj_full = self.get_data(data_dir, "treebank_3_sym/wsj") # Only sections 2-21
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
         
@@ -302,7 +302,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         for synthdata in [synth_alt_three]: 
             synthdata.update(printSentences="./data.txt",
                              syntheticSeed=123454321)
-            
+        
         if self.data == "synthetic": datasets = [synth_alt_three]
         elif self.fast:       datasets = [brown_cf]
         else:               datasets = [brown_full]
@@ -330,6 +330,27 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
                     root.add_dependent(experiment)
                     root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
+            scrape = ScrapeExpout(tsv_file="results.data")
+            scrape.add_prereqs(root.dependents)
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereq(scrape)
+            return root
+        elif self.expname == "vem-wsj":
+            root = RootStage()
+            setup = wsj
+            setup.update(maxNumSentences=100000000)
+            setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
+            setup.set("lambda", 1)
+            for maxSentenceLength in [10, 20]:
+                setup.update(maxSentenceLength=maxSentenceLength)
+                for initWeights in ["uniform", "random"]:
+                    setup.update(initWeights=initWeights)
+                    for randomRestartId in range(100):
+                        setup.set("randomRestartId", randomRestartId, True, False)
+                        # Set the seed explicitly.
+                        experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
+                        root.add_dependent(experiment)
+                        root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
