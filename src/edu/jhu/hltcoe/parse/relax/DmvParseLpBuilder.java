@@ -176,6 +176,7 @@ public class DmvParseLpBuilder {
     }
 
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
+    	log.debug("Adding constraints to matrix");
         CplexUtils.addRows(mat, pp.oneArcPerWall);
         CplexUtils.addRows(mat, pp.oneParent);
         CplexUtils.addRows(mat, pp.oneArcPerPair);
@@ -199,6 +200,7 @@ public class DmvParseLpBuilder {
         if (pp.universalPostCons != null) {
             CplexUtils.addRow(mat, pp.universalPostCons);
         }
+        log.debug("Done adding constraints to matrix");
     }
 
     private void createArcAndFlowVars(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {

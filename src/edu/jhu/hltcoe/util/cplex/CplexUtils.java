@@ -131,19 +131,46 @@ public class CplexUtils {
     public static void addRows(IloLPMatrix mat, IloRange[][] ranges) throws IloException {
         if (ranges == null) {
             return;
-        }
-        for (int i = 0; i < ranges.length; i++) {
-            addRows(mat, ranges[i]);
-        }
+		}
+		int numNonNull = 0;
+		for (int i = 0; i < ranges.length; i++) {
+			for (int j = 0; j < ranges[i].length; j++) {
+				if (ranges[i][j] != null) {
+					numNonNull++;
+				}
+			}
+		}
+		int cur = 0;
+		IloRange[] nonNulls = new IloRange[numNonNull];
+		for (int i = 0; i < ranges.length; i++) {
+			for (int j = 0; j < ranges[i].length; j++) {
+
+				if (ranges[i][j] != null) {
+					nonNulls[cur++] = ranges[i][j];
+				}
+			}
+		}
+		mat.addRows(nonNulls);
     }
 
     public static void addRows(IloLPMatrix mat, IloRange[] ranges) throws IloException {
         if (ranges == null) {
             return;
         }
+        int numNonNull = 0;
         for (int i = 0; i < ranges.length; i++) {
-            addRow(mat, ranges[i]);
+        	if (ranges[i] != null) {
+        		numNonNull++;
+        	}
         }
+        int cur = 0;
+        IloRange[] nonNulls = new IloRange[numNonNull];
+        for (int i = 0; i < ranges.length; i++) {
+        	if (ranges[i] != null) {
+        		nonNulls[cur++] = ranges[i];
+        	}
+        }
+        mat.addRows(nonNulls);
     }
 
     public static void addRow(IloLPMatrix mat, IloRange range) throws IloException {
