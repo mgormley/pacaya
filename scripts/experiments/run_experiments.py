@@ -201,6 +201,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         self.fast = options.fast
         self.expname = options.expname
         self.data = options.data
+        self.hprof = options.hprof
         if options.test:
             self.get_data = get_test_data
         else:
@@ -349,8 +350,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         setup.set("randomRestartId", randomRestartId, True, False)
                         # Set the seed explicitly.
                         experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
-                        root.add_dependent(experiment)
                         root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
+                        root.add_dependent(experiment)
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
@@ -822,6 +823,33 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     # Add some extra time in case some other part of the experiment
                     # (e.g. evaluation) takes excessively long.
                     stage.minutes = (stage.minutes * 2.0) + 10
+                    
+        if self.hprof:
+            # TODO:
+            # This is hacky and doesn't preserve the parallelism of the pipeline. 
+            # Instead, we simply convert the pipeline to a topologically sorted list.
+            
+            stages = self.get_stages_as_list(root_stage)
+            #root_stage.dependents = []
+            new_stages = []
+            for stage in stages:
+                if isinstance(stage, DPExpParams):
+                    if self.hprof == "cpu":
+                        new_stages.append(stage + HProfCpuExpParams()) 
+                    elif self.hprof == "heap":
+                        new_stages.append(stage + HProfHeapExpParams())
+                    else:
+                        raise Exception("Unknown argument for hprof: " + self.hprof)
+                else:
+                    new_stages.append(stage)
+            prev_stage = None
+            for stage in new_stages:
+                stage.dependents = []
+                stage.prereqs = []
+                if prev_stage:
+                    stage.add_prereq(prev_stage)
+                prev_stage = stage
+        return root_stage
 
 if __name__ == "__main__":
     usage = "%prog "
@@ -832,6 +860,7 @@ if __name__ == "__main__":
     parser.add_option('--test', action="store_true", help="Use test data")
     parser.add_option('--expname',  help="Experiment name")
     parser.add_option('--data',  help="Dataset to use")
+    parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) != 1:
@@ -840,7 +869,7 @@ if __name__ == "__main__":
     
     runner = DepParseExpParamsRunner(options)
     root_stage = runner.get_experiments()
-    runner.updateStagesForQsub(root_stage)
+    root_stage = runner.updateStagesForQsub(root_stage)
     runner.run_pipeline(root_stage)
 
 
