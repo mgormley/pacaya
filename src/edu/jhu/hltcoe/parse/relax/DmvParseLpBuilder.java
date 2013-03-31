@@ -208,15 +208,15 @@ public class DmvParseLpBuilder {
     
     public void addConsToNewMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
     	assert(mat.getNcols() == 0);
-    	IloRangeLpRows lpRows = getAsLpRows(pp);
+    	IloRangeLpRows lpRows = getAsLpRows(pp, mat);
     	log.debug("Adding rows to matrix");
-    	lpRows.addRowsToMatrix(mat);
+    	lpRows.pushRowsToCplex();
     	log.debug("Done adding rows to matrix");
     }
-    
-    public IloRangeLpRows getAsLpRows(DmvTreeProgram pp) throws IloException {
+
+	public IloRangeLpRows getAsLpRows(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
     	log.debug("Creating LpRows");
-    	IloRangeLpRows rows = new IloRangeLpRows(prm.setNames);
+    	IloRangeLpRows rows = new IloRangeLpRows(mat, prm.setNames, 1000);
 
         rows.addRows(pp.oneArcPerWall);
         rows.addRows(pp.oneParent);

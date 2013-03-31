@@ -6,17 +6,31 @@ import ilog.concert.IloLinearNumExpr;
 import ilog.concert.IloLinearNumExprIterator;
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;
+
+import java.util.Arrays;
+
+import org.apache.log4j.Logger;
+
 import util.Alphabet;
 import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 public class IloRangeLpRows {
+    private static final Logger log = Logger.getLogger(IloRangeLpRows.class);
 
-	private LpRows lpRows;
+    private int maxRowsToCache;
+	private LpRows rows;
 	private Alphabet<IloNumVar> alphabet;
+	private int numRowsAdded;
+	private boolean setNames;
+	private IloLPMatrix mat;
 	
-	public IloRangeLpRows(boolean setNames) {
-		lpRows = new LpRows(setNames);
+	public IloRangeLpRows(IloLPMatrix mat, boolean setNames, int maxRowsToCache) {
+		this.mat = mat;
+		this.maxRowsToCache = maxRowsToCache;
+		this.setNames = setNames;
+		rows = new LpRows(setNames);
 		alphabet = new Alphabet<IloNumVar>();
+        this.numRowsAdded = 0;
 	}
 	
 	public void addRow(IloRange range) throws IloException {
@@ -28,7 +42,9 @@ public class IloRangeLpRows {
     		int idx = alphabet.lookupObject(iter.nextNumVar());
     		coef.add(idx, iter.getValue());
     	}
-		lpRows.addRow(range.getLB(), coef, range.getUB(), range.getName());
+    	rows.addRow(range.getLB(), coef, range.getUB(), range.getName());
+    	numRowsAdded++;
+    	maybePush();
 	}
 	
 	public void addRows(IloRange[] ranges) throws IloException {
@@ -52,9 +68,28 @@ public class IloRangeLpRows {
 		}
 	}
 
-	public void addRowsToMatrix(IloLPMatrix mat) throws IloException {
+    private void reset() {
+        this.rows = new LpRows(setNames);
+    }
+    
+    private void maybePush() throws IloException {
+        if (rows.getNumRows() >= maxRowsToCache) {
+            pushRowsToCplex();
+        }
+    }
+
+    public void pushRowsToCplex() throws IloException {
 		IloNumVar[] numVars = alphabet.index2feat.toArray(new IloNumVar[]{});
-		mat.addCols(numVars);
-		lpRows.addRowsToMatrix(mat);
-	}
+		IloNumVar[] numVarsSlice = Arrays.copyOfRange(numVars, mat.getNcols(), numVars.length);
+		mat.addCols(numVarsSlice);
+		assert (mat.getNcols() == numVars.length);
+		
+        rows.addRowsToMatrix(mat);
+        log.debug("Rows added: " + numRowsAdded);
+        reset();
+    }
+
+    public int getNumRows() {
+        return numRowsAdded;
+    }
 }
