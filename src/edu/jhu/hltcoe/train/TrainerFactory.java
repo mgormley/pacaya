@@ -213,6 +213,7 @@ public class TrainerFactory {
     public static int rltInitMax = 10000;
     @Opt(name = "rltCutMax", hasArg = true, description = "(max only) Max number of cut rows to accept.")
     public static int rltCutMax = 1000;
+    // TODO: Change rltNames to lpNames.
     @Opt(name = "rltNames", hasArg = true, description = "Whether to set RLT variable/constraint names.")
     public static boolean rltNames = false;
     @Opt(name = "addBindingCons", hasArg = true, description = "Whether to add binding constraints as factors to RLT.")
@@ -333,6 +334,8 @@ public class TrainerFactory {
         parsePrm.universalMinProp = universalMinProp;
         parsePrm.universalPostCons = universalPostCons;
         parsePrm.inclExtraCons = inclExtraParseCons;
+        parsePrm.formulation = formulation;
+        parsePrm.setNames = TrainerFactory.rltNames;
         return parsePrm;
     }
 
@@ -382,7 +385,7 @@ public class TrainerFactory {
                 lpParsePrm.cplexPrm = getCplexPrm();
                 lpParsePrm.parsePrm = getDmvParseLpBuilderPrm();
                 lpParsePrm.tempDir = getDwTempDir();
-                
+
                 RelaxedParserWrapperPrm prm = new RelaxedParserWrapperPrm();
                 prm.projPrm = getDmvProjectorPrm();
                 prm.relaxedParser = new LpDmvRelaxedParser(lpParsePrm);

@@ -213,7 +213,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
     def get_experiments(self):
         all = DPExpParams()
         all.set("expname", self.expname, False, False)
-        all.update(formulation="FLOW_NONPROJ",
+        all.update(formulation="FLOW_PROJ_LPRELAX_FCOBJ",
                    parser="cky",
                    model="dmv",
                    algorithm="bnb",
