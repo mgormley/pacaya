@@ -21,6 +21,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
+import edu.jhu.hltcoe.lp.IloRangeLpRows;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
@@ -37,6 +38,7 @@ public class DmvParseLpBuilder {
         public boolean universalPostCons = false;
         public double universalMinProp = 0.8;
         public ShinyEdges shinyEdges = null;
+		public boolean setNames = false;
         
         // TODO: add a parameter for whether we want the LP relaxation, rather
         // than pushing it into the IlpFormulation enum.
@@ -118,7 +120,7 @@ public class DmvParseLpBuilder {
 
         // Add constraints to LP Matrix.
         pp.mat = cplex.LPMatrix();
-        addConsToMatrix(pp, pp.mat);
+        addConsToNewMatrix(pp, pp.mat);
         
         // Add DMV objective.
         if (prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
@@ -175,6 +177,7 @@ public class DmvParseLpBuilder {
         }
     }
 
+    @Deprecated
     public void addConsToMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
     	log.debug("Adding constraints to matrix");
         CplexUtils.addRows(mat, pp.oneArcPerWall);
@@ -201,6 +204,45 @@ public class DmvParseLpBuilder {
             CplexUtils.addRow(mat, pp.universalPostCons);
         }
         log.debug("Done adding constraints to matrix");
+    }
+    
+    public void addConsToNewMatrix(DmvTreeProgram pp, IloLPMatrix mat) throws IloException {
+    	assert(mat.getNcols() == 0);
+    	IloRangeLpRows lpRows = getAsLpRows(pp);
+    	log.debug("Adding rows to matrix");
+    	lpRows.addRowsToMatrix(mat);
+    	log.debug("Done adding rows to matrix");
+    }
+    
+    public IloRangeLpRows getAsLpRows(DmvTreeProgram pp) throws IloException {
+    	log.debug("Creating LpRows");
+    	IloRangeLpRows rows = new IloRangeLpRows(prm.setNames);
+
+        rows.addRows(pp.oneArcPerWall);
+        rows.addRows(pp.oneParent);
+        rows.addRows(pp.oneArcPerPair);
+        rows.addRows(pp.rootFlowIsSentLength);
+        rows.addRows(pp.flowDiff);
+        rows.addRows(pp.flowBoundRoot);
+        rows.addRows(pp.flowBoundChild);
+        rows.addRows(pp.arcFlowBoundRoot);
+        rows.addRows(pp.arcFlowBoundChild);
+        if (pp.projectiveRoot != null && pp.projectiveChild != null) {
+            rows.addRows(pp.projectiveRoot);
+            rows.addRows(pp.projectiveChild);
+        }
+        rows.addRows(pp.numToSideCons);
+        rows.addRows(pp.genAdjCons);
+        rows.addRows(pp.numNonAdjCons);
+        rows.addRows(pp.stopAdjCons);
+        if (pp.featCountCons != null) {
+            rows.addRows(pp.featCountCons);
+        }
+        if (pp.universalPostCons != null) {
+        	rows.addRow(pp.universalPostCons);
+        }
+        log.debug("Done creating LpRows");
+        return rows;
     }
 
     private void createArcAndFlowVars(DmvTrainCorpus corpus, DmvTreeProgram pp) throws IloException {
