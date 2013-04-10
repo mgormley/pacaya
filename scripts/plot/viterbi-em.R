@@ -24,12 +24,12 @@ plotaccuracyvslikelihood <- function(mydata) {
   xlab = "Per token log-likelihood (train)"
   ylab = "Accuracy (train)"
   p <- ggplot(mydata, aes(x=trainLogLikelihood/numWords,
-                          y=trainAccuracy, color=initWeights,
-                          shape=universalPostCons))
+                          y=trainAccuracy, shape=initWeights,
+                          color=universalPostCons))
   p <- p + geom_point()
   p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
-  p <- p + scale_color_discrete(name="Initialization")
-  p <- p + scale_shape_discrete(name="Posterior\nConstraints")
+  p <- p + scale_shape_discrete(name="Initialization")
+  p <- p + scale_color_discrete(name="Posterior\nConstraints")
   ##p <- p + geom_smooth()
 }
 myplot(plotaccuracyvslikelihood(df),
@@ -38,3 +38,21 @@ myplot(plotaccuracyvslikelihood(df),
 dfCorr <- subset(df, initWeights == "random")
 dfCorr <- dfCorr[,c("trainAccuracy", "trainLogLikelihood")]
 rcorr(as.matrix(dfCorr), type="pearson")
+
+## For CLSP/COE Talk
+plotaccuracyvslikelihood <- function(mydata) {
+  title = "Penn Treebank, Brown"
+  ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
+  xlab = "Per token log-likelihood (train)"
+  ylab = "Accuracy (train)"
+  p <- ggplot(mydata, aes(x=trainLogLikelihood/numWords,
+                          y=trainAccuracy, shape=universalPostCons,
+                          color=universalPostCons))
+  p <- p + geom_point()
+  p <- p + xlab(xlab) + ylab(ylab) + opts(title=title)
+  p <- p + scale_shape_discrete(name="Posterior\nConstraints")
+  p <- p + scale_color_discrete(name="Posterior\nConstraints")
+  ##p <- p + geom_smooth()
+}
+myplot(plotaccuracyvslikelihood(subset(df, initWeights == "random")),
+       str_c(results.file, "accvlike-randomonly", "pdf", sep="."))

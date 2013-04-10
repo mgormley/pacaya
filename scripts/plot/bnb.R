@@ -79,6 +79,8 @@ plotbnbboundsvtime <- function(mydata) {
   p <- p + scale_shape_discrete(name=methodDescription)
 }
 myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
+dfBoth.subset.temp <- subset(dfBoth.subset, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | !is.finite(rltInitMax))
+myplot(plotbnbboundsvtime(dfBoth.subset.temp), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
 
 plotbnbboundsvnodes <- function(mydata) {
   title = "" ##str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
@@ -92,6 +94,7 @@ plotbnbboundsvnodes <- function(mydata) {
   p <- p + scale_color_discrete(name="Proportion supervised")
 }
 myplot(plotbnbboundsvnodes(dfBoth.subset), str_c(results.file, "ul-bounds-node", "pdf", sep="."))
+myplot(plotbnbboundsvnodes(dfBoth.subset.temp), str_c(results.file, "ul-bounds-node", "pdf", sep="."))
 
 plotbnbboundsvtime <- function(mydata) {
   title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")

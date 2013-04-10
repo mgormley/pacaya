@@ -156,6 +156,10 @@ plotAccVsTime <- function(mydata) {
   p <- p + scale_linetype_discrete(name="Posterior Constraints")
 }
 
+
+myplot(plotLogLikeVsTime(subset(df, universalPostCons == "False")),
+       str_c(results.file, "llvtime", "pdf", sep="."))
+
 myplot(plotLogLikeVsTime(df),
        str_c(results.file, "llvtime", "pdf", sep="."))
 
@@ -167,4 +171,61 @@ print(max[order(max$V1),])
 
 myplot(plotAccVsTime(subset(df, method == "Viterbi EM" | method == "RLT Max 1000")),
        str_c(results.file, "accvtime", "pdf", sep="."))
+
+
+
+## Read B&B status data.
+results.file = "/Users/mgormley/research/dep_parse/results/viterbi-vs-bnb/results.data"
+df <- read.table(results.file, header=TRUE)
+df <- df[order(df$time),]
+
+
+df$rltInitMax[which(is.na(df$rltInitMax))] <- as.numeric("+inf")
+df$rltCutMax[which(is.na(df$rltCutMax))] <- as.numeric("+inf")
+df$method <- str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection, df$rltCutMax, sep=".")
+## For ACL:
+df$method <- ""
+df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
+df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
+df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
+##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max ", df$rltInitMax), df$method)
+df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
+df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
+
+#df$method <- str_c(df$envelopeOnly, df$rltInitMax, sep=" / ")
+methodDescription <- "Algorithm"
+
+## OLD ACL method description:
+##df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", str_c("B&B", df$envelopeOnly, df$rltInitMax, sep=" / "))
+##methodDescription <- "Algorithm /\nEnvelope Only / \nMax RLT cuts"
+
+##df$method = str_c(df$algorithm, sep=".")
+##df <- subset(df, algorithm == "viterbi" | algorithm == "bnb" )
+##df <- subset(df, time/1000/60 < 61)
+df <- subset(df, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100001 | !is.finite(rltInitMax))
+df <- subset(df, maxNumSentences == 200)
+df <- subset(df,is.na(rltCutMax) | !is.finite(rltCutMax) | rltCutMax == 0 )
+
+
+plotAcc <- function(mydata) {
+  title = "Penn Treebank, Brown"
+  xlab = "Time (min)"
+  ylab = "Accuracy (train)"
+  p <- ggplot(mydata, aes(x=method,
+                          y=trainAccuracy, fill=universalPostCons))
+  p <- p + geom_bar(position="dodge")
+  ##p <- p + geom_line(aes(linetype=universalPostCons))
+  ##p <- p + geom_smooth(aes(linetype=universalPostCons))
+  p <- p + xlab(xlab) + ylab(ylab)
+  ## For ACL: p <- p + opts(title=title)
+  ##p <- p + scale_color_discrete(name=methodDescription)
+  ##p <- p + scale_shape_discrete(name=methodDescription)
+  p <- p + scale_fill_discrete(name="Posterior Constraints")
+  p <- p + opts(axis.text.x = theme_text(angle = 90, hjust = 1))
+}
+
+myplot(plotAcc(df),
+       str_c(results.file, "acc", "pdf", sep="."))
+
+
 

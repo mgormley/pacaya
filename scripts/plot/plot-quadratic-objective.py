@@ -57,6 +57,7 @@ X, Y = np.meshgrid(X, Y)
 # Z = generate(X/20+10, Y/20+10, 0.0)
 # Z = generate2(X, Y, 10.0, 10.0)
 Z = X * Y
+#TODO : Zrelax = 
 
 zmin, zmax = np.min(Z), np.max(Z)
 
