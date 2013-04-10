@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package depparsing.extended;
 
 import static depparsing.globals.Constants.LEFT;
 import static depparsing.globals.Constants.RIGHT;

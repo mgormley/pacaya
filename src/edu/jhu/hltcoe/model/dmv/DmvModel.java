@@ -8,7 +8,7 @@ import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.cky.DepProbMatrix;
+import depparsing.extended.DepProbMatrix;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.LabeledMultinomial;
 

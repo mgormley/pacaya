@@ -24,7 +24,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
 import edu.jhu.hltcoe.lp.IloRangeLpRows;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
+import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 

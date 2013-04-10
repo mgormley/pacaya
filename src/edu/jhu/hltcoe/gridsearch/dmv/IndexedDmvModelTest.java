@@ -22,7 +22,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
+import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;

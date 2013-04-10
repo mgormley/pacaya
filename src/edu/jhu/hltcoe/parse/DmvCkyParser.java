@@ -8,9 +8,9 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.cky.CKYParser;
-import edu.jhu.hltcoe.parse.cky.DepInstance;
-import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
+import depparsing.extended.CKYParser;
+import depparsing.extended.DepInstance;
+import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 

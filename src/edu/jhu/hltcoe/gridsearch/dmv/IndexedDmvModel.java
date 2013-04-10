@@ -1,27 +1,24 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import java.util.ArrayList;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import util.Alphabet;
+import depparsing.extended.DepInstance;
+import depparsing.extended.DepProbMatrix;
+import depparsing.extended.DepSentenceDist;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.cky.DepInstance;
-import edu.jhu.hltcoe.parse.cky.DepProbMatrix;
-import edu.jhu.hltcoe.parse.cky.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.math.Vectors;
 
 public class IndexedDmvModel implements IndexedCpt {
     

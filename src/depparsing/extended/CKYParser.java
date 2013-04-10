@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package depparsing.extended;
 
 import static depparsing.globals.Constants.CHILD;
 import static depparsing.globals.Constants.CHOICE;
