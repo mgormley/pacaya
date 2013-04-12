@@ -2,7 +2,9 @@ package edu.jhu.hltcoe.parse.cky;
 
 import java.util.ArrayList;
 
-import edu.jhu.hltcoe.data.Label;
+import util.Alphabet;
+
+import com.sun.tools.javac.util.List;
 
 /**
  * Grammar in Chomsky normal form.
@@ -13,18 +15,38 @@ import edu.jhu.hltcoe.data.Label;
 public class CnfGrammar {
 
 	private ArrayList<Rule> allRules;
+
+	private ArrayList<Rule> unaryRules;
+	private ArrayList<Rule> binaryRules;
 	
-	public CnfGrammar() {
-		allRules = new ArrayList<Rule>();
+	private ArrayList<Rule>[] unaryRulesForChild;
+	private ArrayList<Rule>[][] binaryRulesForChildren;
+	
+	public CnfGrammar(ArrayList<Rule> allRules, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
+		this.allRules = allRules;
+		unaryRulesForChild = new ArrayList[lexAlphabet.size()];
+		binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
+		for (Rule r : allRules) {
+			if (r.isUnary()) {
+				if (unaryRulesForChild[r.getLeftChild()] == null) {
+					unaryRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
+				}
+				unaryRulesForChild[r.getLeftChild()].add(r);
+			} else {
+				if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] == null) {
+					binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>();
+				}
+				binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].add(r);
+			}
+		}
 	}
 	
-	public void addRule(Rule rule) {
-		allRules.add(rule);
+	public ArrayList<Rule> getUnaryRulesWithChild(int child) {
+		return unaryRulesForChild[child];
 	}
 
-	public ArrayList<Rule> getUnaryRulesWithChild(Label label) {
-		// TODO Auto-generated method stub
-		return null;
+	public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
+		return binaryRulesForChildren[leftChildNt][rightChildNt];
 	}
 	
 }
