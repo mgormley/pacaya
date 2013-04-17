@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 
 /**
  * A unary or binary rule (or production) in a CNF grammar.
@@ -10,28 +10,47 @@ import util.Alphabet;
  */
 public class Rule {
 
-	/** If this is not a unary rule, then it is a binary rule. */
-	private boolean isUnary;
+	public static final int LEXICAL_RULE = -1;
+	public static final int UNARY_RULE = -2;
 	
 	private int parent;
 	private int leftChild;
 	private int rightChild;
-	// Subclass: LogProb rule should have this: private double logProb;
-	// Separate subclass should compute based on features of the sentence.
+	private double score;
+	// TODO: Subclass: LogProb rule should have this: private double logProb;
+	// TODO: Separate subclass should compute based on features of the sentence.
 	
-	private Alphabet<String> symbolMap;
+	private Alphabet<String> lexAlphabet;
+	private Alphabet<String> ntAlphabet;
+
+	public Rule(int parent, int leftChild, int rightChild, double score, Alphabet<String> ntAlphabet,
+			Alphabet<String> lexAlphabet) {
+		this.parent = parent;
+		this.leftChild = leftChild;
+		this.rightChild = rightChild;
+		this.score = score;
+		this.lexAlphabet = lexAlphabet;
+		this.ntAlphabet = ntAlphabet;
+	}
 
 	public double getScore() {
-		// TODO Auto-generated method stub
-		return 0;
+		return score;
 	}
 
 	public int getParent() {
 		return parent;
 	}
 
+	public boolean isBinary() {
+		return rightChild >= 0;
+	}
+	
 	public boolean isUnary() {
-		return isUnary;
+		return rightChild == UNARY_RULE;
+	}
+	
+	public boolean isLexical() {
+		return rightChild == LEXICAL_RULE;
 	}
 
 	public int getLeftChild() {

@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.parse.cky;
 
 import java.util.ArrayList;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 
 import com.sun.tools.javac.util.List;
 
@@ -16,13 +16,16 @@ public class CnfGrammar {
 
 	private ArrayList<Rule> allRules;
 
-	private ArrayList<Rule> unaryRules;
-	private ArrayList<Rule> binaryRules;
-	
+	private ArrayList<Rule>[] lexRulesForChild;
 	private ArrayList<Rule>[] unaryRulesForChild;
 	private ArrayList<Rule>[][] binaryRulesForChildren;
+
+	private Alphabet<String> lexAlphabet;
+	private Alphabet<String> ntAlphabet;
 	
 	public CnfGrammar(ArrayList<Rule> allRules, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
+		this.lexAlphabet = lexAlphabet;
+		this.ntAlphabet = ntAlphabet;
 		this.allRules = allRules;
 		unaryRulesForChild = new ArrayList[lexAlphabet.size()];
 		binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
@@ -48,5 +51,20 @@ public class CnfGrammar {
 	public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
 		return binaryRulesForChildren[leftChildNt][rightChildNt];
 	}
+
+	public Alphabet<String> getLexAlphabet() {
+		return lexAlphabet;
+	}
+
+	public Alphabet<String> getNtAlphabet() {
+		return ntAlphabet;
+	}
+
+	public int getNumLexicalTypes() {
+		return lexAlphabet.size();
+	}
 	
+	public int getNumNonTerminals() {
+		return ntAlphabet.size();
+	}
 }
