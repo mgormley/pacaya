@@ -66,22 +66,7 @@ public class BasicDmvProjector implements DmvProjector {
         }
         // Project the relaxed model parameters back into the bounded
         // sum-to-exactly-one space
-        // TODO: must use bounds here?
-   
-        double[][] logProbs = Utilities.copyOf(relaxSol.getLogProbs());
-        // Project the model parameters back onto the feasible (sum-to-one)
-        // region ignoring the model parameter bounds (we just want a good solution)
-        // there's no reason to constrain it.
-        for (int c = 0; c < logProbs.length; c++) {
-            double[] probs = Vectors.getExp(logProbs[c]);
-            try {
-                probs = projector.getDefaultProjection(prm.rootBounds, c, probs);
-            } catch (IloException e) {
-                throw new RuntimeException(e);
-            }
-            logProbs[c] = Vectors.getLog(probs); 
-        }
-        // Create a new DmvModel from these model parameters
+        double[][] logProbs = getProjectedParams(relaxSol.getLogProbs());
    
         // Project the fractional parse back to the feasible region
         // where the weight of each edge is given by the indicator variable
@@ -95,6 +80,25 @@ public class BasicDmvProjector implements DmvProjector {
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);
         return sol;
     }
+
+	private double[][] getProjectedParams(double[][] relaxedLogProbs) {
+		// TODO: must use bounds here?   
+        double[][] logProbs = Utilities.copyOf(relaxedLogProbs);
+        // Project the model parameters back onto the feasible (sum-to-one)
+        // region ignoring the model parameter bounds (we just want a good solution)
+        // there's no reason to constrain it.
+        for (int c = 0; c < logProbs.length; c++) {
+            double[] probs = Vectors.getExp(logProbs[c]);
+            try {
+                probs = projector.getDefaultProjection(prm.rootBounds, c, probs);
+            } catch (IloException e) {
+                throw new RuntimeException(e);
+            }
+            logProbs[c] = Vectors.getLog(probs); 
+        }
+        // Create a new DmvModel from these model parameters
+		return logProbs;
+	}
 
     public DepTreebank getProjectedParses(RelaxedDepTreebank fracTreebank) {
         double[][] fracRoots = fracTreebank.getFracRoots(); 

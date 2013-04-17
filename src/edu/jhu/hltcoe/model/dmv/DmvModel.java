@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.model.dmv;
 import java.util.HashSet;
 import java.util.Set;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
@@ -36,7 +36,7 @@ public class DmvModel extends DepProbMatrix implements Model {
     public Set<Label> getVocab() {
         Set<Label> children = new HashSet<Label>();
         for (int i=0; i<tagAlphabet.size(); i++) {
-            children.add(tagAlphabet.lookupIndex(i));
+            children.add(tagAlphabet.lookupObject(i));
         }
         return children;
     }
@@ -44,7 +44,7 @@ public class DmvModel extends DepProbMatrix implements Model {
     // ------------------ Root -------------------
 
     public double getRootWeight(Label childLabel) {
-        int c = tagAlphabet.lookupObject(childLabel);
+        int c = tagAlphabet.lookupIndex(childLabel);
         return root[c];
     }
 
@@ -52,14 +52,14 @@ public class DmvModel extends DepProbMatrix implements Model {
         Set<Label> children = getVocab();
         LabeledMultinomial<Label> mult = new LabeledMultinomial<Label>();
         for (Label childLabel : children) {
-            int c = tagAlphabet.lookupObject(childLabel);
+            int c = tagAlphabet.lookupIndex(childLabel);
             mult.put(childLabel, root[c]);
         }
         return mult;
     }
     
     public void putRootWeight(Label childLabel, double logProb) {
-        int c = tagAlphabet.lookupObject(childLabel);
+        int c = tagAlphabet.lookupIndex(childLabel);
         root[c] = logProb;
     }
     
@@ -77,8 +77,8 @@ public class DmvModel extends DepProbMatrix implements Model {
         
         LabeledMultinomial<Label> mult = new LabeledMultinomial<Label>();
         for (Label childLabel : children) {
-            int c = tagAlphabet.lookupObject(childLabel);
-            int p = tagAlphabet.lookupObject(label);
+            int c = tagAlphabet.lookupIndex(childLabel);
+            int p = tagAlphabet.lookupIndex(label);
             int dir = lr.getAsInt();
             int cv = 0;
             mult.put(childLabel, child[c][p][dir][cv]);
@@ -87,8 +87,8 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
 
     public double getChildWeight(Label parentLabel, Lr lr, Label childLabel) {
-        int c = tagAlphabet.lookupObject(childLabel);
-        int p = tagAlphabet.lookupObject(parentLabel);
+        int c = tagAlphabet.lookupIndex(childLabel);
+        int p = tagAlphabet.lookupIndex(parentLabel);
         int dir = lr.getAsInt();
         int cv = 0;
         return child[c][p][dir][cv];
@@ -100,8 +100,8 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
     
     public void putChildWeight(Label parentLabel, Lr lr, Label childLabel, double logProb) {
-        int c = tagAlphabet.lookupObject(childLabel);
-        int p = tagAlphabet.lookupObject(parentLabel);
+        int c = tagAlphabet.lookupIndex(childLabel);
+        int p = tagAlphabet.lookupIndex(parentLabel);
         int dir = lr.getAsInt();
         int cv = 0;
         child[c][p][dir][cv] = logProb;
@@ -114,7 +114,7 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
     
     public double getStopWeight(Label parent, Lr lr, boolean adjacent) {
-        int pid = tagAlphabet.lookupObject(parent);
+        int pid = tagAlphabet.lookupIndex(parent);
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        
@@ -122,7 +122,7 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
     
     public double getContWeight(Label parent, Lr lr, boolean adjacent) {
-        int pid = tagAlphabet.lookupObject(parent);
+        int pid = tagAlphabet.lookupIndex(parent);
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        
@@ -135,7 +135,7 @@ public class DmvModel extends DepProbMatrix implements Model {
     }
 
     public void putStopProb(Label parent, Lr lr, boolean adjacent, double prob) {
-        int pid = tagAlphabet.lookupObject(parent);
+        int pid = tagAlphabet.lookupIndex(parent);
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        

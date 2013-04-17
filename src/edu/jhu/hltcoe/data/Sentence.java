@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.data;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import gnu.trove.TIntArrayList;
 
 
@@ -30,7 +30,7 @@ public class Sentence implements Iterable<Label> {
     }
     
     protected boolean add(Label label) {
-        labelIds.add(alphabet.lookupObject(label));
+        labelIds.add(alphabet.lookupIndex(label));
         return labels.add(label);
     }
     

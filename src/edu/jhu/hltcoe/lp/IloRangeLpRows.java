@@ -11,7 +11,7 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
 
 public class IloRangeLpRows {
@@ -39,7 +39,7 @@ public class IloRangeLpRows {
     	IloLinearNumExprIterator iter = expr.linearIterator();
 		SortedLongDoubleVector coef = new SortedLongDoubleVector();
     	while (iter.hasNext()) {
-    		int idx = alphabet.lookupObject(iter.nextNumVar());
+    		int idx = alphabet.lookupIndex(iter.nextNumVar());
     		coef.add(idx, iter.getValue());
     	}
     	rows.addRow(range.getLB(), coef, range.getUB(), range.getName());
@@ -79,7 +79,7 @@ public class IloRangeLpRows {
     }
 
     public void pushRowsToCplex() throws IloException {
-		IloNumVar[] numVars = alphabet.index2feat.toArray(new IloNumVar[]{});
+		IloNumVar[] numVars = alphabet.getObjects().toArray(new IloNumVar[]{});
 		IloNumVar[] numVarsSlice = Arrays.copyOfRange(numVars, mat.getNcols(), numVars.length);
 		mat.addCols(numVarsSlice);
 		assert (mat.getNcols() == numVars.length);

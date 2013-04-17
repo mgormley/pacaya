@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import model.AbstractCountTable;
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import util.ArrayMath;
 import util.LogSummer;
 import depparsing.model.NonterminalMap;
@@ -620,7 +620,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 	public static <T> ArrayList<T> getAllTagsStrings(Alphabet<T> tagAlphabet) {
         ArrayList<T> tags= new ArrayList<T>(tagAlphabet.size());
         for (int i = 0; i < tagAlphabet.size(); i++) {
-            tags.add(tagAlphabet.index2feat.get(i));
+            tags.add(tagAlphabet.lookupObject(i));
         }
         return tags;
     }
@@ -635,7 +635,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 		
 		// Print log probability estimates to output file
 		for(Label tag : sortedTags) {
-			int posNum = tagAlphabet.lookupObject(tag);
+			int posNum = tagAlphabet.lookupIndex(tag);
 			outWriter.write(tag + "\nroot\t" + double2String(root[posNum]) + "\n");
 
 			for(int dir = 0; dir < 2; dir++) {
@@ -651,7 +651,7 @@ public class DepProbMatrix extends AbstractCountTable implements Serializable {
 			for(int v = 0; v < nontermMap.childValency; v++) {
 				outWriter.write("child: left, right, valence = " + v + "\n");
 				for(int i = 0; i < numTags; i++) {
-					outWriter.write(tagAlphabet.index2feat.get(i) + ": " + 
+					outWriter.write(tagAlphabet.lookupObject(i) + ": " + 
 							double2String(child[i][posNum][LEFT][v]) + ", " +
 							double2String(child[i][posNum][RIGHT][v]) + "\n");
 				}

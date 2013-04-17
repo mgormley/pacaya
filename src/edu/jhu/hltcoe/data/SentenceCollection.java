@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 
 public class SentenceCollection implements Iterable<Sentence> {
 
@@ -63,7 +63,7 @@ public class SentenceCollection implements Iterable<Sentence> {
     
     private void addSentenceToAlphabet(Sentence sentence) {
         for (Label l : sentence) {
-            alphabet.lookupObject(l);
+            alphabet.lookupIndex(l);
         }
     }
 

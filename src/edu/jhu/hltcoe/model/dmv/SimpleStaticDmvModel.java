@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.model.dmv;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.TaggedWord;
 import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
@@ -13,8 +13,8 @@ public class SimpleStaticDmvModel {
     public static DmvModel getTwoPosTagInstance() {
         DmvModelFactory modelFactory = new UniformDmvModelFactory();
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        alphabet.lookupObject(TW_A);
-        alphabet.lookupObject(TW_B);
+        alphabet.lookupIndex(TW_A);
+        alphabet.lookupIndex(TW_B);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(alphabet);
 
         dmvModel.fill(0.0);
@@ -45,9 +45,9 @@ public class SimpleStaticDmvModel {
     public static DmvModel getThreePosTagInstance() {
         DmvModelFactory modelFactory = new UniformDmvModelFactory();
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        alphabet.lookupObject(noun);
-        alphabet.lookupObject(adj);
-        alphabet.lookupObject(verb);
+        alphabet.lookupIndex(noun);
+        alphabet.lookupIndex(adj);
+        alphabet.lookupIndex(verb);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(alphabet);
 
         dmvModel.fill(0.0);
@@ -74,9 +74,9 @@ public class SimpleStaticDmvModel {
     public static DmvModel getAltThreePosTagInstance() {
         DmvModelFactory modelFactory = new UniformDmvModelFactory();
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        alphabet.lookupObject(noun);
-        alphabet.lookupObject(adj);
-        alphabet.lookupObject(verb);
+        alphabet.lookupIndex(noun);
+        alphabet.lookupIndex(adj);
+        alphabet.lookupIndex(verb);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(alphabet);
 
         dmvModel.fill(0.0);
@@ -105,9 +105,9 @@ public class SimpleStaticDmvModel {
     public static DmvModel getFixedStopRandChild() {
         DmvModelFactory modelFactory = new RandomDmvModelFactory(1.0);
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        alphabet.lookupObject(noun);
-        alphabet.lookupObject(adj);
-        alphabet.lookupObject(verb);
+        alphabet.lookupIndex(noun);
+        alphabet.lookupIndex(adj);
+        alphabet.lookupIndex(verb);
         DmvModel dmvModel = (DmvModel) modelFactory.getInstance(alphabet);
         dmvModel.convertLogToReal();
         

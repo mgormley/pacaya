@@ -3,7 +3,7 @@
  */
 package edu.jhu.hltcoe.model.dmv;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 

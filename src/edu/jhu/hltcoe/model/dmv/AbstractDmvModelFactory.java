@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.model.dmv;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.TrainCorpus;

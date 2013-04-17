@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import depparsing.extended.DepInstance;
 import depparsing.extended.DepProbMatrix;
 import depparsing.extended.DepSentenceDist;
@@ -82,15 +82,15 @@ public class IndexedDmvModel implements IndexedCpt {
         rhsToC = new Alphabet<Rhs>();
         rhsToC.startGrowth();
         // Create for DepProbMatrix
-        rhsToC.lookupObject(new Rhs(ROOT));
+        rhsToC.lookupIndex(new Rhs(ROOT));
         for(int p = 0; p < numTags; p++)
             for(int dir = 0; dir < 2; dir++) 
                 for(int cv = 0; cv < childValency; cv++)
-                    rhsToC.lookupObject(new Rhs(CHILD, p, dir, cv));
+                    rhsToC.lookupIndex(new Rhs(CHILD, p, dir, cv));
         for(int p = 0; p < numTags; p++)
             for(int dir = 0; dir < 2; dir++)
                 for(int dv = 0; dv < decisionValency; dv++)
-                    rhsToC.lookupObject(new Rhs(DECISION, p, dir, dv));
+                    rhsToC.lookupIndex(new Rhs(DECISION, p, dir, dv));
         rhsToC.stopGrowth();
         log.trace("rhsToC: size=" + rhsToC.size() + " alphabet=" + rhsToC);
         
@@ -104,10 +104,10 @@ public class IndexedDmvModel implements IndexedCpt {
         for (int s=0; s<corpus.size(); s++) {
             Alphabet<ParamId> paramToI = new Alphabet<ParamId>();
             for (int c=0; c<getNumConds(); c++) {
-                Rhs rhs = rhsToC.lookupIndex(c);
+                Rhs rhs = rhsToC.lookupObject(c);
                 for (int m=0; m<getNumParams(c); m++) {
                     if (sentMaxFreqCms[s][c][m] > 0) {
-                        paramToI.lookupObject(new ParamId(rhs,m));
+                        paramToI.lookupIndex(new ParamId(rhs,m));
                     }
                 }
             }
@@ -122,10 +122,10 @@ public class IndexedDmvModel implements IndexedCpt {
             Alphabet<ParamId> paramToI = sentParamToI.get(s);
             Alphabet<CM> cmToI = new Alphabet<CM>();
             for (int i=0; i<paramToI.size(); i++) {
-                ParamId p = paramToI.lookupIndex(i);
+                ParamId p = paramToI.lookupObject(i);
                 Rhs rhs = p.get1();
                 int m = p.get2();
-                cmToI.lookupObject(new CM(rhsToC.lookupObject(rhs),m));
+                cmToI.lookupIndex(new CM(rhsToC.lookupIndex(rhs),m));
             }
             cmToI.stopGrowth();
             sentCmToI.add(cmToI);
@@ -191,7 +191,7 @@ public class IndexedDmvModel implements IndexedCpt {
         for (int cIdx=0; cIdx<tags.length; cIdx++) {
             int cTag = tags[cIdx];
             // The root parameter can appear once for each tag in the sentence
-            maxFreq[rhsToC.lookupObject(new Rhs(ROOT))][cTag] = 1;
+            maxFreq[rhsToC.lookupIndex(new Rhs(ROOT))][cTag] = 1;
             
             // Each edge has some child parameter and can appear once
             for (int pIdx=0; pIdx<tags.length; pIdx++) {
@@ -203,7 +203,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
-                maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                maxFreq[rhsToC.lookupIndex(rhs)][m]++;
             }
             
             // For each direction (LEFT, RIGHT)
@@ -217,20 +217,20 @@ public class IndexedDmvModel implements IndexedCpt {
                 // stopAdj
                 rhs = new Rhs(DECISION, cTag, lr, 0);
                 m = Constants.END;
-                maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                 if (numOnSide > 0) {
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
                     m = Constants.CONT;
-                    maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                    maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                     // contNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
                     m = Constants.CONT;
-                    maxFreq[rhsToC.lookupObject(rhs)][m] += numOnSide-1;
+                    maxFreq[rhsToC.lookupIndex(rhs)][m] += numOnSide-1;
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
                     m = Constants.END;
-                    maxFreq[rhsToC.lookupObject(rhs)][m]++;
+                    maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                 }
             }
         }
@@ -255,7 +255,7 @@ public class IndexedDmvModel implements IndexedCpt {
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumParams(int)
      */
     public int getNumParams(int c) { 
-        Rhs rhs = rhsToC.lookupIndex(c);
+        Rhs rhs = rhsToC.lookupObject(c);
         if (rhs.get(0) == ROOT || rhs.get(0) == CHILD) {
             return numTags;
         } else if (rhs.get(0) == DECISION) {
@@ -269,17 +269,17 @@ public class IndexedDmvModel implements IndexedCpt {
      * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getName(int, int)
      */
     public String getName(int c, int m) {
-        Rhs rhs = rhsToC.lookupIndex(c);
+        Rhs rhs = rhsToC.lookupObject(c);
         if (rhs.get(0) == ROOT) {
-            String cTag = alphabet.lookupIndex(m).getLabel();
+            String cTag = alphabet.lookupObject(m).getLabel();
             return String.format("root(%s)", cTag);
         } else if (rhs.get(0) == CHILD) {
-            String pTag = alphabet.lookupIndex(rhs.get(1)).getLabel();
+            String pTag = alphabet.lookupObject(rhs.get(1)).getLabel();
             String lr = rhs.get(2) == Constants.LEFT ? "l" : "r";
-            String cTag = alphabet.lookupIndex(m).getLabel();
+            String cTag = alphabet.lookupObject(m).getLabel();
             return String.format("child_{%s,%s,%d}(%s)", pTag, lr, rhs.get(3), cTag);
         } else if (rhs.get(0) == DECISION) {
-            String pTag = alphabet.lookupIndex(rhs.get(1)).getLabel();
+            String pTag = alphabet.lookupObject(rhs.get(1)).getLabel();
             String lr = (rhs.get(2) == Constants.LEFT) ? "l" : "r";
             String sc = (m == Constants.END) ? "s" : "c";
             return String.format("dec_{%s,%s,%d}(%s)",  pTag, lr, rhs.get(3), sc);
@@ -289,15 +289,15 @@ public class IndexedDmvModel implements IndexedCpt {
     }
 
     public int getCRoot() {
-        return rhsToC.lookupObject(new Rhs(ROOT));
+        return rhsToC.lookupIndex(new Rhs(ROOT));
     }
     
     public int getCChild(int pTag, int lr, int cv) {
-        return rhsToC.lookupObject(new Rhs(CHILD, pTag, lr, cv));
+        return rhsToC.lookupIndex(new Rhs(CHILD, pTag, lr, cv));
     }
     
     public int getCDecision(int pTag, int lr, int dv) {
-        return rhsToC.lookupObject(new Rhs(DECISION, pTag, lr, dv));
+        return rhsToC.lookupIndex(new Rhs(DECISION, pTag, lr, dv));
     }
 
     /**
@@ -348,7 +348,7 @@ public class IndexedDmvModel implements IndexedCpt {
      * @param i Sentence variable index
      */
     public int getC(int s, int i) {
-        return sentCmToI.get(s).lookupIndex(i).get1();
+        return sentCmToI.get(s).lookupObject(i).get1();
     }
 
     /**
@@ -357,7 +357,7 @@ public class IndexedDmvModel implements IndexedCpt {
      * @param i Sentence variable index
      */
     public int getM(int s, int i) {
-        return sentParamToI.get(s).lookupIndex(i).get2();
+        return sentParamToI.get(s).lookupObject(i).get2();
     }
 
     /**
@@ -373,7 +373,7 @@ public class IndexedDmvModel implements IndexedCpt {
      * or -1 if c,m is never used in sentence s.
      */
     public int getSi(int s, int c, int m) {
-        return sentCmToI.get(s).lookupObject(new CM(c,m));
+        return sentCmToI.get(s).lookupIndex(new CM(c,m));
     }
     
     // ------------------ Begin Feature Counts -----------------------
@@ -488,13 +488,13 @@ public class IndexedDmvModel implements IndexedCpt {
             if (pIdx == WallDepTreeNode.WALL_POSITION) {
                 Rhs rhs = new Rhs(ROOT);
                 int m = cTag;
-                totFreqCm[rhsToC.lookupObject(rhs)][m]++;
+                totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
             } else {
                 int pTag = tags[pIdx];
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
-                totFreqCm[rhsToC.lookupObject(rhs)][m]++;
+                totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
             }
             for (int lr=0; lr<2; lr++) {
                 String lrs = lr == 0 ? "l" : "r";
@@ -503,24 +503,24 @@ public class IndexedDmvModel implements IndexedCpt {
                     // stopAdj
                     Rhs rhs = new Rhs(DECISION, cTag, lr, 0);
                     int m = Constants.END;
-                    totFreqCm[rhsToC.lookupObject(rhs)][m]++;
+                    totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                 } else {
                     Rhs rhs;
                     int m;
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
                     m = Constants.CONT;
-                    totFreqCm[rhsToC.lookupObject(rhs)][m]++;
+                    totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                     if (numOnSide - 1 > 0) {
                         // contNonAdj
                         rhs = new Rhs(DECISION, cTag, lr, 1);
                         m = Constants.CONT;
-                        totFreqCm[rhsToC.lookupObject(rhs)][m] += numOnSide - 1;
+                        totFreqCm[rhsToC.lookupIndex(rhs)][m] += numOnSide - 1;
                     }
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
                     m = Constants.END;
-                    totFreqCm[rhsToC.lookupObject(rhs)][m]++;
+                    totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                 }
             }
         }
@@ -548,13 +548,13 @@ public class IndexedDmvModel implements IndexedCpt {
             if (pIdx == WallDepTreeNode.WALL_POSITION) {
                 Rhs rhs = new Rhs(ROOT);
                 int m = cTag;
-                sentSol[paramToI.lookupObject(new ParamId(rhs, m))]++;
+                sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
             } else {
                 int pTag = tags[pIdx];
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
-                sentSol[paramToI.lookupObject(new ParamId(rhs, m))]++;
+                sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
             }
             for (int lr=0; lr<2; lr++) {
                 String lrs = lr == 0 ? "l" : "r";
@@ -563,24 +563,24 @@ public class IndexedDmvModel implements IndexedCpt {
                     // stopAdj
                     Rhs rhs = new Rhs(DECISION, cTag, lr, 0);
                     int m = Constants.END;
-                    sentSol[paramToI.lookupObject(new ParamId(rhs, m))]++;
+                    sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                 } else {
                     Rhs rhs;
                     int m;
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
                     m = Constants.CONT;
-                    sentSol[paramToI.lookupObject(new ParamId(rhs, m))]++;
+                    sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                     if (numOnSide - 1 > 0) {
                         // contNonAdj
                         rhs = new Rhs(DECISION, cTag, lr, 1);
                         m = Constants.CONT;
-                        sentSol[paramToI.lookupObject(new ParamId(rhs, m))] += numOnSide - 1;
+                        sentSol[paramToI.lookupIndex(new ParamId(rhs, m))] += numOnSide - 1;
                     }
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
                     m = Constants.END;
-                    sentSol[paramToI.lookupObject(new ParamId(rhs, m))]++;
+                    sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                 }
             }
         }
@@ -600,7 +600,7 @@ public class IndexedDmvModel implements IndexedCpt {
         // Map the sentence variable indices --> indices of DepProbMatrix
         Alphabet<ParamId> paramToI = sentParamToI.get(s);
         for (int i=0; i<getNumSentVars(s); i++) {
-            ParamId p = paramToI.lookupIndex(i);
+            ParamId p = paramToI.lookupObject(i);
             Rhs rhs = p.get1();
             int m = p.get2();
             double logProb = sentLogProbs[i];
@@ -619,7 +619,7 @@ public class IndexedDmvModel implements IndexedCpt {
         
         // Map the sentence variable indices --> indices of DepProbMatrix
         for (int c=0; c<logProbs.length; c++) {
-            Rhs rhs = rhsToC.lookupIndex(c);
+            Rhs rhs = rhsToC.lookupObject(c);
             assert(logProbs[c].length == getNumParams(c));
             for (int m=0; m<logProbs[c].length; m++) {
                 double logProb = logProbs[c][m];
@@ -674,7 +674,7 @@ public class IndexedDmvModel implements IndexedCpt {
     public double[][] getCmLogProbs(DepProbMatrix dpm) {
         double[][] logProbs = new double[getNumConds()][];
         for (int c=0; c<logProbs.length; c++) {
-            Rhs rhs = rhsToC.lookupIndex(c);
+            Rhs rhs = rhsToC.lookupObject(c);
             logProbs[c] = new double[getNumParams(c)];
             for (int m=0; m<logProbs[c].length; m++) {
                 logProbs[c][m] = getDPMValue(dpm, rhs, m);

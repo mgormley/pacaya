@@ -122,7 +122,7 @@ public class IndexedDmvModelTest {
 
         System.out.print("alphabet: ");
         for (int i=0; i<sentences.getLabelAlphabet().size(); i++){
-            System.out.printf("(%d,%s)\n",i,sentences.getLabelAlphabet().lookupIndex(i));
+            System.out.printf("(%d,%s)\n",i,sentences.getLabelAlphabet().lookupObject(i));
         }
         
         

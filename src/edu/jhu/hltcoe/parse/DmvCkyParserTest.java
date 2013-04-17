@@ -14,7 +14,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -47,8 +47,8 @@ public class DmvCkyParserTest {
     public static DmvModel getTwoPosTagInstance() {
         DmvModelFactory modelFactory = new RandomDmvModelFactory(0.1);
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        alphabet.lookupObject(TW_A);
-        alphabet.lookupObject(TW_B);
+        alphabet.lookupIndex(TW_A);
+        alphabet.lookupIndex(TW_B);
         DmvModel dmvModel = modelFactory.getInstance(alphabet);
         
         dmvModel.fill(0.5);

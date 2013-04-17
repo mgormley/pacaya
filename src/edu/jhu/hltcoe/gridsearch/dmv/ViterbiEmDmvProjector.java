@@ -108,6 +108,7 @@ public class ViterbiEmDmvProjector implements DmvProjector {
 
         // Add the null solution, so that the collection isn't empty.
         
+        // TODO: bug fix: this pair of projectors is projecting the parse twice!
         DmvSolution normSol = normProjector.getProjectedDmvSolution(relaxSol);
         log.debug("Normalized projected solution score: " + safeGetScore(normSol));
         solutions.add(normSol);

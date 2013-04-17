@@ -6,6 +6,12 @@ import java.util.Iterator;
 import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.Utilities;
 
+/**
+ * Sorted mapping of ints to doubles.
+ * 
+ * @author mgormley
+ *
+ */
 public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 
 	protected int[] indices;

@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
@@ -117,7 +117,7 @@ public class DepTreebank implements Iterable<DepTree> {
     private void addTreeToAlphabet(DepTree tree) {
         for (DepTreeNode node : tree) {
             if (node.getLabel() != WallDepTreeNode.WALL_LABEL) {
-                alphabet.lookupObject(node.getLabel());
+                alphabet.lookupIndex(node.getLabel());
             }
         }
     }

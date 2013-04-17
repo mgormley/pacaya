@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import util.Alphabet;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Tag;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
@@ -104,7 +104,7 @@ public class ShinyEdges {
         if (label == WallDepTreeNode.WALL_LABEL) {
             return wallIdx;
         }
-        return alphabet.lookupObject(label);
+        return alphabet.lookupIndex(label);
     }
     
     private int getNumShinyEdges() {
