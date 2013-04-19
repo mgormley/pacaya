@@ -9,21 +9,21 @@ import edu.jhu.hltcoe.util.Alphabet;
  *
  */
 public class CfgTree {
-	
-	private CfgTreeNode root;
+    
+    private CfgTreeNode root;
 
-	public CfgTree(CfgTreeNode root) {
-		this.root = root;
-	}
+    public CfgTree(CfgTreeNode root) {
+        this.root = root;
+    }
 
-	@Override
-	public String toString() {
-		return "CfgTree [root=" + root + "]";
-	}
-	
+    @Override
+    public String toString() {
+        return "CfgTree [root=" + root + "]";
+    }
+    
 
-	public String getAsPennTreebankString() {
-		return root.getAsPennTreebankString();
-	}
+    public String getAsPennTreebankString() {
+        return root.getAsPennTreebankString();
+    }
 
 }

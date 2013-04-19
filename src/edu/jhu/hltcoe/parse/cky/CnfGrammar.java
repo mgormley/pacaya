@@ -15,106 +15,106 @@ import edu.jhu.hltcoe.util.Utilities;
  */
 public class CnfGrammar {
 
-	private int rootSymbol;
-	private ArrayList<Rule> allRules;
+    private int rootSymbol;
+    private ArrayList<Rule> allRules;
 
-	private ArrayList<Rule>[] lexRulesForChild;
-	private ArrayList<Rule>[] unaryRulesForChild;
-	private ArrayList<Rule>[][] binaryRulesForChildren;
+    private ArrayList<Rule>[] lexRulesForChild;
+    private ArrayList<Rule>[] unaryRulesForChild;
+    private ArrayList<Rule>[][] binaryRulesForChildren;
 
-	private Alphabet<String> lexAlphabet;
-	private Alphabet<String> ntAlphabet;
-	
-	public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
-		this.rootSymbol = rootSymbol;
-		this.lexAlphabet = lexAlphabet;
-		this.ntAlphabet = ntAlphabet;
-		this.allRules = allRules;
-		lexRulesForChild = new ArrayList[lexAlphabet.size()];
-		unaryRulesForChild = new ArrayList[ntAlphabet.size()];
-		binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
+    private Alphabet<String> lexAlphabet;
+    private Alphabet<String> ntAlphabet;
+    
+    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
+        this.rootSymbol = rootSymbol;
+        this.lexAlphabet = lexAlphabet;
+        this.ntAlphabet = ntAlphabet;
+        this.allRules = allRules;
+        lexRulesForChild = new ArrayList[lexAlphabet.size()];
+        unaryRulesForChild = new ArrayList[ntAlphabet.size()];
+        binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
 
-		for (int i=0; i<lexRulesForChild.length; i++) {
-			lexRulesForChild[i] = new ArrayList<Rule>();
-		}
-		for (int i=0; i<unaryRulesForChild.length; i++) {
-			unaryRulesForChild[i] = new ArrayList<Rule>();
-		}
-		for (int i=0; i<binaryRulesForChildren.length; i++) {
-			for (int j=0; j<binaryRulesForChildren[i].length; j++) {
-				binaryRulesForChildren[i][j] = new ArrayList<Rule>();
-			}
-		}
-		//		Arrays.fill(lexRulesForChild, Collections.emptyList());
-		//		Arrays.fill(unaryRulesForChild, Collections.emptyList());
-		//		Utilities.fill(binaryRulesForChildren, Collections.emptyList());
-		
-		for (Rule r : allRules) {
-			if (r.isLexical()) {
-				if (lexRulesForChild[r.getLeftChild()] == null) {
-					lexRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
-				}
-				lexRulesForChild[r.getLeftChild()].add(r);
-			} else if (r.isUnary()) {
-				if (unaryRulesForChild[r.getLeftChild()] == null) {
-					unaryRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
-				}
-				unaryRulesForChild[r.getLeftChild()].add(r);
-			} else {
-				if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] == null) {
-					binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>();
-				}
-				binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
-						.add(r);
-			}
-		}
-	}
+        for (int i=0; i<lexRulesForChild.length; i++) {
+            lexRulesForChild[i] = new ArrayList<Rule>();
+        }
+        for (int i=0; i<unaryRulesForChild.length; i++) {
+            unaryRulesForChild[i] = new ArrayList<Rule>();
+        }
+        for (int i=0; i<binaryRulesForChildren.length; i++) {
+            for (int j=0; j<binaryRulesForChildren[i].length; j++) {
+                binaryRulesForChildren[i][j] = new ArrayList<Rule>();
+            }
+        }
+        //        Arrays.fill(lexRulesForChild, Collections.emptyList());
+        //        Arrays.fill(unaryRulesForChild, Collections.emptyList());
+        //        Utilities.fill(binaryRulesForChildren, Collections.emptyList());
+        
+        for (Rule r : allRules) {
+            if (r.isLexical()) {
+                if (lexRulesForChild[r.getLeftChild()] == null) {
+                    lexRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
+                }
+                lexRulesForChild[r.getLeftChild()].add(r);
+            } else if (r.isUnary()) {
+                if (unaryRulesForChild[r.getLeftChild()] == null) {
+                    unaryRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
+                }
+                unaryRulesForChild[r.getLeftChild()].add(r);
+            } else {
+                if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] == null) {
+                    binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>();
+                }
+                binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
+                        .add(r);
+            }
+        }
+    }
 
-	public ArrayList<Rule> getLexicalRulesWithChild(int child) {
-		return lexRulesForChild[child];
-	}
+    public ArrayList<Rule> getLexicalRulesWithChild(int child) {
+        return lexRulesForChild[child];
+    }
 
-	public ArrayList<Rule> getUnaryRulesWithChild(int child) {
-		return unaryRulesForChild[child];
-	}
+    public ArrayList<Rule> getUnaryRulesWithChild(int child) {
+        return unaryRulesForChild[child];
+    }
 
-	public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
-		return binaryRulesForChildren[leftChildNt][rightChildNt];
-	}
+    public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
+        return binaryRulesForChildren[leftChildNt][rightChildNt];
+    }
 
-	public Alphabet<String> getLexAlphabet() {
-		return lexAlphabet;
-	}
+    public Alphabet<String> getLexAlphabet() {
+        return lexAlphabet;
+    }
 
-	public Alphabet<String> getNtAlphabet() {
-		return ntAlphabet;
-	}
+    public Alphabet<String> getNtAlphabet() {
+        return ntAlphabet;
+    }
 
-	public int getNumLexicalTypes() {
-		return lexAlphabet.size();
-	}
-	
-	public int getNumNonTerminals() {
-		return ntAlphabet.size();
-	}
+    public int getNumLexicalTypes() {
+        return lexAlphabet.size();
+    }
+    
+    public int getNumNonTerminals() {
+        return ntAlphabet.size();
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("CnfGrammar [rootSymbol=");
-		sb.append(ntAlphabet.lookupObject(rootSymbol));
-		sb.append(", allRules=\n");
-		for (int i=0; i<allRules.size(); i++) {
-			sb.append("\t");
-			sb.append(allRules.get(i));
-			sb.append("\n");
-		}
-		sb.append("]");
-		return sb.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CnfGrammar [rootSymbol=");
+        sb.append(ntAlphabet.lookupObject(rootSymbol));
+        sb.append(", allRules=\n");
+        for (int i=0; i<allRules.size(); i++) {
+            sb.append("\t");
+            sb.append(allRules.get(i));
+            sb.append("\n");
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 
-	public int getRootSymbol() {
-		return rootSymbol;
-	}
-	
+    public int getRootSymbol() {
+        return rootSymbol;
+    }
+    
 }
