@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.util.Alphabet;
 
 public class CnfGrammarBuilder {
 
+	private int rootSymbol;
 	private ArrayList<Rule> allRules;
 	private ArrayList<Rule> lexRules;
 	private ArrayList<Rule> unaryRules;
@@ -30,7 +31,7 @@ public class CnfGrammarBuilder {
 	}
 	
 	public CnfGrammar getGrammar() {
-		return new CnfGrammar(allRules, lexAlphabet, ntAlphabet);
+		return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet);
 	}
 
 	public void loadFromResource(String resourceName) {
@@ -47,11 +48,17 @@ public class CnfGrammarBuilder {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	private enum GrReaderState {
+		RootSymbol,
+		NonTerminalRules,
+		LexicalRules,
+	}
 
 	public void loadFromInputStream(InputStream inputStream) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		String line;
-		boolean readingLexicalRules = false;
+		GrReaderState state = GrReaderState.RootSymbol;
 		
 		Pattern spaceRegex = Pattern.compile("\\s+");
 		while ((line = reader.readLine()) != null) {
@@ -59,31 +66,53 @@ public class CnfGrammarBuilder {
 			if (line.startsWith("#") || line.equals("")) {
 				// Skip comments and empty lines.
 				continue;
-			}
+			}	
+			
 			if (line.equals("===")) {
-				readingLexicalRules = true;
+				// Change states to reading lexical rules.
+				state = GrReaderState.LexicalRules;
 				continue;
 			}
+			
+			if (state == GrReaderState.RootSymbol) {
+				// Read the root symbol.
+				rootSymbol = ntAlphabet.lookupIndex(line);
+				state = GrReaderState.NonTerminalRules;
+				continue;
+			}
+			
+			// Read either a unary, binary, or lexical rule.
 			String[] splits = spaceRegex.split(line);
 			Rule r;
-			if (splits.length == 3) {
-				// Unary rule.
-				if (readingLexicalRules) {
-					r = getLexicalRule(splits[0], splits[1], Double.parseDouble(splits[2]));
+			if (splits.length == 4) {
+				// Unary or lexical rule.
+				// splits[1] is the separator "-->"
+				String parent = splits[0];
+				String child = splits[2];
+				double logProb = Double.parseDouble(splits[3]);
+				if (state == GrReaderState.LexicalRules) {
+					r = getLexicalRule(parent, child, logProb);
 					lexRules.add(r);
 				} else {
-					r = getUnaryRule(splits[0], splits[1], Double.parseDouble(splits[2]));
+					r = getUnaryRule(parent, child, logProb);
 					unaryRules.add(r);
 				}
-			} else if (splits.length == 4 && !readingLexicalRules) {
+			} else if (splits.length == 5 && state == GrReaderState.NonTerminalRules) {
 				// Binary rule.
-				r = getBinaryRule(splits[0], splits[1], splits[2], Double.parseDouble(splits[3]));
+				// splits[1] is the separator "-->"
+				String parent = splits[0];
+				String leftChild = splits[2];
+				String rightChild = splits[3];
+				double logProb = Double.parseDouble(splits[4]);
+				r = getBinaryRule(parent, leftChild, rightChild, logProb);
 				binaryRules.add(r);
 			} else {
 				throw new RuntimeException("Invalid line: " + line);
 			}
 			allRules.add(r);
 		}
+		lexAlphabet.stopGrowth();
+		ntAlphabet.stopGrowth();
 	}
 
 	private Rule getLexicalRule(String parentStr, String childStr, double logProb) {
@@ -94,14 +123,14 @@ public class CnfGrammarBuilder {
 
 	private Rule getUnaryRule(String parentStr, String childStr, double logProb) {
 		int parent = ntAlphabet.lookupIndex(parentStr);
-		int child = lexAlphabet.lookupIndex(childStr);
+		int child = ntAlphabet.lookupIndex(childStr);
 		return new Rule(parent, child, Rule.UNARY_RULE, logProb, ntAlphabet, lexAlphabet);
 	}
 
 	private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb) {
 		int parent = ntAlphabet.lookupIndex(parentStr);
-		int leftChild = lexAlphabet.lookupIndex(leftChildStr);
-		int rightChild = lexAlphabet.lookupIndex(rightChildStr);
+		int leftChild = ntAlphabet.lookupIndex(leftChildStr);
+		int rightChild = ntAlphabet.lookupIndex(rightChildStr);
 		return new Rule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet);
 	}
 

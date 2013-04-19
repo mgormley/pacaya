@@ -60,5 +60,29 @@ public class Rule {
 	public int getRightChild() {
 		return rightChild;
 	}
-		
+	
+	public String getParentStr() {
+		return ntAlphabet.lookupObject(parent);
+	}
+
+	public String getLeftChildStr() {
+		if (isLexical()) {
+			return lexAlphabet.lookupObject(leftChild);
+		} else {
+			return ntAlphabet.lookupObject(leftChild);
+		}		
+	}
+
+	public String getRightChildStr() {
+		if (rightChild < 0) {
+			return null;
+		} else {
+			return ntAlphabet.lookupObject(rightChild);
+		}		
+	}
+	@Override
+	public String toString() {
+		return "Rule [parent=" + getParentStr() + ", leftChild=" + getLeftChildStr()
+				+ ", rightChild=" + getRightChildStr() + ", score=" + score + "]";
+	}
 }

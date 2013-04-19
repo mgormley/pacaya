@@ -14,15 +14,19 @@ import java.util.Map;
  */
 public class Alphabet<T> {
 
+	private static final int MISSING_OBJECT_INDEX = -1;
 	private ArrayList<T> idxObjMap;
 	private Map<T, Integer> objIdxMap;
+	private boolean isGrowing;
 	
 	public Alphabet() {
+		isGrowing = true;
 		idxObjMap = new ArrayList<T>();
 		objIdxMap = new HashMap<T, Integer>();
 	}
 	
 	public Alphabet(Alphabet<T> other) {
+		isGrowing = true;
 		idxObjMap = new ArrayList<T>(other.idxObjMap);
 		objIdxMap = new HashMap<T, Integer>(other.objIdxMap);
 	}
@@ -34,10 +38,15 @@ public class Alphabet<T> {
 	public int lookupIndex(T object, boolean addIfMissing) {
 		Integer index = objIdxMap.get(object);
 		if (index == null) {
-			// Add this new object to the alphabet.
-			index = idxObjMap.size();
-			idxObjMap.add(object);
-			objIdxMap.put(object, index);
+			// A new object we haven't seen before.
+			if (isGrowing && addIfMissing) {
+				// Add this new object to the alphabet.
+				index = idxObjMap.size();
+				idxObjMap.add(object);
+				objIdxMap.put(object, index);
+			} else {
+				return MISSING_OBJECT_INDEX;
+			}
 		}
 		return index;
 	}
@@ -56,17 +65,23 @@ public class Alphabet<T> {
 	}
 
 	public void startGrowth() {
-		// TODO Auto-generated method stub
-		
+		isGrowing = true;
 	}
 
 	public void stopGrowth() {
-		// TODO Auto-generated method stub
-		
+		isGrowing = false;
 	}
 
 	public List<T> getObjects() {
 		return Collections.unmodifiableList(idxObjMap);
+	}
+
+	public int[] lookupIndices(T[] objectSequence) {
+		int[] ids = new int[objectSequence.length];
+		for (int i=0; i<objectSequence.length; i++) {
+			ids[i] = lookupIndex(objectSequence[i]);
+		}
+		return ids;
 	}
 	
 }

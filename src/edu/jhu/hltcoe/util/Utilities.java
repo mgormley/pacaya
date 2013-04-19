@@ -531,6 +531,12 @@ public class Utilities {
         }
     }
 
+    public static void fill(Object[][] array, Object value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
+        }
+    }
+    
     /**
      * Gets an array where array[i] = i.
      * @param length The length of the array.
