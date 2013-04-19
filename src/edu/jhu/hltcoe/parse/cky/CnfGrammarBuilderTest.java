@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.parse.cky;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
 import org.junit.Test;
 
 public class CnfGrammarBuilderTest {
@@ -9,7 +11,7 @@ public class CnfGrammarBuilderTest {
 	public static final String timeFliesGrammarResource = "/edu/jhu/hltcoe/parse/cky/time-flies.gr";
 
 	@Test
-	public void testLoadGrammarFromFile() {
+	public void testLoadGrammarFromFile() throws IOException {
 
 		CnfGrammarBuilder builder = new CnfGrammarBuilder();
 		builder.loadFromResource(timeFliesGrammarResource);

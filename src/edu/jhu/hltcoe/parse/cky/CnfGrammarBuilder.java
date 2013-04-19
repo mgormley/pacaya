@@ -1,11 +1,14 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import edu.jhu.hltcoe.util.Alphabet;
 
@@ -33,20 +36,24 @@ public class CnfGrammarBuilder {
 	public CnfGrammar getGrammar() {
 		return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet);
 	}
+	
+	public void loadFromFile(String filename) throws IOException {
+		InputStream inputStream = new FileInputStream(filename);
+		if (filename.endsWith(".gz")) {
+			inputStream = new GZIPInputStream(inputStream);
+		}
+		loadFromInputStream(inputStream);
+	}
 
-	public void loadFromResource(String resourceName) {
+	public void loadFromResource(String resourceName) throws IOException {
 		InputStream inputStream = this.getClass().getResourceAsStream(
 				resourceName);
 		if (inputStream == null) {
 			throw new RuntimeException("Unable to find resource: "
 					+ resourceName);
 		}
-		try {
-			loadFromInputStream(inputStream);
-			inputStream.close();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		loadFromInputStream(inputStream);
+		inputStream.close();
 	}
 	
 	private enum GrReaderState {
@@ -66,17 +73,22 @@ public class CnfGrammarBuilder {
 			if (line.startsWith("#") || line.equals("")) {
 				// Skip comments and empty lines.
 				continue;
-			}	
+			}
 			
-			if (line.equals("===")) {
+			if (line.startsWith("===")) {
 				// Change states to reading lexical rules.
 				state = GrReaderState.LexicalRules;
 				continue;
 			}
 			
 			if (state == GrReaderState.RootSymbol) {
-				// Read the root symbol.
-				rootSymbol = ntAlphabet.lookupIndex(line);
+				if (line.contains(" ")) {
+					// Read a bubs-parser style line with the root symbol in start=Root
+					rootSymbol = ntAlphabet.lookupIndex("ROOT");
+				} else {
+					// Read the root symbol.
+					rootSymbol = ntAlphabet.lookupIndex(line);
+				}
 				state = GrReaderState.NonTerminalRules;
 				continue;
 			}
@@ -133,5 +145,6 @@ public class CnfGrammarBuilder {
 		int rightChild = ntAlphabet.lookupIndex(rightChildStr);
 		return new Rule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet);
 	}
+
 
 }

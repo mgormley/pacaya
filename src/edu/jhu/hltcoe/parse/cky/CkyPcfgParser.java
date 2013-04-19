@@ -52,7 +52,7 @@ public class CkyPcfgParser {
 				// Apply unary rules.
 				for(final int parentNt : chart.getNonTerminals(start, end)) {
 					for (Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
-						double score = r.getScore();
+						double score = r.getScore() + chart.getMaxScore(start, end, r.getLeftChild());
 						chart.updateCell(start, end, r, score);
 					}
 				}

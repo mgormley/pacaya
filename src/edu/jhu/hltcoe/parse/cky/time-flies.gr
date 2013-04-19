@@ -11,8 +11,8 @@ NP -> N N -2
 ===
 N -> time -1
 V -> time -2
-N -> flies -1
-V -> flies -2
+V -> flies -1
+N -> flies -2
 IN -> like -1
 V -> like -2
 N -> like -3
