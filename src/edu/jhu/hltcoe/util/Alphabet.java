@@ -83,5 +83,11 @@ public class Alphabet<T> {
 		}
 		return ids;
 	}
+
+    @Override
+    public String toString() {
+        return "Alphabet [idxObjMap=" + idxObjMap + ", isGrowing=" + isGrowing
+                + "]";
+    }
 	
 }
