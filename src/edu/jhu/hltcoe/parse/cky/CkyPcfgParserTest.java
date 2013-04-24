@@ -20,8 +20,8 @@ public class CkyPcfgParserTest {
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<CfgTree, Double> pair = parseSentence("time flies like an arrow", grammar);
-        CfgTree tree = pair.get1();
+        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar);
+        BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
         System.out.println(logProb);
@@ -41,8 +41,8 @@ public class CkyPcfgParserTest {
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<CfgTree, Double> pair = parseSentence("an arrow flies like time", grammar);
-        CfgTree tree = pair.get1();
+        Pair<BinaryTree, Double> pair = parseSentence("an arrow flies like time", grammar);
+        BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
         System.out.println(logProb);
@@ -63,8 +63,8 @@ public class CkyPcfgParserTest {
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<CfgTree, Double> pair = parseSentence("time flies like an arrow", grammar);
-        CfgTree tree = pair.get1();
+        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar);
+        BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
         System.out.println(logProb);
@@ -77,7 +77,7 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(-46.24, logProb, 1e-2);
     }
     
-    public static Pair<CfgTree, Double> parseSentence(String sentence, CnfGrammar grammar) {
+    public static Pair<BinaryTree, Double> parseSentence(String sentence, CnfGrammar grammar) {
         String[] tokens = sentence.split(" ");
         int[] sent = grammar.getLexAlphabet().lookupIndices(tokens);
         System.out.println(Arrays.toString(sent));

@@ -8,20 +8,20 @@ import edu.jhu.hltcoe.util.Alphabet;
  * @author mgormley
  *
  */
-public class CfgTreeNode {
+public class BinaryTreeNode {
 
     private static final int INDENT_CHARS = 4;
     private int parent;
     private int start;
     private int end;
-    private CfgTreeNode leftChildNode;
-    private CfgTreeNode rightChildNode;
+    private BinaryTreeNode leftChildNode;
+    private BinaryTreeNode rightChildNode;
     private boolean isLexical;
     
     private Alphabet<String> alphabet;
     
-    public CfgTreeNode(int parent, int start, int end, CfgTreeNode leftChildNode,
-            CfgTreeNode rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
+    public BinaryTreeNode(int parent, int start, int end, BinaryTreeNode leftChildNode,
+            BinaryTreeNode rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
         this.parent = parent;
         this.start = start;
         this.end = end;

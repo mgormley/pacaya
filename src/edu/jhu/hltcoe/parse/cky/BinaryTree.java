@@ -8,11 +8,11 @@ import edu.jhu.hltcoe.util.Alphabet;
  * @author mgormley
  *
  */
-public class CfgTree {
+public class BinaryTree {
     
-    private CfgTreeNode root;
+    private BinaryTreeNode root;
 
-    public CfgTree(CfgTreeNode root) {
+    public BinaryTree(BinaryTreeNode root) {
         this.root = root;
     }
 
