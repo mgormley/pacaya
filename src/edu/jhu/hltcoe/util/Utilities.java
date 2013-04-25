@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,8 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Utilities {
 
@@ -561,6 +563,27 @@ public class Utilities {
             index[i] = i;
         }
         return index;
+    }
+
+    public static List<File> getMatchingFiles(File file, String regexStr) {
+        Pattern regex = Pattern.compile(regexStr);
+        return getMatchingFiles(file, regex);
+    }
+
+    private static List<File> getMatchingFiles(File file, Pattern regex) {
+        ArrayList<File> files = new ArrayList<File>();
+        if (file.exists()) {
+            if (file.isFile()) {
+                if (regex.matcher(file.getName()).matches()) {
+                    files.add(file);
+                }
+            } else {
+                for (File subFile : file.listFiles()) {
+                    files.addAll(getMatchingFiles(subFile, regex));
+                }
+            }
+        }
+        return files;
     }
     
 }

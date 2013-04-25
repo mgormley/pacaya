@@ -30,6 +30,7 @@ public class ArgParser {
     public ArgParser(Class<?> mainClass) {
         options = new Options();
         optionFieldMap = new HashMap<Option, Field>();
+        this.mainClass = mainClass;  
     }
 
     public Options getOptions() {

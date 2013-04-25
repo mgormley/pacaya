@@ -51,6 +51,9 @@ public class NaryTree {
         readUntilCharacter(reader, '(');
         NaryTreeNode root = NaryTreeNode.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
         readUntilCharacter(reader, ')');
+        if (root == null) {
+            return null;
+        }
         root.updateStartEnd();
         NaryTree tree = new NaryTree(root);        
         return tree;
@@ -69,6 +72,10 @@ public class NaryTree {
     @Override
     public String toString() {
         return "NaryTree [root=" + root + "]";
+    }
+
+    public BinaryTree binarize() {
+        return new BinaryTree(root.binarize());
     }
         
 }
