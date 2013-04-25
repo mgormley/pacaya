@@ -22,7 +22,7 @@ public class NaryTreeNodeTest {
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
-        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, reader);
+        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(alphabet);
@@ -33,6 +33,28 @@ public class NaryTreeNodeTest {
         assertEquals(origTreeStr, newTreeStr);
     }
 
+    @Test
+    public void testUpdateStartEnd() throws IOException {
+        String origTreeStr = "" +
+                "(VP (VB join)\n" +
+                    "(NP (DT the) (NN board) )\n" +
+                    "(PP-CLR (IN as)\n" + 
+                      "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
+                    "(NP-TMP (NNP Nov.) (CD 29) ))\n";
+        
+        StringReader reader = new StringReader(origTreeStr);
+        Alphabet<String> alphabet = new Alphabet<String>();
+        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
+        String newTreeStr = tree.getAsPennTreebankString();
+        
+        System.out.println(newTreeStr);
+        tree.updateStartEnd();
+        assertEquals(0, tree.getStart());
+        assertEquals(9, tree.getEnd());
+        assertEquals(3, tree.getChildren().get(2).getStart());
+        assertEquals(7, tree.getChildren().get(2).getEnd());
+    }
+    
     private static String canonicalizeTreeString(String newTreeStr) {
         return newTreeStr.trim().replaceAll("\\s+\\)", ")").replaceAll("\\s+", " ");
     }

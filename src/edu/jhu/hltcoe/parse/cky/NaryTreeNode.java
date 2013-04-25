@@ -1,20 +1,22 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Stack;
 
+import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 
 /**
- * Node in a binary tree for a context free grammar.
+ * Node in an n-ary tree for a context free grammar.
  * 
  * @author mgormley
  *
  */
 public class NaryTreeNode {
 
+    private static final int NOT_INITIALIZED = -1;
     private int parent;
     private int start;
     private int end;
@@ -101,8 +103,37 @@ public class NaryTreeNode {
     public enum ReaderState {
         START, LEXICAL, NONTERMINAL, CHILDREN, DONE,
     }
+
+    public static ArrayList<NaryTreeNode> readTreesInPtbFormat(
+            Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+        ArrayList<NaryTreeNode> trees = new ArrayList<NaryTreeNode>();
+        while (true) {
+            NaryTreeNode tree = readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            if (tree != null) {
+                trees.add(tree);
+            }            
+            if (tree == null || tree.isLexical) {
+                break;
+            }            
+        }
+        return trees;
+    }
     
-    public static NaryTreeNode readTreeInPtbFormat(Alphabet<String> alphabet, Reader reader) throws IOException {
+    /**
+     * Reads an NaryTreeNode from a string.
+     * 
+     * Example:
+     * (NP (DT the) (NN board) )
+     * 
+     * Note that the resulting tree will NOT have the start/end fields initialized.
+     * @param lexAlphabet TODO
+     * @param ntAlphabet 
+     * @param reader
+     * 
+     * @return
+     * @throws IOException
+     */
+    public static NaryTreeNode readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder parentSb = new StringBuilder();
         ArrayList<NaryTreeNode> children = null;
@@ -134,7 +165,7 @@ public class NaryTreeNode {
             } else if (state == ReaderState.NONTERMINAL) {
                 if (isWhitespace(c)) {
                     state = ReaderState.CHILDREN;
-                    children = readTreesInPtbFormat(alphabet, reader);
+                    children = readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader);
                     state = ReaderState.DONE;
                     break;
                 } else {
@@ -152,27 +183,95 @@ public class NaryTreeNode {
         //String treeStr = origTreeStr.replaceAll("\\s+", " ");
         //String parentStr = treeStr.substring(ntStart, ntEnd);
         // TODO: resolve start and end.
-        
-        NaryTreeNode root = new NaryTreeNode(alphabet.lookupIndex(parentSb.toString()), -1, -1, children, isLexical, alphabet);
+        int start = NOT_INITIALIZED;
+        int end = NOT_INITIALIZED;
+        NaryTreeNode root = new NaryTreeNode(ntAlphabet.lookupIndex(parentSb.toString()), start, end, children, isLexical, ntAlphabet);
         return root;
     }
 
     private static boolean isWhitespace(char c) {
         return c == ' ' || c == '\n' || c == '\t';
     }
-
-    public static ArrayList<NaryTreeNode> readTreesInPtbFormat(
-            Alphabet<String> alphabet, Reader reader) throws IOException {
-        ArrayList<NaryTreeNode> trees = new ArrayList<NaryTreeNode>();
-        while (true) {
-            NaryTreeNode tree = readTreeInPtbFormat(alphabet, reader);
-            if (tree != null) {
-                trees.add(tree);
-            }            
-            if (tree == null || tree.isLexical) {
-                break;
-            }            
+    
+    public void preOrderTraversal(LambdaOne<NaryTreeNode> function) {
+        // Visit this node.
+        function.apply(this);
+        // Pre-order traversal of each child.
+        if (children != null) {
+            for (NaryTreeNode child : children) {
+                child.postOrderTraversal(function);
+            }
         }
-        return trees;
+    }
+    
+    public void postOrderTraversal(LambdaOne<NaryTreeNode> function) {
+        // Post-order traversal of each child.
+        if (children != null) {
+            for (NaryTreeNode child : children) {
+                child.postOrderTraversal(function);
+            }
+        }
+        // Visit this node.
+        function.apply(this);
+    }
+
+    public boolean isLeaf() {
+        return children == null || children.size() == 0;
+    }
+    
+    /**
+     * Updates all the start end fields, treating the current node as the root.
+     */
+    public void updateStartEnd() {
+        ArrayList<NaryTreeNode> leaves = getLeaves();
+        for (int i=0; i<leaves.size(); i++) {
+            NaryTreeNode leaf = leaves.get(i);
+            leaf.start = i;
+            leaf.end = i+1;
+        }
+        postOrderTraversal(new UpdateStartEnd());
+    }
+
+    private ArrayList<NaryTreeNode> getLeaves() {
+        LeafCollector leafCollector = new LeafCollector();
+        postOrderTraversal(leafCollector);
+        return leafCollector.leaves;
+    }
+
+    private class LeafCollector implements LambdaOne<NaryTreeNode> {
+
+        public ArrayList<NaryTreeNode> leaves = new ArrayList<NaryTreeNode>();
+        
+        @Override
+        public void apply(NaryTreeNode node) {
+            if (node.isLeaf()) {
+                leaves.add(node);
+            }
+        }
+        
+    }
+    
+    private class UpdateStartEnd implements LambdaOne<NaryTreeNode> {
+
+        @Override
+        public void apply(NaryTreeNode node) {
+            if (!node.isLeaf()) {
+                node.start = node.children.get(0).start;
+                node.end = node.children.get(node.children.size()-1).end;
+            }
+        }
+        
+    }
+
+    public int getStart() {
+        return start;
+    }
+    
+    public int getEnd() {
+        return end;
+    }
+
+    public ArrayList<NaryTreeNode> getChildren() {
+        return children;
     }
 }

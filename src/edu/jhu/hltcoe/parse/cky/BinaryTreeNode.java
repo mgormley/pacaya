@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 
 /**
@@ -92,5 +93,30 @@ public class BinaryTreeNode {
             }
             sb.append(")");
         }
+    }
+
+    public void preOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+        // Visit this node.
+        function.apply(this);
+        // Pre-order traversal of each child.
+        leftChildNode.preOrderTraversal(function);
+        rightChildNode.preOrderTraversal(function);
+    }
+
+    public void inOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+        // In-order traversal of left child.
+        leftChildNode.inOrderTraversal(function);
+        // Visit this node.
+        function.apply(this);
+        // In-order traversal of right child.
+        rightChildNode.inOrderTraversal(function);
+    }
+    
+    public void postOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+        // Post-order traversal of each child.
+        leftChildNode.postOrderTraversal(function);
+        rightChildNode.postOrderTraversal(function);
+        // Visit this node.
+        function.apply(this);
     }
 }
