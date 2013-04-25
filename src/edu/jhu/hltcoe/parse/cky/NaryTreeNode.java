@@ -3,7 +3,7 @@ package edu.jhu.hltcoe.parse.cky;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Stack;
+import java.util.LinkedList;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -41,12 +41,6 @@ public class NaryTreeNode {
     
     private String getParentStr() {
         return alphabet.lookupObject(parent);
-    }
-    
-    @Override
-    public String toString() {
-        return "CfgTreeNode [parent=" + getParentStr() + "_{" + start + ", "
-                + end + "}, children=" + children + "]";
     }
     
     /**
@@ -99,7 +93,7 @@ public class NaryTreeNode {
             sb.append(")");
         }
     }
-    
+        
     public enum ReaderState {
         START, LEXICAL, NONTERMINAL, CHILDREN, DONE,
     }
@@ -238,6 +232,58 @@ public class NaryTreeNode {
         return leafCollector.leaves;
     }
 
+    /**
+     * Get a left-binarized form of this tree.
+     * 
+     * This returns a binarized form that relabels the nodes just as in the
+     * Berkeley parser.
+     */
+    public BinaryTreeNode binarize() {
+        BinaryTreeNode leftChild;
+        BinaryTreeNode rightChild;
+        if (isLeaf()) {
+            leftChild = null;
+            rightChild = null;
+        } else if (children.size() == 1) {
+            leftChild = children.get(0).binarize();
+            rightChild = null;
+        } else if (children.size() == 2) {
+            leftChild = children.get(0).binarize();
+            rightChild = children.get(1).binarize();
+        } else {
+            // Define the label of the new parent node as in the Berkeley grammar.
+            int xbarParent = alphabet.lookupIndex("@" + getParentStr());
+            
+            LinkedList<NaryTreeNode> queue = new LinkedList<NaryTreeNode>(children);
+            leftChild = queue.removeFirst().binarize();
+            do {
+                rightChild = queue.removeFirst().binarize();
+                leftChild = new BinaryTreeNode(xbarParent, leftChild.getStart(),
+                        rightChild.getEnd(), leftChild, rightChild, isLexical,
+                        alphabet);
+            } while (!queue.isEmpty());
+        }
+        return new BinaryTreeNode(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
+    }
+    
+    public int getStart() {
+        return start;
+    }
+    
+    public int getEnd() {
+        return end;
+    }
+
+    public ArrayList<NaryTreeNode> getChildren() {
+        return children;
+    }
+    
+    @Override
+    public String toString() {
+        return "NaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
+                + end + "}, children=" + children + "]";
+    }
+
     private class LeafCollector implements LambdaOne<NaryTreeNode> {
 
         public ArrayList<NaryTreeNode> leaves = new ArrayList<NaryTreeNode>();
@@ -261,17 +307,5 @@ public class NaryTreeNode {
             }
         }
         
-    }
-
-    public int getStart() {
-        return start;
-    }
-    
-    public int getEnd() {
-        return end;
-    }
-
-    public ArrayList<NaryTreeNode> getChildren() {
-        return children;
     }
 }

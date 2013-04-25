@@ -39,14 +39,7 @@ public class BinaryTreeNode {
     private String getParentStr() {
         return alphabet.lookupObject(parent);
     }
-    
-    @Override
-    public String toString() {
-        return "CfgTreeNode [parent=" + getParentStr() + "_{" + start + ", "
-                + end + "}, leftChildNode=" + leftChildNode
-                + ", rightChildNode=" + rightChildNode + "]";
-    }
-    
+        
     /**
      * Gets a string representation of this parse that looks like the typical 
      * Penn Treebank style parse.
@@ -119,4 +112,20 @@ public class BinaryTreeNode {
         // Visit this node.
         function.apply(this);
     }
+
+    public int getStart() {
+        return start;
+    }
+    
+    public int getEnd() {
+        return end;
+    }
+    
+    @Override
+    public String toString() {
+        return "BinaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
+                + end + "}, leftChildNode=" + leftChildNode
+                + ", rightChildNode=" + rightChildNode + "]";
+    }
+    
 }

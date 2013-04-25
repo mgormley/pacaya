@@ -16,14 +16,13 @@ public class BinaryTree {
         this.root = root;
     }
 
-    @Override
-    public String toString() {
-        return "CfgTree [root=" + root + "]";
-    }
-    
-
     public String getAsPennTreebankString() {
         return root.getAsPennTreebankString();
     }
 
+    @Override
+    public String toString() {
+        return "BinaryTree [root=" + root + "]";
+    }
+    
 }

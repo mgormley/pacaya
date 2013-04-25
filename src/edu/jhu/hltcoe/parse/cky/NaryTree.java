@@ -19,18 +19,15 @@ public class NaryTree {
 
     public NaryTree(NaryTreeNode root) {
         this.root = root;
-    }
-
-    @Override
-    public String toString() {
-        return "CfgTree [root=" + root + "]";
-    }
-    
+    }    
 
     public String getAsPennTreebankString() {
         return "( " + root.getAsPennTreebankString() + " )";
     }
 
+    /**
+     * Reads a list of trees in Penn Treebank format.
+     */
     public static ArrayList<NaryTree> readTreesInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ArrayList<NaryTree> trees = new ArrayList<NaryTree>();
         while (true) {
@@ -67,6 +64,11 @@ public class NaryTree {
                 break;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "NaryTree [root=" + root + "]";
     }
         
 }
