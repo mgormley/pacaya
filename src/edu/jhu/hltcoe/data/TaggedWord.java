@@ -22,7 +22,8 @@ public class TaggedWord extends AbstractLabel implements Label {
     /**
      * For reducing from 45 to 17 tags.
      */
-    public void setTag(String tag) {
+    @Deprecated
+    void setTag(String tag) {
         this.tag = tag;
     }
     

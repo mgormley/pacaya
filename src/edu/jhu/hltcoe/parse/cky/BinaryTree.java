@@ -1,6 +1,5 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import edu.jhu.hltcoe.util.Alphabet;
 
 /**
  * Binary tree from a context free grammar.
@@ -23,6 +22,10 @@ public class BinaryTree {
     @Override
     public String toString() {
         return "BinaryTree [root=" + root + "]";
+    }
+
+    public int[] getSentence() {
+        return root.getSentence();
     }
     
 }

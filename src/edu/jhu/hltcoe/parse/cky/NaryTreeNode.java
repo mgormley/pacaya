@@ -179,7 +179,14 @@ public class NaryTreeNode {
         // TODO: resolve start and end.
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
-        NaryTreeNode root = new NaryTreeNode(ntAlphabet.lookupIndex(parentSb.toString()), start, end, children, isLexical, ntAlphabet);
+        Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
+        int parent = alphabet.lookupIndex(parentSb.toString());
+        if (parent == -1) {
+            throw new IllegalStateException("Unknown "
+                    + (isLexical ? "word" : "nonterminal") + ": "
+                    + parentSb.toString());
+        }
+        NaryTreeNode root = new NaryTreeNode(parent, start, end, children, isLexical, ntAlphabet);
         return root;
     }
 
@@ -208,6 +215,18 @@ public class NaryTreeNode {
         // Visit this node.
         function.apply(this);
     }
+    
+    public int getStart() {
+        return start;
+    }
+    
+    public int getEnd() {
+        return end;
+    }
+
+    public ArrayList<NaryTreeNode> getChildren() {
+        return children;
+    }
 
     public boolean isLeaf() {
         return children == null || children.size() == 0;
@@ -226,10 +245,25 @@ public class NaryTreeNode {
         postOrderTraversal(new UpdateStartEnd());
     }
 
-    private ArrayList<NaryTreeNode> getLeaves() {
+    /**
+     * Gets the leaves of this tree.
+     */
+    public ArrayList<NaryTreeNode> getLeaves() {
         LeafCollector leafCollector = new LeafCollector();
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
+    }
+    
+    /**
+     * Gets the lexical item ids comprising the sentence.
+     */
+    public int[] getSentence() {
+        ArrayList<NaryTreeNode> leaves = getLeaves();
+        int[] sent = new int[leaves.size()];
+        for (int i=0; i<sent.length; i++) {
+            sent[i] = leaves.get(i).parent;
+        }
+        return sent;
     }
 
     /**
@@ -264,18 +298,6 @@ public class NaryTreeNode {
             } while (!queue.isEmpty());
         }
         return new BinaryTreeNode(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
-    }
-    
-    public int getStart() {
-        return start;
-    }
-    
-    public int getEnd() {
-        return end;
-    }
-
-    public ArrayList<NaryTreeNode> getChildren() {
-        return children;
     }
     
     @Override

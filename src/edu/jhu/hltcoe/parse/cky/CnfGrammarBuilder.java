@@ -1,8 +1,8 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -24,22 +24,32 @@ public class CnfGrammarBuilder {
     private Alphabet<String> ntAlphabet;
     
     public CnfGrammarBuilder() {
+        this(new Alphabet<String>(), new Alphabet<String>());
+    }
+    
+    public CnfGrammarBuilder(Alphabet<String> lexAlphabet,
+            Alphabet<String> ntAlphabet) {
+
         allRules = new ArrayList<Rule>();
         lexRules = new ArrayList<Rule>();
         unaryRules = new ArrayList<Rule>();
         binaryRules = new ArrayList<Rule>();
         
-        lexAlphabet = new Alphabet<String>();
-        ntAlphabet = new Alphabet<String>();
+        this.lexAlphabet = lexAlphabet;  
+        this.ntAlphabet = ntAlphabet;
     }
-    
+
     public CnfGrammar getGrammar() {
         return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet);
     }
     
     public void loadFromFile(String filename) throws IOException {
+        loadFromFile(new File(filename));
+    }
+    
+    public void loadFromFile(File filename) throws IOException {
         InputStream inputStream = new FileInputStream(filename);
-        if (filename.endsWith(".gz")) {
+        if (filename.getName().endsWith(".gz")) {
             inputStream = new GZIPInputStream(inputStream);
         }
         loadFromInputStream(inputStream);

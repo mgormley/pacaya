@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import java.util.ArrayList;
+
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 
@@ -11,7 +13,6 @@ import edu.jhu.hltcoe.util.Alphabet;
  */
 public class BinaryTreeNode {
 
-    private static final int INDENT_CHARS = 4;
     private int parent;
     private int start;
     private int end;
@@ -120,12 +121,78 @@ public class BinaryTreeNode {
     public int getEnd() {
         return end;
     }
+
+    public boolean isLeaf() {
+        return leftChildNode == null && rightChildNode == null;
+    }
     
+    /**
+     * Updates all the start end fields, treating the current node as the root.
+     */
+    public void updateStartEnd() {
+        ArrayList<BinaryTreeNode> leaves = getLeaves();
+        for (int i=0; i<leaves.size(); i++) {
+            BinaryTreeNode leaf = leaves.get(i);
+            leaf.start = i;
+            leaf.end = i+1;
+        }
+        postOrderTraversal(new UpdateStartEnd());
+    }
+
+    /**
+     * Gets the leaves of this tree.
+     */
+    public ArrayList<BinaryTreeNode> getLeaves() {
+        LeafCollector leafCollector = new LeafCollector();
+        postOrderTraversal(leafCollector);
+        return leafCollector.leaves;
+    }
+    
+    /**
+     * Gets the lexical item ids comprising the sentence.
+     */
+    public int[] getSentence() {
+        ArrayList<BinaryTreeNode> leaves = getLeaves();
+        int[] sent = new int[leaves.size()];
+        for (int i=0; i<sent.length; i++) {
+            sent[i] = leaves.get(i).parent;
+        }
+        return sent;
+    }
+
     @Override
     public String toString() {
         return "BinaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
                 + end + "}, leftChildNode=" + leftChildNode
                 + ", rightChildNode=" + rightChildNode + "]";
     }
+
+    private class LeafCollector implements LambdaOne<BinaryTreeNode> {
+
+        public ArrayList<BinaryTreeNode> leaves = new ArrayList<BinaryTreeNode>();
+        
+        @Override
+        public void apply(BinaryTreeNode node) {
+            if (node.isLeaf()) {
+                leaves.add(node);
+            }
+        }
+        
+    }
     
+    private class UpdateStartEnd implements LambdaOne<BinaryTreeNode> {
+
+        @Override
+        public void apply(BinaryTreeNode node) {
+            if (!node.isLeaf()) {
+                node.start = node.leftChildNode.start;
+                if (node.rightChildNode == null) {
+                    node.end = node.leftChildNode.end;
+                } else {
+                    node.end = node.rightChildNode.end;
+                }
+            }
+        }
+        
+    }
 }
