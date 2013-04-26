@@ -1,3 +1,6 @@
+*.pyc
+*~
+.#*
 
 # /
 /other_repos
