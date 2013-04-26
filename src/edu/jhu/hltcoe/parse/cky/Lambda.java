@@ -14,7 +14,7 @@ public class Lambda {
 
     // TODO: Generalize this.
     public interface LambdaOne<T> {
-        public void apply(T obj);
+        public void call(T obj);
     }
     
 }

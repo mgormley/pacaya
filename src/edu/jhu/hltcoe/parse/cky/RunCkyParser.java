@@ -13,6 +13,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.parse.cky.NaryTreeNode.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
@@ -32,6 +33,8 @@ public class RunCkyParser {
     public static File treeFile = null;
     @Opt(hasArg = true, description = "Pseudo random number generator seed")
     public static long seed = Prng.DEFAULT_SEED;
+    @Opt(hasArg = true, description = "Directory containing evalb")
+    public static File evalbDir = null;
 
     public void run() throws IOException {
         Alphabet<String> lexAlphabet = new Alphabet<String>();
@@ -55,7 +58,28 @@ public class RunCkyParser {
             reader.close();
         }
         
-        // TODO: remove function tags and null elements.
+        log.info("Removing null elements");
+        final int nullElement = ntAlphabet.lookupIndex("-NONE-");
+        NaryTreeNodeFilter nullElementFilter = new NaryTreeNodeFilter() {
+            @Override
+            public boolean accept(NaryTreeNode node) {
+                if (node.getParent() == nullElement) {
+                    return false;
+                } else if (!node.isLexical() && node.isLeaf()) {
+                    return false;
+                }
+                return true;
+            }
+        };
+        for (int i=0; i<naryTrees.size(); i++) {
+            NaryTree tree = naryTrees.get(i);
+            tree.postOrderFilterNodes(nullElementFilter);
+            naryTrees.set(i, tree);
+        }
+        
+        log.info("Removing function tags");
+        // TODO:
+        // TODO: remove function tags.
         
         log.info("Binarizing " + naryTrees.size() + " trees");
         ArrayList<BinaryTree> binaryTrees = new ArrayList<BinaryTree>();
@@ -82,6 +106,10 @@ public class RunCkyParser {
                 writer.write("\n\n");
             }
             writer.close();
+        }
+        
+        if (evalbDir != null) {
+            // TODO: run evalb
         }
     }
     

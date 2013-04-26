@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -196,7 +197,7 @@ public class NaryTreeNode {
     
     public void preOrderTraversal(LambdaOne<NaryTreeNode> function) {
         // Visit this node.
-        function.apply(this);
+        function.call(this);
         // Pre-order traversal of each child.
         if (children != null) {
             for (NaryTreeNode child : children) {
@@ -213,7 +214,7 @@ public class NaryTreeNode {
             }
         }
         // Visit this node.
-        function.apply(this);
+        function.call(this);
     }
     
     public int getStart() {
@@ -246,12 +247,52 @@ public class NaryTreeNode {
     }
 
     /**
-     * Gets the leaves of this tree.
+     * Gets the leaves of this tree in left-to-right order.
      */
     public ArrayList<NaryTreeNode> getLeaves() {
         LeafCollector leafCollector = new LeafCollector();
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
+    }
+    
+    // TODO: remove.          
+//    public void removeNullElements() {
+//        final int nullElement = ntAlphabet.lookupIndex("-NONE-");
+//        postOrderFilterNodes(new NaryTreeNodeFilter() {
+//            @Override
+//            public boolean accept(NaryTreeNode node) {
+//                if (node.parent == nullElement) {
+//                    return false;
+//                } else if (!node.isLexical && node.isLeaf()) {
+//                    return false;
+//                }
+//            } 
+//        });
+//    }
+    
+    public interface NaryTreeNodeFilter {
+        public boolean accept(NaryTreeNode node);
+    }
+
+    /**
+     * Keep only those nodes which the filter accepts.
+     */
+    public void postOrderFilterNodes(final NaryTreeNodeFilter filter) {
+        postOrderTraversal(new LambdaOne<NaryTreeNode>() {
+            @Override
+            public void call(NaryTreeNode node) {
+                if (!node.isLeaf()) {
+                    ArrayList<NaryTreeNode> filtChildren = new ArrayList<NaryTreeNode>();
+                    for (NaryTreeNode child : node.children) {
+                        if (filter.accept(child)) {
+                            filtChildren.add(child);
+                        }
+                    }
+                    node.children = filtChildren;
+                }
+            }
+        });
+        updateStartEnd();
     }
     
     /**
@@ -311,7 +352,7 @@ public class NaryTreeNode {
         public ArrayList<NaryTreeNode> leaves = new ArrayList<NaryTreeNode>();
         
         @Override
-        public void apply(NaryTreeNode node) {
+        public void call(NaryTreeNode node) {
             if (node.isLeaf()) {
                 leaves.add(node);
             }
@@ -322,12 +363,20 @@ public class NaryTreeNode {
     private class UpdateStartEnd implements LambdaOne<NaryTreeNode> {
 
         @Override
-        public void apply(NaryTreeNode node) {
+        public void call(NaryTreeNode node) {
             if (!node.isLeaf()) {
                 node.start = node.children.get(0).start;
                 node.end = node.children.get(node.children.size()-1).end;
             }
         }
         
+    }
+
+    public int getParent() {
+        return parent;
+    }
+
+    public boolean isLexical() {
+        return isLexical;
     }
 }

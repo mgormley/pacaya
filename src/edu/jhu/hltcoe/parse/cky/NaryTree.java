@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
+import edu.jhu.hltcoe.parse.cky.NaryTreeNode.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
 
 /**
@@ -77,5 +78,9 @@ public class NaryTree {
     public BinaryTree binarize() {
         return new BinaryTree(root.binarize());
     }
-        
+
+    public void postOrderFilterNodes(NaryTreeNodeFilter filter) {
+        root.postOrderFilterNodes(filter);
+    }
+    
 }

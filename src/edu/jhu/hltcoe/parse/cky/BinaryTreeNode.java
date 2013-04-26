@@ -91,7 +91,7 @@ public class BinaryTreeNode {
 
     public void preOrderTraversal(LambdaOne<BinaryTreeNode> function) {
         // Visit this node.
-        function.apply(this);
+        function.call(this);
         // Pre-order traversal of each child.
         leftChildNode.preOrderTraversal(function);
         rightChildNode.preOrderTraversal(function);
@@ -101,7 +101,7 @@ public class BinaryTreeNode {
         // In-order traversal of left child.
         leftChildNode.inOrderTraversal(function);
         // Visit this node.
-        function.apply(this);
+        function.call(this);
         // In-order traversal of right child.
         rightChildNode.inOrderTraversal(function);
     }
@@ -111,7 +111,7 @@ public class BinaryTreeNode {
         leftChildNode.postOrderTraversal(function);
         rightChildNode.postOrderTraversal(function);
         // Visit this node.
-        function.apply(this);
+        function.call(this);
     }
 
     public int getStart() {
@@ -172,7 +172,7 @@ public class BinaryTreeNode {
         public ArrayList<BinaryTreeNode> leaves = new ArrayList<BinaryTreeNode>();
         
         @Override
-        public void apply(BinaryTreeNode node) {
+        public void call(BinaryTreeNode node) {
             if (node.isLeaf()) {
                 leaves.add(node);
             }
@@ -183,7 +183,7 @@ public class BinaryTreeNode {
     private class UpdateStartEnd implements LambdaOne<BinaryTreeNode> {
 
         @Override
-        public void apply(BinaryTreeNode node) {
+        public void call(BinaryTreeNode node) {
             if (!node.isLeaf()) {
                 node.start = node.leftChildNode.start;
                 if (node.rightChildNode == null) {
