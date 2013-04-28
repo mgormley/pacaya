@@ -7,6 +7,14 @@
 /bin
 /classes
 /tests
+/exp
+/dantzig_wolfe
+
+# /lib/
+/lib/*/
+/lib/*.tgz
+/lib/*.tar.gz
+/lib/*.zip
 
 # /papers/**/
 /papers/**/*.synctex.gz
@@ -30,3 +38,13 @@
 
 # /src/ (for src/com/ibm/cplex)
 /src/com
+
+# /data
+/data/Web2.0Dataset/
+/data/grammars/
+/data/treebank_3/
+/data/treebank_3_sym/
+
+java.hprof.txt
+warn.log
+tmp
