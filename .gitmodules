@@ -1,0 +1,3 @@
+[submodule "scripts/experiments/core"]
+	path = scripts/experiments/core
+	url = ssh://git@bitbucket.org/mgormley/core.git
