@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.stanford.nlp.ling.HasTag;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
@@ -43,6 +45,11 @@ public class DepTree implements Iterable<DepTreeNode> {
         
     }
     
+    /**
+     * Construct a dependency tree from a Stanford constituency tree.
+     * 
+     * @param tree
+     */
     public DepTree(Tree tree) {
         // Remove punctuation
         tree = tree.prune(new PunctuationFilter());
@@ -124,6 +131,13 @@ public class DepTree implements Iterable<DepTreeNode> {
         return tag;
     }
 
+    /**
+     * Construct a dependency tree from a sentence and the head of each token.
+     * 
+     * @param sentence The input sentence.
+     * @param parents The index of the parent of each token. -1 indicates the root.
+     * @param isProjective Whether the tree is projective.
+     */
     public DepTree(Sentence sentence, int[] parents, boolean isProjective) {
         this.isProjective = isProjective;
         this.parents = parents;
@@ -136,6 +150,11 @@ public class DepTree implements Iterable<DepTreeNode> {
         addParentChildLinksToNodes();
     }
     
+    /**
+     * Construct a dependency tree from a wall node and its children.
+     * 
+     * @param wall
+     */
     @SuppressWarnings("unchecked")
     public DepTree(ProjDepTreeNode wall) {
         isProjective = true;
@@ -158,6 +177,11 @@ public class DepTree implements Iterable<DepTreeNode> {
             }
         }
         checkTree();
+    }
+
+    public DepTree(CoNLLXSentence sent) {
+        // TODO: filter out punctuation.
+        this(new Sentence(sent), sent.getParents(), false);
     }
 
     private DepTreeNode getNodeByPosition(int position) {

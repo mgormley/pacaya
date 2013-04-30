@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.data;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -7,8 +8,10 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
+import edu.jhu.hltcoe.data.conll.CoNLLXReader;
+import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;
@@ -47,7 +50,13 @@ public class DepTreebank implements Iterable<DepTree> {
         this.filter = filter;
     }
     
-    public void loadPath(String trainPath) {
+    /**
+     * Read constituency trees from the Penn Treebank and use the Collins head
+     * finding rules to extract dependency trees from them.
+     * 
+     * @param trainPath
+     */
+    public void loadPtbPath(String trainPath) {
         Treebank stanfordTreebank = new DiskTreebank();
         CategoryWordTag.suppressTerminalDetails = true;
         stanfordTreebank.loadPath(trainPath);
@@ -69,6 +78,32 @@ public class DepTreebank implements Iterable<DepTree> {
         }
     }
 
+    /**
+     * Read constituency trees from the Penn Treebank and use the Collins head
+     * finding rules to extract dependency trees from them.
+     * 
+     * @param trainPath
+     */
+    public void loadCoNLLXPath(String trainPath) {
+        CoNLLXReader reader = new CoNLLXReader(trainPath);
+        for (CoNLLXSentence sent : reader) {
+            try {
+                if (this.size() >= maxNumSentences) {
+                    break;
+                }
+                DepTree tree = new DepTree(sent);
+                int len = tree.getNumTokens();
+                if (len <= maxSentenceLength) {
+                    if (filter == null || filter.accept(tree)) {
+                        this.add(tree);
+                    }
+                }
+            } catch (HeadFinderException e) {
+                log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
+            }
+        }
+    }
+    
     public SentenceCollection getSentences() {
         if (sentences == null) {
             sentences = new SentenceCollection(this);

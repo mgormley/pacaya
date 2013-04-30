@@ -159,6 +159,12 @@ public class Vectors {
             params[i] += lambda;
         }
     }
+
+    public static void add(int[] params, int lambda) {
+        for (int i=0; i<params.length; i++) {
+            params[i] += lambda;
+        }
+    }
     
     public static double mean(double[] array) {
         return sum(array) / array.length;
