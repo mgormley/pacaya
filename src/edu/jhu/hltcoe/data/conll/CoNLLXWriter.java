@@ -20,8 +20,9 @@ public class CoNLLXWriter {
     public void write(CoNLLXSentence sentence) throws IOException {
         for (CoNLLXToken token : sentence) {
             token.write(writer);
+            writer.write("\n");
         }
-        writer.write("");
+        writer.write("\n");
     }
     
     public void close() throws IOException {

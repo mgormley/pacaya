@@ -143,25 +143,26 @@ public class CoNLLXToken {
 
     public void write(Writer writer) throws IOException {
         final String sep = " ";
-        writer.write(id);
+        
+        writer.write(String.format("%-3d", id));
         writer.write(sep);
-        writer.write(form);
+        writer.write(String.format("%-20s", form));
         writer.write(sep);
-        writer.write(toUnderscoreString(lemma));
+        writer.write(String.format("%-20s", toUnderscoreString(lemma)));
         writer.write(sep);
-        writer.write(cpostag);
+        writer.write(String.format("%-5s", cpostag));
         writer.write(sep);
-        writer.write(postag);
+        writer.write(String.format("%-5s", postag));
         writer.write(sep);
-        writer.write(getFeatsString(feats));
+        writer.write(String.format("%-20s", getFeatsString(feats)));
         writer.write(sep);
-        writer.write(head);
+        writer.write(String.format("%-3s", Integer.toString(head)));
         writer.write(sep);
-        writer.write(deprel);
+        writer.write(String.format("%-9s", deprel));
         writer.write(sep);
-        writer.write(toUnderscoreString(phead));
+        writer.write(String.format("%-3s", toUnderscoreString(phead)));
         writer.write(sep);
-        writer.write(toUnderscoreString(pdeprel));
+        writer.write(String.format("%-9s", toUnderscoreString(pdeprel)));
         writer.write(sep);
     }
 

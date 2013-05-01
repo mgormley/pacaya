@@ -74,14 +74,8 @@ public class ArgParser {
     public CommandLine parseArgs(String[] args) throws ParseException {
         // Parse command line.
         CommandLine cmd = null;
-        try {
-            CommandLineParser parser = new PosixParser();
-            cmd = parser.parse(options, args);
-        } catch (ParseException e1) {
-            log.error(e1.getMessage());
-            printUsage();
-            throw e1;
-        }
+        CommandLineParser parser = new PosixParser();
+        cmd = parser.parse(options, args);
 
         // Set fields on added classes.
         try {
