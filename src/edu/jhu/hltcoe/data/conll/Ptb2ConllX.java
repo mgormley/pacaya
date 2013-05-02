@@ -39,6 +39,7 @@ public class Ptb2ConllX {
             Vectors.add(heads, 1);
             conllxWriter.write(new CoNLLXSentence(sent, heads));
         }
+        conllxWriter.close();
     }
     
     public static void main(String[] args) throws IOException {
