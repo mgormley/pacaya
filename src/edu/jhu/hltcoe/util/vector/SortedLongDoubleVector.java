@@ -59,10 +59,44 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
 	}
 	
 	public void set(SortedLongDoubleVector other) {
+	    //int numUniqueIndices = countUnique(this.indices, other.indices);
+	    //long[] tmpIndices = new long[numUniqueIndices];
+	    //double[] tmpValues = new double[numUniqueIndices];
 		// TODO: this could be done much faster with a merge of the two arrays.
 		for (LongDoubleEntry ve : other) {
 			set(ve.index(), ve.get());
 		}
+	}
+	
+	/**
+	 * Counts the number of unique indices in two arrays.
+	 * @param indices1 Sorted array of indices.
+	 * @param indices2 Sorted array of indices.
+	 */
+	public static int countUnique(long[] indices1, long[] indices2) {
+        int numUniqueIndices = 0;
+        int i = 0;
+        int j = 0;
+        while (i < indices1.length && j < indices2.length) {
+            if (indices1[i] < indices2[j]) {
+                numUniqueIndices++;
+                i++;
+            } else if (indices2[j] < indices1[i]) {
+                numUniqueIndices++;
+                j++;
+            } else {
+                // Equal indices.
+                i++;
+                j++;
+            }
+        }
+        for (; i < indices1.length; i++) {
+            numUniqueIndices++;
+        }
+        for (; j < indices2.length; j++) {
+            numUniqueIndices++;
+        }
+        return numUniqueIndices;
 	}
 
     public double dot(SortedLongDoubleVector y) {

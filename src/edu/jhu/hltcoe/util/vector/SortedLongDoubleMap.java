@@ -22,9 +22,6 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		if (!Sort.isSortedAscAndUnique(index)) {
 			throw new IllegalStateException("Indices are not sorted ascending");
 		}
-		if (!Sort.isSortedAsc(data)) {
-			throw new IllegalStateException("Values are not sorted ascending");
-		}
 		
 		this.used = index.length;
 		this.indices = index;
@@ -126,18 +123,24 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		}
 	}
 
-	public class LongDoubleIterator implements Iterator<LongDoubleEntry> {
+    /**
+     * This iterator is fast in the case of for(Entry e : vector) { }, however a
+     * given entry should not be used after the following call to next().
+     */
+    public class LongDoubleIterator implements Iterator<LongDoubleEntry> {
 
-		private int i = 0;
+	    // The current entry.
+        private LongDoubleEntryImpl entry = new LongDoubleEntryImpl(-1);
 		
 		@Override
 		public boolean hasNext() {
-			return i < used;
+			return entry.i+1 < used;
 		}
 
 		@Override
 		public LongDoubleEntry next() {
-			return new LongDoubleEntryImpl(i);
+		    entry.i++;
+			return entry;
 		}
 
 		@Override

@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.util.vector;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Iterator;
 
 import org.junit.Test;
 
@@ -109,4 +111,24 @@ public class SortedIntDoubleMapTest {
 			// pass
 		}
 	}
+
+    @Test
+    public void testIterator() {
+        SortedIntDoubleMap map = new SortedIntDoubleMap();
+        map.put(2, 22.);
+        map.put(1, 11.);
+        
+        IntDoubleEntry cur;
+        Iterator<IntDoubleEntry> iter = map.iterator();
+        assertEquals(true, iter.hasNext()); 
+        assertEquals(true, iter.hasNext()); 
+        cur = iter.next();
+        assertEquals(1, cur.index()); 
+        assertEquals(11, cur.get(), 1e-13); 
+        assertEquals(true, iter.hasNext()); 
+        cur = iter.next();
+        assertEquals(2, cur.index()); 
+        assertEquals(22, cur.get(), 1e-13); 
+        assertEquals(false, iter.hasNext());
+    }
 }

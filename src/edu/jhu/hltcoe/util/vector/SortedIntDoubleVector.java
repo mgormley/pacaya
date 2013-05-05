@@ -50,6 +50,13 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     	}
     }
 
+    public void add(SortedIntDoubleVector other) {
+        // TODO: this could be done much faster with a merge of the two arrays.
+        for (IntDoubleEntry ve : other) {
+            add(ve.index(), ve.get());
+        }
+    }
+    
 	public void set(SortedIntDoubleVector other) {
 		// TODO: this could be done much faster with a merge of the two arrays.
 		for (IntDoubleEntry ve : other) {

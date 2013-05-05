@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.util.vector;
 
 import static org.junit.Assert.*;
 
+import java.util.Iterator;
+
 import org.junit.Test;
 
 public class SortedIntLongMapTest {
@@ -109,4 +111,24 @@ public class SortedIntLongMapTest {
 			// pass
 		}
 	}
+
+    @Test
+    public void testIterator() {
+        SortedIntLongMap map = new SortedIntLongMap();
+        map.put(2, 22);
+        map.put(1, 11);
+        
+        IntLongEntry cur;
+        Iterator<IntLongEntry> iter = map.iterator();
+        assertEquals(true, iter.hasNext()); 
+        assertEquals(true, iter.hasNext()); 
+        cur = iter.next();
+        assertEquals(1, cur.index()); 
+        assertEquals(11, cur.get()); 
+        assertEquals(true, iter.hasNext()); 
+        cur = iter.next();
+        assertEquals(2, cur.index()); 
+        assertEquals(22, cur.get()); 
+        assertEquals(false, iter.hasNext());
+    }
 }
