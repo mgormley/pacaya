@@ -220,8 +220,8 @@ public class IndexedDmvModelTest {
         int iterations = 25;
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, 0.99999, 9, 5, lambda, null);
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, 0.99999, 9, 5, lambda, null, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(vtPrm);
         // TODO: use random restarts
         trainer.train(corpus);
         double trainerLogLikelihood = trainer.getLogLikelihood();

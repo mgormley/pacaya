@@ -24,6 +24,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
@@ -34,7 +35,6 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.BnBDmvTrainer;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -115,7 +115,7 @@ public class PipelineRunner {
         }
         
         if (cmd.hasOption("relaxOnly")) {
-            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm());
+            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(trainTreebank, goldModel));
             DmvSolution initSol = initSolFactory.getInitFeasSol(trainCorpus);
             DmvRelaxationFactory relaxFactory = TrainerFactory.getDmvRelaxationFactory();
             DmvRelaxation relax = relaxFactory.getInstance(trainCorpus, initSol);
@@ -131,7 +131,7 @@ public class PipelineRunner {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
-            DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory();
+            DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory(trainTreebank, goldModel);
             DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             if (projSol != null) {
@@ -181,7 +181,7 @@ public class PipelineRunner {
     }
 
     // TODO: This should update the deltas of the root node.
-    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) {
+    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
         if (cmd.hasOption("initBounds")) {
             // Initialize the bounds as a hypercube around some initial solution.
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
@@ -193,7 +193,8 @@ public class PipelineRunner {
                 IndexedDmvModel idm = new IndexedDmvModel(trainCorpus);
                 goldSol = new DmvSolution(idm.getCmLogProbs(trueModel), idm, trainTreebank, Double.NaN);
             }
-            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
+            // TODO: replace this with an TrainerFactory.getInitSolFactoryPrm();
+            DmvSolution initBoundsSol = DmvSolFactory.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
             
             LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
             

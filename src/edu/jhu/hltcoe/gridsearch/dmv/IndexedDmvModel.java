@@ -52,10 +52,9 @@ public class IndexedDmvModel implements IndexedCpt {
         }
     }
     
-    
-    private static final int ROOT = 0;
-    private static final int CHILD = 1;
-    private static final int DECISION = 2;
+    public static final int ROOT = 0;
+    public static final int CHILD = 1;
+    public static final int DECISION = 2;
     
     private int numTags;
     private final int childValency = 1;
@@ -298,6 +297,11 @@ public class IndexedDmvModel implements IndexedCpt {
     
     public int getCDecision(int pTag, int lr, int dv) {
         return rhsToC.lookupIndex(new Rhs(DECISION, pTag, lr, dv));
+    }
+    
+    // TODO: maybe exposing this method is a bad idea.
+    public Rhs getRhs(int c) {
+        return rhsToC.lookupObject(c);
     }
 
     /**
@@ -616,7 +620,7 @@ public class IndexedDmvModel implements IndexedCpt {
     public DmvModel getDmvModel(double[][] logProbs) {
         DmvModel dmv = new DmvModel(alphabet);
         dmv.fill(Double.NEGATIVE_INFINITY);
-        
+
         // Map the sentence variable indices --> indices of DepProbMatrix
         for (int c=0; c<logProbs.length; c++) {
             Rhs rhs = rhsToC.lookupObject(c);
@@ -681,6 +685,10 @@ public class IndexedDmvModel implements IndexedCpt {
             }
         }
         return logProbs;
+    }
+    
+    public Alphabet<Label> getLabelAlphabet() {
+        return alphabet;
     }
     
 }

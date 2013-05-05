@@ -7,6 +7,7 @@ import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
@@ -18,15 +19,27 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         public double lambda = 0.1;
         public DependencyParserEvaluator evaluator = null;
         public EMTrainerPrm emPrm = new EMTrainerPrm();
+        public ViterbiParser parser = null; // = new DmvCkyParser();
+        public ModelFactory modelFactory = null; // new UniformDmvModelFactory();
         public DmvViterbiEMTrainerPrm() { }
         public DmvViterbiEMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
-                double lambda, DependencyParserEvaluator evaluator) {
+                double lambda, DependencyParserEvaluator evaluator, ViterbiParser parser, DmvModelFactory modelFactory) {
             this.lambda = lambda;
             this.evaluator = evaluator;
+            this.parser = parser;
+            this.modelFactory = modelFactory;
             this.emPrm.iterations = iterations;
             this.emPrm.convergenceRatio = convergenceRatio;
             this.emPrm.numRestarts = numRestarts;
             this.emPrm.timeoutSeconds = timeoutSeconds;
+        }
+        /** Copy constructor */
+        public DmvViterbiEMTrainerPrm(DmvViterbiEMTrainerPrm other) {
+            this.lambda = other.lambda;
+            this.evaluator = other.evaluator;
+            this.parser = other.parser;
+            this.modelFactory = other.modelFactory;
+            this.emPrm = new EMTrainerPrm(other.emPrm);
         }
     }
         
@@ -34,12 +47,10 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
     private DmvViterbiEMTrainerPrm prm;
     
     public DmvViterbiEMTrainer(DmvViterbiEMTrainerPrm prm) {
-        this(prm, new DmvCkyParser(), new UniformDmvModelFactory());
-    }
-    
-    // TODO: push parser and modelFactory into prm. This will probably require copying the prm.
-    public DmvViterbiEMTrainer(DmvViterbiEMTrainerPrm prm, ViterbiParser parser, ModelFactory modelFactory) { 
-        super(prm.emPrm, new ViterbiEStep(parser), new DmvMStep(prm.lambda), modelFactory);
+        super(prm.emPrm, new ViterbiEStep(prm.parser), new DmvMStep(prm.lambda), prm.modelFactory);
+        if (prm.parser == null || prm.modelFactory == null) {
+            throw new IllegalArgumentException("Missing required parameters");
+        }
         this.prm = prm;
     }
 

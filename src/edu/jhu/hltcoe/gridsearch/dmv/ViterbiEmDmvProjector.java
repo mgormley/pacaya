@@ -170,8 +170,9 @@ public class ViterbiEmDmvProjector implements DmvProjector {
 
     private DmvSolution runViterbiEmHelper(DmvModelFactory modelFactory) {
         // Run Viterbi EM to improve the projected solution.
-        ViterbiParser parser = new DmvCkyParser();
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm.vemPrm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm vemPrm = new DmvViterbiEMTrainerPrm(prm.vemPrm);
+        vemPrm.modelFactory = modelFactory;
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm.vemPrm);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();

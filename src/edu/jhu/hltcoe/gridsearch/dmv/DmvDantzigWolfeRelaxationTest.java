@@ -7,8 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-
-import edu.jhu.hltcoe.util.Timer;
+import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -18,12 +17,13 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -34,11 +34,11 @@ import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.Vectors;
 import edu.jhu.hltcoe.util.rproj.RDataFrame;
@@ -282,13 +282,13 @@ public class DmvDantzigWolfeRelaxationTest {
     }
     
     @Test
-    public void testSemiSupervisedOnSynthetic() {
+    public void testSemiSupervisedOnSynthetic() throws ParseException {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
         DmvTrainCorpus trainCorpus = DmvCkyParserTest.getDefaultSemiSupervisedSyntheticCorpus(dmvModel); 
 
         DmvDantzigWolfeRelaxation dw = getDw(trainCorpus, 10);
 
-        DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(InitSol.VITERBI_EM, trainCorpus, dw, null, null);
+        DmvSolution initBoundsSol = DmvSolFactory.getInitSol(InitSol.VITERBI_EM, trainCorpus, dw, null, null);
         LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, 0.1, 0.0);
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
@@ -317,14 +317,14 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvMStep mStep = new DmvMStep(0.0);
         DmvModel m1 = mStep.getModel(treebank);
                 
-        DmvObjective obj = new DmvObjective(corpus);
+        DmvObjective obj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus));
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
         Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
     }
     
     @Test
-    public void testQualityOfRelaxation() throws IOException {
+    public void testQualityOfRelaxation() throws IOException, ParseException {
         
         
         // TODO: use real model and real trees to compute a better
@@ -345,7 +345,7 @@ public class DmvDantzigWolfeRelaxationTest {
         DmvSolution goldSol = new DmvSolution(goldLogProbs, idm, goldTreebank, dw.computeTrueObjective(goldLogProbs, goldTreebank));            
         
         InitSol opt = InitSol.GOLD;
-        DmvSolution initSol = LocalBnBDmvTrainer.getInitSol(opt, corpus, dw, goldTreebank, goldSol);
+        DmvSolution initSol = DmvSolFactory.getInitSol(opt, corpus, dw, goldTreebank, goldSol);
 
         StringBuilder sb = new StringBuilder();        
         sb.append("gold score: " + goldSol.getScore() + "\n");
@@ -470,8 +470,8 @@ public class DmvDantzigWolfeRelaxationTest {
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
 
-        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null);
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm);
         // TODO: use random restarts
         trainer.train(corpus);
         

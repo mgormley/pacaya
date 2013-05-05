@@ -7,7 +7,7 @@ import ilog.cplex.IloCplex;
 import java.io.File;
 import java.util.Arrays;
 
-
+import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Level;
 import org.junit.Assert;
 import org.junit.Before;
@@ -20,16 +20,17 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
-import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
@@ -39,7 +40,6 @@ import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
@@ -517,13 +517,13 @@ public class DmvRltRelaxationTest {
     }
     
     @Test
-    public void testSemiSupervisedOnSynthetic() {
+    public void testSemiSupervisedOnSynthetic() throws ParseException {
         DmvModel dmvModel = SimpleStaticDmvModel.getThreePosTagInstance();
         DmvTrainCorpus trainCorpus = DmvCkyParserTest.getDefaultSemiSupervisedSyntheticCorpus(dmvModel); 
 
         DmvRltRelaxation dw = getLp(trainCorpus, 10);
 
-        DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(InitSol.VITERBI_EM, trainCorpus, dw, null, null);
+        DmvSolution initBoundsSol = DmvSolFactory.getInitSol(InitSol.VITERBI_EM, trainCorpus, dw, null, null);
         LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, 0.1, 0.0);
             
         // TODO: is this relaxation really independent of the frequency bounds? That's what seems to be happening.
@@ -560,7 +560,7 @@ public class DmvRltRelaxationTest {
         DmvMStep mStep = new DmvMStep(0.0);
         DmvModel m1 = mStep.getModel(treebank);
         
-        DmvObjective obj = new DmvObjective(corpus);
+        DmvObjective obj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus));
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
         // Compare the feature counts from the treebank to the relaxation.

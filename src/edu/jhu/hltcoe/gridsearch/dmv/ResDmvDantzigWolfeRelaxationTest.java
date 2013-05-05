@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import static edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest.solveRelaxation;
-
 import static org.junit.Assert.assertEquals;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
@@ -11,7 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import edu.jhu.hltcoe.util.Timer;
+import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -21,6 +20,7 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
@@ -29,8 +29,8 @@ import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.Vectors;
 import edu.jhu.hltcoe.util.rproj.RDataFrame;
@@ -287,7 +287,8 @@ public class ResDmvDantzigWolfeRelaxationTest {
         DmvTrainCorpus corpus = new DmvTrainCorpus(treebank, 1.0);
 
         // Get the relaxed solution.
-        ResDmvDantzigWolfeRelaxation dwRelax = new ResDmvDantzigWolfeRelaxation(new ResDmvDwRelaxPrm());
+        ResDmvDwRelaxPrm prm = new ResDmvDwRelaxPrm();
+        ResDmvDantzigWolfeRelaxation dwRelax = new ResDmvDantzigWolfeRelaxation(prm);
         dwRelax.init1(corpus);
         dwRelax.init2(DmvDantzigWolfeRelaxationTest.getInitFeasSol(corpus));
         DmvRelaxedSolution relaxSol = solveRelaxation(dwRelax);
@@ -296,7 +297,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         DmvMStep mStep = new DmvMStep(0.0);
         DmvModel m1 = mStep.getModel(treebank);
                 
-        DmvObjective obj = new DmvObjective(corpus);
+        DmvObjective obj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus));
         double m1Obj = obj.computeTrueObjective(m1, treebank);
         
         Assert.assertEquals(m1Obj, relaxSol.getScore(), 1e-4);
@@ -304,7 +305,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
     }
     
     @Test
-    public void testQualityOfRelaxation() throws IOException {
+    public void testQualityOfRelaxation() throws IOException, ParseException {
         
         
         // TODO: use real model and real trees to compute a better
@@ -325,7 +326,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         DmvSolution goldSol = new DmvSolution(goldLogProbs, idm, goldTreebank, dw.computeTrueObjective(goldLogProbs, goldTreebank));            
         
         InitSol opt = InitSol.GOLD;
-        DmvSolution initSol = LocalBnBDmvTrainer.getInitSol(opt, corpus, dw, goldTreebank, goldSol);
+        DmvSolution initSol = DmvSolFactory.getInitSol(opt, corpus, dw, goldTreebank, goldSol);
 
         StringBuilder sb = new StringBuilder();        
         sb.append("gold score: " + goldSol.getScore() + "\n");

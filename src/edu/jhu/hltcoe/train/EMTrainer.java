@@ -28,6 +28,13 @@ public class EMTrainer<C> implements Trainer<C> {
             this.numRestarts = numRestarts;
             this.timeoutSeconds = timeoutSeconds;
         }
+        /** Copy constructor */
+        public EMTrainerPrm(EMTrainerPrm other) {
+            this.iterations = other.iterations;
+            this.convergenceRatio = other.convergenceRatio;
+            this.numRestarts = other.numRestarts;
+            this.timeoutSeconds = other.timeoutSeconds;
+        }
     }
     
     private Logger log = Logger.getLogger(EMTrainer.class);

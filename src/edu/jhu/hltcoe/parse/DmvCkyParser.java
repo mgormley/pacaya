@@ -1,16 +1,17 @@
 package edu.jhu.hltcoe.parse;
 
 
+import depparsing.extended.CKYParser;
+import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import depparsing.extended.CKYParser;
-import depparsing.extended.DepInstance;
-import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -19,6 +20,15 @@ public class DmvCkyParser implements ViterbiParser {
     private double parseWeight;
     private DmvObjective dmvObj;
     private DmvTrainCorpus corpus;
+    private DmvObjectivePrm objPrm;
+
+    public DmvCkyParser() {
+        this(new DmvObjectivePrm());
+    }
+    
+    public DmvCkyParser(DmvObjectivePrm objPrm) {
+        this.objPrm = objPrm;
+    }
 
     @Override
     public double getLastParseWeight() {
@@ -28,7 +38,7 @@ public class DmvCkyParser implements ViterbiParser {
     public DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model genericModel) {
         // Lazily construct the objective.
         if (dmvObj == null || this.corpus != corpus) {
-            this.dmvObj = new DmvObjective(corpus);
+            this.dmvObj = new DmvObjective(objPrm, new IndexedDmvModel(corpus));
             this.corpus = corpus;
         }
         DmvModel model = (DmvModel) genericModel;

@@ -35,6 +35,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
@@ -52,6 +53,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     public static class DmvDwRelaxPrm extends DwRelaxPrm implements DmvRelaxationFactory {
         public CplexPrm cplexPrm = new CplexPrm();
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
+        public DmvObjectivePrm objPrm = new DmvObjectivePrm();
         public DmvDwRelaxPrm() {
             super();
         }
@@ -96,7 +98,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
     public void init1(DmvTrainCorpus corpus) {
         this.corpus = corpus;
         this.idm = new IndexedDmvModel(this.corpus);
-        this.dmvObj = new DmvObjective(this.corpus);
+        this.dmvObj = new DmvObjective(prm.objPrm, idm);
     }
 
     protected void setAsActiveNode(ProblemNode pn) {

@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import ilog.concert.IloException;
+import depparsing.extended.DepInstance;
+import depparsing.extended.DepSentenceDist;
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -11,9 +13,8 @@ import edu.jhu.hltcoe.gridsearch.Solution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
-import depparsing.extended.DepInstance;
-import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
@@ -28,6 +29,7 @@ public class BasicDmvProjector implements DmvProjector {
     public static class DmvProjectorPrm implements DmvProjectorFactory {
         public ProjectionsPrm projPrm = new ProjectionsPrm();
         public CptBounds rootBounds = null;
+        public DmvObjectivePrm objPrm = new DmvObjectivePrm();
         @Override
         public Projector getInstance(DmvTrainCorpus corpus, DmvRelaxation relax) {
             return new BasicDmvProjector(this, corpus);
@@ -48,7 +50,7 @@ public class BasicDmvProjector implements DmvProjector {
 
         // TODO: we shouldn't have to create a new IndexedDmvModel here.
         this.idm = new IndexedDmvModel(this.corpus);
-        this.obj = new DmvObjective(this.corpus);
+        this.obj = new DmvObjective(prm.objPrm, idm);
         
         if (prm.rootBounds == null) {
             this.prm.rootBounds = new CptBounds(idm);

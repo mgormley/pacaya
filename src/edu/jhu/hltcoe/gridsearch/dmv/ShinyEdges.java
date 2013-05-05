@@ -107,6 +107,10 @@ public class ShinyEdges {
         return alphabet.lookupIndex(label);
     }
     
+    public int getWallIdx() {
+        return wallIdx;
+    }
+    
     private int getNumShinyEdges() {
         return numShinyEdges;
     }
