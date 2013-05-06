@@ -314,7 +314,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         default_brown = brown + DPExpParams(maxSentenceLength=10, 
                                             maxNumSentences=200,
                                             dataset="brown200")
-        default_wsj = wsj + DPExpParams(maxSentenceLength=10, 
+        default_wsj = wsj_00 + DPExpParams(maxSentenceLength=10, 
                                             maxNumSentences=200,
                                             dataset="wsj200")
         
@@ -384,9 +384,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 for algorithm in ["viterbi", "bnb"]:
                     experiment = all + dataset + DPExpParams(algorithm=algorithm)
                     if algorithm == "viterbi":
+                        exps.append(experiment + universalPostCons + DPExpParams(parser="relaxed"))
                         exps.append(experiment)
                         #exps.append(experiment + universalPostCons) # parser="cky"
-                        exps.append(experiment + universalPostCons + DPExpParams(parser="relaxed"))
                     else:
                         for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
                             exps.append(experiment + relax)
