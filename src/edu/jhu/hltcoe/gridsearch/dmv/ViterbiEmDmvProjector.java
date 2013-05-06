@@ -174,10 +174,14 @@ public class ViterbiEmDmvProjector implements DmvProjector {
         vemPrm.modelFactory = modelFactory;
         DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm.vemPrm);
         trainer.train(corpus);
+
+        IndexedDmvModel idm = relax.getIdm();
         
         DepTreebank treebank = trainer.getCounts();
-        IndexedDmvModel idm = relax.getIdm();
         DmvModel dmv = (DmvModel)trainer.getModel();
+        if (treebank == null || dmv == null) {
+            return null;
+        }
         double[][] logProbs = idm.getCmLogProbs(dmv);
         
         // Compute the score for the solution
