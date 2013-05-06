@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 /**
  * Parsing chart that stores every cell explicitly. This is suitable for
- * grammars with a very small number of non-terminals (e.g. the DMV). Ï
+ * grammars with a very small number of non-terminals (e.g. the DMV).
  * 
  * @author mgormley
  * 
