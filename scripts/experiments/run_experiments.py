@@ -414,10 +414,10 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             all.update(algorithm="bnb", epsilon=0.01)
             # Run for some fixed amount of time.                
             all.update(numRestarts=1000000000)
-            all.update(timeoutSeconds=11*60*60)
+            all.update(timeoutSeconds=10*60)
             rltAllRelax.update(rltFilter="max")
-            #maxes = [1000, 10000, 100000, 400000]
-            maxes = [1000, 10000]
+            maxes = [1000, 10000, 100000]
+            #maxes = [1000, 10000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
