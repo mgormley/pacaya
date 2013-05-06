@@ -314,7 +314,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         # Only keeping sentences that contain a verb
         default_brown.update(mustContainVerb=None)
         brown100 = default_brown + DPExpParams(maxNumSentences=100)
-        default_synth = synth_alt_three + DPExpParams(maxNumSentences=8)
+        default_synth = synth_alt_three + DPExpParams(maxNumSentences=5)
         
         experiments = []
         if self.expname == "viterbi-em":
@@ -346,7 +346,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 setup.update(maxSentenceLength=maxSentenceLength)
                 for initWeights in ["uniform", "random"]:
                     setup.update(initWeights=initWeights)
-                    for randomRestartId in range(100):
+                    for randomRestartId in range(1):
                         setup.set("randomRestartId", randomRestartId, True, False)
                         # Set the seed explicitly.
                         experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
@@ -398,12 +398,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "bnb":
             root = RootStage()
-            all.update(algorithm="bnb")
+            all.update(algorithm="bnb", epsilon=0.01)
             # Run for some fixed amount of time.                
             all.update(numRestarts=1000000000)
             all.update(timeoutSeconds=11*60*60)
             rltAllRelax.update(rltFilter="max")
-            maxes = [1000, 10000, 100000]
+            #maxes = [1000, 10000, 100000, 400000]
+            maxes = [1000, 10000]
             extra_relaxes = [rltAllRelax + DPExpParams(rltInitMax=p, rltCutMax=p) for p in maxes]
             extra_relaxes += [x + DPExpParams(rltCutMax=0) for x in extra_relaxes]
             exps = []
