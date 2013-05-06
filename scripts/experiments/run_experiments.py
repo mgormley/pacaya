@@ -84,6 +84,7 @@ class ScrapeStatuses(experiment_runner.PythonExpParams):
     def create_experiment_script(self, exp_dir):
         # Add directories to scrape.
         for stage in self.stages_to_scrape:
+            # TODO: Debug this: with hproj=cpu enabled, all the stage.cwd fields are None.
             self.add_arg(stage.cwd)
         script = ""
         script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (self.root_dir)
@@ -310,10 +311,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         # Default datasets.
         default_brown = brown + DPExpParams(maxSentenceLength=10, 
-                                            maxNumSentences=200)
+                                            maxNumSentences=200,
+                                            dataset="brown200")
         # Only keeping sentences that contain a verb
-        default_brown.update(mustContainVerb=None)
-        brown100 = default_brown + DPExpParams(maxNumSentences=100)
+        default_brown.update(mustContainVerb=True)
+        brown100 = default_brown + DPExpParams(maxNumSentences=100, dataset="brown100")
         default_synth = synth_alt_three + DPExpParams(maxNumSentences=8)
         
         experiments = []
@@ -329,8 +331,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     setup.set("randomRestartId", randomRestartId, True, False)
                     # Set the seed explicitly.
                     experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
-                    root.add_dependent(experiment)
                     root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
+                    #root.add_dependent(experiment + universalPostCons)
+                    root.add_dependent(experiment)
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
@@ -374,11 +377,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiment = all + dataset + DPExpParams(algorithm=algorithm)
                     if algorithm == "viterbi":
                         exps.append(experiment)
+                        #exps.append(experiment + universalPostCons) # parser="cky"
                         exps.append(experiment + universalPostCons + DPExpParams(parser="relaxed"))
                     else:
                         for relax in [lpRelax, rltObjVarRelax] + extra_relaxes:
                             exps.append(experiment + relax)
-                            exps.append(experiment + relax + universalPostCons)
+                            #exps.append(experiment + relax + universalPostCons) # parser="cky"
+                            exps.append(experiment + relax + universalPostCons + DPExpParams(parser="relaxed"))
             if self.fast:
                 # Drop all but 3 experiments for a fast run.
                 exps = exps[:4]
