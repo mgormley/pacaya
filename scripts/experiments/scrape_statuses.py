@@ -133,13 +133,13 @@ class DpSingleScraper(Scraper):
         # Get the status list of the appropriate type.
         status_list = None
         if self.type == "incumbent":
-            stdout_lines = self.read_grepped_lines(stdout_file, "Incumbent")
+            stdout_lines = self.read_grepped_lines(stdout_file, "Incumbent", ".grep_incumbent")
             status_list = get_incumbent_status_list(stdout_lines)
         elif self.type == "bnb":
-            stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver - Summary")
+            stdout_lines = self.read_grepped_lines(stdout_file, "LazyBranchAndBoundSolver - Summary", ".grep_bnb")
             status_list = get_bnb_status_list(stdout_lines)
         elif self.type == "curnode":
-            stdout_lines = self.read_grepped_lines(stdout_file, "CurrentNode")
+            stdout_lines = self.read_grepped_lines(stdout_file, "CurrentNode", ".grep_curnode")
             status_list = get_curnode_status_list(stdout_lines)
         else:
             raise Exception()
@@ -147,9 +147,9 @@ class DpSingleScraper(Scraper):
         # Combine the status objects with the experiment definition. 
         return [exp + status for status in status_list]
     
-    def read_grepped_lines(self, stdout_file, pattern):
+    def read_grepped_lines(self, stdout_file, pattern, suffix=".grep"):
         # TODO: maybe move this into Scraper.
-        grepped_file = stdout_file + ".bnb_status_grep"
+        grepped_file = stdout_file + suffix
         os.system('grep "%s" %s > %s' % (pattern, stdout_file, grepped_file))
         stdout_lines = self.read_stdout_lines(grepped_file)
         return stdout_lines
