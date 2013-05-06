@@ -66,4 +66,8 @@ public class RelaxedParserWrapper implements ViterbiParser {
         return projTrees;
     }
 
+    public void reset() {
+        prm.relaxedParser.reset();
+    }
+
 }

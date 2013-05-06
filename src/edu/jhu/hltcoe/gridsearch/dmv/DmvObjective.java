@@ -1,5 +1,8 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import org.apache.log4j.Logger;
+
+import edu.jhu.hltcoe.PipelineRunner;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.Rhs;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -13,7 +16,8 @@ public class DmvObjective {
         public double universalMinProp = 0.8;
         public ShinyEdges shinyEdges = null;
     }
-    
+
+    private static final Logger log = Logger.getLogger(DmvObjective.class);
     private static final double EQUALITY_TOLERANCE = 1e-8;
     private DmvObjectivePrm prm;
     private IndexedDmvModel idm;
@@ -28,9 +32,13 @@ public class DmvObjective {
     }
 
     public double computeTrueObjective(double[][] logProbs, double[][] featCounts) {
-        if (prm.universalPostCons && propShiny(featCounts) < prm.universalMinProp) {
-			// TODO: log proportion shiny
-            return Double.NEGATIVE_INFINITY;
+        if (prm.universalPostCons) {
+            double propShiny = propShiny(featCounts);
+            log.info("Proporition shiny edges: " + propShiny);
+            if (propShiny < prm.universalMinProp) {
+                log.info("Proporition shiny edges < min prop");
+                return Double.NEGATIVE_INFINITY;
+            }
         }
         double quadObj = 0.0;
         for (int c = 0; c < logProbs.length; c++) {
@@ -45,8 +53,13 @@ public class DmvObjective {
     }
     
     public double computeTrueObjective(double[][] logProbs, int[][] featCounts) {
-        if (prm.universalPostCons && propShiny(featCounts) < prm.universalMinProp) {
-            return Double.NEGATIVE_INFINITY;
+        if (prm.universalPostCons) {
+            double propShiny = propShiny(featCounts);
+            log.info("Proporition shiny edges: " + propShiny);
+            if (propShiny < prm.universalMinProp) {
+                log.info("Proporition shiny edges < min prop");
+                return Double.NEGATIVE_INFINITY;
+            }
         }
         double quadObj = 0.0;
         for (int c = 0; c < logProbs.length; c++) {

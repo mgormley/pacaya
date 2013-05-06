@@ -171,6 +171,8 @@ public class TrainerFactory {
     public static boolean universalPostCons = false;
     @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
     public static double universalMinProp = 0.8;
+    @Opt(name = "universalMinPropAddend", hasArg = true, description = "A proportion to add to the universalMinProp when running the relaxed parser.")
+    public static double universalMinPropAddend = 0.0;
     @Opt(hasArg = true, description = "Whether to include extra parse constraints to tighten the relaxation.")
     public static boolean inclExtraParseCons = false;
 
@@ -187,6 +189,8 @@ public class TrainerFactory {
     // B&B initial solution parameters. 
     @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
     public static int initSolNumRestarts = 9;
+    @Opt(name = "initSolTimeoutSeconds", hasArg = true, description = "(B&B only) The timeout in seconds for finding an initial solution.")
+    public static double initSolTimeoutSeconds = Double.POSITIVE_INFINITY;
     
     // Projection parameters.
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
@@ -338,7 +342,7 @@ public class TrainerFactory {
 
     private static DmvParseLpBuilderPrm getDmvParseLpBuilderPrm() {
         DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
-        parsePrm.universalMinProp = universalMinProp;
+        parsePrm.universalMinProp = universalMinProp + universalMinPropAddend;
         parsePrm.universalPostCons = universalPostCons;
         parsePrm.inclExtraCons = inclExtraParseCons;
         parsePrm.formulation = formulation;
@@ -570,9 +574,6 @@ public class TrainerFactory {
     }
 
     public static DmvSolFactoryPrm getDmvSolFactoryPrm(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {        
-        // Other constants.
-        final double initSolTimeoutSeconds = timeoutSeconds / 2.0;
-        
         ViterbiParser parser = getViterbiParser();
         DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
         

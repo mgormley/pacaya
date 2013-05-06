@@ -46,7 +46,7 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
         }
 
         @Override
-        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(TrainCorpus c, Model model) {
+        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(TrainCorpus c, Model model, int iteration) {
             DmvTrainCorpus corpus = (DmvTrainCorpus) c;
             fixableModelFactory.fixModel(model);
             fastTrainer.train(corpus);

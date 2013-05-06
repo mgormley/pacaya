@@ -344,5 +344,10 @@ public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
         
         return relaxTreebank;
     }
+
+    @Override
+    public void reset() {
+        throw new RuntimeException("not implemented");
+    }
     
 }

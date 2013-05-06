@@ -105,7 +105,7 @@ public class EMTrainer<C> implements Trainer<C> {
             log.info("iteration = " + getIterationsCompleted());
             
             // E-step 
-            Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(corpus, model);
+            Pair<C,Double> pair = eStep.getCountsAndLogLikelihood(corpus, model, iterCount);
             counts = pair.get1();
             logLikelihood = pair.get2();
             
@@ -114,6 +114,9 @@ public class EMTrainer<C> implements Trainer<C> {
             log.info("likelihood ratio = " + Utilities.exp(prevLogLikelihood - logLikelihood));
             if (prevLogLikelihood - logLikelihood > Utilities.log(prm.convergenceRatio)) {
                 log.info("Stopping training due to convergence");
+                break;
+            } else if (prevLogLikelihood == Double.NEGATIVE_INFINITY && logLikelihood == Double.NEGATIVE_INFINITY && iterCount > 0) {
+                log.info("Stopping training due to consecutive likelihoods of negative infinity");
                 break;
             } else if ( iterCount >= prm.iterations) {
                 log.info("Stopping training at max iterations");

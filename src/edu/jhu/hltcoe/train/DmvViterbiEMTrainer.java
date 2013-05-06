@@ -11,6 +11,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.util.Pair;
 
 public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
@@ -71,7 +72,11 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         }
 
         @Override
-        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(TrainCorpus corpus, Model model) {
+        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(TrainCorpus corpus, Model model, int iteration) {
+            //TODO: remove this hacky reset function: 
+            //if (iteration == 1 && parser instanceof RelaxedParserWrapper) {
+                //((RelaxedParserWrapper)parser).reset();
+            //}
             DepTreebank depTreebank = parser.getViterbiParse((DmvTrainCorpus)corpus, model);
             return new Pair<DepTreebank,Double>(depTreebank, parser.getLastParseWeight());
         }

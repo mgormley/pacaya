@@ -123,14 +123,19 @@ public class DmvParseLpBuilder {
         addConsToNewMatrix(pp, pp.mat);
         
         // Add DMV objective.
+        addObjective(corpus, model, pp);
+
+        return pp;
+    }
+
+    public void addObjective(DmvTrainCorpus corpus, DmvModel model,
+            DmvParsingProgram pp) throws IloException {
         if (prm.formulation == IlpFormulation.FLOW_PROJ_LPRELAX_FCOBJ) {
             IndexedDmvModel idm = new IndexedDmvModel(corpus);
             addFeatCountDmvObj(corpus, idm, model, pp);
         } else {
             addDmvObj(corpus, model, pp);
         }
-
-        return pp;
     }
 
     public DmvTreeProgram buildDmvTreeProgram(DmvTrainCorpus corpus) throws IloException {
