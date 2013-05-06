@@ -12,6 +12,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import cern.colt.list.IntArrayList;
+import edu.jhu.hltcoe.util.map.IntObjectHashMap;
+
 public class Utilities {
 
     private static final double DEFAULT_DELTA = 1e-13;
@@ -113,6 +116,31 @@ public class Utilities {
         List<Y> list = map.get(key);
         if (list == null) {
             return Collections.emptyList();
+        } else {
+            return list;
+        }
+    }
+    
+    /**
+     * @return The resulting list.
+     */
+    public static IntArrayList addToList(IntObjectHashMap<IntArrayList> map, int key, int value) {
+        IntArrayList values;
+        if (map.containsKey(key)) {
+            values = map.get(key);
+            values.add(value);
+        } else {
+            values = new IntArrayList();
+            values.add(value);
+            map.put(key, values);
+        }
+        return values;
+    }
+
+    public static IntArrayList safeGetList(IntObjectHashMap<IntArrayList> map, int key) {
+        IntArrayList list = map.get(key);
+        if (list == null) {
+            return new IntArrayList();
         } else {
             return list;
         }

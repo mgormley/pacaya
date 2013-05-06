@@ -4,25 +4,19 @@ import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_B;
 import static edu.jhu.hltcoe.parse.IlpViterbiParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import junit.framework.Assert;
-
 
 import org.junit.Before;
 import org.junit.Test;
-
-import edu.jhu.hltcoe.util.Alphabet;
 
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
@@ -30,6 +24,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -168,7 +163,7 @@ public class DmvCkyParserTest {
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, Prng.nextInt(1000000));
         DepTreebank treebank = generator.getTreebank(100);
         DmvTrainCorpus trainCorpus = new DmvTrainCorpus(treebank, propSupervised);
-        System.out.println("Fully supervised logProb: " + (new DmvObjective(trainCorpus)).computeTrueObjective(dmvModel, treebank));
+        System.out.println("Fully supervised logProb: " + (new DmvObjective(new DmvObjectivePrm(), new IndexedDmvModel(trainCorpus))).computeTrueObjective(dmvModel, treebank));
         return trainCorpus;
     }
     

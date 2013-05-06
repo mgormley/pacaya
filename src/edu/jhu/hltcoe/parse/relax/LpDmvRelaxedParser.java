@@ -29,28 +29,49 @@ public class LpDmvRelaxedParser implements RelaxedParser {
     private LpDmvRelaxedParserPrm prm;
     private IloCplex cplex;
     private double lastParseWeight;
+
+    private DmvTrainCorpus corpus;
+    private DmvParseLpBuilder builder;
+    private DmvParsingProgram pp;
         
     public LpDmvRelaxedParser(LpDmvRelaxedParserPrm prm) {
         this.prm = prm;
     }
 
+    /**
+     * Resets the cached LP.
+     */
+    public void reset() {
+        cplex = null;
+        builder = null;
+        pp = null;
+        corpus = null;
+    }
+    
     @Override
     public RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model model) {
-        DmvModel dmv = (DmvModel) model;
         try {
-            this.cplex = prm.cplexPrm.getIloCplexInstance();
-            DmvParseLpBuilder builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
+            DmvModel dmv = (DmvModel) model;
+            if (cplex == null || corpus != this.corpus) {
+                // Lazily construct the linear program. 
+                this.cplex = prm.cplexPrm.getIloCplexInstance();
+                builder = new DmvParseLpBuilder(prm.parsePrm, cplex);
 
-            DmvParsingProgram pp = builder.buildParsingProgram(corpus, dmv);
+                pp = builder.buildParsingProgram(corpus, dmv);
 
-            cplex.add(pp.mat);
-            cplex.add(pp.obj);
-
+                cplex.add(pp.mat);
+                cplex.add(pp.obj);
+                this.corpus = corpus;
+            } else {
+                cplex.remove(pp.obj);
+                builder.addObjective(corpus, dmv, pp);
+                cplex.add(pp.obj);
+            }
             if (prm.tempDir != null) {
                 cplex.exportModel(new File(prm.tempDir, "lpParser.lp").getAbsolutePath());
             }
             if (!cplex.solve()) {
-                throw new RuntimeException("unable to parse");
+                throw new RuntimeException("Parsing problem is infeasible. Check your posterior constraints.");
             }
 
             lastParseWeight = cplex.getObjValue();

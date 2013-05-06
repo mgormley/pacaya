@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.data;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
 import gnu.trove.TIntArrayList;
 
@@ -29,6 +30,10 @@ public class Sentence implements Iterable<Label> {
         }
     }
     
+    public Sentence(CoNLLXSentence sent) {
+        
+    }
+
     protected boolean add(Label label) {
         labelIds.add(alphabet.lookupIndex(label));
         return labels.add(label);

@@ -11,6 +11,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.hltcoe.util.Sort;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
 public class FactorBuilder {
@@ -28,6 +29,9 @@ public class FactorBuilder {
         
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {
             this.g = g;
+            if (!Sort.isSortedAscAndUnique(Gind)) {
+                Sort.sortIndexAsc(Gind, Gval);
+            }
             this.G = new SortedLongDoubleVector(SafeCast.toLong(Gind), Gval);
             this.mat = mat;
         }

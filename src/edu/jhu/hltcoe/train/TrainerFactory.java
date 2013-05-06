@@ -8,42 +8,43 @@ import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.gridsearch.BfsComparator;
 import edu.jhu.hltcoe.gridsearch.DfsNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.NodeOrderer;
-import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.DfsNodeOrderer.DfsNodeOrdererPrm;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
 import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.hltcoe.gridsearch.NodeOrderer;
+import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.PlungingBfsNodeOrderer.PlungingBfsNodeOrdererPrm;
+import edu.jhu.hltcoe.gridsearch.PqNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.hltcoe.gridsearch.cpt.FullStrongVariableSelector;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.hltcoe.gridsearch.cpt.PseudocostVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
 import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolutionEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolutionEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.SamplingDistribution;
+import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandChildAtDepthNodeOrderer;
 import edu.jhu.hltcoe.gridsearch.randwalk.DfsRandWalkNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowAdder;
@@ -51,8 +52,9 @@ import edu.jhu.hltcoe.gridsearch.rlt.filter.RandPropRltRowAdder;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.hltcoe.model.FixableModelFactory;
-import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.FixableDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
@@ -66,10 +68,10 @@ import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.ViterbiParser;
-import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser;
-import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
+import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedParserWrapperPrm;
 import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
@@ -169,6 +171,8 @@ public class TrainerFactory {
     public static boolean universalPostCons = false;
     @Opt(name = "universalMinProp", hasArg = true, description = "The proportion of edges that must be from the shiny set.")
     public static double universalMinProp = 0.8;
+    @Opt(name = "universalMinPropAddend", hasArg = true, description = "A proportion to add to the universalMinProp when running the relaxed parser.")
+    public static double universalMinPropAddend = 0.0;
     @Opt(hasArg = true, description = "Whether to include extra parse constraints to tighten the relaxation.")
     public static boolean inclExtraParseCons = false;
 
@@ -185,6 +189,8 @@ public class TrainerFactory {
     // B&B initial solution parameters. 
     @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
     public static int initSolNumRestarts = 9;
+    @Opt(name = "initSolTimeoutSeconds", hasArg = true, description = "(B&B only) The timeout in seconds for finding an initial solution.")
+    public static double initSolTimeoutSeconds = Double.POSITIVE_INFINITY;
     
     // Projection parameters.
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
@@ -243,7 +249,7 @@ public class TrainerFactory {
     public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
         
     public static ViterbiParser getEvalParser() {
-        return new DmvCkyParser();
+        return new DmvCkyParser(getDmvObjectivePrm());
     }
     
     public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
@@ -258,6 +264,8 @@ public class TrainerFactory {
         stoPrm.maxStoCuts = maxStoCuts;
         stoPrm.projPrm = projPrm;
         
+        DmvObjectivePrm objPrm = getDmvObjectivePrm();
+        
         DmvRelaxationFactory relaxFactory;
         File dwTemp = getDwTempDir();
         if (relaxation.equals("dw")) {
@@ -268,6 +276,7 @@ public class TrainerFactory {
             dwPrm.cplexPrm = cplexPrm;
             dwPrm.maxDwIterations = maxDwIterations;
             dwPrm.stoPrm = stoPrm;
+            dwPrm.objPrm = objPrm;
             relaxFactory = dwPrm;
         } else if (relaxation.equals("dw-res")) {
             ResDmvDwRelaxPrm dwPrm = new ResDmvDwRelaxPrm();
@@ -277,13 +286,14 @@ public class TrainerFactory {
             dwPrm.cplexPrm = cplexPrm;
             dwPrm.maxDwIterations = maxDwIterations;
             dwPrm.projPrm = projPrm;
+            dwPrm.objPrm = objPrm;
             relaxFactory = dwPrm;
         } else if (relaxation.equals("rlt")) {
             RltPrm rltPrm = new RltPrm();
             rltPrm.nameRltVarsAndCons = false;
             rltPrm.envelopeOnly = envelopeOnly;
             rltPrm.nameRltVarsAndCons = rltNames;
-
+            
             DmvParseLpBuilderPrm parsePrm = getDmvParseLpBuilderPrm();
 
             DimReducerPrm drPrm = new DimReducerPrm();
@@ -309,6 +319,7 @@ public class TrainerFactory {
             rrPrm.stoPrm = stoPrm;
             rrPrm.parsePrm = parsePrm;
             rrPrm.drPrm = drPrm;
+            rrPrm.objPrm = objPrm;
 
             rrPrm.objVarFilter = false;
             if (rltFilter.equals("obj-var")) {
@@ -331,7 +342,7 @@ public class TrainerFactory {
 
     private static DmvParseLpBuilderPrm getDmvParseLpBuilderPrm() {
         DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
-        parsePrm.universalMinProp = universalMinProp;
+        parsePrm.universalMinProp = universalMinProp + universalMinPropAddend;
         parsePrm.universalPostCons = universalPostCons;
         parsePrm.inclExtraCons = inclExtraParseCons;
         parsePrm.formulation = formulation;
@@ -368,79 +379,20 @@ public class TrainerFactory {
         Trainer trainer = null;
         DmvViterbiEMTrainer viterbiTrainer = null;
         if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
-            ViterbiParser parser;
-            IlpSolverFactory ilpSolverFactory = null;
-            if (parserName.startsWith("ilp-")) {
-                IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
-                ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
-                // TODO: make this an option
-                // ilpSolverFactory.setBlockFileWriter(new
-                // DeltaParseBlockFileWriter(formulation));
-            }
-
-            if (parserName.equals("cky")) {
-                parser = new DmvCkyParser();
-            } else if (parserName.equals("relaxed")) {
-                LpDmvRelaxedParserPrm lpParsePrm = new LpDmvRelaxedParserPrm();
-                lpParsePrm.cplexPrm = getCplexPrm();
-                lpParsePrm.parsePrm = getDmvParseLpBuilderPrm();
-                lpParsePrm.tempDir = getDwTempDir();
-
-                RelaxedParserWrapperPrm prm = new RelaxedParserWrapperPrm();
-                prm.projPrm = getDmvProjectorPrm();
-                prm.relaxedParser = new LpDmvRelaxedParser(lpParsePrm);
-                
-                parser = new RelaxedParserWrapper(prm);
-            } else if (parserName.equals("ilp-sentence")) {
-                parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
-            } else if (parserName.equals("ilp-corpus")) {
-                parser = new IlpViterbiParser(formulation, ilpSolverFactory);
-            } else if (parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
-                DeltaGenerator deltaGen;
-                if (deltaGenerator.equals("fixed-interval")) {
-                    deltaGen = new FixedIntervalDeltaGenerator(interval, numPerSide);
-                } else if (deltaGenerator.equals("factor")) {
-                    deltaGen = new FactorDeltaGenerator(factor, numPerSide);
-                } else {
-                    throw new ParseException("Delta generator not supported: " + deltaGenerator);
-                }
-                if (parserName.equals("ilp-deltas")) {
-                    parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
-                } else if (parserName.equals("ilp-deltas-init")) {
-                    parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen,
-                            ilpSolverFactory);
-                } else {
-                    throw new ParseException("Parser not supported: " + parserName);
-                }
-            } else {
-                throw new ParseException("Parser not supported: " + parserName);
-            }
-
-            ModelFactory modelFactory;
-            if (initWeights.equals("uniform")) {
-                modelFactory = new UniformDmvModelFactory();
-            } else if (initWeights.equals("random")) {
-                modelFactory = new RandomDmvModelFactory(lambda);
-            } else if (initWeights.equals("supervised")) {
-                modelFactory = new SupervisedDmvModelFactory(goldTreebank);
-            } else if (initWeights.equals("gold")) {
-                modelFactory = new FixableModelFactory(null);
-                ((FixableModelFactory) modelFactory).fixModel(goldModel);
-            } else {
-                throw new ParseException("initWeights not supported: " + initWeights);
-            }
+            ViterbiParser parser = getViterbiParser();
+            DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
 
             if (algorithm.equals("viterbi")) {
                 DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts,
-                        timeoutSeconds, lambda, parserEvaluator);
-                trainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
+                        timeoutSeconds, lambda, parserEvaluator, parser, modelFactory);
+                trainer = new DmvViterbiEMTrainer(vtPrm);
             }
             if (algorithm.equals("viterbi-bnb")) {
                 // Use zero random restarts, no timeout, and no evaluator for
                 // local search with large neighborhoods.
                 DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, 0,
-                        Double.POSITIVE_INFINITY, lambda, null);
-                viterbiTrainer = new DmvViterbiEMTrainer(vtPrm, parser, modelFactory);
+                        Double.POSITIVE_INFINITY, lambda, null, parser, modelFactory);
+                viterbiTrainer = new DmvViterbiEMTrainer(vtPrm);
             }
         }
 
@@ -488,9 +440,9 @@ public class TrainerFactory {
         } else if (nodeOrder.equals("dfs-randwalk")) {
             nodeOrderer = new DfsRandWalkNodeOrderer(60);
         }
-        DmvSolFactoryPrm initSolPrm = getDmvSolFactoryPrm();
+        DmvSolFactoryPrm initSolPrm = getDmvSolFactoryPrm(goldTreebank, goldModel);
 
-        DmvProjectorFactory projectorFactory = getDmvProjectorFactory();
+        DmvProjectorFactory projectorFactory = getDmvProjectorFactory(goldTreebank, goldModel);
 
         LazyBnbSolverPrm bnbPrm = new LazyBnbSolverPrm();
         bnbPrm.disableFathoming = disableFathoming;
@@ -543,18 +495,97 @@ public class TrainerFactory {
         return trainer;
     }
 
-    public static DmvSolFactoryPrm getDmvSolFactoryPrm() {        
-        // Other constants.
-        final double initSolTimeoutSeconds = timeoutSeconds / 2.0;
+    private static ViterbiParser getViterbiParser() throws ParseException {
+        ViterbiParser parser;
+        IlpSolverFactory ilpSolverFactory = null;
+        if (parserName.startsWith("ilp-")) {
+            IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
+            ilpSolverFactory = new IlpSolverFactory(ilpSolverId, numThreads, ilpWorkMemMegs);
+            // TODO: make this an option
+            // ilpSolverFactory.setBlockFileWriter(new
+            // DeltaParseBlockFileWriter(formulation));
+        }
+
+        if (parserName.equals("cky")) {
+            parser = new DmvCkyParser(getDmvObjectivePrm());
+        } else if (parserName.equals("relaxed")) {
+            LpDmvRelaxedParserPrm lpParsePrm = new LpDmvRelaxedParserPrm();
+            lpParsePrm.cplexPrm = getCplexPrm();
+            lpParsePrm.parsePrm = getDmvParseLpBuilderPrm();
+            lpParsePrm.tempDir = getDwTempDir();
+
+            RelaxedParserWrapperPrm prm = new RelaxedParserWrapperPrm();
+            prm.projPrm = getDmvProjectorPrm();
+            prm.relaxedParser = new LpDmvRelaxedParser(lpParsePrm);
+            prm.objPrm = getDmvObjectivePrm();
+            
+            parser = new RelaxedParserWrapper(prm);
+        } else if (parserName.equals("ilp-sentence")) {
+            parser = new IlpViterbiSentenceParser(formulation, ilpSolverFactory);
+        } else if (parserName.equals("ilp-corpus")) {
+            parser = new IlpViterbiParser(formulation, ilpSolverFactory);
+        } else if (parserName.equals("ilp-deltas") || parserName.equals("ilp-deltas-init")) {
+            DeltaGenerator deltaGen;
+            if (deltaGenerator.equals("fixed-interval")) {
+                deltaGen = new FixedIntervalDeltaGenerator(interval, numPerSide);
+            } else if (deltaGenerator.equals("factor")) {
+                deltaGen = new FactorDeltaGenerator(factor, numPerSide);
+            } else {
+                throw new ParseException("Delta generator not supported: " + deltaGenerator);
+            }
+            if (parserName.equals("ilp-deltas")) {
+                parser = new IlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen);
+            } else if (parserName.equals("ilp-deltas-init")) {
+                parser = new InitializedIlpViterbiParserWithDeltas(formulation, ilpSolverFactory, deltaGen,
+                        ilpSolverFactory);
+            } else {
+                throw new ParseException("Parser not supported: " + parserName);
+            }
+        } else {
+            throw new ParseException("Parser not supported: " + parserName);
+        }
+        return parser;
+    }
+
+    private static DmvModelFactory getDmvModelFactory(DepTreebank goldTreebank,
+            DmvModel goldModel) throws ParseException {
+        DmvModelFactory modelFactory;
+        if (initWeights.equals("uniform")) {
+            modelFactory = new UniformDmvModelFactory();
+        } else if (initWeights.equals("random")) {
+            modelFactory = new RandomDmvModelFactory(lambda);
+        } else if (initWeights.equals("supervised")) {
+            modelFactory = new SupervisedDmvModelFactory(goldTreebank);
+        } else if (initWeights.equals("gold")) {
+            modelFactory = new FixableDmvModelFactory(null);
+            ((FixableModelFactory) modelFactory).fixModel(goldModel);
+        } else {
+            throw new ParseException("initWeights not supported: " + initWeights);
+        }
+        return modelFactory;
+    }
+
+    private static DmvObjectivePrm getDmvObjectivePrm() {
+        DmvObjectivePrm prm = new DmvObjectivePrm();
+        prm.universalPostCons = universalPostCons;
+        prm.universalMinProp = universalMinProp;
+        prm.shinyEdges = null;
+        return prm;
+    }
+
+    public static DmvSolFactoryPrm getDmvSolFactoryPrm(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {        
+        ViterbiParser parser = getViterbiParser();
+        DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
         
         DmvSolFactoryPrm initSolPrm = new DmvSolFactoryPrm();
         initSolPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, initSolNumRestarts,
-                initSolTimeoutSeconds, lambda, null);
+                initSolTimeoutSeconds, lambda, null, parser, modelFactory);
         return initSolPrm;
     }
 
-    public static DmvProjectorFactory getDmvProjectorFactory() {
+    public static DmvProjectorFactory getDmvProjectorFactory(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {
         DmvProjectorPrm dprojPrm = getDmvProjectorPrm();
+        dprojPrm.objPrm = getDmvObjectivePrm();
         
         if (projAlgo == ProjectionAlgo.BASIC) {
             return dprojPrm;
@@ -562,12 +593,15 @@ public class TrainerFactory {
             // Other constants.
             final double vemProjTimeoutSeconds = timeoutSeconds / 10.0;
             
+            ViterbiParser parser = getViterbiParser();
+            DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
+            
             ViterbiEmDmvProjectorPrm vedpPrm = new ViterbiEmDmvProjectorPrm();
             vedpPrm.proportionViterbiImproveTreebank = vemProjPropImproveTreebank;
             vedpPrm.proportionViterbiImproveModel = vemProjPropImproveModel;
             vedpPrm.dprojPrm = dprojPrm;
             vedpPrm.vemPrm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, vemProjNumRestarts,
-                    vemProjTimeoutSeconds, lambda, null);
+                    vemProjTimeoutSeconds, lambda, null, parser, modelFactory);
             return vedpPrm;
         } else {
             throw new RuntimeException("Unhandled projection algorithm: " + projAlgo);

@@ -9,4 +9,6 @@ public interface RelaxedParser {
     RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model model);
 
     double getLastParseWeight();
+
+    void reset();
 }

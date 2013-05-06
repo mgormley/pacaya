@@ -1,17 +1,21 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
+import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.TrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.hltcoe.train.TrainCorpus;
+import edu.jhu.hltcoe.train.TrainerFactory;
 
 public class DmvSolFactory {
 
@@ -30,6 +34,35 @@ public class DmvSolFactory {
         }
     }
     
+    public enum InitSol {
+        VITERBI_EM("viterbi-em"), 
+        GOLD("gold"), 
+        RANDOM("random"), 
+        UNIFORM("uniform"),
+        SUPERVISED("supervised"),
+        NONE("none");
+        
+        private String id;
+    
+        InitSol(String id) {
+          this.id = id;
+        }
+    
+        @Override
+        public String toString() {
+            return id;
+        }
+        
+        public static InitSol getById(String id) {
+            for (InitSol is : values()) {
+                if (is.id.equals(id)) {
+                    return is;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognized InitSol id: " + id);
+        }
+    }
+
     private DmvSolFactoryPrm prm;
     
     public DmvSolFactory(DmvSolFactoryPrm prm) {
@@ -37,17 +70,15 @@ public class DmvSolFactory {
     }
     
     public DmvSolution getInitFeasSol(TrainCorpus corpus) {
-        return getSol((DmvTrainCorpus)corpus, prm.vemPrm);
+        return getSol((DmvTrainCorpus)corpus);
     }
     
-    private static DmvSolution getSol(DmvTrainCorpus corpus, DmvViterbiEMTrainerPrm vemPrm) {
+    private DmvSolution getSol(DmvTrainCorpus corpus) {
         // TODO: pass this in.
         IndexedDmvModel idm = new IndexedDmvModel(corpus);
 
         // Run Viterbi EM.
-        ViterbiParser parser = new DmvCkyParser();
-        DmvModelFactory modelFactory = new UniformDmvModelFactory();
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(vemPrm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm.vemPrm);
         trainer.train(corpus);
         
         DepTreebank treebank = trainer.getCounts();
@@ -62,6 +93,49 @@ public class DmvSolFactory {
         double score = trainer.getLogLikelihood();
         
         return new DmvSolution(logProbs, idm, treebank, score);
+    }
+
+    // TODO: Remove this since it doesn't fully respect the command line arguments.
+    @Deprecated
+    public static DmvSolution getInitSol(InitSol opt, DmvTrainCorpus corpus, DmvRelaxation relax, DepTreebank trainTreebank, DmvSolution goldSol) throws ParseException {
+        IndexedDmvModel idm;
+        if (relax != null) {
+            idm = relax.getIdm();
+        } else {
+            idm = new IndexedDmvModel(corpus);
+        }
+    
+        DmvSolution initBoundsSol;
+        if (opt == InitSol.VITERBI_EM) {
+            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(null, null));
+            initBoundsSol = initSolFactory.getInitFeasSol(corpus);
+        } else if (opt == InitSol.GOLD) {
+            initBoundsSol = goldSol;
+        } else if (opt == InitSol.RANDOM || opt == InitSol.UNIFORM || opt == InitSol.SUPERVISED){
+            
+            DmvModelFactory modelFactory;
+            if (opt == InitSol.RANDOM) {
+                modelFactory = new RandomDmvModelFactory(0.00001);
+            } else if (opt == InitSol.SUPERVISED) {
+                modelFactory = new SupervisedDmvModelFactory(trainTreebank);
+            } else {
+                modelFactory = new UniformDmvModelFactory();
+            }
+            DmvModel randModel = modelFactory.getInstance(corpus.getLabelAlphabet());
+            double[][] logProbs = idm.getCmLogProbs(randModel);
+            ViterbiParser parser = new DmvCkyParser();
+            DepTreebank treebank = parser.getViterbiParse(corpus, randModel);
+            double score;
+            if (relax != null) {
+                score = relax.computeTrueObjective(logProbs, treebank);
+            } else {
+                score = parser.getLastParseWeight();
+            }
+            initBoundsSol = new DmvSolution(logProbs, idm, treebank, score);            
+        } else {
+            throw new IllegalStateException("unsupported initialization: " + opt);
+        }
+        return initBoundsSol;
     }
     
 }

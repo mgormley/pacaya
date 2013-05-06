@@ -22,9 +22,6 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		if (!Sort.isSortedAscAndUnique(index)) {
 			throw new IllegalStateException("Indices are not sorted ascending");
 		}
-		if (!Sort.isSortedAsc(data)) {
-			throw new IllegalStateException("Values are not sorted ascending");
-		}
 		
 		this.used = index.length;
 		this.indices = index;
@@ -126,26 +123,32 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		}
 	}
 
-	public class IntLongIterator implements Iterator<IntLongEntry> {
+    /**
+     * This iterator is fast in the case of for(Entry e : vector) { }, however a
+     * given entry should not be used after the following call to next().
+     */
+    public class IntLongIterator implements Iterator<IntLongEntry> {
 
-		private int i = 0;
-		
-		@Override
-		public boolean hasNext() {
-			return i < used;
-		}
+        // The current entry.
+        private IntLongEntryImpl entry = new IntLongEntryImpl(-1);
+        
+        @Override
+        public boolean hasNext() {
+            return entry.i+1 < used;
+        }
 
-		@Override
-		public IntLongEntry next() {
-			return new IntLongEntryImpl(i);
-		}
+        @Override
+        public IntLongEntry next() {
+            entry.i++;
+            return entry;
+        }
 
-		@Override
-		public void remove() {
-			throw new RuntimeException("operation not supported");
-		}
-		
-	}
+        @Override
+        public void remove() {
+            throw new RuntimeException("operation not supported");
+        }
+        
+    }
 
 	@Override
 	public Iterator<IntLongEntry> iterator() {

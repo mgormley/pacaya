@@ -33,9 +33,11 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
                 int iterations, double convergenceRatio) {
             this.fixableModelFactory = new FixableModelFactory(modelFactory);
             DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
+            prm.parser = fastParser;
+            prm.modelFactory = fixableModelFactory;
             prm.emPrm.iterations = Integer.MAX_VALUE;
             prm.emPrm.convergenceRatio = convergenceRatio;
-            this.fastTrainer = new DmvViterbiEMTrainer(prm, fastParser, fixableModelFactory);
+            this.fastTrainer = new DmvViterbiEMTrainer(prm);
             this.deltaParser = deltaParser;
 
             Logger ftLogger = Logger.getLogger(DmvViterbiEMTrainer.class.getName() + "(fastTrainer)");
@@ -44,7 +46,7 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
         }
 
         @Override
-        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(TrainCorpus c, Model model) {
+        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(TrainCorpus c, Model model, int iteration) {
             DmvTrainCorpus corpus = (DmvTrainCorpus) c;
             fixableModelFactory.fixModel(model);
             fastTrainer.train(corpus);

@@ -4,22 +4,23 @@ import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
+import cern.colt.list.IntArrayList;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.lp.FactorBuilder.BoundFactor;
 import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
+import edu.jhu.hltcoe.lp.FactorList;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.SafeCast;
 import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.hltcoe.util.map.IntObjectHashMap;
 import edu.jhu.hltcoe.util.tuple.OrderedPair;
 import edu.jhu.hltcoe.util.tuple.UnorderedPair;
+import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
 import gnu.trove.TIntHashSet;
 
 /**
@@ -59,17 +60,21 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList eqFactors = rlt.getEqFactors().sublist(startFac, endFac);
 
         // Get a mapping of variables ids to factors indices.
-        Map<Integer, List<Integer>> varConsMap = getVarConsMap(eqFactors);
+        IntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(eqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<OrderedPair> rltRows = new HashSet<OrderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            for (Integer consId1 : Utilities.safeGetList(varConsMap, varIdPair.get1())) {
+            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
+            for (int i=0; i<list1.size(); i++) {
+                int consId1 = list1.getQuick(i);
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the second variable in this pair.
                 rltRows.add(new OrderedPair(consId1, varIdPair.get2()));
             }
-            for (Integer consId2 : Utilities.safeGetList(varConsMap, varIdPair.get2())) {
+            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            for (int i=0; i<list2.size(); i++) {
+                int consId2 = list2.getQuick(i);
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the first variable in this pair.
                 rltRows.add(new OrderedPair(consId2, varIdPair.get1()));
@@ -85,13 +90,13 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList leqFactors = rlt.getLeqFactors();
 
         // Get a mapping of variables ids to factors indices.
-        Map<Integer, List<Integer>> varConsMap = getVarConsMap(leqFactors);
+        IntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(leqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            for (Integer i : Utilities.safeGetList(varConsMap, varIdPair.get1())) {
-                for (Integer j : Utilities.safeGetList(varConsMap, varIdPair.get2())) {
+            for (int i : Utilities.safeGetList(varConsMap, varIdPair.get1()).elements()) {
+                for (int j : Utilities.safeGetList(varConsMap, varIdPair.get2()).elements()) {
                     if ((startFac1 <= i && i < endFac1 && startFac2 <= j && j < endFac2) ||
                             (startFac2 <= i && i < endFac2 && startFac1 <= j && j < endFac1)) {
                         // Add a RLT row, for each pair of factors.
@@ -109,15 +114,15 @@ public class VarRltRowAdder implements RltRowAdder {
      * containing a non-zero coefficient for variable k, add an entry for (k
      * --> i).
      */ 
-    private Map<Integer, List<Integer>> getVarConsMap(FactorList factors) {
-        Map<Integer, List<Integer>> varConsMap = new HashMap<Integer, List<Integer>>();
+    private IntObjectHashMap<IntArrayList> getVarConsMap(FactorList factors) {
+        IntObjectHashMap<IntArrayList> varConsMap = new IntObjectHashMap<IntArrayList>();
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);
             if (boundsOnly && !(factor instanceof BoundFactor)){
                 continue;
             }
-            for (LongDoubleEntry ve : factor.G) {
-                int veIdx = SafeCast.safeLongToInt(ve.index());
+            for (long lveIdx : factor.G.getIndices()) {
+                int veIdx = SafeCast.safeLongToInt(lveIdx);
                 if (inputVarIds.contains(veIdx)) {
                     Utilities.addToList(varConsMap, veIdx, i);
                 }

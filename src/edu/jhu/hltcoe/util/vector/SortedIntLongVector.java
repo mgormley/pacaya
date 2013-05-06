@@ -51,6 +51,13 @@ public class SortedIntLongVector extends SortedIntLongMap {
     	}
     }
 
+    public void add(SortedIntLongVector other) {
+        // TODO: this could be done much faster with a merge of the two arrays.
+        for (IntLongEntry ve : other) {
+            add(ve.index(), ve.get());
+        }
+    }
+    
 	public void set(SortedIntLongVector other) {
 		// TODO: this could be done much faster with a merge of the two arrays.
 		for (IntLongEntry ve : other) {

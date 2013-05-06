@@ -20,6 +20,6 @@ for subdir in glob('%s/*' % (wsj_dir)):
         continue
     src = os.path.abspath(os.path.join(wsj_dir, subdir))
     dest = os.path.abspath(os.path.join(sym_dir, subdir))
-    cmd = 'ln -s %s %s' % (src, dest) 
+    cmd = 'cp -r %s %s' % (src, dest) 
     print cmd
     os.system(cmd)

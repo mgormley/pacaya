@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -10,16 +9,12 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.FileMapTagReducer;
+import edu.jhu.hltcoe.data.DepTreebankReader;
 import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Ptb45To17TagReducer;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.TaggedWord;
-import edu.jhu.hltcoe.data.VerbTreeFilter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
@@ -29,6 +24,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvProjector;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
@@ -39,18 +35,22 @@ import edu.jhu.hltcoe.parse.ViterbiParser;
 import edu.jhu.hltcoe.train.BnBDmvTrainer;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.InitSol;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.cli.ArgParser;
+import edu.jhu.hltcoe.util.cli.Opt;
 
 public class PipelineRunner {
 
     private static final Logger log = Logger.getLogger(PipelineRunner.class);
 
+    @Opt(hasArg = true, description = "Maximum sentence length for test data.")
+    int maxSentenceLengthTest = Integer.MAX_VALUE;
+    
     public PipelineRunner() {
     }
 
@@ -63,9 +63,8 @@ public class PipelineRunner {
             // Read the data and (maybe) reduce size of treebank
             String trainPath = cmd.getOptionValue("train");
             log.info("Reading train data: " + trainPath);
-            int maxSentenceLength = Command.getOptionValue(cmd, "maxSentenceLength", Integer.MAX_VALUE);
             Alphabet<Label> alphabet = new Alphabet<Label>();
-            trainTreebank = getTreebank(cmd, trainPath, maxSentenceLength, alphabet);
+            trainTreebank = DepTreebankReader.getTreebank(trainPath, DepTreebankReader.maxSentenceLength, alphabet);
         } else if (cmd.hasOption("synthetic")) {
             String synthetic = cmd.getOptionValue("synthetic");
             if (synthetic.equals("two")) {
@@ -107,9 +106,8 @@ public class PipelineRunner {
             // Read the data and (maybe) reduce size of treebank
             String testPath = cmd.getOptionValue("test");
             log.info("Reading test data: " + testPath);
-            int maxSentenceLengthTest = Command.getOptionValue(cmd, "maxSentenceLengthTest", Integer.MAX_VALUE);
-            
-            testTreebank = getTreebank(cmd, testPath, maxSentenceLengthTest, trainTreebank.getAlphabet());
+           
+            testTreebank = DepTreebankReader.getTreebank(testPath, maxSentenceLengthTest, trainTreebank.getAlphabet());
 
             log.info("Number of test sentences: " + testTreebank.size());
             log.info("Number of test tokens: " + testTreebank.getNumTokens());
@@ -117,7 +115,7 @@ public class PipelineRunner {
         }
         
         if (cmd.hasOption("relaxOnly")) {
-            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm());
+            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(trainTreebank, goldModel));
             DmvSolution initSol = initSolFactory.getInitFeasSol(trainCorpus);
             DmvRelaxationFactory relaxFactory = TrainerFactory.getDmvRelaxationFactory();
             DmvRelaxation relax = relaxFactory.getInstance(trainCorpus, initSol);
@@ -133,7 +131,7 @@ public class PipelineRunner {
                 log.info("initBoundsSol: " + initBoundsSol.getScore());
                 log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
             }
-            DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory();
+            DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory(trainTreebank, goldModel);
             DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
             DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
             if (projSol != null) {
@@ -182,38 +180,8 @@ public class PipelineRunner {
         }
     }
 
-    private DepTreebank getTreebank(CommandLine cmd, String trainPath, int maxSentenceLength, Alphabet<Label> alphabet) {
-        DepTreebank trainTreebank;
-        int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", Integer.MAX_VALUE); 
-        boolean mustContainVerb = cmd.hasOption("mustContainVerb");
-        String reduceTags = Command.getOptionValue(cmd, "reduceTags", "none");
-
-        // Create the original trainTreebank with a throw-away alphabet.
-        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences, new Alphabet<Label>());
-        if (mustContainVerb) {
-            trainTreebank.setTreeFilter(new VerbTreeFilter());
-        }
-        trainTreebank.loadPath(trainPath);
-        
-        if ("45to17".equals(reduceTags)) {
-            log.info("Reducing PTB from 45 to 17 tags");
-            (new Ptb45To17TagReducer()).reduceTags(trainTreebank);
-        } else if (!"none".equals(reduceTags)) {
-            log.info("Reducing tags with file map: " + reduceTags);
-            (new FileMapTagReducer(new File(reduceTags))).reduceTags(trainTreebank);
-        }
-
-        // After reducing tags we create an entirely new treebank that uses the alphabet we care about.
-        DepTreebank tmpTreebank = new DepTreebank(alphabet);
-        for (DepTree tree : trainTreebank) {
-            tmpTreebank.add(tree);
-        }
-        trainTreebank = tmpTreebank;
-        return trainTreebank;
-    }
-
     // TODO: This should update the deltas of the root node.
-    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) {
+    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
         if (cmd.hasOption("initBounds")) {
             // Initialize the bounds as a hypercube around some initial solution.
             InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
@@ -225,7 +193,8 @@ public class PipelineRunner {
                 IndexedDmvModel idm = new IndexedDmvModel(trainCorpus);
                 goldSol = new DmvSolution(idm.getCmLogProbs(trueModel), idm, trainTreebank, Double.NaN);
             }
-            DmvSolution initBoundsSol = LocalBnBDmvTrainer.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
+            // TODO: replace this with an TrainerFactory.getInitSolFactoryPrm();
+            DmvSolution initBoundsSol = DmvSolFactory.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
             
             LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
             
@@ -282,17 +251,12 @@ public class PipelineRunner {
         // Options for data
         options.addOption("tr", "train", true, "Training data.");
         options.addOption("tr", "synthetic", true, "Generate synthetic training data.");
-        options.addOption("msl", "maxSentenceLength", true, "Max sentence length.");
-        options.addOption("mns", "maxNumSentences", true, "Max number of sentences for training."); 
-        options.addOption("vb", "mustContainVerb", false, "Filter down to sentences that contain certain verbs."); 
-        options.addOption("rd", "reduceTags", true, "Tag reduction type [none, 45to17, {a file map}]."); 
         options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
         options.addOption("ss", "syntheticSeed", true, "Pseudo random number generator seed for synthetic data generation only.");
         options.addOption("psu", "propSupervised", true, "Proportion of labeled/supervised training data.");
         
         // Options for test data
         options.addOption("te", "test", true, "Test data.");
-        options.addOption("mslt", "maxSentenceLengthTest", true, "Max sentence length for test data.");
         
         // Options to restrict the initialization
         options.addOption("ib", "initBounds", true, "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]");
@@ -307,6 +271,8 @@ public class PipelineRunner {
         configureLogging();
         
         ArgParser parser = new ArgParser(PipelineRunner.class);
+        parser.addClass(PipelineRunner.class);
+        parser.addClass(DepTreebankReader.class);
         parser.addClass(TrainerFactory.class);
         addOptions(parser.getOptions());
         CommandLine cmd = null;

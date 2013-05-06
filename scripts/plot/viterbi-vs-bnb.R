@@ -94,7 +94,7 @@ plotnumtrees <- function(mydata) {
 myplot(plotnumfathom(dfBoth), str_c(results.file, "fathom-rate", "pdf", sep="."))
 
 ## Read data
-results.file = "/Users/mgormley/research/dep_parse/results/viterbi-vs-bnb/incumbent-status.data"
+results.file = "/Users/mgormley/research/parsing/results/viterbi-vs-bnb/incumbent-status.data"
 df <- read.table(results.file, header=TRUE)
 df.orig <- df
 df <- df[order(df$time),]
@@ -129,7 +129,11 @@ plotLogLikeVsTime <- function(mydata) {
   title = "Penn Treebank, Brown"
   xlab = "Time (min)"
   ylab = "Log-likelihood (train)"
-  p <- ggplot(mydata, aes(x=time / 1000 / 60,
+  #mydata$time <- max(mydata$time, 1.0)
+  mydata$minutes <- mydata$time / 1000 / 60
+  mydata$minutes <- mydata$time / 1000 
+  mydata$minutes[which(mydata$minutes < 1.0)] <- 1.0
+  p <- ggplot(mydata, aes(x=minutes,
                           y=incumbentLogLikelihood, color=method))
   p <- p + geom_point(aes(shape=method))
   p <- p + geom_line(aes(linetype=universalPostCons))
@@ -138,6 +142,7 @@ plotLogLikeVsTime <- function(mydata) {
   p <- p + scale_color_discrete(name=methodDescription) 
   p <- p + scale_shape_discrete(name=methodDescription)
   p <- p + scale_linetype_discrete(name="Posterior Constraints")
+  p <- p + scale_x_log10()
 }
 
 plotAccVsTime <- function(mydata) {
@@ -154,6 +159,7 @@ plotAccVsTime <- function(mydata) {
   p <- p + scale_color_discrete(name=methodDescription)
   p <- p + scale_shape_discrete(name=methodDescription)
   p <- p + scale_linetype_discrete(name="Posterior Constraints")
+  p <- p + scale_x_log10()
 }
 
 
@@ -174,7 +180,7 @@ myplot(plotAccVsTime(subset(df, method == "Viterbi EM" | method == "RLT Max 1000
 
 
 
-## Read B&B status data.
+## Read B&B status data. --- Below trying to make bar charts ---
 results.file = "/Users/mgormley/research/dep_parse/results/viterbi-vs-bnb/results.data"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]

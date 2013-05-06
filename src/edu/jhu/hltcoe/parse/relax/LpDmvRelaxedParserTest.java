@@ -215,7 +215,7 @@ public class LpDmvRelaxedParserTest {
         JUnitUtils.assertArrayEquals(new int[]{1, 2, 3, -1}, projTrees.get(2).getParents());
     }
 
-    private DepTreebank getPostConsTrees(SentenceCollection sentences, Model model, boolean univeralPostCons, double universalMinProp) {
+    public static DepTreebank getPostConsTrees(SentenceCollection sentences, Model model, boolean univeralPostCons, double universalMinProp) {
         LpDmvRelaxedParserPrm prm = new LpDmvRelaxedParserPrm();
         prm.parsePrm.formulation = IlpFormulation.FLOW_PROJ_LPRELAX;
         prm.parsePrm.universalPostCons = univeralPostCons;

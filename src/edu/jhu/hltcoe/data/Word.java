@@ -6,6 +6,9 @@ public class Word implements Label {
     private String word;
     
     public Word(String word) {
+        if (word == null) {
+            throw new IllegalArgumentException("word is null");
+        }
         this.word = word.intern();
     }
 
@@ -15,32 +18,26 @@ public class Word implements Label {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((word == null) ? 0 : word.hashCode());
-        return result;
+        return word.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
+        if (obj instanceof Word) {
+            Word other = (Word) obj;
+            return word.equals(other.word);
+        } else {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        Word other = (Word) obj;
-        if (word == null) {
-            if (other.word != null)
-                return false;
-        } else if (!word.equals(other.word))
-            return false;
-        return true;
+        }
     }
-    
+
     @Override
-    public int compareTo(Label arg0) {
-        return getLabel().compareTo(arg0.getLabel());
+    public int compareTo(Label label) {
+        if (label instanceof Word) {
+            return getLabel().compareTo(label.getLabel());
+        } else {
+            return -1;
+        }
     }
     
     @Override

@@ -3,9 +3,11 @@ package edu.jhu.hltcoe.parse.relax;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.ViterbiParser;
@@ -16,8 +18,10 @@ public class RelaxedParserWrapper implements ViterbiParser {
     
     public static class RelaxedParserWrapperPrm {
         // TODO: This should be a factory.
+        // TODO: We should be careful that the objective and the parser match up.
         public RelaxedParser relaxedParser = new LpDmvRelaxedParser(new LpDmvRelaxedParserPrm());
         public DmvProjectorPrm projPrm = new DmvProjectorPrm();
+        public DmvObjectivePrm objPrm = new DmvObjectivePrm();       
     }
     
     private RelaxedParserWrapperPrm prm;
@@ -50,7 +54,7 @@ public class RelaxedParserWrapper implements ViterbiParser {
             projector = new BasicDmvProjector(new DmvProjectorPrm(), corpus);
         }
         if (obj == null) {
-            obj = new DmvObjective(corpus);
+            obj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus));
         }
 
         // Solve the relaxation.
@@ -60,6 +64,10 @@ public class RelaxedParserWrapper implements ViterbiParser {
         // Compute the parse score.
         lastParseWeight = obj.computeTrueObjective(model, projTrees);
         return projTrees;
+    }
+
+    public void reset() {
+        prm.relaxedParser.reset();
     }
 
 }

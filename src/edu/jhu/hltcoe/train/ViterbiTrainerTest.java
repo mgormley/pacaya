@@ -37,9 +37,11 @@ public class ViterbiTrainerTest {
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
+        prm.parser = parser;
+        prm.modelFactory = modelFactory;
         prm.emPrm.iterations = 25;
         prm.emPrm.convergenceRatio = 0.99999;
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
@@ -56,17 +58,18 @@ public class ViterbiTrainerTest {
         ViterbiParser parser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
+        prm.parser = parser;
+        prm.modelFactory = modelFactory;
         prm.emPrm.iterations = 25;
         prm.emPrm.convergenceRatio = 0.99999;
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm);
         
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString("the cat ate the hat with the mouse");
         trainer.train(new DmvTrainCorpus(sentences));
         
         Assert.assertEquals(2, trainer.getIterationsCompleted());
-    }
-    
+    }    
 
     @Test
     public void testRestarts() {
@@ -85,8 +88,8 @@ public class ViterbiTrainerTest {
         double lambda = 0.1;
         ViterbiParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(5, 0.99999, 9, 5, lambda, null);
-        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm, parser, modelFactory);
+        DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(5, 0.99999, 9, 5, lambda, null, parser, modelFactory);
+        DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(prm);
         return trainer;
     }
     

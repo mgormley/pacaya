@@ -6,6 +6,9 @@ public class Tag extends AbstractLabel implements Label {
     private String tag;
     
     public Tag(String tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag is null");
+        }
         this.tag = tag.intern();
     }
 
@@ -28,32 +31,29 @@ public class Tag extends AbstractLabel implements Label {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((tag == null) ? 0 : tag.hashCode());
-        return result;
+        return tag.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (!super.equals(obj))
+        if (obj instanceof TaggedWord) {
+            TaggedWord other = (TaggedWord) obj;
+            return tag.equals(other.getTag());
+        } else if (obj instanceof Tag) {
+            Tag other = (Tag) obj;
+            return tag.equals(other.tag);
+        } else {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        Tag other = (Tag) obj;
-        if (tag == null) {
-            if (other.tag != null)
-                return false;
-        } else if (!tag.equals(other.tag))
-            return false;
-        return true;
+        }
     }
 
     @Override
-    public int compareTo(Label arg0) {
-        return getLabel().compareTo(arg0.getLabel());
+    public int compareTo(Label label) {
+        if (label instanceof Tag || label instanceof TaggedWord) {
+            return getLabel().compareTo(label.getLabel());
+        } else {
+            return -1;
+        }
     }
     
     @Override

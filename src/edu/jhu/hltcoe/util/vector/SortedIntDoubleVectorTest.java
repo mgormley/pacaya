@@ -1,6 +1,6 @@
 package edu.jhu.hltcoe.util.vector;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -107,4 +107,49 @@ public class SortedIntDoubleVectorTest {
 		assertEquals(66., v1.get(3), 1e-13);
     }
     
+    @Test
+    public void testSetAll() {
+        SortedIntDoubleVector v1 = new SortedIntDoubleVector();
+        SortedIntDoubleVector v2 = new SortedIntDoubleVector();
+        
+        v1.set(1, 11.);
+        v1.set(2, 22.);
+        v1.set(4, 44.);
+        
+        v2.set(1, 11.);
+        v2.set(3, 33.);
+        v2.set(4, 0.);
+        v2.set(5, 55.);
+        
+        v1.set(v2);
+
+        assertEquals(11., v1.get(1), 1e-13);
+        assertEquals(22., v1.get(2), 1e-13);
+        assertEquals(33., v1.get(3), 1e-13);
+        assertEquals(0., v1.get(4), 1e-13);
+        assertEquals(55., v1.get(5), 1e-13);
+    }
+    
+    @Test
+    public void testAddAll() {
+        SortedIntDoubleVector v1 = new SortedIntDoubleVector();
+        SortedIntDoubleVector v2 = new SortedIntDoubleVector();
+        
+        v1.set(1, 11.);
+        v1.set(2, 22.);
+        v1.set(4, 44.);
+        
+        v2.set(1, 11.);
+        v2.set(3, 33.);
+        v2.set(4, 0.);
+        v2.set(5, 55.);
+        
+        v1.add(v2);
+
+        assertEquals(22., v1.get(1), 1e-13);
+        assertEquals(22., v1.get(2), 1e-13);
+        assertEquals(33., v1.get(3), 1e-13);
+        assertEquals(44., v1.get(4), 1e-13);
+        assertEquals(55., v1.get(5), 1e-13);        
+    }
 }    

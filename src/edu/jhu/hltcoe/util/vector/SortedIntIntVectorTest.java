@@ -107,4 +107,49 @@ public class SortedIntIntVectorTest {
 		assertEquals(66, v1.get(3));
     }
     
+    @Test
+    public void testSetAll() {
+        SortedIntIntVector v1 = new SortedIntIntVector();
+        SortedIntIntVector v2 = new SortedIntIntVector();
+        
+        v1.set(1, 11);
+        v1.set(2, 22);
+        v1.set(4, 44);
+        
+        v2.set(1, 11);
+        v2.set(3, 33);
+        v2.set(4, 0);
+        v2.set(5, 55);
+        
+        v1.set(v2);
+
+        assertEquals(11, v1.get(1));
+        assertEquals(22, v1.get(2));
+        assertEquals(33, v1.get(3));
+        assertEquals(0, v1.get(4));
+        assertEquals(55, v1.get(5));
+    }
+    
+    @Test
+    public void testAddAll() {
+        SortedIntIntVector v1 = new SortedIntIntVector();
+        SortedIntIntVector v2 = new SortedIntIntVector();
+        
+        v1.set(1, 11);
+        v1.set(2, 22);
+        v1.set(4, 44);
+        
+        v2.set(1, 11);
+        v2.set(3, 33);
+        v2.set(4, 0);
+        v2.set(5, 55);
+        
+        v1.add(v2);
+
+        assertEquals(22, v1.get(1));
+        assertEquals(22, v1.get(2));
+        assertEquals(33, v1.get(3));
+        assertEquals(44, v1.get(4));
+        assertEquals(55, v1.get(5));        
+    }
 }    

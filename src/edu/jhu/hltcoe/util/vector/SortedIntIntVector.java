@@ -51,6 +51,13 @@ public class SortedIntIntVector extends SortedIntIntMap {
     	}
     }
 
+    public void add(SortedIntIntVector other) {
+        // TODO: this could be done much faster with a merge of the two arrays.
+        for (IntIntEntry ve : other) {
+            add(ve.index(), ve.get());
+        }
+    }
+    
 	public void set(SortedIntIntVector other) {
 		// TODO: this could be done much faster with a merge of the two arrays.
 		for (IntIntEntry ve : other) {

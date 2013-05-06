@@ -20,8 +20,8 @@ getDataset <- function(mydata) {
 
 
 ## Read B&B status data.
-results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data"
-##results.file = "/Users/mgormley/research/dep_parse/results/bnb/bnb-status.data.r860"
+results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data"
+##results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data.r860"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
@@ -68,15 +68,16 @@ plotbnbboundsvtime <- function(mydata) {
   mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
 
   ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
-  xlab = "Time (minutes)"
+  xlab = "Time (sec)"
   ylab = "Bounds on log-likelihood"
-  p <- ggplot(mydata, aes(x=time / 1000 / 60, y=bound, color=factor(method)))
+  p <- ggplot(mydata, aes(x=time / 1000, y=bound, color=factor(method)))
   p <- p + geom_line(aes(linetype=boundType))
-  p <- p + geom_point(data=subset(mydata, (numSeen %% 25000 == 1)), aes(shape=method))
+  p <- p + geom_point(data=subset(mydata, (numSeen %% 200 == 1)), aes(shape=method))
   p <- p + xlab(xlab) + ylab(ylab) ##+ opts(title=title)
   p <- p + scale_linetype_discrete(name="Bound type")
   p <- p + scale_color_discrete(name=methodDescription) 
   p <- p + scale_shape_discrete(name=methodDescription)
+  p <- p + scale_x_log10()
 }
 myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
 dfBoth.subset.temp <- subset(dfBoth.subset, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | !is.finite(rltInitMax))

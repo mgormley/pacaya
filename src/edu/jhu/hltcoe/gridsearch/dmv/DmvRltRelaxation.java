@@ -27,13 +27,14 @@ import edu.jhu.hltcoe.gridsearch.RelaxStatus;
 import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer;
 import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
@@ -69,6 +70,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         public LpStoBuilderPrm stoPrm = new LpStoBuilderPrm();
         public DmvParseLpBuilderPrm parsePrm = new DmvParseLpBuilderPrm();
         public DimReducerPrm drPrm = new DimReducerPrm();
+        public DmvObjectivePrm objPrm = new DmvObjectivePrm();
         public DmvRltRelaxPrm() { 
             // We have to use the Dual simplex algorithm in order to 
             // stop early and fathom a node.
@@ -128,7 +130,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     public void init1(DmvTrainCorpus corpus) {
         this.corpus = corpus;
         this.idm = new IndexedDmvModel(this.corpus);
-        this.dmvObj = new DmvObjective(this.corpus);
+        this.dmvObj = new DmvObjective(prm.objPrm, idm);
     }
     
     // Copied from DantzigWolfeRelaxation.
