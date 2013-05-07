@@ -77,7 +77,7 @@ plotbnbboundsvtime <- function(mydata) {
   p <- p + scale_linetype_discrete(name="Bound type")
   p <- p + scale_color_discrete(name=methodDescription) 
   p <- p + scale_shape_discrete(name=methodDescription)
-  p <- p + scale_x_log10()
+  #p <- p + scale_x_log10()
 }
 myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
 dfBoth.subset.temp <- subset(dfBoth.subset, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | !is.finite(rltInitMax))

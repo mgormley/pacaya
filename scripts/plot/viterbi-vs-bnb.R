@@ -99,6 +99,7 @@ df <- read.table(results.file, header=TRUE)
 df.orig <- df
 df <- df[order(df$time),]
 
+prepData <- function(df) {
 df$rltInitMax[which(is.na(df$rltInitMax))] <- as.numeric("+inf")
 df$rltCutMax[which(is.na(df$rltCutMax))] <- as.numeric("+inf")
 df$method <- str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection, df$rltCutMax, sep=".")
@@ -129,6 +130,10 @@ df <- subset(df, maxNumSentences == 200)
 df <- subset(df,is.na(rltCutMax) | !is.finite(rltCutMax) | rltCutMax == 0 )
 
 df$perTokenCrossEntropy <- ifelse(df$dataset == "wsj200", - df$incumbentLogLikelihood / log(2) / 1365, NULL)
+}
+prepData(df)
+
+
 
 # Remove any solution found after 8 hours.
 df <- subset(df, time / 1000 / 60 / 60 < 8)
@@ -140,6 +145,14 @@ myfun <- function(x) {
 ddf <- ddply(df, .(method, universalPostCons), myfun)
 ddf$time <- 8*60*60*1000
 df <- rbind(ddf, df)
+
+
+myfun <- function(x) {
+  x[which.max(x$time),]
+}
+ddf <- ddply(df, .(method, universalPostCons), myfun)
+print(ddf[,c("method", "universalPostCons", "incumbentAccuracy")])
+write.table(ddf[,c("method", "universalPostCons", "incumbentAccuracy")], file=str_c(results.file, "inc-acc", "csv", sep="."), sep=",")
 
 plotLogLikeVsTime <- function(mydata) {
   title = "Penn Treebank, Brown"
@@ -195,6 +208,7 @@ myplot(plotAccVsTime(df),
 
 max <- ddply(df, .(method, universalPostCons), function(x) max(x$incumbentLogLikelihood))
 print(max[order(max$V1),])
+max <- ddply(df, .(method, universalPostCons), function(x){ x[which.max(x$incumbentAccuracy),] })
 
 myplot(plotAccVsTime(subset(df, method == "Viterbi EM" | method == "RLT Max 1000")),
        str_c(results.file, "accvtime", "pdf", sep="."))
@@ -202,10 +216,8 @@ myplot(plotAccVsTime(subset(df, method == "Viterbi EM" | method == "RLT Max 1000
 
 
 ## Read B&B status data. --- Below trying to make bar charts ---
-results.file = "/Users/mgormley/research/dep_parse/results/viterbi-vs-bnb/results.data"
+results.file = "/Users/mgormley/research/parsing/results/viterbi-vs-bnb/results.data"
 df <- read.table(results.file, header=TRUE)
-df <- df[order(df$time),]
-
 
 df$rltInitMax[which(is.na(df$rltInitMax))] <- as.numeric("+inf")
 df$rltCutMax[which(is.na(df$rltCutMax))] <- as.numeric("+inf")
@@ -215,8 +227,9 @@ df$method <- ""
 df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
 df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
 df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
-##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max ", df$rltInitMax), df$method)
+## ON FOR ACL SUBMISSION:
 df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
+##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k.", df$rltCutMax/1000, "k"), df$method)
 df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
 
 #df$method <- str_c(df$envelopeOnly, df$rltInitMax, sep=" / ")
@@ -229,30 +242,45 @@ methodDescription <- "Algorithm"
 ##df$method = str_c(df$algorithm, sep=".")
 ##df <- subset(df, algorithm == "viterbi" | algorithm == "bnb" )
 ##df <- subset(df, time/1000/60 < 61)
-df <- subset(df, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100001 | !is.finite(rltInitMax))
+df <- subset(df, dataset == "wsj200")
+df <- subset(df, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
 df <- subset(df, maxNumSentences == 200)
+## ON FOR ACL SUBMISSION:
 df <- subset(df,is.na(rltCutMax) | !is.finite(rltCutMax) | rltCutMax == 0 )
 
+df$isGlobal <- ifelse(df$method == "Viterbi", FALSE, TRUE)
 
 plotAcc <- function(mydata) {
   title = "Penn Treebank, Brown"
   xlab = "Time (min)"
   ylab = "Accuracy (train)"
   p <- ggplot(mydata, aes(x=method,
-                          y=trainAccuracy, fill=universalPostCons))
-  p <- p + geom_bar(position="dodge")
+                          y=trainAccuracy,
+                          fill=universalPostCons,
+                          linetype=isGlobal))
+  p <- p + geom_point() ##position="dodge")
   ##p <- p + geom_line(aes(linetype=universalPostCons))
   ##p <- p + geom_smooth(aes(linetype=universalPostCons))
   p <- p + xlab(xlab) + ylab(ylab)
+  p <- p + scale_y_continuous(limits=c(0.5, 0.7))
   ## For ACL: p <- p + opts(title=title)
   ##p <- p + scale_color_discrete(name=methodDescription)
   ##p <- p + scale_shape_discrete(name=methodDescription)
   p <- p + scale_fill_discrete(name="Posterior Constraints")
   p <- p + opts(axis.text.x = theme_text(angle = 90, hjust = 1))
+  p <- p + geom_text(aes(label=trainAccuracy), vjust=0.0,hjust=0.5)
 }
 
-myplot(plotAcc(df),
-       str_c(results.file, "acc", "pdf", sep="."))
+p <- plotAcc(subset(df, universalPostCons=="True"))
+filename <- str_c(results.file, "acc", "pdf", sep=".")
+print(p)
+
+  p <- p + theme_bw(12, base_family="serif") + opts(axis.text.x = theme_text(angle = -90, hjust = 1))
+  print(p)
+  ggsave(filename, width=stdwidth, height=stdheight)
+
+write.table(df[,c("method", "universalPostCons", "trainAccuracy")], file=str_c(results.file, "acc", "csv", sep="."), sep=",")
+
 
 
 
