@@ -1,9 +1,19 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.hltcoe.util;
 
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * An aggregation iterator for lists of files. The subclass provides a
+ * constructor for an iterator, and this class becomes a single iterator by
+ * concatenating all the iterators together.
+ * 
+ * @author mgormley
+ * 
+ * @param <T>
+ *            The type of class over which to iterate.
+ */
 public abstract class FileListIterator<T> implements Iterator<T> {
 
     private Iterator<T> curIter;

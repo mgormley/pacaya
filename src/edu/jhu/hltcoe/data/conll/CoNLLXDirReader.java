@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.util.FileListIterator;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
