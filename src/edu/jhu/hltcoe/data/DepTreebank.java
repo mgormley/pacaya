@@ -9,7 +9,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
-import edu.jhu.hltcoe.data.conll.CoNLLXReader;
+import edu.jhu.hltcoe.data.conll.CoNLLXDirReader;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.stanford.nlp.ling.CategoryWordTag;
@@ -85,7 +85,7 @@ public class DepTreebank implements Iterable<DepTree> {
      * @param trainPath
      */
     public void loadCoNLLXPath(String trainPath) {
-        CoNLLXReader reader = new CoNLLXReader(trainPath);
+        CoNLLXDirReader reader = new CoNLLXDirReader(trainPath);
         for (CoNLLXSentence sent : reader) {
             try {
                 if (this.size() >= maxNumSentences) {

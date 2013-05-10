@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -34,7 +35,7 @@ import org.apache.commons.lang.StringUtils;
  */
 public class CoNLLXToken {
     private static final Pattern whitespace = Pattern.compile("\\s+");
-    private static final Pattern verticalBar = Pattern.compile("|");
+    private static final Pattern verticalBar = Pattern.compile("\\|");
     
     // Field number:    Field name:     Description:
     /** 1    ID  Token counter, starting at 1 for each new sentence. */
@@ -48,7 +49,7 @@ public class CoNLLXToken {
     /** 5    POSTAG  Fine-grained part-of-speech tag, where the tagset depends on the language, or identical to the coarse-grained part-of-speech tag if not available. */
     private String postag;
     /** 6    FEATS   Unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (|), or an underscore if not available. */
-    private Set<String> feats; 
+    private List<String> feats; 
     /** 7    HEAD    Head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero. */
     private int head;
     /** 8    DEPREL  Dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
@@ -77,7 +78,7 @@ public class CoNLLXToken {
     }
     
     public CoNLLXToken(int id, String form, String lemma, String cpostag,
-            String postag, Set<String> feats, int head, String deprel,
+            String postag, List<String> feats, int head, String deprel,
             String phead, String pdeprel) {
         this.id = id;
         this.form = form;
@@ -114,15 +115,15 @@ public class CoNLLXToken {
         }
     }
 
-    private static Set<String> getFeats(String featsStr) {
+    private static List<String> getFeats(String featsStr) {
         if (featsStr == null) {
             return null;
         }
         String[] splits = verticalBar.split(featsStr);
-        return new HashSet<String>(Arrays.asList(splits));
+        return Arrays.asList(splits);
     }
 
-    private static String getFeatsString(Set<String> feats) {
+    private static String getFeatsString(List<String> feats) {
         if (feats == null) {
             return "_";
         } else if (feats.size() == 0) {
@@ -146,24 +147,23 @@ public class CoNLLXToken {
         
         writer.write(String.format("%-3d", id));
         writer.write(sep);
-        writer.write(String.format("%-20s", form));
+        writer.write(String.format("%-17s", form));
         writer.write(sep);
-        writer.write(String.format("%-20s", toUnderscoreString(lemma)));
+        writer.write(String.format("%-17s", toUnderscoreString(lemma)));
         writer.write(sep);
         writer.write(String.format("%-5s", cpostag));
         writer.write(sep);
         writer.write(String.format("%-5s", postag));
         writer.write(sep);
-        writer.write(String.format("%-20s", getFeatsString(feats)));
+        writer.write(String.format("%-32s", getFeatsString(feats)));
         writer.write(sep);
         writer.write(String.format("%-3s", Integer.toString(head)));
         writer.write(sep);
-        writer.write(String.format("%-9s", deprel));
+        writer.write(String.format("%-7s", deprel));
         writer.write(sep);
-        writer.write(String.format("%-3s", toUnderscoreString(phead)));
+        writer.write(String.format("%-2s", toUnderscoreString(phead)));
         writer.write(sep);
-        writer.write(String.format("%-9s", toUnderscoreString(pdeprel)));
-        writer.write(sep);
+        writer.write(String.format("%s", toUnderscoreString(pdeprel)));
     }
 
     public int getId() {
@@ -186,7 +186,7 @@ public class CoNLLXToken {
         return postag;
     }
 
-    public Set<String> getFeats() {
+    public List<String> getFeats() {
         return feats;
     }
 

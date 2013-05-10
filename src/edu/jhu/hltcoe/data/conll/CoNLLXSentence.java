@@ -32,25 +32,6 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         }
     }
 
-    public static CoNLLXSentence readCoNLLXSentence(BufferedReader reader) throws IOException {
-        // The current token.
-        String line;
-        // The tokens for one sentence.
-        ArrayList<String> tokens = new ArrayList<String>();
-        
-        while ((line = reader.readLine()) != null) {
-            if (line.equals("")) {
-                // End of sentence marker.
-                return new CoNLLXSentence(tokens);
-            } else {
-                // Regular token.
-                tokens.add(line);
-            }
-        }
-        // Could not read a full sentence.
-        return null;
-    }
-
     public CoNLLXToken get(int i) {
         return tokens.get(i);
     }

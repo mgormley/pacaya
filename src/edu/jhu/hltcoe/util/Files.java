@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -98,6 +100,22 @@ public class Files {
                 return;
             }
         }
+    }
+
+    public static String getResourceAsString(String resourceName) throws IOException {
+        InputStream inputStream = Files.class.getResourceAsStream(resourceName);
+        return getInputStreamAsString(inputStream);
+    }
+    
+    public static String getInputStreamAsString(InputStream inputStream) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+            sb.append("\n");
+        }
+        return sb.toString();
     }
     
 }

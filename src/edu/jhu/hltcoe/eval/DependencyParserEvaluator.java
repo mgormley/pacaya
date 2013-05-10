@@ -63,8 +63,8 @@ public class DependencyParserEvaluator implements Evaluator {
 
     @Override
     public void print() {
-        log.info(String.format("Accuracy on %s: %.2f", dataName, accuracy));
-        log.info(String.format("LogLikelihood on %s: %.2f", dataName, logLikelihood));
+        log.info(String.format("Accuracy on %s: %.4f", dataName, accuracy));
+        log.info(String.format("LogLikelihood on %s: %.4f", dataName, logLikelihood));
         log.info(String.format("Per token cross entropy on %s: %.3f", dataName, perTokenCrossEnt));
     }
 
