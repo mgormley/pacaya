@@ -33,11 +33,13 @@ df$method = str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection
 ## For ACL:
 df$method <- ""
 df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
-df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
+df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Max.0k"), df$method)
 df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
 ##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax), df$method)
 df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
 df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
+
+df$method <- factor(df$method, levels = c("Viterbi EM", "RLT Obj.Filter", "RLT Max.0k","RLT Max.1k", "RLT Max.10k", "RLT Max.100k"))
 
 methodDescription <- "Relaxation"
 
@@ -58,14 +60,15 @@ dfBoth.subset <- subset(dfBoth, dataset == "alt-three"
                         & bound != -Inf)
 
 
-max <- ddply(df, .(method), function(x) max(x$numSeen))
+max <- ddply(df, .(method), function(x){ x[which.max(x$numSeen),]})
+print(max[,c("method", "numSeen")])
 print(max[order(max$V1),])
 
 plotbnbboundsvtime <- function(mydata) {
   ## For ACL:
   ##mydata$rltInitMax[which(is.na(mydata$rltInitMax))] <- as.numeric("+inf")
   ##mydata$method = str_c(mydata$envelopeOnly, mydata$rltInitMax, sep=" / ")
-  mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
+  mydata <- subset(mydata, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | !is.finite(rltInitMax))
 
   ##title = str_c(getDataset(mydata), unique(df$offsetProb), sep=".")
   xlab = "Time (sec)"
@@ -77,7 +80,7 @@ plotbnbboundsvtime <- function(mydata) {
   p <- p + scale_linetype_discrete(name="Bound type")
   p <- p + scale_color_discrete(name=methodDescription) 
   p <- p + scale_shape_discrete(name=methodDescription)
-  #p <- p + scale_x_log10()
+  p <- p + scale_x_log10()
 }
 myplot(plotbnbboundsvtime(dfBoth.subset), str_c(results.file, "ul-bounds-time", "pdf", sep="."))
 dfBoth.subset.temp <- subset(dfBoth.subset, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | !is.finite(rltInitMax))

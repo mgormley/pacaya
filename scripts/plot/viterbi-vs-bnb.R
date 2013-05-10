@@ -106,7 +106,7 @@ df$method <- str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelectio
 ## For ACL:
 df$method <- ""
 df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
-df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
+df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Max.0k"), df$method)
 df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
 ## ON FOR ACL SUBMISSION:
 df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
@@ -130,8 +130,14 @@ df <- subset(df, maxNumSentences == 200)
 df <- subset(df,is.na(rltCutMax) | !is.finite(rltCutMax) | rltCutMax == 0 )
 
 df$perTokenCrossEntropy <- ifelse(df$dataset == "wsj200", - df$incumbentLogLikelihood / log(2) / 1365, NULL)
+df$isGlobal <- ifelse(df$method == "Viterbi", FALSE, TRUE)
+
+
+df$method <- factor(df$method, levels = c("Viterbi EM", "RLT Obj.Filter", "RLT Max.0k","RLT Max.1k", "RLT Max.10k", "RLT Max.100k"))
+
+return(df)
 }
-prepData(df)
+df <- prepData(df)
 
 
 
@@ -219,36 +225,7 @@ myplot(plotAccVsTime(subset(df, method == "Viterbi EM" | method == "RLT Max 1000
 results.file = "/Users/mgormley/research/parsing/results/viterbi-vs-bnb/results.data"
 df <- read.table(results.file, header=TRUE)
 
-df$rltInitMax[which(is.na(df$rltInitMax))] <- as.numeric("+inf")
-df$rltCutMax[which(is.na(df$rltCutMax))] <- as.numeric("+inf")
-df$method <- str_c(df$relaxation, df$envelopeOnly, df$rltInitMax, df$varSelection, df$rltCutMax, sep=".")
-## For ACL:
-df$method <- ""
-df$method <- ifelse(df$algorithm == "bnb" , str_c(df$method, "RLT"), df$method)
-df$method <- ifelse(df$envelopeOnly == "True", str_c(df$method, " Conv.Env."), df$method)
-df$method <- ifelse(df$rltFilter == "obj-var" & !(df$envelopeOnly == "True"), str_c(df$method, " Obj.Filter"), df$method)
-## ON FOR ACL SUBMISSION:
-df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k"), df$method)
-##df$method <- ifelse(df$rltFilter == "max", str_c(df$method, " Max.", df$rltInitMax/1000, "k.", df$rltCutMax/1000, "k"), df$method)
-df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", df$method)
-
-#df$method <- str_c(df$envelopeOnly, df$rltInitMax, sep=" / ")
-methodDescription <- "Algorithm"
-
-## OLD ACL method description:
-##df$method <- ifelse(df$algorithm == "viterbi", "Viterbi EM", str_c("B&B", df$envelopeOnly, df$rltInitMax, sep=" / "))
-##methodDescription <- "Algorithm /\nEnvelope Only / \nMax RLT cuts"
-
-##df$method = str_c(df$algorithm, sep=".")
-##df <- subset(df, algorithm == "viterbi" | algorithm == "bnb" )
-##df <- subset(df, time/1000/60 < 61)
-df <- subset(df, dataset == "wsj200")
-df <- subset(df, is.na(rltInitMax) | rltInitMax == 1000 | rltInitMax == 10000 | rltInitMax == 100000 | !is.finite(rltInitMax))
-df <- subset(df, maxNumSentences == 200)
-## ON FOR ACL SUBMISSION:
-df <- subset(df,is.na(rltCutMax) | !is.finite(rltCutMax) | rltCutMax == 0 )
-
-df$isGlobal <- ifelse(df$method == "Viterbi", FALSE, TRUE)
+df <- prepData(df)
 
 plotAcc <- function(mydata) {
   title = "Penn Treebank, Brown"
