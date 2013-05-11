@@ -45,6 +45,11 @@
 /data/grammars/
 /data/treebank_3/
 /data/treebank_3_sym/
+/data/Web2.0Dataset.tar.zip
+/data/conll2009/
+/data/conllx/
+/data/tag_maps.tar.gz
+/data/treebank_3_old/
 
 java.hprof.txt
 warn.log
