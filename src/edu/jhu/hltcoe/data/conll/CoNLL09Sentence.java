@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.TaggedWord;
 
 /**
- * One sentence from a CoNNL-X formatted file.
+ * One sentence from a CoNLL-2009 formatted file.
  */
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
@@ -23,14 +23,14 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
     }
 
-    public CoNLL09Sentence(Sentence sent, int[] heads) {
-        tokens = new ArrayList<CoNLL09Token>();
-        for (int i=0; i<sent.size(); i++) {
-            Label label = sent.get(i);
-            TaggedWord tw = (TaggedWord) label;
-            tokens.add(new CoNLL09Token(i+1, tw.getWord(), tw.getWord(), tw.getTag(), tw.getTag(), null, heads[i], "NO_LABEL", null, null));
-        }
-    }
+//    public CoNLL09Sentence(Sentence sent, int[] heads) {
+//        tokens = new ArrayList<CoNLL09Token>();
+//        for (int i=0; i<sent.size(); i++) {
+//            Label label = sent.get(i);
+//            TaggedWord tw = (TaggedWord) label;
+//            tokens.add(new CoNLL09Token(i+1, tw.getWord(), tw.getWord(), tw.getTag(), tw.getTag(), null, heads[i], "NO_LABEL", null, null));
+//        }
+//    }
 
     public CoNLL09Token get(int i) {
         return tokens.get(i);

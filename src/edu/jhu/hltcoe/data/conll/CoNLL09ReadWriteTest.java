@@ -11,11 +11,11 @@ import edu.jhu.hltcoe.util.Files;
 
 public class CoNLL09ReadWriteTest {
 
-    private static final String conllXExample= "/edu/jhu/hltcoe/data/conll/conll-x-example.conll";
+    private static final String conll2009Example= "/edu/jhu/hltcoe/data/conll/CoNLL2009-ST-Catalan-trial.txt";
     
     @Test
     public void testReadWrite() throws IOException {
-        InputStream inputStream = this.getClass().getResourceAsStream(conllXExample);
+        InputStream inputStream = this.getClass().getResourceAsStream(conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
 
         StringWriter writer = new StringWriter();
@@ -26,7 +26,7 @@ public class CoNLL09ReadWriteTest {
         cw.close();
         cr.close();
         
-        String readSentsStr = Files.getResourceAsString(conllXExample);
+        String readSentsStr = Files.getResourceAsString(conll2009Example, "UTF-8");
         String writeSentsStr = writer.getBuffer().toString();
         String[] readSplits = readSentsStr.split("\n");
         String[] writeSplits = writeSentsStr.split("\n");

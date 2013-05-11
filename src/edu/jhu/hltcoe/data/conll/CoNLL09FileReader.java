@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * Reads a single file in CoNLL-X format.
+ * Reads a single file in CoNLL-2009 format.
  * 
  * @author mgormley
  *

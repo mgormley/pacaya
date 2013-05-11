@@ -11,11 +11,13 @@ import edu.jhu.hltcoe.util.FileListIterator;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
- * Reads a file or directory of CoNLL-X files.
+ * Reads a file or directory of CoNLL-2009 files.
  * 
  * @author mgormley
  *
  */
+// TODO: Decide whether it even makes sense to have this class.
+@Deprecated
 public class CoNLL09DirReader implements Iterable<CoNLL09Sentence> {
 
     private static final Logger log = Logger.getLogger(CoNLL09DirReader.class);

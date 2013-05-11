@@ -116,6 +116,22 @@ public class Files {
             sb.append("\n");
         }
         return sb.toString();
+    }    
+
+    public static String getResourceAsString(String resourceName, String charset) throws IOException {
+        InputStream inputStream = Files.class.getResourceAsStream(resourceName);
+        return getInputStreamAsString(inputStream, charset);
+    }
+    
+    public static String getInputStreamAsString(InputStream inputStream, String charset) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+            sb.append("\n");
+        }
+        return sb.toString();
     }
     
 }

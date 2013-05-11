@@ -10,7 +10,7 @@ import java.io.Writer;
 import org.apache.log4j.Logger;
 
 /**
- * Writes a single CoNLL-X format file.
+ * Writes a single CoNLL-2009 format file.
  * 
  * @author mgormley
  *
@@ -30,13 +30,11 @@ public class CoNLL09Writer {
     }
     
     public void write(CoNLL09Sentence sentence) throws IOException {
-        if (count != 0) {
-            writer.write("\n");
-        }
         for (CoNLL09Token token : sentence) {
             token.write(writer);
             writer.write("\n");
         }
+        writer.write("\n");
         count++;
         writer.flush();
     }

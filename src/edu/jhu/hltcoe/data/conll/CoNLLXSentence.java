@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.TaggedWord;
 
 /**
- * One sentence from a CoNNL-X formatted file.
+ * One sentence from a CoNLL-X formatted file.
  */
 public class CoNLLXSentence implements Iterable<CoNLLXToken> {
 
