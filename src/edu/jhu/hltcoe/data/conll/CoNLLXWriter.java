@@ -9,6 +9,12 @@ import java.io.Writer;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Writes a single CoNLL-X format file.
+ * 
+ * @author mgormley
+ *
+ */
 public class CoNLLXWriter {
 
     private static final Logger log = Logger.getLogger(CoNLLXWriter.class);

@@ -17,6 +17,12 @@ import edu.jhu.hltcoe.util.cli.ArgParser;
 import edu.jhu.hltcoe.util.cli.Opt;
 import edu.jhu.hltcoe.util.math.Vectors;
 
+/**
+ * Converts Penn Treebank data to a CoNLL-X file.
+ *  
+ * @author mgormley
+ *
+ */
 public class Ptb2ConllX {
 
     private static final Logger log = Logger.getLogger(Ptb2ConllX.class);
