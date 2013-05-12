@@ -4,13 +4,12 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.DepTreebankReader;
+import edu.jhu.hltcoe.data.DepTreebankReader.DatasetType;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
@@ -38,35 +37,69 @@ import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
 import edu.jhu.hltcoe.train.Trainer;
 import edu.jhu.hltcoe.train.TrainerFactory;
 import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Command;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.cli.ArgParser;
 import edu.jhu.hltcoe.util.cli.Opt;
 
 public class PipelineRunner {
-
+    
     private static final Logger log = Logger.getLogger(PipelineRunner.class);
+    
+    // Options not specific to the model
+    @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
+    public static long seed = Prng.DEFAULT_SEED;
+    @Opt(name = "printModel", hasArg = true, description = "File to which we should print the model.")
+    public static String printModel = null;
+    @Opt(name = "relaxOnly", hasArg = true, description = "Flag indicating that only a relaxation should be run")
+    public static boolean relaxOnly = false;
 
+    // Options for data
+    @Opt(name="train", hasArg=true, required=true, description="Training data.")
+    public static String train = null;
+    @Opt(name="trainType", hasArg=true, required=true, description="Type of training data.")
+    public static DatasetType trainType = null;
+    @Opt(name = "synthetic", hasArg = true, description = "Generate synthetic training data.")
+    public static String synthetic = null;
+    @Opt(name = "printSentences", hasArg = true, description = "File to which we should print the sentences.")
+    public static String printSentences = null;
+    @Opt(name = "syntheticSeed", hasArg = true, description = "Pseudo random number generator seed for synthetic data generation only.")
+    public static long syntheticSeed = 123454321;
+    @Opt(name = "propSupervised", hasArg = true, description = "Proportion of labeled/supervised training data.")
+    public static double propSupervised = 0.0;
+
+    // Options for test data
+    @Opt(name="test", hasArg=true, description="Testing data.")
+    public static String test = null;
+    @Opt(name="testType", hasArg=true, description="Type of testing data.")
+    public static DatasetType testType = null;
+    //@Opt(name = "test", hasArg = true, description = "Test data.")
+    //public static String test = null;
     @Opt(hasArg = true, description = "Maximum sentence length for test data.")
-    int maxSentenceLengthTest = Integer.MAX_VALUE;
+    public static int maxSentenceLengthTest = Integer.MAX_VALUE;
+
+    // Options to restrict the initialization
+    @Opt(name = "initBounds", hasArg = true, description = "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]")
+    public static InitSol initBounds = null;
     
     public PipelineRunner() {
     }
 
-    public void run(CommandLine cmd) throws ParseException, IOException {  
+    public void run() throws ParseException, IOException {  
         
         // Get the training data
         DepTreebank trainTreebank;
         DmvModel goldModel = null;
-        if (cmd.hasOption("train")) {
+        if (trainType == DatasetType.PTB || trainType == DatasetType.CONLL_X
+                || trainType == DatasetType.CONLL_2009) {
             // Read the data and (maybe) reduce size of treebank
-            String trainPath = cmd.getOptionValue("train");
-            log.info("Reading train data: " + trainPath);
+            log.info("Reading train data: " + train);
             Alphabet<Label> alphabet = new Alphabet<Label>();
-            trainTreebank = DepTreebankReader.getTreebank(trainPath, DepTreebankReader.maxSentenceLength, alphabet);
-        } else if (cmd.hasOption("synthetic")) {
-            String synthetic = cmd.getOptionValue("synthetic");
+            trainTreebank = DepTreebankReader.getTreebank(train, trainType, DepTreebankReader.maxSentenceLength, alphabet);
+        } else if (trainType == DatasetType.SYNTHETIC) {
+            if (synthetic == null) {
+                throw new ParseException("--synthetic must be specified");
+            }
             if (synthetic.equals("two")) {
                 goldModel = SimpleStaticDmvModel.getTwoPosTagInstance();
             } else if (synthetic.equals("three")) {
@@ -76,19 +109,13 @@ public class PipelineRunner {
             } else {
                 throw new ParseException("Unknown synthetic type: " + synthetic);
             }
-            long syntheticSeed = 123454321;
-            if (cmd.hasOption("syntheticSeed")) {
-                syntheticSeed = Long.parseLong(cmd.getOptionValue("syntheticSeed"));
-            }
             DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, syntheticSeed);
-            int maxNumSentences = Command.getOptionValue(cmd, "maxNumSentences", 100); 
-            trainTreebank = generator.getTreebank(maxNumSentences);
+            trainTreebank = generator.getTreebank(DepTreebankReader.maxNumSentences);
         } else {
             throw new ParseException("Either the option --train or --synthetic must be specified");
         }
         
         // Divide into labeled and unlabeled data.
-        double propSupervised = Command.getOptionValue(cmd, "propSupervised", 0.0);
         DmvTrainCorpus trainCorpus = new DmvTrainCorpus(trainTreebank, propSupervised); 
             
         log.info("Number of unlabeled train sentences: " + trainCorpus.getNumUnlabeled());
@@ -98,28 +125,27 @@ public class PipelineRunner {
         log.info("Number of train types: " + trainTreebank.getNumTypes());
                 
         // Print train sentences to a file
-        printSentences(cmd, trainTreebank);
+        printSentences(trainTreebank);
         
         // Get the test data
         DepTreebank testTreebank = null;
-        if (cmd.hasOption("test")) {
+        if (test != null) {
             // Read the data and (maybe) reduce size of treebank
-            String testPath = cmd.getOptionValue("test");
-            log.info("Reading test data: " + testPath);
+            log.info("Reading test data: " + test);
            
-            testTreebank = DepTreebankReader.getTreebank(testPath, maxSentenceLengthTest, trainTreebank.getAlphabet());
+            testTreebank = DepTreebankReader.getTreebank(test, testType, maxSentenceLengthTest, trainTreebank.getAlphabet());
 
             log.info("Number of test sentences: " + testTreebank.size());
             log.info("Number of test tokens: " + testTreebank.getNumTokens());
             log.info("Number of test types: " + testTreebank.getNumTypes());
         }
         
-        if (cmd.hasOption("relaxOnly")) {
+        if (relaxOnly) {
             DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(trainTreebank, goldModel));
             DmvSolution initSol = initSolFactory.getInitFeasSol(trainCorpus);
             DmvRelaxationFactory relaxFactory = TrainerFactory.getDmvRelaxationFactory();
             DmvRelaxation relax = relaxFactory.getInstance(trainCorpus, initSol);
-            DmvSolution initBoundsSol = updateBounds(cmd, trainCorpus, relax, trainTreebank, goldModel);
+            DmvSolution initBoundsSol = updateBounds(trainCorpus, relax, trainTreebank, goldModel);
             Timer timer = new Timer();
             timer.start();
             DmvProblemNode rootNode = new DmvProblemNode(null);
@@ -146,11 +172,11 @@ public class PipelineRunner {
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(trainCorpus);
-                updateBounds(cmd, trainCorpus, bnb.getRootRelaxation(), trainTreebank, goldModel);
+                updateBounds(trainCorpus, bnb.getRootRelaxation(), trainTreebank, goldModel);
                 bnb.train();
             } else {
                 trainer.train(trainCorpus);
-            }   
+            }
             Model model = trainer.getModel();
             
             // Evaluate the model on the training data
@@ -170,7 +196,6 @@ public class PipelineRunner {
             }
             
             // Print learned model to a file
-            String printModel = Command.getOptionValue(cmd, "printModel", null);
             if (printModel != null) {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(printModel));
                 writer.write("Learned Model:\n");
@@ -181,12 +206,11 @@ public class PipelineRunner {
     }
 
     // TODO: This should update the deltas of the root node.
-    private DmvSolution updateBounds(CommandLine cmd, DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
-        if (cmd.hasOption("initBounds")) {
+    private DmvSolution updateBounds(DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
+        if (initBounds != null) {
             // Initialize the bounds as a hypercube around some initial solution.
-            InitSol opt = InitSol.getById(Command.getOptionValue(cmd, "initBounds", "none"));
-            double offsetProb = Command.getOptionValue(cmd, "offsetProb", 1.0);
-            double probOfSkipCm = Command.getOptionValue(cmd, "probOfSkipCm", 0.0);
+            double offsetProb = TrainerFactory.offsetProb;
+            double probOfSkipCm = TrainerFactory.probOfSkipCm;
             
             DmvSolution goldSol = null;
             if (trueModel != null) { 
@@ -194,7 +218,7 @@ public class PipelineRunner {
                 goldSol = new DmvSolution(idm.getCmLogProbs(trueModel), idm, trainTreebank, Double.NaN);
             }
             // TODO: replace this with an TrainerFactory.getInitSolFactoryPrm();
-            DmvSolution initBoundsSol = DmvSolFactory.getInitSol(opt, trainCorpus, dw, trainTreebank, goldSol);
+            DmvSolution initBoundsSol = DmvSolFactory.getInitSol(initBounds, trainCorpus, dw, trainTreebank, goldSol);
             
             LocalBnBDmvTrainer.setBoundsFromInitSol(dw, initBoundsSol, offsetProb, probOfSkipCm);
             
@@ -203,10 +227,9 @@ public class PipelineRunner {
         return null;
     }
 
-    private void printSentences(CommandLine cmd, DepTreebank depTreebank)
+    private void printSentences(DepTreebank depTreebank)
             throws IOException {
         SentenceCollection sentences = depTreebank.getSentences();
-        String printSentences = Command.getOptionValue(cmd, "printSentences", null);
         if (printSentences != null) {
             BufferedWriter writer = new BufferedWriter(new FileWriter(printSentences));
             // TODO: improve this
@@ -232,7 +255,7 @@ public class PipelineRunner {
                 sb.append("\n");
                 writer.write(sb.toString());
             }
-            if (cmd.hasOption("synthetic")) {
+            if (synthetic != null) {
                 log.info("Printing trees...");
                 // Also print the synthetic trees
                 writer.write("Trees:\n");
@@ -241,27 +264,7 @@ public class PipelineRunner {
             writer.close();
         }
     }
-
-    public static void addOptions(Options options) {
-        // Options not specific to the model
-        options.addOption("s", "seed", true, "Pseudo random number generator seed for everything else.");
-        options.addOption("pm", "printModel", true, "File to which we should print the model.");
-        options.addOption("ro", "relaxOnly", false, "Flag indicating that only a relaxation should be run");
-        
-        // Options for data
-        options.addOption("tr", "train", true, "Training data.");
-        options.addOption("tr", "synthetic", true, "Generate synthetic training data.");
-        options.addOption("ps", "printSentences", true, "File to which we should print the sentences.");
-        options.addOption("ss", "syntheticSeed", true, "Pseudo random number generator seed for synthetic data generation only.");
-        options.addOption("psu", "propSupervised", true, "Proportion of labeled/supervised training data.");
-        
-        // Options for test data
-        options.addOption("te", "test", true, "Test data.");
-        
-        // Options to restrict the initialization
-        options.addOption("ib", "initBounds", true, "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]");
-    }
-
+    
     private static void configureLogging() {
         //ConsoleAppender cAppender = new ConsoleAppender(new EnhancedPatternLayout("%d{HH:mm:ss,SSS} [%t] %p %c %x - %m%n"));
         //BasicConfigurator.configure(cAppender); 
@@ -274,21 +277,19 @@ public class PipelineRunner {
         parser.addClass(PipelineRunner.class);
         parser.addClass(DepTreebankReader.class);
         parser.addClass(TrainerFactory.class);
-        addOptions(parser.getOptions());
-        CommandLine cmd = null;
         try {
-            cmd = parser.parseArgs(args);
+            parser.parseArgs(args);
         } catch (ParseException e) {
             log.error(e.getMessage());
             parser.printUsage();
             System.exit(1);
         }
         
-        Prng.seed(Command.getOptionValue(cmd, "seed", Prng.DEFAULT_SEED));
+        Prng.seed(seed);
         
         PipelineRunner pipeline = new PipelineRunner();
         try {
-            pipeline.run(cmd);
+            pipeline.run();
         } catch (ParseException e1) {
             log.error(e1.getMessage());
             parser.printUsage();

@@ -114,6 +114,19 @@ public class CoNLL09Token {
         this.apreds = apreds;
     }
 
+    public void intern() {
+        form = form.intern();
+        lemma = lemma.intern();
+        plemma = plemma.intern();
+        pos = pos.intern();
+        ppos = ppos.intern();
+        feat = CoNLLXToken.getInternedList(feat);
+        pfeat = CoNLLXToken.getInternedList(pfeat);
+        deprel = deprel.intern();
+        pdeprel = pdeprel.intern();
+        pred = pred.intern();
+        apreds = CoNLLXToken.getInternedList(apreds);
+    }
 
     /**
      * Convert from the underscore representation of an optional string to the null representation.

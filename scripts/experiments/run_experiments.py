@@ -249,7 +249,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    bnbTimeoutSeconds=100,
                    timeoutSeconds=8*60*60, # If we leave this out, CPLEX complains.
                    universalPostCons=False,
-                   addBindingCons=False)
+                   addBindingCons=False,
+                   relaxOnly=False)
         all.set("lambda", 1.0)
         
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
@@ -443,7 +444,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-semi":
             root = RootStage()
             all.update(algorithm="bnb",
-                       initBounds="viterbi-em")
+                       initBounds="VITERBI_EM")
             dataset = brown
             for maxSentenceLength, maxNumSentences, timeoutSeconds in [(5, 100, 1*60*60), (10, 300, 1*60*60)]:
                 msl = DPExpParams(maxSentenceLength=maxSentenceLength)
@@ -472,7 +473,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "bnb-semi-synth":
             all.update(algorithm="bnb",
-                       initBounds="gold",
+                       initBounds="GOLD",
                        initWeights="gold",
                        varSelection="regret")
             dataset = synth_alt_three
@@ -538,7 +539,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         elif self.expname == "bnb-supervised":
             root = RootStage()
             all.update(algorithm="bnb",
-                       initBounds="viterbi-em",                    
+                       initBounds="VITERBI_EM",                    
                        varSelection="regret",
                        offsetProb=1.0, 
                        varSplit="half-prob",
@@ -579,7 +580,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         all.update(numRestarts=1000000000)
                         all.update(timeoutSeconds=timeoutSeconds)
                     for varSelection in ["regret"]:
-                        for initBounds in ["viterbi-em"]: #TODO: , "random", "uniform"]: # TODO: "gold"
+                        for initBounds in ["VITERBI_EM"]: #TODO: , "random", "uniform"]: # TODO: "gold"
                             for offsetProb in [0.05, 0.1, 0.2, 0.5, 1.0]: #TODO: frange(10e-13, 0.21,0.05):
                                 for probOfSkipCm in [0.0]: #TODO: frange(0.0, 0.21, 0.05):
                                     algo = DPExpParams(varSelection=varSelection,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
@@ -658,14 +659,14 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             return root
         elif self.expname == "relax-root-rlt":
             root = RootStage()
-            all.update(relaxOnly=None,
+            all.update(relaxOnly=True,
                        rootMaxCutRounds=0, #TODO: maybe push this back up to 1 after we support cutting in the projection?
                        maxCutRounds=0,
                        timeoutSeconds=2*60*60)
             relax = rltAllRelax + DPExpParams(rltFilter="prop", rltCutProp=0.0)
             dataset = default_synth
             # This is broken due to probOfSkipCm.
-            #            dataset = dataset + DPExpParams(initBounds="gold",
+            #            dataset = dataset + DPExpParams(initBounds="GOLD",
             #                                            offsetProb=0.25,
             #                                            probOfSkipCm=0.75)
             exps = []
@@ -714,9 +715,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         experiments.append(all + dataset + msl + mns + DPExpParams(algorithm="viterbi",parser="cky"))
                         for i in range(0,100):
-                            for initBounds in ["random"]:
+                            for initBounds in ["RANDOM"]:
                                 for offsetProb in frange(10e-13, 1.001,0.05):
-                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=None))
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=True))
         elif self.expname == "relax-quality":
             # Fixed seed
             all.update(seed=112233)
@@ -725,19 +726,19 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [100,300]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for initBounds in ["viterbi-em", "random", "uniform"]: # TODO: "gold"
+                        for initBounds in ["VITERBI_EM", "RANDOM", "UNIFORM"]: # TODO: "gold"
                             for offsetProb in frange(10e-13, 1.001,0.05):
                                 for probOfSkipCm in frange(0.0, 0.2, 0.05):
-                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm, relaxOnly=None))
+                                    experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm, relaxOnly=True))
         elif self.expname == "relax-compare":
             # Fixed seed
-            all.update(relaxOnly=None, seed=112233)
+            all.update(relaxOnly=True, seed=112233)
             for dataset in datasets:
                 for maxSentenceLength in [10]:
                     msl = DPExpParams(maxSentenceLength=maxSentenceLength)
                     for maxNumSentences in [300]:
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
-                        for initBounds in ["random"]: # TODO: "gold"
+                        for initBounds in ["RANDOM"]: # TODO: "gold"
                             for offsetProb in frange(10e-13, 1.001,0.2):
                                 #for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                 for relaxation in ["dw", "dw-res"]:

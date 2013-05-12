@@ -47,8 +47,10 @@ public class ArgParser {
                     Opt option = field.getAnnotation(Opt.class);
 
                     String name = getName(option, field);
-
-                    Option apacheOpt = new Option(name, name, option.hasArg(), option.description());
+                    // TODO: make each of these unique.
+                    String shortName = name.substring(0, 2);
+                    
+                    Option apacheOpt = new Option(shortName, name, option.hasArg(), option.description());                    
                     apacheOpt.setRequired(option.required());
                     options.addOption(apacheOpt);
 

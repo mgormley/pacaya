@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.DepTreebankReader;
+import edu.jhu.hltcoe.data.DepTreebankReader.DatasetType;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -36,7 +37,7 @@ public class Ptb2ConllX {
 
     public void run() throws IOException {
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        DepTreebank trees = DepTreebankReader.getTreebank(ptbIn.getAbsolutePath(), alphabet);
+        DepTreebank trees = DepTreebankReader.getTreebank(ptbIn.getAbsolutePath(), DatasetType.PTB, alphabet);
         CoNLLXWriter conllxWriter = new CoNLLXWriter(conllxOut);
         for (int i=0; i<trees.size(); i++) {
             DepTree tree = trees.get(i);

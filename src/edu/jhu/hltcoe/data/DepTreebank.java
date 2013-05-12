@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.data;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,6 +10,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
+import edu.jhu.hltcoe.data.conll.CoNLL09FileReader;
+import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
 import edu.jhu.hltcoe.data.conll.CoNLLXDirReader;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -91,7 +94,7 @@ public class DepTreebank implements Iterable<DepTree> {
                 if (this.size() >= maxNumSentences) {
                     break;
                 }
-                DepTree tree = new DepTree(sent);
+                DepTree tree = new DepTree(sent, alphabet);
                 int len = tree.getNumTokens();
                 if (len <= maxSentenceLength) {
                     if (filter == null || filter.accept(tree)) {
@@ -104,6 +107,26 @@ public class DepTreebank implements Iterable<DepTree> {
         }
     }
     
+    public void loadCoNLL09Path(String trainPath) throws IOException {
+        CoNLL09FileReader reader = new CoNLL09FileReader(new File(trainPath));
+        for (CoNLL09Sentence sent : reader) {
+            try {
+                if (this.size() >= maxNumSentences) {
+                    break;
+                }
+                DepTree tree = new DepTree(sent, alphabet);
+                int len = tree.getNumTokens();
+                if (len <= maxSentenceLength) {
+                    if (filter == null || filter.accept(tree)) {
+                        this.add(tree);
+                    }
+                }
+            } catch (HeadFinderException e) {
+                log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
+            }
+        }
+    }
+        
     public SentenceCollection getSentences() {
         if (sentences == null) {
             sentences = new SentenceCollection(this);

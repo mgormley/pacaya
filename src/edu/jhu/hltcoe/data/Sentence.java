@@ -1,11 +1,14 @@
 package edu.jhu.hltcoe.data;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
+import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
+import edu.jhu.hltcoe.data.conll.CoNLL09Token;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
+import edu.jhu.hltcoe.data.conll.CoNLLXToken;
 import edu.jhu.hltcoe.util.Alphabet;
 import gnu.trove.TIntArrayList;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 
 public class Sentence implements Iterable<Label> {
@@ -30,8 +33,18 @@ public class Sentence implements Iterable<Label> {
         }
     }
     
-    public Sentence(CoNLLXSentence sent) {
-        
+    public Sentence(CoNLLXSentence sent, Alphabet<Label> alphabet) {
+        this(alphabet);
+        for (CoNLLXToken token : sent) {
+            add(new TaggedWord(token.getForm(), token.getPosTag()));
+        }
+    }
+
+    public Sentence(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
+        this(alphabet);
+        for (CoNLL09Token token : sent) {
+            add(new TaggedWord(token.getForm(), token.getPos()));
+        }
     }
 
     protected boolean add(Label label) {

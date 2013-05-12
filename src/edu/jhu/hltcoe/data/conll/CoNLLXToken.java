@@ -2,10 +2,9 @@ package edu.jhu.hltcoe.data.conll;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
@@ -90,6 +89,25 @@ public class CoNLLXToken {
         this.deprel = deprel;
         this.phead = phead;
         this.pdeprel = pdeprel;
+    }
+    
+    public void intern() {
+        form = form.intern();
+        lemma = lemma.intern();
+        cpostag = cpostag.intern();
+        postag = postag.intern();
+        feats = getInternedList(feats);
+        deprel = deprel.intern();
+        phead = phead.intern();
+        pdeprel = pdeprel.intern();
+    }
+
+    public static List<String> getInternedList(List<String> oldList) {
+        ArrayList<String> newList = new ArrayList<String>(oldList.size());
+        for (String elem : oldList) {
+            newList.add(elem.intern());
+        }
+        return newList;
     }
 
     /**

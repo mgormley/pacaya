@@ -1,14 +1,16 @@
 package edu.jhu.hltcoe.data;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.conll.Ptb2ConllX;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.cli.Opt;
 
 public class DepTreebankReader {
+
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2009 };
 
     private static final Logger log = Logger.getLogger(DepTreebankReader.class);
 
@@ -21,11 +23,11 @@ public class DepTreebankReader {
     @Opt(hasArg = true, description = "Type or file indicating tag mapping")
     public static String reduceTags = "none";
         
-    public static DepTreebank getTreebank(String trainPath, Alphabet<Label> alphabet) {
-        return getTreebank(trainPath, maxSentenceLength, alphabet);
+    public static DepTreebank getTreebank(String trainPath, DatasetType trainType, Alphabet<Label> alphabet) throws IOException {
+        return getTreebank(trainPath, trainType, maxSentenceLength, alphabet);
     }
     
-    public static DepTreebank getTreebank(String trainPath, int maxSentenceLength, Alphabet<Label> alphabet) {
+    public static DepTreebank getTreebank(String trainPath, DatasetType trainType, int maxSentenceLength, Alphabet<Label> alphabet) throws IOException {
         DepTreebank trainTreebank;
 
         // Create the original trainTreebank with a throw-away alphabet.
@@ -33,7 +35,16 @@ public class DepTreebankReader {
         if (mustContainVerb) {
             trainTreebank.setTreeFilter(new VerbTreeFilter());
         }
-        trainTreebank.loadPtbPath(trainPath);
+        
+        if (trainType == DatasetType.PTB) {
+            trainTreebank.loadPtbPath(trainPath);
+        } else if (trainType == DatasetType.CONLL_X) {
+            trainTreebank.loadCoNLLXPath(trainPath);
+        } else if (trainType == DatasetType.CONLL_2009) {
+            trainTreebank.loadCoNLL09Path(trainPath);
+        } else {
+            throw new RuntimeException("Unhandled dataset type: " + trainType);
+        }
         
         if ("45to17".equals(reduceTags)) {
             log.info("Reducing PTB from 45 to 17 tags");

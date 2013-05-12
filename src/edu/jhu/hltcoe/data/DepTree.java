@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.stanford.nlp.ling.HasTag;
@@ -179,9 +180,14 @@ public class DepTree implements Iterable<DepTreeNode> {
         checkTree();
     }
 
-    public DepTree(CoNLLXSentence sent) {
+    public DepTree(CoNLLXSentence sent, Alphabet<Label> alphabet) {
         // TODO: filter out punctuation.
-        this(new Sentence(sent), sent.getParents(), false);
+        this(new Sentence(sent, alphabet), sent.getParents(), false);
+    }
+
+    public DepTree(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
+        // TODO: filter out punctuation.
+        this(new Sentence(sent, alphabet), sent.getParents(), false);
     }
 
     private DepTreeNode getNodeByPosition(int position) {
