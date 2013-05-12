@@ -4,7 +4,11 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -18,19 +22,30 @@ import org.apache.log4j.Logger;
 public class ArgParser {
 
     private static final Logger log = Logger.getLogger(ArgParser.class);
-
+    private static final Pattern capitals = Pattern.compile("[A-Z]");
+    
     private Options options;
     private Map<Option, Field> optionFieldMap;
     private Class<?> mainClass = null;
-
+    private Set<String> names;
+    private Set<String> shortNames;
+    private boolean createShortNames;
+    
     public ArgParser() {
         this(null);
     }
     
     public ArgParser(Class<?> mainClass) {
+        this(mainClass, false);
+    }
+    
+    public ArgParser(Class<?> mainClass, boolean createShortNames) {
         options = new Options();
         optionFieldMap = new HashMap<Option, Field>();
-        this.mainClass = mainClass;  
+        this.mainClass = mainClass;
+        names = new HashSet<String>();
+        shortNames = new HashSet<String>();
+        this.createShortNames = createShortNames;
     }
 
     public Options getOptions() {
@@ -47,8 +62,14 @@ public class ArgParser {
                     Opt option = field.getAnnotation(Opt.class);
 
                     String name = getName(option, field);
-                    // TODO: make each of these unique.
-                    String shortName = name.substring(0, 2);
+                    if (!names.add(name)) {
+                        throw new RuntimeException("Multiple options have the same name: --" + name);
+                    }
+
+                    String shortName = null;
+                    if (createShortNames) {
+                        shortName = getAndAddUniqueShortName(name);
+                    }
                     
                     Option apacheOpt = new Option(shortName, name, option.hasArg(), option.description());                    
                     apacheOpt.setRequired(option.required());
@@ -63,6 +84,33 @@ public class ArgParser {
                 }
             }
         }
+    }
+
+    private String getAndAddUniqueShortName(String name) {
+        // Capitalize the first letter of the name.
+        String initCappedName = name.substring(0, 1).toUpperCase() + name.substring(1, name.length());
+        // Make the short name all the capital letters in the long name.
+        Matcher matcher = capitals.matcher(initCappedName);
+        StringBuilder sbShortName = new StringBuilder();
+        while(matcher.find()) {
+            sbShortName.append(matcher.group());
+        }
+        String shortName = sbShortName.toString().toLowerCase();
+
+        if (!shortNames.add(shortName)) {
+            int i;
+            for (i=0; i<10; i++) {
+                String tmpsn = shortName + i;
+                if (shortNames.add(tmpsn)) {
+                    shortName = tmpsn;
+                    break;
+                }
+            }
+            if (i == 10) {
+                throw new RuntimeException("Multiple options have the same short name: -" + shortName  + " (--" + name + ")");
+            }
+        }
+        return shortName;
     }
 
     public static String getName(Opt option, Field field) {
