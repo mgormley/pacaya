@@ -114,6 +114,25 @@ public class CoNLL09Token {
         this.apreds = apreds;
     }
 
+    /** Deep copy constructor */
+    public CoNLL09Token(CoNLL09Token other) {
+        this.id = other.id;
+        this.form = other.form;
+        this.lemma = other.lemma;
+        this.plemma = other.plemma;
+        this.pos = other.pos;
+        this.ppos = other.ppos;
+        this.feat = other.feat == null ? null : new ArrayList<String>(other.feat);
+        this.pfeat = other.pfeat == null ? null : new ArrayList<String>(other.pfeat);
+        this.head = other.head;
+        this.phead = other.phead;
+        this.deprel = other.deprel;
+        this.pdeprel = other.pdeprel;
+        this.fillpred = other.fillpred;
+        this.pred = other.pred;
+        this.apreds = other.apreds == null ? null : new ArrayList<String>(other.apreds);
+    }
+
     public void intern() {
         form = form.intern();
         lemma = lemma.intern();
@@ -321,6 +340,10 @@ public class CoNLL09Token {
 
     public List<String> getApreds() {
         return apreds;
+    }
+    
+    public void setPhead(int phead) {
+        this.phead = phead;
     }
     
 }

@@ -18,7 +18,7 @@ public class DependencyParserEvaluator implements Evaluator {
 
     private static final Logger log = Logger.getLogger(DependencyParserEvaluator.class);
 
-    private DepTreebank depTreebank;
+    private DepTreebank goldTreebank;
     private ViterbiParser parser;
     private double accuracy;
     private double logLikelihood;
@@ -26,16 +26,18 @@ public class DependencyParserEvaluator implements Evaluator {
 
     private double perTokenCrossEnt;
 
-    public DependencyParserEvaluator(ViterbiParser parser, DepTreebank depTreebank, String dataName) {
+    private DepTreebank parses;
+
+    public DependencyParserEvaluator(ViterbiParser parser, DepTreebank goldTreebank, String dataName) {
         this.parser = parser;
-        this.depTreebank = depTreebank;
+        this.goldTreebank = goldTreebank;
         this.dataName = dataName;
     }
 
     @Override
     public void evaluate(Model model) {
-        SentenceCollection sentences = depTreebank.getSentences();
-        DepTreebank parses = parser.getViterbiParse(sentences, model);
+        SentenceCollection sentences = goldTreebank.getSentences();
+        parses = parser.getViterbiParse(sentences, model);
         logLikelihood = parser.getLastParseWeight();
         perTokenCrossEnt = - logLikelihood / Utilities.log(2) / sentences.getNumTokens();
         
@@ -45,9 +47,9 @@ public class DependencyParserEvaluator implements Evaluator {
     public double evaluate(DepTreebank parses) {
         int correct = 0;
         int total = 0;
-        assert(parses.size() == depTreebank.size());
-        for (int i = 0; i < depTreebank.size(); i++) {
-            int[] goldParents = depTreebank.get(i).getParents();
+        assert(parses.size() == goldTreebank.size());
+        for (int i = 0; i < goldTreebank.size(); i++) {
+            int[] goldParents = goldTreebank.get(i).getParents();
             int[] parseParents = parses.get(i).getParents();
             assert(parseParents.length == goldParents.length);
             for (int j = 0; j < goldParents.length; j++) {
@@ -66,6 +68,11 @@ public class DependencyParserEvaluator implements Evaluator {
         log.info(String.format("Accuracy on %s: %.4f", dataName, accuracy));
         log.info(String.format("LogLikelihood on %s: %.4f", dataName, logLikelihood));
         log.info(String.format("Per token cross entropy on %s: %.3f", dataName, perTokenCrossEnt));
+    }
+
+    @Override
+    public DepTreebank getParses() {
+        return parses;
     }
 
 }

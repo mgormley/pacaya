@@ -1,12 +1,14 @@
 package edu.jhu.hltcoe;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.DepTreebankReader;
 import edu.jhu.hltcoe.data.DepTreebankReader.DatasetType;
@@ -14,6 +16,12 @@ import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.data.TaggedWord;
+import edu.jhu.hltcoe.data.conll.CoNLL09DepTree;
+import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
+import edu.jhu.hltcoe.data.conll.CoNLL09Writer;
+import edu.jhu.hltcoe.data.conll.CoNLLXDepTree;
+import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
+import edu.jhu.hltcoe.data.conll.CoNLLXWriter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
@@ -26,7 +34,6 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
@@ -55,10 +62,12 @@ public class PipelineRunner {
     public static boolean relaxOnly = false;
 
     // Options for data
-    @Opt(name="train", hasArg=true, required=true, description="Training data.")
+    @Opt(name="train", hasArg=true, required=true, description="Training data input file or directory.")
     public static String train = null;
     @Opt(name="trainType", hasArg=true, required=true, description="Type of training data.")
     public static DatasetType trainType = null;
+    @Opt(name="trainOut", hasArg=true, required=true, description="Training data output file.")
+    public static File trainOut = null;
     @Opt(name = "synthetic", hasArg = true, description = "Generate synthetic training data.")
     public static String synthetic = null;
     @Opt(name = "printSentences", hasArg = true, description = "File to which we should print the sentences.")
@@ -69,17 +78,17 @@ public class PipelineRunner {
     public static double propSupervised = 0.0;
 
     // Options for test data
-    @Opt(name="test", hasArg=true, description="Testing data.")
+    @Opt(name="test", hasArg=true, description="Testing data input file or directory.")
     public static String test = null;
     @Opt(name="testType", hasArg=true, description="Type of testing data.")
     public static DatasetType testType = null;
-    //@Opt(name = "test", hasArg = true, description = "Test data.")
-    //public static String test = null;
+    @Opt(name="testOut", hasArg=true, description="Testing data output file.")
+    public static String testOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for test data.")
     public static int maxSentenceLengthTest = Integer.MAX_VALUE;
 
     // Options to restrict the initialization
-    @Opt(name = "initBounds", hasArg = true, description = "How to initialize the bounds: [viterbi-em, gold, random, uniform, none]")
+    @Opt(name = "initBounds", hasArg = true, description = "How to initialize the bounds. [VITERBI_EM, GOLD, RANDOM, UNIFORM, SUPERVISED, NONE]")
     public static InitSol initBounds = null;
     
     public PipelineRunner() {
@@ -123,7 +132,7 @@ public class PipelineRunner {
         log.info("Number of train sentences: " + trainTreebank.size());
         log.info("Number of train tokens: " + trainTreebank.getNumTokens());
         log.info("Number of train types: " + trainTreebank.getNumTypes());
-                
+        
         // Print train sentences to a file
         printSentences(trainTreebank);
         
@@ -177,22 +186,14 @@ public class PipelineRunner {
             } else {
                 trainer.train(trainCorpus);
             }
-            Model model = trainer.getModel();
-            
+            DmvModel model = (DmvModel) trainer.getModel();
+
             // Evaluate the model on the training data
-            log.info("Evaluating model on train");
-            // Note: this parser must return the log-likelihood from parser.getParseWeight()
-            ViterbiParser parser = TrainerFactory.getEvalParser();
-            Evaluator trainEval = new DependencyParserEvaluator(parser, trainTreebank, "train");
-            trainEval.evaluate(model);
-            trainEval.print();
+            evalAndWrite(model, trainTreebank, "train");
             
             // Evaluate the model on the test data
             if (testTreebank != null) {
-                log.info("Evaluating model on test");
-                Evaluator testEval = new DependencyParserEvaluator(parser, testTreebank, "test");
-                testEval.evaluate(model);
-                testEval.print();
+                evalAndWrite(model, testTreebank, "test");
             }
             
             // Print learned model to a file
@@ -201,6 +202,54 @@ public class PipelineRunner {
                 writer.write("Learned Model:\n");
                 writer.write(model.toString());
                 writer.close();
+            }
+        }
+    }
+    
+    private void evalAndWrite(DmvModel model, DepTreebank trainTreebank, String datasetName) throws IOException {
+        // Evaluation.
+        // Note: this parser must return the log-likelihood from parser.getParseWeight()
+        ViterbiParser parser = TrainerFactory.getEvalParser();
+                    
+        log.info("Evaluating model on " + datasetName);
+        Evaluator trainEval = new DependencyParserEvaluator(parser, trainTreebank, datasetName);
+        trainEval.evaluate(model);
+        trainEval.print();
+        
+        // Write parses to a file.
+        if (trainOut != null) {
+            DepTreebank trainParses = trainEval.getParses();
+            // Write the parses of the training data out to a file.
+            if (trainType == DatasetType.CONLL_X) {
+                CoNLLXWriter cw = new CoNLLXWriter(trainOut);
+                for (int i=0; i<trainParses.size(); i++) {
+                    DepTree parse = trainParses.get(i);
+                    DepTree goldTree = trainTreebank.get(i);
+                    // Make a copy of the original CoNLL-X sentence.
+                    CoNLLXSentence sent = ((CoNLLXDepTree)goldTree).getCoNLLXSentence();
+                    sent = new CoNLLXSentence(sent);
+                    // Update the parents in the copy.
+                    sent.setHeadsFromParents(parse.getParents());
+                    // Write the sentence.
+                    cw.write(sent);
+                }
+                cw.close();
+            } else if (trainType == DatasetType.CONLL_2009) {
+                CoNLL09Writer cw = new CoNLL09Writer(trainOut);
+                for (int i=0; i<trainParses.size(); i++) {
+                    DepTree parse = trainParses.get(i);
+                    DepTree goldTree = trainTreebank.get(i);
+                    // Make a copy of the original CoNLL-09 sentence.
+                    CoNLL09Sentence sent = ((CoNLL09DepTree)goldTree).getCoNLL09Sentence();
+                    sent = new CoNLL09Sentence(sent);
+                    // Update the parents in the copy.
+                    sent.setPheadsFromParents(parse.getParents());
+                    // Write the sentence.
+                    cw.write(sent);
+                }
+                cw.close();
+            } else {
+                throw new RuntimeException("Unhandled dataset type: " + trainType);
             }
         }
     }

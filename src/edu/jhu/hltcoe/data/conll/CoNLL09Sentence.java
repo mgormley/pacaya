@@ -1,13 +1,7 @@
 package edu.jhu.hltcoe.data.conll;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.TaggedWord;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
@@ -32,6 +26,14 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 //        }
 //    }
 
+    /** Deep copy constructor. */
+    public CoNLL09Sentence(CoNLL09Sentence sent) {
+        tokens = new ArrayList<CoNLL09Token>(sent.tokens.size());
+        for (CoNLL09Token tok : sent) {
+            tokens.add(new CoNLL09Token(tok));
+        }
+    }    
+    
     public CoNLL09Token get(int i) {
         return tokens.get(i);
     }
@@ -67,5 +69,11 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
             parents[i] = tokens.get(i).getHead() - 1;
         }
         return parents;
+    }
+
+    public void setPheadsFromParents(int[] parents) {
+        for (int i=0; i<parents.length; i++) {
+            tokens.get(i).setPhead(parents[i] + 1);
+        }
     }
 }

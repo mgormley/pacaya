@@ -1,137 +1,25 @@
 package edu.jhu.hltcoe.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
-import edu.stanford.nlp.ling.HasTag;
-import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.trees.CollinsHeadFinder;
-import edu.stanford.nlp.trees.Dependency;
-import edu.stanford.nlp.trees.HeadFinder;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.util.Filter;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
     public static final int EMPTY_POSITION = -2;
     
-    private List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
-    private int[] parents;
-    private boolean isProjective;
+    protected List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
+    protected int[] parents;
+    protected boolean isProjective;
     
-    private static String[] ptbPunctTags = {"!", "#", "$", "''", "(", ")", ",", "-LRB-", "-RRB-", ".", ":", "?", "``"};
-    HashSet<String> punctTags = new HashSet<String>(Arrays.asList(ptbPunctTags));
-    
-    private class PunctuationFilter implements Filter<Tree> {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public boolean accept(Tree node) {
-            if (node.isPreTerminal()) {
-                String tag = node.label().value();
-                if (punctTags.contains(tag)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        
+    protected DepTree() {
+        // Only for subclasses.
     }
     
-    /**
-     * Construct a dependency tree from a Stanford constituency tree.
-     * 
-     * @param tree
-     */
-    public DepTree(Tree tree) {
-        // Remove punctuation
-        tree = tree.prune(new PunctuationFilter());
-        
-        List<Tree> leaves = tree.getLeaves();
-        for (Tree leaf : leaves) {
-            if (punctTags.contains(getTag(leaf, tree))) {
-                throw new IllegalStateException("There shouldn't be any leaves that are considered punctuation!");
-            }
-        }
-        
-        // Create parents array
-        parents = new int[leaves.size()];
-        Arrays.fill(parents, EMPTY_POSITION);
-
-        // Percolate heads
-        HeadFinder hf = new CollinsHeadFinder();
-        tree.percolateHeads(hf);
-        Collection<Dependency<Tree, Tree, Object>> dependencies = mapDependencies(tree, hf);
-
-        for(Dependency<Tree, Tree, Object> dependency : dependencies) {
-            Tree parent = dependency.governor();
-            Tree child = dependency.dependent();
-                        
-            int parentIdx = indexOfInstance(leaves, parent);
-            int childIdx = indexOfInstance(leaves, child);
-            
-            if (childIdx < 0) {
-                throw new IllegalStateException("Child not found in leaves: " + child);
-            } else if (parents[childIdx] != EMPTY_POSITION) {
-                throw new IllegalStateException("Multiple parents for the same node: " + child);
-            }
-            
-            parents[childIdx] = parentIdx;
-        }
-        for (int i=0; i<parents.length; i++) {
-            if (parents[i] == EMPTY_POSITION) {
-                parents[i] = WallDepTreeNode.WALL_POSITION;
-            }
-        }
-        
-        // Create nodes
-        nodes.add(new WallDepTreeNode());
-        int position = 0;
-        for (Tree leaf : leaves) {
-            // Note: it is the parent of the leaf that has the word AND the tag
-            String word = getWord(leaf, tree);
-            String tag = getTag(leaf, tree);
-            assert(word != null || tag != null);
-            nodes.add(new NonprojDepTreeNode(word, tag, position));            
-            position++;
-        }
-        
-        if (true) {
-            
-        }
-        
-        // Add parent/child links to DepTreeNodes
-        addParentChildLinksToNodes();
-        
-        this.isProjective = checkIsProjective();
-    }
-
-    private String getWord(Tree leaf, Tree tree) {
-        edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
-        String word = null;
-        if (label instanceof HasWord) {
-            word = ((HasWord)label).word();
-        }
-        return word;
-    }
-
-    private String getTag(Tree leaf, Tree tree) {
-        edu.stanford.nlp.ling.Label label = leaf.parent(tree).label();
-        String tag = null;
-        if (label instanceof HasTag) {
-            tag = ((HasTag)label).tag();
-        }
-        return tag;
-    }
-
     /**
      * Construct a dependency tree from a sentence and the head of each token.
      * 
@@ -180,21 +68,11 @@ public class DepTree implements Iterable<DepTreeNode> {
         checkTree();
     }
 
-    public DepTree(CoNLLXSentence sent, Alphabet<Label> alphabet) {
-        // TODO: filter out punctuation.
-        this(new Sentence(sent, alphabet), sent.getParents(), false);
-    }
-
-    public DepTree(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
-        // TODO: filter out punctuation.
-        this(new Sentence(sent, alphabet), sent.getParents(), false);
-    }
-
-    private DepTreeNode getNodeByPosition(int position) {
+    protected DepTreeNode getNodeByPosition(int position) {
         return nodes.get(position+1);
     }
     
-    private void addParentChildLinksToNodes() {
+    protected void addParentChildLinksToNodes() {
         checkTree();
         for (int i=0; i<parents.length; i++) {
             NonprojDepTreeNode child = (NonprojDepTreeNode)getNodeByPosition(i);
@@ -204,7 +82,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
 
-    private void checkTree() {
+    protected void checkTree() {
         // Check that there is exactly one node with the WALL as its parent
         int emptyCount = countChildrenOf(EMPTY_POSITION);
         if (emptyCount != 0) {
@@ -241,7 +119,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
     
-    private boolean checkIsProjective() {
+    protected boolean checkIsProjective() {
         for (int i=0; i<parents.length; i++) {
             int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
             int minI = i < pari ? i : pari;
@@ -264,7 +142,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         return true;
     }
 
-    private int countChildrenOf(int parent) {
+    protected int countChildrenOf(int parent) {
         int count = 0;
         for (int i=0; i<parents.length; i++) {
             if (parents[i] == parent) {
@@ -274,61 +152,9 @@ public class DepTree implements Iterable<DepTreeNode> {
         return count;
     }
 
-    /**
-     * Standard List.indexOf() uses the equals method for comparison.
-     * This method uses == for comparison.
-     */
-    private <X> int indexOfInstance(List<X> list, X obj) {
-        int i=0; 
-        for (X x : list) {
-            if ( x == obj) {
-               return i; 
-            }
-            i++;
-        }
-        return -1;
-    }
-    
     @Override
     public String toString() {
         return nodes.toString();
-    }
-
-    public static Collection<Dependency<Tree, Tree, Object>> mapDependencies(Tree tree, HeadFinder hf) {
-        if (hf == null) {
-            throw new IllegalArgumentException("mapDependencies: need headfinder");
-        }
-        List<Dependency<Tree, Tree, Object>> deps = new ArrayList<Dependency<Tree, Tree, Object>>();
-        for (Tree node : tree) {
-            if (node.isLeaf() || node.children().length < 2) {
-                continue;
-            }
-            // Label l = node.label();
-            // System.err.println("doing kids of label: " + l);
-            // Tree hwt = node.headPreTerminal(hf);
-            Tree hwt = node.headTerminal(hf);
-            // System.err.println("have hf, found head preterm: " + hwt);
-            if (hwt == null) {
-                throw new HeadFinderException("mapDependencies: headFinder failed!");
-            }
-
-            for (Tree child : node.children()) {
-                // Label dl = child.label();
-                // Tree dwt = child.headPreTerminal(hf);
-                Tree dwt = child.headTerminal(hf);
-                if (dwt == null) {
-                    throw new HeadFinderException("mapDependencies: headFinder failed!");
-                }
-                // System.err.println("kid is " + dl);
-                // System.err.println("transformed to " +
-                // dml.toString("value{map}"));
-                if (dwt != hwt) {
-                    Dependency<Tree, Tree, Object> p = new UnnamedTreeDependency(hwt, dwt);
-                    deps.add(p);
-                }
-            }
-        }
-        return deps;
     }
 
     public List<DepTreeNode> getNodes() {

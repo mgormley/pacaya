@@ -10,8 +10,10 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
+import edu.jhu.hltcoe.data.conll.CoNLL09DepTree;
 import edu.jhu.hltcoe.data.conll.CoNLL09FileReader;
 import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
+import edu.jhu.hltcoe.data.conll.CoNLLXDepTree;
 import edu.jhu.hltcoe.data.conll.CoNLLXDirReader;
 import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -68,7 +70,7 @@ public class DepTreebank implements Iterable<DepTree> {
                 if (this.size() >= maxNumSentences) {
                     break;
                 }
-                DepTree tree = new DepTree(stanfordTree);
+                DepTree tree = new PtbDepTree(stanfordTree);
                 int len = tree.getNumTokens();
                 if (len <= maxSentenceLength) {
                     if (filter == null || filter.accept(tree)) {
@@ -94,7 +96,7 @@ public class DepTreebank implements Iterable<DepTree> {
                 if (this.size() >= maxNumSentences) {
                     break;
                 }
-                DepTree tree = new DepTree(sent, alphabet);
+                DepTree tree = new CoNLLXDepTree(sent, alphabet);
                 int len = tree.getNumTokens();
                 if (len <= maxSentenceLength) {
                     if (filter == null || filter.accept(tree)) {
@@ -114,7 +116,7 @@ public class DepTreebank implements Iterable<DepTree> {
                 if (this.size() >= maxNumSentences) {
                     break;
                 }
-                DepTree tree = new DepTree(sent, alphabet);
+                DepTree tree = new CoNLL09DepTree(sent, alphabet);
                 int len = tree.getNumTokens();
                 if (len <= maxSentenceLength) {
                     if (filter == null || filter.accept(tree)) {

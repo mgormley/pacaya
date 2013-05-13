@@ -90,6 +90,20 @@ public class CoNLLXToken {
         this.phead = phead;
         this.pdeprel = pdeprel;
     }
+
+    /** Deep copy constructor */
+    public CoNLLXToken(CoNLLXToken other) {
+        this.id = other.id;
+        this.form = other.form;
+        this.lemma = other.lemma;
+        this.cpostag = other.cpostag;
+        this.postag = other.postag;
+        this.feats = other.feats == null ? null : new ArrayList<String>(other.feats);
+        this.head = other.head;
+        this.deprel = other.deprel;
+        this.phead = other.phead;
+        this.pdeprel = other.pdeprel;
+    }
     
     public void intern() {
         form = form.intern();
@@ -222,6 +236,10 @@ public class CoNLLXToken {
 
     public String getPDepRel() {
         return pdeprel;
-    }    
+    }
+
+    public void setHead(int head) {
+        this.head = head;
+    }
     
 }

@@ -291,6 +291,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
         
+        conll09_dir = "/export/common/data/corpora/LDC/LDC2012T03/data"
+        conll09_sp_dir = os.path.join(conll09_dir, "CoNLL2009-ST-Spanish") 
+        conll09_sp_dev = self.get_data(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt") + \
+             DPExpParams(test=os.path.join(conll09_sp_dir, "CoNLL2009-ST-Spanish-development.txt"),
+                         trainType="CONLL_2009",
+                         testType="CONLL_2009",
+                         trainOut="train-parses.txt",
+                         testOut="test-parses.txt")
+        conll09_sp_test = conll09_sp_dev + 
+            DPExpParams(test=os.path.join(conll09_sp_dir, "CoNLL2009-ST-evaluation-Spanish.txt")
+        
         synth_alt_three = DPExpParams(synthetic="alt-three")
         synth_alt_three.set("dataset", "alt-three", True, False)
 
@@ -362,6 +373,22 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         experiment = all + setup + DPExpParams(seed=random.getrandbits(63))
                         root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
                         root.add_dependent(experiment)
+            scrape = ScrapeExpout(tsv_file="results.data")
+            scrape.add_prereqs(root.dependents)
+            svnco = SvnCommitResults(self.expname)
+            svnco.add_prereq(scrape)
+            return root
+        elif self.expname == "vem-conll":
+            root = RootStage()
+            setup = DPExpParams()
+            setup.update(maxNumSentences=100000000)
+            setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
+            setup.set("lambda", 1)
+            for dataset in [conll09_sp_dev, conll09_sp_test]:
+                # Set the seed explicitly.
+                experiment = all + setup + dataset 
+                root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
+                root.add_dependent(experiment)
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)

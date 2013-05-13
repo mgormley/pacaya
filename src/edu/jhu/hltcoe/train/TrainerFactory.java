@@ -565,7 +565,7 @@ public class TrainerFactory {
         return modelFactory;
     }
 
-    private static DmvObjectivePrm getDmvObjectivePrm() {
+    public static DmvObjectivePrm getDmvObjectivePrm() {
         DmvObjectivePrm prm = new DmvObjectivePrm();
         prm.universalPostCons = universalPostCons;
         prm.universalMinProp = universalMinProp;

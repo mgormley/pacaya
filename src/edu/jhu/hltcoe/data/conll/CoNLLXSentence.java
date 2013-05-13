@@ -15,7 +15,7 @@ import edu.jhu.hltcoe.data.TaggedWord;
 public class CoNLLXSentence implements Iterable<CoNLLXToken> {
 
     private ArrayList<CoNLLXToken> tokens;
-    
+        
     public CoNLLXSentence(ArrayList<String> sentLines) {
         tokens = new ArrayList<CoNLLXToken>();
         for (String line : sentLines) {
@@ -32,6 +32,14 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         }
     }
 
+    /** Deep copy constructor. */
+    public CoNLLXSentence(CoNLLXSentence sent) {
+        tokens = new ArrayList<CoNLLXToken>(sent.tokens.size());
+        for (CoNLLXToken tok : sent) {
+            tokens.add(new CoNLLXToken(tok));
+        }
+    }    
+    
     public CoNLLXToken get(int i) {
         return tokens.get(i);
     }
@@ -67,5 +75,11 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
             parents[i] = tokens.get(i).getHead() - 1;
         }
         return parents;
+    }
+
+    public void setHeadsFromParents(int[] parents) {
+        for (int i=0; i<parents.length; i++) {
+            tokens.get(i).setHead(parents[i] + 1);
+        }
     }
 }
