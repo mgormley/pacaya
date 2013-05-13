@@ -83,7 +83,7 @@ public class PipelineRunner {
     @Opt(name="testType", hasArg=true, description="Type of testing data.")
     public static DatasetType testType = null;
     @Opt(name="testOut", hasArg=true, description="Testing data output file.")
-    public static String testOut = null;
+    public static File testOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for test data.")
     public static int maxSentenceLengthTest = Integer.MAX_VALUE;
 
@@ -189,11 +189,11 @@ public class PipelineRunner {
             DmvModel model = (DmvModel) trainer.getModel();
 
             // Evaluate the model on the training data
-            evalAndWrite(model, trainTreebank, "train");
+            evalAndWrite(model, trainTreebank, "train", trainOut, trainType);
             
             // Evaluate the model on the test data
             if (testTreebank != null) {
-                evalAndWrite(model, testTreebank, "test");
+                evalAndWrite(model, testTreebank, "test", testOut, testType);
             }
             
             // Print learned model to a file
@@ -206,7 +206,7 @@ public class PipelineRunner {
         }
     }
     
-    private void evalAndWrite(DmvModel model, DepTreebank trainTreebank, String datasetName) throws IOException {
+    private void evalAndWrite(DmvModel model, DepTreebank trainTreebank, String datasetName, File trainOut, DatasetType trainType) throws IOException {
         // Evaluation.
         // Note: this parser must return the log-likelihood from parser.getParseWeight()
         ViterbiParser parser = TrainerFactory.getEvalParser();
