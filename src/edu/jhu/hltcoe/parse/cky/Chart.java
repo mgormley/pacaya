@@ -87,10 +87,10 @@ public class Chart {
         }
     }
 
-    public Pair<BinaryTree,Double> getViterbiParse() {
+    public Pair<BinaryTreeNode,Double> getViterbiParse() {
         BinaryTreeNode root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
         double rootScore = chart[0][sent.length].maxScores[grammar.getRootSymbol()];
-        return new Pair<BinaryTree, Double>(new BinaryTree(root), rootScore);
+        return new Pair<BinaryTreeNode, Double>(root, rootScore);
     }
     
     /**
