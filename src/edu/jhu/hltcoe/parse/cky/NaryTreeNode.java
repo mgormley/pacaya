@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.hltcoe.util.Files;
 
 /**
  * Node in an n-ary tree for a context free grammar.
@@ -21,6 +22,7 @@ public class NaryTreeNode {
     private int parent;
     private int start;
     private int end;
+    /** Children of this node, ordered left-to-right */
     private ArrayList<NaryTreeNode> children;
     private boolean isLexical;
     
@@ -49,17 +51,19 @@ public class NaryTreeNode {
      * Penn Treebank style parse.
      * 
      * Example:
-     *  (ROOT (S (NP (NN time))
+     *  ((ROOT (S (NP (NN time))
      *           (VP (VBZ flies)
      *               (PP (IN like)
      *                   (NP (DT an)
-     *                       (NN arrow))))))
+     *                       (NN arrow)))))))
      *                       
      * @return A string representing this parse.
      */
     public String getAsPennTreebankString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("(");
         getAsPennTreebankString(0, 0, sb);
+        sb.append(")");
         return sb.toString();
     }
 
@@ -103,7 +107,7 @@ public class NaryTreeNode {
             Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ArrayList<NaryTreeNode> trees = new ArrayList<NaryTreeNode>();
         while (true) {
-            NaryTreeNode tree = readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            NaryTreeNode tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
             if (tree != null) {
                 trees.add(tree);
             }            
@@ -112,6 +116,23 @@ public class NaryTreeNode {
             }            
         }
         return trees;
+    }
+
+
+    /**
+     * Reads a full tree in Penn Treebank format. Such a tree should include an
+     * outer set of parentheses. The returned tree will have initialized the
+     * start/end fields.
+     */
+    public static NaryTreeNode readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+        Files.readUntilCharacter(reader, '(');
+        NaryTreeNode root = NaryTreeNode.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+        Files.readUntilCharacter(reader, ')');
+        if (root == null) {
+            return null;
+        }
+        root.updateStartEnd();
+        return root;
     }
     
     /**
@@ -128,7 +149,7 @@ public class NaryTreeNode {
      * @return
      * @throws IOException
      */
-    public static NaryTreeNode readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    private static NaryTreeNode readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder parentSb = new StringBuilder();
         ArrayList<NaryTreeNode> children = null;
@@ -312,27 +333,36 @@ public class NaryTreeNode {
      * 
      * This returns a binarized form that relabels the nodes just as in the
      * Berkeley parser.
+     * 
+     * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public BinaryTreeNode binarize() {
+    public BinaryTreeNode binarize(Alphabet<String> ntAlphabet) {
+        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+
         BinaryTreeNode leftChild;
         BinaryTreeNode rightChild;
         if (isLeaf()) {
             leftChild = null;
             rightChild = null;
         } else if (children.size() == 1) {
-            leftChild = children.get(0).binarize();
+            leftChild = children.get(0).binarize(ntAlphabet);
             rightChild = null;
         } else if (children.size() == 2) {
-            leftChild = children.get(0).binarize();
-            rightChild = children.get(1).binarize();
+            leftChild = children.get(0).binarize(ntAlphabet);
+            rightChild = children.get(1).binarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
-            int xbarParent = alphabet.lookupIndex("@" + getParentStr());
+            int xbarParent = ntAlphabet.lookupIndex("@" + getParentStr());
             
             LinkedList<NaryTreeNode> queue = new LinkedList<NaryTreeNode>(children);
-            leftChild = queue.removeFirst().binarize();
+            // Start by binarizing the left-most child, and store as L.
+            leftChild = queue.removeFirst().binarize(ntAlphabet);
             do {
-                rightChild = queue.removeFirst().binarize();
+                // Working left-to-right, remove and binarize the next-left-most child, and store as R.
+                rightChild = queue.removeFirst().binarize(ntAlphabet);
+                // Then form a new binary node that has left/right children: L and R.
+                // That is, a node (@parentStr --> (L) (R)).
+                // Store this new node as L and repeat.
                 leftChild = new BinaryTreeNode(xbarParent, leftChild.getStart(),
                         rightChild.getEnd(), leftChild, rightChild, isLexical,
                         alphabet);
@@ -378,5 +408,23 @@ public class NaryTreeNode {
 
     public boolean isLexical() {
         return isLexical;
+    }
+
+    public Alphabet<String> getAlphabet() {
+        return alphabet;
+    }
+
+    public void setParent(String parentStr) {
+        this.parent = alphabet.lookupIndex(parentStr);
+        if (this.parent == -1) {
+            throw new IllegalArgumentException("Invalid parent string: " + parentStr + " " + parent);
+        }
+    }
+    
+    public void setParent(int parent) {
+        if (parent >= alphabet.size() || parent < 0) {
+            throw new IllegalArgumentException("Invalid parent: " + parent);
+        }
+        this.parent = parent;
     }
 }

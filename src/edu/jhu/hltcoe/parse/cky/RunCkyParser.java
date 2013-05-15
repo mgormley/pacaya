@@ -8,11 +8,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.parse.cky.NaryTreeNode.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Pair;
@@ -45,18 +47,18 @@ public class RunCkyParser {
         builder.loadFromFile(grammar);        
         CnfGrammar grammar = builder.getGrammar();
         
-        log.info("Stopping alphabet growth");
-        lexAlphabet.stopGrowth();
-        ntAlphabet.stopGrowth();
-        
         log.info("Reading trees from file: " + train);
-        ArrayList<NaryTree> naryTrees = new ArrayList<NaryTree>();
+        NaryTreebank naryTrees = new NaryTreebank();
         List<File> mrgFiles = Utilities.getMatchingFiles(train, ".*\\.mrg");
         for (File mrgFile : mrgFiles) {
             BufferedReader reader = new BufferedReader(new FileReader(mrgFile));
-            naryTrees.addAll(NaryTree.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader));
+            naryTrees.addAll(NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader));
             reader.close();
         }
+        
+        log.info("Stopping alphabet growth");
+        lexAlphabet.stopGrowth();
+        ntAlphabet.stopGrowth();
         
         log.info("Removing null elements");
         final int nullElement = ntAlphabet.lookupIndex("-NONE-");
@@ -72,36 +74,78 @@ public class RunCkyParser {
             }
         };
         for (int i=0; i<naryTrees.size(); i++) {
-            NaryTree tree = naryTrees.get(i);
+            NaryTreeNode tree = naryTrees.get(i);
             tree.postOrderFilterNodes(nullElementFilter);
             naryTrees.set(i, tree);
         }
         
         log.info("Removing function tags");
-        // TODO:
-        // TODO: remove function tags.
+        LambdaOne<NaryTreeNode> ftRemover = new LambdaOne<NaryTreeNode>() {
+            private final Pattern functionTag = Pattern.compile("-[A-Z]+$");
+            @Override
+            public void call(NaryTreeNode node) {
+                if (!node.isLexical()) {
+                    Alphabet<String> alphabet = node.getAlphabet();
+                    int p = node.getParent();
+                    String pStr = alphabet.lookupObject(p);
+                    // Remove the function tags.
+                    pStr = functionTag.matcher(pStr).replaceAll("");
+                    node.setParent(alphabet.lookupIndex(pStr));
+                }
+            }
+        };
+        for (int i=0; i<naryTrees.size(); i++) {
+            NaryTreeNode tree = naryTrees.get(i);
+            tree.postOrderTraversal(ftRemover);
+            naryTrees.set(i, tree);
+        }
         
+        // TODO: Convert OOVs to OOV terminals in the grammar.
+        
+        // TODO: why binarize at all? We would only do this if we wanted to learn a grammar.
         log.info("Binarizing " + naryTrees.size() + " trees");
-        ArrayList<BinaryTree> binaryTrees = new ArrayList<BinaryTree>();
-        for (NaryTree tree : naryTrees) {
-            // TODO: use a separate alphabet?
-            binaryTrees.add(tree.binarize());
+        BinaryTreebank binaryTrees = new BinaryTreebank();
+        for (NaryTreeNode tree : naryTrees) {
+            binaryTrees.add(tree.binarize(ntAlphabet));
         }
         naryTrees = null;
         
         log.info("Parsing " + binaryTrees.size() + " trees");
-        ArrayList<BinaryTree> parseTrees = new ArrayList<BinaryTree>();
-        for (BinaryTree tree : binaryTrees) {
+        BinaryTreebank parseTrees = new BinaryTreebank();
+        for (BinaryTreeNode tree : binaryTrees) {
             int[] sent = tree.getSentence();
             Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
-            Pair<BinaryTree, Double> pair = chart.getViterbiParse();
+            Pair<BinaryTreeNode, Double> pair = chart.getViterbiParse();
             parseTrees.add(pair.get1());
+        }
+        
+        // Remove non-terminal refinements (e.g. NP_10 should be NP).
+        log.info("Removing nonterminal refinements");        
+        LambdaOne<NaryTreeNode> refineRemover = new LambdaOne<NaryTreeNode>() {
+            private final Pattern refine = Pattern.compile("_\\d+$");
+            @Override
+            public void call(NaryTreeNode node) {
+                if (!node.isLexical()) {
+                    Alphabet<String> alphabet = node.getAlphabet();
+                    int p = node.getParent();
+                    String pStr = alphabet.lookupObject(p);
+                    // Remove the function tags.
+                    pStr = refine.matcher(pStr).replaceAll("");
+                    node.setParent(alphabet.lookupIndex(pStr));
+                }
+            }
+        };
+        for (int i=0; i<naryTrees.size(); i++) {
+            NaryTreeNode tree = naryTrees.get(i);
+            tree.postOrderTraversal(refineRemover);
+            naryTrees.set(i, tree);
         }
         
         if (treeFile != null) {
             log.info("Writing trees to file: " + treeFile);
             BufferedWriter writer = new BufferedWriter(new FileWriter(treeFile));
-            for (BinaryTree tree : parseTrees) {
+            for (BinaryTreeNode tree : parseTrees) {
+                // TODO: Collapse binary trees back into n-ary trees.
                 writer.write(tree.getAsPennTreebankString());
                 writer.write("\n\n");
             }
@@ -109,6 +153,8 @@ public class RunCkyParser {
         }
         
         if (evalbDir != null) {
+            Evalb evalb = new Evalb(evalbDir);
+            //evalb.runEvalb(goldTrees, treeFile, "evalb.txt");
             // TODO: run evalb
         }
     }
@@ -130,4 +176,5 @@ public class RunCkyParser {
         RunCkyParser pipeline = new RunCkyParser();
         pipeline.run();
     }
+    
 }

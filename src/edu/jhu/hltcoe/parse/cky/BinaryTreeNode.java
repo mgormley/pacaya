@@ -125,6 +125,10 @@ public class BinaryTreeNode {
     public boolean isLeaf() {
         return leftChildNode == null && rightChildNode == null;
     }
+
+    public Alphabet<String> getAlphabet() {
+        return alphabet;
+    }
     
     /**
      * Updates all the start end fields, treating the current node as the root.

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -132,6 +133,16 @@ public class Files {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public static void readUntilCharacter(Reader reader, char stopChar) throws IOException {
+        char[] cbuf = new char[1];
+        while (reader.read(cbuf) != -1) {
+            char c = cbuf[0];
+            if (c == stopChar) {
+                break;
+            }
+        }
     }
     
 }

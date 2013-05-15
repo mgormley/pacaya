@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.io.File;
+import java.util.List;
 
 import edu.jhu.hltcoe.util.Command;
 
@@ -23,6 +24,10 @@ public class Evalb {
         this.evalbFile = evalbFile;
         this.prmFile = prmFile;
     }
+    
+    //TODO: public void runEvalb(List<NaryTreeNode> goldTrees, List<NaryTreeNode> testTrees, File logFile) {
+    //
+    //}
     
     public void runEvalb(File goldTrees, File testTrees, File logFile) {
         String[] cmd = new String[]{
