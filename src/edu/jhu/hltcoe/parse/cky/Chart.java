@@ -87,10 +87,10 @@ public class Chart {
         }
     }
 
-    public Pair<BinaryTreeNode,Double> getViterbiParse() {
-        BinaryTreeNode root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
+    public Pair<BinaryTree,Double> getViterbiParse() {
+        BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
         double rootScore = chart[0][sent.length].maxScores[grammar.getRootSymbol()];
-        return new Pair<BinaryTreeNode, Double>(root, rootScore);
+        return new Pair<BinaryTree, Double>(root, rootScore);
     }
     
     /**
@@ -101,17 +101,17 @@ public class Chart {
      * @param rootSymbol The symbol of the root of the requested tree.
      * @return 
      */
-    private BinaryTreeNode getViterbiTree(int start, int end, int rootSymbol) {
+    private BinaryTree getViterbiTree(int start, int end, int rootSymbol) {
         ChartCell cell = chart[start][end];
         BackPointer bp = cell.bps[rootSymbol];
         if (bp == null) {
             return null;
         }
         
-        BinaryTreeNode leftChild;
-        BinaryTreeNode rightChild;
+        BinaryTree leftChild;
+        BinaryTree rightChild;
         if (bp.r.isLexical()) {
-            leftChild = new BinaryTreeNode(bp.r.getLeftChild(), start, end, null, null, true, grammar.getLexAlphabet());
+            leftChild = new BinaryTree(bp.r.getLeftChild(), start, end, null, null, true, grammar.getLexAlphabet());
             rightChild = null;
         } else if (bp.r.isUnary()) {
             leftChild = getViterbiTree(start, bp.mid, bp.r.getLeftChild());
@@ -121,6 +121,6 @@ public class Chart {
             rightChild = getViterbiTree(bp.mid, end, bp.r.getRightChild());
         }
         
-        return new BinaryTreeNode(rootSymbol, start, end, leftChild, rightChild, false, grammar.getNtAlphabet());
+        return new BinaryTree(rootSymbol, start, end, leftChild, rightChild, false, grammar.getNtAlphabet());
     }
 }

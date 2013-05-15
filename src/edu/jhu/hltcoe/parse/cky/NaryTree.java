@@ -11,24 +11,24 @@ import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Files;
 
 /**
- * Node in an n-ary tree for a context free grammar.
+ * N-ary tree for a context free grammar.
  * 
  * @author mgormley
  *
  */
-public class NaryTreeNode {
+public class NaryTree {
 
     private static final int NOT_INITIALIZED = -1;
     private int parent;
     private int start;
     private int end;
     /** Children of this node, ordered left-to-right */
-    private ArrayList<NaryTreeNode> children;
+    private ArrayList<NaryTree> children;
     private boolean isLexical;
     
     private Alphabet<String> alphabet;
     
-    public NaryTreeNode(int parent, int start, int end, ArrayList<NaryTreeNode> children,
+    public NaryTree(int parent, int start, int end, ArrayList<NaryTree> children,
             boolean isLexical, Alphabet<String> alphabet) {
         this.parent = parent;
         this.start = start;
@@ -85,7 +85,7 @@ public class NaryTreeNode {
             int numNewChars = 1 + getParentStr().length();
 
             for (int i=0; i<children.size(); i++) {
-                NaryTreeNode child = children.get(i);
+                NaryTree child = children.get(i);
                 if (i==0) {
                     // First child.
                     child.getAsPennTreebankString(indent+numNewChars+1, indent + numNewChars, sb);
@@ -103,11 +103,11 @@ public class NaryTreeNode {
         START, LEXICAL, NONTERMINAL, CHILDREN, DONE,
     }
 
-    public static ArrayList<NaryTreeNode> readTreesInPtbFormat(
+    public static ArrayList<NaryTree> readTreesInPtbFormat(
             Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
-        ArrayList<NaryTreeNode> trees = new ArrayList<NaryTreeNode>();
+        ArrayList<NaryTree> trees = new ArrayList<NaryTree>();
         while (true) {
-            NaryTreeNode tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            NaryTree tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
             if (tree != null) {
                 trees.add(tree);
             }            
@@ -124,9 +124,9 @@ public class NaryTreeNode {
      * outer set of parentheses. The returned tree will have initialized the
      * start/end fields.
      */
-    public static NaryTreeNode readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    public static NaryTree readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         Files.readUntilCharacter(reader, '(');
-        NaryTreeNode root = NaryTreeNode.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+        NaryTree root = NaryTree.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
         Files.readUntilCharacter(reader, ')');
         if (root == null) {
             return null;
@@ -149,10 +149,10 @@ public class NaryTreeNode {
      * @return
      * @throws IOException
      */
-    private static NaryTreeNode readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    private static NaryTree readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder parentSb = new StringBuilder();
-        ArrayList<NaryTreeNode> children = null;
+        ArrayList<NaryTree> children = null;
         boolean isLexical = false;
 
         char[] cbuf = new char[1];
@@ -208,7 +208,7 @@ public class NaryTreeNode {
                     + (isLexical ? "word" : "nonterminal") + ": "
                     + parentSb.toString());
         }
-        NaryTreeNode root = new NaryTreeNode(parent, start, end, children, isLexical, ntAlphabet);
+        NaryTree root = new NaryTree(parent, start, end, children, isLexical, ntAlphabet);
         return root;
     }
 
@@ -216,21 +216,21 @@ public class NaryTreeNode {
         return c == ' ' || c == '\n' || c == '\t';
     }
     
-    public void preOrderTraversal(LambdaOne<NaryTreeNode> function) {
+    public void preOrderTraversal(LambdaOne<NaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
         if (children != null) {
-            for (NaryTreeNode child : children) {
+            for (NaryTree child : children) {
                 child.postOrderTraversal(function);
             }
         }
     }
     
-    public void postOrderTraversal(LambdaOne<NaryTreeNode> function) {
+    public void postOrderTraversal(LambdaOne<NaryTree> function) {
         // Post-order traversal of each child.
         if (children != null) {
-            for (NaryTreeNode child : children) {
+            for (NaryTree child : children) {
                 child.postOrderTraversal(function);
             }
         }
@@ -246,7 +246,7 @@ public class NaryTreeNode {
         return end;
     }
 
-    public ArrayList<NaryTreeNode> getChildren() {
+    public ArrayList<NaryTree> getChildren() {
         return children;
     }
 
@@ -258,9 +258,9 @@ public class NaryTreeNode {
      * Updates all the start end fields, treating the current node as the root.
      */
     public void updateStartEnd() {
-        ArrayList<NaryTreeNode> leaves = getLeaves();
+        ArrayList<NaryTree> leaves = getLeaves();
         for (int i=0; i<leaves.size(); i++) {
-            NaryTreeNode leaf = leaves.get(i);
+            NaryTree leaf = leaves.get(i);
             leaf.start = i;
             leaf.end = i+1;
         }
@@ -270,7 +270,7 @@ public class NaryTreeNode {
     /**
      * Gets the leaves of this tree in left-to-right order.
      */
-    public ArrayList<NaryTreeNode> getLeaves() {
+    public ArrayList<NaryTree> getLeaves() {
         LeafCollector leafCollector = new LeafCollector();
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
@@ -292,19 +292,19 @@ public class NaryTreeNode {
 //    }
     
     public interface NaryTreeNodeFilter {
-        public boolean accept(NaryTreeNode node);
+        public boolean accept(NaryTree node);
     }
 
     /**
      * Keep only those nodes which the filter accepts.
      */
     public void postOrderFilterNodes(final NaryTreeNodeFilter filter) {
-        postOrderTraversal(new LambdaOne<NaryTreeNode>() {
+        postOrderTraversal(new LambdaOne<NaryTree>() {
             @Override
-            public void call(NaryTreeNode node) {
+            public void call(NaryTree node) {
                 if (!node.isLeaf()) {
-                    ArrayList<NaryTreeNode> filtChildren = new ArrayList<NaryTreeNode>();
-                    for (NaryTreeNode child : node.children) {
+                    ArrayList<NaryTree> filtChildren = new ArrayList<NaryTree>();
+                    for (NaryTree child : node.children) {
                         if (filter.accept(child)) {
                             filtChildren.add(child);
                         }
@@ -320,7 +320,7 @@ public class NaryTreeNode {
      * Gets the lexical item ids comprising the sentence.
      */
     public int[] getSentence() {
-        ArrayList<NaryTreeNode> leaves = getLeaves();
+        ArrayList<NaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
             sent[i] = leaves.get(i).parent;
@@ -336,11 +336,11 @@ public class NaryTreeNode {
      * 
      * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public BinaryTreeNode binarize(Alphabet<String> ntAlphabet) {
+    public BinaryTree binarize(Alphabet<String> ntAlphabet) {
         Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
 
-        BinaryTreeNode leftChild;
-        BinaryTreeNode rightChild;
+        BinaryTree leftChild;
+        BinaryTree rightChild;
         if (isLeaf()) {
             leftChild = null;
             rightChild = null;
@@ -354,7 +354,7 @@ public class NaryTreeNode {
             // Define the label of the new parent node as in the Berkeley grammar.
             int xbarParent = ntAlphabet.lookupIndex("@" + getParentStr());
             
-            LinkedList<NaryTreeNode> queue = new LinkedList<NaryTreeNode>(children);
+            LinkedList<NaryTree> queue = new LinkedList<NaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
             leftChild = queue.removeFirst().binarize(ntAlphabet);
             do {
@@ -363,12 +363,12 @@ public class NaryTreeNode {
                 // Then form a new binary node that has left/right children: L and R.
                 // That is, a node (@parentStr --> (L) (R)).
                 // Store this new node as L and repeat.
-                leftChild = new BinaryTreeNode(xbarParent, leftChild.getStart(),
+                leftChild = new BinaryTree(xbarParent, leftChild.getStart(),
                         rightChild.getEnd(), leftChild, rightChild, isLexical,
                         alphabet);
             } while (!queue.isEmpty());
         }
-        return new BinaryTreeNode(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
+        return new BinaryTree(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
     }
     
     @Override
@@ -377,12 +377,12 @@ public class NaryTreeNode {
                 + end + "}, children=" + children + "]";
     }
 
-    private class LeafCollector implements LambdaOne<NaryTreeNode> {
+    private class LeafCollector implements LambdaOne<NaryTree> {
 
-        public ArrayList<NaryTreeNode> leaves = new ArrayList<NaryTreeNode>();
+        public ArrayList<NaryTree> leaves = new ArrayList<NaryTree>();
         
         @Override
-        public void call(NaryTreeNode node) {
+        public void call(NaryTree node) {
             if (node.isLeaf()) {
                 leaves.add(node);
             }
@@ -390,10 +390,10 @@ public class NaryTreeNode {
         
     }
     
-    private class UpdateStartEnd implements LambdaOne<NaryTreeNode> {
+    private class UpdateStartEnd implements LambdaOne<NaryTree> {
 
         @Override
-        public void call(NaryTreeNode node) {
+        public void call(NaryTree node) {
             if (!node.isLeaf()) {
                 node.start = node.children.get(0).start;
                 node.end = node.children.get(node.children.size()-1).end;

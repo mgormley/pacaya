@@ -6,24 +6,24 @@ import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 
 /**
- * Node in a binary tree for a context free grammar.
+ * Binary tree for a context free grammar.
  * 
  * @author mgormley
  *
  */
-public class BinaryTreeNode {
+public class BinaryTree {
 
     private int parent;
     private int start;
     private int end;
-    private BinaryTreeNode leftChildNode;
-    private BinaryTreeNode rightChildNode;
+    private BinaryTree leftChildNode;
+    private BinaryTree rightChildNode;
     private boolean isLexical;
     
     private Alphabet<String> alphabet;
     
-    public BinaryTreeNode(int parent, int start, int end, BinaryTreeNode leftChildNode,
-            BinaryTreeNode rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
+    public BinaryTree(int parent, int start, int end, BinaryTree leftChildNode,
+            BinaryTree rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
         this.parent = parent;
         this.start = start;
         this.end = end;
@@ -56,7 +56,9 @@ public class BinaryTreeNode {
      */
     public String getAsPennTreebankString() {
         StringBuilder sb = new StringBuilder();
+        sb.append("(");
         getAsPennTreebankString(0, 0, sb);
+        sb.append(")");
         return sb.toString();
     }
 
@@ -89,7 +91,7 @@ public class BinaryTreeNode {
         }
     }
 
-    public void preOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+    public void preOrderTraversal(LambdaOne<BinaryTree> function) {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
@@ -97,7 +99,7 @@ public class BinaryTreeNode {
         rightChildNode.preOrderTraversal(function);
     }
 
-    public void inOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+    public void inOrderTraversal(LambdaOne<BinaryTree> function) {
         // In-order traversal of left child.
         leftChildNode.inOrderTraversal(function);
         // Visit this node.
@@ -106,7 +108,7 @@ public class BinaryTreeNode {
         rightChildNode.inOrderTraversal(function);
     }
     
-    public void postOrderTraversal(LambdaOne<BinaryTreeNode> function) {
+    public void postOrderTraversal(LambdaOne<BinaryTree> function) {
         // Post-order traversal of each child.
         leftChildNode.postOrderTraversal(function);
         rightChildNode.postOrderTraversal(function);
@@ -134,9 +136,9 @@ public class BinaryTreeNode {
      * Updates all the start end fields, treating the current node as the root.
      */
     public void updateStartEnd() {
-        ArrayList<BinaryTreeNode> leaves = getLeaves();
+        ArrayList<BinaryTree> leaves = getLeaves();
         for (int i=0; i<leaves.size(); i++) {
-            BinaryTreeNode leaf = leaves.get(i);
+            BinaryTree leaf = leaves.get(i);
             leaf.start = i;
             leaf.end = i+1;
         }
@@ -146,7 +148,7 @@ public class BinaryTreeNode {
     /**
      * Gets the leaves of this tree.
      */
-    public ArrayList<BinaryTreeNode> getLeaves() {
+    public ArrayList<BinaryTree> getLeaves() {
         LeafCollector leafCollector = new LeafCollector();
         postOrderTraversal(leafCollector);
         return leafCollector.leaves;
@@ -156,7 +158,7 @@ public class BinaryTreeNode {
      * Gets the lexical item ids comprising the sentence.
      */
     public int[] getSentence() {
-        ArrayList<BinaryTreeNode> leaves = getLeaves();
+        ArrayList<BinaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
             sent[i] = leaves.get(i).parent;
@@ -171,12 +173,12 @@ public class BinaryTreeNode {
                 + ", rightChildNode=" + rightChildNode + "]";
     }
 
-    private class LeafCollector implements LambdaOne<BinaryTreeNode> {
+    private class LeafCollector implements LambdaOne<BinaryTree> {
 
-        public ArrayList<BinaryTreeNode> leaves = new ArrayList<BinaryTreeNode>();
+        public ArrayList<BinaryTree> leaves = new ArrayList<BinaryTree>();
         
         @Override
-        public void call(BinaryTreeNode node) {
+        public void call(BinaryTree node) {
             if (node.isLeaf()) {
                 leaves.add(node);
             }
@@ -184,10 +186,10 @@ public class BinaryTreeNode {
         
     }
     
-    private class UpdateStartEnd implements LambdaOne<BinaryTreeNode> {
+    private class UpdateStartEnd implements LambdaOne<BinaryTree> {
 
         @Override
-        public void call(BinaryTreeNode node) {
+        public void call(BinaryTree node) {
             if (!node.isLeaf()) {
                 node.start = node.leftChildNode.start;
                 if (node.rightChildNode == null) {

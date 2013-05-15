@@ -10,12 +10,12 @@ import org.junit.Test;
 
 import edu.jhu.hltcoe.util.Alphabet;
 
-public class NaryTreeNodeTest {
+public class NaryTreeTest {
 
     @Test
     public void testGetAsPennTreebankString2() throws IOException {
         String origTreeStr = "" +
-                "( (S (VP (VB join)\n" +
+                "((S (VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +
                     "(PP-CLR (IN as)\n" + 
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
@@ -23,7 +23,7 @@ public class NaryTreeNodeTest {
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
-        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(alphabet);
@@ -37,15 +37,15 @@ public class NaryTreeNodeTest {
     @Test
     public void testGetFromPennTreebankString() throws IOException {
         String origTreeStr = "" +
-                "( (VP (VB join)\n" +
+                "((VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +
                     "(PP-CLR (IN as)\n" + 
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
-                    "(NP-TMP (NNP Nov.) (CD 29) )) )\n";
+                    "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
-        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(alphabet);
@@ -59,15 +59,15 @@ public class NaryTreeNodeTest {
     @Test
     public void testUpdateStartEnd() throws IOException {
         String origTreeStr = "" +
-                "( (VP (VB join)\n" +
+                "((VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +
                     "(PP-CLR (IN as)\n" + 
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
-                    "(NP-TMP (NNP Nov.) (CD 29) )) )\n";
+                    "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
-        NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(newTreeStr);
@@ -81,17 +81,17 @@ public class NaryTreeNodeTest {
     @Test
     public void testBinarize() throws IOException {
         String origTreeStr = "" +
-                "( (VP (VB join)\n" +
+                "((VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +
                     "(PP-CLR (IN as)\n" + 
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
-                    "(NP-TMP (NNP Nov.) (CD 29) )) )\n";
+                    "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
-        NaryTreeNode naryTree = NaryTreeNode.readTreeInPtbFormat(alphabet, alphabet, reader);
+        NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
-        BinaryTreeNode binaryTree = naryTree.binarize(alphabet);
+        BinaryTree binaryTree = naryTree.binarize(alphabet);
         assertEquals(22, alphabet.size());
 
         String newTreeStr = binaryTree.getAsPennTreebankString();

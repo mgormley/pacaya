@@ -15,7 +15,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
-import edu.jhu.hltcoe.parse.cky.NaryTreeNode.NaryTreeNodeFilter;
+import edu.jhu.hltcoe.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
@@ -64,7 +64,7 @@ public class RunCkyParser {
         final int nullElement = ntAlphabet.lookupIndex("-NONE-");
         NaryTreeNodeFilter nullElementFilter = new NaryTreeNodeFilter() {
             @Override
-            public boolean accept(NaryTreeNode node) {
+            public boolean accept(NaryTree node) {
                 if (node.getParent() == nullElement) {
                     return false;
                 } else if (!node.isLexical() && node.isLeaf()) {
@@ -74,16 +74,16 @@ public class RunCkyParser {
             }
         };
         for (int i=0; i<naryTrees.size(); i++) {
-            NaryTreeNode tree = naryTrees.get(i);
+            NaryTree tree = naryTrees.get(i);
             tree.postOrderFilterNodes(nullElementFilter);
             naryTrees.set(i, tree);
         }
         
         log.info("Removing function tags");
-        LambdaOne<NaryTreeNode> ftRemover = new LambdaOne<NaryTreeNode>() {
+        LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
             private final Pattern functionTag = Pattern.compile("-[A-Z]+$");
             @Override
-            public void call(NaryTreeNode node) {
+            public void call(NaryTree node) {
                 if (!node.isLexical()) {
                     Alphabet<String> alphabet = node.getAlphabet();
                     int p = node.getParent();
@@ -95,7 +95,7 @@ public class RunCkyParser {
             }
         };
         for (int i=0; i<naryTrees.size(); i++) {
-            NaryTreeNode tree = naryTrees.get(i);
+            NaryTree tree = naryTrees.get(i);
             tree.postOrderTraversal(ftRemover);
             naryTrees.set(i, tree);
         }
@@ -105,26 +105,26 @@ public class RunCkyParser {
         // TODO: why binarize at all? We would only do this if we wanted to learn a grammar.
         log.info("Binarizing " + naryTrees.size() + " trees");
         BinaryTreebank binaryTrees = new BinaryTreebank();
-        for (NaryTreeNode tree : naryTrees) {
+        for (NaryTree tree : naryTrees) {
             binaryTrees.add(tree.binarize(ntAlphabet));
         }
         naryTrees = null;
         
         log.info("Parsing " + binaryTrees.size() + " trees");
         BinaryTreebank parseTrees = new BinaryTreebank();
-        for (BinaryTreeNode tree : binaryTrees) {
+        for (BinaryTree tree : binaryTrees) {
             int[] sent = tree.getSentence();
             Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
-            Pair<BinaryTreeNode, Double> pair = chart.getViterbiParse();
+            Pair<BinaryTree, Double> pair = chart.getViterbiParse();
             parseTrees.add(pair.get1());
         }
         
         // Remove non-terminal refinements (e.g. NP_10 should be NP).
         log.info("Removing nonterminal refinements");        
-        LambdaOne<NaryTreeNode> refineRemover = new LambdaOne<NaryTreeNode>() {
+        LambdaOne<NaryTree> refineRemover = new LambdaOne<NaryTree>() {
             private final Pattern refine = Pattern.compile("_\\d+$");
             @Override
-            public void call(NaryTreeNode node) {
+            public void call(NaryTree node) {
                 if (!node.isLexical()) {
                     Alphabet<String> alphabet = node.getAlphabet();
                     int p = node.getParent();
@@ -136,7 +136,7 @@ public class RunCkyParser {
             }
         };
         for (int i=0; i<naryTrees.size(); i++) {
-            NaryTreeNode tree = naryTrees.get(i);
+            NaryTree tree = naryTrees.get(i);
             tree.postOrderTraversal(refineRemover);
             naryTrees.set(i, tree);
         }
@@ -144,7 +144,7 @@ public class RunCkyParser {
         if (treeFile != null) {
             log.info("Writing trees to file: " + treeFile);
             BufferedWriter writer = new BufferedWriter(new FileWriter(treeFile));
-            for (BinaryTreeNode tree : parseTrees) {
+            for (BinaryTree tree : parseTrees) {
                 // TODO: Collapse binary trees back into n-ary trees.
                 writer.write(tree.getAsPennTreebankString());
                 writer.write("\n\n");

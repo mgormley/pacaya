@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import edu.jhu.hltcoe.util.Alphabet;
 
-public class NaryTreebank extends ArrayList<NaryTreeNode> {
+public class NaryTreebank extends ArrayList<NaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
 
@@ -16,7 +16,7 @@ public class NaryTreebank extends ArrayList<NaryTreeNode> {
     public static NaryTreebank readTreesInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         NaryTreebank trees = new NaryTreebank();
         while (true) {
-            NaryTreeNode tree = NaryTreeNode.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            NaryTree tree = NaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
             if (tree != null) {
                 trees.add(tree);
             }
