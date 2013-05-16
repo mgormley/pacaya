@@ -1,12 +1,9 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -19,6 +16,7 @@ import edu.jhu.hltcoe.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.cli.ArgParser;
 import edu.jhu.hltcoe.util.cli.Opt;
@@ -27,17 +25,31 @@ public class RunCkyParser {
     
     private static final Logger log = Logger.getLogger(RunCkyParser.class);
 
+    // Input data.
     @Opt(hasArg = true, required = true, description = "Penn Treebank training data directory")
     public static File train;
+    @Opt(hasArg = true, description = "Maximum sentence length for train data.")
+    public static int maxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences/trees to include in training data.")
+    public static int maxNumSentences = Integer.MAX_VALUE; 
+    
+    // Grammar.
     @Opt(hasArg = true, required = true, description = "CNF grammar")
     public static File grammar;
+    
+    // Output files.
     @Opt(hasArg = true, description = "File to which the trees should be written")
     public static File treeFile = null;
-    @Opt(hasArg = true, description = "Pseudo random number generator seed")
-    public static long seed = Prng.DEFAULT_SEED;
+    @Opt(hasArg = true, description = "File to which the parses should be written")
+    public static File parseFile = null;
+
+    // Evaluation.
     @Opt(hasArg = true, description = "Directory containing evalb")
     public static File evalbDir = null;
 
+    @Opt(hasArg = true, description = "Pseudo random number generator seed")
+    public static long seed = Prng.DEFAULT_SEED;
+    
     public void run() throws IOException {
         Alphabet<String> lexAlphabet = new Alphabet<String>();
         Alphabet<String> ntAlphabet = new Alphabet<String>();
@@ -46,20 +58,41 @@ public class RunCkyParser {
         CnfGrammarBuilder builder = new CnfGrammarBuilder(lexAlphabet, ntAlphabet);
         builder.loadFromFile(grammar);        
         CnfGrammar grammar = builder.getGrammar();
+
+        log.info("Nonterminal alphabet size: " + ntAlphabet.size());
+        log.info("Lexical alphabet size: " + lexAlphabet.size());
+        
+        log.info("Restarting alphabet growth");
+        lexAlphabet.startGrowth();
+        ntAlphabet.startGrowth();
         
         log.info("Reading trees from file: " + train);
         NaryTreebank naryTrees = new NaryTreebank();
         List<File> mrgFiles = Utilities.getMatchingFiles(train, ".*\\.mrg");
         for (File mrgFile : mrgFiles) {
             BufferedReader reader = new BufferedReader(new FileReader(mrgFile));
-            naryTrees.addAll(NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader));
+            NaryTreebank tmpTrees = NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            for (NaryTree tree : tmpTrees) {
+                if (tree.getSentence().length <= maxSentenceLength) {
+                    naryTrees.add(tree);
+                }
+                if (naryTrees.size() >= maxNumSentences) {
+                    break;
+                }
+            }
+            if (naryTrees.size() >= maxNumSentences) {
+                break;
+            }
             reader.close();
         }
-        
+
         log.info("Stopping alphabet growth");
         lexAlphabet.stopGrowth();
         ntAlphabet.stopGrowth();
-        
+
+        log.info("Nonterminal alphabet size: " + ntAlphabet.size());
+        log.info("Lexical alphabet size: " + lexAlphabet.size());
+                
         log.info("Removing null elements");
         final int nullElement = ntAlphabet.lookupIndex("-NONE-");
         NaryTreeNodeFilter nullElementFilter = new NaryTreeNodeFilter() {
@@ -99,6 +132,11 @@ public class RunCkyParser {
             tree.postOrderTraversal(ftRemover);
             naryTrees.set(i, tree);
         }
+
+        if (treeFile != null) {
+            log.info("Writing (munged) trees to file: " + treeFile);
+            naryTrees.write(treeFile);
+        }
         
         // TODO: Convert OOVs to OOV terminals in the grammar.
         
@@ -106,25 +144,30 @@ public class RunCkyParser {
         log.info("Binarizing " + naryTrees.size() + " trees");
         BinaryTreebank binaryTrees = new BinaryTreebank();
         for (NaryTree tree : naryTrees) {
-            binaryTrees.add(tree.binarize(ntAlphabet));
+            binaryTrees.add(tree.leftBinarize(ntAlphabet));
         }
         naryTrees = null;
         
         log.info("Parsing " + binaryTrees.size() + " trees");
-        BinaryTreebank parseTrees = new BinaryTreebank();
-        for (BinaryTree tree : binaryTrees) {
+        BinaryTreebank binaryParses = new BinaryTreebank();
+        Timer timer = new Timer();
+        timer.start();
+        for (BinaryTree tree : binaryTrees) {            
             int[] sent = tree.getSentence();
             Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
             Pair<BinaryTree, Double> pair = chart.getViterbiParse();
-            parseTrees.add(pair.get1());
+            binaryParses.add(pair.get1());
+            timer.split();
+            log.debug("Avg seconds per parse: " + timer.avgSec());
         }
+        timer.stop();
         
         // Remove non-terminal refinements (e.g. NP_10 should be NP).
         log.info("Removing nonterminal refinements");        
-        LambdaOne<NaryTree> refineRemover = new LambdaOne<NaryTree>() {
+        LambdaOne<BinaryTree> refineRemover = new LambdaOne<BinaryTree>() {
             private final Pattern refine = Pattern.compile("_\\d+$");
             @Override
-            public void call(NaryTree node) {
+            public void call(BinaryTree node) {
                 if (!node.isLexical()) {
                     Alphabet<String> alphabet = node.getAlphabet();
                     int p = node.getParent();
@@ -135,27 +178,27 @@ public class RunCkyParser {
                 }
             }
         };
-        for (int i=0; i<naryTrees.size(); i++) {
-            NaryTree tree = naryTrees.get(i);
+        for (int i=0; i<binaryParses.size(); i++) {
+            BinaryTree tree = binaryParses.get(i);
             tree.postOrderTraversal(refineRemover);
-            naryTrees.set(i, tree);
+            binaryParses.set(i, tree);
         }
         
-        if (treeFile != null) {
-            log.info("Writing trees to file: " + treeFile);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(treeFile));
-            for (BinaryTree tree : parseTrees) {
-                // TODO: Collapse binary trees back into n-ary trees.
-                writer.write(tree.getAsPennTreebankString());
-                writer.write("\n\n");
-            }
-            writer.close();
+        log.info("Collapsing binary trees back into n-ary trees");
+        NaryTreebank naryParses = new NaryTreebank();
+        for (BinaryTree tree : binaryParses) {
+            naryParses.add(tree.collapseToNary(ntAlphabet));
+        }
+        binaryTrees = null;
+
+        if (parseFile != null) {
+            log.info("Writing parses to file: " + parseFile);
+            naryParses.write(parseFile);
         }
         
         if (evalbDir != null) {
             Evalb evalb = new Evalb(evalbDir);
-            //evalb.runEvalb(goldTrees, treeFile, "evalb.txt");
-            // TODO: run evalb
+            evalb.runEvalb(treeFile, parseFile, new File("evalb.txt"));
         }
     }
     

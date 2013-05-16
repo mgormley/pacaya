@@ -167,6 +167,25 @@ class DPExpParams(experiment_runner.JavaExpParams):
             java_args += " -Djava.library.path=%s " % (jlp)
         return java_args
 
+class CkyExpParams(experiment_runner.JavaExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.JavaExpParams.__init__(self,keywords)
+            
+    def get_initial_keys(self):
+        return "dataSet model k s".split()
+    
+    def get_instance(self):
+        return CkyExpParams()
+    
+    def create_experiment_script(self, exp_dir):
+        script = ""
+        #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (self.root_dir, self.root_dir)
+        script += "echo 'CLASSPATH=$CLASSPATH'\n"
+        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.hltcoe.parse.cky.RunCkyParser  %s \n" % (self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+    
 
 class HProfCpuExpParams(DPExpParams):
 
@@ -286,7 +305,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
-        wsj_00 = self.get_data(data_dir, "treebank_3_sym/wsj/02")
+        wsj_02 = self.get_data(data_dir, "treebank_3_sym/wsj/02")
+        wsj_22 = self.get_data(data_dir, "treebank_3_sym/wsj/22")
+        wsj_23 = self.get_data(data_dir, "treebank_3_sym/wsj/23")
         wsj_full = self.get_data(data_dir, "treebank_3_sym/wsj") # Only sections 2-21
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
@@ -308,11 +329,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         synth_alt_three = DPExpParams(synthetic="alt-three")
         synth_alt_three.set("dataset", "alt-three", True, False)
 
-        wsj = wsj_full if not self.fast else wsj_00
+        wsj = wsj_full if not self.fast else wsj_02
         brown = brown_full if not self.fast else brown_cf
         
         # Reducing tagset explicitly
-        for ptbdata in [wsj_00, wsj_full, brown_cf, brown_full]:
+        for ptbdata in [wsj_02, wsj_full, brown_cf, brown_full]:
             #ptbdata.update(reduceTags="%s/data/universal_pos_tags.1.02/en-ptb.map" % (self.root_dir))
             ptbdata.update(reduceTags="%s/data/tag_maps/en-ptb-plus-aux.map" % (self.root_dir))
         
@@ -329,7 +350,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         default_brown = brown + DPExpParams(maxSentenceLength=10, 
                                             maxNumSentences=200,
                                             dataset="brown200")
-        default_wsj = wsj_00 + DPExpParams(maxSentenceLength=10, 
+        default_wsj = wsj_02 + DPExpParams(maxSentenceLength=10, 
                                             maxNumSentences=200,
                                             dataset="wsj200")
         
@@ -399,6 +420,30 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)
+            return root
+        elif self.expname == "parse-wsj":
+            root = RootStage()
+            setup = CkyExpParams(grammar="%s/data/grammars/eng.R0.gr.gz" % (get_root_dir()),
+                                 evalbDir="%s/../other_lib/EVALB" % (get_root_dir()),
+                                 treeFile="trees.mrg",
+                                 parseFile="parses.mrg",
+                                 maxNumSentences=10,
+                                 maxSentenceLength=10,
+                                 )
+            grR0=CkyExpParams()
+            grR0.set("grammar", "%s/data/grammars/eng.R0.gr.gz" % (get_root_dir()), False, True)
+            grR0.set("grammarName", "eng.R0.gr.gz", True, False)
+            grsm6=CkyExpParams()
+            grsm6.set("grammar", "%s/data/grammars/eng.sm6.gr.gz" % (get_root_dir()), False, True)
+            grsm6.set("grammarName", "eng.sm6.gr.gz", True, False)
+
+            grammars = [grR0, grsm6]
+            for dataset in [wsj_02, wsj_22, wsj_23]:
+                for grammar in grammars:
+                    # Set the seed explicitly.
+                    experiment = dataset + setup + grammar
+                    experiment.remove("reduceTags")
+                    root.add_dependent(experiment)
             return root
         elif self.expname == "viterbi-vs-bnb":
             root = RootStage()

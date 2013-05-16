@@ -62,7 +62,7 @@ public class NaryTree {
     public String getAsPennTreebankString() {
         StringBuilder sb = new StringBuilder();
         sb.append("(");
-        getAsPennTreebankString(0, 0, sb);
+        getAsPennTreebankString(1, 1, sb);
         sb.append(")");
         return sb.toString();
     }
@@ -70,7 +70,7 @@ public class NaryTree {
     private void getAsPennTreebankString(int indent, int numOnLine, StringBuilder sb) {
         int numSpaces = indent - numOnLine;
         if (numSpaces <= 0 && indent != 0) {
-            numSpaces = 1;
+            //numSpaces = 1;
         }
         for (int i=0; i<numSpaces; i++) {
             sb.append(" ");
@@ -196,9 +196,6 @@ public class NaryTree {
             return null;
         }
         
-        //String treeStr = origTreeStr.replaceAll("\\s+", " ");
-        //String parentStr = treeStr.substring(ntStart, ntEnd);
-        // TODO: resolve start and end.
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
         Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
@@ -208,7 +205,7 @@ public class NaryTree {
                     + (isLexical ? "word" : "nonterminal") + ": "
                     + parentSb.toString());
         }
-        NaryTree root = new NaryTree(parent, start, end, children, isLexical, ntAlphabet);
+        NaryTree root = new NaryTree(parent, start, end, children, isLexical, alphabet);
         return root;
     }
 
@@ -336,7 +333,7 @@ public class NaryTree {
      * 
      * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public BinaryTree binarize(Alphabet<String> ntAlphabet) {
+    public BinaryTree leftBinarize(Alphabet<String> ntAlphabet) {
         Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
 
         BinaryTree leftChild;
@@ -345,28 +342,32 @@ public class NaryTree {
             leftChild = null;
             rightChild = null;
         } else if (children.size() == 1) {
-            leftChild = children.get(0).binarize(ntAlphabet);
+            leftChild = children.get(0).leftBinarize(ntAlphabet);
             rightChild = null;
         } else if (children.size() == 2) {
-            leftChild = children.get(0).binarize(ntAlphabet);
-            rightChild = children.get(1).binarize(ntAlphabet);
+            leftChild = children.get(0).leftBinarize(ntAlphabet);
+            rightChild = children.get(1).leftBinarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
             int xbarParent = ntAlphabet.lookupIndex("@" + getParentStr());
             
             LinkedList<NaryTree> queue = new LinkedList<NaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
-            leftChild = queue.removeFirst().binarize(ntAlphabet);
-            do {
+            leftChild = queue.removeFirst().leftBinarize(ntAlphabet);
+            while (true) {
                 // Working left-to-right, remove and binarize the next-left-most child, and store as R.
-                rightChild = queue.removeFirst().binarize(ntAlphabet);
+                rightChild = queue.removeFirst().leftBinarize(ntAlphabet);
+                // Break once we've acquired the right-most child.
+                if (queue.isEmpty()) {
+                    break;
+                }
                 // Then form a new binary node that has left/right children: L and R.
                 // That is, a node (@parentStr --> (L) (R)).
                 // Store this new node as L and repeat.
                 leftChild = new BinaryTree(xbarParent, leftChild.getStart(),
                         rightChild.getEnd(), leftChild, rightChild, isLexical,
                         alphabet);
-            } while (!queue.isEmpty());
+            }
         }
         return new BinaryTree(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
     }

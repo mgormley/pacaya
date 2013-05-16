@@ -1,5 +1,8 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -25,6 +28,20 @@ public class NaryTreebank extends ArrayList<NaryTree> {
             }
         }
         return trees;
+    }
+
+    /**
+     * Writes the trees to a file.
+     * @param outFile The output file.
+     * @throws IOException 
+     */
+    public void write(File outFile) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+        for (NaryTree tree : this) {
+            writer.write(tree.getAsPennTreebankString());
+            writer.write("\n\n");
+        }
+        writer.close();        
     } 
 
 }

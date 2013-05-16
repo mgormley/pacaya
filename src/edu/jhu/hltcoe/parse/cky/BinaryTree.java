@@ -1,6 +1,7 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -16,8 +17,8 @@ public class BinaryTree {
     private int parent;
     private int start;
     private int end;
-    private BinaryTree leftChildNode;
-    private BinaryTree rightChildNode;
+    private BinaryTree leftChild;
+    private BinaryTree rightChild;
     private boolean isLexical;
     
     private Alphabet<String> alphabet;
@@ -27,8 +28,8 @@ public class BinaryTree {
         this.parent = parent;
         this.start = start;
         this.end = end;
-        this.leftChildNode = leftChildNode;
-        this.rightChildNode = rightChildNode;
+        this.leftChild = leftChildNode;
+        this.rightChild = rightChildNode;
         this.isLexical = isLexical;
         this.alphabet = alphabet;
     }
@@ -57,7 +58,7 @@ public class BinaryTree {
     public String getAsPennTreebankString() {
         StringBuilder sb = new StringBuilder();
         sb.append("(");
-        getAsPennTreebankString(0, 0, sb);
+        getAsPennTreebankString(1, 1, sb);
         sb.append(")");
         return sb.toString();
     }
@@ -65,7 +66,7 @@ public class BinaryTree {
     private void getAsPennTreebankString(int indent, int numOnLine, StringBuilder sb) {
         int numSpaces = indent - numOnLine;
         if (numSpaces <= 0 && indent != 0) {
-            numSpaces = 1;
+            //numSpaces = 1;
         }
         for (int i=0; i<numSpaces; i++) {
             sb.append(" ");
@@ -79,13 +80,13 @@ public class BinaryTree {
             // If this is a constant instead, then we have each depth in one column.
             int numNewChars = 1 + getParentStr().length();
 
-            if (leftChildNode != null) {
+            if (leftChild != null) {
                 //sb.append("\n");
-                leftChildNode.getAsPennTreebankString(indent+numNewChars+1, indent + numNewChars, sb);
+                leftChild.getAsPennTreebankString(indent+numNewChars+1, indent + numNewChars, sb);
             }
-            if (rightChildNode != null) {
+            if (rightChild != null) {
                 sb.append("\n");
-                rightChildNode.getAsPennTreebankString(indent+numNewChars+1, 0, sb);
+                rightChild.getAsPennTreebankString(indent+numNewChars+1, 0, sb);
             }
             sb.append(")");
         }
@@ -95,27 +96,43 @@ public class BinaryTree {
         // Visit this node.
         function.call(this);
         // Pre-order traversal of each child.
-        leftChildNode.preOrderTraversal(function);
-        rightChildNode.preOrderTraversal(function);
+        if (leftChild != null) {
+            leftChild.preOrderTraversal(function);
+        }
+        if (rightChild != null) {
+            rightChild.preOrderTraversal(function);
+        }
     }
 
     public void inOrderTraversal(LambdaOne<BinaryTree> function) {
         // In-order traversal of left child.
-        leftChildNode.inOrderTraversal(function);
+        if (leftChild != null) {
+            leftChild.inOrderTraversal(function);
+        }
         // Visit this node.
         function.call(this);
         // In-order traversal of right child.
-        rightChildNode.inOrderTraversal(function);
+        if (rightChild != null) {
+            rightChild.inOrderTraversal(function);
+        }
     }
     
     public void postOrderTraversal(LambdaOne<BinaryTree> function) {
         // Post-order traversal of each child.
-        leftChildNode.postOrderTraversal(function);
-        rightChildNode.postOrderTraversal(function);
+        if (leftChild != null) {
+            leftChild.postOrderTraversal(function);
+        }
+        if (rightChild != null) {
+            rightChild.postOrderTraversal(function);
+        }
         // Visit this node.
         function.call(this);
     }
 
+    public int getParent() {
+        return parent;
+    }
+    
     public int getStart() {
         return start;
     }
@@ -125,7 +142,19 @@ public class BinaryTree {
     }
 
     public boolean isLeaf() {
-        return leftChildNode == null && rightChildNode == null;
+        return leftChild == null && rightChild == null;
+    }
+
+    public boolean isLexical() {
+        return isLexical;
+    }
+    
+    public BinaryTree getLeftChild() {
+        return leftChild;
+    }
+
+    public BinaryTree getRightChild() {
+        return rightChild;
     }
 
     public Alphabet<String> getAlphabet() {
@@ -169,8 +198,8 @@ public class BinaryTree {
     @Override
     public String toString() {
         return "BinaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
-                + end + "}, leftChildNode=" + leftChildNode
-                + ", rightChildNode=" + rightChildNode + "]";
+                + end + "}, leftChildNode=" + leftChild
+                + ", rightChildNode=" + rightChild + "]";
     }
 
     private class LeafCollector implements LambdaOne<BinaryTree> {
@@ -191,14 +220,56 @@ public class BinaryTree {
         @Override
         public void call(BinaryTree node) {
             if (!node.isLeaf()) {
-                node.start = node.leftChildNode.start;
-                if (node.rightChildNode == null) {
-                    node.end = node.leftChildNode.end;
+                node.start = node.leftChild.start;
+                if (node.rightChild == null) {
+                    node.end = node.leftChild.end;
                 } else {
-                    node.end = node.rightChildNode.end;
+                    node.end = node.rightChild.end;
                 }
             }
         }
         
+    }
+
+    public NaryTree collapseToNary(Alphabet<String> ntAlphabet) {
+        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+
+        ArrayList<NaryTree> children = null;
+        if (!isLeaf()) {
+            assert (leftChild != null);
+            LinkedList<NaryTree> queue = new LinkedList<NaryTree>();
+            addToQueue(queue, leftChild, ntAlphabet);
+            addToQueue(queue, rightChild, ntAlphabet);
+            children = new ArrayList<NaryTree>(queue);
+        }        
+        return new NaryTree(parent, start, end, children, isLexical, alphabet);         
+    }
+
+    private void addToQueue(LinkedList<NaryTree> queue, BinaryTree child,
+            Alphabet<String> ntAlphabet) {
+        if (child == null) {
+            return;
+        }
+        String parentStr = alphabet.lookupObject(child.getParent());
+        if (GrammarConstants.isBinarized(parentStr)) {
+            addToQueue(queue, child.leftChild, ntAlphabet);
+            addToQueue(queue, child.rightChild, ntAlphabet);
+        } else {
+            queue.add(child.collapseToNary(ntAlphabet));
+        }
+    }
+
+    public void setParent(String parentStr) {
+        this.parent = alphabet.lookupIndex(parentStr);
+        if (this.parent == -1) {
+            throw new IllegalArgumentException("Invalid parent string: " + parentStr + " " + parent);
+        }
+    }
+    
+    public void setParent(int parent) {
+        if (parent >= alphabet.size() || parent < 0) {
+            throw new IllegalArgumentException("Invalid parent: " + parent);
+        }
+        this.parent = parent;
     }
 }

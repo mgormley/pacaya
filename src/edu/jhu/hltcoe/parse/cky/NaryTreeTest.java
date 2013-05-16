@@ -78,29 +78,40 @@ public class NaryTreeTest {
         assertEquals(7, tree.getChildren().get(2).getEnd());
     }
     
+
     @Test
     public void testBinarize() throws IOException {
-        String origTreeStr = "" +
+        String origBinaryTreeStr = "" + 
+                "((VP (@VP (@VP (VB join)\n" +
+                                   "(NP (DT the)\n" +
+                                       "(NN board)))\n" +
+                              "(PP-CLR (IN as)\n" + 
+                                      "(NP (@NP (DT a)\n" +
+                                               "(JJ nonexecutive))\n" +
+                                          "(NN director))))\n"+
+                    "(NP-TMP (NNP Nov.)\n"+
+                            "(CD 29))))\n";
+        String origNaryTreeStr = "" +
                 "((VP (VB join)\n" +
                     "(NP (DT the) (NN board) )\n" +
                     "(PP-CLR (IN as)\n" + 
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
-        StringReader reader = new StringReader(origTreeStr);
+        StringReader reader = new StringReader(origNaryTreeStr);
         Alphabet<String> alphabet = new Alphabet<String>();
         NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
-        BinaryTree binaryTree = naryTree.binarize(alphabet);
+        BinaryTree binaryTree = naryTree.leftBinarize(alphabet);
         assertEquals(22, alphabet.size());
 
-        String newTreeStr = binaryTree.getAsPennTreebankString();
+        String newBinaryTreeStr = binaryTree.getAsPennTreebankString();
         
         System.out.println(alphabet);
-        System.out.println(newTreeStr);
-        newTreeStr = canonicalizeTreeString(newTreeStr);
-        Assert.assertTrue(newTreeStr.contains("(VP (@VP (@VP (@VP (VB join)"));
-        Assert.assertTrue(newTreeStr.contains("(NP (@NP (@NP (DT a) (JJ nonexecutive)) (NN director)) (NN director))))"));
+        System.out.println(newBinaryTreeStr);
+        newBinaryTreeStr = canonicalizeTreeString(newBinaryTreeStr);
+        origBinaryTreeStr = canonicalizeTreeString(origBinaryTreeStr);
+        assertEquals(origBinaryTreeStr, newBinaryTreeStr);        
     }
     
     private static String canonicalizeTreeString(String newTreeStr) {
