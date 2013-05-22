@@ -19,7 +19,7 @@ import edu.jhu.hltcoe.util.Files;
 public class NaryTree {
 
     private static final int NOT_INITIALIZED = -1;
-    private int parent;
+    private int symbol;
     private int start;
     private int end;
     /** Children of this node, ordered left-to-right */
@@ -28,9 +28,9 @@ public class NaryTree {
     
     private Alphabet<String> alphabet;
     
-    public NaryTree(int parent, int start, int end, ArrayList<NaryTree> children,
+    public NaryTree(int symbol, int start, int end, ArrayList<NaryTree> children,
             boolean isLexical, Alphabet<String> alphabet) {
-        this.parent = parent;
+        this.symbol = symbol;
         this.start = start;
         this.end = end;
         this.children = children;
@@ -42,8 +42,8 @@ public class NaryTree {
 //        return new Span(start, end);
 //    }
     
-    private String getParentStr() {
-        return alphabet.lookupObject(parent);
+    private String getSymbolStr() {
+        return alphabet.lookupObject(symbol);
     }
     
     /**
@@ -76,13 +76,13 @@ public class NaryTree {
             sb.append(" ");
         }
         if (isLexical) {
-            sb.append(getParentStr());
+            sb.append(getSymbolStr());
         } else {
             sb.append("(");
-            sb.append(getParentStr());
+            sb.append(getSymbolStr());
             
             // If this is a constant instead, then we have each depth in one column.
-            int numNewChars = 1 + getParentStr().length();
+            int numNewChars = 1 + getSymbolStr().length();
 
             for (int i=0; i<children.size(); i++) {
                 NaryTree child = children.get(i);
@@ -151,7 +151,7 @@ public class NaryTree {
      */
     private static NaryTree readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
-        StringBuilder parentSb = new StringBuilder();
+        StringBuilder symbolSb = new StringBuilder();
         ArrayList<NaryTree> children = null;
         boolean isLexical = false;
 
@@ -167,7 +167,7 @@ public class NaryTree {
                     // This was the tail end of a tree.
                     break;
                 } else if (!isWhitespace(c)) {
-                    parentSb.append(c);
+                    symbolSb.append(c);
                     state = ReaderState.LEXICAL;
                     isLexical = true;
                 }
@@ -176,7 +176,7 @@ public class NaryTree {
                     state = ReaderState.DONE;
                     break;
                 } else {
-                    parentSb.append(c);
+                    symbolSb.append(c);
                 }
             } else if (state == ReaderState.NONTERMINAL) {
                 if (isWhitespace(c)) {
@@ -185,7 +185,7 @@ public class NaryTree {
                     state = ReaderState.DONE;
                     break;
                 } else {
-                    parentSb.append(c);
+                    symbolSb.append(c);
                 }
             } else {
                 throw new IllegalStateException("Invalid state: " + state);
@@ -199,13 +199,13 @@ public class NaryTree {
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
         Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
-        int parent = alphabet.lookupIndex(parentSb.toString());
-        if (parent == -1) {
+        int symbol = alphabet.lookupIndex(symbolSb.toString());
+        if (symbol == -1) {
             throw new IllegalStateException("Unknown "
                     + (isLexical ? "word" : "nonterminal") + ": "
-                    + parentSb.toString());
+                    + symbolSb.toString());
         }
-        NaryTree root = new NaryTree(parent, start, end, children, isLexical, alphabet);
+        NaryTree root = new NaryTree(symbol, start, end, children, isLexical, alphabet);
         return root;
     }
 
@@ -279,7 +279,7 @@ public class NaryTree {
 //        postOrderFilterNodes(new NaryTreeNodeFilter() {
 //            @Override
 //            public boolean accept(NaryTreeNode node) {
-//                if (node.parent == nullElement) {
+//                if (node.symbol == nullElement) {
 //                    return false;
 //                } else if (!node.isLexical && node.isLeaf()) {
 //                    return false;
@@ -320,7 +320,7 @@ public class NaryTree {
         ArrayList<NaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
-            sent[i] = leaves.get(i).parent;
+            sent[i] = leaves.get(i).symbol;
         }
         return sent;
     }
@@ -349,7 +349,7 @@ public class NaryTree {
             rightChild = children.get(1).leftBinarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
-            int xbarParent = ntAlphabet.lookupIndex("@" + getParentStr());
+            int xbarParent = ntAlphabet.lookupIndex("@" + getSymbolStr());
             
             LinkedList<NaryTree> queue = new LinkedList<NaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
@@ -362,19 +362,19 @@ public class NaryTree {
                     break;
                 }
                 // Then form a new binary node that has left/right children: L and R.
-                // That is, a node (@parentStr --> (L) (R)).
+                // That is, a node (@symbolStr --> (L) (R)).
                 // Store this new node as L and repeat.
                 leftChild = new BinaryTree(xbarParent, leftChild.getStart(),
                         rightChild.getEnd(), leftChild, rightChild, isLexical,
                         alphabet);
             }
         }
-        return new BinaryTree(parent, start, end, leftChild, rightChild , isLexical, alphabet);                
+        return new BinaryTree(symbol, start, end, leftChild, rightChild , isLexical, alphabet);                
     }
     
     @Override
     public String toString() {
-        return "NaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
+        return "NaryTreeNode [symbol=" + getSymbolStr() + "_{" + start + ", "
                 + end + "}, children=" + children + "]";
     }
 
@@ -403,8 +403,8 @@ public class NaryTree {
         
     }
 
-    public int getParent() {
-        return parent;
+    public int getSymbol() {
+        return symbol;
     }
 
     public boolean isLexical() {
@@ -415,17 +415,17 @@ public class NaryTree {
         return alphabet;
     }
 
-    public void setParent(String parentStr) {
-        this.parent = alphabet.lookupIndex(parentStr);
-        if (this.parent == -1) {
-            throw new IllegalArgumentException("Invalid parent string: " + parentStr + " " + parent);
+    public void setSymbol(String symbolStr) {
+        this.symbol = alphabet.lookupIndex(symbolStr);
+        if (this.symbol == -1) {
+            throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
         }
     }
     
-    public void setParent(int parent) {
-        if (parent >= alphabet.size() || parent < 0) {
-            throw new IllegalArgumentException("Invalid parent: " + parent);
+    public void setSymbol(int symbol) {
+        if (symbol >= alphabet.size() || symbol < 0) {
+            throw new IllegalArgumentException("Invalid symbol: " + symbol);
         }
-        this.parent = parent;
+        this.symbol = symbol;
     }
 }

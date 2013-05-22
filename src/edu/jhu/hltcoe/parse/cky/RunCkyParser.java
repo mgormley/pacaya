@@ -98,7 +98,7 @@ public class RunCkyParser {
         NaryTreeNodeFilter nullElementFilter = new NaryTreeNodeFilter() {
             @Override
             public boolean accept(NaryTree node) {
-                if (node.getParent() == nullElement) {
+                if (node.getSymbol() == nullElement) {
                     return false;
                 } else if (!node.isLexical() && node.isLeaf()) {
                     return false;
@@ -119,11 +119,11 @@ public class RunCkyParser {
             public void call(NaryTree node) {
                 if (!node.isLexical()) {
                     Alphabet<String> alphabet = node.getAlphabet();
-                    int p = node.getParent();
+                    int p = node.getSymbol();
                     String pStr = alphabet.lookupObject(p);
                     // Remove the function tags.
                     pStr = functionTag.matcher(pStr).replaceAll("");
-                    node.setParent(alphabet.lookupIndex(pStr));
+                    node.setSymbol(alphabet.lookupIndex(pStr));
                 }
             }
         };
@@ -170,11 +170,11 @@ public class RunCkyParser {
             public void call(BinaryTree node) {
                 if (!node.isLexical()) {
                     Alphabet<String> alphabet = node.getAlphabet();
-                    int p = node.getParent();
+                    int p = node.getSymbol();
                     String pStr = alphabet.lookupObject(p);
                     // Remove the function tags.
                     pStr = refine.matcher(pStr).replaceAll("");
-                    node.setParent(alphabet.lookupIndex(pStr));
+                    node.setSymbol(alphabet.lookupIndex(pStr));
                 }
             }
         };

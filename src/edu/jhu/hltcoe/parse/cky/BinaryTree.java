@@ -14,7 +14,7 @@ import edu.jhu.hltcoe.util.Alphabet;
  */
 public class BinaryTree {
 
-    private int parent;
+    private int symbol;
     private int start;
     private int end;
     private BinaryTree leftChild;
@@ -23,9 +23,9 @@ public class BinaryTree {
     
     private Alphabet<String> alphabet;
     
-    public BinaryTree(int parent, int start, int end, BinaryTree leftChildNode,
+    public BinaryTree(int symbol, int start, int end, BinaryTree leftChildNode,
             BinaryTree rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
-        this.parent = parent;
+        this.symbol = symbol;
         this.start = start;
         this.end = end;
         this.leftChild = leftChildNode;
@@ -38,8 +38,8 @@ public class BinaryTree {
 //        return new Span(start, end);
 //    }
     
-    private String getParentStr() {
-        return alphabet.lookupObject(parent);
+    private String getSymbolStr() {
+        return alphabet.lookupObject(symbol);
     }
         
     /**
@@ -72,13 +72,13 @@ public class BinaryTree {
             sb.append(" ");
         }
         if (isLexical) {
-            sb.append(getParentStr());
+            sb.append(getSymbolStr());
         } else {
             sb.append("(");
-            sb.append(getParentStr());
+            sb.append(getSymbolStr());
             
             // If this is a constant instead, then we have each depth in one column.
-            int numNewChars = 1 + getParentStr().length();
+            int numNewChars = 1 + getSymbolStr().length();
 
             if (leftChild != null) {
                 //sb.append("\n");
@@ -129,8 +129,8 @@ public class BinaryTree {
         function.call(this);
     }
 
-    public int getParent() {
-        return parent;
+    public int getSymbol() {
+        return symbol;
     }
     
     public int getStart() {
@@ -190,14 +190,14 @@ public class BinaryTree {
         ArrayList<BinaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
-            sent[i] = leaves.get(i).parent;
+            sent[i] = leaves.get(i).symbol;
         }
         return sent;
     }
 
     @Override
     public String toString() {
-        return "BinaryTreeNode [parent=" + getParentStr() + "_{" + start + ", "
+        return "BinaryTreeNode [symbol=" + getSymbolStr() + "_{" + start + ", "
                 + end + "}, leftChildNode=" + leftChild
                 + ", rightChildNode=" + rightChild + "]";
     }
@@ -242,7 +242,7 @@ public class BinaryTree {
             addToQueue(queue, rightChild, ntAlphabet);
             children = new ArrayList<NaryTree>(queue);
         }        
-        return new NaryTree(parent, start, end, children, isLexical, alphabet);         
+        return new NaryTree(symbol, start, end, children, isLexical, alphabet);         
     }
 
     private static void addToQueue(LinkedList<NaryTree> queue, BinaryTree child,
@@ -250,8 +250,8 @@ public class BinaryTree {
         if (child == null) {
             return;
         }
-        String parentStr = child.alphabet.lookupObject(child.getParent());
-        if (GrammarConstants.isBinarized(parentStr)) {
+        String symbolStr = child.alphabet.lookupObject(child.getSymbol());
+        if (GrammarConstants.isBinarized(symbolStr)) {
             addToQueue(queue, child.leftChild, ntAlphabet);
             addToQueue(queue, child.rightChild, ntAlphabet);
         } else {
@@ -259,17 +259,17 @@ public class BinaryTree {
         }
     }
 
-    public void setParent(String parentStr) {
-        this.parent = alphabet.lookupIndex(parentStr);
-        if (this.parent == -1) {
-            throw new IllegalArgumentException("Invalid parent string: " + parentStr + " " + parent);
+    public void setSymbol(String symbolStr) {
+        this.symbol = alphabet.lookupIndex(symbolStr);
+        if (this.symbol == -1) {
+            throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
         }
     }
     
-    public void setParent(int parent) {
-        if (parent >= alphabet.size() || parent < 0) {
-            throw new IllegalArgumentException("Invalid parent: " + parent);
+    public void setSymbol(int symbol) {
+        if (symbol >= alphabet.size() || symbol < 0) {
+            throw new IllegalArgumentException("Invalid symbol: " + symbol);
         }
-        this.parent = parent;
+        this.symbol = symbol;
     }
 }

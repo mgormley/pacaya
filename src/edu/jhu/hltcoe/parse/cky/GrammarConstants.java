@@ -6,8 +6,8 @@ public class GrammarConstants {
 
     //private static final Pattern binarizedRegex = Pattern.compile("^@");
     
-    public static boolean isBinarized(String parentStr) {
-        return parentStr.charAt(0) == '@';
+    public static boolean isBinarized(String symbolStr) {
+        return symbolStr.charAt(0) == '@';
     }
 
 
