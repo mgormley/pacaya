@@ -905,6 +905,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                              timeoutSeconds=6,   
                              initSolTimeoutSeconds=2,
                              bnbTimeoutSeconds=2)
+            if isinstance(stage, CkyExpParams) and self.fast:
+                stage.update(maxSentenceLength=7,
+                             maxNumSentences=3)
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")
