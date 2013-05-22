@@ -86,10 +86,6 @@ public class RunCkyParser {
             reader.close();
         }
 
-        log.info("Stopping alphabet growth");
-        lexAlphabet.stopGrowth();
-        ntAlphabet.stopGrowth();
-
         log.info("Nonterminal alphabet size: " + ntAlphabet.size());
         log.info("Lexical alphabet size: " + lexAlphabet.size());
                 
@@ -123,7 +119,7 @@ public class RunCkyParser {
                     String pStr = alphabet.lookupObject(p);
                     // Remove the function tags.
                     pStr = functionTag.matcher(pStr).replaceAll("");
-                    node.setSymbol(alphabet.lookupIndex(pStr));
+                    node.setSymbol(pStr);
                 }
             }
         };
@@ -132,6 +128,12 @@ public class RunCkyParser {
             tree.postOrderTraversal(ftRemover);
             naryTrees.set(i, tree);
         }
+
+        // We can't stop the alphabet growth for the Berkeley grammar because
+        // we will end up removing the non-terminal refinements at the end.
+        //        log.info("Stopping alphabet growth");
+        //        lexAlphabet.stopGrowth();
+        //        ntAlphabet.stopGrowth();
 
         if (treeFile != null) {
             log.info("Writing (munged) trees to file: " + treeFile);
@@ -174,7 +176,7 @@ public class RunCkyParser {
                     String pStr = alphabet.lookupObject(p);
                     // Remove the function tags.
                     pStr = refine.matcher(pStr).replaceAll("");
-                    node.setSymbol(alphabet.lookupIndex(pStr));
+                    node.setSymbol(pStr);
                 }
             }
         };
