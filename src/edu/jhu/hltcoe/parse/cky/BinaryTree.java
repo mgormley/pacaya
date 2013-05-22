@@ -41,17 +41,26 @@ public class BinaryTree {
     private String getSymbolStr() {
         return alphabet.lookupObject(symbol);
     }
-        
+       
+    private static String canonicalizeTreeString(String newTreeStr) {
+        return newTreeStr.trim().replaceAll("\\s+\\)", ")").replaceAll("\\s+", " ");
+    }
+    
+    public String getAsOneLineString() {
+        // TODO: speedup.
+        return canonicalizeTreeString(getAsPennTreebankString());
+    }
+    
     /**
      * Gets a string representation of this parse that looks like the typical 
      * Penn Treebank style parse.
      * 
      * Example:
-     *  (ROOT (S (NP (NN time))
+     *  ((ROOT (S (NP (NN time))
      *           (VP (VBZ flies)
      *               (PP (IN like)
      *                   (NP (DT an)
-     *                       (NN arrow))))))
+     *                       (NN arrow)))))))
      *                       
      * @return A string representing this parse.
      */
@@ -65,9 +74,6 @@ public class BinaryTree {
 
     private void getAsPennTreebankString(int indent, int numOnLine, StringBuilder sb) {
         int numSpaces = indent - numOnLine;
-        if (numSpaces <= 0 && indent != 0) {
-            //numSpaces = 1;
-        }
         for (int i=0; i<numSpaces; i++) {
             sb.append(" ");
         }

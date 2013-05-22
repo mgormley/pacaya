@@ -18,6 +18,25 @@ public class Files {
         // private constructor
     }
 
+    public static void cat(File logFile) {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(logFile));
+            char[] cbuf = new char[512];
+            while (reader.ready()) {
+                int numRead = reader.read(cbuf);
+                if (numRead < cbuf.length) {
+                    char[] tmp = Arrays.copyOfRange(cbuf, 0, numRead);
+                    System.out.print(tmp);
+                } else {
+                    System.out.print(cbuf);
+                }
+            }
+            reader.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     public static String tail(File logFile) {
         try {
             RandomAccessFile raf = new RandomAccessFile(logFile, "r");

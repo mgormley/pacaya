@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import edu.jhu.hltcoe.util.Command;
+import edu.jhu.hltcoe.util.Files;
 
 public class Evalb {
 
@@ -37,6 +38,7 @@ public class Evalb {
                 testTrees.getAbsolutePath(),
         };
         Command.runCommand(cmd, logFile, new File("."));    
+        Files.cat(logFile);
     }
     
 }

@@ -135,7 +135,7 @@ public class RunCkyParser {
 
         if (treeFile != null) {
             log.info("Writing (munged) trees to file: " + treeFile);
-            naryTrees.write(treeFile);
+            naryTrees.writeTreesInOneLineFormat(treeFile);
         }
         
         // TODO: Convert OOVs to OOV terminals in the grammar.
@@ -193,7 +193,7 @@ public class RunCkyParser {
 
         if (parseFile != null) {
             log.info("Writing parses to file: " + parseFile);
-            naryParses.write(parseFile);
+            naryParses.writeTreesInOneLineFormat(parseFile);
         }
         
         if (evalbDir != null) {

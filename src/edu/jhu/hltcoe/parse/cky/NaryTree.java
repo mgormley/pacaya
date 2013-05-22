@@ -46,6 +46,16 @@ public class NaryTree {
         return alphabet.lookupObject(symbol);
     }
     
+
+    private static String canonicalizeTreeString(String newTreeStr) {
+        return newTreeStr.trim().replaceAll("\\s+\\)", ")").replaceAll("\\s+", " ");
+    }
+    
+    public String getAsOneLineString() {
+        // TODO: speedup.
+        return canonicalizeTreeString(getAsPennTreebankString());
+    }
+    
     /**
      * Gets a string representation of this parse that looks like the typical 
      * Penn Treebank style parse.
@@ -69,9 +79,6 @@ public class NaryTree {
 
     private void getAsPennTreebankString(int indent, int numOnLine, StringBuilder sb) {
         int numSpaces = indent - numOnLine;
-        if (numSpaces <= 0 && indent != 0) {
-            //numSpaces = 1;
-        }
         for (int i=0; i<numSpaces; i++) {
             sb.append(" ");
         }

@@ -35,11 +35,25 @@ public class NaryTreebank extends ArrayList<NaryTree> {
      * @param outFile The output file.
      * @throws IOException 
      */
-    public void write(File outFile) throws IOException {
+    public void writeTreesInPtbFormat(File outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
         for (NaryTree tree : this) {
             writer.write(tree.getAsPennTreebankString());
             writer.write("\n\n");
+        }
+        writer.close();        
+    } 
+
+    /**
+     * Writes the trees to a file.
+     * @param outFile The output file.
+     * @throws IOException 
+     */
+    public void writeTreesInOneLineFormat(File outFile) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+        for (NaryTree tree : this) {
+            writer.write(tree.getAsOneLineString());
+            writer.write("\n");
         }
         writer.close();        
     } 
