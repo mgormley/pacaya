@@ -245,12 +245,12 @@ public class BinaryTree {
         return new NaryTree(parent, start, end, children, isLexical, alphabet);         
     }
 
-    private void addToQueue(LinkedList<NaryTree> queue, BinaryTree child,
+    private static void addToQueue(LinkedList<NaryTree> queue, BinaryTree child,
             Alphabet<String> ntAlphabet) {
         if (child == null) {
             return;
         }
-        String parentStr = alphabet.lookupObject(child.getParent());
+        String parentStr = child.alphabet.lookupObject(child.getParent());
         if (GrammarConstants.isBinarized(parentStr)) {
             addToQueue(queue, child.leftChild, ntAlphabet);
             addToQueue(queue, child.rightChild, ntAlphabet);
