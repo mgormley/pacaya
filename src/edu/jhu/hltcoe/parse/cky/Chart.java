@@ -37,19 +37,20 @@ public class Chart {
 
     public enum ChartCellType { FULL, HASH };
 
-    private ChartCellType cellType = ChartCellType.FULL;
+    private final ChartCellType cellType;
 
-    private ChartCell[][] chart;
-    private CnfGrammar grammar;
-    private int[] sent;
+    private final ChartCell[][] chart;
+    private final CnfGrammar grammar;
+    private final int[] sent;
 
-    public Chart(int[] sent, CnfGrammar grammar) {
+    public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
+        this.cellType = cellType;
         this.sent = sent;
         this.grammar = grammar;
         chart = new ChartCell[sent.length][sent.length+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
-                switch(cellType) {
+                switch(this.cellType) {
                 case HASH:
                     chart[i][j] = new SingleHashChartCell(grammar);
                     break;

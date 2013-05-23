@@ -1,9 +1,7 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import java.util.ArrayList;
-
 import edu.jhu.hltcoe.data.Sentence;
-import gnu.trove.TIntDoubleHashMap;
+import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
 
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.
@@ -20,22 +18,28 @@ public class CkyPcfgParser {
 
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT };
     
-    private static final LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+    private final LoopOrder loopOrder;
+    private final ChartCellType cellType;
+    
+    public CkyPcfgParser(LoopOrder loopOrder, ChartCellType cellType) {
+        this.loopOrder = loopOrder;
+        this.cellType = cellType;
+    }
     
     @Deprecated
-    public final static Chart parseSentence(Sentence sentence, CnfGrammar grammar) {
+    public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
         // TODO: assert sentence.getAlphabet() == grammar.getLexAlphabet();
         int[] sent = sentence.getLabelIds();
         return parseSentence(sent, grammar);
     }
     
-    public final static Chart parseSentence(int[] sent, CnfGrammar grammar) {
-        Chart chart = new Chart(sent, grammar);
+    public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
+        Chart chart = new Chart(sent, grammar, cellType);
 
         // Apply lexical rules to each word.
         for (int i = 0; i <= sent.length - 1; i++) {
             ChartCell cell = chart.getCell(i, i+1);
-            for (Rule r : grammar.getLexicalRulesWithChild(sent[i])) {
+            for (final Rule r : grammar.getLexicalRulesWithChild(sent[i])) {
                 double score = r.getScore();
                 cell.updateCell(i+1, r, score);
             }
@@ -63,7 +67,7 @@ public class CkyPcfgParser {
                 MaxScoresSnapshot maxScores = cell.getMaxScoresSnapshot();
                 int[] nts = cell.getNts();
                 for(final int parentNt : nts) {
-                    for (Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
+                    for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
                         double score = r.getScore() + maxScores.getMaxScore(r.getLeftChild());
                         cell.updateCell(end, r, score);
                     }

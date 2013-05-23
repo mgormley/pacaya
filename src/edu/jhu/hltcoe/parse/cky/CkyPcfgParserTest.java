@@ -6,6 +6,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.util.Pair;
 
 public class CkyPcfgParserTest {
@@ -77,11 +79,12 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(-46.24, logProb, 1e-2);
     }
     
+    // TODO: we should parse with each method and check that we get the same solution.
     public static Pair<BinaryTree, Double> parseSentence(String sentence, CnfGrammar grammar) {
         String[] tokens = sentence.split(" ");
         int[] sent = grammar.getLexAlphabet().lookupIndices(tokens);
         System.out.println(Arrays.toString(sent));
-        Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
+        Chart chart = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL).parseSentence(sent, grammar);
         return chart.getViterbiParse();
     }
 }

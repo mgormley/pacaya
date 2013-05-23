@@ -12,6 +12,8 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -50,6 +52,12 @@ public class RunCkyParser {
 
     @Opt(hasArg = true, description = "Pseudo random number generator seed")
     public static long seed = Prng.DEFAULT_SEED;
+    
+    // Parsing.
+    @Opt(hasArg = true, description = "The parsing loop order for processing binary rules.")
+    public static LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+    @Opt(hasArg = true, description = "The parse chart cell type.")
+    public static ChartCellType cellType = ChartCellType.FULL;
     
     public void run() throws IOException {
         log.info("Reading grammar from file");
@@ -95,10 +103,11 @@ public class RunCkyParser {
         log.info("Parsing " + naryTrees.size() + " trees");
         BinaryTreebank binaryParses = new BinaryTreebank();
         Timer timer = new Timer();
+        CkyPcfgParser parser = new CkyPcfgParser(loopOrder, cellType);
         for (NaryTree tree : naryTrees) {            
             int[] sent = tree.getSentence();
             timer.start();
-            Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
+            Chart chart = parser.parseSentence(sent, grammar);
             timer.stop();
             Pair<BinaryTree, Double> pair = chart.getViterbiParse();
             binaryParses.add(pair.get1());
