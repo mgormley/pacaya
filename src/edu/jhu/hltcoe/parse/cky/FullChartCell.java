@@ -10,6 +10,14 @@ import gnu.trove.TIntArrayList;
  * grammars with a very small number of non-terminals (e.g. the DMV), where Hash
  * lookups would slow down the parsing.
  * 
+ * The key speedup here is avoiding any hasing whatsoever. The nonterminals set
+ * is not represented as a HashSet but instead as an IntArrayList where we use
+ * the presence of a null in bps[nt] to indicate that a nonterminal with id nt
+ * is not in the set.
+ * 
+ * In addition we "close" the cell after processing it, so that future calls to
+ * getNts() will used a cached array of ints.
+ * 
  * @author mgormley
  * 
  */

@@ -5,7 +5,7 @@ import edu.jhu.hltcoe.util.map.IntObjectHashMap;
 import edu.jhu.hltcoe.util.map.OpenIntDoubleHashMapWithDefault;
 
 /**
- * Cell that stores every entries in a single hash table.
+ * Cell that stores every entry in a single hash table.
  * 
  * @author mgormley
  * 
