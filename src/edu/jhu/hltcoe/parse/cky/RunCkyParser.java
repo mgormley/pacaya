@@ -91,11 +91,6 @@ public class RunCkyParser {
         // Reset the lexical alphabet (only) to the grammar's alphabets.
         naryTrees.resetAlphabets(grammar.getLexAlphabet(), ntAlphabet);
                 
-        // TODO: why binarize at all? We would only do this if we wanted to learn a grammar.
-        //        log.info("Binarizing " + naryTrees.size() + " trees");
-        //        BinaryTreebank binaryTrees = naryTrees.leftBinarize(ntAlphabet);
-        //        binaryTrees = null;
-
         log.info("Parsing " + naryTrees.size() + " trees");
         BinaryTreebank binaryParses = new BinaryTreebank();
         Timer timer = new Timer();

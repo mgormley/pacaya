@@ -21,6 +21,8 @@ public class CnfGrammar {
     private ArrayList<Rule>[] lexRulesForChild;
     private ArrayList<Rule>[] unaryRulesForChild;
     private ArrayList<Rule>[][] binaryRulesForChildren;
+    private ArrayList<Rule>[] binaryRulesWithLeftChild;
+    private ArrayList<Rule>[] binaryRulesWithRightChild;
 
     private Alphabet<String> lexAlphabet;
     private Alphabet<String> ntAlphabet;
@@ -34,18 +36,18 @@ public class CnfGrammar {
         lexRulesForChild = new ArrayList[lexAlphabet.size()];
         unaryRulesForChild = new ArrayList[ntAlphabet.size()];
         binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
+        binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
+        binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
 
-        for (int i=0; i<lexRulesForChild.length; i++) {
-            lexRulesForChild[i] = new ArrayList<Rule>();
-        }
-        for (int i=0; i<unaryRulesForChild.length; i++) {
-            unaryRulesForChild[i] = new ArrayList<Rule>();
-        }
+        fill(lexRulesForChild);
+        fill(unaryRulesForChild);
         for (int i=0; i<binaryRulesForChildren.length; i++) {
             for (int j=0; j<binaryRulesForChildren[i].length; j++) {
                 binaryRulesForChildren[i][j] = new ArrayList<Rule>();
             }
         }
+        fill(binaryRulesWithLeftChild);
+        fill(binaryRulesWithRightChild);
         
         for (Rule r : allRules) {
             if (r.isLexical()) {
@@ -55,7 +57,15 @@ public class CnfGrammar {
             } else {
                 binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
                         .add(r);
+                binaryRulesWithLeftChild[r.getLeftChild()].add(r);
+                binaryRulesWithRightChild[r.getRightChild()].add(r);
             }
+        }
+    }
+
+    private static void fill(ArrayList<Rule>[] array) {
+        for (int i=0; i<array.length; i++) {
+            array[i] = new ArrayList<Rule>();
         }
     }
 
@@ -69,6 +79,14 @@ public class CnfGrammar {
 
     public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
         return binaryRulesForChildren[leftChildNt][rightChildNt];
+    }
+
+    public ArrayList<Rule> getBinaryRulesWithLeftChild(int leftChildNt) {
+        return binaryRulesWithLeftChild[leftChildNt];
+    }
+    
+    public ArrayList<Rule> getBinaryRulesWithRightChild(int rightChildNt) {
+        return binaryRulesWithRightChild[rightChildNt];
     }
 
     public Alphabet<String> getLexAlphabet() {

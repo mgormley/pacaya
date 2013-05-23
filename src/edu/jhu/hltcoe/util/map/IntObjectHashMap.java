@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.util.map;
 
+import cern.colt.function.IntProcedure;
 import cern.colt.list.ObjectArrayList;
 import cern.colt.map.OpenIntObjectHashMap;
 
@@ -10,6 +11,10 @@ public class IntObjectHashMap<T> {
     
     public IntObjectHashMap() {
         map = new OpenIntObjectHashMap();
+    }
+    
+    public IntObjectHashMap(IntObjectHashMap<T> other) {
+        map = (OpenIntObjectHashMap)other.map.clone();
     }
     
     public void clear() {
@@ -25,7 +30,7 @@ public class IntObjectHashMap<T> {
     }
 
     @SuppressWarnings("unchecked")
-    public T get(int key) {
+    public final T get(int key) {
         return (T) map.get(key);
     }
 
@@ -47,6 +52,26 @@ public class IntObjectHashMap<T> {
 
     public ObjectArrayList values() {
         return map.values();
+    }
+    
+    public int[] keys() {
+        final int[] keys = new int[map.size()];
+        map.forEachKey(new IntProcedure() {
+            int i = 0;
+            @Override
+            public boolean apply(int element) {
+                keys[i++] = element;
+                return true;
+            }
+        });
+        return keys;
+    }
+    
+    @Override
+    public Object clone() {
+        IntObjectHashMap<T> clone = new IntObjectHashMap<T>(); // (IntObjectHashMap<T>) super.clone();
+        clone.map = (OpenIntObjectHashMap)map.clone();
+        return clone;
     }
     
 }

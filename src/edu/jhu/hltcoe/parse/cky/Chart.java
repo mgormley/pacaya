@@ -1,20 +1,17 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import edu.jhu.hltcoe.util.Pair;
-import gnu.trove.TIntArrayList;
 
-import java.util.Arrays;
 
 /**
- * Parsing chart that stores every cell explicitly. This is suitable for
- * grammars with a very small number of non-terminals (e.g. the DMV).
+ * Parsing chart that stores every cell explicitly.
  * 
  * @author mgormley
  * 
  */
 public class Chart {
-
-    private static class BackPointer {
+    
+    public static class BackPointer {
         private Rule r;
         private int mid;
 
@@ -23,28 +20,24 @@ public class Chart {
             this.mid = mid;
         }
 
-    }
-
-    private static class ChartCell {
-        private double[] maxScores;
-        // private double[] insideScores;
-        // private double[] outsideScores;
-        private BackPointer[] bps;
-        private TIntArrayList nts;
-
-        public ChartCell(CnfGrammar grammar) {
-            maxScores = new double[grammar.getNumNonTerminals()];
-            // insideScores = new double[grammar.getNumNonTerminals()];
-            // outsideScores = new double[grammar.getNumNonTerminals()];
-            bps = new BackPointer[grammar.getNumNonTerminals()];
-            nts = new TIntArrayList();
-
-            // Initialize scores to negative infinity.
-            Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
-            // Arrays.fill(insideScores, Double.NEGATIVE_INFINITY);
-            // Arrays.fill(outsideScores, Double.NEGATIVE_INFINITY);
+        /**
+         * Get the midpoint of the rule application.
+         */
+        public int getMid() {
+            return mid;
+        }
+        
+        /**
+         * Get the rule.
+         */
+        public Rule getRule() {
+            return r;
         }
     }
+
+    public enum ChartCellType { FULL, HASH };
+
+    private ChartCellType cellType = ChartCellType.HASH;
 
     private ChartCell[][] chart;
     private CnfGrammar grammar;
@@ -56,40 +49,24 @@ public class Chart {
         chart = new ChartCell[sent.length][sent.length+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
-                chart[i][j] = new ChartCell(grammar);
+                switch(cellType) {
+                case HASH:
+                    chart[i][j] = new SingleHashChartCell(grammar);
+                    break;
+                case FULL:
+                    chart[i][j] = new FullChartCell(grammar);
+                    break;
+                default:
+                    throw new RuntimeException("not implemented for " + cellType);
+                }
+                
             }
-        }
-    }
-
-    public int[] getNonTerminals(int start, int end) {
-        return chart[start][end].nts.toNativeArray();
-    }
-
-    public double getMaxScore(int start, int end, int nt) {
-        return chart[start][end].maxScores[nt];
-    }
-
-    public void updateCell(int start, int end, Rule r, double score) {
-        assert !r.isBinary();
-        updateCell(start, end, end, r, score);
-    }
-
-    public void updateCell(int start, int mid, int end, Rule r, double score) {
-        ChartCell cell = chart[start][end];
-        int nt = r.getParent();
-        if (cell.bps[nt] == null) {
-            // If the non-terminal hasn't been added yet, include it in the set of non terminals.
-            cell.nts.add(nt);
-        }
-        if (score > cell.maxScores[nt]) {
-            cell.maxScores[nt] = score;
-            cell.bps[nt] = new BackPointer(r, mid);
         }
     }
 
     public Pair<BinaryTree,Double> getViterbiParse() {
         BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
-        double rootScore = chart[0][sent.length].maxScores[grammar.getRootSymbol()];
+        double rootScore = chart[0][sent.length].getMaxScore(grammar.getRootSymbol());
         return new Pair<BinaryTree, Double>(root, rootScore);
     }
     
@@ -103,7 +80,7 @@ public class Chart {
      */
     private BinaryTree getViterbiTree(int start, int end, int rootSymbol) {
         ChartCell cell = chart[start][end];
-        BackPointer bp = cell.bps[rootSymbol];
+        BackPointer bp = cell.getBp(rootSymbol);
         if (bp == null) {
             return null;
         }
@@ -122,5 +99,9 @@ public class Chart {
         }
         
         return new BinaryTree(rootSymbol, start, end, leftChild, rightChild, false, grammar.getNtAlphabet());
+    }
+
+    public ChartCell getCell(int start, int end) {
+        return chart[start][end];
     }
 }
