@@ -37,7 +37,7 @@ public class Chart {
 
     public enum ChartCellType { FULL, HASH };
 
-    private ChartCellType cellType = ChartCellType.HASH;
+    private ChartCellType cellType = ChartCellType.FULL;
 
     private ChartCell[][] chart;
     private CnfGrammar grammar;

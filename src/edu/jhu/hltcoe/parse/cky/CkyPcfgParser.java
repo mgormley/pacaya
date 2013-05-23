@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import java.util.ArrayList;
+
 import edu.jhu.hltcoe.data.Sentence;
 import gnu.trove.TIntDoubleHashMap;
 
@@ -13,16 +15,16 @@ public class CkyPcfgParser {
 
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT };
     
-    private LoopOrder loopOrder = LoopOrder.CARTESIAN_PRODUCT;
+    private static final LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
     
     @Deprecated
-    public static Chart parseSentence(Sentence sentence, CnfGrammar grammar) {
+    public final static Chart parseSentence(Sentence sentence, CnfGrammar grammar) {
         // TODO: assert sentence.getAlphabet() == grammar.getLexAlphabet();
         int[] sent = sentence.getLabelIds();
         return parseSentence(sent, grammar);
     }
     
-    public static Chart parseSentence(int[] sent, CnfGrammar grammar) {
+    public final static Chart parseSentence(int[] sent, CnfGrammar grammar) {
         Chart chart = new Chart(sent, grammar);
 
         // Apply lexical rules to each word.
@@ -41,23 +43,16 @@ public class CkyPcfgParser {
                 ChartCell cell = chart.getCell(start, end);
                 
                 // Apply binary rules.
-                for (int mid = start + 1; mid <= end - 1; mid++) {
-                    ChartCell leftCell = chart.getCell(start, mid);
-                    ChartCell rightCell = chart.getCell(mid, end);
-                    
-                    // Loop through all possible pairs of left/right non-terminals.
-                    for (final int leftChildNt : leftCell.getNts()) {
-                        for (final int rightChildNt : rightCell.getNts()) {
-                            // Lookup the rules with those left/right children.
-                            for (final Rule r : grammar.getBinaryRulesWithChildren(leftChildNt, rightChildNt)) {
-                                double score = r.getScore() 
-                                        + leftCell.getMaxScore(r.getLeftChild()) 
-                                        + rightCell.getMaxScore(r.getRightChild());
-                                cell.updateCell(mid, r, score);
-                            }
-                        }
-                    }
+                if (loopOrder == LoopOrder.CARTESIAN_PRODUCT) {
+                    processCellCartesianProduct(grammar, chart, start, end, cell);
+                } else if (loopOrder == LoopOrder.LEFT_CHILD) {
+                    processCellLeftChild(grammar, chart, start, end, cell);
+                } else if (loopOrder == LoopOrder.RIGHT_CHILD) {
+                    processCellRightChild(grammar, chart, start, end, cell);
+                } else {
+                    throw new RuntimeException("Not implemented: " + loopOrder);
                 }
+
                 
                 // Apply unary rules.
                 MaxScoresSnapshot maxScores = cell.getMaxScoresSnapshot();
@@ -76,4 +71,93 @@ public class CkyPcfgParser {
         return chart;
     }
 
+    /**
+     * Process a cell (binary rules only) using the Cartesian product of the children's rules.
+     * 
+     * This follows the description in (Dunlop et al., 2010).
+     */
+    private final static void processCellCartesianProduct(CnfGrammar grammar, Chart chart, int start,
+            int end, ChartCell cell) {
+        // Apply binary rules.
+        for (int mid = start + 1; mid <= end - 1; mid++) {
+            ChartCell leftCell = chart.getCell(start, mid);
+            ChartCell rightCell = chart.getCell(mid, end);
+            
+            // Loop through all possible pairs of left/right non-terminals.
+            for (final int leftChildNt : leftCell.getNts()) {
+                double leftScoreForNt = leftCell.getMaxScore(leftChildNt);
+                for (final int rightChildNt : rightCell.getNts()) {
+                    double rightScoreForNt = rightCell.getMaxScore(rightChildNt);
+                    // Lookup the rules with those left/right children.
+                    for (final Rule r : grammar.getBinaryRulesWithChildren(leftChildNt, rightChildNt)) {
+                        double score = r.getScore()
+                                + leftScoreForNt
+                                + rightScoreForNt;
+                        cell.updateCell(mid, r, score);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Process a cell (binary rules only) using the left-child to constrain the set of rules we consider.
+     * 
+     * This follows the description in (Dunlop et al., 2010).
+     */
+    private final static void processCellLeftChild(CnfGrammar grammar, Chart chart, int start,
+            int end, ChartCell cell) {
+        // Apply binary rules.
+        for (int mid = start + 1; mid <= end - 1; mid++) {
+            ChartCell leftCell = chart.getCell(start, mid);
+            ChartCell rightCell = chart.getCell(mid, end);
+            
+            // Loop through each left child non-terminal.
+            for (final int leftChildNt : leftCell.getNts()) {
+                double leftScoreForNt = leftCell.getMaxScore(leftChildNt);
+                // Lookup all rules with that left child.
+                for (final Rule r : grammar.getBinaryRulesWithLeftChild(leftChildNt)) {
+                    // Check whether the right child of that rule is in the right child cell.
+                    double rightScoreForNt = rightCell.getMaxScore(r.getRightChild());
+                    if (rightScoreForNt > Double.NEGATIVE_INFINITY) {
+                        double score = r.getScore() 
+                                + leftScoreForNt
+                                + rightScoreForNt;
+                        cell.updateCell(mid, r, score);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Process a cell (binary rules only) using the left-child to constrain the set of rules we consider.
+     * 
+     * This follows the description in (Dunlop et al., 2010).
+     */
+    private final static void processCellRightChild(CnfGrammar grammar, Chart chart, int start,
+            int end, ChartCell cell) {
+        // Apply binary rules.
+        for (int mid = start + 1; mid <= end - 1; mid++) {
+            ChartCell leftCell = chart.getCell(start, mid);
+            ChartCell rightCell = chart.getCell(mid, end);
+            
+            // Loop through each right child non-terminal.
+            for (final int rightChildNt : rightCell.getNts()) {
+                double rightScoreForNt = rightCell.getMaxScore(rightChildNt);
+                // Lookup all rules with that right child.
+                for (final Rule r : grammar.getBinaryRulesWithRightChild(rightChildNt)) {
+                    // Check whether the left child of that rule is in the left child cell.
+                    double leftScoreForNt = leftCell.getMaxScore(r.getLeftChild());
+                    if (leftScoreForNt > Double.NEGATIVE_INFINITY) {
+                        double score = r.getScore() 
+                                + leftScoreForNt
+                                + rightScoreForNt;
+                        cell.updateCell(mid, r, score);
+                    }
+                }
+            }
+        }
+    }
+    
 }

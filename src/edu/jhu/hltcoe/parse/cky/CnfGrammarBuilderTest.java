@@ -27,7 +27,7 @@ public class CnfGrammarBuilderTest {
                 1,
                 grammar.getBinaryRulesWithChildren(
                         grammar.getNtAlphabet().lookupIndex("NP"),
-                        grammar.getNtAlphabet().lookupIndex("VP")).size());
+                        grammar.getNtAlphabet().lookupIndex("VP")).length);
     }
 
 }

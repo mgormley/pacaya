@@ -42,11 +42,13 @@ public class SingleHashChartCell implements ChartCell {
     }
 
     public final BackPointer getBp(int symbol) {
-        return table.get(symbol).bp;
+        Storage entry = table.get(symbol);
+        return (entry != null) ? entry.bp : null;
     }
     
     public final double getMaxScore(int symbol) {
-        return table.get(symbol).maxScore;
+        Storage entry = table.get(symbol);
+        return (entry != null) ? entry.maxScore : Double.NEGATIVE_INFINITY;
     }
     
     public final int[] getNts() {

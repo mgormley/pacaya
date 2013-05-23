@@ -17,15 +17,15 @@ public class IntObjectHashMap<T> {
         map = (OpenIntObjectHashMap)other.map.clone();
     }
     
-    public void clear() {
+    public final void clear() {
         map.clear();
     }
 
-    public boolean containsKey(int key) {
+    public final boolean containsKey(int key) {
         return map.containsKey(key);
     }
 
-    public boolean containsValue(T value) {
+    public final boolean containsValue(T value) {
         return map.containsValue(value);
     }
 
@@ -34,27 +34,27 @@ public class IntObjectHashMap<T> {
         return (T) map.get(key);
     }
 
-    public boolean isEmpty() {
+    public final boolean isEmpty() {
         return map.isEmpty();
     }
 
-    public boolean put(int key, T value) {
+    public final boolean put(int key, T value) {
         return map.put(key, value);
     }
 
-    public boolean removeKey(int key) {
+    public final boolean removeKey(int key) {
         return map.removeKey(key);
     }
 
-    public int size() {
+    public final int size() {
         return map.size();
     }
 
-    public ObjectArrayList values() {
+    public final ObjectArrayList values() {
         return map.values();
     }
     
-    public int[] keys() {
+    public final int[] keys() {
         final int[] keys = new int[map.size()];
         map.forEachKey(new IntProcedure() {
             int i = 0;

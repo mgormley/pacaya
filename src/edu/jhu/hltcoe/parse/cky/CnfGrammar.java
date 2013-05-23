@@ -23,7 +23,12 @@ public class CnfGrammar {
     private ArrayList<Rule>[][] binaryRulesForChildren;
     private ArrayList<Rule>[] binaryRulesWithLeftChild;
     private ArrayList<Rule>[] binaryRulesWithRightChild;
-
+    
+    // Arrays corresponding to binaryRulesForChildren, binaryRulesWithLeftChild, binaryRulesWithRightChild.
+    private Rule[][][] brfc;
+    private Rule[][] brwlc;
+    private Rule[][] brwrc;
+    
     private Alphabet<String> lexAlphabet;
     private Alphabet<String> ntAlphabet;
     
@@ -61,6 +66,28 @@ public class CnfGrammar {
                 binaryRulesWithRightChild[r.getRightChild()].add(r);
             }
         }
+        
+        brfc = getAsArrays(binaryRulesForChildren);
+        brwlc = getAsArrays(binaryRulesWithLeftChild);
+        brwrc = getAsArrays(binaryRulesWithRightChild);
+    }
+    
+    private static Rule[][] getAsArrays(ArrayList<Rule>[] a) {
+        Rule[][] b = new Rule[a.length][];
+        for (int i=0; i<a.length; i++) {
+            b[i] = a[i].toArray(new Rule[]{});
+        }
+        return b;
+    }
+
+    private static Rule[][][] getAsArrays(ArrayList<Rule>[][] a) {
+        Rule[][][] b = new Rule[a.length][a[0].length][];
+        for (int i=0; i<a.length; i++) {
+            for (int j=0; j<a[i].length; j++) {
+                b[i][j] = a[i][j].toArray(new Rule[]{});
+            }
+        }
+        return b;
     }
 
     private static void fill(ArrayList<Rule>[] array) {
@@ -77,18 +104,18 @@ public class CnfGrammar {
         return unaryRulesForChild[child];
     }
 
-    public ArrayList<Rule> getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
-        return binaryRulesForChildren[leftChildNt][rightChildNt];
+    public Rule[] getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
+        return brfc[leftChildNt][rightChildNt];
     }
 
-    public ArrayList<Rule> getBinaryRulesWithLeftChild(int leftChildNt) {
-        return binaryRulesWithLeftChild[leftChildNt];
+    public Rule[] getBinaryRulesWithLeftChild(int leftChildNt) {
+        return brwlc[leftChildNt];
+    }
+
+    public Rule[] getBinaryRulesWithRightChild(int rightChildNt) {
+        return brwrc[rightChildNt];
     }
     
-    public ArrayList<Rule> getBinaryRulesWithRightChild(int rightChildNt) {
-        return binaryRulesWithRightChild[rightChildNt];
-    }
-
     public Alphabet<String> getLexAlphabet() {
         return lexAlphabet;
     }

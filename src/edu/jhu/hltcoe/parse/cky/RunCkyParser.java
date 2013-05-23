@@ -86,6 +86,7 @@ public class RunCkyParser {
         if (treeFile != null) {
             log.info("Writing (munged) trees to file: " + treeFile);
             naryTrees.writeTreesInOneLineFormat(treeFile);
+            naryTrees.writeSentencesInOneLineFormat(treeFile + ".sent");
         }
 
         // Reset the lexical alphabet (only) to the grammar's alphabets.
@@ -94,16 +95,15 @@ public class RunCkyParser {
         log.info("Parsing " + naryTrees.size() + " trees");
         BinaryTreebank binaryParses = new BinaryTreebank();
         Timer timer = new Timer();
-        timer.start();
         for (NaryTree tree : naryTrees) {            
             int[] sent = tree.getSentence();
+            timer.start();
             Chart chart = CkyPcfgParser.parseSentence(sent, grammar);
+            timer.stop();
             Pair<BinaryTree, Double> pair = chart.getViterbiParse();
             binaryParses.add(pair.get1());
-            timer.split();
             log.debug("Avg seconds per parse: " + timer.avgSec());
         }
-        timer.stop();
         
         // Reset alphabets to the growable ones before we remove the nonterminal refinements.
         binaryParses.resetAlphabets(lexAlphabet, ntAlphabet);

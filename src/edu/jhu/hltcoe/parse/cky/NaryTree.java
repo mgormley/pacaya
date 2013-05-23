@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -54,6 +55,9 @@ public class NaryTree {
     
     public String getAsOneLineString() {
         // TODO: speedup.
+//        StringBuilder sb = new StringBuilder();
+//        getAsPennTreebankString(1, 1, sb);
+//        return canonicalizeTreeString(sb.toString());
         return canonicalizeTreeString(getAsPennTreebankString());
     }
     
@@ -448,5 +452,14 @@ public class NaryTree {
                 node.setSymbolStr(symbolStr);
             }
         });
+    }
+
+    public List<String> getSentenceStrs() {
+        ArrayList<NaryTree> leaves = getLeaves();
+        ArrayList<String> sentence = new ArrayList<String>(leaves.size());
+        for (int i = 0; i < leaves.size(); i++) {
+            sentence.add(leaves.get(i).getSymbolStr());
+        }
+        return sentence;
     }
 }

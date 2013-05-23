@@ -10,14 +10,14 @@ import edu.jhu.hltcoe.util.map.OpenIntDoubleHashMapWithDefault;
  * @author mgormley
  * 
  */
-public class HashChartCell implements ChartCell {
+public class DoubleHashChartCell implements ChartCell {
 
     private OpenIntDoubleHashMapWithDefault maxScores;
     private IntObjectHashMap<BackPointer> bps;
     private int[] ntsArray;    
     private boolean isClosed;
 
-    public HashChartCell(CnfGrammar grammar) {
+    public DoubleHashChartCell(CnfGrammar grammar) {
         maxScores = new OpenIntDoubleHashMapWithDefault(Double.NEGATIVE_INFINITY);
         bps = new IntObjectHashMap<BackPointer>();
 

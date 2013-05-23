@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang.StringUtils;
 
 import edu.jhu.hltcoe.util.Alphabet;
 
@@ -58,6 +61,16 @@ public class NaryTreebank extends ArrayList<NaryTree> {
         writer.close();        
     }
 
+    public void writeSentencesInOneLineFormat(String outFile) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
+        for (NaryTree tree : this) {
+            List<String> sent = tree.getSentenceStrs();
+            writer.write(StringUtils.join(sent.toArray(), " "));
+            writer.write("\n");
+        }
+        writer.close(); 
+    } 
+
     public BinaryTreebank leftBinarize(Alphabet<String> ntAlphabet) {
         BinaryTreebank binaryTrees = new BinaryTreebank();
         for (NaryTree tree : this) {
@@ -71,6 +84,6 @@ public class NaryTreebank extends ArrayList<NaryTree> {
         for (NaryTree tree : this) {
             tree.resetAlphabets(lexAlphabet, ntAlphabet);
         }
-    } 
+    }
 
 }
