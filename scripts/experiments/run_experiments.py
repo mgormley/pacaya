@@ -438,7 +438,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             grsm6.set("grammarName", "eng.sm6.gr.gz", True, False)
 
             grammars = [grR0, grsm6]
-            for dataset in [wsj_02]: #TODO: we need an OOV detector to parse these: , wsj_22, wsj_23]:
+            for dataset in [wsj_02, wsj_22, wsj_23]:
                 for grammar in grammars:
                     # Set the seed explicitly.
                     experiment = dataset + setup + grammar
