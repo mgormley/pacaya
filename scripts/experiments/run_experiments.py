@@ -306,8 +306,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
         wsj_02 = self.get_data(data_dir, "treebank_3_sym/wsj/02")
-        wsj_22 = self.get_data(data_dir, "treebank_3_sym/wsj/22")
-        wsj_23 = self.get_data(data_dir, "treebank_3_sym/wsj/23")
+        wsj_22 = self.get_data(data_dir, "treebank_3/wsj/22")
+        wsj_23 = self.get_data(data_dir, "treebank_3/wsj/23")
         wsj_full = self.get_data(data_dir, "treebank_3_sym/wsj") # Only sections 2-21
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
         brown_full = self.get_data(data_dir, "treebank_3/brown")
