@@ -29,14 +29,19 @@ public class CnfGrammarBuilder {
     
     public CnfGrammarBuilder(Alphabet<String> lexAlphabet,
             Alphabet<String> ntAlphabet) {
-
+        if (lexAlphabet.size() > 0) {
+            throw new IllegalArgumentException("Lexical alphabet must by empty.");
+        }        
+        if (ntAlphabet.size() > 0) {
+            throw new IllegalArgumentException("Nonterminal alphabet must by empty.");
+        }
+        this.lexAlphabet = lexAlphabet;  
+        this.ntAlphabet = ntAlphabet;
+        
         allRules = new ArrayList<Rule>();
         lexRules = new ArrayList<Rule>();
         unaryRules = new ArrayList<Rule>();
-        binaryRules = new ArrayList<Rule>();
-        
-        this.lexAlphabet = lexAlphabet;  
-        this.ntAlphabet = ntAlphabet;
+        binaryRules = new ArrayList<Rule>();                
     }
 
     public CnfGrammar getGrammar() {

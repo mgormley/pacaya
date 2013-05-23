@@ -25,6 +25,7 @@ public class CnfGrammar {
     private Alphabet<String> lexAlphabet;
     private Alphabet<String> ntAlphabet;
     
+    @SuppressWarnings("unchecked")
     public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
         this.rootSymbol = rootSymbol;
         this.lexAlphabet = lexAlphabet;
@@ -45,25 +46,13 @@ public class CnfGrammar {
                 binaryRulesForChildren[i][j] = new ArrayList<Rule>();
             }
         }
-        //        Arrays.fill(lexRulesForChild, Collections.emptyList());
-        //        Arrays.fill(unaryRulesForChild, Collections.emptyList());
-        //        Utilities.fill(binaryRulesForChildren, Collections.emptyList());
         
         for (Rule r : allRules) {
             if (r.isLexical()) {
-                if (lexRulesForChild[r.getLeftChild()] == null) {
-                    lexRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
-                }
                 lexRulesForChild[r.getLeftChild()].add(r);
             } else if (r.isUnary()) {
-                if (unaryRulesForChild[r.getLeftChild()] == null) {
-                    unaryRulesForChild[r.getLeftChild()] = new ArrayList<Rule>();
-                }
                 unaryRulesForChild[r.getLeftChild()].add(r);
             } else {
-                if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] == null) {
-                    binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>();
-                }
                 binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
                         .add(r);
             }
@@ -115,6 +104,13 @@ public class CnfGrammar {
 
     public int getRootSymbol() {
         return rootSymbol;
+    }
+
+    public boolean isUnknownWord(String word) {
+        if (lexAlphabet.lookupIndex(word) < 0) {
+            return true;
+        }
+        return false;
     }
     
 }

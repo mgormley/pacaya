@@ -89,5 +89,11 @@ public class Alphabet<T> {
         return "Alphabet [idxObjMap=" + idxObjMap + ", isGrowing=" + isGrowing
                 + "]";
     }
+
+    public static <T> Alphabet<T> getEmptyStoppedAlphabet() {
+        Alphabet<T> alphabet = new Alphabet<T>();
+        alphabet.stopGrowth();
+        return alphabet;
+    }
 	
 }

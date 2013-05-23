@@ -38,7 +38,7 @@ public class BinaryTree {
 //        return new Span(start, end);
 //    }
     
-    private String getSymbolStr() {
+    public String getSymbolStr() {
         return alphabet.lookupObject(symbol);
     }
        
@@ -239,7 +239,9 @@ public class BinaryTree {
 
     public NaryTree collapseToNary(Alphabet<String> ntAlphabet) {
         Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
-
+        // Reset the symbol id according to the new alphabet.
+        int symbol = alphabet.lookupIndex(getSymbolStr());
+        
         ArrayList<NaryTree> children = null;
         if (!isLeaf()) {
             assert (leftChild != null);
@@ -247,7 +249,8 @@ public class BinaryTree {
             addToQueue(queue, leftChild, ntAlphabet);
             addToQueue(queue, rightChild, ntAlphabet);
             children = new ArrayList<NaryTree>(queue);
-        }        
+        }
+        
         return new NaryTree(symbol, start, end, children, isLexical, alphabet);         
     }
 
@@ -265,7 +268,7 @@ public class BinaryTree {
         }
     }
 
-    public void setSymbol(String symbolStr) {
+    public void setSymbolStr(String symbolStr) {
         this.symbol = alphabet.lookupIndex(symbolStr);
         if (this.symbol == -1) {
             throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
@@ -277,5 +280,16 @@ public class BinaryTree {
             throw new IllegalArgumentException("Invalid symbol: " + symbol);
         }
         this.symbol = symbol;
+    }
+
+    public void resetAlphabets(final Alphabet<String> lexAlphabet,
+            final Alphabet<String> ntAlphabet) {
+        preOrderTraversal(new LambdaOne<BinaryTree>() {
+            public void call(BinaryTree node) {
+                String symbolStr = node.getSymbolStr();
+                node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
+                node.setSymbolStr(symbolStr);
+            }
+        });
     }
 }

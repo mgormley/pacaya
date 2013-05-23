@@ -56,6 +56,21 @@ public class NaryTreebank extends ArrayList<NaryTree> {
             writer.write("\n");
         }
         writer.close();        
+    }
+
+    public BinaryTreebank leftBinarize(Alphabet<String> ntAlphabet) {
+        BinaryTreebank binaryTrees = new BinaryTreebank();
+        for (NaryTree tree : this) {
+            binaryTrees.add(tree.leftBinarize(ntAlphabet));
+        }
+        return binaryTrees;
+    }
+
+    public void resetAlphabets(Alphabet<String> lexAlphabet,
+            Alphabet<String> ntAlphabet) {
+        for (NaryTree tree : this) {
+            tree.resetAlphabets(lexAlphabet, ntAlphabet);
+        }
     } 
 
 }

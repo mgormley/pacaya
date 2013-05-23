@@ -42,7 +42,8 @@ public class NaryTree {
 //        return new Span(start, end);
 //    }
     
-    private String getSymbolStr() {
+    /** This method does an alphabet lookup and is slow. */
+    public String getSymbolStr() {
         return alphabet.lookupObject(symbol);
     }
     
@@ -342,6 +343,8 @@ public class NaryTree {
      */
     public BinaryTree leftBinarize(Alphabet<String> ntAlphabet) {
         Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+        // Reset the symbol id according to the new alphabet.
+        int symbol = alphabet.lookupIndex(getSymbolStr());
 
         BinaryTree leftChild;
         BinaryTree rightChild;
@@ -356,7 +359,7 @@ public class NaryTree {
             rightChild = children.get(1).leftBinarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
-            int xbarParent = ntAlphabet.lookupIndex("@" + getSymbolStr());
+            int xbarParent = alphabet.lookupIndex("@" + getSymbolStr());
             
             LinkedList<NaryTree> queue = new LinkedList<NaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
@@ -422,17 +425,28 @@ public class NaryTree {
         return alphabet;
     }
 
-    public void setSymbol(String symbolStr) {
+    public void setSymbolStr(String symbolStr) {
         this.symbol = alphabet.lookupIndex(symbolStr);
-        if (this.symbol == -1) {
-            throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
+        if (this.symbol < 0) {
+            throw new IllegalArgumentException("Symbol is not in alphabet. symbolStr=" + symbolStr + " id=" + symbol);
         }
     }
     
     public void setSymbol(int symbol) {
         if (symbol >= alphabet.size() || symbol < 0) {
-            throw new IllegalArgumentException("Invalid symbol: " + symbol);
+            throw new IllegalArgumentException("Invalid symbol id: " + symbol);
         }
         this.symbol = symbol;
+    }
+
+    public void resetAlphabets(final Alphabet<String> lexAlphabet,
+            final Alphabet<String> ntAlphabet) {
+        preOrderTraversal(new LambdaOne<NaryTree>() {
+            public void call(NaryTree node) {
+                String symbolStr = node.getSymbolStr();
+                node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
+                node.setSymbolStr(symbolStr);
+            }
+        });
     }
 }
