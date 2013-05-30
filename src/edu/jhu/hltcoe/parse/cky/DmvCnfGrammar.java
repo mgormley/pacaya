@@ -1,0 +1,204 @@
+package edu.jhu.hltcoe.parse.cky;
+
+import java.util.ArrayList;
+
+import depparsing.globals.Constants;
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.hltcoe.util.Utilities;
+
+public class DmvCnfGrammar {
+
+    private static final String rootSymbolStr = "S";
+
+    // Rules that correspond to probabilities in the model.
+    private Rule[] root; // Indexed by child.
+    private Rule[][][] child; // Indexed by child, parent, and direction.
+    private Rule[][][][] decision; // Indexed by parent, direction, valence (0 or 1), and STOP/CONT.    
+    // Structural rules (with probability 1.0).
+    private Rule[][][] structural; // Indexed by child, parent, and direction.
+    
+    private CnfGrammar cnfGrammar;
+    private Alphabet<String> lexAlphabet;
+    private Alphabet<String> ntAlphabet;
+
+    private int numTags;
+    private int rootSymbol;
+    
+    private int[] annoToUnanno; // Mapping of annotated tags to unannotated tags.
+    private int[][] unannoToAnno; // Mapping of annotated tags to annotated tags.
+    
+    public DmvCnfGrammar(DmvModel dmv, Alphabet<Label> labelAlphabet) {
+        numTags = labelAlphabet.size();
+        this.lexAlphabet = new Alphabet<String>();
+        // Cache mapping of unannoated tags to annotated tags.
+        annoToUnanno = new int[numTags*2];
+        unannoToAnno = new int[numTags][2];
+        for (int unanno=0; unanno<labelAlphabet.size(); unanno++) {
+            for (int dir=0; dir<2; dir++) {
+                int anno;
+                if (dir == Constants.LEFT) {
+                    anno = lexAlphabet.lookupIndex(String.format("%d_{l}", unanno)); 
+                } else {
+                    anno = lexAlphabet.lookupIndex(String.format("%d_{r}", unanno));
+                }
+                annoToUnanno[anno] = unanno;
+                unannoToAnno[unanno][dir] = anno;
+            }
+        }
+        this.ntAlphabet = new Alphabet<String>();
+        this.rootSymbol = ntAlphabet.lookupIndex(rootSymbolStr);
+        
+        this.root = new Rule[numTags];
+        this.child = new Rule[numTags][numTags][2];
+        this.decision = new Rule[numTags][2][2][2];
+        this.structural = new Rule[numTags][numTags][2];
+        
+        for (int c=0; c<numTags; c++) {
+            this.root[c] = getRootRule(c);
+            for (int p=0; p<numTags; p++) {
+                for (int dir=0; dir<2; dir++) {
+                    this.child[c][p][dir] = getChildRule(c, p, dir);
+                    this.structural[c][p][dir] = getStructuralRule(c, p, dir); 
+                }
+            }
+            for (int dir=0; dir<2; dir++) {
+                for (int val=0; val<2; val++) {
+                    for (int sc=0; sc<2; sc++) {
+                        this.decision[c][dir][val][sc] = getDecisionRule(c, dir, val, sc);
+                    }
+                }
+            }
+        }
+        
+        updateLogProbs(dmv);
+        
+        this.cnfGrammar = new CnfGrammar(getAllRules(), rootSymbol, lexAlphabet, ntAlphabet);
+    }
+
+    public int getAnnotatedTagRight(int tag) {
+        return unannoToAnno[tag][DmvModel.Lr.RIGHT.getAsInt()];
+    }
+    
+    public int getAnnotatedTagLeft(int tag) {
+        return unannoToAnno[tag][DmvModel.Lr.LEFT.getAsInt()];
+    }
+    
+    public int getUnannotatedTag(int annotatedTag) {
+        return annoToUnanno[annotatedTag];
+    }
+
+    private void updateLogProbs(DmvModel dmv) {
+        for (int c=0; c<numTags; c++) {
+            this.root[c].setScore(dmv.root[c]);
+            for (int p=0; p<numTags; p++) {
+                for (int dir=0; dir<2; dir++) {
+                    this.child[c][p][dir].setScore(dmv.child[c][p][dir][0]);
+                    this.structural[c][p][dir].setScore(0.0);
+                }
+            }
+            for (int dir=0; dir<2; dir++) {
+                for (int val=0; val<2; val++) {
+                    for (int sc=0; sc<2; sc++) {
+                        this.decision[c][dir][val][sc].setScore(dmv.decision[c][dir][val][sc]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Shorthand for String.format().
+     */
+    private String f(String format, Object... args) {
+        return String.format(format, args);
+    }
+
+    private Rule getRootRule(int p) {
+        return getBinaryRule(rootSymbolStr, 
+                             f("L_{%d}", p), 
+                             f("R_{%d}", p), 
+                             0.0);
+    }
+    
+    private Rule getChildRule(int c, int p, int dir) {
+        if (dir == Constants.LEFT) {
+            return getBinaryRule(f("L_{%d}^{1}", p), 
+                                 f("L_{%d}", c), 
+                                 f("M_{%d,%d*}", c, p), 
+                                 0.0);
+        } else {
+            return getBinaryRule(f("R_{%d}^{1}", p),
+                                 f("M_{%d*,%d}", p, c),
+                                 f("R_{%d}", c),
+                                 0.0);
+        }
+    }
+
+    private Rule getStructuralRule(int c, int p, int dir) {
+        if (dir == Constants.LEFT) { 
+            return getBinaryRule(f("M_{%d,%d*}", c, p),
+                                 f("R_{%d}", c),
+                                 f("L_{%d}^{*}", p),
+                                 0.0);
+        } else {
+            return getBinaryRule(f("M_{%d*,%d}", p, c),
+                                 f("R_{%d}^{*}", p),
+                                 f("L_{%d}", c),
+                                 0.0);
+        }
+    }
+
+    private Rule getDecisionRule(int c, int dir, int val, int sc) {
+        String cap = (dir == Constants.LEFT) ? "L" : "R";
+        String parent_ss = (val == 0) ? "" : "^{*}"; // parent superscript
+        
+        int parent = ntAlphabet.lookupIndex(f("%s_{%d}%s", cap, c, parent_ss));
+        if (sc == Constants.END){
+            int leftChild = (dir == Constants.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
+            int rightChild = Rule.LEXICAL_RULE;
+            double score = 0.0;
+            return new Rule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
+        } else {
+            int leftChild = ntAlphabet.lookupIndex(f("%s_{%d}^{1}", cap, c));
+            int rightChild = Rule.UNARY_RULE;
+            double score = 0.0;
+            return new Rule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
+        }
+    }    
+
+    private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb) {
+        int parent = ntAlphabet.lookupIndex(parentStr);
+        int leftChild = ntAlphabet.lookupIndex(leftChildStr);
+        int rightChild = ntAlphabet.lookupIndex(rightChildStr);
+        return new Rule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet);
+    }
+
+    /**
+     * Gets a representation of the sentence that can be parsed by this grammar.
+     */
+    public int[] getSent(Sentence sentence) {
+        int[] labelIds = sentence.getLabelIds();
+        int[] sent = new int[2 * labelIds.length];
+        for (int i=0; i<labelIds.length; i++) {
+            sent[2*i] = this.getAnnotatedTagLeft(labelIds[i]);
+            sent[2*i+1] = this.getAnnotatedTagRight(labelIds[i]);
+        }
+        return sent;
+    }
+
+    private ArrayList<Rule> getAllRules() {
+        ArrayList<Rule> allRules = new ArrayList<Rule>();
+        Utilities.addAll(allRules, root);
+        Utilities.addAll(allRules, child);
+        Utilities.addAll(allRules, decision);
+        Utilities.addAll(allRules, structural);
+        return allRules;
+    }
+    
+    public CnfGrammar getCnfGrammar() {
+        return cnfGrammar;
+    }
+}

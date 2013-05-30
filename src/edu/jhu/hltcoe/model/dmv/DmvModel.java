@@ -13,7 +13,7 @@ import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.LabeledMultinomial;
 
 public class DmvModel extends DepProbMatrix implements Model {
-
+    
     public enum Lr { 
         LEFT, RIGHT;
         public int getAsInt() {

@@ -3,7 +3,9 @@ package edu.jhu.hltcoe.parse.dep;
 import java.util.Arrays;
 
 /**
- * Projective dependency parser.
+ * Edge-factored projective dependency parser.
+ * 
+ * TODO: break ties randomly.
  * 
  * @author mgormley
  *

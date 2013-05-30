@@ -86,4 +86,8 @@ public class Rule {
         return "Rule [parent=" + getParentStr() + ", leftChild=" + getLeftChildStr()
                 + ", rightChild=" + getRightChildStr() + ", score=" + score + "]";
     }
+    
+    public void setScore(double score) {
+        this.score = score;
+    }
 }

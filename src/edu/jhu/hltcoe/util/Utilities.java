@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import cern.colt.list.IntArrayList;
+import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.util.map.IntObjectHashMap;
 
 public class Utilities {
@@ -612,6 +613,31 @@ public class Utilities {
             }
         }
         return files;
+    }
+
+    public static <T> void addAll(ArrayList<T> list, T[] array) {
+        if (array == null) {
+            return;
+        }
+        list.addAll(Arrays.asList(array));
+    }
+    
+    public static <T> void addAll(ArrayList<T> list, T[][] array) {
+        for (int i=0; i<array.length; i++) {
+            addAll(list, array[i]);
+        }
+    }
+    
+    public static <T> void addAll(ArrayList<T> list, T[][][] array) {
+        for (int i=0; i<array.length; i++) {
+            addAll(list, array[i]);
+        }
+    }
+    
+    public static <T> void addAll(ArrayList<T> list, T[][][][] array) {
+        for (int i=0; i<array.length; i++) {
+            addAll(list, array[i]);
+        }
     }
     
 }

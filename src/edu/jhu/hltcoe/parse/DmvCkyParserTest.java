@@ -84,6 +84,23 @@ public class DmvCkyParserTest {
             assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
         }
     }
+
+    @Test
+    public void testLongerTwoPosTagCase() {
+        DmvModel model = getTwoPosTagInstance();
+        SentenceCollection sentences = new SentenceCollection(model.getTagAlphabet());
+        sentences.addSentenceFromString("a/A b/B a/A");
+        double expectedParseWeight = Utilities.log(Math.pow(0.5, 10)); // 0.5^7
+        
+        // dynamic programming parsing
+        DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
+        // flow projective parsing (only for comparison)
+        DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
+        
+        for (int i=0; i<flowTrees.size(); i++) {
+            assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
+        }
+    }
     
     @Test
     public void testProjParses() {

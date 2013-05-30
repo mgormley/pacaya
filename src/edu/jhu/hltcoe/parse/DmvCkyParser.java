@@ -12,6 +12,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -74,7 +75,22 @@ public class DmvCkyParser implements ViterbiParser {
         return treebank;
     }
 
-    public Pair<DepTree, Double> parse(Sentence sentence, DmvModel depProbMatrix) {
+    public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
+        return parse1(sentence, dmv);
+    }
+    
+    /**
+     * My CKY parser.
+     */
+    public Pair<DepTree, Double> parse1(Sentence sentence, DmvModel dmv) {
+        DmvCkyPcfgParser parser = new DmvCkyPcfgParser();
+        return parser.parse(sentence, dmv);
+    }
+    
+    /**
+     * The depparsing package's CKYParser.
+     */
+    public Pair<DepTree, Double> parse2(Sentence sentence, DmvModel depProbMatrix) {
         assert(sentence.getAlphabet() == depProbMatrix.getTagAlphabet());
         DepSentenceDist sd = new DepSentenceDist(sentence, depProbMatrix);
 
