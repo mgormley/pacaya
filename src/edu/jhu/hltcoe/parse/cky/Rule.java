@@ -80,6 +80,7 @@ public class Rule {
             return ntAlphabet.lookupObject(rightChild);
         }        
     }
+    
     @Override
     public String toString() {
         return "Rule [parent=" + getParentStr() + ", leftChild=" + getLeftChildStr()

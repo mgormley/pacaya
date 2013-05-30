@@ -15,6 +15,7 @@ import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
@@ -129,14 +130,18 @@ public class BasicDmvProjector implements DmvProjector {
         return treebank;
     }
 
+    /**
+     * Finds the maximum projective spanning tree with these edge weights.
+     *  
+     * @param sentence The sentence.
+     * @param fracRoot The fractional edge weights from the root.
+     * @param fracChild The fractional edge weights between the children.
+     * @return The dependency tree.
+     */
     public static DepTree getProjectiveParse(Sentence sentence, double[] fracRoot, double[][] fracChild) {
-        DmvCkyParser parser = new DmvCkyParser();
-        int[] tags = new int[sentence.size()];
-        DepInstance depInstance = new DepInstance(tags);
-        DepSentenceDist sd = new DepSentenceDist(depInstance, new NonterminalMap(2, 1), fracRoot, fracChild);
-        Pair<DepTree, Double> pair = parser.parse(sentence, sd);
-        DepTree tree = pair.get1();
-        return tree;
+        int[] parents = new int[sentence.size()];
+        ProjectiveDependencyParser.parse(fracRoot, fracChild, parents);
+        return new DepTree(sentence, parents, true);
     }
 
 }
