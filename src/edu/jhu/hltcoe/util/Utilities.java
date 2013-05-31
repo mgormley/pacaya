@@ -464,6 +464,14 @@ public class Utilities {
         return Math.abs(a - b) < delta;
     }
 
+    /**
+     * Compares two double values up to some delta.
+     * 
+     * @param a
+     * @param b
+     * @param delta
+     * @return The value 0 if a equals b, a value greater than 0 if if a > b, and a value less than 0 if a < b.  
+     */
     public static int compare(double a, double b, double delta) {
         if (equals(a, b, delta)) {
             return 0;

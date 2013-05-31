@@ -22,9 +22,11 @@ public class DmvCkyPcfgParser {
         if (this.grammar == null || this.dmv != dmv) {
             this.dmv = dmv;
             this.grammar = new DmvCnfGrammar(dmv, sentence.getAlphabet());
+        } else {
+            this.grammar.updateLogProbs(dmv);
         }
         
-        CkyPcfgParser parser = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL);
+        CkyPcfgParser parser = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
         
         int[] sent = grammar.getSent(sentence);
         Chart chart = parser.parseSentence(sent, grammar.getCnfGrammar());
@@ -32,9 +34,9 @@ public class DmvCkyPcfgParser {
         Pair<BinaryTree, Double> pair = chart.getViterbiParse();        
         BinaryTree tree = pair.get1();
         double logProb = pair.get2();
-        log.debug("DMV Tree:\n" + tree.getAsPennTreebankString());
+        //TODO: remove: log.debug("DMV Tree:\n" + tree.getAsPennTreebankString());
         int[] parents = extractParents(tree, grammar);
-        log.debug("parents: " + Arrays.toString(parents));
+        //TODO: remove: log.debug("parents: " + Arrays.toString(parents));
         
         return new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
     }
@@ -49,8 +51,7 @@ public class DmvCkyPcfgParser {
 
     private int extractParents(BinaryTree tree, int[] parents, DmvCnfGrammar grammar) {
         if (tree.isLeaf()) {
-            // Leaf node. Must map the left/right annotated tag back to the standard tag.
-            //return grammar.getUnannotatedTag(tree.getSymbol());
+            // Leaf node. Must map to the *position* of the corresponding node.
             return tree.getStart() / 2;
         }
 
@@ -78,7 +79,7 @@ public class DmvCkyPcfgParser {
                 // If it starts with L than C is a left child of H.
                 isLeftHead = !(symbol.charAt(0) == 'L');
             }
-            log.debug("Structural symbol: " + symbol + " Is left head:" + isLeftHead);
+            // TODO: remove log.debug("Structural symbol: " + symbol + " Is left head:" + isLeftHead);
             int head = isLeftHead ? leftHead : rightHead;
             int child = isLeftHead ? rightHead : leftHead;
             // Set that parent in the parents array.

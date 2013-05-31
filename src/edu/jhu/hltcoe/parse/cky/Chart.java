@@ -35,7 +35,7 @@ public class Chart {
         }
     }
 
-    public enum ChartCellType { FULL, HASH };
+    public enum ChartCellType { FULL, HASH, FULL_BREAK_TIES };
 
     private final ChartCellType cellType;
 
@@ -44,6 +44,9 @@ public class Chart {
     private final int[] sent;
 
     public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
+        // TODO: Most of the parse time for the DMV parser is spent constructing
+        // these chart cells.We could easily cache a (large) chart and simply
+        // clear it after each parse.
         this.cellType = cellType;
         this.sent = sent;
         this.grammar = grammar;
@@ -56,6 +59,9 @@ public class Chart {
                     break;
                 case FULL:
                     chart[i][j] = new FullChartCell(grammar);
+                    break;
+                case FULL_BREAK_TIES:
+                    chart[i][j] = new FullTieBreakerChartCell(grammar, true);
                     break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);

@@ -96,23 +96,23 @@ public class CnfGrammar {
         }
     }
 
-    public ArrayList<Rule> getLexicalRulesWithChild(int child) {
+    public final ArrayList<Rule> getLexicalRulesWithChild(int child) {
         return lexRulesForChild[child];
     }
 
-    public ArrayList<Rule> getUnaryRulesWithChild(int child) {
+    public final ArrayList<Rule> getUnaryRulesWithChild(int child) {
         return unaryRulesForChild[child];
     }
 
-    public Rule[] getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
+    public final Rule[] getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {
         return brfc[leftChildNt][rightChildNt];
     }
 
-    public Rule[] getBinaryRulesWithLeftChild(int leftChildNt) {
+    public final Rule[] getBinaryRulesWithLeftChild(int leftChildNt) {
         return brwlc[leftChildNt];
     }
 
-    public Rule[] getBinaryRulesWithRightChild(int rightChildNt) {
+    public final Rule[] getBinaryRulesWithRightChild(int rightChildNt) {
         return brwrc[rightChildNt];
     }
     

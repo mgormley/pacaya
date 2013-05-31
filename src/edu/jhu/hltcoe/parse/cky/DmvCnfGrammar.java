@@ -90,7 +90,11 @@ public class DmvCnfGrammar {
         return annoToUnanno[annotatedTag];
     }
 
-    private void updateLogProbs(DmvModel dmv) {
+    /**
+     * Updates the log-probabilities on the rules using those from the input DMV model.
+     * @param dmv The input DMV model.
+     */
+    public void updateLogProbs(DmvModel dmv) {
         for (int c=0; c<numTags; c++) {
             this.root[c].setScore(dmv.root[c]);
             for (int p=0; p<numTags; p++) {
