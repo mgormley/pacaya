@@ -23,6 +23,13 @@ public class DoubleHashChartCell implements ChartCell {
 
         isClosed = false;
     }
+
+    public void reset() {
+        maxScores.clear();
+        bps.clear();
+        ntsArray = null;
+        isClosed = false;
+    }
     
     public final void updateCell(int mid, Rule r, double score) {
         assert(!isClosed);

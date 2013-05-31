@@ -40,6 +40,14 @@ public class FullChartCell implements ChartCell {
         // Initialize scores to negative infinity.
         Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
     }
+
+    public void reset() {
+        Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
+        Arrays.fill(bps, null);
+        nts.clear();
+        isClosed = false;
+        ntsArray = null;
+    }
     
     public final void updateCell(int mid, Rule r, double score) {
         assert(!isClosed);

@@ -648,4 +648,48 @@ public class Utilities {
         }
     }
     
+    /**
+     * Faster version of Arrays.fill(). That standard version does NOT use
+     * memset, and only iterates over the array filling each value. This method
+     * works out to be much faster and seems to be using memset as appropriate.
+     */
+    public static void fill(double[] array, double value) {
+        final int n = array.length;
+        if (n > 0) {
+            array[0] = value;
+        }
+        for (int i = 1; i < n; i += i) {
+           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        }
+    }
+    
+    /**
+     * Faster version of Arrays.fill(). That standard version does NOT use
+     * memset, and only iterates over the array filling each value. This method
+     * works out to be much faster and seems to be using memset as appropriate.
+     */
+    public static void fill(boolean[] array, boolean value) {
+        final int n = array.length;
+        if (n > 0) {
+            array[0] = value;
+        }
+        for (int i = 1; i < n; i += i) {
+           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        }
+    }
+
+    /**
+     * Faster version of Arrays.fill(). That standard version does NOT use
+     * memset, and only iterates over the array filling each value. This method
+     * works out to be much faster and seems to be using memset as appropriate.
+     */
+    public static void fill(Object[] array, Object value) {
+        final int n = array.length;
+        if (n > 0) {
+            array[0] = value;
+        }
+        for (int i = 1; i < n; i += i) {
+           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        }
+    }
 }

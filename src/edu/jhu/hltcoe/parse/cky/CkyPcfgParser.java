@@ -20,6 +20,7 @@ public class CkyPcfgParser {
     
     private final LoopOrder loopOrder;
     private final ChartCellType cellType;
+    private Chart chart;
     
     public CkyPcfgParser(LoopOrder loopOrder, ChartCellType cellType) {
         this.loopOrder = loopOrder;
@@ -34,8 +35,17 @@ public class CkyPcfgParser {
     }
     
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
-        Chart chart = new Chart(sent, grammar, cellType);
-
+        if (chart == null || chart.getGrammar() != grammar) {
+            // Lazily construct the chart.
+            chart = new Chart(sent, grammar, cellType);
+        } else {
+            // If it already exists, just reset it for efficiency.
+            chart.reset(sent);
+        }
+        return parseSentence(sent, grammar, chart, loopOrder);
+    }
+    
+    public static final Chart parseSentence(final int[] sent, final CnfGrammar grammar, final Chart chart, final LoopOrder loopOrder) {
         // Apply lexical rules to each word.
         for (int i = 0; i <= sent.length - 1; i++) {
             ChartCell cell = chart.getCell(i, i+1);

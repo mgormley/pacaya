@@ -15,8 +15,15 @@ import edu.jhu.hltcoe.util.Pair;
 public class DmvCkyPcfgParser {
 
     private static final Logger log = Logger.getLogger(DmvCkyPcfgParser.class);
+    
+    // Cached for efficiency.
     private DmvCnfGrammar grammar;
     private DmvModel dmv;
+    private CkyPcfgParser parser;
+    
+    public DmvCkyPcfgParser() {
+        parser = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
+    }
     
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
         if (this.grammar == null || this.dmv != dmv) {
@@ -25,9 +32,7 @@ public class DmvCkyPcfgParser {
         } else {
             this.grammar.updateLogProbs(dmv);
         }
-        
-        CkyPcfgParser parser = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
-        
+                
         int[] sent = grammar.getSent(sentence);
         Chart chart = parser.parseSentence(sent, grammar.getCnfGrammar());
         
@@ -41,7 +46,7 @@ public class DmvCkyPcfgParser {
         return new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
     }
 
-    private int[] extractParents(BinaryTree tree, DmvCnfGrammar grammar) {
+    private static int[] extractParents(BinaryTree tree, DmvCnfGrammar grammar) {
         int[] parents = new int[tree.getEnd() / 2];
         Arrays.fill(parents, -2);
         int head = extractParents(tree, parents, grammar);
@@ -49,7 +54,7 @@ public class DmvCkyPcfgParser {
         return parents;
     }
 
-    private int extractParents(BinaryTree tree, int[] parents, DmvCnfGrammar grammar) {
+    private static int extractParents(BinaryTree tree, int[] parents, DmvCnfGrammar grammar) {
         if (tree.isLeaf()) {
             // Leaf node. Must map to the *position* of the corresponding node.
             return tree.getStart() / 2;

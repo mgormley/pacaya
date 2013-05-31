@@ -38,10 +38,10 @@ public class Chart {
     public enum ChartCellType { FULL, HASH, FULL_BREAK_TIES };
 
     private final ChartCellType cellType;
-
-    private final ChartCell[][] chart;
     private final CnfGrammar grammar;
-    private final int[] sent;
+    
+    private ChartCell[][] chart;
+    private int[] sent;
 
     public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
         // TODO: Most of the parse time for the DMV parser is spent constructing
@@ -50,10 +50,37 @@ public class Chart {
         this.cellType = cellType;
         this.sent = sent;
         this.grammar = grammar;
-        chart = new ChartCell[sent.length][sent.length+1];
+        this.chart = getNewChart(sent, grammar, cellType);
+    }
+    
+    /**
+     * Resets the chart for the input sentence.
+     */
+    public void reset(int[] sent) {
+        this.sent = sent;
+        // Ensure that the chart is large enough.
+        if (sent.length > chart.length){
+            chart = getNewChart(sent, grammar, cellType);
+        } else {
+            // TODO: this would be even faster (but riskier from a software
+            // development standpoint) if we use sent.length.
+            for (int i = 0; i < sent.length; i++) {
+                for (int j = i+1; j < sent.length + 1; j++) {
+                    chart[i][j].reset();
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets a new chart of the appropriate size for the sentence, specific to
+     * this grammar, and with cells of the specified type.
+     */
+    private static ChartCell[][] getNewChart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
+        ChartCell[][] chart = new ChartCell[sent.length][sent.length+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
-                switch(this.cellType) {
+                switch(cellType) {
                 case HASH:
                     chart[i][j] = new SingleHashChartCell(grammar);
                     break;
@@ -65,11 +92,11 @@ public class Chart {
                     break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
-                }
-                
+                }                
             }
         }
-    }
+        return chart;
+    }    
 
     public Pair<BinaryTree,Double> getViterbiParse() {
         BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
@@ -110,5 +137,9 @@ public class Chart {
 
     public ChartCell getCell(int start, int end) {
         return chart[start][end];
+    }
+    
+    public CnfGrammar getGrammar() {
+        return grammar;
     }
 }

@@ -48,13 +48,23 @@ public class FullTieBreakerChartCell implements ChartCell {
         isClosed = false;
         
         // Initialize scores to negative infinity.
-        Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
+        Utilities.fill(maxScores, Double.NEGATIVE_INFINITY);
         
         // Tie breaking fields.
         this.breakTies = breakTies;
         maxJit = new double[grammar.getNumNonTerminals()];
         // -- uses default initialization to false.
         maxHasJit = new boolean[grammar.getNumNonTerminals()];
+    }
+    
+    public void reset() {
+        Utilities.fill(maxScores, Double.NEGATIVE_INFINITY);
+        Utilities.fill(bps, null);
+        nts.clear();
+        isClosed = false;
+        ntsArray = null;
+        Utilities.fill(maxJit, 0.0);
+        Utilities.fill(maxHasJit, false);
     }
     
     public final void updateCell(int mid, Rule r, double score) {

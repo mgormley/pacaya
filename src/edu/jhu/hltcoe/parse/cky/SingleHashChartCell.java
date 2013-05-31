@@ -29,6 +29,12 @@ public class SingleHashChartCell implements ChartCell {
         table = new IntObjectHashMap<Storage>();
         isClosed = false;
     }
+
+    public void reset() {
+        table.clear();
+        ntsArray = null;
+        isClosed = false;
+    }
     
     public final void updateCell(int mid, Rule r, double score) {
         assert(!isClosed);

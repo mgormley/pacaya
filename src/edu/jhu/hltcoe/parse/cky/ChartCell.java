@@ -22,4 +22,11 @@ public interface ChartCell {
 
     public void close();
 
+
+    /**
+     * Ensures that the chart cell is open and all future calls will be just as
+     * if it was newly constructed.
+     */
+    public void reset();
+
 }
