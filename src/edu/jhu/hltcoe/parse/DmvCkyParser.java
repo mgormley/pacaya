@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.parse;
 
 
+import org.apache.log4j.Logger;
+
 import depparsing.extended.CKYParser;
 import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.data.DepTree;
@@ -15,20 +17,27 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Timer;
 
 public class DmvCkyParser implements ViterbiParser {
+
+    private static final Logger log = Logger.getLogger(DmvCkyParser.class);
 
     private double parseWeight;
     private DmvObjective dmvObj;
     private SentenceCollection sents;
     private DmvObjectivePrm objPrm;
+    private Timer timer;
 
+    private DmvCkyPcfgParser parser;
+    
     public DmvCkyParser() {
         this(new DmvObjectivePrm());
     }
     
     public DmvCkyParser(DmvObjectivePrm objPrm) {
         this.objPrm = objPrm;
+        this.timer = new Timer();
     }
 
     @Override
@@ -66,14 +75,21 @@ public class DmvCkyParser implements ViterbiParser {
     }
 
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
-        return parse1(sentence, dmv);
+        timer.start();
+        Pair<DepTree,Double> pair = parse1(sentence, dmv);
+        timer.stop();
+        log.debug("Average seconds per sentence: " + timer.avgSec());
+        return pair;
     }
     
     /**
      * My CKY parser.
      */
     public Pair<DepTree, Double> parse1(Sentence sentence, DmvModel dmv) {
-        DmvCkyPcfgParser parser = new DmvCkyPcfgParser();
+        if (parser == null) {
+            // Lazily contruct the parser, which does some handy caching of the model.
+            parser = new DmvCkyPcfgParser();
+        }
         return parser.parse(sentence, dmv);
     }
     
