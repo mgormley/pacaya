@@ -27,18 +27,21 @@ def get_root_dir():
     print "Using root_dir: " + root_dir
     return root_dir;
 
-def get_dev_data(data_dir, file_prefix, name=None):
-    return get_some_data(data_dir, file_prefix, name, "dev")
+def get_dev_data(data_dir, file_prefix, name=None, data_type=None):
+    return get_some_data(data_dir, file_prefix, name, "dev", data_type)
 
-def get_test_data(data_dir, file_prefix, name=None):
-    return get_some_data(data_dir, file_prefix, name, "test")
+def get_test_data(data_dir, file_prefix, name=None, data_type=None):
+    return get_some_data(data_dir, file_prefix, name, "test", data_type)
 
-def get_some_data(data_dir, file_prefix, name, test_suffix): 
+def get_some_data(data_dir, file_prefix, name, test_suffix, data_type): 
     data = DPExpParams()
     if name == None:
         name = file_prefix.replace("/", "-")
+    if data_type == None:
+        data_type = "PTB"
     data.set("dataset", name,True,False)
     data.set("train","%s/%s" % (data_dir, file_prefix),False,True)
+    data.update(trainType=data_type)
     #data.set("dev","%s/%s.%s" % (data_dir, file_prefix, test_suffix),False,True)
     return data
 
@@ -305,13 +308,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         # Data sets
         data_dir = os.path.join(self.root_dir, "data")
-        wsj_02 = self.get_data(data_dir, "treebank_3_sym/wsj/02")
-        wsj_22 = self.get_data(data_dir, "treebank_3/wsj/22")
-        wsj_23 = self.get_data(data_dir, "treebank_3/wsj/23")
-        wsj_24 = self.get_data(data_dir, "treebank_3/wsj/24")
-        wsj_full = self.get_data(data_dir, "treebank_3_sym/wsj") # Only sections 2-21
-        brown_cf = self.get_data(data_dir, "treebank_3/brown/cf")
-        brown_full = self.get_data(data_dir, "treebank_3/brown")
+        wsj_02 = self.get_data(data_dir, "treebank_3_sym/wsj/02", "PTB")
+        wsj_22 = self.get_data(data_dir, "treebank_3/wsj/22", "PTB")
+        wsj_23 = self.get_data(data_dir, "treebank_3/wsj/23", "PTB")
+        wsj_24 = self.get_data(data_dir, "treebank_3/wsj/24", "PTB")
+        wsj_full = self.get_data(data_dir, "treebank_3_sym/wsj", "PTB") # Only sections 2-21
+        brown_cf = self.get_data(data_dir, "treebank_3/brown/cf", "PTB")
+        brown_full = self.get_data(data_dir, "treebank_3/brown", "PTB")
         
         conll09_dir = "/export/common/data/corpora/LDC/LDC2012T03/data"
         conll09_sp_dir = os.path.join(conll09_dir, "CoNLL2009-ST-Spanish")
