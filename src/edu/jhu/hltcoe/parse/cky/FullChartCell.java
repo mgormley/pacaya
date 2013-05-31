@@ -23,19 +23,15 @@ import gnu.trove.TIntArrayList;
  */
 public class FullChartCell implements ChartCell {
     
-    private double[] maxScores;
-    // private double[] insideScores;
-    // private double[] outsideScores;
-    private BackPointer[] bps;
-    private TIntArrayList nts;
+    private final double[] maxScores;
+    private final BackPointer[] bps;
+    private final TIntArrayList nts;
     private int[] ntsArray;
     
     private boolean isClosed;
 
     public FullChartCell(CnfGrammar grammar) {
         maxScores = new double[grammar.getNumNonTerminals()];
-        // insideScores = new double[grammar.getNumNonTerminals()];
-        // outsideScores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new TIntArrayList();
 
@@ -43,8 +39,6 @@ public class FullChartCell implements ChartCell {
         
         // Initialize scores to negative infinity.
         Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
-        // Arrays.fill(insideScores, Double.NEGATIVE_INFINITY);
-        // Arrays.fill(outsideScores, Double.NEGATIVE_INFINITY);
     }
     
     public final void updateCell(int mid, Rule r, double score) {
@@ -99,7 +93,6 @@ public class FullChartCell implements ChartCell {
     public void close() {
         isClosed = true;
         ntsArray = nts.toNativeArray();
-        nts = null;
     }
     
 }
