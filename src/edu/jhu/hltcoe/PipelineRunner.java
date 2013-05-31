@@ -66,7 +66,7 @@ public class PipelineRunner {
     public static String train = null;
     @Opt(name="trainType", hasArg=true, required=true, description="Type of training data.")
     public static DatasetType trainType = null;
-    @Opt(name="trainOut", hasArg=true, required=true, description="Training data output file.")
+    @Opt(name="trainOut", hasArg=true, description="Training data output file.")
     public static File trainOut = null;
     @Opt(name = "synthetic", hasArg = true, description = "Generate synthetic training data.")
     public static String synthetic = null;
