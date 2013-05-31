@@ -6,10 +6,12 @@ import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.
  * 
- * Currently running at 0.07 seconds per sentence for the first 200 sentences of
+ * Currently running at 0.075 seconds per sentence for the first 200 sentences of
  * WSJ section 24 with LoopOrder.LEFT_CHILD and CellType.FULL. This is about
  * twice as fast as the exhaustive bubs-parser "ecpccl", though slightly slower
  * than the reported times in (Dunlop et al. 2010).
+ * 
+ * With caching we run slightly faster at: 0.067 seconds per sentence.
  * 
  * @author mgormley
  * 
