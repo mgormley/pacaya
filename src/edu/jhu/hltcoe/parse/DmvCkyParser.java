@@ -20,7 +20,7 @@ public class DmvCkyParser implements ViterbiParser {
 
     private double parseWeight;
     private DmvObjective dmvObj;
-    private DmvTrainCorpus corpus;
+    private SentenceCollection sents;
     private DmvObjectivePrm objPrm;
 
     public DmvCkyParser() {
@@ -38,9 +38,9 @@ public class DmvCkyParser implements ViterbiParser {
     
     public DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model genericModel) {
         // Lazily construct the objective.
-        if (dmvObj == null || this.corpus != corpus) {
+        if (dmvObj == null || this.sents != corpus.getSentences()) {
             this.dmvObj = new DmvObjective(objPrm, new IndexedDmvModel(corpus));
-            this.corpus = corpus;
+            this.sents = corpus.getSentences();
         }
         DmvModel model = (DmvModel) genericModel;
         DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
@@ -61,18 +61,8 @@ public class DmvCkyParser implements ViterbiParser {
 
     @Override
     public DepTreebank getViterbiParse(SentenceCollection sentences, Model genericModel) {
-        DmvModel model = (DmvModel) genericModel;
-        DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
-
-        parseWeight = 0.0;
-        for (Sentence sentence : sentences) {
-            Pair<DepTree, Double> pair = parse(sentence, model);
-            DepTree tree = pair.get1();
-            parseWeight += pair.get2();
-            
-            treebank.add(tree);
-        }
-        return treebank;
+        DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
+        return getViterbiParse(corpus, genericModel);
     }
 
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
@@ -98,7 +88,7 @@ public class DmvCkyParser implements ViterbiParser {
         return pair;
     }
 
-    public Pair<DepTree, Double> parse(Sentence sentence, DepSentenceDist sd) {
+    private Pair<DepTree, Double> parse(Sentence sentence, DepSentenceDist sd) {
         int numWords = sd.depInst.postags.length;
         int[] parents = new int[numWords];
 
