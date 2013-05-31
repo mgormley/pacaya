@@ -16,7 +16,10 @@ import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
  */
 public class CkyPcfgParser {
 
-    public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT };
+    public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT }
+
+    // Whether or not to cache the chart cells between calls to the parser.
+    private static final boolean CACHE_CHART = true;
     
     private final LoopOrder loopOrder;
     private final ChartCellType cellType;
@@ -35,8 +38,8 @@ public class CkyPcfgParser {
     }
     
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
-        if (chart == null || chart.getGrammar() != grammar) {
-            // Lazily construct the chart.
+        if (!CACHE_CHART || chart == null || chart.getGrammar() != grammar) {
+            // Construct a new chart.
             chart = new Chart(sent, grammar, cellType);
         } else {
             // If it already exists, just reset it for efficiency.

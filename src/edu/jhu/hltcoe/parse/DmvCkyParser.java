@@ -76,7 +76,7 @@ public class DmvCkyParser implements ViterbiParser {
 
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
         timer.start();
-        Pair<DepTree,Double> pair = parse1(sentence, dmv);
+        Pair<DepTree,Double> pair = parse2(sentence, dmv);
         timer.stop();
         log.debug("Average seconds per sentence: " + timer.avgSec());
         return pair;
