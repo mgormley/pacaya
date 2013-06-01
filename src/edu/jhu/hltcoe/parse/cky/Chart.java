@@ -35,7 +35,7 @@ public class Chart {
         }
     }
 
-    public enum ChartCellType { FULL, HASH, FULL_BREAK_TIES };
+    public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES };
 
     private final ChartCellType cellType;
     private final CnfGrammar grammar;
@@ -81,8 +81,11 @@ public class Chart {
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
                 switch(cellType) {
-                case HASH:
+                case SINGLE_HASH:
                     chart[i][j] = new SingleHashChartCell(grammar);
+                    break;
+                case DOUBLE_HASH:
+                    chart[i][j] = new DoubleHashChartCell(grammar);
                     break;
                 case FULL:
                     chart[i][j] = new FullChartCell(grammar);

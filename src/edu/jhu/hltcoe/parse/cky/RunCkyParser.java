@@ -13,6 +13,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.parse.cky.NaryTree.NaryTreeNodeFilter;
@@ -103,7 +104,11 @@ public class RunCkyParser {
         log.info("Parsing " + naryTrees.size() + " trees");
         BinaryTreebank binaryParses = new BinaryTreebank();
         Timer timer = new Timer();
-        CkyPcfgParser parser = new CkyPcfgParser(loopOrder, cellType);
+        CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
+        prm.loopOrder = loopOrder;
+        prm.cellType = cellType;
+        prm.cacheChart = true;
+        CkyPcfgParser parser = new CkyPcfgParser(prm);
         for (NaryTree tree : naryTrees) {            
             int[] sent = tree.getSentence();
             timer.start();

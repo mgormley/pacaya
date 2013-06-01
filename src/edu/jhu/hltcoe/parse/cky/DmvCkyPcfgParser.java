@@ -9,6 +9,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -22,7 +23,11 @@ public class DmvCkyPcfgParser {
     private CkyPcfgParser parser;
     
     public DmvCkyPcfgParser() {
-        parser = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
+        CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
+        prm.loopOrder = LoopOrder.LEFT_CHILD;
+        prm.cellType = ChartCellType.FULL_BREAK_TIES;
+        prm.cacheChart = true;
+        parser = new CkyPcfgParser(prm);
     }
     
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {

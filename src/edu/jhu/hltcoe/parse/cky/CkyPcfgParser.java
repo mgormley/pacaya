@@ -18,18 +18,26 @@ import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
  */
 public class CkyPcfgParser {
 
+    public static class CkyPcfgParserPrm {
+        // Whether or not to cache the chart cells between calls to the parser.
+        public boolean cacheChart = true;  
+        public LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        public ChartCellType cellType = ChartCellType.FULL;
+    }
+    
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT }
 
-    // Whether or not to cache the chart cells between calls to the parser.
-    private static final boolean CACHE_CHART = true;
-    
+    private Chart chart;
+
+    // These are private final just to ensure that they are never slow accesses.
     private final LoopOrder loopOrder;
     private final ChartCellType cellType;
-    private Chart chart;
+    private final boolean cacheChart;
     
-    public CkyPcfgParser(LoopOrder loopOrder, ChartCellType cellType) {
-        this.loopOrder = loopOrder;
-        this.cellType = cellType;
+    public CkyPcfgParser(CkyPcfgParserPrm prm) {
+        this.loopOrder = prm.loopOrder;
+        this.cellType = prm.cellType;
+        this.cacheChart = prm.cacheChart;
     }
     
     @Deprecated
@@ -40,7 +48,7 @@ public class CkyPcfgParser {
     }
     
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
-        if (!CACHE_CHART || chart == null || chart.getGrammar() != grammar) {
+        if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
             // Construct a new chart.
             chart = new Chart(sent, grammar, cellType);
         } else {
@@ -100,7 +108,7 @@ public class CkyPcfgParser {
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private final static void processCellCartesianProduct(CnfGrammar grammar, Chart chart, int start,
+    private static final void processCellCartesianProduct(CnfGrammar grammar, Chart chart, int start,
             int end, ChartCell cell) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
@@ -129,7 +137,7 @@ public class CkyPcfgParser {
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private final static void processCellLeftChild(CnfGrammar grammar, Chart chart, int start,
+    private static final void processCellLeftChild(CnfGrammar grammar, Chart chart, int start,
             int end, ChartCell cell) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
@@ -159,7 +167,7 @@ public class CkyPcfgParser {
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private final static void processCellRightChild(CnfGrammar grammar, Chart chart, int start,
+    private static final void processCellRightChild(CnfGrammar grammar, Chart chart, int start,
             int end, ChartCell cell) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {

@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -84,7 +85,11 @@ public class CkyPcfgParserTest {
         String[] tokens = sentence.split(" ");
         int[] sent = grammar.getLexAlphabet().lookupIndices(tokens);
         System.out.println(Arrays.toString(sent));
-        Chart chart = new CkyPcfgParser(LoopOrder.LEFT_CHILD, ChartCellType.FULL).parseSentence(sent, grammar);
+        CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
+        prm.loopOrder = LoopOrder.LEFT_CHILD;
+        prm.cellType = ChartCellType.FULL;
+        prm.cacheChart = true;
+        Chart chart = new CkyPcfgParser(prm).parseSentence(sent, grammar);
         return chart.getViterbiParse();
     }
 }
