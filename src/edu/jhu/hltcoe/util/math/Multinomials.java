@@ -40,9 +40,16 @@ public class Multinomials {
         for (int d = 0; d < logProps.length; d++) {
             logPropSum = Utilities.logAdd(logPropSum, logProps[d]);
         }
-        for (int d = 0; d < logProps.length; d++) {
-            logProps[d] -= logPropSum;
-            assert(!Double.isNaN(logProps[d]));
+        if (logPropSum != Double.NEGATIVE_INFINITY) {
+            for (int d = 0; d < logProps.length; d++) {
+                logProps[d] -= logPropSum;
+                assert(!Double.isNaN(logProps[d]));
+            }
+        } else {
+            double uniform = Utilities.log(1.0 / (double)logProps.length);
+            for (int d = 0; d < logProps.length; d++) {
+                logProps[d] = uniform;
+            }
         }
     }
     
