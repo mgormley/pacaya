@@ -20,8 +20,8 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         public double lambda = 0.1;
         public DependencyParserEvaluator evaluator = null;
         public EMTrainerPrm emPrm = new EMTrainerPrm();
-        public ViterbiParser parser = null; // = new DmvCkyParser();
-        public ModelFactory modelFactory = null; // new UniformDmvModelFactory();
+        public ViterbiParser parser = new DmvCkyParser();
+        public ModelFactory modelFactory = new UniformDmvModelFactory();
         public DmvViterbiEMTrainerPrm() { }
         public DmvViterbiEMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
                 double lambda, DependencyParserEvaluator evaluator, ViterbiParser parser, DmvModelFactory modelFactory) {
