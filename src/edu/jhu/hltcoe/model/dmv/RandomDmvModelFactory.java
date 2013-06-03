@@ -19,7 +19,8 @@ public class RandomDmvModelFactory extends AbstractDmvModelFactory implements Dm
     public DmvModel getInstance(Alphabet<Label> alphabet) {
         DmvModel dmv = new DmvModel(alphabet);
         dmv.setRandom();
-        dmv.backoff(Utilities.log(lambda));
+        dmv.logNormalize();
+        dmv.logAddConstant(Utilities.log(lambda));
         dmv.logNormalize();
         return dmv;
     }

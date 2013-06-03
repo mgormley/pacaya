@@ -4,6 +4,7 @@ import static depparsing.globals.Constants.LEFT;
 import static depparsing.globals.Constants.RIGHT;
 import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -27,12 +28,12 @@ public class DepSentenceDist {
 
     public final NonterminalMap nontermMap;
 
-    public DepSentenceDist(Sentence sentence, DepProbMatrix depProbMatrix) {
+    public DepSentenceDist(Sentence sentence, DmvModel depProbMatrix) {
         this(new DepInstance(sentence.getLabelIds()), depProbMatrix);
     }
     
-    public DepSentenceDist(DepInstance depInst, DepProbMatrix depProbMatrix) {
-        this(depInst, depProbMatrix.nontermMap);
+    public DepSentenceDist(DepInstance depInst, DmvModel depProbMatrix) {
+        this(depInst, new NonterminalMap(2, 1));
         cacheModel(depProbMatrix);
     }
 
@@ -56,7 +57,7 @@ public class DepSentenceDist {
      * and their corresponding POS numbers when computing the posteriors and
      * running inside outside.
      */
-    private void cacheModel(DepProbMatrix model) {
+    private void cacheModel(DmvModel model) {
         // FIXME -- is this necessary
         int[] i2tag = depInst.postags;
         for (int c = 0; c < i2tag.length; c++) {
@@ -67,12 +68,13 @@ public class DepSentenceDist {
                     continue;
                 int ptag = i2tag[p];
                 int dir = (c < p ? LEFT : RIGHT);
-                for (int v = 0; v < model.nontermMap.childValency; v++) {
-                    child[c][p][v] = model.child[ctag][ptag][dir][v];
+                for (int v = 0; v < nontermMap.childValency; v++) {
+                    // IMPORTANT NOTE: we cache the same parameters regardless of the child valency of the model.
+                    child[c][p][v] = model.child[ctag][ptag][dir];
                 }
             }
             for (int dir = 0; dir < 2; dir++) {
-                for (int v = 0; v < model.nontermMap.decisionValency; v++) {
+                for (int v = 0; v < nontermMap.decisionValency; v++) {
                     for (int choice = 0; choice < 2; choice++) {
                         decision[c][dir][v][choice] = model.decision[ctag][dir][v][choice];
                     }

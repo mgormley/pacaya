@@ -45,6 +45,17 @@ public class Multinomials {
             assert(!Double.isNaN(logProps[d]));
         }
     }
+    
+    /**
+     * Asserts that the parameters are log-normalized within some delta.
+     */
+    public static void assertLogNormalized(double[] logProps, double delta) {
+        double logPropSum = Double.NEGATIVE_INFINITY;
+        for (int d = 0; d < logProps.length; d++) {
+            logPropSum = Utilities.logAdd(logPropSum, logProps[d]);
+        }
+        assert(Utilities.equals(0.0, logPropSum, delta));
+    }
 
     public static int sampleFromProportions(double[] dProp) {
         double dPropSum = 0;

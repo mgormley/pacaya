@@ -152,7 +152,7 @@ public class ViterbiEmDmvProjector implements DmvProjector {
         // TODO: this is a slow conversion
         DmvModel model = idm.getDmvModel(logProbs);
         // We must smooth the weights so that there exists some valid parse
-        model.backoff(Utilities.log(lambda));
+        model.logAddConstant(Utilities.log(lambda));
         model.logNormalize();
         DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
         return runViterbiEmHelper(modelFactory);

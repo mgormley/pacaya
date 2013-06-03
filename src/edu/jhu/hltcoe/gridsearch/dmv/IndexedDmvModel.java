@@ -4,9 +4,7 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
 import depparsing.extended.DepInstance;
-import depparsing.extended.DepProbMatrix;
 import depparsing.extended.DepSentenceDist;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
@@ -17,6 +15,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.IntTuple;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -77,10 +76,10 @@ public class IndexedDmvModel implements IndexedCpt {
         numTags = alphabet.size();
         log.trace("numTags: " + numTags);
         
-        // Create map of DepProbMatrix right hand sides to integers
+        // Create map of DmvModel right hand sides to integers
         rhsToC = new Alphabet<Rhs>();
         rhsToC.startGrowth();
-        // Create for DepProbMatrix
+        // Create for DmvModel
         rhsToC.lookupIndex(new Rhs(ROOT));
         for(int p = 0; p < numTags; p++)
             for(int dir = 0; dir < 2; dir++) 
@@ -422,7 +421,7 @@ public class IndexedDmvModel implements IndexedCpt {
             } else {
                 int pTag = tags[pIdx];
                 int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
-                dmv.child[cTag][pTag][lr][0]++;
+                dmv.child[cTag][pTag][lr]++;
             }
             for (int lr=0; lr<2; lr++) {
                 String lrs = lr == 0 ? "l" : "r";
@@ -598,22 +597,22 @@ public class IndexedDmvModel implements IndexedCpt {
      */
     @Deprecated
     public DepSentenceDist getDepSentenceDist(Sentence sentence, int s, double[] sentLogProbs) {
-        DepProbMatrix depProbMatrix = new DepProbMatrix(alphabet, decisionValency, childValency);
-        depProbMatrix.fill(Double.NEGATIVE_INFINITY);
+        DmvModel dmv = new DmvModel(alphabet);
+        dmv.fill(Double.NEGATIVE_INFINITY);
         
-        // Map the sentence variable indices --> indices of DepProbMatrix
+        // Map the sentence variable indices --> indices of DmvModel
         Alphabet<ParamId> paramToI = sentParamToI.get(s);
         for (int i=0; i<getNumSentVars(s); i++) {
             ParamId p = paramToI.lookupObject(i);
             Rhs rhs = p.get1();
             int m = p.get2();
             double logProb = sentLogProbs[i];
-            setDPMValue(depProbMatrix, rhs, m, logProb);
+            setDmvValue(dmv, rhs, m, logProb);
         }
         
-        log.trace("depProbMatrix: " + depProbMatrix);
+        log.trace("dmv: " + dmv);
         DepInstance depInst = new DepInstance(sentence.getLabelIds());
-        DepSentenceDist sd = new DepSentenceDist(depInst, depProbMatrix);
+        DepSentenceDist sd = new DepSentenceDist(depInst, dmv);
         return sd;
     }
     
@@ -621,67 +620,67 @@ public class IndexedDmvModel implements IndexedCpt {
         DmvModel dmv = new DmvModel(alphabet);
         dmv.fill(Double.NEGATIVE_INFINITY);
 
-        // Map the sentence variable indices --> indices of DepProbMatrix
+        // Map the sentence variable indices --> indices of DmvModel
         for (int c=0; c<logProbs.length; c++) {
             Rhs rhs = rhsToC.lookupObject(c);
             assert(logProbs[c].length == getNumParams(c));
             for (int m=0; m<logProbs[c].length; m++) {
                 double logProb = logProbs[c][m];
-                setDPMValue(dmv, rhs, m, logProb);
+                setDmvValue(dmv, rhs, m, logProb);
             }
         }
         return dmv;
     }
 
-    private static void setDPMValue(DepProbMatrix depProbMatrix, ParamId param, double logProb) {
+    private static void setDPMValue(DmvModel dmv, ParamId param, double logProb) {
         Rhs rhs = param.get1();
         int m = param.get2();
-        setDPMValue(depProbMatrix, rhs, m, logProb);
+        setDmvValue(dmv, rhs, m, logProb);
     }
     
-    private static void setDPMValue(DepProbMatrix depProbMatrix, Rhs rhs, int m, double logProb) {
+    private static void setDmvValue(DmvModel dmv, Rhs rhs, int m, double logProb) {
         log.trace(String.format("setDPMValue: rhs=%s m=%d logProb=%f", rhs.toString(), m, logProb));
         if (rhs.get(0) == ROOT) {
-            depProbMatrix.root[m] = logProb;
+            dmv.root[m] = logProb;
         } else if (rhs.get(0) == CHILD) {
-            // For reference: child[cTag][pTag][lr][childValency];
-            depProbMatrix.child[m][rhs.get(1)][rhs.get(2)][rhs.get(3)] = logProb;
+            // For reference: child[cTag][pTag][lr];
+            dmv.child[m][rhs.get(1)][rhs.get(2)] = logProb;
         } else if (rhs.get(0) == DECISION) {
             // For reference: decision[pTag][lr][decisionValency][m];
-            depProbMatrix.decision[rhs.get(1)][rhs.get(2)][rhs.get(3)][m] = logProb;
+            dmv.decision[rhs.get(1)][rhs.get(2)][rhs.get(3)][m] = logProb;
         } else {
             throw new IllegalStateException("Unsupported type");
         }
     }
     
-    public static double getDPMValue(DepProbMatrix depProbMatrix, ParamId param) {
+    public static double getDmvValue(DmvModel dmv, ParamId param) {
         Rhs rhs = param.get1();
         int m = param.get2();
-        return getDPMValue(depProbMatrix, rhs, m);
+        return getDmvValue(dmv, rhs, m);
     }
     
-    public static double getDPMValue(DepProbMatrix depProbMatrix, Rhs rhs, int m) {
+    public static double getDmvValue(DmvModel dmv, Rhs rhs, int m) {
         //log.trace(String.format("getDPMValue: rhs=%s m=%d logProb=%f", rhs.toString(), m));
         if (rhs.get(0) == ROOT) {
-            return depProbMatrix.root[m];
+            return dmv.root[m];
         } else if (rhs.get(0) == CHILD) {
-            // For reference: child[cTag][pTag][lr][childValency];
-            return depProbMatrix.child[m][rhs.get(1)][rhs.get(2)][rhs.get(3)];
+            // For reference: child[cTag][pTag][lr];
+            return dmv.child[m][rhs.get(1)][rhs.get(2)];
         } else if (rhs.get(0) == DECISION) {
             // For reference: decision[pTag][lr][decisionValency][m];
-            return depProbMatrix.decision[rhs.get(1)][rhs.get(2)][rhs.get(3)][m];
+            return dmv.decision[rhs.get(1)][rhs.get(2)][rhs.get(3)][m];
         } else {
             throw new IllegalStateException("Unsupported type");
         }
     }
 
-    public double[][] getCmLogProbs(DepProbMatrix dpm) {
+    public double[][] getCmLogProbs(DmvModel dmv) {
         double[][] logProbs = new double[getNumConds()][];
         for (int c=0; c<logProbs.length; c++) {
             Rhs rhs = rhsToC.lookupObject(c);
             logProbs[c] = new double[getNumParams(c)];
             for (int m=0; m<logProbs[c].length; m++) {
-                logProbs[c][m] = getDPMValue(dpm, rhs, m);
+                logProbs[c][m] = getDmvValue(dmv, rhs, m);
             }
         }
         return logProbs;

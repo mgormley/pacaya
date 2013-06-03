@@ -17,4 +17,8 @@ public class Lambda {
         public void call(T obj);
     }
     
+    public interface LambdaOneToOne<T,S> {
+        public S call(T obj);
+    }
+    
 }

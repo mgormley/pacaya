@@ -64,7 +64,7 @@ public class DmvCkyParserTest {
 //        dmvModel.putStopWeight(TW_B, "r", true, 0.6);
         
         dmvModel.convertRealToLog();
-        dmvModel.assertNormalized(1e-13);
+        dmvModel.assertLogNormalized(1e-13);
         return dmvModel;
     }
     

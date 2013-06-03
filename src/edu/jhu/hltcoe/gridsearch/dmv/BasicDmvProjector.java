@@ -1,9 +1,6 @@
 package edu.jhu.hltcoe.gridsearch.dmv;
 
 import ilog.concert.IloException;
-import depparsing.extended.DepInstance;
-import depparsing.extended.DepSentenceDist;
-import depparsing.model.NonterminalMap;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
@@ -14,10 +11,8 @@ import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.Vectors;
 

@@ -14,18 +14,18 @@ public class DmvCnfGrammar {
     private static final String rootSymbolStr = "S";
 
     // Rules that correspond to probabilities in the model.
-    private Rule[] root; // Indexed by child.
-    private Rule[][][] child; // Indexed by child, parent, and direction.
-    private Rule[][][][] decision; // Indexed by parent, direction, valence (0 or 1), and STOP/CONT.    
+    private final Rule[] root; // Indexed by child.
+    private final Rule[][][] child; // Indexed by child, parent, and direction.
+    private final Rule[][][][] decision; // Indexed by parent, direction, valence (0 or 1), and STOP/CONT.    
     // Structural rules (with probability 1.0).
-    private Rule[][][] structural; // Indexed by child, parent, and direction.
+    private final Rule[][][] structural; // Indexed by child, parent, and direction.
     
-    private CnfGrammar cnfGrammar;
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private final CnfGrammar cnfGrammar;
+    private final Alphabet<String> lexAlphabet;
+    private final Alphabet<String> ntAlphabet;
 
-    private int numTags;
-    private int rootSymbol;
+    private final int numTags;
+    private final int rootSymbol;
     
     private int[] annoToUnanno; // Mapping of annotated tags to unannotated tags.
     private int[][] unannoToAnno; // Mapping of annotated tags to annotated tags.
@@ -99,7 +99,7 @@ public class DmvCnfGrammar {
             this.root[c].setScore(dmv.root[c]);
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    this.child[c][p][dir].setScore(dmv.child[c][p][dir][0]);
+                    this.child[c][p][dir].setScore(dmv.child[c][p][dir]);
                     this.structural[c][p][dir].setScore(0.0);
                 }
             }

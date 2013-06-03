@@ -52,6 +52,7 @@ import edu.jhu.hltcoe.util.Utilities;
  *       and the size of inside-outside arrays, but the number of parameters
  *       depends on both valences; parameters for some rules may be identical.
  */
+@Deprecated
 public class DepProbMatrix extends AbstractCountTable implements Serializable {
 
 	/**

@@ -34,7 +34,7 @@ public class SimpleStaticDmvModel {
         dmvModel.putStopProb(TW_B, Lr.RIGHT, true, 0.6);
         
         dmvModel.convertRealToLog();
-        dmvModel.assertNormalized(1e-13);
+        dmvModel.assertLogNormalized(1e-13);
         return dmvModel;
     }
 
@@ -67,7 +67,7 @@ public class SimpleStaticDmvModel {
         dmvModel.putStopProb(verb, Lr.RIGHT, true, 0.0);
         
         dmvModel.convertRealToLog();
-        dmvModel.assertNormalized(1e-13);
+        dmvModel.assertLogNormalized(1e-13);
         return dmvModel;
     }
     
@@ -97,7 +97,7 @@ public class SimpleStaticDmvModel {
         dmvModel.putStopProb(verb, Lr.RIGHT, true, 0.4);
         
         dmvModel.convertRealToLog();
-        dmvModel.assertNormalized(1e-13);
+        dmvModel.assertLogNormalized(1e-13);
         return dmvModel;
     }
     
@@ -114,7 +114,7 @@ public class SimpleStaticDmvModel {
         dmvModel.fillStopProbs(0.9);
         
         dmvModel.convertRealToLog();
-        dmvModel.assertNormalized(1e-13);
+        dmvModel.assertLogNormalized(1e-13);
         return dmvModel;
     }
     
