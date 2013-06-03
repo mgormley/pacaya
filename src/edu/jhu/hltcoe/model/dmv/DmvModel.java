@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.model.dmv;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -255,6 +256,26 @@ public class DmvModel implements Model {
         }
     }
     
+    /**
+     * Same as apply but does the function calls in a different order used to
+     * preserve backwards compatability of setRandom().
+     */
+    public void applyOldOrder(LambdaOneToOne<Double,Double> lambda) {
+        for (int c=0; c<numTags; c++) {
+            this.root[c] = lambda.call(this.root[c]);
+            for (int dir=0; dir<2; dir++) {
+                for (int p=0; p<numTags; p++) {
+                    this.child[c][p][dir] = lambda.call(this.child[c][p][dir]);
+                }
+                for (int val=0; val<2; val++) {
+                    for (int sc=0; sc<2; sc++) {
+                        this.decision[c][dir][val][sc] = lambda.call(this.decision[c][dir][val][sc]);
+                    }
+                }
+            }
+        }
+    }
+    
     public void addConstant(final double addend) {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
@@ -298,9 +319,7 @@ public class DmvModel implements Model {
             }
             
         };
-        applyRoot(lambda);
-        applyChild(lambda);
-        applyStop(lambda);
+        applyOldOrder(lambda);
     }
 
     public void normalize() {
@@ -369,6 +388,9 @@ public class DmvModel implements Model {
         // 
         // Compute all the normalizing constants.
         double[][] logSums = new double[numTags][2]; // Indexed by parent and direction.
+        for (int p=0; p<numTags; p++) {
+            Arrays.fill(logSums[p], Double.NEGATIVE_INFINITY);
+        }
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
@@ -377,10 +399,15 @@ public class DmvModel implements Model {
             }
         }
         // Subtract off the normalizing constants.
+        double uniform = Utilities.log(1.0 / numTags);
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    child[c][p][dir] -= logSums[p][dir];
+                    if (logSums[p][dir] != Double.NEGATIVE_INFINITY) {
+                        child[c][p][dir] -= logSums[p][dir];
+                    } else {
+                        child[c][p][dir] = uniform;
+                    }
                     assert(!Double.isNaN(child[c][p][dir]));
                 }
             }
@@ -410,6 +437,9 @@ public class DmvModel implements Model {
         // 
         // Compute all the normalizing constants.
         double[][] logSums = new double[numTags][2]; // Indexed by parent and direction.
+        for (int p=0; p<numTags; p++) {
+            Arrays.fill(logSums[p], Double.NEGATIVE_INFINITY);
+        }
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
