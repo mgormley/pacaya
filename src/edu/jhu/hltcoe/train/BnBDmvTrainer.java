@@ -71,6 +71,7 @@ public class BnBDmvTrainer implements Trainer<DepTreebank> {
     }
     
     public SearchStatus train() {
+        // TODO: subtract off the time used in init().
         DmvProblemNode rootNode = new DmvProblemNode(prm.brancher);
         SearchStatus status = bnbSolver.runBranchAndBound(rootNode, initFeasSol, initFeasSol.getScore());
         relax.end();
