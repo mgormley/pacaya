@@ -155,7 +155,7 @@ public class ArgParser {
         formatter.printHelp(usage, options, true);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setStaticField(Field field, String value) throws IllegalArgumentException,
             IllegalAccessException {
         Class<?> type = field.getType();

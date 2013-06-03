@@ -174,6 +174,7 @@ public abstract class AbstractDipSolver implements IlpSolver {
                     var = columns.get(colNum);
                     result.put(var, value);
                 } else {
+                    solReader.close();
                     throw new IllegalStateException("No match fround" + var);
                 }
             }

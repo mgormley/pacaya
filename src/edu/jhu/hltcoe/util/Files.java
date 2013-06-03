@@ -43,6 +43,7 @@ public class Files {
             byte[] bytes = new byte[500];
             raf.skipBytes((int)raf.length() - bytes.length);
             int read = raf.read(bytes);
+            raf.close();
             return new String(Arrays.copyOf(bytes, read));
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -101,9 +102,11 @@ public class Files {
             while ((line = reader.readLine()) != null) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
+                    reader.close();
                     return matcher;
                 }
             }
+            reader.close();
             return null;
         } catch (IOException e) {
             throw new RuntimeException(e);

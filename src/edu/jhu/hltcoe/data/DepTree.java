@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
-import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
-import edu.jhu.hltcoe.util.Alphabet;
-
 public class DepTree implements Iterable<DepTreeNode> {
 
     public static final int EMPTY_POSITION = -2;

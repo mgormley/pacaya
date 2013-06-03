@@ -89,6 +89,7 @@ public class ClGurobiIlpSolver implements IlpSolver {
             Double value = Double.valueOf(splits[1]);
             solMap.put(gurobiVar, value);
         }
+        reader.close();
         return solMap;
     }
 

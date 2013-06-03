@@ -120,6 +120,7 @@ public class ZimplRunner {
             zimplVar = zimplVar.substring(1,zimplVar.length()-1);
             tblMap.put(zimplVar, gurobiVar);
         }
+        reader.close();
         return tblMap;
     }
 
@@ -150,6 +151,7 @@ public class ZimplRunner {
             zimplVar = zimplVar.substring(1,zimplVar.length()-1);
             tblMap.put(gurobiVar, zimplVar);
         }
+        reader.close();
         return tblMap;
     }
 

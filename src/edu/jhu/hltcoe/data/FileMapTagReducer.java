@@ -28,6 +28,7 @@ public class FileMapTagReducer extends AbstractTagReducer {
                     fileMap.put(splits[0], splits[1]);
                 }
             }
+            reader.close();
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

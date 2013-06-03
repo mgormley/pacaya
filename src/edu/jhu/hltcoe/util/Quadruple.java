@@ -45,7 +45,6 @@ public class Quadruple<X,Y,Z,A> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -54,6 +53,7 @@ public class Quadruple<X,Y,Z,A> {
             return false;
         if (getClass() != obj.getClass())
             return false;
+        @SuppressWarnings("rawtypes")
         Quadruple other = (Quadruple) obj;
         if (a == null) {
             if (other.a != null)
