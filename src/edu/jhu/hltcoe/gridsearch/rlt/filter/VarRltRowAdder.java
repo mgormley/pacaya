@@ -6,7 +6,6 @@ import ilog.concert.IloNumVar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import cern.colt.list.IntArrayList;
@@ -95,12 +94,18 @@ public class VarRltRowAdder implements RltRowAdder {
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            for (int i : Utilities.safeGetList(varConsMap, varIdPair.get1()).elements()) {
-                for (int j : Utilities.safeGetList(varConsMap, varIdPair.get2()).elements()) {
-                    if ((startFac1 <= i && i < endFac1 && startFac2 <= j && j < endFac2) ||
-                            (startFac2 <= i && i < endFac2 && startFac1 <= j && j < endFac1)) {
+            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
+            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            for (int i=0; i<list1.size(); i++) {
+                int consId1 = list1.getQuick(i);
+                for (int j=0; j<list2.size(); j++) {
+                    int consId2 = list2.getQuick(j);
+                    if ((      startFac1 <= consId1 && consId1 < endFac1 
+                            && startFac2 <= consId2 && consId2 < endFac2) ||
+                        (      startFac2 <= consId1 && consId1 < endFac2 
+                            && startFac1 <= consId2 && consId2 < endFac1)) {
                         // Add a RLT row, for each pair of factors.
-                        rltRows.add(new UnorderedPair(i, j));
+                        rltRows.add(new UnorderedPair(consId1, consId2));
                     }
                 }
             }
@@ -121,10 +126,13 @@ public class VarRltRowAdder implements RltRowAdder {
             if (boundsOnly && !(factor instanceof BoundFactor)){
                 continue;
             }
-            for (long lveIdx : factor.G.getIndices()) {
-                int veIdx = SafeCast.safeLongToInt(lveIdx);
-                if (inputVarIds.contains(veIdx)) {
-                    Utilities.addToList(varConsMap, veIdx, i);
+            for (LongDoubleEntry ve : factor.G) {
+                // Check that this is a nonzero entry.
+                if (ve.get() != 0.0) {
+                    int veIdx = SafeCast.safeLongToInt(ve.index());
+                    if (inputVarIds.contains(veIdx)) {
+                        Utilities.addToList(varConsMap, veIdx, i);
+                    }
                 }
             }
         }
