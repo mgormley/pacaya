@@ -187,17 +187,20 @@ public class SortedIntIntVector extends SortedIntIntMap {
     	if (obj instanceof SortedIntIntVector) {
     		SortedIntIntVector other = (SortedIntIntVector) obj;
 
-	        if (other.size() != this.size()) {
+            SortedIntIntVector v1 = SortedIntIntVector.getWithNoZeroValues(this);
+            SortedIntIntVector v2 = SortedIntIntVector.getWithNoZeroValues(other);
+            
+	        if (v2.size() != v1.size()) {
 	            return false;
 	        }
 	        // This is slow, but correct.
-	        for (IntIntEntry ve : this) {
-	            if (ve.get() != other.get(ve.index())) {
+	        for (IntIntEntry ve : v1) {
+	            if (ve.get() != v2.get(ve.index())) {
 	                return false;
 	            }
 	        }
-	        for (IntIntEntry ve : other) {
-	            if (ve.get() != this.get(ve.index())) {
+	        for (IntIntEntry ve : v2) {
+	            if (ve.get() != v1.get(ve.index())) {
 	                return false;
 	            }
 	        }

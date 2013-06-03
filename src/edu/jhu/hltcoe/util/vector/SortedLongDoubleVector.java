@@ -218,17 +218,21 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
      * Returns true if the input vector is equal to this one.
      */
     public boolean equals(SortedLongDoubleVector other, double delta) {
-        if (other.size() != this.size()) {
+        // This is slow, but correct.
+        SortedLongDoubleVector v1 = SortedLongDoubleVector.getWithNoZeroValues(this, delta);
+        SortedLongDoubleVector v2 = SortedLongDoubleVector.getWithNoZeroValues(other, delta);
+                
+        if (v2.size() != v1.size()) {
             return false;
         }
-        // This is slow, but correct.
-        for (LongDoubleEntry ve : this) {
-            if (!Utilities.equals(ve.get(), other.get(ve.index()), delta)) {
+
+        for (LongDoubleEntry ve : v1) {
+            if (!Utilities.equals(ve.get(), v2.get(ve.index()), delta)) {
                 return false;
             }
         }
-        for (LongDoubleEntry ve : other) {
-            if (!Utilities.equals(ve.get(), this.get(ve.index()), delta)) {
+        for (LongDoubleEntry ve : v2) {
+            if (!Utilities.equals(ve.get(), v1.get(ve.index()), delta)) {
                 return false;
             }
         }

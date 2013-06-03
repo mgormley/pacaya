@@ -184,26 +184,29 @@ public class SortedIntLongVector extends SortedIntLongMap {
      */
     @Override
     public boolean equals(Object obj) {
-    	if (obj instanceof SortedIntLongVector) {
-    		SortedIntLongVector other = (SortedIntLongVector) obj;
+        if (obj instanceof SortedIntLongVector) {
+            SortedIntLongVector other = (SortedIntLongVector) obj;
 
-	        if (other.size() != this.size()) {
-	            return false;
-	        }
-	        // This is slow, but correct.
-	        for (IntLongEntry ve : this) {
-	            if (ve.get() != other.get(ve.index())) {
-	                return false;
-	            }
-	        }
-	        for (IntLongEntry ve : other) {
-	            if (ve.get() != this.get(ve.index())) {
-	                return false;
-	            }
-	        }
-	        return true;
-    	}
-    	return false;
+            SortedIntLongVector v1 = SortedIntLongVector.getWithNoZeroValues(this);
+            SortedIntLongVector v2 = SortedIntLongVector.getWithNoZeroValues(other);
+            
+            if (v2.size() != v1.size()) {
+                return false;
+            }
+            // This is slow, but correct.
+            for (IntLongEntry ve : v1) {
+                if (ve.get() != v2.get(ve.index())) {
+                    return false;
+                }
+            }
+            for (IntLongEntry ve : v2) {
+                if (ve.get() != v1.get(ve.index())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
     
     @Override

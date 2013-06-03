@@ -183,17 +183,21 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
      * Returns true if the input vector is equal to this one.
      */
     public boolean equals(SortedIntDoubleVector other, double delta) {
-        if (other.size() != this.size()) {
+        // This is slow, but correct.
+        SortedIntDoubleVector v1 = SortedIntDoubleVector.getWithNoZeroValues(this, delta);
+        SortedIntDoubleVector v2 = SortedIntDoubleVector.getWithNoZeroValues(other, delta);
+                
+        if (v2.size() != v1.size()) {
             return false;
         }
-        // This is slow, but correct.
-        for (IntDoubleEntry ve : this) {
-            if (!Utilities.equals(ve.get(), other.get(ve.index()), delta)) {
+
+        for (IntDoubleEntry ve : v1) {
+            if (!Utilities.equals(ve.get(), v2.get(ve.index()), delta)) {
                 return false;
             }
         }
-        for (IntDoubleEntry ve : other) {
-            if (!Utilities.equals(ve.get(), this.get(ve.index()), delta)) {
+        for (IntDoubleEntry ve : v2) {
+            if (!Utilities.equals(ve.get(), v1.get(ve.index()), delta)) {
                 return false;
             }
         }
