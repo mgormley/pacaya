@@ -122,7 +122,30 @@ public class Vectors {
         }
         return min;
     }
-
+    
+    public static int argmax(double[] array) {
+        double max = Double.NEGATIVE_INFINITY;
+        int argmax = -1;
+        for (int i=0; i<array.length; i++) {
+            if (array[i] > max) {
+                max = array[i];
+                argmax = i;
+            }
+        }
+        return argmax;
+    }
+    
+    public static int argmin(double[] array) {
+        double min = Double.POSITIVE_INFINITY;
+        int argmin = -1;
+        for (int i=0; i<array.length; i++) {
+            if (array[i] < min) {
+                min = array[i];
+                argmin = i;
+            }
+        }
+        return argmin;
+    }
 
     public static double dotProduct(double[] array1, double[] array2) {
         if (array1.length != array2.length) {

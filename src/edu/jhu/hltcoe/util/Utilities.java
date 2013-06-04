@@ -563,18 +563,6 @@ public class Utilities {
         sb.append("]");
         return sb.toString();
     }
-
-    public static void fill(int[][] array, int value) {
-        for (int i=0; i<array.length; i++) {
-            Arrays.fill(array[i], value);
-        }
-    }
-
-    public static void fill(Object[][] array, Object value) {
-        for (int i=0; i<array.length; i++) {
-            Arrays.fill(array[i], value);
-        }
-    }
     
     /**
      * Gets an array where array[i] = i.
@@ -645,6 +633,48 @@ public class Utilities {
     public static <T> void addAll(ArrayList<T> list, T[][][][] array) {
         for (int i=0; i<array.length; i++) {
             addAll(list, array[i]);
+        }
+    }
+    
+    public static void fill(double[][] array, double value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(double[][][] array, double value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(double[][][][] array, double value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(int[][] array, int value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(int[][][] array, int value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(int[][][][] array, int value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
+
+    public static void fill(Object[][] array, Object value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
         }
     }
     
