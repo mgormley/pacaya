@@ -7,17 +7,24 @@ import ilog.concert.IloObjective;
 import ilog.cplex.IloCplex;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.Vectors;
 
 
 public class LpSumToOneTest {
 
+    @Before
+    public void setUp() {
+        Prng.seed(Prng.DEFAULT_SEED);
+    }
+    
     @Test
     public void testSumToOne() throws IloException {
         
@@ -82,10 +89,10 @@ public class LpSumToOneTest {
         
         int nRowsBefore = lpMatrix.getNrows();
         System.out.println("nRowsBefore: " + nRowsBefore);
-        Assert.assertEquals(24, nRowsBefore);
+        Assert.assertEquals(18, nRowsBefore);
         sto.projectModelParamsAndAddCuts();
         int nRowsAfter = lpMatrix.getNrows();
-        Assert.assertEquals(25, nRowsAfter);
+        Assert.assertEquals(19, nRowsAfter);
         
         cplex.solve();
         double[][] logProbs = sto.extractRelaxedLogProbs();
