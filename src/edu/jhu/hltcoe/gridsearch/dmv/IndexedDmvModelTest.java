@@ -96,7 +96,7 @@ public class IndexedDmvModelTest {
         c = 1+6;
         m = 0;
         s = 1;
-        assertEquals("dec_{N,l,0}(N)", idm.getName(c,m));
+        assertEquals("dec_{N,l,0}(s)", idm.getName(c,m));
         // Should exist in sent 1
         assertEquals(3, idm.getMaxFreq(s, idm.getSi(s, c, m)));
         s=0;
