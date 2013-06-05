@@ -48,7 +48,7 @@ public class SortTest {
     }
     
     @Test
-    public void testSortValues() {
+    public void testSortValuesAsc() {
         double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
         int[] index = Sort.getIndexArray(values);
         Sort.sortValuesAsc(values, index);
@@ -57,6 +57,18 @@ public class SortTest {
         
         JUnitUtils.assertArrayEquals(new double[]{ -1.0, 1.0f, 2.0, 3.0f, 5.0}, values, 1e-13);
         Assert.assertArrayEquals(new int[]{ 3, 0, 2, 1, 4}, index);
+    }
+    
+    @Test
+    public void testSortValuesDesc() {
+        double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
+        int[] index = Sort.getIndexArray(values);
+        Sort.sortValuesDesc(values, index);
+        System.out.println(Arrays.toString(values));
+        System.out.println(Arrays.toString(index));
+        
+        JUnitUtils.assertArrayEquals(new double[]{ 5.0, 3.0, 2.0, 1.0, -1.0}, values, 1e-13);
+        Assert.assertArrayEquals(new int[]{ 4, 1, 2, 0, 3}, index);
     }
     
     @Test
@@ -84,7 +96,7 @@ public class SortTest {
     }    
 
     @Test
-    public void testSortIndex() {
+    public void testSortIndexAsc() {
         double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
         int[] index = new int[] { 1, 4, 5, 8, 3};
         Sort.sortIndexAsc(index, values);
@@ -93,6 +105,18 @@ public class SortTest {
         
         JUnitUtils.assertArrayEquals(new double[]{ 1.0, 5.0, 3.0, 2.0, -1.0 }, values, 1e-13);
         Assert.assertArrayEquals(new int[]{ 1, 3, 4, 5, 8 }, index);
+    }
+
+    @Test
+    public void testSortIndexDesc() {
+        double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
+        int[] index = new int[] { 1, 4, 5, 8, 3};
+        Sort.sortIndexDesc(index, values);
+        System.out.println(Arrays.toString(values));
+        System.out.println(Arrays.toString(index));
+        
+        JUnitUtils.assertArrayEquals(new double[]{ -1.0, 2.0, 3.0, 5.0, 1.0 }, values, 1e-13);
+        Assert.assertArrayEquals(new int[]{ 8, 5, 4, 3, 1 }, index);
     }
     
 }
