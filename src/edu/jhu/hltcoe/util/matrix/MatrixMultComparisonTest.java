@@ -70,7 +70,7 @@ public class MatrixMultComparisonTest {
     }
 
     // Output is "Parallel COLT: 6440.0"
-    @Test
+    //@Test
     public void testMatrixMultColt() {
         if (true) {
             // pass.
