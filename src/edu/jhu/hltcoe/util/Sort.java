@@ -85,7 +85,38 @@ public class Sort {
         quicksortValues(values, index, 0, index.length - 1);
     }
 
-    public static void quicksortValues(double[] a, int[] index, int left, int right) {
+    private static void quicksortValues(double[] array, int[] index, int left, int right) {
+        if (left < right) {
+            // Choose a pivot index.
+            // --> Here we choose the rightmost element which does the least
+            // amount of work if the array is already sorted.
+            int pivotIndex = right;
+            // Partition the array so that everything less than
+            // values[pivotIndex] is on the left of pivotNewIndex and everything
+            // greater than or equal is on the right.
+            int pivotNewIndex = partitionValues(array, index, left, right, pivotIndex);
+            // Recurse on the left and right sides.
+            quicksortValues(array, index, left, pivotNewIndex - 1);
+            quicksortValues(array, index, pivotNewIndex + 1, right);
+        }
+    }
+    
+    private static int partitionValues(double[] array, int[] index, int left, int right, int pivotIndex) {
+        double pivotValue = array[pivotIndex];
+        // Move the pivot value to the rightmost position.
+        swap(array, index, pivotIndex, right);
+        // For each position between left and right, swap all the values less
+        // than or equal to the pivot value to the left side.
+        int storeIndex = left;
+        for (int i=left; i<right; i++) {
+            if (array[i] <= pivotValue) {
+                swap(array, index, i, storeIndex);
+                storeIndex++;
+            }
+        }
+        // Move the pivot value back to the split point.
+        swap(array, index, storeIndex, right);
+        return storeIndex;
     }
 
     /**
@@ -108,9 +139,40 @@ public class Sort {
         return index;
     }
 
-    public static void quicksortIndex(int[] index, double[] values, int left, int right) {
-
+    private static void quicksortIndex(int[] array, double[] values, int left, int right) {
+        if (left < right) {
+            // Choose a pivot index.
+            // --> Here we choose the rightmost element which does the least
+            // amount of work if the array is already sorted.
+            int pivotIndex = right;
+            // Partition the array so that everything less than
+            // values[pivotIndex] is on the left of pivotNewIndex and everything
+            // greater than or equal is on the right.
+            int pivotNewIndex = partitionIndex(array, values, left, right, pivotIndex);
+            // Recurse on the left and right sides.
+            quicksortIndex(array, values, left, pivotNewIndex - 1);
+            quicksortIndex(array, values, pivotNewIndex + 1, right);
+        }
     }
+    
+    private static int partitionIndex(int[] array, double[] values, int left, int right, int pivotIndex) {
+        int pivotValue = array[pivotIndex];
+        // Move the pivot value to the rightmost position.
+        swap(values, array, pivotIndex, right);
+        // For each position between left and right, swap all the values less
+        // than or equal to the pivot value to the left side.
+        int storeIndex = left;
+        for (int i=left; i<right; i++) {
+            if (array[i] <= pivotValue) {
+                swap(values, array, i, storeIndex);
+                storeIndex++;
+            }
+        }
+        // Move the pivot value back to the split point.
+        swap(values, array, storeIndex, right);
+        return storeIndex;
+    }
+    
 
     /**
      * Returns whether x is less than y.
