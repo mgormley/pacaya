@@ -1,6 +1,9 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.hltcoe.parse.cky.chart;
 
-import edu.jhu.hltcoe.parse.cky.Chart.BackPointer;
+import edu.jhu.hltcoe.parse.cky.CnfGrammar;
+import edu.jhu.hltcoe.parse.cky.MaxScoresSnapshot;
+import edu.jhu.hltcoe.parse.cky.Rule;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.util.map.IntObjectHashMap;
 import edu.jhu.hltcoe.util.map.OpenIntDoubleHashMapWithDefault;
 

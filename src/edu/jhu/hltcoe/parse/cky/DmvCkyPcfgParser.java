@@ -8,9 +8,10 @@ import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.hltcoe.parse.cky.chart.Chart;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.util.Pair;
 
 public class DmvCkyPcfgParser {

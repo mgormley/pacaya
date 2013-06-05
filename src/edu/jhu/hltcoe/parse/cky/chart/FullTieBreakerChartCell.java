@@ -1,8 +1,11 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.hltcoe.parse.cky.chart;
 
 import java.util.Arrays;
 
-import edu.jhu.hltcoe.parse.cky.Chart.BackPointer;
+import edu.jhu.hltcoe.parse.cky.CnfGrammar;
+import edu.jhu.hltcoe.parse.cky.MaxScoresSnapshot;
+import edu.jhu.hltcoe.parse.cky.Rule;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntArrayList;

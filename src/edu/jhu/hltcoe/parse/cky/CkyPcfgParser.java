@@ -1,7 +1,9 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.parse.cky.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.chart.Chart;
+import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.
