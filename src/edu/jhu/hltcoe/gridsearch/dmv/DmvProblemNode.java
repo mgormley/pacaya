@@ -58,8 +58,11 @@ public class DmvProblemNode implements ProblemNode {
         // Take the optimistic bound from the parent.
         this.optimisticBound = parent.optimisticBound;
         
-        // Conserve space on the internal list representation.
-        deltas.trimToSize();
+        // Check for null deltas (used for testing only)
+        if (deltas != null) {
+            // Conserve space on the internal list representation.
+            deltas.trimToSize();
+        }
     }
     
 
