@@ -13,160 +13,98 @@ public class Sort {
         // private constructor
     }
 
-    
-    @Test
-    public void testSortValues() {
-        double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
-        int[] index = getIndexArray(values);
-        Sort.sortValuesAsc(values, index);
-        System.out.println(Arrays.toString(values));
-        System.out.println(Arrays.toString(index));
-        JUnitUtils.assertArrayEquals(new double[]{ -1.0, 1.0f, 2.0, 3.0f, 5.0}, values, 1e-13);
-        Assert.assertArrayEquals(new int[]{ 3, 0, 2, 1, 4}, index);
-    }
-    
-    @Test
-    public void testSortValuesInfinitiesAsc() {
-        double[] values = new double[]{ 1.0f, Double.POSITIVE_INFINITY, 2.0f, -1.0, Double.NEGATIVE_INFINITY, 5.0};
-        int[] index = getIndexArray(values);
-        Sort.sortValuesAsc(values, index);
-        System.out.println(Arrays.toString(values));
-        System.out.println(Arrays.toString(index));
-        // TODO: add assertions 
-    }
-    
-    @Test
-    public void testSortValuesInfinitiesDesc() {
-        double[] values = new double[]{ 1.0f, Double.POSITIVE_INFINITY, 2.0f, -1.0, Double.NEGATIVE_INFINITY, 5.0};
-        int[] index = getIndexArray(values);
-        Sort.sortValuesDesc(values, index);
-        System.out.println(Arrays.toString(values));
-        System.out.println(Arrays.toString(index));
-        // TODO: add assertions 
-    }    
-
-    @Test
-    public void testSortIndex() {
-        double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
-        int[] index = new int[] { 1, 4, 5, 8, 3};
-        Sort.sortIndexAsc(index, values);
-        System.out.println(Arrays.toString(values));
-        System.out.println(Arrays.toString(index));
-        JUnitUtils.assertArrayEquals(new double[]{ 1.0, 5.0, 3.0, 2.0, -1.0 }, values, 1e-13);
-        Assert.assertArrayEquals(new int[]{ 1, 3, 4, 5, 8 }, index);
-    }
-    
-    public static int[] getIndexArray(double[] main) {
-        return Utilities.getIndexArray(main.length);
+    public static int[] getIndexArray(double[] values) {
+        return Utilities.getIndexArray(values.length);
     }
 
-    // Copied from: http://stackoverflow.com/questions/951848/java-array-sort-quick-way-to-get-a-sorted-list-of-indices-of-an-array
     /**
-     * Performs an in-place quick sort on main. All the sorting operations on main
+     * Performs an in-place quick sort on values. All the sorting operations on values
      * are mirrored in index. Sorts in descending order.
      */
-    public static void sortValuesDesc(double[] main, int[] index) {
-        Vectors.scale(main, -1.0);
-        sortValuesAsc(main, index);
-        Vectors.scale(main, -1.0);
+    public static void sortValuesDesc(double[] values, int[] index) {
+        Vectors.scale(values, -1.0);
+        sortValuesAsc(values, index);
+        Vectors.scale(values, -1.0);
     }
     
     /**
-     * Performs an in-place quick sort on main. All the sorting operations on main
+     * Performs an in-place quick sort on values. All the sorting operations on values
      * are mirrored in index. Sorts in ascending order.
      */
-    public static void sortValuesAsc(double[] main, int[] index) {
-        quicksortValues(main, index, 0, index.length - 1);
+    public static void sortValuesAsc(double[] values, int[] index) {
+        quicksortValues(values, index, 0, index.length - 1);
     }
 
-    // quicksort a[left] to a[right]
     public static void quicksortValues(double[] a, int[] index, int left, int right) {
-        if (right <= left) return;
-        int i = partitionValues(a, index, left, right);
-        quicksortValues(a, index, left, i-1);
-        quicksortValues(a, index, i+1, right);
     }
 
-    // partition a[left] to a[right], assumes left < right
-    private static int partitionValues(double[] a, int[] index, int left, int right) {
-        int i = left - 1;
-        int j = right;
-        while (true) {
-            while (less(a[++i], a[right]))      // find item on left to swap
-                ;                               // a[right] acts as sentinel
-            while (less(a[right], a[--j]))      // find item on right to swap
-                if (j == left) break;           // don't go out-of-bounds
-            if (i >= j) break;                  // check if pointers cross
-            exch(a, index, i, j);               // swap two elements into place
-        }
-        exch(a, index, i, right);               // swap with partition element
-        return i;
-    }
-    
     /**
      * Performs an in-place quick sort on index. All the sorting operations on index
-     * are mirrored in main. Sorts in descending order.
+     * are mirrored in values. Sorts in descending order.
      */
-    public static void sortIndexDesc(int[] index, double[] main) {
+    public static void sortIndexDesc(int[] index, double[] values) {
         Vectors.scale(index, -1);
-        sortIndexAsc(index, main);
+        sortIndexAsc(index, values);
         Vectors.scale(index, -1);
     }
     
     /**
      * Performs an in-place quick sort on index. All the sorting operations on index
-     * are mirrored in main. Sorts in ascending order.
+     * are mirrored in values. Sorts in ascending order.
      * @return index - sorted.
      */
-    public static int[] sortIndexAsc(int[] index, double[] main) {
-        quicksortIndex(index, main, 0, index.length - 1);
+    public static int[] sortIndexAsc(int[] index, double[] values) {
+        quicksortIndex(index, values, 0, index.length - 1);
         return index;
     }
 
-    // quicksort index[left] to index[right]
-    public static void quicksortIndex(int[] index, double[] a, int left, int right) {
-        if (right <= left) return;
-        int i = partitionIndex(index, a, left, right);
-        quicksortIndex(index, a, left, i-1);
-        quicksortIndex(index, a, i+1, right);
+    public static void quicksortIndex(int[] index, double[] values, int left, int right) {
+
     }
 
-    // partition index[left] to index[right], assumes left < right
-    private static int partitionIndex(int[] index, double[] a, int left, int right) {
-        int i = left - 1;
-        int j = right;
-        while (true) {
-            while (less(index[++i], index[right]))      // find item on left to swap
-                ;                               // a[right] acts as sentinel
-            while (less(index[right], index[--j]))      // find item on right to swap
-                if (j == left) break;           // don't go out-of-bounds
-            if (i >= j) break;                  // check if pointers cross
-            exch(a, index, i, j);               // swap two elements into place
-        }
-        exch(a, index, i, right);               // swap with partition element
-        return i;
-    }
-
-    // is x > y ?
-    private static boolean less(int x, int y) {
+    /**
+     * Returns whether x is less than y.
+     */
+    private static boolean ltInt(int x, int y) {
         return (x < y);
     }
     
-    // is x > y ?
-    private static boolean less(double x, double y) {
+    /**
+     * Returns whether x is less than y.
+     */
+    private static boolean ltDouble(double x, double y) {
         return (x < y);
     }
 
-    // exchange a[i] and a[j]
-    private static void exch(double[] a, int[] index, int i, int j) {
-        double swap = a[i];
-        a[i] = a[j];
-        a[j] = swap;
-        int b = index[i];
-        index[i] = index[j];
-        index[j] = b;
+    /**
+     * Swaps the elements at positions i and j in both the values and index array, which must be the same length.
+     * @param values An array of values.
+     * @param index An array of indices.
+     * @param i The position of the first element to swap.
+     * @param j The position of the second element to swap.
+     */
+    private static void swap(double[] values, int[] index, int i, int j) {
+        swap(values, i, j);
+        swap(index, i, j);
     }
-    
+
+    /**
+     * Swaps the elements at positions i and j.
+     */
+    private static void swap(double[] array, int i, int j) {
+        double valAtI = array[i];
+        array[i] = array[j];
+        array[j] = valAtI;
+    }
+
+    /**
+     * Swaps the elements at positions i and j.
+     */
+    private static void swap(int[] array, int i, int j) {
+        int valAtI = array[i];
+        array[i] = array[j];
+        array[j] = valAtI;
+    }
 
     public static boolean isSortedAsc(int[] array) {
     	for (int i=0; i<array.length-1; i++) {
