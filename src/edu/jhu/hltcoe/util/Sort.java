@@ -13,6 +13,56 @@ public class Sort {
         // private constructor
     }
 
+    /**
+     * Performs an in-place quick sort on array. Sorts in descending order.
+     */
+    public static void sortDesc(double[] array) {
+        Vectors.scale(array, -1.0);
+        sortAsc(array);
+        Vectors.scale(array, -1.0);
+    }
+    
+    /**
+     * Performs an in-place quick sort on array. Sorts in acscending order.
+     */
+    public static void sortAsc(double[] array) {
+        quicksort(array, 0, array.length-1);
+    }
+    
+    private static void quicksort(double[] array, int left, int right) {
+        if (left < right) {
+            // Choose a pivot index.
+            // --> Here we choose the rightmost element which does the least
+            // amount of work if the array is already sorted.
+            int pivotIndex = right;
+            // Partition the array so that everything less than
+            // values[pivotIndex] is on the left of pivotNewIndex and everything
+            // greater than or equal is on the right.
+            int pivotNewIndex = partition(array, left, right, pivotIndex);
+            // Recurse on the left and right sides.
+            quicksort(array, left, pivotNewIndex - 1);
+            quicksort(array, pivotNewIndex + 1, right);
+        }
+    }
+    
+    private static int partition(double[] array, int left, int right, int pivotIndex) {
+        double pivotValue = array[pivotIndex];
+        // Move the pivot value to the rightmost position.
+        swap(array, pivotIndex, right);
+        // For each position between left and right, swap all the values less
+        // than or equal to the pivot value to the left side.
+        int storeIndex = left;
+        for (int i=left; i<right; i++) {
+            if (array[i] <= pivotValue) {
+                swap(array, i, storeIndex);
+                storeIndex++;
+            }
+        }
+        // Move the pivot value back to the split point.
+        swap(array, storeIndex, right);
+        return storeIndex;
+    }
+    
     public static int[] getIndexArray(double[] values) {
         return Utilities.getIndexArray(values.length);
     }
