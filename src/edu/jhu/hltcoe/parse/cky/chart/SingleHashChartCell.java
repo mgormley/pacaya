@@ -1,7 +1,6 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
-import edu.jhu.hltcoe.parse.cky.MaxScoresSnapshot;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.util.map.IntObjectHashMap;
@@ -55,7 +54,7 @@ public class SingleHashChartCell implements ChartCell {
         return (entry != null) ? entry.bp : null;
     }
     
-    public final double getMaxScore(int symbol) {
+    public final double getScore(int symbol) {
         Storage entry = table.get(symbol);
         return (entry != null) ? entry.maxScore : Double.NEGATIVE_INFINITY;
     }
@@ -68,23 +67,23 @@ public class SingleHashChartCell implements ChartCell {
         }
     }
 
-    private static class FullMaxScores implements MaxScoresSnapshot {
+    private static class SingleHashScores implements ScoresSnapshot {
 
         private IntObjectHashMap<Storage> table;
 
-        public FullMaxScores(IntObjectHashMap<Storage> table) {
+        public SingleHashScores(IntObjectHashMap<Storage> table) {
             this.table = table;
         }
 
         @Override
-        public double getMaxScore(int symbol) {
+        public double getScore(int symbol) {
             return table.get(symbol).maxScore;
         }
         
     }
     
-    public MaxScoresSnapshot getMaxScoresSnapshot() {
-        return new FullMaxScores(new IntObjectHashMap<Storage>(table));
+    public ScoresSnapshot getScoresSnapshot() {
+        return new SingleHashScores(new IntObjectHashMap<Storage>(table));
     }
 
     @Override

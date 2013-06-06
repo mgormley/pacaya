@@ -1,9 +1,6 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
-import java.util.Arrays;
-
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
-import edu.jhu.hltcoe.parse.cky.MaxScoresSnapshot;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.util.Prng;
@@ -113,7 +110,7 @@ public class FullTieBreakerChartCell implements ChartCell {
         return bps[symbol];
     }
     
-    public final double getMaxScore(int symbol) {
+    public final double getScore(int symbol) {
         return maxScores[symbol];
     }
     
@@ -124,24 +121,9 @@ public class FullTieBreakerChartCell implements ChartCell {
             return nts.toNativeArray();
         }
     }
-
-    private static class FullMaxScores implements MaxScoresSnapshot {
-
-        private double[] maxScores;
-
-        public FullMaxScores(double[] maxScores) {
-            this.maxScores = maxScores;
-        }
-
-        @Override
-        public double getMaxScore(int symbol) {
-            return maxScores[symbol];
-        }
-        
-    }
     
-    public MaxScoresSnapshot getMaxScoresSnapshot() {
-        return new FullMaxScores(maxScores);
+    public ScoresSnapshot getScoresSnapshot() {
+        return new FullScores(maxScores);
     }
 
     @Override

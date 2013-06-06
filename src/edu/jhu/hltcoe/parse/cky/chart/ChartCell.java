@@ -1,6 +1,5 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
-import edu.jhu.hltcoe.parse.cky.MaxScoresSnapshot;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 
@@ -14,13 +13,13 @@ public interface ChartCell {
     
     public BackPointer getBp(int symbol);
     
-    public double getMaxScore(int symbol);
+    public double getScore(int symbol);
     
     public int[] getNts();
 
     public void updateCell(int mid, Rule r, double score);
 
-    public MaxScoresSnapshot getMaxScoresSnapshot();
+    public ScoresSnapshot getScoresSnapshot();
 
     public void close();
 

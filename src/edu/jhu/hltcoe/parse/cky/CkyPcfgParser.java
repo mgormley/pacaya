@@ -3,6 +3,7 @@ package edu.jhu.hltcoe.parse.cky;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
+import edu.jhu.hltcoe.parse.cky.chart.ScoresSnapshot;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 
 /**
@@ -89,11 +90,11 @@ public class CkyPcfgParser {
 
                 
                 // Apply unary rules.
-                MaxScoresSnapshot maxScores = cell.getMaxScoresSnapshot();
+                ScoresSnapshot scoresSnapshot = cell.getScoresSnapshot();
                 int[] nts = cell.getNts();
                 for(final int parentNt : nts) {
                     for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
-                        double score = r.getScore() + maxScores.getMaxScore(r.getLeftChild());
+                        double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
                         cell.updateCell(end, r, score);
                     }
                 }
@@ -119,9 +120,9 @@ public class CkyPcfgParser {
             
             // Loop through all possible pairs of left/right non-terminals.
             for (final int leftChildNt : leftCell.getNts()) {
-                double leftScoreForNt = leftCell.getMaxScore(leftChildNt);
+                double leftScoreForNt = leftCell.getScore(leftChildNt);
                 for (final int rightChildNt : rightCell.getNts()) {
-                    double rightScoreForNt = rightCell.getMaxScore(rightChildNt);
+                    double rightScoreForNt = rightCell.getScore(rightChildNt);
                     // Lookup the rules with those left/right children.
                     for (final Rule r : grammar.getBinaryRulesWithChildren(leftChildNt, rightChildNt)) {
                         double score = r.getScore()
@@ -148,11 +149,11 @@ public class CkyPcfgParser {
             
             // Loop through each left child non-terminal.
             for (final int leftChildNt : leftCell.getNts()) {
-                double leftScoreForNt = leftCell.getMaxScore(leftChildNt);
+                double leftScoreForNt = leftCell.getScore(leftChildNt);
                 // Lookup all rules with that left child.
                 for (final Rule r : grammar.getBinaryRulesWithLeftChild(leftChildNt)) {
                     // Check whether the right child of that rule is in the right child cell.
-                    double rightScoreForNt = rightCell.getMaxScore(r.getRightChild());
+                    double rightScoreForNt = rightCell.getScore(r.getRightChild());
                     if (rightScoreForNt > Double.NEGATIVE_INFINITY) {
                         double score = r.getScore() 
                                 + leftScoreForNt
@@ -178,11 +179,11 @@ public class CkyPcfgParser {
             
             // Loop through each right child non-terminal.
             for (final int rightChildNt : rightCell.getNts()) {
-                double rightScoreForNt = rightCell.getMaxScore(rightChildNt);
+                double rightScoreForNt = rightCell.getScore(rightChildNt);
                 // Lookup all rules with that right child.
                 for (final Rule r : grammar.getBinaryRulesWithRightChild(rightChildNt)) {
                     // Check whether the left child of that rule is in the left child cell.
-                    double leftScoreForNt = leftCell.getMaxScore(r.getLeftChild());
+                    double leftScoreForNt = leftCell.getScore(r.getLeftChild());
                     if (leftScoreForNt > Double.NEGATIVE_INFINITY) {
                         double score = r.getScore() 
                                 + leftScoreForNt

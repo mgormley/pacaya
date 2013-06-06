@@ -39,7 +39,8 @@ public class Chart {
     }
 
     public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES };
-
+    public enum ParseType { VITERBI, INSIDE };
+    
     private final ChartCellType cellType;
     private final CnfGrammar grammar;
     
@@ -47,9 +48,6 @@ public class Chart {
     private int[] sent;
 
     public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
-        // TODO: Most of the parse time for the DMV parser is spent constructing
-        // these chart cells.We could easily cache a (large) chart and simply
-        // clear it after each parse.
         this.cellType = cellType;
         this.sent = sent;
         this.grammar = grammar;
@@ -65,8 +63,9 @@ public class Chart {
         if (sent.length > chart.length){
             chart = getNewChart(sent, grammar, cellType);
         } else {
-            // TODO: this would be even faster (but riskier from a software
-            // development standpoint) if we use sent.length.
+            // Clear the chart.
+            //
+            // Note that we only need to clear the portion that will be used while parsing this sentence.
             for (int i = 0; i < sent.length; i++) {
                 for (int j = i+1; j < sent.length + 1; j++) {
                     chart[i][j].reset();
@@ -106,7 +105,7 @@ public class Chart {
 
     public Pair<BinaryTree,Double> getViterbiParse() {
         BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
-        double rootScore = chart[0][sent.length].getMaxScore(grammar.getRootSymbol());
+        double rootScore = chart[0][sent.length].getScore(grammar.getRootSymbol());
         return new Pair<BinaryTree, Double>(root, rootScore);
     }
     
