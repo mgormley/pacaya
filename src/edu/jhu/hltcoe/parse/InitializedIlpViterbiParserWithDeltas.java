@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 
-public class InitializedIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas implements ViterbiParser {
+public class InitializedIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas implements DepParser {
     
     private IlpViterbiParserWithDeltas initParser;
     private Map<String,Double> mipStart;

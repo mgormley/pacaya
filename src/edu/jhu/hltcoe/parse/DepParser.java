@@ -5,7 +5,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
-public interface ViterbiParser {
+public interface DepParser {
 
     DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model model);
     

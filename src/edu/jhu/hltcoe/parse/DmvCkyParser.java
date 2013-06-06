@@ -19,7 +19,7 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
 
-public class DmvCkyParser implements ViterbiParser {
+public class DmvCkyParser implements DepParser {
 
     private static final Logger log = Logger.getLogger(DmvCkyParser.class);
 

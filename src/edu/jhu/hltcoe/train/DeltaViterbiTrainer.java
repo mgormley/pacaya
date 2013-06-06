@@ -8,7 +8,7 @@ import edu.jhu.hltcoe.model.FixableModelFactory;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -16,7 +16,7 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
 
     private static final Logger log = Logger.getLogger(DeltaViterbiTrainer.class);
 
-    public DeltaViterbiTrainer(ViterbiParser deltaParser, ViterbiParser fastParser, ModelFactory modelFactory,
+    public DeltaViterbiTrainer(DepParser deltaParser, DepParser fastParser, ModelFactory modelFactory,
             int iterations, double convergenceRatio, double lambda) {
         super(new EMTrainerPrm(iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY), new ViterbiEStepForDeltas(
                 deltaParser, fastParser, modelFactory, iterations, convergenceRatio), new DmvMStep(lambda),
@@ -27,9 +27,9 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
 
         private DmvViterbiEMTrainer fastTrainer;
         private FixableModelFactory fixableModelFactory;
-        private ViterbiParser deltaParser;
+        private DepParser deltaParser;
 
-        public ViterbiEStepForDeltas(ViterbiParser deltaParser, ViterbiParser fastParser, ModelFactory modelFactory,
+        public ViterbiEStepForDeltas(DepParser deltaParser, DepParser fastParser, ModelFactory modelFactory,
                 int iterations, double convergenceRatio) {
             this.fixableModelFactory = new FixableModelFactory(modelFactory);
             DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();

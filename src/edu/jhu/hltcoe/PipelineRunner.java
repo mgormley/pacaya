@@ -37,7 +37,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.train.BnBDmvTrainer;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
@@ -209,7 +209,7 @@ public class PipelineRunner {
     private void evalAndWrite(DmvModel model, DepTreebank trainTreebank, String datasetName, File trainOut, DatasetType trainType) throws IOException {
         // Evaluation.
         // Note: this parser must return the log-likelihood from parser.getParseWeight()
-        ViterbiParser parser = TrainerFactory.getEvalParser();
+        DepParser parser = TrainerFactory.getEvalParser();
                     
         log.info("Evaluating model on " + datasetName);
         Evaluator trainEval = new DependencyParserEvaluator(parser, trainTreebank, datasetName);

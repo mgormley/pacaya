@@ -21,7 +21,7 @@ import edu.jhu.hltcoe.parse.IdentityDeltaGenerator.Delta;
 import edu.jhu.hltcoe.util.Quadruple;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements ViterbiParser {
+public class IlpViterbiParserWithDeltas extends IlpViterbiParser implements DepParser {
 
     private static final Logger log = Logger.getLogger(IlpViterbiParserWithDeltas.class);
     private DeltaGenerator deltaGen;

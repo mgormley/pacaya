@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
@@ -123,7 +123,7 @@ public class DmvSolFactory {
             }
             DmvModel randModel = modelFactory.getInstance(corpus.getLabelAlphabet());
             double[][] logProbs = idm.getCmLogProbs(randModel);
-            ViterbiParser parser = new DmvCkyParser();
+            DepParser parser = new DmvCkyParser();
             DepTreebank treebank = parser.getViterbiParse(corpus, randModel);
             double score;
             if (relax != null) {

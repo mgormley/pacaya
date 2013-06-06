@@ -10,7 +10,7 @@ import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -20,11 +20,11 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         public double lambda = 0.1;
         public DependencyParserEvaluator evaluator = null;
         public EMTrainerPrm emPrm = new EMTrainerPrm();
-        public ViterbiParser parser = new DmvCkyParser();
+        public DepParser parser = new DmvCkyParser();
         public ModelFactory modelFactory = new UniformDmvModelFactory();
         public DmvViterbiEMTrainerPrm() { }
         public DmvViterbiEMTrainerPrm(int iterations, double convergenceRatio, int numRestarts, double timeoutSeconds, 
-                double lambda, DependencyParserEvaluator evaluator, ViterbiParser parser, DmvModelFactory modelFactory) {
+                double lambda, DependencyParserEvaluator evaluator, DepParser parser, DmvModelFactory modelFactory) {
             this.lambda = lambda;
             this.evaluator = evaluator;
             this.parser = parser;
@@ -65,9 +65,9 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
 
     private static class ViterbiEStep implements EStep<DepTreebank> {
 
-        private ViterbiParser parser;
+        private DepParser parser;
 
-        public ViterbiEStep(ViterbiParser parser) {
+        public ViterbiEStep(DepParser parser) {
             this.parser = parser;
         }
 

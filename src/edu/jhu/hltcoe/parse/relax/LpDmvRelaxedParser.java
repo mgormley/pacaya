@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.cplex.CplexPrm;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
-public class LpDmvRelaxedParser implements RelaxedParser {
+public class LpDmvRelaxedParser implements RelaxedDepParser {
 
     public static class LpDmvRelaxedParserPrm {
         public File tempDir = null;

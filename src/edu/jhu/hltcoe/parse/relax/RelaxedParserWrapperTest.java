@@ -9,7 +9,7 @@ import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedParserWrapperPrm;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Prng;
 
@@ -32,7 +32,7 @@ public class RelaxedParserWrapperTest {
 
         DmvTrainCorpus corpus = new DmvTrainCorpus(sentences);
         
-        RelaxedParserWrapper parser = new RelaxedParserWrapper(new RelaxedParserWrapperPrm());
+        RelaxedParserWrapper parser = new RelaxedParserWrapper(new RelaxedDepParserWrapperPrm());
         DepTreebank trees = parser.getViterbiParse(corpus, model);
         System.out.println(trees);
         double score = parser.getLastParseWeight();

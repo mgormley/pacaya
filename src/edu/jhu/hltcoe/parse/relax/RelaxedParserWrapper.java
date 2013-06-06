@@ -10,26 +10,26 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
-public class RelaxedParserWrapper implements ViterbiParser {
+public class RelaxedParserWrapper implements DepParser {
     
-    public static class RelaxedParserWrapperPrm {
+    public static class RelaxedDepParserWrapperPrm {
         // TODO: This should be a factory.
         // TODO: We should be careful that the objective and the parser match up.
-        public RelaxedParser relaxedParser = new LpDmvRelaxedParser(new LpDmvRelaxedParserPrm());
+        public RelaxedDepParser relaxedParser = new LpDmvRelaxedParser(new LpDmvRelaxedParserPrm());
         public DmvProjectorPrm projPrm = new DmvProjectorPrm();
         public DmvObjectivePrm objPrm = new DmvObjectivePrm();       
     }
     
-    private RelaxedParserWrapperPrm prm;
+    private RelaxedDepParserWrapperPrm prm;
     private BasicDmvProjector projector;
     private double lastParseWeight;
     private DmvObjective obj;
     
-    public RelaxedParserWrapper(RelaxedParserWrapperPrm prm) {
+    public RelaxedParserWrapper(RelaxedDepParserWrapperPrm prm) {
         this.prm = prm;
     }
     

@@ -32,7 +32,7 @@ import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.DmvCkyParserTest;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
@@ -467,7 +467,7 @@ public class DmvDantzigWolfeRelaxationTest {
         double convergenceRatio = 0.99999;
         double timeoutSeconds = 5;
         
-        ViterbiParser parser = new DmvCkyParser();
+        DepParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
 
         DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm(iterations, convergenceRatio, numRestarts, timeoutSeconds, lambda, null, parser, modelFactory);

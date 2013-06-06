@@ -23,13 +23,13 @@ import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
-import edu.jhu.hltcoe.parse.relax.RelaxedParser;
+import edu.jhu.hltcoe.parse.relax.RelaxedDepParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class IlpViterbiParser implements ViterbiParser, RelaxedParser {
+public class IlpViterbiParser implements DepParser, RelaxedDepParser {
 
     private static final Logger log = Logger.getLogger(IlpViterbiParser.class);
     

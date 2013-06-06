@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
@@ -19,7 +19,7 @@ public class DependencyParserEvaluator implements Evaluator {
     private static final Logger log = Logger.getLogger(DependencyParserEvaluator.class);
 
     private DepTreebank goldTreebank;
-    private ViterbiParser parser;
+    private DepParser parser;
     private double accuracy;
     private double logLikelihood;
     private String dataName;
@@ -28,7 +28,7 @@ public class DependencyParserEvaluator implements Evaluator {
 
     private DepTreebank parses;
 
-    public DependencyParserEvaluator(ViterbiParser parser, DepTreebank goldTreebank, String dataName) {
+    public DependencyParserEvaluator(DepParser parser, DepTreebank goldTreebank, String dataName) {
         this.parser = parser;
         this.goldTreebank = goldTreebank;
         this.dataName = dataName;

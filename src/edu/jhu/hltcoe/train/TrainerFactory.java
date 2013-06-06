@@ -67,12 +67,12 @@ import edu.jhu.hltcoe.parse.IlpViterbiParser;
 import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpViterbiParserWithDeltas;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
-import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedParserWrapperPrm;
+import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
 import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
@@ -248,7 +248,7 @@ public class TrainerFactory {
     @Opt(hasArg = true, description = "The type of constraint conversion.")
     public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
         
-    public static ViterbiParser getEvalParser() {
+    public static DepParser getEvalParser() {
         return new DmvCkyParser(getDmvObjectivePrm());
     }
     
@@ -379,7 +379,7 @@ public class TrainerFactory {
         Trainer trainer = null;
         DmvViterbiEMTrainer viterbiTrainer = null;
         if (algorithm.equals("viterbi") || algorithm.equals("viterbi-bnb")) {
-            ViterbiParser parser = getViterbiParser();
+            DepParser parser = getParser();
             DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
 
             if (algorithm.equals("viterbi")) {
@@ -495,8 +495,8 @@ public class TrainerFactory {
         return trainer;
     }
 
-    private static ViterbiParser getViterbiParser() throws ParseException {
-        ViterbiParser parser;
+    private static DepParser getParser() throws ParseException {
+        DepParser parser;
         IlpSolverFactory ilpSolverFactory = null;
         if (parserName.startsWith("ilp-")) {
             IlpSolverId ilpSolverId = IlpSolverId.getById(ilpSolver);
@@ -514,7 +514,7 @@ public class TrainerFactory {
             lpParsePrm.parsePrm = getDmvParseLpBuilderPrm();
             lpParsePrm.tempDir = getDwTempDir();
 
-            RelaxedParserWrapperPrm prm = new RelaxedParserWrapperPrm();
+            RelaxedDepParserWrapperPrm prm = new RelaxedDepParserWrapperPrm();
             prm.projPrm = getDmvProjectorPrm();
             prm.relaxedParser = new LpDmvRelaxedParser(lpParsePrm);
             prm.objPrm = getDmvObjectivePrm();
@@ -574,7 +574,7 @@ public class TrainerFactory {
     }
 
     public static DmvSolFactoryPrm getDmvSolFactoryPrm(DepTreebank goldTreebank, DmvModel goldModel) throws ParseException {        
-        ViterbiParser parser = getViterbiParser();
+        DepParser parser = getParser();
         DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
         
         DmvSolFactoryPrm initSolPrm = new DmvSolFactoryPrm();
@@ -593,7 +593,7 @@ public class TrainerFactory {
             // Other constants.
             final double vemProjTimeoutSeconds = timeoutSeconds / 10.0;
             
-            ViterbiParser parser = getViterbiParser();
+            DepParser parser = getParser();
             DmvModelFactory modelFactory = getDmvModelFactory(goldTreebank, goldModel);
             
             ViterbiEmDmvProjectorPrm vedpPrm = new ViterbiEmDmvProjectorPrm();

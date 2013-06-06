@@ -17,7 +17,7 @@ import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.util.Prng;
 
 public class DeltaViterbiTrainerTest {
@@ -35,9 +35,9 @@ public class DeltaViterbiTrainerTest {
         double convergenceRatio = 0.99999;
 
         IlpSolverFactory ilpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
-        ViterbiParser fastParser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
+        DepParser fastParser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
         DeltaGenerator deltaGen = new FixedIntervalDeltaGenerator(0.1, 3);
-        ViterbiParser deltaParser = new IlpViterbiParserWithDeltas(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory,
+        DepParser deltaParser = new IlpViterbiParserWithDeltas(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory,
                 deltaGen);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DeltaViterbiTrainer trainer = new DeltaViterbiTrainer(deltaParser, fastParser, modelFactory, iterations,

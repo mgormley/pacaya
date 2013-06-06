@@ -21,7 +21,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
-import edu.jhu.hltcoe.parse.ViterbiParser;
+import edu.jhu.hltcoe.parse.DepParser;
 import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
@@ -218,7 +218,7 @@ public class IndexedDmvModelTest {
 
         double lambda = 0.0;
         int iterations = 25;
-        ViterbiParser parser = new DmvCkyParser();
+        DepParser parser = new DmvCkyParser();
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DmvViterbiEMTrainerPrm vtPrm = new DmvViterbiEMTrainerPrm(iterations, 0.99999, 9, 5, lambda, null, parser, modelFactory);
         DmvViterbiEMTrainer trainer = new DmvViterbiEMTrainer(vtPrm);

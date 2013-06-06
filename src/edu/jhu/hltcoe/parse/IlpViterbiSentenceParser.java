@@ -23,7 +23,7 @@ import edu.jhu.hltcoe.util.Files;
  * @author mgormley
  *
  */
-public class IlpViterbiSentenceParser extends IlpViterbiParser implements ViterbiSentenceParser {
+public class IlpViterbiSentenceParser extends IlpViterbiParser implements DepSentenceParser {
 
     private static final Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
         

@@ -4,7 +4,7 @@ import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 
-public interface RelaxedParser {
+public interface RelaxedDepParser {
 
     RelaxedDepTreebank getRelaxedParse(DmvTrainCorpus corpus, Model model);
 
