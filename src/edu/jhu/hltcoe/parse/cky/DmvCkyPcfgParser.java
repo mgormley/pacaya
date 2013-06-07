@@ -11,6 +11,8 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
+import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.util.Pair;
 
@@ -42,61 +44,71 @@ public class DmvCkyPcfgParser {
         int[] sent = grammar.getSent(sentence);
         Chart chart = parser.parseSentence(sent, grammar.getCnfGrammar());
         
-        Pair<BinaryTree, Double> pair = chart.getViterbiParse();        
-        BinaryTree tree = pair.get1();
+        Pair<int[], Double> pair= extractParentsFromChart(sent, chart, grammar);
+        int[] parents = pair.get1();
         double logProb = pair.get2();
-        //TODO: remove: log.debug("DMV Tree:\n" + tree.getAsPennTreebankString());
-        int[] parents = extractParents(tree, grammar);
-        //TODO: remove: log.debug("parents: " + Arrays.toString(parents));
         
         return new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
     }
 
-    private static int[] extractParents(BinaryTree tree, DmvCnfGrammar grammar) {
-        int[] parents = new int[tree.getEnd() / 2];
+    private static Pair<int[], Double> extractParentsFromChart(int[] sent, Chart chart, DmvCnfGrammar grammar) {
+        // Create an empty parents array.
+        int[] parents = new int[sent.length / 2];
         Arrays.fill(parents, -2);
-        int head = extractParents(tree, parents, grammar);
+        // Get the viterbi dependency tree.
+        int rootSymbol = grammar.getCnfGrammar().getRootSymbol();
+        int head = getViterbiTree(0, sent.length, rootSymbol, chart, grammar, parents);
+        // Set the parent of the sentence's head to be the wall node.
         parents[head] = WallDepTreeNode.WALL_POSITION;
-        return parents;
+        // Get the score of the viterbi dependency tree.
+        double rootScore = chart.getCell(0, sent.length).getScore(rootSymbol);
+        return new Pair<int[], Double>(parents, rootScore);
     }
-
-    private static int extractParents(BinaryTree tree, int[] parents, DmvCnfGrammar grammar) {
-        if (tree.isLeaf()) {
-            // Leaf node. Must map to the *position* of the corresponding node.
-            return tree.getStart() / 2;
-        }
-
-        int leftHead = extractParents(tree.getLeftChild(), parents, grammar);
-        BinaryTree rightChild = tree.getRightChild();
-        if (rightChild == null) {
-            // Tree has only left child.
-            return leftHead;
-        }
+    
+    /**
+     * Gets the highest probability tree with the span (start, end) and the root symbol rootSymbol.
+     * 
+     * @param start The start of the span of the requested tree.
+     * @param end The end of the span of the requested tree.
+     * @param rootSymbol The symbol of the root of the requested tree.
+     * @param chart The parse chart.
+     * @param grammar The DMV grammar.
+     * @param parents The output array specifying the parent of each word in the sentence.
+     * @return
+     */
+    private static int getViterbiTree(int start, int end,
+            int rootSymbol, Chart chart, DmvCnfGrammar grammar, int[] parents) {
+        ChartCell cell = chart.getCell(start, end);
+        BackPointer bp = cell.getBp(rootSymbol);
         
-        // Binary rule.        
-        int rightHead = extractParents(rightChild, parents, grammar);
-        String symbol = tree.getSymbolStr();
-
-        if (symbol.charAt(0) == 'S') { // TODO: this should refer to the root symbol string.
-            // This is not a structural rule, so heads are identical.
-            assert leftHead == rightHead;
-            return leftHead;
+        // The backpointer will never be null because we return on lexical rules.
+        assert(bp != null);
+        
+        if (bp.r.isLexical()) {
+            // Leaf node. Must map to the *position* of the corresponding node.
+            return start / 2;
+        } else if (bp.r.isUnary()) {
+            // Return the head of the left child.
+            return getViterbiTree(start, bp.mid, bp.r.getLeftChild(), chart, grammar, parents);
         } else {
-            // This is a structural rule, so determine which is the head.
-            boolean isLeftHead;
-            if (symbol.charAt(0) == 'M') {
-                isLeftHead = !(symbol.charAt(symbol.length()-2) == '*') ;
-            } else {
-                // If it starts with L than C is a left child of H.
-                isLeftHead = !(symbol.charAt(0) == 'L');
-            }
-            // TODO: remove log.debug("Structural symbol: " + symbol + " Is left head:" + isLeftHead);
+            // Get the left and right heads.
+            int leftHead = getViterbiTree(start, bp.mid, bp.r.getLeftChild(), chart, grammar, parents);
+            int rightHead = getViterbiTree(bp.mid, end, bp.r.getRightChild(), chart, grammar, parents);
+            // Then determine whether the rule defines a left or right dependency.
+            boolean isLeftHead = ((DmvRule)bp.r).isLeftHead();
             int head = isLeftHead ? leftHead : rightHead;
             int child = isLeftHead ? rightHead : leftHead;
             // Set that parent in the parents array.
-            parents[child] = head;
+            if (parents[child] == -2) {
+                parents[child] = head;
+            } else {
+                // In the DMV grammar, the structural rule will set the parent
+                // first, but we still need to return the correct head from the
+                // child rules.
+                assert(parents[child] == head);
+            }
             return head;
-        }        
+        }
     }
     
 }

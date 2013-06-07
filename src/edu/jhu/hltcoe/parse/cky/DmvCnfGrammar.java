@@ -124,7 +124,8 @@ public class DmvCnfGrammar {
         return getBinaryRule(rootSymbolStr, 
                              f("L_{%d}", p), 
                              f("R_{%d}", p), 
-                             0.0);
+                             0.0,
+                             true); // The left and right heads will always be the same.
     }
     
     private Rule getChildRule(int c, int p, int dir) {
@@ -132,12 +133,14 @@ public class DmvCnfGrammar {
             return getBinaryRule(f("L_{%d}^{1}", p), 
                                  f("L_{%d}", c), 
                                  f("M_{%d,%d*}", c, p), 
-                                 0.0);
+                                 0.0,
+                                 false); // The left is the child.
         } else {
             return getBinaryRule(f("R_{%d}^{1}", p),
                                  f("M_{%d*,%d}", p, c),
                                  f("R_{%d}", c),
-                                 0.0);
+                                 0.0,
+                                 true); // The left is the head.
         }
     }
 
@@ -146,12 +149,14 @@ public class DmvCnfGrammar {
             return getBinaryRule(f("M_{%d,%d*}", c, p),
                                  f("R_{%d}", c),
                                  f("L_{%d}^{*}", p),
-                                 0.0);
+                                 0.0,
+                                 false); // The left is the child.
         } else {
             return getBinaryRule(f("M_{%d*,%d}", p, c),
                                  f("R_{%d}^{*}", p),
                                  f("L_{%d}", c),
-                                 0.0);
+                                 0.0,
+                                 true); // The left is the head.
         }
     }
 
@@ -164,20 +169,20 @@ public class DmvCnfGrammar {
             int leftChild = (dir == Constants.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
             int rightChild = Rule.LEXICAL_RULE;
             double score = 0.0;
-            return new Rule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
+            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true);
         } else {
             int leftChild = ntAlphabet.lookupIndex(f("%s_{%d}^{1}", cap, c));
             int rightChild = Rule.UNARY_RULE;
             double score = 0.0;
-            return new Rule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
+            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true);
         }
-    }    
-
-    private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb) {
+    }
+    
+    private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb, boolean isLeftHead) {
         int parent = ntAlphabet.lookupIndex(parentStr);
         int leftChild = ntAlphabet.lookupIndex(leftChildStr);
         int rightChild = ntAlphabet.lookupIndex(rightChildStr);
-        return new Rule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet);
+        return new DmvRule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet, isLeftHead);
     }
 
     /**

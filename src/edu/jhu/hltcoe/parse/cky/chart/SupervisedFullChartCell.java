@@ -25,7 +25,7 @@ import gnu.trove.TIntArrayList;
  * @author mgormley
  * 
  */
-public class FullChartCell implements ChartCell {
+public final class SupervisedFullChartCell implements ChartCell {
 
     /** Whether to compute the inside score or the max score. */
     private final boolean computeInside;
@@ -52,7 +52,7 @@ public class FullChartCell implements ChartCell {
      */
     private boolean isClosed;
 
-    public FullChartCell(CnfGrammar grammar, ParseType parseType) {
+    public SupervisedFullChartCell(int[][] parents, CnfGrammar grammar, ParseType parseType) {
         scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new TIntArrayList();
@@ -77,7 +77,7 @@ public class FullChartCell implements ChartCell {
         ntsArray = null;
     }
     
-    public void updateCell(int mid, Rule r, double score) {
+    public final void updateCell(int mid, Rule r, double score) {
         assert(!isClosed);
         int nt = r.getParent();
         if (bps[nt] == null) {

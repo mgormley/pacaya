@@ -15,8 +15,10 @@ import edu.jhu.hltcoe.util.Pair;
 public class Chart {
     
     public static class BackPointer {
-        private Rule r;
-        private int mid;
+        /** The rule. */
+        public final Rule r;
+        /** The midpoint of the rule application. */
+        public final int mid;
 
         public BackPointer(Rule r, int mid) {
             this.r = r;
@@ -102,11 +104,11 @@ public class Chart {
                     break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
-                }                
+                }            
             }
         }
         return chart;
-    }    
+    }
 
     public Pair<BinaryTree,Double> getViterbiParse() {
         BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());

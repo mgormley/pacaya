@@ -8,6 +8,8 @@ import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntArrayList;
 
 /**
+ * This class optionally breaks ties using a cached random number (jitter).
+ * 
  * Cell that stores every possible entry explicitly. This is suitable for
  * grammars with a very small number of non-terminals (e.g. the DMV), where Hash
  * lookups would slow down the parsing.
@@ -19,8 +21,6 @@ import gnu.trove.TIntArrayList;
  * 
  * In addition we "close" the cell after processing it, so that future calls to
  * getNts() will used a cached array of ints.
- * 
- * This class optionally breaks ties using cached jitter.
  * 
  * @author mgormley
  * 
