@@ -104,7 +104,7 @@ public class Chart {
                     break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
-                }            
+                }
             }
         }
         return chart;

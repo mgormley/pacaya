@@ -3,6 +3,8 @@ package edu.jhu.hltcoe.parse.cky.chart;
 import java.util.Arrays;
 
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
+import edu.jhu.hltcoe.parse.cky.DmvRule;
+import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
@@ -25,7 +27,7 @@ import gnu.trove.TIntArrayList;
  * @author mgormley
  * 
  */
-public final class SupervisedFullChartCell implements ChartCell {
+public final class ConstrainedFullChartCell implements ChartCell {
 
     /** Whether to compute the inside score or the max score. */
     private final boolean computeInside;
@@ -51,8 +53,17 @@ public final class SupervisedFullChartCell implements ChartCell {
      * throw an exception if an attempt to update it is made.
      */
     private boolean isClosed;
-
-    public SupervisedFullChartCell(int[][] parents, CnfGrammar grammar, ParseType parseType) {
+    /** The start the span dominated by this chart cell. */
+    private final int start;
+    /** The end the span dominated by this chart cell. */
+    private final int end;
+    /** Indicates whether a parent/child arc is valid. Indexed by child position, parent position. */
+    private boolean[][] validParent;
+    
+    public ConstrainedFullChartCell(int start, int end, boolean[][] validParent, CnfGrammar grammar, ParseType parseType) {
+        this.start = start;
+        this.end = end;
+        this.validParent = validParent;
         scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new TIntArrayList();
@@ -70,15 +81,34 @@ public final class SupervisedFullChartCell implements ChartCell {
     }
 
     public void reset() {
-        Arrays.fill(scores, Double.NEGATIVE_INFINITY);
-        Arrays.fill(bps, null);
-        nts.clear();
-        isClosed = false;
-        ntsArray = null;
+//        Arrays.fill(scores, Double.NEGATIVE_INFINITY);
+//        Arrays.fill(bps, null);
+//        nts.clear();
+//        isClosed = false;
+//        ntsArray = null;
+        throw new RuntimeException("Caching of constrained chart cells is not supported.");
     }
     
     public final void updateCell(int mid, Rule r, double score) {
         assert(!isClosed);
+        final DmvRule dmvRule = (DmvRule)r;
+        if (dmvRule.getType() == DmvRuleType.STRUCTURAL) {
+            // This is only true for structural rules.
+            int leftHead = start / 2;
+            int rightHead = end / 2;
+            // Determine which is the head and child.
+            boolean isLeftHead = dmvRule.isLeftHead();
+            int head = isLeftHead ? leftHead : rightHead;
+            int child = isLeftHead ? rightHead : leftHead;
+            
+            if (validParent[child] != null && validParent[child].length > 0) {
+                // Check that the constraints allow this arc.
+                if (!validParent[child][head]) {
+                    return;
+                }
+            }
+        }
+        
         int nt = r.getParent();
         if (bps[nt] == null) {
             // If the non-terminal hasn't been added yet, include it in the set of non terminals.

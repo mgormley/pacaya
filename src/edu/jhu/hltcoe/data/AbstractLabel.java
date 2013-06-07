@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.data;
 
+// TODO: maybe this should be removed?
 public abstract class AbstractLabel implements Label {
 
     public abstract String getLabel();
