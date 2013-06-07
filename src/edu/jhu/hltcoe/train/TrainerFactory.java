@@ -92,7 +92,7 @@ public class TrainerFactory {
     @Opt(name = "model", hasArg = true, description = "Model")
     public static String modelName = "dmv";
     @Opt(name = "parser", hasArg = true, description = "Parser")
-    public static String parserName = "ilp-sentence";
+    public static String parserName = "cky";
     @Opt(name = "dwTempDir", hasArg = true, description = "(D-W only) For testing only. The temporary directory to which CPLEX files should be written")
     public static String dwTempDir = "";
     @Opt(name = "timeoutSeconds", hasArg = true, description = "The timeout in seconds for training run")
@@ -163,6 +163,10 @@ public class TrainerFactory {
     public static int numThreads = 2;
     @Opt(name = "ilpWorkMemMegs", hasArg = true, description = "The working memory allotted for the ILP solver in megabytes")
     public static double ilpWorkMemMegs = 512.0;
+    
+    // Dynamic programming parser parameters.
+    @Opt(hasArg = true, description = "Whether dependency arcs must come from the set of PRED/ARG arcs given by CoNLL-2009 data.")
+    public static boolean usePredArgSupervision = false;    
     
     // Parse formulation parameters.
     @Opt(name = "formulation", hasArg = true, description = "ILP formulation for parsing")
@@ -507,7 +511,11 @@ public class TrainerFactory {
         }
 
         if (parserName.equals("cky")) {
-            parser = new DmvCkyParser(getDmvObjectivePrm());
+            if (!usePredArgSupervision) {
+                parser = new DmvCkyParser(getDmvObjectivePrm());
+            } else {
+                parser = null; //TODO: new PredArgDmvCkyParser();
+            }
         } else if (parserName.equals("relaxed")) {
             LpDmvRelaxedParserPrm lpParsePrm = new LpDmvRelaxedParserPrm();
             lpParsePrm.cplexPrm = getCplexPrm();
