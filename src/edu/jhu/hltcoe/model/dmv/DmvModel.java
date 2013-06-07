@@ -16,7 +16,7 @@ import edu.jhu.hltcoe.util.math.Multinomials;
 
 public class DmvModel implements Model {
     
-    // Rules that correspond to probabilities in the model.
+    // Probabilities or log-probabilities.
     public final double[] root; // Indexed by child.
     public final double[][][] child; // Indexed by child, parent, and direction.
     public final double[][][][] decision; // Indexed by parent, direction, valence (0 or 1), and STOP/CONT.    

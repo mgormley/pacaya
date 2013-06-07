@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import depparsing.extended.DepInstance;
-import depparsing.extended.DepSentenceDist;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
@@ -14,6 +12,7 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.IntTuple;
@@ -596,7 +595,7 @@ public class IndexedDmvModel implements IndexedCpt {
      * This is currently unused.
      */
     @Deprecated
-    public DepSentenceDist getDepSentenceDist(Sentence sentence, int s, double[] sentLogProbs) {
+    public DmvSentParamCache getDmvSentParamCache(Sentence sentence, int s, double[] sentLogProbs) {
         DmvModel dmv = new DmvModel(alphabet);
         dmv.fill(Double.NEGATIVE_INFINITY);
         
@@ -611,9 +610,7 @@ public class IndexedDmvModel implements IndexedCpt {
         }
         
         log.trace("dmv: " + dmv);
-        DepInstance depInst = new DepInstance(sentence.getLabelIds());
-        DepSentenceDist sd = new DepSentenceDist(depInst, dmv);
-        return sd;
+        return new DmvSentParamCache(dmv, sentence);
     }
     
     public DmvModel getDmvModel(double[][] logProbs) {

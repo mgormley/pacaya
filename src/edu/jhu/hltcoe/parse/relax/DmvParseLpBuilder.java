@@ -23,8 +23,8 @@ import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
 import edu.jhu.hltcoe.lp.IloRangeLpRows;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.cplex.CplexUtils;
 
@@ -808,7 +808,7 @@ public class DmvParseLpBuilder {
         IloLinearNumExpr expr = cplex.linearNumExpr();
         for (int s = 0; s < corpus.size(); s++) {
             Sentence sent = corpus.getSentence(s);
-            DepSentenceDist sd = new DepSentenceDist(sent, model);
+            DmvSentParamCache sd = new DmvSentParamCache(model, sent);
             for (int c = 0; c < sent.size(); c++) {
                 expr.addTerm(sd.root[c], pp.arcRoot[s][c]);
                 for (int p = 0; p < sent.size(); p++) {

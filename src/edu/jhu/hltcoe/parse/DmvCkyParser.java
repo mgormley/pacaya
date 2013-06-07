@@ -3,8 +3,6 @@ package edu.jhu.hltcoe.parse;
 
 import org.apache.log4j.Logger;
 
-import depparsing.extended.CKYParser;
-import depparsing.extended.DepSentenceDist;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Sentence;
@@ -76,47 +74,14 @@ public class DmvCkyParser implements DepParser {
 
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
         timer.start();
-        Pair<DepTree,Double> pair = parse1(sentence, dmv);
+        if (parser == null) {
+            // Lazily contruct the parser, which does some handy caching of the model.
+            parser = new DmvCkyPcfgParser();
+        }
+        Pair<DepTree,Double> pair = parser.parse(sentence, dmv);
         timer.stop();
         log.debug("Average seconds per sentence: " + timer.avgSec());
         return pair;
     }
     
-    /**
-     * My CKY parser.
-     */
-    public Pair<DepTree, Double> parse1(Sentence sentence, DmvModel dmv) {
-        if (parser == null) {
-            // Lazily contruct the parser, which does some handy caching of the model.
-            parser = new DmvCkyPcfgParser();
-        }
-        return parser.parse(sentence, dmv);
-    }
-    
-    /**
-     * The depparsing package's CKYParser.
-     */
-    public Pair<DepTree, Double> parse2(Sentence sentence, DmvModel depProbMatrix) {
-        assert(sentence.getAlphabet() == depProbMatrix.getTagAlphabet());
-        DepSentenceDist sd = new DepSentenceDist(sentence, depProbMatrix);
-
-        Pair<DepTree, Double> pair = parse(sentence, sd);
-        return pair;
-    }
-
-    private Pair<DepTree, Double> parse(Sentence sentence, DepSentenceDist sd) {
-        int numWords = sd.depInst.postags.length;
-        int[] parents = new int[numWords];
-
-        double parseWeight = CKYParser.parseSentence(sd, parents);
-
-        // Must decrement parents array by one
-        for (int i = 0; i < parents.length; i++) {
-            parents[i]--;
-        }
-        DepTree tree = new DepTree(sentence, parents, true);
-
-        return new Pair<DepTree, Double>(tree, parseWeight);
-    }
-
 }

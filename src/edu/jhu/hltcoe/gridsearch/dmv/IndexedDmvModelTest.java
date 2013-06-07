@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -19,10 +18,10 @@ import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.DepParser;
-import depparsing.extended.DepSentenceDist;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
@@ -137,7 +136,7 @@ public class IndexedDmvModelTest {
         sentParams[idm.getSi(s, 2, 1)] = 1.0;
         // Noun, Left, Adj, Stop
         sentParams[idm.getSi(s, 7, 0)] = 1.5;
-        DepSentenceDist dsd = idm.getDepSentenceDist(sentences.get(0), s, sentParams);
+        DmvSentParamCache dsd = idm.getDmvSentParamCache(sentences.get(0), s, sentParams);
         for (int i=0; i<dsd.child.length; i++) {
             for (int j=0; j<dsd.child[i].length; j++) {
                 System.out.printf("(%d,%d)=%f\n", i,j,dsd.child[i][j][0]);
