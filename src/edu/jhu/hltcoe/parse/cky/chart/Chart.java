@@ -46,12 +46,14 @@ public class Chart {
     
     private ChartCell[][] chart;
     private int[] sent;
+    private ParseType parseType;
 
-    public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
+    public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
         this.cellType = cellType;
+        this.parseType = parseType;
         this.sent = sent;
         this.grammar = grammar;
-        this.chart = getNewChart(sent, grammar, cellType);
+        this.chart = getNewChart(sent, grammar, cellType, parseType);
     }
     
     /**
@@ -61,7 +63,7 @@ public class Chart {
         this.sent = sent;
         // Ensure that the chart is large enough.
         if (sent.length > chart.length){
-            chart = getNewChart(sent, grammar, cellType);
+            chart = getNewChart(sent, grammar, cellType, parseType);
         } else {
             // Clear the chart.
             //
@@ -78,10 +80,13 @@ public class Chart {
      * Gets a new chart of the appropriate size for the sentence, specific to
      * this grammar, and with cells of the specified type.
      */
-    private static ChartCell[][] getNewChart(int[] sent, CnfGrammar grammar, ChartCellType cellType) {
+    private static ChartCell[][] getNewChart(int[] sent, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
         ChartCell[][] chart = new ChartCell[sent.length][sent.length+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
+                if (parseType == ParseType.INSIDE && cellType != ChartCellType.FULL) {
+                    throw new RuntimeException("Inside algorithm not implemented for cell type: " + cellType);
+                }
                 switch(cellType) {
                 case SINGLE_HASH:
                     chart[i][j] = new SingleHashChartCell(grammar);
@@ -90,7 +95,7 @@ public class Chart {
                     chart[i][j] = new DoubleHashChartCell(grammar);
                     break;
                 case FULL:
-                    chart[i][j] = new FullChartCell(grammar);
+                    chart[i][j] = new FullChartCell(grammar, parseType);
                     break;
                 case FULL_BREAK_TIES:
                     chart[i][j] = new FullTieBreakerChartCell(grammar, true);

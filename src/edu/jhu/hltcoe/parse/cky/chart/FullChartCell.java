@@ -5,6 +5,8 @@ import java.util.Arrays;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
+import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntArrayList;
 
 /**
@@ -24,27 +26,51 @@ import gnu.trove.TIntArrayList;
  * 
  */
 public class FullChartCell implements ChartCell {
-    
-    private final double[] maxScores;
+
+    /** Whether to compute the inside score or the max score. */
+    private final boolean computeInside;
+    /** The inside score or the max score. Indexed by the nonterminal type. */
+    private final double[] scores;
+    /** 
+     * The backpointer to the children corresponding to the max score. 
+     * Indexed by the nonterminal type.
+     */
     private final BackPointer[] bps;
+    /**
+     * When the chart cell is not closed, an array list containing the set of
+     * nonterminals that have non-null backpointers. When the chart cell is
+     * closed, the <code>ntsArray</code> should be used instead of this.
+     */
     private final TIntArrayList nts;
+    /**
+     * When the chart cell is closed, this is a copy of the elements in <code>nts</code>.
+     */
     private int[] ntsArray;
-    
+    /**
+     * Whether this chart cell has been closed. When closed, the chart cell will
+     * throw an exception if an attempt to update it is made.
+     */
     private boolean isClosed;
 
-    public FullChartCell(CnfGrammar grammar) {
-        maxScores = new double[grammar.getNumNonTerminals()];
+    public FullChartCell(CnfGrammar grammar, ParseType parseType) {
+        scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new TIntArrayList();
 
         isClosed = false;
         
         // Initialize scores to negative infinity.
-        Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
+        Arrays.fill(scores, Double.NEGATIVE_INFINITY);
+        
+        if (parseType == ParseType.INSIDE){
+            computeInside = true;
+        } else {
+            computeInside = false;
+        }
     }
 
     public void reset() {
-        Arrays.fill(maxScores, Double.NEGATIVE_INFINITY);
+        Arrays.fill(scores, Double.NEGATIVE_INFINITY);
         Arrays.fill(bps, null);
         nts.clear();
         isClosed = false;
@@ -58,9 +84,17 @@ public class FullChartCell implements ChartCell {
             // If the non-terminal hasn't been added yet, include it in the set of non terminals.
             nts.add(nt);
         }
-        if (score > maxScores[nt]) {
-            maxScores[nt] = score;
-            bps[nt] = new BackPointer(r, mid);
+        if (computeInside) {
+            // Compute the inside score.
+            scores[nt] = Utilities.logAdd(scores[nt], score);
+            // Add a dummy backpointer, so that the above non-null check still works.
+            bps[nt] = new BackPointer(null, -1);
+        } else {
+            // Compute the viterbi score.
+            if (score > scores[nt]) {
+                scores[nt] = score;
+                bps[nt] = new BackPointer(r, mid);
+            }
         }
     }
 
@@ -69,7 +103,7 @@ public class FullChartCell implements ChartCell {
     }
     
     public final double getScore(int symbol) {
-        return maxScores[symbol];
+        return scores[symbol];
     }
     
     public final int[] getNts() {
@@ -81,7 +115,7 @@ public class FullChartCell implements ChartCell {
     }
 
     public ScoresSnapshot getScoresSnapshot() {
-        return new FullScores(maxScores);
+        return new FullScores(scores);
     }
 
     @Override

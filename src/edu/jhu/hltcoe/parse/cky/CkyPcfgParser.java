@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.parse.cky;
 
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
 import edu.jhu.hltcoe.parse.cky.chart.ScoresSnapshot;
 
@@ -25,6 +26,7 @@ public class CkyPcfgParser {
         public boolean cacheChart = true;  
         public LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
         public ChartCellType cellType = ChartCellType.FULL;
+        public ParseType parseType = ParseType.VITERBI;
     }
     
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT }
@@ -34,11 +36,13 @@ public class CkyPcfgParser {
     // These are private final just to ensure that they are never slow accesses.
     private final LoopOrder loopOrder;
     private final ChartCellType cellType;
+    private final ParseType parseType;
     private final boolean cacheChart;
     
     public CkyPcfgParser(CkyPcfgParserPrm prm) {
         this.loopOrder = prm.loopOrder;
         this.cellType = prm.cellType;
+        this.parseType = prm.parseType;
         this.cacheChart = prm.cacheChart;
     }
     
@@ -53,7 +57,7 @@ public class CkyPcfgParser {
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
         if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
             // Construct a new chart.
-            chart = new Chart(sent, grammar, cellType);
+            chart = new Chart(sent, grammar, cellType, parseType);
         } else {
             // If it already exists, just reset it for efficiency.
             chart.reset(sent);
