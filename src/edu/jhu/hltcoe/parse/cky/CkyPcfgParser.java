@@ -1,10 +1,9 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
 import edu.jhu.hltcoe.parse.cky.chart.ScoresSnapshot;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.
@@ -14,7 +13,7 @@ import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
  * twice as fast as the exhaustive bubs-parser "ecpccl", though slightly slower
  * than the reported times in (Dunlop et al. 2010).
  * 
- * With caching we run slightly faster at: 0.067 seconds per sentence.
+ * With chart caching we run slightly faster at: 0.067 seconds per sentence.
  * 
  * @author mgormley
  * 
@@ -43,12 +42,13 @@ public class CkyPcfgParser {
         this.cacheChart = prm.cacheChart;
     }
     
-    @Deprecated
-    public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
-        // TODO: assert sentence.getAlphabet() == grammar.getLexAlphabet();
-        int[] sent = sentence.getLabelIds();
-        return parseSentence(sent, grammar);
-    }
+    // TODO: This would require proper handling of alphabets.
+    //    @Deprecated
+    //    public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
+    //        // TODO: assert sentence.getAlphabet() == grammar.getLexAlphabet();
+    //        int[] sent = sentence.getLabelIds();
+    //        return parseSentence(sent, grammar);
+    //    }
     
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
         if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
@@ -58,10 +58,19 @@ public class CkyPcfgParser {
             // If it already exists, just reset it for efficiency.
             chart.reset(sent);
         }
-        return parseSentence(sent, grammar, chart, loopOrder);
+        parseSentence(sent, grammar, loopOrder, chart);
+        return chart;
     }
     
-    public static final Chart parseSentence(final int[] sent, final CnfGrammar grammar, final Chart chart, final LoopOrder loopOrder) {
+    /**
+     * Runs CKY and populates the chart.
+     * 
+     * @param sent The input sentence.
+     * @param grammar The input grammar.
+     * @param loopOrder The loop order to use when parsing.
+     * @param chart The output chart.
+     */
+    public static final void parseSentence(final int[] sent, final CnfGrammar grammar, final LoopOrder loopOrder, final Chart chart) {
         // Apply lexical rules to each word.
         for (int i = 0; i <= sent.length - 1; i++) {
             ChartCell cell = chart.getCell(i, i+1);
@@ -103,7 +112,6 @@ public class CkyPcfgParser {
             }
         }
     
-        return chart;
     }
 
     /**
