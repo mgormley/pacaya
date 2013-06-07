@@ -19,7 +19,7 @@ import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.util.Prng;
 import edu.jhu.hltcoe.util.Timer;
 
-public class IlpViterbiParserTest {
+public class IlpDepParserTest {
 
     
     private final static double lambda = 0.1;
@@ -152,7 +152,7 @@ public class IlpViterbiParserTest {
 
     public static DepTreebank getIlpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
-        IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
+        IlpDepParser parser = new IlpDepParser(formulation, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
@@ -164,7 +164,7 @@ public class IlpViterbiParserTest {
 
     public static RelaxedDepTreebank getLpParses(Model model, SentenceCollection sentences, IlpFormulation formulation, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
-        IlpViterbiParser parser = new IlpViterbiParser(formulation, factory);
+        IlpDepParser parser = new IlpDepParser(formulation, factory);
         RelaxedDepTreebank trees = parser.getRelaxedParse(sentences, model);
         System.out.println("logProb: " + parser.getLastParseWeight());
         Assert.assertEquals(expectedParseWeight, parser.getLastParseWeight(), 1E-3);

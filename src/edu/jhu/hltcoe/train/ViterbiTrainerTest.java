@@ -14,7 +14,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpViterbiSentenceParser;
+import edu.jhu.hltcoe.parse.IlpDepSentenceParser;
 import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.hltcoe.util.Prng;
@@ -55,7 +55,7 @@ public class ViterbiTrainerTest {
     public void testConvergence() {
         double lambda = 0.1;
         IlpSolverFactory ilpSolverFactory = new IlpSolverFactory(IlpSolverId.CPLEX, 1, 128);
-        DepParser parser = new IlpViterbiSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
+        DepParser parser = new IlpDepSentenceParser(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
         DmvViterbiEMTrainerPrm prm = new DmvViterbiEMTrainerPrm();
         prm.parser = parser;

@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.ilp.ZimplRunner;
 import edu.jhu.hltcoe.ilp.decomp.BlockFileWriter;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpViterbiParser;
+import edu.jhu.hltcoe.parse.IlpDepParser;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Utilities;
 
@@ -97,7 +97,7 @@ public class DeltaParseBlockFileWriter implements BlockFileWriter {
                     log.debug("Line Splits: " + Arrays.toString(lineSplits));
                 }
                 
-                String[] varSplits = IlpViterbiParser.zimplVarRegex.split(zimplVar);
+                String[] varSplits = IlpDepParser.zimplVarRegex.split(zimplVar);
                 if (varSplits.length <= 1) {
                     log.debug("Var Splits: " + Arrays.toString(varSplits));
                     log.debug("Line: " + line);

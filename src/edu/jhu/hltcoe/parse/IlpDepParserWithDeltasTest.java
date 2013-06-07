@@ -23,7 +23,7 @@ import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.util.Prng;
 
 
-public class IlpViterbiParserWithDeltasTest {
+public class IlpDepParserWithDeltasTest {
 
     
     private final static double lambda = 0.1;
@@ -44,7 +44,7 @@ public class IlpViterbiParserWithDeltasTest {
 
         DeltaGenerator deltaGen;
 
-        DepTreebank treesStandard = IlpViterbiParserTest.getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
+        DepTreebank treesStandard = IlpDepParserTest.getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
 
         deltaGen = new IdentityDeltaGenerator();
         DepTreebank treesDelta = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight);
@@ -87,7 +87,7 @@ public class IlpViterbiParserWithDeltasTest {
         
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 2, 128);
-        IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        IlpDepParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
@@ -96,7 +96,7 @@ public class IlpViterbiParserWithDeltasTest {
         return trees;
     }
     
-    public static class MockIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas {
+    public static class MockIlpViterbiParserWithDeltas extends IlpDepParserWithDeltas {
         
         public MockIlpViterbiParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory,
                 DeltaGenerator deltaGen) {

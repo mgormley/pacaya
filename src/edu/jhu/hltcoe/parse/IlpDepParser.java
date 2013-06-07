@@ -29,9 +29,9 @@ import edu.jhu.hltcoe.util.DelayedDeleter;
 import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Utilities;
 
-public class IlpViterbiParser implements DepParser, RelaxedDepParser {
+public class IlpDepParser implements DepParser, RelaxedDepParser {
 
-    private static final Logger log = Logger.getLogger(IlpViterbiParser.class);
+    private static final Logger log = Logger.getLogger(IlpDepParser.class);
     
     public static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;
@@ -43,7 +43,7 @@ public class IlpViterbiParser implements DepParser, RelaxedDepParser {
     protected IlpSolverFactory ilpSolverFactory;
     protected double parseWeight;
     
-    public IlpViterbiParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
+    public IlpDepParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         this.formulation = formulation;
         this.ilpSolverFactory = ilpSolverFactory;
         codeMap = new ZimplXmlCodeContainerReader(formulation);

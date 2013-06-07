@@ -10,15 +10,15 @@ import edu.jhu.hltcoe.ilp.IlpSolverFactory;
 import edu.jhu.hltcoe.ilp.ZimplSolver;
 import edu.jhu.hltcoe.model.Model;
 
-public class InitializedIlpViterbiParserWithDeltas extends IlpViterbiParserWithDeltas implements DepParser {
+public class InitializedIlpDepParserWithDeltas extends IlpDepParserWithDeltas implements DepParser {
     
-    private IlpViterbiParserWithDeltas initParser;
+    private IlpDepParserWithDeltas initParser;
     private Map<String,Double> mipStart;
     
-    public InitializedIlpViterbiParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory, DeltaGenerator deltaGen, IlpSolverFactory initIlpSolverFactory) {
+    public InitializedIlpDepParserWithDeltas(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory, DeltaGenerator deltaGen, IlpSolverFactory initIlpSolverFactory) {
         // TODO: this should be initialized by a fast dynamic programming parser 
         super(formulation, ilpSolverFactory, deltaGen);
-        initParser = new IlpViterbiParserWithDeltas(formulation, initIlpSolverFactory, new IdentityDeltaGenerator());
+        initParser = new IlpDepParserWithDeltas(formulation, initIlpSolverFactory, new IdentityDeltaGenerator());
     }
 
     @Override

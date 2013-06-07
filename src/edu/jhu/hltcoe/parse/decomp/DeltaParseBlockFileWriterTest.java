@@ -17,8 +17,8 @@ import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltas;
-import edu.jhu.hltcoe.parse.IlpViterbiParserWithDeltasTest.MockIlpViterbiParserWithDeltas;
+import edu.jhu.hltcoe.parse.IlpDepParserWithDeltas;
+import edu.jhu.hltcoe.parse.IlpDepParserWithDeltasTest.MockIlpViterbiParserWithDeltas;
 import edu.jhu.hltcoe.util.Prng;
 
 
@@ -99,7 +99,7 @@ public class DeltaParseBlockFileWriterTest {
     public static DepTreebank getParsesMilpBlockPc(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.DIP_MILPBLOCK_PC, 2, 128);
         factory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
-        IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        IlpDepParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
@@ -111,7 +111,7 @@ public class DeltaParseBlockFileWriterTest {
     public static DepTreebank getParsesParsePc(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.DIP_PARSE_PC, 2, 128);
         factory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
-        IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        IlpDepParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
@@ -123,7 +123,7 @@ public class DeltaParseBlockFileWriterTest {
     public static DepTreebank getParsesCpm(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.DIP_MILPBLOCK_CPM, 2, 128);
         factory.setBlockFileWriter(new DeltaParseBlockFileWriter(formulation));
-        IlpViterbiParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
+        IlpDepParserWithDeltas parser = new MockIlpViterbiParserWithDeltas(formulation, factory, deltaGen);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);

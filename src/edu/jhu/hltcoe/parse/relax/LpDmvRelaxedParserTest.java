@@ -22,7 +22,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpViterbiParserTest;
+import edu.jhu.hltcoe.parse.IlpDepParserTest;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -51,7 +51,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
         
         // This should have the same expected objective as the Zimpl version.
         RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
@@ -71,7 +71,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
         
         // This should have the same expected objective as the Zimpl version.
         RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
@@ -88,7 +88,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
         
         // This should have the same expected objective as the Zimpl version.
         RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
@@ -107,7 +107,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);
         
         //expectedObj = -26.525; // TODO: this shouldn't be different!
         // This should have the same expected objective as the Zimpl version.
@@ -127,7 +127,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
         
         // This should have the same expected objective as the Zimpl version.
         RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_PROJ_LPRELAX, expectedObj);
@@ -148,7 +148,7 @@ public class LpDmvRelaxedParserTest {
 
         // Single commodity flow non-projective parsing LP Relaxation
         // This is conveniently an integer solution
-        RelaxedDepTreebank trees2 = IlpViterbiParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);
+        RelaxedDepTreebank trees2 = IlpDepParserTest.getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);
         
         // This should have the same expected objective as the Zimpl version.
         RelaxedDepTreebank trees1 = getLpParses(model, sentences, IlpFormulation.FLOW_NONPROJ_LPRELAX, expectedObj);

@@ -23,11 +23,11 @@ import edu.jhu.hltcoe.util.Files;
  * @author mgormley
  *
  */
-public class IlpViterbiSentenceParser extends IlpViterbiParser implements DepSentenceParser {
+public class IlpDepSentenceParser extends IlpDepParser implements DepSentenceParser {
 
-    private static final Logger log = Logger.getLogger(IlpViterbiSentenceParser.class);
+    private static final Logger log = Logger.getLogger(IlpDepSentenceParser.class);
         
-    public IlpViterbiSentenceParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
+    public IlpDepSentenceParser(IlpFormulation formulation, IlpSolverFactory ilpSolverFactory) {
         super(formulation, ilpSolverFactory);
     }
     

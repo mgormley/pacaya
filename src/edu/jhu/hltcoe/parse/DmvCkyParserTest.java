@@ -2,7 +2,7 @@ package edu.jhu.hltcoe.parse;
 
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_B;
-import static edu.jhu.hltcoe.parse.IlpViterbiParserTest.getIlpParses;
+import static edu.jhu.hltcoe.parse.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;
 

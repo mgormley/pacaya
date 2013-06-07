@@ -23,7 +23,7 @@ import edu.jhu.hltcoe.util.Files;
 import edu.jhu.hltcoe.util.Prng;
 
 
-public class InitializedIlpViterbiParserWithDeltasTest {
+public class InitializedIlpDepParserWithDeltasTest {
 
     
     private final static double lambda = 0.1;
@@ -44,7 +44,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
 
         DeltaGenerator deltaGen;
 
-        DepTreebank treesStandard = IlpViterbiParserTest.getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
+        DepTreebank treesStandard = IlpDepParserTest.getIlpParses(model, sentences, IlpFormulation.FLOW_NONPROJ, expectedParseWeight);
 
         deltaGen = new IdentityDeltaGenerator();
         DepTreebank treesDelta = getParses(model, sentences, IlpFormulation.FLOW_NONPROJ, deltaGen, expectedParseWeight, expectedParseWeight);
@@ -92,7 +92,7 @@ public class InitializedIlpViterbiParserWithDeltasTest {
         
     public static DepTreebank getParses(Model model, SentenceCollection sentences, IlpFormulation formulation, DeltaGenerator deltaGen, double expectedParseWeight, double expectedInitParseWeight) {
         IlpSolverFactory factory = new IlpSolverFactory(IlpSolverId.CPLEX, 2, 128);
-        InitializedIlpViterbiParserWithDeltas parser = new InitializedIlpViterbiParserWithDeltas(formulation, factory, deltaGen, factory);
+        InitializedIlpDepParserWithDeltas parser = new InitializedIlpDepParserWithDeltas(formulation, factory, deltaGen, factory);
         DepTreebank trees = parser.getViterbiParse(sentences, model);
         for (DepTree depTree : trees) {
             System.out.println(depTree);
