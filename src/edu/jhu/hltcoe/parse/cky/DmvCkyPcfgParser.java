@@ -10,6 +10,7 @@ import edu.jhu.hltcoe.data.WallDepTreeNode;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
@@ -57,9 +58,7 @@ public class DmvCkyPcfgParser {
         Arrays.fill(parents, -2);
         // Get the viterbi dependency tree.
         int rootSymbol = grammar.getCnfGrammar().getRootSymbol();
-        int head = getViterbiTree(0, sent.length, rootSymbol, chart, grammar, parents);
-        // Set the parent of the sentence's head to be the wall node.
-        parents[head] = WallDepTreeNode.WALL_POSITION;
+        getViterbiTree(0, sent.length, rootSymbol, chart, grammar, parents);
         // Get the score of the viterbi dependency tree.
         double rootScore = chart.getCell(0, sent.length).getScore(rootSymbol);
         return new Pair<int[], Double>(parents, rootScore);
@@ -74,7 +73,7 @@ public class DmvCkyPcfgParser {
      * @param chart The parse chart.
      * @param grammar The DMV grammar.
      * @param parents The output array specifying the parent of each word in the sentence.
-     * @return
+     * @return The head of the span.
      */
     private static int getViterbiTree(int start, int end,
             int rootSymbol, Chart chart, DmvCnfGrammar grammar, int[] parents) {
@@ -94,18 +93,24 @@ public class DmvCkyPcfgParser {
             // Get the left and right heads.
             int leftHead = getViterbiTree(start, bp.mid, bp.r.getLeftChild(), chart, grammar, parents);
             int rightHead = getViterbiTree(bp.mid, end, bp.r.getRightChild(), chart, grammar, parents);
+            
+            //TODO: Remove: 
+            //log.debug(String.format("lh: %d rh: %d s: %d mid: %d e: %d %s", leftHead, rightHead, start/2, bp.mid/2, end/2, bp.r.getParentStr()));
+            
             // Then determine whether the rule defines a left or right dependency.
-            boolean isLeftHead = ((DmvRule)bp.r).isLeftHead();
+            DmvRule dmvRule = (DmvRule)bp.r;
+            boolean isLeftHead = dmvRule.isLeftHead();
             int head = isLeftHead ? leftHead : rightHead;
             int child = isLeftHead ? rightHead : leftHead;
             // Set that parent in the parents array.
-            if (parents[child] == -2) {
+            if (dmvRule.getType() == DmvRuleType.STRUCTURAL) {
+                assert parents[child] == -2;
                 parents[child] = head;
-            } else {
-                // In the DMV grammar, the structural rule will set the parent
-                // first, but we still need to return the correct head from the
-                // child rules.
-                assert(parents[child] == head);
+            } else if (dmvRule.getType() == DmvRuleType.ROOT) {
+                // Set the parent of the head of the sentence to be the wall.
+                // 
+                // This is only possible because we keep track of the heads recursively.
+                parents[head] = WallDepTreeNode.WALL_POSITION;
             }
             return head;
         }

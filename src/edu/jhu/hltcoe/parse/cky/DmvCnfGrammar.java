@@ -6,11 +6,12 @@ import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Utilities;
 
 public class DmvCnfGrammar {
-
+    
     private static final String rootSymbolStr = "S";
 
     // Rules that correspond to probabilities in the model.
@@ -125,7 +126,8 @@ public class DmvCnfGrammar {
                              f("L_{%d}", p), 
                              f("R_{%d}", p), 
                              0.0,
-                             true); // The left and right heads will always be the same.
+                             true, // The left and right heads will always be the same.
+                             DmvRuleType.ROOT);
     }
     
     private Rule getChildRule(int c, int p, int dir) {
@@ -134,13 +136,15 @@ public class DmvCnfGrammar {
                                  f("L_{%d}", c), 
                                  f("M_{%d,%d*}", c, p), 
                                  0.0,
-                                 false); // The left is the child.
+                                 false, // The left is the child.
+                                 DmvRuleType.CHILD);
         } else {
             return getBinaryRule(f("R_{%d}^{1}", p),
                                  f("M_{%d*,%d}", p, c),
                                  f("R_{%d}", c),
                                  0.0,
-                                 true); // The left is the head.
+                                 true, // The left is the head.
+                                 DmvRuleType.CHILD);
         }
     }
 
@@ -150,13 +154,15 @@ public class DmvCnfGrammar {
                                  f("R_{%d}", c),
                                  f("L_{%d}^{*}", p),
                                  0.0,
-                                 false); // The left is the child.
+                                 false,
+                                 DmvRuleType.STRUCTURAL); // The left is the child.
         } else {
             return getBinaryRule(f("M_{%d*,%d}", p, c),
                                  f("R_{%d}^{*}", p),
                                  f("L_{%d}", c),
                                  0.0,
-                                 true); // The left is the head.
+                                 true,
+                                 DmvRuleType.STRUCTURAL); // The left is the head.
         }
     }
 
@@ -169,20 +175,20 @@ public class DmvCnfGrammar {
             int leftChild = (dir == Constants.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
             int rightChild = Rule.LEXICAL_RULE;
             double score = 0.0;
-            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true);
+            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true, DmvRuleType.DECISION);
         } else {
             int leftChild = ntAlphabet.lookupIndex(f("%s_{%d}^{1}", cap, c));
             int rightChild = Rule.UNARY_RULE;
             double score = 0.0;
-            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true);
+            return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true, DmvRuleType.DECISION);
         }
     }
     
-    private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb, boolean isLeftHead) {
+    private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb, boolean isLeftHead, DmvRuleType type) {
         int parent = ntAlphabet.lookupIndex(parentStr);
         int leftChild = ntAlphabet.lookupIndex(leftChildStr);
         int rightChild = ntAlphabet.lookupIndex(rightChildStr);
-        return new DmvRule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet, isLeftHead);
+        return new DmvRule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet, isLeftHead, type);
     }
 
     /**
