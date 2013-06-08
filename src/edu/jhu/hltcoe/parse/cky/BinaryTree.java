@@ -3,6 +3,10 @@ package edu.jhu.hltcoe.parse.cky;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.Tag;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 
@@ -21,10 +25,10 @@ public class BinaryTree {
     private BinaryTree rightChild;
     private boolean isLexical;
     
-    private Alphabet<String> alphabet;
+    private Alphabet<Label> alphabet;
     
     public BinaryTree(int symbol, int start, int end, BinaryTree leftChildNode,
-            BinaryTree rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
+            BinaryTree rightChildNode, boolean isLexical, Alphabet<Label> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -37,10 +41,6 @@ public class BinaryTree {
 //    public Span getSpan() {
 //        return new Span(start, end);
 //    }
-    
-    public String getSymbolStr() {
-        return alphabet.lookupObject(symbol);
-    }
        
     private static String canonicalizeTreeString(String newTreeStr) {
         return newTreeStr.trim().replaceAll("\\s+\\)", ")").replaceAll("\\s+", " ");
@@ -134,10 +134,6 @@ public class BinaryTree {
         // Visit this node.
         function.call(this);
     }
-
-    public int getSymbol() {
-        return symbol;
-    }
     
     public int getStart() {
         return start;
@@ -163,8 +159,41 @@ public class BinaryTree {
         return rightChild;
     }
 
-    public Alphabet<String> getAlphabet() {
+    public Alphabet<Label> getAlphabet() {
         return alphabet;
+    }
+    
+    /** This method does an alphabet lookup and is slow. */
+    private String getSymbolStr() {
+        return alphabet.lookupObject(symbol).getLabel();
+    }
+    
+    /** This method does an alphabet lookup and is slow. */
+    public Label getSymbolLabel() {
+        return alphabet.lookupObject(symbol);
+    }
+
+    private void setSymbolStr(String symbolStr) {
+        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
+        this.symbol = alphabet.lookupIndex(l);
+        if (this.symbol == -1) {
+            throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
+        }
+    }
+
+    public void setSymbolLabel(Label label) {
+        this.symbol = alphabet.lookupIndex(label);
+        if (this.symbol < 0) {
+            throw new IllegalArgumentException(
+                    "Symbol is not in alphabet. label=" + label + " id=" + symbol);
+        }
+    }
+
+    public void setSymbol(int symbol) {
+        if (symbol >= alphabet.size() || symbol < 0) {
+            throw new IllegalArgumentException("Invalid symbol: " + symbol);
+        }
+        this.symbol = symbol;
     }
     
     /**
@@ -192,13 +221,22 @@ public class BinaryTree {
     /**
      * Gets the lexical item ids comprising the sentence.
      */
-    public int[] getSentence() {
+    public int[] getSentenceIds() {
         ArrayList<BinaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
             sent[i] = leaves.get(i).symbol;
         }
         return sent;
+    }
+
+    public Sentence getSentence() {
+        ArrayList<BinaryTree> leaves = getLeaves();
+        ArrayList<Label> labels = new ArrayList<Label>(leaves.size());
+        for (int i = 0; i < leaves.size(); i++) {
+            labels.add(leaves.get(i).getSymbolLabel());
+        }
+        return new Sentence(leaves.get(0).alphabet, labels);
     }
 
     @Override
@@ -237,10 +275,10 @@ public class BinaryTree {
         
     }
 
-    public NaryTree collapseToNary(Alphabet<String> ntAlphabet) {
-        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public NaryTree collapseToNary(Alphabet<Label> ntAlphabet) {
+        Alphabet<Label> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
-        int symbol = alphabet.lookupIndex(getSymbolStr());
+        int symbol = alphabet.lookupIndex(getSymbolLabel());
         
         ArrayList<NaryTree> children = null;
         if (!isLeaf()) {
@@ -255,11 +293,11 @@ public class BinaryTree {
     }
 
     private static void addToQueue(LinkedList<NaryTree> queue, BinaryTree child,
-            Alphabet<String> ntAlphabet) {
+            Alphabet<Label> ntAlphabet) {
         if (child == null) {
             return;
         }
-        String symbolStr = child.alphabet.lookupObject(child.getSymbol());
+        String symbolStr = child.getSymbolStr();
         if (GrammarConstants.isBinarized(symbolStr)) {
             addToQueue(queue, child.leftChild, ntAlphabet);
             addToQueue(queue, child.rightChild, ntAlphabet);
@@ -268,27 +306,13 @@ public class BinaryTree {
         }
     }
 
-    public void setSymbolStr(String symbolStr) {
-        this.symbol = alphabet.lookupIndex(symbolStr);
-        if (this.symbol == -1) {
-            throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
-        }
-    }
-    
-    public void setSymbol(int symbol) {
-        if (symbol >= alphabet.size() || symbol < 0) {
-            throw new IllegalArgumentException("Invalid symbol: " + symbol);
-        }
-        this.symbol = symbol;
-    }
-
-    public void resetAlphabets(final Alphabet<String> lexAlphabet,
-            final Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(final Alphabet<Label> lexAlphabet,
+            final Alphabet<Label> ntAlphabet) {
         preOrderTraversal(new LambdaOne<BinaryTree>() {
             public void call(BinaryTree node) {
-                String symbolStr = node.getSymbolStr();
+                Label label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
-                node.setSymbolStr(symbolStr);
+                node.setSymbolLabel(label);
             }
         });
     }

@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Tag;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.util.Alphabet;
 
 public class CnfGrammarBuilder {
@@ -20,15 +23,15 @@ public class CnfGrammarBuilder {
     private ArrayList<Rule> unaryRules;
     private ArrayList<Rule> binaryRules;
 
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private Alphabet<Label> lexAlphabet;
+    private Alphabet<Label> ntAlphabet;
     
     public CnfGrammarBuilder() {
-        this(new Alphabet<String>(), new Alphabet<String>());
+        this(new Alphabet<Label>(), new Alphabet<Label>());
     }
     
-    public CnfGrammarBuilder(Alphabet<String> lexAlphabet,
-            Alphabet<String> ntAlphabet) {
+    public CnfGrammarBuilder(Alphabet<Label> lexAlphabet,
+            Alphabet<Label> ntAlphabet) {
         if (lexAlphabet.size() > 0) {
             throw new IllegalArgumentException("Lexical alphabet must by empty.");
         }        
@@ -99,10 +102,10 @@ public class CnfGrammarBuilder {
             if (state == GrReaderState.RootSymbol) {
                 if (line.contains(" ")) {
                     // Read a bubs-parser style line with the root symbol in start=Root
-                    rootSymbol = ntAlphabet.lookupIndex("ROOT");
+                    rootSymbol = ntAlphabet.lookupIndex(new Tag("ROOT"));
                 } else {
                     // Read the root symbol.
-                    rootSymbol = ntAlphabet.lookupIndex(line);
+                    rootSymbol = ntAlphabet.lookupIndex(new Tag(line));
                 }
                 state = GrReaderState.NonTerminalRules;
                 continue;
@@ -143,21 +146,21 @@ public class CnfGrammarBuilder {
     }
 
     private Rule getLexicalRule(String parentStr, String childStr, double logProb) {
-        int parent = ntAlphabet.lookupIndex(parentStr);
-        int child = lexAlphabet.lookupIndex(childStr);
+        int parent = ntAlphabet.lookupIndex(new Tag(parentStr));
+        int child = lexAlphabet.lookupIndex(new Word(childStr));
         return new Rule(parent, child, Rule.LEXICAL_RULE, logProb, ntAlphabet, lexAlphabet);
     }
 
     private Rule getUnaryRule(String parentStr, String childStr, double logProb) {
-        int parent = ntAlphabet.lookupIndex(parentStr);
-        int child = ntAlphabet.lookupIndex(childStr);
+        int parent = ntAlphabet.lookupIndex(new Tag(parentStr));
+        int child = ntAlphabet.lookupIndex(new Tag(childStr));
         return new Rule(parent, child, Rule.UNARY_RULE, logProb, ntAlphabet, lexAlphabet);
     }
 
     private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb) {
-        int parent = ntAlphabet.lookupIndex(parentStr);
-        int leftChild = ntAlphabet.lookupIndex(leftChildStr);
-        int rightChild = ntAlphabet.lookupIndex(rightChildStr);
+        int parent = ntAlphabet.lookupIndex(new Tag(parentStr));
+        int leftChild = ntAlphabet.lookupIndex(new Tag(leftChildStr));
+        int rightChild = ntAlphabet.lookupIndex(new Tag(rightChildStr));
         return new Rule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet);
     }
 

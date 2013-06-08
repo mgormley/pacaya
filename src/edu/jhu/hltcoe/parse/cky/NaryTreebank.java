@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.util.Alphabet;
 
 public class NaryTreebank extends ArrayList<NaryTree> {
@@ -19,7 +20,7 @@ public class NaryTreebank extends ArrayList<NaryTree> {
     /**
      * Reads a list of trees in Penn Treebank format.
      */
-    public static NaryTreebank readTreesInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    public static NaryTreebank readTreesInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
         NaryTreebank trees = new NaryTreebank();
         while (true) {
             NaryTree tree = NaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -64,14 +65,14 @@ public class NaryTreebank extends ArrayList<NaryTree> {
     public void writeSentencesInOneLineFormat(String outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
         for (NaryTree tree : this) {
-            List<String> sent = tree.getSentenceStrs();
+            List<Label> sent = tree.getSentence().getLabels();
             writer.write(StringUtils.join(sent.toArray(), " "));
             writer.write("\n");
         }
         writer.close(); 
     } 
 
-    public BinaryTreebank leftBinarize(Alphabet<String> ntAlphabet) {
+    public BinaryTreebank leftBinarize(Alphabet<Label> ntAlphabet) {
         BinaryTreebank binaryTrees = new BinaryTreebank();
         for (NaryTree tree : this) {
             binaryTrees.add(tree.leftBinarize(ntAlphabet));
@@ -79,8 +80,8 @@ public class NaryTreebank extends ArrayList<NaryTree> {
         return binaryTrees;
     }
 
-    public void resetAlphabets(Alphabet<String> lexAlphabet,
-            Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(Alphabet<Label> lexAlphabet,
+            Alphabet<Label> ntAlphabet) {
         for (NaryTree tree : this) {
             tree.resetAlphabets(lexAlphabet, ntAlphabet);
         }

@@ -1,5 +1,7 @@
 package edu.berkeley.nlp.PCFGLA.smoothing;
 
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.util.Alphabet;
 
 
@@ -13,15 +15,20 @@ import edu.jhu.hltcoe.util.Alphabet;
  */
 public class BerkeleySignatureBuilder {
 
-    private Alphabet<String> lexAlphabet;
+    private Alphabet<Label> lexAlphabet;
 
-    public BerkeleySignatureBuilder(Alphabet<String> lexAlphabet) {
-        this.lexAlphabet = new Alphabet<String>(lexAlphabet);
+    public BerkeleySignatureBuilder(Alphabet<Label> lexAlphabet) {
+        this.lexAlphabet = new Alphabet<Label>(lexAlphabet);
         this.lexAlphabet.stopGrowth();
     }
 
     private boolean isKnown(String lowered) {
-        return lexAlphabet.lookupIndex(lowered) != -1;
+        return lexAlphabet.lookupIndex(new Word(lowered)) != -1;
+    }
+    
+    public Word getSignature(Word wordLabel, int loc, int unknownLevel) {
+        String word = wordLabel.getLabel();
+        return new Word(getSignature(word, loc, unknownLevel));
     }
     
     /**

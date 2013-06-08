@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import depparsing.globals.Constants;
 import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.Tag;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -22,8 +24,8 @@ public class DmvCnfGrammar {
     private final Rule[][][] structural; // Indexed by child, parent, and direction.
     
     private final CnfGrammar cnfGrammar;
-    private final Alphabet<String> lexAlphabet;
-    private final Alphabet<String> ntAlphabet;
+    private final Alphabet<Label> lexAlphabet;
+    private final Alphabet<Label> ntAlphabet;
 
     private final int numTags;
     private final int rootSymbol;
@@ -33,7 +35,7 @@ public class DmvCnfGrammar {
     
     public DmvCnfGrammar(DmvModel dmv, Alphabet<Label> labelAlphabet) {
         numTags = labelAlphabet.size();
-        this.lexAlphabet = new Alphabet<String>();
+        this.lexAlphabet = new Alphabet<Label>();
         // Cache mapping of unannoated tags to annotated tags.
         annoToUnanno = new int[numTags*2];
         unannoToAnno = new int[numTags][2];
@@ -41,16 +43,16 @@ public class DmvCnfGrammar {
             for (int dir=0; dir<2; dir++) {
                 int anno;
                 if (dir == Constants.LEFT) {
-                    anno = lexAlphabet.lookupIndex(String.format("%d_{l}", unanno)); 
+                    anno = lexAlphabet.lookupIndex(new Word(String.format("%d_{l}", unanno))); 
                 } else {
-                    anno = lexAlphabet.lookupIndex(String.format("%d_{r}", unanno));
+                    anno = lexAlphabet.lookupIndex(new Word(String.format("%d_{r}", unanno)));
                 }
                 annoToUnanno[anno] = unanno;
                 unannoToAnno[unanno][dir] = anno;
             }
         }
-        this.ntAlphabet = new Alphabet<String>();
-        this.rootSymbol = ntAlphabet.lookupIndex(rootSymbolStr);
+        this.ntAlphabet = new Alphabet<Label>();
+        this.rootSymbol = ntAlphabet.lookupIndex(new Tag(rootSymbolStr));
         
         this.root = new Rule[numTags];
         this.child = new Rule[numTags][numTags][2];
@@ -170,14 +172,14 @@ public class DmvCnfGrammar {
         String cap = (dir == Constants.LEFT) ? "L" : "R";
         String parent_ss = (val == 0) ? "" : "^{*}"; // parent superscript
         
-        int parent = ntAlphabet.lookupIndex(f("%s_{%d}%s", cap, c, parent_ss));
+        int parent = ntAlphabet.lookupIndex(new Tag(f("%s_{%d}%s", cap, c, parent_ss)));
         if (sc == Constants.END){
             int leftChild = (dir == Constants.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
             int rightChild = Rule.LEXICAL_RULE;
             double score = 0.0;
             return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true, DmvRuleType.DECISION);
         } else {
-            int leftChild = ntAlphabet.lookupIndex(f("%s_{%d}^{1}", cap, c));
+            int leftChild = ntAlphabet.lookupIndex(new Tag(f("%s_{%d}^{1}", cap, c)));
             int rightChild = Rule.UNARY_RULE;
             double score = 0.0;
             return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true, DmvRuleType.DECISION);
@@ -185,9 +187,9 @@ public class DmvCnfGrammar {
     }
     
     private Rule getBinaryRule(String parentStr, String leftChildStr, String rightChildStr, double logProb, boolean isLeftHead, DmvRuleType type) {
-        int parent = ntAlphabet.lookupIndex(parentStr);
-        int leftChild = ntAlphabet.lookupIndex(leftChildStr);
-        int rightChild = ntAlphabet.lookupIndex(rightChildStr);
+        int parent = ntAlphabet.lookupIndex(new Tag(parentStr));
+        int leftChild = ntAlphabet.lookupIndex(new Tag(leftChildStr));
+        int rightChild = ntAlphabet.lookupIndex(new Tag(rightChildStr));
         return new DmvRule(parent, leftChild, rightChild, logProb, ntAlphabet, lexAlphabet, isLeftHead, type);
     }
 

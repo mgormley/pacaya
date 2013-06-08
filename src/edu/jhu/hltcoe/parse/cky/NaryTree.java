@@ -1,12 +1,14 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.Tag;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Files;
@@ -27,10 +29,10 @@ public class NaryTree {
     private ArrayList<NaryTree> children;
     private boolean isLexical;
     
-    private Alphabet<String> alphabet;
+    private Alphabet<Label> alphabet;
     
     public NaryTree(int symbol, int start, int end, ArrayList<NaryTree> children,
-            boolean isLexical, Alphabet<String> alphabet) {
+            boolean isLexical, Alphabet<Label> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -41,13 +43,7 @@ public class NaryTree {
 
 //    public Span getSpan() {
 //        return new Span(start, end);
-//    }
-    
-    /** This method does an alphabet lookup and is slow. */
-    public String getSymbolStr() {
-        return alphabet.lookupObject(symbol);
-    }
-    
+//    }    
 
     private static String canonicalizeTreeString(String newTreeStr) {
         return newTreeStr.trim().replaceAll("\\s+\\)", ")").replaceAll("\\s+", " ");
@@ -116,7 +112,7 @@ public class NaryTree {
     }
 
     public static ArrayList<NaryTree> readTreesInPtbFormat(
-            Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+            Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
         ArrayList<NaryTree> trees = new ArrayList<NaryTree>();
         while (true) {
             NaryTree tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -136,7 +132,7 @@ public class NaryTree {
      * outer set of parentheses. The returned tree will have initialized the
      * start/end fields.
      */
-    public static NaryTree readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    public static NaryTree readTreeInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
         Files.readUntilCharacter(reader, '(');
         NaryTree root = NaryTree.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
         Files.readUntilCharacter(reader, ')');
@@ -161,7 +157,7 @@ public class NaryTree {
      * @return
      * @throws IOException
      */
-    private static NaryTree readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
+    private static NaryTree readSubtreeInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder symbolSb = new StringBuilder();
         ArrayList<NaryTree> children = null;
@@ -210,8 +206,10 @@ public class NaryTree {
         
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
-        Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
-        int symbol = alphabet.lookupIndex(symbolSb.toString());
+        Alphabet<Label> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
+        String symbolStr = symbolSb.toString();
+        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
+        int symbol = alphabet.lookupIndex(l);
         if (symbol == -1) {
             throw new IllegalStateException("Unknown "
                     + (isLexical ? "word" : "nonterminal") + ": "
@@ -328,13 +326,22 @@ public class NaryTree {
     /**
      * Gets the lexical item ids comprising the sentence.
      */
-    public int[] getSentence() {
+    public int[] getSentenceIds() {
         ArrayList<NaryTree> leaves = getLeaves();
         int[] sent = new int[leaves.size()];
         for (int i=0; i<sent.length; i++) {
             sent[i] = leaves.get(i).symbol;
         }
         return sent;
+    }
+
+    public Sentence getSentence() {
+        ArrayList<NaryTree> leaves = getLeaves();
+        ArrayList<Label> labels = new ArrayList<Label>(leaves.size());
+        for (int i = 0; i < leaves.size(); i++) {
+            labels.add(leaves.get(i).getSymbolLabel());
+        }
+        return new Sentence(leaves.get(0).alphabet, labels);
     }
 
     /**
@@ -345,10 +352,10 @@ public class NaryTree {
      * 
      * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public BinaryTree leftBinarize(Alphabet<String> ntAlphabet) {
-        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public BinaryTree leftBinarize(Alphabet<Label> ntAlphabet) {
+        Alphabet<Label> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
-        int symbol = alphabet.lookupIndex(getSymbolStr());
+        int symbol = alphabet.lookupIndex(getSymbolLabel());
 
         BinaryTree leftChild;
         BinaryTree rightChild;
@@ -363,7 +370,8 @@ public class NaryTree {
             rightChild = children.get(1).leftBinarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
-            int xbarParent = alphabet.lookupIndex("@" + getSymbolStr());
+            int xbarParent = alphabet.lookupIndex(GrammarConstants
+                    .getBinarizedTag((Tag) getSymbolLabel()));
             
             LinkedList<NaryTree> queue = new LinkedList<NaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
@@ -416,23 +424,36 @@ public class NaryTree {
         }
         
     }
-
-    public int getSymbol() {
-        return symbol;
-    }
-
     public boolean isLexical() {
         return isLexical;
     }
 
-    public Alphabet<String> getAlphabet() {
+    public Alphabet<Label> getAlphabet() {
         return alphabet;
     }
+    
+    /** This method does an alphabet lookup and is slow. */
+    private String getSymbolStr() {
+        return alphabet.lookupObject(symbol).getLabel();
+    }
+    
+    /** This method does an alphabet lookup and is slow. */
+    public Label getSymbolLabel() {
+        return alphabet.lookupObject(symbol);
+    }
 
-    public void setSymbolStr(String symbolStr) {
-        this.symbol = alphabet.lookupIndex(symbolStr);
+    private void setSymbolStr(String symbolStr) {
+        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
+        this.symbol = alphabet.lookupIndex(l);
         if (this.symbol < 0) {
             throw new IllegalArgumentException("Symbol is not in alphabet. symbolStr=" + symbolStr + " id=" + symbol);
+        }
+    }
+    
+    public void setSymbolLabel(Label label) {
+        this.symbol = alphabet.lookupIndex(label);
+        if (this.symbol < 0) {
+            throw new IllegalArgumentException("Symbol is not in alphabet. label=" + label + " id=" + symbol);
         }
     }
     
@@ -443,23 +464,14 @@ public class NaryTree {
         this.symbol = symbol;
     }
 
-    public void resetAlphabets(final Alphabet<String> lexAlphabet,
-            final Alphabet<String> ntAlphabet) {
+    public void resetAlphabets(final Alphabet<Label> lexAlphabet,
+            final Alphabet<Label> ntAlphabet) {
         preOrderTraversal(new LambdaOne<NaryTree>() {
             public void call(NaryTree node) {
-                String symbolStr = node.getSymbolStr();
+                Label label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
-                node.setSymbolStr(symbolStr);
+                node.setSymbolLabel(label);
             }
         });
-    }
-
-    public List<String> getSentenceStrs() {
-        ArrayList<NaryTree> leaves = getLeaves();
-        ArrayList<String> sentence = new ArrayList<String>(leaves.size());
-        for (int i = 0; i < leaves.size(); i++) {
-            sentence.add(leaves.get(i).getSymbolStr());
-        }
-        return sentence;
     }
 }
