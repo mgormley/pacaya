@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.util.Alphabet;
 
 public class DmvRule extends Rule {
@@ -10,7 +11,7 @@ public class DmvRule extends Rule {
     private DmvRuleType type;
 
     public DmvRule(int parent, int leftChild, int rightChild, double score,
-            Alphabet<String> ntAlphabet, Alphabet<String> lexAlphabet, boolean isLeftHead, DmvRuleType type) {
+            Alphabet<Label> ntAlphabet, Alphabet<Label> lexAlphabet, boolean isLeftHead, DmvRuleType type) {
         super(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet);
         this.isLeftHead = isLeftHead;
         this.type = type;

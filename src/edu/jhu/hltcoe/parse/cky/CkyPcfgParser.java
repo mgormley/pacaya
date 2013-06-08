@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
@@ -49,13 +50,13 @@ public class CkyPcfgParser {
         this.cacheChart = prm.cacheChart;
     }
     
-    // TODO: This would require proper handling of alphabets.
-    //    @Deprecated
-    //    public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
-    //        // TODO: assert sentence.getAlphabet() == grammar.getLexAlphabet();
-    //        int[] sent = sentence.getLabelIds();
-    //        return parseSentence(sent, grammar);
-    //    }
+    public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
+        if (sentence.getAlphabet() != grammar.getLexAlphabet()) {
+            throw new IllegalArgumentException("Alphabets for sentence and grammar must be the same.");
+        }
+        int[] sent = sentence.getLabelIds();
+        return parseSentence(sent, grammar);
+    }
     
     public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
         if (!cacheChart || chart == null || chart.getGrammar() != grammar) {

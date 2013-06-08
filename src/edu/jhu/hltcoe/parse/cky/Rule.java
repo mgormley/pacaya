@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky;
 
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.util.Alphabet;
 
 /**
@@ -20,11 +21,11 @@ public class Rule {
     // TODO: Subclass: LogProb rule should have this: private double logProb;
     // TODO: Separate subclass should compute based on features of the sentence.
     
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private Alphabet<Label> lexAlphabet;
+    private Alphabet<Label> ntAlphabet;
 
-    public Rule(int parent, int leftChild, int rightChild, double score, Alphabet<String> ntAlphabet,
-            Alphabet<String> lexAlphabet) {
+    public Rule(int parent, int leftChild, int rightChild, double score, Alphabet<Label> ntAlphabet,
+            Alphabet<Label> lexAlphabet) {
         this.parent = parent;
         this.leftChild = leftChild;
         this.rightChild = rightChild;
@@ -61,11 +62,11 @@ public class Rule {
         return rightChild;
     }
     
-    public String getParentStr() {
+    public Label getParentLabel() {
         return ntAlphabet.lookupObject(parent);
     }
 
-    public String getLeftChildStr() {
+    public Label getLeftChildLabel() {
         if (isLexical()) {
             return lexAlphabet.lookupObject(leftChild);
         } else {
@@ -73,12 +74,28 @@ public class Rule {
         }        
     }
 
-    public String getRightChildStr() {
+    public Label getRightChildLabel() {
         if (rightChild < 0) {
             return null;
         } else {
             return ntAlphabet.lookupObject(rightChild);
         }        
+    }
+    
+    private String getParentStr() {
+        return getParentLabel().getLabel();
+    }
+
+    private String getLeftChildStr() {
+        return getLeftChildLabel().getLabel();
+    }
+
+    private String getRightChildStr() {
+        if (rightChild < 0) {
+            return null;
+        } else {
+            return getRightChildLabel().getLabel();
+        }
     }
     
     @Override

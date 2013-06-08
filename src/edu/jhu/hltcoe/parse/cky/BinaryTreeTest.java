@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.io.StringReader;
 
-import org.junit.Assert;
 import org.junit.Test;
 
+import edu.jhu.hltcoe.data.Label;
 import edu.jhu.hltcoe.util.Alphabet;
 
 public class BinaryTreeTest {
@@ -22,7 +22,7 @@ public class BinaryTreeTest {
                             "(NP-TMP (NNP Nov.) (CD 29) ))))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        Alphabet<Label> alphabet = new Alphabet<Label>();
         BinaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader).leftBinarize(alphabet);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -55,7 +55,7 @@ public class BinaryTreeTest {
         
         // First just build (and check) the binary tree.
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<String> alphabet = new Alphabet<String>();
+        Alphabet<Label> alphabet = new Alphabet<Label>();
         NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
         BinaryTree binaryTree = naryTree.leftBinarize(alphabet);

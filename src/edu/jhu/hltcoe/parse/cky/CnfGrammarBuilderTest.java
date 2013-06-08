@@ -1,10 +1,12 @@
 package edu.jhu.hltcoe.parse.cky;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
 import org.junit.Test;
+
+import edu.jhu.hltcoe.data.Tag;
 
 public class CnfGrammarBuilderTest {
 
@@ -26,8 +28,8 @@ public class CnfGrammarBuilderTest {
         assertEquals(
                 1,
                 grammar.getBinaryRulesWithChildren(
-                        grammar.getNtAlphabet().lookupIndex("NP"),
-                        grammar.getNtAlphabet().lookupIndex("VP")).length);
+                        grammar.getNtAlphabet().lookupIndex(new Tag("NP")),
+                        grammar.getNtAlphabet().lookupIndex(new Tag("VP"))).length);
     }
 
 }

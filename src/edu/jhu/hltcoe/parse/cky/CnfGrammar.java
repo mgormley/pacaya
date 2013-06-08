@@ -1,11 +1,10 @@
 package edu.jhu.hltcoe.parse.cky;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Utilities;
 
 /**
  * Grammar in Chomsky normal form.
@@ -29,11 +28,11 @@ public class CnfGrammar {
     private Rule[][] brwlc;
     private Rule[][] brwrc;
     
-    private Alphabet<String> lexAlphabet;
-    private Alphabet<String> ntAlphabet;
+    private Alphabet<Label> lexAlphabet;
+    private Alphabet<Label> ntAlphabet;
     
     @SuppressWarnings("unchecked")
-    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet) {
+    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet) {
         this.rootSymbol = rootSymbol;
         this.lexAlphabet = lexAlphabet;
         this.ntAlphabet = ntAlphabet;
@@ -116,11 +115,11 @@ public class CnfGrammar {
         return brwrc[rightChildNt];
     }
     
-    public Alphabet<String> getLexAlphabet() {
+    public Alphabet<Label> getLexAlphabet() {
         return lexAlphabet;
     }
 
-    public Alphabet<String> getNtAlphabet() {
+    public Alphabet<Label> getNtAlphabet() {
         return ntAlphabet;
     }
 
@@ -151,7 +150,7 @@ public class CnfGrammar {
         return rootSymbol;
     }
 
-    public boolean isUnknownWord(String word) {
+    public boolean isUnknownWord(Word word) {
         if (lexAlphabet.lookupIndex(word) < 0) {
             return true;
         }

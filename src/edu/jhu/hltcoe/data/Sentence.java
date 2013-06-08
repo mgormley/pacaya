@@ -8,7 +8,9 @@ import edu.jhu.hltcoe.util.Alphabet;
 import gnu.trove.TIntArrayList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 
 
 public class Sentence implements Iterable<Label> {
@@ -47,9 +49,28 @@ public class Sentence implements Iterable<Label> {
         }
     }
 
+    public Sentence(Alphabet<Label> alphabet, ArrayList<Label> labels) {
+        this(alphabet);
+        for (Label l : labels) {
+            add(l);
+        }
+    }
+    
+    public Sentence(Alphabet<Label> alphabet, int[] labelIds) {
+        this(alphabet);
+        for (int labelId : labelIds) {
+            add(labelId);
+        }
+    }
+    
     protected boolean add(Label label) {
         labelIds.add(alphabet.lookupIndex(label));
         return labels.add(label);
+    }
+    
+    protected boolean add(int labelId) {
+        labelIds.add(labelId);
+        return labels.add(alphabet.lookupObject(labelId));
     }
     
     public Label get(int i) {
@@ -71,6 +92,10 @@ public class Sentence implements Iterable<Label> {
 
     public Alphabet<Label> getAlphabet() {
         return alphabet;
+    }
+    
+    public List<Label> getLabels() {
+        return Collections.unmodifiableList(labels);
     }
     
     @Override

@@ -6,6 +6,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.SentenceCollection;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
@@ -82,15 +84,15 @@ public class CkyPcfgParserTest {
     }
     
     // TODO: we should parse with each method and check that we get the same solution.
-    public static Pair<BinaryTree, Double> parseSentence(String sentence, CnfGrammar grammar) {
-        String[] tokens = sentence.split(" ");
-        int[] sent = grammar.getLexAlphabet().lookupIndices(tokens);
-        System.out.println(Arrays.toString(sent));
+    public static Pair<BinaryTree, Double> parseSentence(String sentStr, CnfGrammar grammar) {
+        SentenceCollection sentences = new SentenceCollection(grammar.getLexAlphabet());
+        sentences.addSentenceFromString(sentStr);
+        Sentence sentence = sentences.get(0);
         CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
         prm.loopOrder = LoopOrder.LEFT_CHILD;
         prm.cellType = ChartCellType.FULL;
         prm.cacheChart = true;
-        Chart chart = new CkyPcfgParser(prm).parseSentence(sent, grammar);
+        Chart chart = new CkyPcfgParser(prm).parseSentence(sentence, grammar);
         return chart.getViterbiParse();
     }
 }
