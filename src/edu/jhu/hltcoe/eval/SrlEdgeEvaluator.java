@@ -54,13 +54,11 @@ public class SrlEdgeEvaluator implements Evaluator {
             // Get a mapping from argument positions to SrlArg objects.
             CoNLL09DepTree conll09Tree = (CoNLL09DepTree) goldTreebank.get(i);
             SrlGraph srlGraph = conll09Tree.getCoNLL09Sentence().getSrlGraph();
-            Map<Integer,SrlArg> posArgMap = srlGraph.getPositionArgMap();
             
             // For each word labeled as a semantic argument...
-            for (Entry<Integer,SrlArg> pair : posArgMap.entrySet()) {
-                // Get the next child.
-                int argPosition = pair.getKey();
-                SrlArg arg = pair.getValue();
+            for (SrlArg arg : srlGraph.getArgs()) {
+                // Get the child's position.
+                int argPosition = arg.getPosition();
 
                 // Check whether the predicted parent agrees with one of the
                 // predicates for this argument.
