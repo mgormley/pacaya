@@ -9,19 +9,9 @@ import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntArrayList;
 
 /**
- * This class optionally breaks ties using a cached random number (jitter).
- * 
- * Cell that stores every possible entry explicitly. This is suitable for
- * grammars with a very small number of non-terminals (e.g. the DMV), where Hash
- * lookups would slow down the parsing.
- * 
- * The key speedup here is avoiding any hasing whatsoever. The nonterminals set
- * is not represented as a HashSet but instead as an IntArrayList where we use
- * the presence of a null in bps[nt] to indicate that a nonterminal with id nt
- * is not in the set.
- * 
- * In addition we "close" the cell after processing it, so that future calls to
- * getNts() will used a cached array of ints.
+ * This class is identical to <code>FullChartCell</code> except that it adds the
+ * option of breaking ties using a cached random number (jitter) for each
+ * nonterminal type.
  * 
  * @author mgormley
  * 

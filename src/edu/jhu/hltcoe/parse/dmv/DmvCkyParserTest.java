@@ -4,11 +4,16 @@ import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_B;
 import static edu.jhu.hltcoe.parse.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import cern.colt.Arrays;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.DepTreebank;
 import edu.jhu.hltcoe.data.Label;
@@ -23,6 +28,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Alphabet;
@@ -173,6 +179,72 @@ public class DmvCkyParserTest {
         Assert.assertEquals(0.511, eval.evaluate(parses), 1e-3);
     }
 
+    @Test
+    public void testTieBreakingOnUniformModel() {
+        Prng.seed(System.currentTimeMillis());
+        
+        SentenceCollection sentences = new SentenceCollection();
+        //sentences.addSentenceFromString("the cat ate the hat with the mouse");
+        sentences.addSentenceFromString("the cat ate");
+        DmvModelFactory modelFactory = new UniformDmvModelFactory();
+        DmvModel model = modelFactory.getInstance(sentences.getLabelAlphabet());
+        
+        // Compute the expected log-likelihood as follows:
+        //
+        // 0.5^(n*2 stops, n-1 continues) * (1/3)^(n arcs)
+        //
+        // Note: we have n-1 continues since the root always only generates a single child.
+        int n = sentences.get(0).size();
+        int m = model.root.length;
+        double expectedParseWeight = Utilities.log(Math.pow(0.5, n * 2 + n-1) * Math.pow(1./m, n));
+
+        System.out.println("Expected log likelihood: " + expectedParseWeight);
+        
+        // Parse num restarts times and print out the results.
+        int numRestarts = 1000;
+        Map<ParentsArray,Integer> counter = new HashMap<ParentsArray,Integer>();
+        for (int i=0; i<numRestarts; i++) {
+            DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
+            ParentsArray pa = new ParentsArray(dpTrees.get(0).getParents());
+            System.out.println(Arrays.toString(pa.parents));
+            Utilities.increment(counter, pa, 1);
+        }
+        for (ParentsArray pa : counter.keySet()) {
+            System.out.printf("%5d %s\n", counter.get(pa), pa);
+        }
+    }
+    
+    public static class ParentsArray {
+        private int[] parents;
+        public ParentsArray(int[] parents) {
+            if (parents == null) {
+                throw new IllegalStateException();
+            }
+            this.parents = parents;
+        }
+        @Override
+        public int hashCode() {
+            return java.util.Arrays.hashCode(parents);
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            ParentsArray other = (ParentsArray) obj;
+            if (!java.util.Arrays.equals(parents, other.parents))
+                return false;
+            return true;
+        }
+        @Override
+        public String toString() {
+            return "PA: " + Arrays.toString(parents);
+        }
+    }
+    
     public static DmvTrainCorpus getDefaultSemiSupervisedSyntheticCorpus(DmvModel dmvModel) {
         return getSemiSupervisedSyntheticCorpus(dmvModel, 0.9);
     }

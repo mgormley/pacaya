@@ -208,5 +208,5 @@ public class DmvCkyParser implements DepParser {
             return head;
         }
     }
-        
+
 }
