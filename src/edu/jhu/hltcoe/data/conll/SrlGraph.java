@@ -1,7 +1,9 @@
 package edu.jhu.hltcoe.data.conll;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A graph representing SRL annotations on a sentence.
@@ -41,7 +43,7 @@ public class SrlGraph {
      * @author mgormley
      *
      */
-    static class SrlArg extends SrlNode {
+    public static class SrlArg extends SrlNode {
 
         public SrlArg(int position) {
             super(position);
@@ -175,6 +177,17 @@ public class SrlGraph {
     public String toString() {
         return "SrlGraph [preds=" + preds + ", args=" + args + ", edges="
                 + edges + "]";
-    }    
+    }
+
+    /**
+     * Creates a new mapping of argument positions to arguments.
+     */
+    public Map<Integer, SrlArg> getPositionArgMap() {
+        HashMap<Integer, SrlArg> map = new HashMap<Integer, SrlArg>();
+        for (SrlArg arg : args) {
+            map.put(arg.getPosition(), arg);
+        }
+        return map;        
+    }
     
 }

@@ -24,6 +24,7 @@ import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
 import edu.jhu.hltcoe.data.conll.CoNLLXWriter;
 import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
 import edu.jhu.hltcoe.eval.Evaluator;
+import edu.jhu.hltcoe.eval.SrlEdgeEvaluator;
 import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
@@ -206,25 +207,35 @@ public class PipelineRunner {
         }
     }
     
-    private void evalAndWrite(DmvModel model, DepTreebank trainTreebank, String datasetName, File trainOut, DatasetType trainType) throws IOException {
+    private void evalAndWrite(DmvModel model, DepTreebank goldTreebank, String datasetName, File trainOut, DatasetType trainType) throws IOException {
+        // TODO: This does not correctly evaluate semi-supervised datasets and instead treats them as entirely unsupervised. 
+        
         // Evaluation.
         // Note: this parser must return the log-likelihood from parser.getParseWeight()
         DepParser parser = TrainerFactory.getEvalParser();
-                    
+
         log.info("Evaluating model on " + datasetName);
-        Evaluator trainEval = new DependencyParserEvaluator(parser, trainTreebank, datasetName);
-        trainEval.evaluate(model);
-        trainEval.print();
+        // Evaluate syntactic dependency accuracy.
+        Evaluator synDepEval = new DependencyParserEvaluator(parser, goldTreebank, datasetName);
+        synDepEval.evaluate(model);
+        synDepEval.print();
+        
+        if (trainType == DatasetType.CONLL_2009) {
+            // Evaluate proportion of syntactic dependencies that agree with the semantic dependencies.
+            SrlEdgeEvaluator semDepEval = new SrlEdgeEvaluator(parser, goldTreebank, datasetName);            
+            semDepEval.evaluate(synDepEval.getParses());
+            semDepEval.print();
+        }
         
         // Write parses to a file.
         if (trainOut != null) {
-            DepTreebank trainParses = trainEval.getParses();
+            DepTreebank parses = synDepEval.getParses();
             // Write the parses of the training data out to a file.
             if (trainType == DatasetType.CONLL_X) {
                 CoNLLXWriter cw = new CoNLLXWriter(trainOut);
-                for (int i=0; i<trainParses.size(); i++) {
-                    DepTree parse = trainParses.get(i);
-                    DepTree goldTree = trainTreebank.get(i);
+                for (int i=0; i<parses.size(); i++) {
+                    DepTree parse = parses.get(i);
+                    DepTree goldTree = goldTreebank.get(i);
                     // Make a copy of the original CoNLL-X sentence.
                     CoNLLXSentence sent = ((CoNLLXDepTree)goldTree).getCoNLLXSentence();
                     sent = new CoNLLXSentence(sent);
@@ -236,9 +247,9 @@ public class PipelineRunner {
                 cw.close();
             } else if (trainType == DatasetType.CONLL_2009) {
                 CoNLL09Writer cw = new CoNLL09Writer(trainOut);
-                for (int i=0; i<trainParses.size(); i++) {
-                    DepTree parse = trainParses.get(i);
-                    DepTree goldTree = trainTreebank.get(i);
+                for (int i=0; i<parses.size(); i++) {
+                    DepTree parse = parses.get(i);
+                    DepTree goldTree = goldTreebank.get(i);
                     // Make a copy of the original CoNLL-09 sentence.
                     CoNLL09Sentence sent = ((CoNLL09DepTree)goldTree).getCoNLL09Sentence();
                     sent = new CoNLL09Sentence(sent);
