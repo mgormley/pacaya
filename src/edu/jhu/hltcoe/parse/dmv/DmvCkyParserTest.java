@@ -201,7 +201,7 @@ public class DmvCkyParserTest {
         System.out.println("Expected log likelihood: " + expectedParseWeight);
         
         // Parse num restarts times and print out the results.
-        int numRestarts = 1000;
+        int numRestarts = 5000;
         Map<ParentsArray,Integer> counter = new HashMap<ParentsArray,Integer>();
         for (int i=0; i<numRestarts; i++) {
             DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);

@@ -112,7 +112,6 @@ public class CkyPcfgParser {
                 } else {
                     throw new RuntimeException("Not implemented: " + loopOrder);
                 }
-
                 
                 // Apply unary rules.
                 ScoresSnapshot scoresSnapshot = cell.getScoresSnapshot();

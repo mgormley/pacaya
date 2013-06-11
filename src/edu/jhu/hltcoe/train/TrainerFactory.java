@@ -514,7 +514,7 @@ public class TrainerFactory {
         if (usePredArgSupervision) {
             ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
         } else {
-            ckyPrm.cellType = ChartCellType.FULL;
+            ckyPrm.cellType = ChartCellType.FULL_BREAK_TIES;
         }
         DmvCkyParserPrm prm = new DmvCkyParserPrm();
         prm.objPrm = getDmvObjectivePrm();

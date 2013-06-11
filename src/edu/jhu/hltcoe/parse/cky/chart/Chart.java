@@ -109,9 +109,9 @@ public class Chart {
                     if (!(sentence instanceof ValidParentsSentence)) {
                         throw new IllegalStateException("Sentence must have valid parent annotations.");
                     }
-                    ChartCell cell = new FullChartCell(grammar, parseType);
+                    ChartCell cell = new FullTieBreakerChartCell(grammar, true);
                     chart[i][j] = new ConstrainedChartCell(i, j, (ValidParentsSentence)sentence, cell);
-                    break;                    
+                    break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
                 }
