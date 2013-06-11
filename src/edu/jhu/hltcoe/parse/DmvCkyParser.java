@@ -30,6 +30,15 @@ import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
 
+/**
+ * CKY parser for the Dependency Model with Valence (DMV).
+ * 
+ * This wraps a CKY PCFG parser, and creates a grammar based on the provided DMV
+ * model.
+ * 
+ * @author mgormley
+ * 
+ */
 public class DmvCkyParser implements DepParser {
 
     public static class DmvCkyParserPrm {
@@ -179,7 +188,7 @@ public class DmvCkyParser implements DepParser {
             int rightHead = getViterbiTree(bp.mid, end, bp.r.getRightChild(), chart, grammar, parents);
             
             //TODO: Remove: 
-            log.debug(String.format("lh: %d rh: %d s: %d mid: %d e: %d %s", leftHead, rightHead, start/2, bp.mid/2, end/2, bp.r.getParentLabel().getLabel()));
+            //log.debug(String.format("lh: %d rh: %d s: %d mid: %d e: %d %s", leftHead, rightHead, start/2, bp.mid/2, end/2, bp.r.getParentLabel().getLabel()));
             
             // Then determine whether the rule defines a left or right dependency.
             DmvRule dmvRule = (DmvRule)bp.r;

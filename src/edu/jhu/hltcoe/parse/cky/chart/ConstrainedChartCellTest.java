@@ -26,7 +26,6 @@ import edu.jhu.hltcoe.util.JUnitUtils;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 
-//TODO: test multiple sentences (i.e. caching)
 public class ConstrainedChartCellTest {
     
     @Before
