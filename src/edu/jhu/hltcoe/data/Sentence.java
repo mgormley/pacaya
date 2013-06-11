@@ -17,7 +17,7 @@ public class Sentence implements Iterable<Label> {
 
     private static final long serialVersionUID = 1L;
     private ArrayList<Label> labels;
-    private TIntArrayList labelIds;
+    private TIntArrayList labelIds;     // TODO: cache an int[] version of this.
     private Alphabet<Label> alphabet;
     
     protected Sentence(Alphabet<Label> alphabet) {
@@ -49,7 +49,7 @@ public class Sentence implements Iterable<Label> {
         }
     }
 
-    public Sentence(Alphabet<Label> alphabet, ArrayList<Label> labels) {
+    public Sentence(Alphabet<Label> alphabet, Iterable<Label> labels) {
         this(alphabet);
         for (Label l : labels) {
             add(l);

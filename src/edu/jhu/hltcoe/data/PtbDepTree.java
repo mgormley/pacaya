@@ -101,7 +101,7 @@ public class PtbDepTree extends DepTree {
         // Add parent/child links to DepTreeNodes
         addParentChildLinksToNodes();
         
-        this.isProjective = checkIsProjective();
+        this.isProjective = checkIsProjective(parents);
     }
 
 
@@ -178,5 +178,14 @@ public class PtbDepTree extends DepTree {
     public Tree getPtbTree() {
         return tree;
     }
-    
+
+    public static class HeadFinderException extends RuntimeException {
+
+        public HeadFinderException(String string) {
+            super(string);
+        }
+
+        private static final long serialVersionUID = 1L;
+        
+    }
 }

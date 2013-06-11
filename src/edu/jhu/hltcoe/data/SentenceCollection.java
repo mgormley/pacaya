@@ -37,8 +37,8 @@ public class SentenceCollection implements Iterable<Sentence> {
     SentenceCollection(DepTreebank treebank) {
         this(treebank.getAlphabet());
         for (DepTree tree : treebank) {
-            Sentence sentence = new Sentence(alphabet, tree);
-            add(sentence);   
+            Sentence sentence = tree.getSentence(treebank.getAlphabet());
+            add(sentence);
         }
     }
     

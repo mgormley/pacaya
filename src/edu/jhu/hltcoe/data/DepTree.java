@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.hltcoe.util.Alphabet;
+
 public class DepTree implements Iterable<DepTreeNode> {
 
     public static final int EMPTY_POSITION = -2;
@@ -80,26 +82,18 @@ public class DepTree implements Iterable<DepTreeNode> {
 
     protected void checkTree() {
         // Check that there is exactly one node with the WALL as its parent
-        int emptyCount = countChildrenOf(EMPTY_POSITION);
+        int emptyCount = countChildrenOf(parents, EMPTY_POSITION);
         if (emptyCount != 0) {
             throw new IllegalStateException("Found an empty parent cell. emptyCount=" + emptyCount);
         }
-        int wallCount = countChildrenOf(WallDepTreeNode.WALL_POSITION);
+        int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
         if (wallCount != 1) {
             throw new IllegalStateException("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
         }
         
         // Check that there are no cyles
-        for (int i=0; i<parents.length; i++) {
-            int numAncestors = 0;
-            int parent = parents[i];
-            while(parent != WallDepTreeNode.WALL_POSITION) {
-                numAncestors += 1;
-                if (numAncestors > parents.length - 1) {
-                    throw new IllegalStateException("Found cycle in parents array");
-                }
-                parent = parents[parent];
-            }
+        if (containsCycle(parents)) {
+            throw new IllegalStateException("Found cycle in parents array");
         }
 
         // Check for proper list lengths
@@ -109,13 +103,48 @@ public class DepTree implements Iterable<DepTreeNode> {
         
         // Check for projectivity if necessary
         if (isProjective) {
-            if (!checkIsProjective()) {
+            if (!checkIsProjective(parents)) {
                 throw new IllegalStateException("Found non-projective arcs in tree");
             }
         }
     }
-    
-    protected boolean checkIsProjective() {
+
+    /**
+     * Checks if a dependency tree represented as a parents array contains a cycle.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @return True if the tree specified by the parents array contains a cycle,
+     *         False otherwise.
+     */
+    public static boolean containsCycle(int[] parents) {
+        for (int i=0; i<parents.length; i++) {
+            int numAncestors = 0;
+            int parent = parents[i];
+            while(parent != WallDepTreeNode.WALL_POSITION) {
+                numAncestors += 1;
+                if (numAncestors > parents.length - 1) {
+                    return true;
+                }
+                parent = parents[parent];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks that a dependency tree represented as a parents array is projective.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @return True if the tree specified by the parents array is projective,
+     *         False otherwise.
+     */
+    public static boolean checkIsProjective(int[] parents) {
         for (int i=0; i<parents.length; i++) {
             int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
             int minI = i < pari ? i : pari;
@@ -138,7 +167,18 @@ public class DepTree implements Iterable<DepTreeNode> {
         return true;
     }
 
-    protected int countChildrenOf(int parent) {
+    /**
+     * Counts of the number of children in a dependency tree for the given
+     * parent index.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @return The number of entries in <code>parents</code> that equal
+     *         <code>parent</code>.
+     */
+    public static int countChildrenOf(int[] parents, int parent) {
         int count = 0;
         for (int i=0; i<parents.length; i++) {
             if (parents[i] == parent) {
@@ -173,14 +213,8 @@ public class DepTree implements Iterable<DepTreeNode> {
         return parents.length;
     }
 
-    public static class HeadFinderException extends RuntimeException {
-
-        public HeadFinderException(String string) {
-            super(string);
-        }
-
-        private static final long serialVersionUID = 1L;
-        
+    public Sentence getSentence(Alphabet<Label> alphabet) {
+        return new Sentence(alphabet, this);
     }
     
 }
