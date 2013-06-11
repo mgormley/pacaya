@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree.HeadFinderException;
+import edu.jhu.hltcoe.data.PtbDepTree.HeadFinderException;
 import edu.jhu.hltcoe.data.conll.CoNLL09DepTree;
 import edu.jhu.hltcoe.data.conll.CoNLL09FileReader;
 import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
@@ -92,19 +92,15 @@ public class DepTreebank implements Iterable<DepTree> {
     public void loadCoNLLXPath(String trainPath) {
         CoNLLXDirReader reader = new CoNLLXDirReader(trainPath);
         for (CoNLLXSentence sent : reader) {
-            try {
-                if (this.size() >= maxNumSentences) {
-                    break;
+            if (this.size() >= maxNumSentences) {
+                break;
+            }
+            DepTree tree = new CoNLLXDepTree(sent, alphabet);
+            int len = tree.getNumTokens();
+            if (len <= maxSentenceLength) {
+                if (filter == null || filter.accept(tree)) {
+                    this.add(tree);
                 }
-                DepTree tree = new CoNLLXDepTree(sent, alphabet);
-                int len = tree.getNumTokens();
-                if (len <= maxSentenceLength) {
-                    if (filter == null || filter.accept(tree)) {
-                        this.add(tree);
-                    }
-                }
-            } catch (HeadFinderException e) {
-                log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
             }
         }
     }
@@ -112,19 +108,15 @@ public class DepTreebank implements Iterable<DepTree> {
     public void loadCoNLL09Path(String trainPath) throws IOException {
         CoNLL09FileReader reader = new CoNLL09FileReader(new File(trainPath));
         for (CoNLL09Sentence sent : reader) {
-            try {
-                if (this.size() >= maxNumSentences) {
-                    break;
+            if (this.size() >= maxNumSentences) {
+                break;
+            }
+            DepTree tree = new CoNLL09DepTree(sent, alphabet);
+            int len = tree.getNumTokens();
+            if (len <= maxSentenceLength) {
+                if (filter == null || filter.accept(tree)) {
+                    this.add(tree);
                 }
-                DepTree tree = new CoNLL09DepTree(sent, alphabet);
-                int len = tree.getNumTokens();
-                if (len <= maxSentenceLength) {
-                    if (filter == null || filter.accept(tree)) {
-                        this.add(tree);
-                    }
-                }
-            } catch (HeadFinderException e) {
-                log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
             }
         }
     }
