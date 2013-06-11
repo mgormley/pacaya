@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.hltcoe.parse.dmv;
 
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_B;
@@ -23,6 +23,7 @@ import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.hltcoe.parse.IlpFormulation;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Prng;

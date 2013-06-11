@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.hltcoe.parse.dmv;
 
 import java.util.ArrayList;
 
@@ -8,7 +8,9 @@ import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.Tag;
 import edu.jhu.hltcoe.data.Word;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
+import edu.jhu.hltcoe.parse.cky.CnfGrammar;
+import edu.jhu.hltcoe.parse.cky.Rule;
+import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.Utilities;
 

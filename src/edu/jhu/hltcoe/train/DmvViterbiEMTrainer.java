@@ -9,8 +9,8 @@ import edu.jhu.hltcoe.model.ModelFactory;
 import edu.jhu.hltcoe.model.dmv.DmvMStep;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.DmvCkyParser;
 import edu.jhu.hltcoe.parse.DepParser;
+import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
 import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
 import edu.jhu.hltcoe.util.Pair;
 

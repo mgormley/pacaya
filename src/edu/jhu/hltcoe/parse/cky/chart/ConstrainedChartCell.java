@@ -5,11 +5,11 @@ import java.util.Arrays;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
-import edu.jhu.hltcoe.parse.cky.DmvRule;
-import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
+import edu.jhu.hltcoe.parse.dmv.DmvRule;
+import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.util.Utilities;
 import gnu.trove.TIntArrayList;
 

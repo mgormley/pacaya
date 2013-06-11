@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.hltcoe.parse.dmv;
 
 
 import java.util.Arrays;
@@ -16,16 +16,15 @@ import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.hltcoe.model.Model;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.hltcoe.parse.cky.DmvCnfGrammar;
-import edu.jhu.hltcoe.parse.cky.DmvRule;
-import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
+import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.train.DmvTrainCorpus;
 import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Timer;
