@@ -60,6 +60,7 @@ import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
 import edu.jhu.hltcoe.parse.DeltaGenerator;
 import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.hltcoe.parse.FactorDeltaGenerator;
 import edu.jhu.hltcoe.parse.FixedIntervalDeltaGenerator;
 import edu.jhu.hltcoe.parse.IlpFormulation;
@@ -68,6 +69,10 @@ import edu.jhu.hltcoe.parse.IlpDepParserWithDeltas;
 import edu.jhu.hltcoe.parse.IlpDepSentenceParser;
 import edu.jhu.hltcoe.parse.InitializedIlpDepParserWithDeltas;
 import edu.jhu.hltcoe.parse.DepParser;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
+import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
@@ -252,10 +257,6 @@ public class TrainerFactory {
     @Opt(hasArg = true, description = "The type of constraint conversion.")
     public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
         
-    public static DepParser getEvalParser() {
-        return new DmvCkyParser(getDmvObjectivePrm());
-    }
-    
     public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
         CplexPrm cplexPrm = getCplexPrm();
 
@@ -499,6 +500,28 @@ public class TrainerFactory {
         return trainer;
     }
 
+    public static DepParser getEvalParser() {
+        // The "false" below indicates that we should NOT use pred/arg supervision.
+        DmvCkyParserPrm prm = getDmvCkyParserPrm(false);
+        return new DmvCkyParser(prm);
+    }
+
+    private static DmvCkyParserPrm getDmvCkyParserPrm(boolean usePredArgSupervision) {
+        CkyPcfgParserPrm ckyPrm = new CkyPcfgParserPrm();
+        ckyPrm.loopOrder = LoopOrder.LEFT_CHILD;
+        ckyPrm.parseType = ParseType.VITERBI;
+        ckyPrm.cacheChart = true;
+        if (usePredArgSupervision) {
+            ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
+        } else {
+            ckyPrm.cellType = ChartCellType.FULL;
+        }
+        DmvCkyParserPrm prm = new DmvCkyParserPrm();
+        prm.objPrm = getDmvObjectivePrm();
+        prm.ckyPrm = ckyPrm;
+        return prm;
+    }
+    
     private static DepParser getParser() throws ParseException {
         DepParser parser;
         IlpSolverFactory ilpSolverFactory = null;
@@ -511,11 +534,8 @@ public class TrainerFactory {
         }
 
         if (parserName.equals("cky")) {
-            if (!usePredArgSupervision) {
-                parser = new DmvCkyParser(getDmvObjectivePrm());
-            } else {
-                parser = null; //TODO: new PredArgDmvCkyParser();
-            }
+            DmvCkyParserPrm prm = getDmvCkyParserPrm(usePredArgSupervision);
+            parser = new DmvCkyParser(prm);
         } else if (parserName.equals("relaxed")) {
             LpDmvRelaxedParserPrm lpParsePrm = new LpDmvRelaxedParserPrm();
             lpParsePrm.cplexPrm = getCplexPrm();

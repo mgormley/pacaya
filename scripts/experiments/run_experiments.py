@@ -413,13 +413,20 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             setup.update(maxNumSentences=100000000, maxSentenceLengthTest=1000)
             setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
             setup.set("lambda", 1)
+            exps = []
             for maxSentenceLength in [10, 20, 1000]:
+                if maxSentenceLength == 1000:
+                    setup.update(timeoutSeconds=48*60*60)
                 setup.update(maxSentenceLength=maxSentenceLength)
                 for dataset in [conll09_sp_dev, conll09_sp_test, conll09_sp_train]:
-                    # Set the seed explicitly.
-                    experiment = all + setup + dataset 
-                    #root.add_dependent(experiment + universalPostCons + DPExpParams(parser="relaxed"))
-                    root.add_dependent(experiment)
+                    for usePredArgSupervision in [True, False]:
+                        # Set the seed explicitly.
+                        exp = all + setup + dataset + DPExpParams(usePredArgSupervision=usePredArgSupervision)
+                        #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
+                        exps.append(exp)
+            # Drop all but 3 experiments for a fast run.
+            if self.fast: exps = exps[:4]
+            root.add_dependents(exps)
             scrape = ScrapeExpout(tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)

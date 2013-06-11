@@ -18,9 +18,8 @@ import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
 import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.cky.BinaryTree;
-import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser;
-import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser.DmvCkyPcfgParserPrm;
+import edu.jhu.hltcoe.parse.DmvCkyParser;
+import edu.jhu.hltcoe.parse.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.util.Alphabet;
 import edu.jhu.hltcoe.util.JUnitUtils;
@@ -28,7 +27,7 @@ import edu.jhu.hltcoe.util.Pair;
 import edu.jhu.hltcoe.util.Prng;
 
 //TODO: test multiple sentences (i.e. caching)
-public class ConstrainedFullChartCellTest {
+public class ConstrainedChartCellTest {
     
     @Before
     public void setUp() {
@@ -122,6 +121,30 @@ public class ConstrainedFullChartCellTest {
     }
 
 
+    @Test
+    public void testCachedChart() throws IOException {
+        Alphabet<Label> alphabet = new Alphabet<Label>();        
+        ValidParentsSentence sentence = getSimpleConstrainedSentence(alphabet);
+        System.out.println(sentence);
+
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(0.1);
+        DmvModel dmv = modelFactory.getInstance(alphabet);
+        
+
+        DmvCkyParserPrm prm = new DmvCkyParserPrm();
+        prm.ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
+        prm.ckyPrm.cacheChart = true;
+        DmvCkyParser parser = new DmvCkyParser(prm);
+
+        DepTree tree;
+
+        tree = parser.parse(sentence, dmv).get1();
+        JUnitUtils.assertArrayEquals(new int[]{ -1,  0, 0, 2, 2 }, tree.getParents());
+        
+        tree = parser.parse(sentence, dmv).get1();
+        JUnitUtils.assertArrayEquals(new int[]{ -1,  0, 0, 2, 2 }, tree.getParents());
+    }
+
     public static CoNLL09Token getTok(String form, String fillpredPredApreds) {
         // Columns: ID FORM LEMMA PLEMMA POS PPOS FEAT PFEAT HEAD PHEAD DEPREL PDEPREL
         // FILLPRED PRED APREDs
@@ -130,9 +153,9 @@ public class ConstrainedFullChartCellTest {
     
     // TODO: we should parse with each method and check that we get the same solution.
     public static Pair<DepTree, Double> parseSentence(Sentence sentence, DmvModel dmv) {
-        DmvCkyPcfgParserPrm prm = new DmvCkyPcfgParserPrm();
+        DmvCkyParserPrm prm = new DmvCkyParserPrm();
         prm.ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
-        prm.ckyPrm.cacheChart = true;
-        return new DmvCkyPcfgParser(prm).parse(sentence, dmv);
+        prm.ckyPrm.cacheChart = false;
+        return new DmvCkyParser(prm).parse(sentence, dmv);
     }
 }
