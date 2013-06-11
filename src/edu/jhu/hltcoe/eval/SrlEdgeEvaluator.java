@@ -80,7 +80,7 @@ public class SrlEdgeEvaluator implements Evaluator {
     
     @Override
     public void print() {
-        log.info(String.format("Proportion args that agree with pred %s: %.4f", dataName, accuracy));
+        log.info(String.format("Proportion semantically valid deps on %s: %.4f", dataName, accuracy));
     }
 
     @Override
