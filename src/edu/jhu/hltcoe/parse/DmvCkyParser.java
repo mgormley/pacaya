@@ -99,6 +99,8 @@ public class DmvCkyParser implements DepParser {
                 treebank.add(pair.get1());
             }
         }
+        log.debug("Average seconds per sentence: " + timer.avgSec());
+
         parseWeight = dmvObj.computeTrueObjective((DmvModel)model, treebank);
         return treebank;
     }
@@ -113,7 +115,6 @@ public class DmvCkyParser implements DepParser {
         timer.start();
         Pair<DepTree,Double> pair = parse2(sentence, dmv);
         timer.stop();
-        log.debug("Average seconds per sentence: " + timer.avgSec());
         return pair;
     }
     
