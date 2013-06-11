@@ -2,6 +2,7 @@ package edu.jhu.hltcoe.parse.cky.chart;
 
 import java.util.Arrays;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
@@ -69,7 +70,7 @@ public class FullChartCell implements ChartCell {
         }
     }
 
-    public void reset() {
+    public void reset(Sentence sentence) {
         Arrays.fill(scores, Double.NEGATIVE_INFINITY);
         Arrays.fill(bps, null);
         nts.clear();

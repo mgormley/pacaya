@@ -1,5 +1,7 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.parse.cky.BinaryTree;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
@@ -40,39 +42,39 @@ public class Chart {
         }
     }
 
-    public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES };
+    public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES, CONSTRAINED_FULL };
     public enum ParseType { VITERBI, INSIDE };
     
     private final ChartCellType cellType;
     private final CnfGrammar grammar;
     
     private ChartCell[][] chart;
-    private int[] sent;
+    private Sentence sentence;
     private ParseType parseType;
 
-    public Chart(int[] sent, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
+    public Chart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
         this.cellType = cellType;
         this.parseType = parseType;
-        this.sent = sent;
+        this.sentence = sentence;
         this.grammar = grammar;
-        this.chart = getNewChart(sent, grammar, cellType, parseType);
+        this.chart = getNewChart(sentence, grammar, cellType, parseType);
     }
     
     /**
      * Resets the chart for the input sentence.
      */
-    public void reset(int[] sent) {
-        this.sent = sent;
+    public void reset(Sentence sentence) {
+        this.sentence = sentence;
         // Ensure that the chart is large enough.
-        if (sent.length > chart.length){
-            chart = getNewChart(sent, grammar, cellType, parseType);
+        if (sentence.size() > chart.length){
+            chart = getNewChart(sentence, grammar, cellType, parseType);
         } else {
             // Clear the chart.
             //
             // Note that we only need to clear the portion that will be used while parsing this sentence.
-            for (int i = 0; i < sent.length; i++) {
-                for (int j = i+1; j < sent.length + 1; j++) {
-                    chart[i][j].reset();
+            for (int i = 0; i < sentence.size(); i++) {
+                for (int j = i+1; j < sentence.size() + 1; j++) {
+                    chart[i][j].reset(sentence);
                 }
             }
         }
@@ -82,8 +84,8 @@ public class Chart {
      * Gets a new chart of the appropriate size for the sentence, specific to
      * this grammar, and with cells of the specified type.
      */
-    private static ChartCell[][] getNewChart(int[] sent, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
-        ChartCell[][] chart = new ChartCell[sent.length][sent.length+1];
+    private static ChartCell[][] getNewChart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
+        ChartCell[][] chart = new ChartCell[sentence.size()][sentence.size()+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
                 if (parseType == ParseType.INSIDE && cellType != ChartCellType.FULL) {
@@ -102,6 +104,13 @@ public class Chart {
                 case FULL_BREAK_TIES:
                     chart[i][j] = new FullTieBreakerChartCell(grammar, true);
                     break;
+                case CONSTRAINED_FULL:
+                    // TODO: This only works for DMV parsing. Add a check.
+                    if (!(sentence instanceof ValidParentsSentence)) {
+                        throw new IllegalStateException("Sentence must have valid parent annotations.");
+                    }
+                    chart[i][j] = new ConstrainedFullChartCell(i, j, (ValidParentsSentence)sentence, grammar, parseType);
+                    break;                    
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
                 }
@@ -111,8 +120,8 @@ public class Chart {
     }
 
     public Pair<BinaryTree,Double> getViterbiParse() {
-        BinaryTree root = getViterbiTree(0, sent.length, grammar.getRootSymbol());
-        double rootScore = chart[0][sent.length].getScore(grammar.getRootSymbol());
+        BinaryTree root = getViterbiTree(0, sentence.size(), grammar.getRootSymbol());
+        double rootScore = chart[0][sentence.size()].getScore(grammar.getRootSymbol());
         return new Pair<BinaryTree, Double>(root, rootScore);
     }
     

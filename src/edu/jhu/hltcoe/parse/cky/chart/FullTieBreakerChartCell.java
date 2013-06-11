@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
@@ -57,7 +58,7 @@ public class FullTieBreakerChartCell implements ChartCell {
         maxHasJit = new boolean[grammar.getNumNonTerminals()];
     }
     
-    public void reset() {
+    public void reset(Sentence sentence) {
         Utilities.fill(maxScores, Double.NEGATIVE_INFINITY);
         Utilities.fill(bps, null);
         nts.clear();

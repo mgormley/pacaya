@@ -2,6 +2,8 @@ package edu.jhu.hltcoe.parse.cky.chart;
 
 import java.util.Arrays;
 
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.DmvRule;
 import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
@@ -57,13 +59,14 @@ public final class ConstrainedFullChartCell implements ChartCell {
     private final int start;
     /** The end the span dominated by this chart cell. */
     private final int end;
-    /** Indicates whether a parent/child arc is valid. Indexed by child position, parent position. */
-    private boolean[][] validParent;
+    /** Sentence which also indicates whether a parent/child arc is valid. */
+    private ValidParentsSentence sent;
     
-    public ConstrainedFullChartCell(int start, int end, boolean[][] validParent, CnfGrammar grammar, ParseType parseType) {
+    public ConstrainedFullChartCell(int start, int end, ValidParentsSentence sentence,
+            CnfGrammar grammar, ParseType parseType) {
         this.start = start;
         this.end = end;
-        this.validParent = validParent;
+        this.sent = sentence;
         scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new TIntArrayList();
@@ -80,7 +83,7 @@ public final class ConstrainedFullChartCell implements ChartCell {
         }
     }
 
-    public void reset() {
+    public void reset(Sentence sentence) {
 //        Arrays.fill(scores, Double.NEGATIVE_INFINITY);
 //        Arrays.fill(bps, null);
 //        nts.clear();
@@ -101,11 +104,16 @@ public final class ConstrainedFullChartCell implements ChartCell {
             int head = isLeftHead ? leftHead : rightHead;
             int child = isLeftHead ? rightHead : leftHead;
             
-            if (validParent[child] != null && validParent[child].length > 0) {
-                // Check that the constraints allow this arc.
-                if (!validParent[child][head]) {
-                    return;
-                }
+            // Check that the constraints allow this arc.
+            if (!sent.isValid(child, head)) {
+                return;
+            }
+        } else if (dmvRule.getType() == DmvRuleType.ROOT) {
+            int head = -1;
+            int child = mid / 2;
+            // Check that the constraints allow this arc.
+            if (!sent.isValid(child, head)) {
+                return;
             }
         }
         

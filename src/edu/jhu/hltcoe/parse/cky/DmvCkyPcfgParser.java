@@ -7,19 +7,31 @@ import org.apache.log4j.Logger;
 import edu.jhu.hltcoe.data.DepTree;
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.model.dmv.DmvModel;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.DmvRule.DmvRuleType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart;
-import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
 import edu.jhu.hltcoe.util.Pair;
 
 public class DmvCkyPcfgParser {
 
+    public static class DmvCkyPcfgParserPrm {
+        public static CkyPcfgParserPrm ckyPrm = new CkyPcfgParserPrm();
+        public DmvCkyPcfgParserPrm() {
+            ckyPrm.loopOrder = LoopOrder.LEFT_CHILD;
+            ckyPrm.cellType = ChartCellType.FULL_BREAK_TIES;
+            ckyPrm.cacheChart = true;
+        }
+    }
+    
     private static final Logger log = Logger.getLogger(DmvCkyPcfgParser.class);
+    
+    private DmvCkyPcfgParserPrm prm;
     
     // Cached for efficiency.
     private DmvCnfGrammar grammar;
@@ -27,11 +39,12 @@ public class DmvCkyPcfgParser {
     private CkyPcfgParser parser;
     
     public DmvCkyPcfgParser() {
-        CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
-        prm.loopOrder = LoopOrder.LEFT_CHILD;
-        prm.cellType = ChartCellType.FULL_BREAK_TIES;
-        prm.cacheChart = true;
-        parser = new CkyPcfgParser(prm);
+        this(new DmvCkyPcfgParserPrm());
+    }
+    
+    public DmvCkyPcfgParser(DmvCkyPcfgParserPrm prm) {
+        this.prm = prm;
+        parser = new CkyPcfgParser(prm.ckyPrm);
     }
     
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
@@ -41,11 +54,21 @@ public class DmvCkyPcfgParser {
         } else {
             this.grammar.updateLogProbs(dmv);
         }
-                
-        int[] sent = grammar.getSent(sentence);
-        Chart chart = parser.parseSentence(sent, grammar.getCnfGrammar());
+
+        // Get an annotated version of the sentence (twice as long as the
+        // original sentence), where each word has two copies of itself with a
+        // Left and Right subscript.
+        int[] annoSent = grammar.getAnnotatedSent(sentence);
+        Sentence annoSentence = new Sentence(grammar.getCnfGrammar().getLexAlphabet(), annoSent);
+        if (sentence instanceof ValidParentsSentence) {
+            // Add the Valid Parent annotations to the annotated sentence.
+            boolean[] vr = ((ValidParentsSentence) sentence).getValidRoot();
+            boolean[][] vps = ((ValidParentsSentence) sentence).getValidParents();
+            annoSentence = new ValidParentsSentence(grammar.getCnfGrammar().getLexAlphabet(), annoSentence, vr, vps);
+        }
+        Chart chart = parser.parseSentence(annoSentence, grammar.getCnfGrammar());
         
-        Pair<int[], Double> pair= extractParentsFromChart(sent, chart, grammar);
+        Pair<int[], Double> pair= extractParentsFromChart(annoSent, chart, grammar);
         int[] parents = pair.get1();
         double logProb = pair.get2();
         
@@ -95,7 +118,7 @@ public class DmvCkyPcfgParser {
             int rightHead = getViterbiTree(bp.mid, end, bp.r.getRightChild(), chart, grammar, parents);
             
             //TODO: Remove: 
-            //log.debug(String.format("lh: %d rh: %d s: %d mid: %d e: %d %s", leftHead, rightHead, start/2, bp.mid/2, end/2, bp.r.getParentStr()));
+            log.debug(String.format("lh: %d rh: %d s: %d mid: %d e: %d %s", leftHead, rightHead, start/2, bp.mid/2, end/2, bp.r.getParentLabel().getLabel()));
             
             // Then determine whether the rule defines a left or right dependency.
             DmvRule dmvRule = (DmvRule)bp.r;

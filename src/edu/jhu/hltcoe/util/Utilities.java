@@ -671,6 +671,24 @@ public class Utilities {
             Utilities.fill(array[i], value);
         }
     }
+    
+    public static void fill(boolean[][] array, boolean value) {
+        for (int i=0; i<array.length; i++) {
+            Arrays.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(boolean[][][] array, boolean value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
+    
+    public static void fill(boolean[][][][] array, boolean value) {
+        for (int i=0; i<array.length; i++) {
+            Utilities.fill(array[i], value);
+        }
+    }
 
     public static void fill(Object[][] array, Object value) {
         for (int i=0; i<array.length; i++) {

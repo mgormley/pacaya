@@ -54,21 +54,29 @@ public class CkyPcfgParser {
         if (sentence.getAlphabet() != grammar.getLexAlphabet()) {
             throw new IllegalArgumentException("Alphabets for sentence and grammar must be the same.");
         }
-        int[] sent = sentence.getLabelIds();
-        return parseSentence(sent, grammar);
-    }
-    
-    public final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
+
         if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
             // Construct a new chart.
-            chart = new Chart(sent, grammar, cellType, parseType);
+            chart = new Chart(sentence, grammar, cellType, parseType);
         } else {
             // If it already exists, just reset it for efficiency.
-            chart.reset(sent);
+            chart.reset(sentence);
         }
+        int[] sent = sentence.getLabelIds();
         parseSentence(sent, grammar, loopOrder, chart);
-        return chart;
-    }
+        return chart;    }
+    
+//    private final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
+//        if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
+//            // Construct a new chart.
+//            chart = new Chart(sent, grammar, cellType, parseType);
+//        } else {
+//            // If it already exists, just reset it for efficiency.
+//            chart.reset(sent);
+//        }
+//        parseSentence(sent, grammar, loopOrder, chart);
+//        return chart;
+//    }
     
     /**
      * Runs CKY and populates the chart.

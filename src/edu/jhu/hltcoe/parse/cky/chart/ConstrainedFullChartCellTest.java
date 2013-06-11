@@ -1,0 +1,138 @@
+package edu.jhu.hltcoe.parse.cky.chart;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import edu.jhu.hltcoe.data.DepTree;
+import edu.jhu.hltcoe.data.Label;
+import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.hltcoe.data.Word;
+import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
+import edu.jhu.hltcoe.data.conll.CoNLL09Token;
+import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
+import edu.jhu.hltcoe.model.dmv.DmvModel;
+import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
+import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
+import edu.jhu.hltcoe.parse.cky.BinaryTree;
+import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser;
+import edu.jhu.hltcoe.parse.cky.DmvCkyPcfgParser.DmvCkyPcfgParserPrm;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.hltcoe.util.Prng;
+
+//TODO: test multiple sentences (i.e. caching)
+public class ConstrainedFullChartCellTest {
+    
+    @Before
+    public void setUp() {
+        Prng.seed(12345);
+    }
+    
+    @Test
+    public void testUnconstrainedSentence() throws IOException {
+        Alphabet<Label> alphabet = new Alphabet<Label>();        
+        ValidParentsSentence sentence = getSimpleUnconstrainedSentence(alphabet);
+        System.out.println(sentence);
+
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(0.1);
+        DmvModel dmv = modelFactory.getInstance(alphabet);
+        
+        Pair<DepTree, Double> pair = parseSentence(sentence, dmv);
+        DepTree tree = pair.get1();
+        double logProb = pair.get2();
+        
+        System.out.println(logProb);
+        System.out.println(tree);
+
+        JUnitUtils.assertArrayEquals(new int[]{ 1,  2, -1, 2, 3 }, tree.getParents());
+        Assert.assertEquals(-19.7, logProb, 1e-1);
+    }
+
+    public static ValidParentsSentence getSimpleUnconstrainedSentence(Alphabet<Label> alphabet) {
+        ArrayList<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
+        tokens.add(getTok("time",  "_ vice"));
+        tokens.add(getTok("flies", "_ pres"));
+        tokens.add(getTok("like",  "_ says"));
+        tokens.add(getTok("an",    "_ says"));
+        tokens.add(getTok("arrow", "_ jump"));
+        CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
+        ValidParentsSentence sentence = new ValidParentsSentence(sent, alphabet);
+        
+        // TODO: This is a hack to convert the TaggedWords (which is what Sentence creates by default) to Words which is what the Grammar expects.
+        boolean[] validRoot = sentence.getValidRoot();
+        boolean[][] validParents = sentence.getValidParents();
+        ArrayList<Label> labels = new ArrayList<Label>();
+        for (Label l : sentence) {
+            labels.add(new Word(l.getLabel()));
+        }
+        sentence = new ValidParentsSentence(alphabet, labels, validRoot, validParents);
+                
+        return sentence;
+    }
+
+    @Test
+    public void testConstrainedSentence() throws IOException {
+        Alphabet<Label> alphabet = new Alphabet<Label>();        
+        ValidParentsSentence sentence = getSimpleConstrainedSentence(alphabet);
+        System.out.println(sentence);
+
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(0.1);
+        DmvModel dmv = modelFactory.getInstance(alphabet);
+        
+        Pair<DepTree, Double> pair = parseSentence(sentence, dmv);
+        DepTree tree = pair.get1();
+        double logProb = pair.get2();
+        
+        System.out.println(logProb);
+        System.out.println(tree);
+
+        //JUnitUtils.assertArrayEquals(new int[]{ 2,  0, -1, 2, 2 }, tree.getParents());
+        JUnitUtils.assertArrayEquals(new int[]{ -1,  0, 0, 2, 2 }, tree.getParents());
+        Assert.assertEquals(-21.1, logProb, 1e-1);
+    }
+
+    public static ValidParentsSentence getSimpleConstrainedSentence(Alphabet<Label> alphabet) {
+        ArrayList<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
+        tokens.add(getTok("time",  "Y vice _ _"));
+        tokens.add(getTok("flies", "_ pres A1 _"));
+        tokens.add(getTok("like",  "Y says A2 _"));
+        tokens.add(getTok("an",    "_ says _ A2"));
+        tokens.add(getTok("arrow", "_ jump _ A1"));
+        CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
+        ValidParentsSentence sentence = new ValidParentsSentence(sent, alphabet);
+        
+        // TODO: This is a hack to convert the TaggedWords (which is what Sentence creates by default) to Words which is what the Grammar expects.
+        boolean[] validRoot = sentence.getValidRoot();
+        boolean[][] validParents = sentence.getValidParents();
+        System.out.println(Arrays.deepToString(validParents));
+        ArrayList<Label> labels = new ArrayList<Label>();
+        for (Label l : sentence) {
+            labels.add(new Word(l.getLabel()));
+        }
+        sentence = new ValidParentsSentence(alphabet, labels, validRoot, validParents);
+                
+        return sentence;
+    }
+
+
+    public static CoNLL09Token getTok(String form, String fillpredPredApreds) {
+        // Columns: ID FORM LEMMA PLEMMA POS PPOS FEAT PFEAT HEAD PHEAD DEPREL PDEPREL
+        // FILLPRED PRED APREDs
+        return new CoNLL09Token("0 " + form + " lemma plemma " + form + " ppos feat pfeat 0 0 deprel pdeprel " + fillpredPredApreds);
+    }
+    
+    // TODO: we should parse with each method and check that we get the same solution.
+    public static Pair<DepTree, Double> parseSentence(Sentence sentence, DmvModel dmv) {
+        DmvCkyPcfgParserPrm prm = new DmvCkyPcfgParserPrm();
+        prm.ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
+        prm.ckyPrm.cacheChart = true;
+        return new DmvCkyPcfgParser(prm).parse(sentence, dmv);
+    }
+}

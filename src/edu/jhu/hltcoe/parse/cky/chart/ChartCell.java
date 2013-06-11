@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 
@@ -23,11 +24,11 @@ public interface ChartCell {
 
     public void close();
 
-
     /**
      * Ensures that the chart cell is open and all future calls will be just as
      * if it was newly constructed.
+     * @param sentence TODO
      */
-    public void reset();
+    public void reset(Sentence sentence);
 
 }

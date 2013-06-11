@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
@@ -26,7 +27,7 @@ public class DoubleHashChartCell implements ChartCell {
         isClosed = false;
     }
 
-    public void reset() {
+    public void reset(Sentence sentence) {
         scores.clear();
         bps.clear();
         ntsArray = null;

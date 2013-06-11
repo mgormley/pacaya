@@ -49,5 +49,12 @@ public class JUnitUtils {
             Assert.assertEquals(a1[i], a2[i]);
         }
     }
+
+    public static void assertArrayEquals(boolean[] a1, boolean[] a2) {
+        Assert.assertEquals(a1.length, a2.length);
+        for (int i=0; i<a1.length; i++) {
+            Assert.assertEquals("at position " + i, a1[i], a2[i]);
+        }
+    }
     
 }

@@ -196,7 +196,7 @@ public class DmvCnfGrammar {
     /**
      * Gets a representation of the sentence that can be parsed by this grammar.
      */
-    public int[] getSent(Sentence sentence) {
+    public int[] getAnnotatedSent(Sentence sentence) {
         int[] labelIds = sentence.getLabelIds();
         int[] sent = new int[2 * labelIds.length];
         for (int i=0; i<labelIds.length; i++) {

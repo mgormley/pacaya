@@ -1,10 +1,10 @@
 package edu.jhu.hltcoe.parse.cky.chart;
 
+import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.hltcoe.util.map.IntObjectHashMap;
-import edu.jhu.hltcoe.util.map.OpenIntDoubleHashMapWithDefault;
 
 /**
  * Cell that stores every entry in a single hash table.
@@ -32,7 +32,7 @@ public class SingleHashChartCell implements ChartCell {
         isClosed = false;
     }
 
-    public void reset() {
+    public void reset(Sentence sentence) {
         table.clear();
         ntsArray = null;
         isClosed = false;
