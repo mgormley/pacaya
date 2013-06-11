@@ -11,7 +11,7 @@ import edu.jhu.hltcoe.util.Files;
 
 public class CoNLL09ReadWriteTest {
 
-    private static final String conll2009Example= "/edu/jhu/hltcoe/data/conll/CoNLL2009-ST-Catalan-trial.txt";
+    public static final String conll2009Example= "/edu/jhu/hltcoe/data/conll/CoNLL2009-ST-Catalan-trial.txt";
     
     @Test
     public void testReadWrite() throws IOException {

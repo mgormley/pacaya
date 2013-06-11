@@ -51,7 +51,7 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
             }
         }
         if (tokens.size() > 0) {
-            return new CoNLL09Sentence(tokens);
+            return CoNLL09Sentence.getInstanceFromTokenStrings(tokens);
         } else {
             return null;
         }
