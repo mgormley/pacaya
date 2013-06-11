@@ -9,8 +9,8 @@ import edu.jhu.hltcoe.parse.DepParser;
 import edu.jhu.hltcoe.util.Utilities;
 
 /**
- * Computes the directed score (as described in Spitkovsky, 2009). Directed score
- * is simply the overall fraction of correctly guessed dependencies
+ * Computes the unlabeled directed dependency accuracy. This is simply the
+ * overall fraction of correctly predicted dependencies.
  * 
  * @author mgormley
  */
