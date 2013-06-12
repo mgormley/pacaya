@@ -5,6 +5,7 @@ import edu.jhu.hltcoe.parse.cky.chart.Chart;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
 import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
+import edu.jhu.hltcoe.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
 import edu.jhu.hltcoe.parse.cky.chart.ScoresSnapshot;
 
 /**
@@ -31,6 +32,7 @@ public class CkyPcfgParser {
         public LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
         public ChartCellType cellType = ChartCellType.FULL;
         public ParseType parseType = ParseType.VITERBI;
+        public ChartCellConstraint constraint = null;
     }
     
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT }
@@ -42,12 +44,14 @@ public class CkyPcfgParser {
     private final ChartCellType cellType;
     private final ParseType parseType;
     private final boolean cacheChart;
+    private final ChartCellConstraint constraint;
     
     public CkyPcfgParser(CkyPcfgParserPrm prm) {
         this.loopOrder = prm.loopOrder;
         this.cellType = prm.cellType;
         this.parseType = prm.parseType;
         this.cacheChart = prm.cacheChart;
+        this.constraint = prm.constraint;
     }
     
     public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
@@ -57,7 +61,7 @@ public class CkyPcfgParser {
 
         if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
             // Construct a new chart.
-            chart = new Chart(sentence, grammar, cellType, parseType);
+            chart = new Chart(sentence, grammar, cellType, parseType, constraint);
         } else {
             // If it already exists, just reset it for efficiency.
             chart.reset(sentence);

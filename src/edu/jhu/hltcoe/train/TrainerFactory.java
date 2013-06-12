@@ -71,6 +71,7 @@ import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
+import edu.jhu.hltcoe.parse.dmv.DmvChartCellConstraint;
 import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
 import edu.jhu.hltcoe.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;

@@ -1,10 +1,9 @@
-package edu.jhu.hltcoe.parse.cky.chart;
+package edu.jhu.hltcoe.parse.dmv;
 
 import edu.jhu.hltcoe.data.Sentence;
 import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.parse.cky.Rule;
 import edu.jhu.hltcoe.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
-import edu.jhu.hltcoe.parse.dmv.DmvRule;
 import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
 
 public class DmvChartCellConstraint implements ChartCellConstraint {
@@ -19,6 +18,9 @@ public class DmvChartCellConstraint implements ChartCellConstraint {
     /** @inheritDoc */
     @Override
     public void setSentence(Sentence sentence) {
+        if (!(sentence instanceof ValidParentsSentence)) {
+            throw new IllegalStateException("Sentence must have valid parent annotations.");
+        }
         this.sent = (ValidParentsSentence)sentence;
     }
     

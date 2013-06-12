@@ -5,6 +5,9 @@ import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
 import edu.jhu.hltcoe.parse.cky.BinaryTree;
 import edu.jhu.hltcoe.parse.cky.CnfGrammar;
 import edu.jhu.hltcoe.parse.cky.Rule;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
+import edu.jhu.hltcoe.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
 import edu.jhu.hltcoe.util.Pair;
 
 
@@ -51,15 +54,17 @@ public class Chart {
     private ChartCell[][] chart;
     private Sentence sentence;
     private ParseType parseType;
+    private ChartCellConstraint constraint;
 
-    public Chart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
+    public Chart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType, ChartCellConstraint constraint) {
         this.cellType = cellType;
         this.parseType = parseType;
         this.sentence = sentence;
         this.grammar = grammar;
-        this.chart = getNewChart(sentence, grammar, cellType, parseType);
+        this.constraint = constraint;
+        this.chart = getNewChart(sentence, grammar, cellType, parseType, constraint);
     }
-    
+
     /**
      * Resets the chart for the input sentence.
      */
@@ -67,7 +72,7 @@ public class Chart {
         this.sentence = sentence;
         // Ensure that the chart is large enough.
         if (sentence.size() > chart.length){
-            chart = getNewChart(sentence, grammar, cellType, parseType);
+            chart = getNewChart(sentence, grammar, cellType, parseType, constraint);
         } else {
             // Clear the chart.
             //
@@ -84,7 +89,7 @@ public class Chart {
      * Gets a new chart of the appropriate size for the sentence, specific to
      * this grammar, and with cells of the specified type.
      */
-    private static ChartCell[][] getNewChart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType) {
+    private static ChartCell[][] getNewChart(Sentence sentence, CnfGrammar grammar, ChartCellType cellType, ParseType parseType, ChartCellConstraint constraint) {
         ChartCell[][] chart = new ChartCell[sentence.size()][sentence.size()+1];
         for (int i = 0; i < chart.length; i++) {
             for (int j = i+1; j < chart[i].length; j++) {
@@ -105,13 +110,7 @@ public class Chart {
                     chart[i][j] = new FullTieBreakerChartCell(grammar, true);
                     break;
                 case CONSTRAINED_FULL:
-                    // TODO: This only works for DMV parsing. Add a check.
-                    if (!(sentence instanceof ValidParentsSentence)) {
-                        throw new IllegalStateException("Sentence must have valid parent annotations.");
-                    }
                     ChartCell cell = new FullTieBreakerChartCell(grammar, true);
-                    // TODO: This should be put as an optional option in a ChartPrm class.
-                    DmvChartCellConstraint constraint = new DmvChartCellConstraint();
                     chart[i][j] = new ConstrainedChartCell(i, j, cell, constraint, sentence);
                     break;
                 default:
