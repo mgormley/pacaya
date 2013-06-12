@@ -110,7 +110,9 @@ public class Chart {
                         throw new IllegalStateException("Sentence must have valid parent annotations.");
                     }
                     ChartCell cell = new FullTieBreakerChartCell(grammar, true);
-                    chart[i][j] = new ConstrainedChartCell(i, j, (ValidParentsSentence)sentence, cell);
+                    // TODO: This should be put as an optional option in a ChartPrm class.
+                    DmvChartCellConstraint constraint = new DmvChartCellConstraint();
+                    chart[i][j] = new ConstrainedChartCell(i, j, cell, constraint, sentence);
                     break;
                 default:
                     throw new RuntimeException("not implemented for " + cellType);
