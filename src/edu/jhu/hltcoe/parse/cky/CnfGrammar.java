@@ -19,6 +19,7 @@ public class CnfGrammar {
 
     private ArrayList<Rule>[] lexRulesForChild;
     private ArrayList<Rule>[] unaryRulesForChild;
+    private ArrayList<Rule>[] unaryRulesForParent; // Used by the outside algorithm.
     private ArrayList<Rule>[][] binaryRulesForChildren;
     private ArrayList<Rule>[] binaryRulesWithLeftChild;
     private ArrayList<Rule>[] binaryRulesWithRightChild;
@@ -39,12 +40,14 @@ public class CnfGrammar {
         this.allRules = allRules;
         lexRulesForChild = new ArrayList[lexAlphabet.size()];
         unaryRulesForChild = new ArrayList[ntAlphabet.size()];
+        unaryRulesForParent = new ArrayList[ntAlphabet.size()];
         binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
         binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
         binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
 
         fill(lexRulesForChild);
         fill(unaryRulesForChild);
+        fill(unaryRulesForParent);
         for (int i=0; i<binaryRulesForChildren.length; i++) {
             for (int j=0; j<binaryRulesForChildren[i].length; j++) {
                 binaryRulesForChildren[i][j] = new ArrayList<Rule>();
@@ -58,6 +61,7 @@ public class CnfGrammar {
                 lexRulesForChild[r.getLeftChild()].add(r);
             } else if (r.isUnary()) {
                 unaryRulesForChild[r.getLeftChild()].add(r);
+                unaryRulesForParent[r.getParent()].add(r);
             } else {
                 binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
                         .add(r);
@@ -101,6 +105,10 @@ public class CnfGrammar {
 
     public final ArrayList<Rule> getUnaryRulesWithChild(int child) {
         return unaryRulesForChild[child];
+    }
+
+    public ArrayList<Rule> getUnaryRulesWithParent(int parent) {
+        return unaryRulesForParent[parent];
     }
 
     public final Rule[] getBinaryRulesWithChildren(int leftChildNt, int rightChildNt) {

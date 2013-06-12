@@ -8,6 +8,7 @@ PP -> IN NP -1
 NP -> DT N -1
 NP -> N -1
 NP -> N N -2
+NP -> N PP -3
 ===
 N -> time -1
 V -> time -2
