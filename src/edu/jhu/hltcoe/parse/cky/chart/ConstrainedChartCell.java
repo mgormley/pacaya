@@ -53,13 +53,13 @@ public final class ConstrainedChartCell implements ChartCell {
         constraint.setSentence(sentence);
     }
     
-    public final void updateCell(int mid, Rule r, double score) {
+    public final void updateCell(int nt, double score, int mid, Rule r) {
         if (!constraint.shouldUpdateCell(start, end, mid, r, score)) {
             // Do not update this chart cell.
             return;
         }
         // Update this chart cell.
-        cell.updateCell(mid, r, score);
+        cell.updateCell(nt, score, mid, r);
     }
 
     public final BackPointer getBp(int symbol) {

@@ -68,7 +68,8 @@ public class CkyPcfgParser {
         }
         int[] sent = sentence.getLabelIds();
         parseSentence(sent, grammar, loopOrder, chart);
-        return chart;    }
+        return chart;    
+     }
     
 //    private final Chart parseSentence(final int[] sent, final CnfGrammar grammar) {
 //        if (!cacheChart || chart == null || chart.getGrammar() != grammar) {
@@ -96,11 +97,11 @@ public class CkyPcfgParser {
             ChartCell cell = chart.getCell(i, i+1);
             for (final Rule r : grammar.getLexicalRulesWithChild(sent[i])) {
                 double score = r.getScore();
-                cell.updateCell(i+1, r, score);
+                cell.updateCell(r.getParent(), score, i+1, r);
             }
         }
         
-        // For each cell in the chart.
+        // For each cell in the chart. (width increasing)
         for (int width = 1; width <= sent.length; width++) {
             for (int start = 0; start <= sent.length - width; start++) {
                 int end = start + width;
@@ -123,7 +124,7 @@ public class CkyPcfgParser {
                 for(final int parentNt : nts) {
                     for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
                         double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
-                        cell.updateCell(end, r, score);
+                        cell.updateCell(r.getParent(), score, end, r);
                     }
                 }
                 
@@ -155,7 +156,7 @@ public class CkyPcfgParser {
                         double score = r.getScore()
                                 + leftScoreForNt
                                 + rightScoreForNt;
-                        cell.updateCell(mid, r, score);
+                        cell.updateCell(r.getParent(), score, mid, r);
                     }
                 }
             }
@@ -185,7 +186,7 @@ public class CkyPcfgParser {
                         double score = r.getScore() 
                                 + leftScoreForNt
                                 + rightScoreForNt;
-                        cell.updateCell(mid, r, score);
+                        cell.updateCell(r.getParent(), score, mid, r);
                     }
                 }
             }
@@ -215,7 +216,7 @@ public class CkyPcfgParser {
                         double score = r.getScore() 
                                 + leftScoreForNt
                                 + rightScoreForNt;
-                        cell.updateCell(mid, r, score);
+                        cell.updateCell(r.getParent(), score, mid, r);
                     }
                 }
             }

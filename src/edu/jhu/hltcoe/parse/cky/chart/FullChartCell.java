@@ -78,9 +78,8 @@ public class FullChartCell implements ChartCell {
         ntsArray = null;
     }
     
-    public void updateCell(int mid, Rule r, double score) {
+    public void updateCell(int nt, double score, int mid, Rule r) {
         assert(!isClosed);
-        int nt = r.getParent();
         if (bps[nt] == null) {
             // If the non-terminal hasn't been added yet, include it in the set of non terminals.
             nts.add(nt);
@@ -89,7 +88,7 @@ public class FullChartCell implements ChartCell {
             // Compute the inside score.
             scores[nt] = Utilities.logAdd(scores[nt], score);
             // Add a dummy backpointer, so that the above non-null check still works.
-            bps[nt] = new BackPointer(null, -1);
+            bps[nt] = BackPointer.NON_NULL_BACKPOINTER;
         } else {
             // Compute the viterbi score.
             if (score > scores[nt]) {

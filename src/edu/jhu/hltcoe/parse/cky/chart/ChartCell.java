@@ -18,7 +18,7 @@ public interface ChartCell {
     
     public int[] getNts();
 
-    public void updateCell(int mid, Rule r, double score);
+    public void updateCell(int symbol, double addendLeft, int mid, Rule r);
 
     public ScoresSnapshot getScoresSnapshot();
 

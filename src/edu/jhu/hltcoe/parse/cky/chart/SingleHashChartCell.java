@@ -38,9 +38,8 @@ public class SingleHashChartCell implements ChartCell {
         isClosed = false;
     }
     
-    public final void updateCell(int mid, Rule r, double score) {
+    public final void updateCell(int nt, double score, int mid, Rule r) {
         assert(!isClosed);
-        int nt = r.getParent();
         
         Storage entry = table.get(nt);
         double curMax = (entry != null) ? entry.maxScore : Double.NEGATIVE_INFINITY; 

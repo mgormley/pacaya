@@ -58,9 +58,8 @@ public class FullTieBreakerChartCell implements ChartCell {
         Utilities.fill(maxHasJit, false);
     }
     
-    public final void updateCell(int mid, Rule r, double score) {
+    public final void updateCell(int nt, double score, int mid, Rule r) {
         assert(!isClosed);
-        int nt = r.getParent();
         if (bps[nt] == null) {
             // If the non-terminal hasn't been added yet, include it in the set of non terminals.
             nts.add(nt);

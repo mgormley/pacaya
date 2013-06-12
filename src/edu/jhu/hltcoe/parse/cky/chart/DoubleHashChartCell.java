@@ -34,9 +34,8 @@ public class DoubleHashChartCell implements ChartCell {
         isClosed = false;
     }
     
-    public final void updateCell(int mid, Rule r, double score) {
+    public final void updateCell(int nt, double score, int mid, Rule r) {
         assert(!isClosed);
-        int nt = r.getParent();
         
         if (score > scores.get(nt)) {
             scores.put(nt, score);
