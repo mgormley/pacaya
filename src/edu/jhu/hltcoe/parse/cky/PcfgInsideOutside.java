@@ -23,12 +23,12 @@ public class PcfgInsideOutside {
      * @author mgormley
      *
      */
-    public static class Charts {
+    public static class IoChart {
         /** Length of the sentence. */
         private final int n;
         private Chart insideChart;
         private Chart outsideChart;
-        public Charts(Sentence sentence, Chart insideChart, Chart outsideChart) {
+        public IoChart(Sentence sentence, Chart insideChart, Chart outsideChart) {
             this.n = sentence.size();
             this.insideChart = insideChart;
             this.outsideChart = outsideChart;
@@ -78,7 +78,7 @@ public class PcfgInsideOutside {
         this.cacheChart = prm.cacheChart;
     }
     
-    public final Charts runInsideOutside(final Sentence sentence, final CnfGrammar grammar) {
+    public final IoChart runInsideOutside(final Sentence sentence, final CnfGrammar grammar) {
         if (sentence.getAlphabet() != grammar.getLexAlphabet()) {
             throw new IllegalArgumentException("Alphabets for sentence and grammar must be the same.");
         }
@@ -95,7 +95,7 @@ public class PcfgInsideOutside {
         int[] sent = sentence.getLabelIds();
         CkyPcfgParser.parseSentence(sent, grammar, loopOrder, inChart);
         runOutsideAlgorithm(sent, grammar, loopOrder, inChart, outChart);
-        return new Charts(sentence, inChart, outChart);    
+        return new IoChart(sentence, inChart, outChart);    
      }
     
     /**
