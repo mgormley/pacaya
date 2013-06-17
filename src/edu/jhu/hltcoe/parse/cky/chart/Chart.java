@@ -163,6 +163,10 @@ public class Chart {
         return chart[start][end];
     }
     
+    public int getSentenceSize() {
+        return sentence.size();
+    }
+    
     public CnfGrammar getGrammar() {
         return grammar;
     }

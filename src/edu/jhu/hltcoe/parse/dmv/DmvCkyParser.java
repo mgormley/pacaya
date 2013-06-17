@@ -114,24 +114,53 @@ public class DmvCkyParser implements DepParser {
         return getViterbiParse(corpus, genericModel);
     }
 
+    /**
+     * Gets the maximum-likelihood dependency tree and its log-likelihood.
+     */
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
         timer.start();
-        Pair<DepTree,Double> pair = parse2(sentence, dmv);
-        timer.stop();
-        return pair;
+        DmvCnfGrammar grammar = getDmvGrammar(sentence, dmv);
+        Sentence annoSentence = getAnnotatedSentence(sentence, grammar);
+        Chart chart = parser.parseSentence(annoSentence, grammar.getCnfGrammar());
+        
+        Pair<int[], Double> pair= extractParentsFromChart(chart, grammar);
+        int[] parents = pair.get1();
+        double logProb = pair.get2();
+        
+        Pair<DepTree,Double> ret = new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
+        timer.stop();        
+        return ret;
     }
-    
-    private Pair<DepTree, Double> parse2(Sentence sentence, DmvModel dmv) {
+
+    /**
+     * Gets a CNF grammar for this DMV. If possible the resulting grammar will
+     * be an cached version of the grammar with the parameters values updated.
+     * 
+     * @param sentence The original sentence.
+     * @param dmv The DMV model.
+     * @return A CNF grammar representing the model.
+     */
+    private DmvCnfGrammar getDmvGrammar(Sentence sentence, DmvModel dmv) {
         if (this.grammar == null || this.dmv != dmv) {
             this.dmv = dmv;
             this.grammar = new DmvCnfGrammar(dmv, sentence.getAlphabet());
         } else {
             this.grammar.updateLogProbs(dmv);
         }
+        return this.grammar;
+    }
 
-        // Get an annotated version of the sentence (twice as long as the
-        // original sentence), where each word has two copies of itself with a
-        // Left and Right subscript.
+    /**
+     * Get an annotated version of the sentence (twice as long as the
+     * original sentence), where each word has two copies of itself with a
+     * Left and Right subscript.
+     * 
+     * @param sentence The original sentence.
+     * @param grammar A CNF grammar representing a DMV.
+     * @return An annotated version of the sentence.
+     */
+    private Sentence getAnnotatedSentence(Sentence sentence,
+            DmvCnfGrammar grammar) {
         int[] annoSent = grammar.getAnnotatedSent(sentence);
         Sentence annoSentence = new Sentence(grammar.getCnfGrammar().getLexAlphabet(), annoSent);
         if (sentence instanceof ValidParentsSentence) {
@@ -140,29 +169,32 @@ public class DmvCkyParser implements DepParser {
             boolean[][] vps = ((ValidParentsSentence) sentence).getValidParents();
             annoSentence = new ValidParentsSentence(grammar.getCnfGrammar().getLexAlphabet(), annoSentence, vr, vps);
         }
-        Chart chart = parser.parseSentence(annoSentence, grammar.getCnfGrammar());
-        
-        Pair<int[], Double> pair= extractParentsFromChart(annoSent, chart, grammar);
-        int[] parents = pair.get1();
-        double logProb = pair.get2();
-        
-        return new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
+        return annoSentence;
     }
 
-    private static Pair<int[], Double> extractParentsFromChart(int[] sent, Chart chart, DmvCnfGrammar grammar) {
+    /**
+     * Gets the maximum-likelihood dependency tree and its log-likelihood.
+     * 
+     * @param chart The parse chart for the annotated sentence.
+     * @param grammar The CNF grammar for the DMV.
+     * @return A pair containing a parents array representing the dependency tree, and the log-likelihood of the parse.
+     */
+    private static Pair<int[], Double> extractParentsFromChart(Chart chart, DmvCnfGrammar grammar) {
+        final int annoSentSize = chart.getSentenceSize();
         // Create an empty parents array.
-        int[] parents = new int[sent.length / 2];
+        int[] parents = new int[annoSentSize / 2];
         Arrays.fill(parents, -2);
         // Get the viterbi dependency tree.
         int rootSymbol = grammar.getCnfGrammar().getRootSymbol();
-        getViterbiTree(0, sent.length, rootSymbol, chart, grammar, parents);
+        getViterbiTree(0, annoSentSize, rootSymbol, chart, grammar, parents);
         // Get the score of the viterbi dependency tree.
-        double rootScore = chart.getCell(0, sent.length).getScore(rootSymbol);
+        double rootScore = chart.getCell(0, annoSentSize).getScore(rootSymbol);
         return new Pair<int[], Double>(parents, rootScore);
     }
     
     /**
-     * Gets the highest probability tree with the span (start, end) and the root symbol rootSymbol.
+     * Fills in the parents array with the highest probability subtree with
+     * the span (start, end) and the root symbol rootSymbol.
      * 
      * @param start The start of the span of the requested tree.
      * @param end The end of the span of the requested tree.
