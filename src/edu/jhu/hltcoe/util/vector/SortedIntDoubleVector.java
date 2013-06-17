@@ -64,6 +64,16 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
 		}
 	}
 
+    /** Computes the dot product of this vector with the given vector. */
+    public double dot(double[] other) {
+        double ret = 0;
+        for (int c = 0; c < used && indices[c] < other.length; c++) {
+            ret += values[c] * other[indices[c]];
+        }
+        return ret;
+    }
+
+    /** Computes the dot product of this vector with the given vector. */
     public double dot(SortedIntDoubleVector y) {
         if (y instanceof SortedIntDoubleVector) {
             SortedIntDoubleVector other = ((SortedIntDoubleVector) y);

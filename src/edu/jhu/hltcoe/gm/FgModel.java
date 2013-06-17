@@ -1,9 +1,10 @@
 package edu.jhu.hltcoe.gm;
 
 import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 
 /**
- * A model for a factor graph in the exponential family.
+ * A model in the exponential family for a factor graph .
  * 
  * @author mgormley
  *
@@ -28,6 +29,15 @@ public class FgModel {
     /** Gets the number of parameters in this model. */
     public int getNumParams() {
         return params.length;
+    }
+
+    public int getNumFactors() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    public double[] getParams() {
+        return params;
     }
     
 }

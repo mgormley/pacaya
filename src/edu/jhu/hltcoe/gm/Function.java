@@ -16,11 +16,11 @@ public interface Function {
     double getValue(double[] point);
     
     /**
-     * Gets the derivative at the given point.
+     * Gets the gradient at the given point.
      * @param point The point.
-     * @return The derivative.
+     * @return The gradient, a vector of partial derivatives.
      */
-    double[] getDerivative(double[] point);
+    double[] getGradient(double[] point);
     
     /**
      * Gets the number of dimensions of the domain of this function.
