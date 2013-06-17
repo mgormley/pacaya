@@ -234,12 +234,12 @@ public class PipelineRunner {
             if (trainType == DatasetType.CONLL_X) {
                 CoNLLXWriter cw = new CoNLLXWriter(trainOut);
                 for (int i=0; i<parses.size(); i++) {
-                    DepTree parse = parses.get(i);
-                    DepTree goldTree = goldTreebank.get(i);
                     // Make a copy of the original CoNLL-X sentence.
+                    DepTree goldTree = goldTreebank.get(i);
                     CoNLLXSentence sent = ((CoNLLXDepTree)goldTree).getCoNLLXSentence();
                     sent = new CoNLLXSentence(sent);
                     // Update the parents in the copy.
+                    DepTree parse = parses.get(i);
                     sent.setHeadsFromParents(parse.getParents());
                     // Write the sentence.
                     cw.write(sent);
@@ -248,12 +248,12 @@ public class PipelineRunner {
             } else if (trainType == DatasetType.CONLL_2009) {
                 CoNLL09Writer cw = new CoNLL09Writer(trainOut);
                 for (int i=0; i<parses.size(); i++) {
-                    DepTree parse = parses.get(i);
-                    DepTree goldTree = goldTreebank.get(i);
                     // Make a copy of the original CoNLL-09 sentence.
+                    DepTree goldTree = goldTreebank.get(i);
                     CoNLL09Sentence sent = ((CoNLL09DepTree)goldTree).getCoNLL09Sentence();
                     sent = new CoNLL09Sentence(sent);
                     // Update the parents in the copy.
+                    DepTree parse = parses.get(i);
                     sent.setPheadsFromParents(parse.getParents());
                     // Write the sentence.
                     cw.write(sent);
