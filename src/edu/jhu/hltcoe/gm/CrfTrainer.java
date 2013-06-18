@@ -101,7 +101,9 @@ public class CrfTrainer {
     private CrfObjective objective;
     
     
+    // TODO: finish this method.
     public void train() {
+        maximizer = new SGD();
         double[] initial = new double[model.getNumParams()];
         // TODO: how to initialize the model parameters?
         double[] params = maximizer.maximize(objective, initial);
