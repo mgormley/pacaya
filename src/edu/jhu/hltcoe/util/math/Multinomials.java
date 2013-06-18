@@ -19,10 +19,7 @@ public class Multinomials {
     }
     
     public static void normalizeProps(double[] props) {
-        double propSum = 0;
-        for (int d = 0; d < props.length; d++) {
-            propSum += props[d];
-        }
+        double propSum = Vectors.sum(props);
         if (propSum != 0) {
             for (int d = 0; d < props.length; d++) {
                 props[d] /= propSum;
@@ -36,10 +33,7 @@ public class Multinomials {
     }
     
     public static void normalizeLogProps(double[] logProps) {
-        double logPropSum = Double.NEGATIVE_INFINITY;
-        for (int d = 0; d < logProps.length; d++) {
-            logPropSum = Utilities.logAdd(logPropSum, logProps[d]);
-        }
+        double logPropSum = Vectors.logSum(logProps);
         if (logPropSum != Double.NEGATIVE_INFINITY) {
             for (int d = 0; d < logProps.length; d++) {
                 logProps[d] -= logPropSum;
@@ -52,15 +46,12 @@ public class Multinomials {
             }
         }
     }
-    
+
     /**
      * Asserts that the parameters are log-normalized within some delta.
      */
     public static void assertLogNormalized(double[] logProps, double delta) {
-        double logPropSum = Double.NEGATIVE_INFINITY;
-        for (int d = 0; d < logProps.length; d++) {
-            logPropSum = Utilities.logAdd(logPropSum, logProps[d]);
-        }
+        double logPropSum = Vectors.logSum(logProps);
         assert(Utilities.equals(0.0, logPropSum, delta));
     }
 

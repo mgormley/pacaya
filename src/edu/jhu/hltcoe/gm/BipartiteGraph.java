@@ -19,10 +19,12 @@ public class BipartiteGraph {
     public static class Edge {
         private Node n1;
         private Node n2;
-        public Node getFirst() {
+        /** This can also be thought of as the node sending the messages. */
+        public Node getParent() {
             return n1;
         }
-        public Node getSecond() {
+        /** This can also be thought of as the node receiving the messages. */
+        public Node getChild() {
             return n2;
         }
     }

@@ -206,4 +206,13 @@ public class Vectors {
         return Math.sqrt(variance(array));
     }
 
+
+    public static double logSum(double[] logProps) {
+        double logPropSum = Double.NEGATIVE_INFINITY;
+        for (int d = 0; d < logProps.length; d++) {
+            logPropSum = Utilities.logAdd(logPropSum, logProps[d]);
+        }
+        return logPropSum;
+    }
+
 }

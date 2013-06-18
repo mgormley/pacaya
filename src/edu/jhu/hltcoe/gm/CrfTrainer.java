@@ -13,6 +13,8 @@ import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 // TODO: This currently does NOT support VarType.LATENT variables. Assert this. Then implement a version that does.
 public class CrfTrainer {
 
+    // TODO: Add an option which computes the gradient on only a subset of the
+    // variables for use by SGD.
     public static class CrfObjective implements Function {
 
         private FgModel model;
@@ -40,7 +42,7 @@ public class CrfTrainer {
                 }
                 // Subtract off the log of the denominator.                
                 ll -= inferencer.getLogPartition(ex, model);
-            }            
+            }
             return ll;
         }
 
@@ -53,6 +55,9 @@ public class CrfTrainer {
             double[] gradient = new double[params.length];
             for (int i=0; i<data.size(); i++) {
                 FgExample ex = data.get(i);
+                FgInferencer inferencer = null;
+                inferencer.set(ex.getFactorGraph()); // TODO: should inference be at the example level or is there a more elegant approach?
+                inferencer.run();
                 for (int a=0; a<model.getNumFactors(); a++) {
                     // TODO: Should the loop over factors be pushed into the FgExample and FgInferencer?
                     // Get the observed feature counts for this factor.
@@ -61,7 +66,7 @@ public class CrfTrainer {
                     // Compute the expected feature counts for this factor.
                     SortedIntDoubleVector expectedFeats = new SortedIntDoubleVector();//getExptCondFeatCounts(a, ex, model, inferencer);
                     Factor factorMarginal = inferencer.getMarginalsForFactorId(a);
-                    for (int c=0; c<factorMarginal.getNumConfigs(); c++) {
+                    for (int c=0; c<factorMarginal.getVars().getNumConfigs(); c++) {
                         // Get the log-probability of the c'th configuration for this factor.
                         // TODO: should factors just store probabilities?
                         double logProb = factorMarginal.getValue(c);
@@ -95,11 +100,9 @@ public class CrfTrainer {
     
     private FgModel model;
     private FgExamples data;
-    private FgInferencer inferencer;
     
     private Maximizer maximizer;
     private CrfObjective objective;
-    
     
     // TODO: finish this method.
     public void train() {

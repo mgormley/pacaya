@@ -2,10 +2,14 @@ package edu.jhu.hltcoe.gm;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.jhu.hltcoe.gm.BipartiteGraph.Edge;
 import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
+import edu.jhu.hltcoe.gm.FactorGraph.Factor;
+import edu.jhu.hltcoe.gm.FactorGraph.Var;
+import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.math.Multinomials;
 import edu.jhu.hltcoe.util.math.Vectors;
 
@@ -16,6 +20,61 @@ import edu.jhu.hltcoe.util.math.Vectors;
  *
  */
 public class FactorGraph {
+   
+    /** 
+     * An edge in a factor graph.
+     * 
+     * @author mgormley
+     *
+     */
+    public static class FgEdge extends Edge {
+        
+        // TODO: write hashCode and equals.
+        public FgEdge() {
+            // TODO: 
+        }
+        
+        public Factor getFactor() {
+            Node n1 = this.getParent();
+            Node n2 = this.getChild();
+            Factor factor;
+            Var var;
+            if (n1 instanceof Factor) {
+                factor = (Factor) n1;
+                var = (Var) n2;
+            } else {
+                factor = (Factor) n2;
+                var = (Var) n1;
+            }
+            return factor;
+        }
+        
+        public Var getVar() {
+            Node n1 = this.getParent();
+            Node n2 = this.getChild();
+            Factor factor;
+            Var var;
+            if (n1 instanceof Factor) {
+                factor = (Factor) n1;
+                var = (Var) n2;
+            } else {
+                factor = (Factor) n2;
+                var = (Var) n1;
+            }
+            return var;
+        }
+
+        public int getId() {
+            // TODO Auto-generated method stub
+            return 0;
+        }
+
+        public boolean isVarToFactor() {
+            // TODO Auto-generated method stub
+            return false;
+        }
+        
+    }
     
     /**
      * A factor in a factor graph.
@@ -35,25 +94,11 @@ public class FactorGraph {
         private double[] values;
         
         public Factor(VarSet vars) {
-            int numConfigs = getNumConfigs(vars);
             this.vars = vars;
+            int numConfigs = vars.getNumConfigs();
             this.values = new double[numConfigs];
         }
-
-        /**
-         * Gets the number of possible configurations for this set of variables.
-         */
-        public static int getNumConfigs(VarSet vars) {
-            if (vars.size() == 0) {
-                return 0;
-            }
-            int numConfigs = 1;
-            for (Var var : vars) {
-                numConfigs *= var.getNumStates();
-            }
-            return numConfigs;
-        }
-
+        
         /** 
          * Gets the marginal distribution over a subset of the variables in this factor, optionally normalized.
          * 
@@ -64,21 +109,16 @@ public class FactorGraph {
         public Factor getMarginal(VarSet vars, boolean normalize) {
             return null; // TODO:
         }
+        
+        public VarSet getVars() {
+            return vars;
+        }
 
         /**
          * Gets the value of the c'th configuration of the variables.
          */
         public double getValue(int c) {
-            // TODO Auto-generated method stub
-            return 0;
-        }
-
-        /**
-         * Gets the number of configurations possible for this factor.
-         */
-        public int getNumConfigs() {
-            // TODO Auto-generated method stub
-            return 0;
+            return values[c];
         }
 
         /** Set all the values to the given value. */
@@ -98,7 +138,77 @@ public class FactorGraph {
         
         /** Normalizes the values. */
         public void normalize() {
+            Multinomials.normalizeProps(values);
+        }
+
+        /** Normalizes the values. */
+        public void logNormalize() {
             Multinomials.normalizeLogProps(values);
+        }
+        
+        /**
+         * Adds each entry in the given factor to this factor.
+         */
+        public void add(Factor f) {
+            if (this.vars.equals(f.vars)) {
+                for (int i=0; i<values.length; i++) {
+                    values[i] += f.values[i];
+                }
+            } else if (this.vars.isSuperset(f.vars)) {
+                
+            } else {
+                throw new IllegalStateException("The varsets must be equal.");
+            }
+        }
+
+        /**
+         * Multiplies each entry in the given factor to this factor.
+         */
+        public void prod(Factor f) {
+            if (!this.vars.equals(f.vars)) {
+                throw new IllegalStateException("The varsets must be equal.");
+            }
+                        
+            for (int i=0; i<values.length; i++) {
+                values[i] *= f.values[i];
+            }
+        }
+        
+        /**
+         * Log-adds each entry in the given factor to this factor.
+         */
+        public void logAdd(Factor f) {
+            if (!this.vars.equals(f.vars)) {
+                throw new IllegalStateException("The varsets must be equal.");
+            }
+            
+            for (int i=0; i<values.length; i++) {
+                values[i] = Utilities.logAdd(values[i], f.values[i]);
+            }
+        }
+
+        /**
+         * Sets each entry in this factor to that of the given factor.
+         * @param factor
+         */
+        public void set(Factor f) {
+            if (!this.vars.equals(f.vars)) {
+                throw new IllegalStateException("The varsets must be equal.");
+            }
+            
+            for (int i=0; i<values.length; i++) {
+                values[i] = f.values[i];
+            }
+        }
+
+        /** Gets the sum of the values for this factor. */
+        public double getSum() {
+            return Vectors.sum(values);
+        }
+        
+        /** Gets the log of the sum of the values for this factor. */
+        public double getLogSum() {
+            return Vectors.logSum(values);
         }
         
     }
@@ -109,7 +219,7 @@ public class FactorGraph {
      * @author mgormley
      *
      */
-    public static class Var extends Node {
+    public static class Var extends Node implements Comparable<Var> {
         
         public enum VarType {
             /** Observed variables will always be observed at training and test time. */
@@ -134,6 +244,11 @@ public class FactorGraph {
         public int getNumStates() {
             return numStates;
         }
+
+        @Override
+        public int compareTo(Var other) {
+            return this.id - other.id;
+        }
         
     }
     
@@ -154,6 +269,25 @@ public class FactorGraph {
             super(1);
             add(var);
         }
+
+        public boolean isSuperset(VarSet vars) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /**
+         * Gets the number of possible configurations for this set of variables.
+         */
+        public int getNumConfigs() {
+            if (this.size() == 0) {
+                return 0;
+            }
+            int numConfigs = 1;
+            for (Var var : this) {
+                numConfigs *= var.getNumStates();
+            }
+            return numConfigs;
+        }
                 
     }
     
@@ -161,7 +295,7 @@ public class FactorGraph {
     private ArrayList<Factor> factors;
     private ArrayList<Var> vars;
     
-    public List<Edge> getEdges() {
+    public List<FgEdge> getEdges() {
         // TODO Auto-generated method stub
         return null;
     }
@@ -171,9 +305,32 @@ public class FactorGraph {
         return 0;
     }
 
-    public Edge getEdge(int i) {
+    public FgEdge getEdge(int i) {
         // TODO Auto-generated method stub
         return null;
+    }
+
+    public List<FgEdge> getEdges(Node node) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Node getNode(Var var) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Node getNode(Factor factor) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Var getVar(int varId) {
+        return vars.get(varId);
+    }
+
+    public Factor getFactor(int factorId) {
+        return factors.get(factorId);
     }
     
 }
