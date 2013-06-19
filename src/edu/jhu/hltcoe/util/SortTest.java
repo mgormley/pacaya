@@ -1,7 +1,8 @@
 package edu.jhu.hltcoe.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.junit.Assert;
@@ -117,6 +118,27 @@ public class SortTest {
         
         JUnitUtils.assertArrayEquals(new double[]{ -1.0, 2.0, 3.0, 5.0, 1.0 }, values, 1e-13);
         Assert.assertArrayEquals(new int[]{ 8, 5, 4, 3, 1 }, index);
+    }
+    
+    @Test
+    public void testMergeSortedLists() {
+        ArrayList<Integer> l1 = new ArrayList<Integer>();
+        ArrayList<Integer> l2 = new ArrayList<Integer>();
+        // Add some fib nums
+        l1.add(1);
+        l1.add(2);
+        l1.add(3);
+        l1.add(5);
+        l1.add(8);
+        // Add odd numbers
+        l2.add(3);
+        l2.add(5);
+        l2.add(7);
+        l2.add(9);
+        l2.add(11);
+        
+        ArrayList<Integer> l3 = Sort.getMergedList(l1, l2);
+        Assert.assertArrayEquals(new Integer[]{ 1, 2, 3, 5, 7, 8, 9, 11 }, l3.toArray(new Integer[]{}));
     }
     
 }

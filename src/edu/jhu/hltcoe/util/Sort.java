@@ -1,6 +1,8 @@
 package edu.jhu.hltcoe.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -288,6 +290,47 @@ public class Sort {
     		}
     	}
     	return true;
+    }
+
+    public static <T extends Comparable<T>> void mergeSortedLists(List<T> list1, List<T> list2, List<T> newList) {
+        int i=0; 
+        int j=0;
+        while(i < list1.size() && j < list2.size()) {
+            T e1 = list1.get(i);
+            T e2 = list2.get(j);
+            int diff = e1.compareTo(e2);
+            if (diff == 0) {
+                // Elements are equal. Only add one.
+                newList.add(e1);
+                i++;
+                j++;
+            } else if (diff < 0) {
+                // e1 is less than e2, so only add e1 this round.
+                newList.add(e1);
+                i++;
+            } else {
+                // e2 is less than e1, so only add e2 this round.
+                newList.add(e2);
+                j++;
+            }
+        }
+
+        for (; i < list1.size(); i++) {
+            newList.add(list1.get(i));
+        }
+        for (; j < list2.size(); j++) {
+            newList.add(list2.get(j));
+        }
+        
+        System.out.println(i);
+        System.out.println(j);
+    }
+
+    public static <T extends Comparable<T>> ArrayList<T> getMergedList(List<T> list1,
+            List<T> list2) {
+        ArrayList<T> newList = new ArrayList<T>();
+        mergeSortedLists(list1, list2, newList);
+        return newList;
     }
 
 

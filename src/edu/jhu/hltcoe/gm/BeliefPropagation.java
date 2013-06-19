@@ -3,10 +3,7 @@ package edu.jhu.hltcoe.gm;
 
 import edu.jhu.hltcoe.gm.BipartiteGraph.Edge;
 import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
-import edu.jhu.hltcoe.gm.FactorGraph.Factor;
 import edu.jhu.hltcoe.gm.FactorGraph.FgEdge;
-import edu.jhu.hltcoe.gm.FactorGraph.Var;
-import edu.jhu.hltcoe.gm.FactorGraph.VarSet;
 import edu.jhu.hltcoe.util.Timer;
 import edu.jhu.hltcoe.util.math.Vectors;
 
@@ -122,7 +119,7 @@ public class BeliefPropagation implements FgInferencer {
             //
             // Compute the product of all messages recieved by v* except for the
             // one from f*.
-            msg = getProductOfMessages(edge.getParent(), msg, edge.getChild());
+            getProductOfMessages(edge.getParent(), msg, edge.getChild());
         } else {
             // Message from factor f* to variable v*.
             //
@@ -134,7 +131,7 @@ public class BeliefPropagation implements FgInferencer {
             // edge if creating it is slow.
             Factor prod = new Factor(factor.getVars());
             prod.set(factor);
-            prod = getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            getProductOfMessages(edge.getParent(), prod, edge.getChild());
 
             // Marginalize over all the assignments to variables for f*, except
             // for v*.
@@ -151,6 +148,10 @@ public class BeliefPropagation implements FgInferencer {
      * Computes the product of all messages being sent to a node, optionally
      * excluding messages sent from another node.
      * 
+     * Upon completion, prod will contain the product of all incoming messages
+     * to node, except for the message from exclNode if specified, times the
+     * factor given in prod.
+     * 
      * @param node
      *            The node to which all the messages are being sent.
      * @param prod
@@ -160,11 +161,8 @@ public class BeliefPropagation implements FgInferencer {
      *            If null, the product of all messages will be taken. If
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
-     * @return The product of all incoming messages to node, except for the
-     *         message from exclNode if specified, times the factor given in
-     *         prod.
      */
-    private Factor getProductOfMessages(Node node, Factor prod, Node exclNode) {
+    private void getProductOfMessages(Node node, Factor prod, Node exclNode) {
         for (FgEdge nbEdge : fg.getEdges(node)) {
             if (nbEdge.getParent() == exclNode) {
                 // Don't include the receiving variable.
@@ -175,9 +173,8 @@ public class BeliefPropagation implements FgInferencer {
             
             // The neighbor messages have a different domain, but addition
             // should still be well defined.
-            prod = prod.add(nbMsg);
+            prod.add(nbMsg);
         }
-        return prod;
     }
 
     /**

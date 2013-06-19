@@ -1,8 +1,5 @@
 package edu.jhu.hltcoe.gm;
 
-import edu.jhu.hltcoe.gm.FactorGraph.Factor;
-import edu.jhu.hltcoe.gm.FactorGraph.Var;
-import edu.jhu.hltcoe.gm.FactorGraph.VarSet;
 import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 
 /**

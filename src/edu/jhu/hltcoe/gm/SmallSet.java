@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+import edu.jhu.hltcoe.util.Sort;
+
 /**
  * Maintains a set as a sorted list.
  * 
@@ -23,13 +25,27 @@ public class SmallSet<E extends Comparable<E>> implements Set<E> {
     public SmallSet(int initialCapacity) {
         list = new ArrayList<E>(initialCapacity);
     }
-
+    
+    /** Copy constructor. */
+    public SmallSet(SmallSet<E> set) {
+        list = new ArrayList<E>(set);
+    }
+    
+    /**
+     * Constructs a new set that is the union of the other sets.
+     * @param sets
+     */
+    public SmallSet(SmallSet<E> set1, SmallSet<E> set2) {  
+        this();
+        Sort.mergeSortedLists(set1.list, set2.list, this.list);
+    }
+        
     public boolean isSuperset(SmallSet<E> other) {
         if (this.list.size() < other.list.size()) {
             return false;
         }
         int j = 0;
-        for (int i=0; i<list.size(); i++) {
+        for (int i=0; i<list.size() && j<other.list.size(); i++) {
             E e1 = this.list.get(i);
             E e2 = other.list.get(j);
             int diff = e1.compareTo(e2);
@@ -64,7 +80,7 @@ public class SmallSet<E extends Comparable<E>> implements Set<E> {
             return false;
         }
     }
-
+    
     /** @inheritDoc */
     @Override
     public boolean addAll(Collection<? extends E> c) {
@@ -73,6 +89,11 @@ public class SmallSet<E extends Comparable<E>> implements Set<E> {
             changed = (add(e) || changed);
         }
         return changed;
+        
+        // TODO: this might be faster:
+        //        ArrayList<E> newList = new ArrayList<E>();
+        //        mergeSortedLists(list, other.list, newList);
+        //        list = newList;
     }
 
     /** @inheritDoc */
@@ -82,15 +103,24 @@ public class SmallSet<E extends Comparable<E>> implements Set<E> {
     }
 
     /** @inheritDoc */
+    @SuppressWarnings("unchecked")
     @Override
     public boolean contains(Object o) {
-        return list.contains(o);
+        if (o instanceof Comparable) {
+            return Collections.binarySearch(list, (E)o) >= 0;
+        }
+        return false;
     }
 
     /** @inheritDoc */
     @Override
     public boolean containsAll(Collection<?> c) {
-        return list.containsAll(c);
+        for (Object o : c) {
+            if (!contains(o)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** @inheritDoc */
