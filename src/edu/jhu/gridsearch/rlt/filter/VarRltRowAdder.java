@@ -20,7 +20,7 @@ import edu.jhu.util.map.IntObjectHashMap;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
 import edu.jhu.util.vector.LongDoubleEntry;
-import gnu.trove.TIntHashSet;
+import edu.jhu.util.collections.PIntHashSet;
 
 /**
  * Adds only RLT rows that have a non-zero coefficient for some RLT variable corresponding
@@ -29,7 +29,7 @@ import gnu.trove.TIntHashSet;
 public class VarRltRowAdder implements RltRowAdder {
     
     private Set<UnorderedPair> varIdPairs;
-    private TIntHashSet inputVarIds;
+    private PIntHashSet inputVarIds;
     private List<Pair<IloNumVar, IloNumVar>> pairs;
     private Rlt rlt;
     private boolean boundsOnly;
@@ -42,7 +42,7 @@ public class VarRltRowAdder implements RltRowAdder {
     @Override
     public void init(Rlt rlt, long numUnfilteredRows) throws IloException {
         varIdPairs = new HashSet<UnorderedPair>();
-        inputVarIds = new TIntHashSet();
+        inputVarIds = new PIntHashSet();
         for (Pair<IloNumVar, IloNumVar> pair : pairs) {
             int varId1 = SafeCast.safeLongToInt(rlt.getIdForInputVar(pair.get1()));
             int varId2 = SafeCast.safeLongToInt(rlt.getIdForInputVar(pair.get2()));

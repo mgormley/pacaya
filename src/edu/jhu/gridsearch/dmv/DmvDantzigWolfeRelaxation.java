@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.dmv;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumExpr;
@@ -559,7 +559,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return new SubproblemRetVal(sumReducedCost, numPositiveRedCosts, false);
     }
 
-    protected int addCuts(IloCplex cplex, TDoubleArrayList iterationObjVals,
+    protected int addCuts(IloCplex cplex, PDoubleArrayList iterationObjVals,
             ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
         // Reset the objective values list, since we would expect the next iteration
         // to increase, not decrease, after adding the cut below.
@@ -611,9 +611,9 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 sto.updateModelParamBounds(c, m, newLb, newUb);
 
                 // Update lambda column if it uses parameter c,m
-                TIntArrayList rowind = new TIntArrayList();
-                TIntArrayList colind = new TIntArrayList();
-                TDoubleArrayList val = new TDoubleArrayList();
+                PIntArrayList rowind = new PIntArrayList();
+                PIntArrayList colind = new PIntArrayList();
+                PDoubleArrayList val = new PDoubleArrayList();
                 int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
                 int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
                 for (LambdaVar lv : mp.lambdaVars) {

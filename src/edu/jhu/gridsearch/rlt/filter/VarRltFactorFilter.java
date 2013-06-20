@@ -1,6 +1,6 @@
 package edu.jhu.gridsearch.rlt.filter;
 
-import gnu.trove.TLongHashSet;
+import edu.jhu.util.collections.PLongHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 
@@ -16,7 +16,7 @@ import edu.jhu.util.Utilities;
  */
 public class VarRltFactorFilter implements RltFactorFilter {
     
-    private TLongHashSet cols;
+    private PLongHashSet cols;
     private List<IloNumVar> vars;
 
     public VarRltFactorFilter(List<IloNumVar> vars) {
@@ -25,7 +25,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
 
     @Override
     public void init(Rlt rlt) throws IloException {
-        cols = new TLongHashSet();
+        cols = new PLongHashSet();
         for (IloNumVar var : vars) {
             cols.add(rlt.getInputMatrix().getIndex(var));
         }

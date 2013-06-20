@@ -1,6 +1,6 @@
 package edu.jhu.gridsearch;
 
-import gnu.trove.TDoubleArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
@@ -201,8 +201,8 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
         }
         
         RelaxStatus status = RelaxStatus.Unknown;
-        TDoubleArrayList iterationLowerBounds = new TDoubleArrayList();
-        TDoubleArrayList iterationObjVals = new TDoubleArrayList();
+        PDoubleArrayList iterationLowerBounds = new PDoubleArrayList();
+        PDoubleArrayList iterationObjVals = new PDoubleArrayList();
         ArrayList<Status> iterationStatus = new ArrayList<Status>();
         WarmStart warmStart = null;
         iterationLowerBounds.add(INTERNAL_BEST_SCORE);
@@ -312,7 +312,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
 
     protected abstract void printSummary();
 
-    protected abstract int addCuts(IloCplex cplex, TDoubleArrayList iterationObjVals, ArrayList<Status> iterationStatus, int cut)  throws UnknownObjectException, IloException;
+    protected abstract int addCuts(IloCplex cplex, PDoubleArrayList iterationObjVals, ArrayList<Status> iterationStatus, int cut)  throws UnknownObjectException, IloException;
 
     protected abstract SubproblemRetVal addColumns(IloCplex cplex)  throws UnknownObjectException, IloException;
 

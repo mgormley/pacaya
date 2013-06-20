@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.dmv;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -397,7 +397,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds  : prm.maxCutRounds;
         
         RelaxStatus status = RelaxStatus.Unknown;
-        TDoubleArrayList cutIterLowerBounds = new TDoubleArrayList();
+        PDoubleArrayList cutIterLowerBounds = new PDoubleArrayList();
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
@@ -522,7 +522,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
-        TIntArrayList rows = new TIntArrayList(); 
+        PIntArrayList rows = new PIntArrayList(); 
 
         if (prm.addBindingCons) {
             // TODO: add binding bounds as factors too.

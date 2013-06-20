@@ -4,8 +4,8 @@
 package edu.jhu.lp;
 
 import edu.jhu.util.SafeCast;
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 
@@ -25,11 +25,11 @@ import edu.jhu.util.vector.SortedLongDoubleVector;
  * 
  */
 public class LpMatrixUpdates {
-    private TIntArrayList rowIdxs;
+    private PIntArrayList rowIdxs;
     private ArrayList<SortedLongDoubleVector> coefs;
 
     public LpMatrixUpdates() {
-        rowIdxs = new TIntArrayList();
+        rowIdxs = new PIntArrayList();
         coefs = new ArrayList<SortedLongDoubleVector>();
     }
 
@@ -39,9 +39,9 @@ public class LpMatrixUpdates {
     }
 
     public void updateRowsInMatrix(IloLPMatrix mat) throws IloException {
-        TIntArrayList rowInd = new TIntArrayList();
-        TIntArrayList colInd = new TIntArrayList();
-        TDoubleArrayList val = new TDoubleArrayList();
+        PIntArrayList rowInd = new PIntArrayList();
+        PIntArrayList colInd = new PIntArrayList();
+        PDoubleArrayList val = new PDoubleArrayList();
         for (int i = 0; i < rowIdxs.size(); i++) {
             int rowind = rowIdxs.get(i);
             SortedLongDoubleVector row = coefs.get(i);

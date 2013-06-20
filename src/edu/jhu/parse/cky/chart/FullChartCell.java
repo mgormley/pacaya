@@ -8,7 +8,7 @@ import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.util.Utilities;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
 /**
  * Cell that stores every possible entry explicitly. This is suitable for
@@ -42,7 +42,7 @@ public class FullChartCell implements ChartCell {
      * nonterminals that have non-null backpointers. When the chart cell is
      * closed, the <code>ntsArray</code> should be used instead of this.
      */
-    private final TIntArrayList nts;
+    private final PIntArrayList nts;
     /**
      * When the chart cell is closed, this is a copy of the elements in <code>nts</code>.
      */
@@ -56,7 +56,7 @@ public class FullChartCell implements ChartCell {
     public FullChartCell(CnfGrammar grammar, ParseType parseType) {
         scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
-        nts = new TIntArrayList();
+        nts = new PIntArrayList();
 
         isClosed = false;
         

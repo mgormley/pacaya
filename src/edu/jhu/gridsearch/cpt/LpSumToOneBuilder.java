@@ -1,6 +1,6 @@
 package edu.jhu.gridsearch.cpt;
 
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
@@ -181,9 +181,9 @@ public class LpSumToOneBuilder {
      * @param newRows
      * @return The number of new constraints added.
      */
-    public TIntArrayList projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
+    public PIntArrayList projectModelParamsAndAddCuts() throws UnknownObjectException, IloException {
         if (numStoCons >= prm.maxStoCuts) {
-            return new TIntArrayList();
+            return new PIntArrayList();
         }
         
         // Add a cut for each distribution by projecting the model
@@ -194,7 +194,7 @@ public class LpSumToOneBuilder {
             // Here the params are log probs
             params[c] = cplex.getValues(modelParamVars[c]);
         }
-        TIntArrayList rows = new TIntArrayList();
+        PIntArrayList rows = new PIntArrayList();
         for (int c = 0; c < idm.getNumConds(); c++) {
             Vectors.exp(params[c]);
             // Here the params are probs

@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.rlt;
 
-import gnu.trove.TIntArrayList;
-import gnu.trove.TLongIntHashMap;
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.PLongIntHashMap;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -133,7 +133,7 @@ public class Rlt {
     // w_{ij} in the RLT matrix.
     private SymIntMat rltVarsIdx;
     // Mapping of INDENTIFIERS for RLT matrix vars to INTERNAL column indices.
-    private TLongIntHashMap idToColIdx;
+    private PLongIntHashMap idToColIdx;
     // The columns of the RLT matrix.
     private ArrayList<IloNumVar> rltMatVars;
     
@@ -175,7 +175,7 @@ public class Rlt {
         rltMatVars.add(rltMat.getNumVar(constantVarColIdx));
 
         // Setup the ID to column index map. Set the values for the non-RLT variables.
-        idToColIdx = new TLongIntHashMap();
+        idToColIdx = new PLongIntHashMap();
         for (int i=0; i<numVars.length; i++) {
             idToColIdx.put(i, i);
         }
@@ -404,7 +404,7 @@ public class Rlt {
     /**
      * @return The number of rows added to the RLT matrix.
      */
-    public int addRowsAsFactors(TIntArrayList rowIds) throws IloException {
+    public int addRowsAsFactors(PIntArrayList rowIds) throws IloException {
         if (prm.envelopeOnly) {
             // Don't add the rows.
             return 0;
@@ -502,7 +502,7 @@ public class Rlt {
     /**
      * Returns true iff the list of integers is a consecutive list.
      */
-    private static boolean areConsecutive(TIntArrayList rows) {
+    private static boolean areConsecutive(PIntArrayList rows) {
         if (rows.size() <= 1) {
             return true;
         }

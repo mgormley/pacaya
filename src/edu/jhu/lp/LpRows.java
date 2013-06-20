@@ -5,7 +5,7 @@ package edu.jhu.lp;
 
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
-import gnu.trove.TDoubleArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloRange;
@@ -22,16 +22,16 @@ import edu.jhu.util.vector.SortedLongDoubleVector;
  * 
  */
 public class LpRows {
-    private TDoubleArrayList lbs;
-    private TDoubleArrayList ubs;
+    private PDoubleArrayList lbs;
+    private PDoubleArrayList ubs;
     private ArrayList<SortedLongDoubleVector> coefs;
     private ArrayList<String> names;
     private boolean setNames;
 
     public LpRows(boolean setNames) {
-        lbs = new TDoubleArrayList();
+        lbs = new PDoubleArrayList();
         coefs = new ArrayList<SortedLongDoubleVector>();
-        ubs = new TDoubleArrayList();
+        ubs = new PDoubleArrayList();
         names = new ArrayList<String>();
         this.setNames = setNames;
     }

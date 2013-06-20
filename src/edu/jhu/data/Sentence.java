@@ -5,7 +5,7 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXToken;
 import edu.jhu.util.Alphabet;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,12 +17,12 @@ public class Sentence implements Iterable<Label> {
 
     private static final long serialVersionUID = 1L;
     private ArrayList<Label> labels;
-    private TIntArrayList labelIds;     // TODO: cache an int[] version of this.
+    private PIntArrayList labelIds;     // TODO: cache an int[] version of this.
     private Alphabet<Label> alphabet;
     
     protected Sentence(Alphabet<Label> alphabet) {
         labels = new ArrayList<Label>();
-        labelIds = new TIntArrayList();
+        labelIds = new PIntArrayList();
         this.alphabet = alphabet; 
     }
     

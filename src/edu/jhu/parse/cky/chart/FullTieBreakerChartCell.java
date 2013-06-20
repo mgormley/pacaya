@@ -6,7 +6,7 @@ import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
 /**
  * This class is identical to <code>FullChartCell</code> except that it adds the
@@ -22,7 +22,7 @@ public class FullTieBreakerChartCell implements ChartCell {
     
     private final double[] maxScores;
     private final BackPointer[] bps;
-    private final TIntArrayList nts;
+    private final PIntArrayList nts;
     private int[] ntsArray;
     
     private boolean isClosed;
@@ -34,7 +34,7 @@ public class FullTieBreakerChartCell implements ChartCell {
     public FullTieBreakerChartCell(CnfGrammar grammar, boolean breakTies) {
         maxScores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
-        nts = new TIntArrayList();
+        nts = new PIntArrayList();
 
         isClosed = false;
         

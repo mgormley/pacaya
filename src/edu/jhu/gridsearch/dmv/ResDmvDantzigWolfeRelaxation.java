@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.dmv;
 
-import gnu.trove.TDoubleArrayList;
-import gnu.trove.TIntArrayList;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
@@ -567,7 +567,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
         return new SubproblemRetVal(sumReducedCost, numPositiveRedCosts, false);
     }
 
-    protected int addCuts(IloCplex cplex, TDoubleArrayList iterationObjVals,
+    protected int addCuts(IloCplex cplex, PDoubleArrayList iterationObjVals,
             ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
         return 0;
     }
@@ -598,9 +598,9 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             bounds.set(Type.PARAM, c, m, newLb, newUb);
 
             // Update lambda column if it uses parameter c,m
-            TIntArrayList rowind = new TIntArrayList();
-            TIntArrayList colind = new TIntArrayList();
-            TDoubleArrayList val = new TDoubleArrayList();
+            PIntArrayList rowind = new PIntArrayList();
+            PIntArrayList colind = new PIntArrayList();
+            PDoubleArrayList val = new PDoubleArrayList();
             int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
             int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             for (LambdaVar lv : mp.lambdaVars) {
@@ -655,9 +655,9 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     }
     
     private void updateGammaVar(GammaVar gv, int c) throws IloException {
-        TIntArrayList rowind = new TIntArrayList();
-        TIntArrayList colind = new TIntArrayList();
-        TDoubleArrayList val = new TDoubleArrayList();
+        PIntArrayList rowind = new PIntArrayList();
+        PIntArrayList colind = new PIntArrayList();
+        PDoubleArrayList val = new PDoubleArrayList();
 
         int colindForGv = mp.lpMatrix.getIndex(gv.gammaVar);
 
