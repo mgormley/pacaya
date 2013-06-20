@@ -1,9 +1,6 @@
 package edu.jhu.util;
 
-import edu.jhu.util.Timer;
 import org.junit.Test;
-
-import edu.jhu.util.prng.MultiplywCarryRNG;
 
 public class PrngTest {
 
@@ -41,23 +38,6 @@ public class PrngTest {
         timer.start();
         for (int i = 0; i < NUM_DOUBLES; i++) {
             Prng.mtColt.nextDouble();
-        }
-        timer.stop();
-        System.out.println(timer.totMs());
-
-        timer = new Timer();
-        timer.start();
-        for (int i = 0; i < NUM_DOUBLES; i++) {
-            Prng.stream.nextDouble();
-        }
-        timer.stop();
-        System.out.println(timer.totMs());
-        
-        timer = new Timer();
-        timer.start();
-        MultiplywCarryRNG mwc = new MultiplywCarryRNG();
-        for (int i = 0; i < NUM_DOUBLES; i++) {
-            mwc.nextDouble();
         }
         timer.stop();
         System.out.println(timer.totMs());

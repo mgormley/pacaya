@@ -1,4 +1,4 @@
-package edu.jhu.util.prng;
+package org.uncommons.maths.random;
 
 //============================================================================
 //Copyright 2006-2010 Daniel W. Dyer
@@ -26,8 +26,8 @@ import org.uncommons.maths.random.SeedException;
 import org.uncommons.maths.random.SeedGenerator;
 
 /**
- * @author mgormley Removed the Reentrant lock that was ensuring thread safe
- *         operation of this class
+ * Note: Removed the Reentrant lock that was ensuring thread safe
+ *         operation of this class -MRG
  * 
  *         <p>
  *         A Java version of George Marsaglia's <a href=

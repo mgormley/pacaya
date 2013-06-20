@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import depparsing.globals.Constants;
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
 import edu.jhu.parse.cky.Lambda.LambdaOneToOne;
@@ -15,6 +14,16 @@ import edu.jhu.util.math.LabeledMultinomial;
 import edu.jhu.util.math.Multinomials;
 
 public class DmvModel implements Model {
+    
+    // Constants for whether a left or right child is generated.
+    public static final int LEFT = 0; 
+    public static final int RIGHT = 1;
+    // Constants for whether a the stopping coin flip comes up STOP or CONTINUE.
+    public static final int END = 0;
+    public static final int CONT = 1;
+    // 
+    public static final int CHOICE = 1;
+    public static final int CHILD = 0;
     
     // Probabilities or log-probabilities.
     public final double[] root; // Indexed by child.
@@ -27,7 +36,7 @@ public class DmvModel implements Model {
     public enum Lr { 
         LEFT, RIGHT;
         public int getAsInt() {
-            return (this == LEFT) ? Constants.LEFT : Constants.RIGHT;
+            return (this == LEFT) ? DmvModel.LEFT : DmvModel.RIGHT;
         } 
         public String toString() {
             return (this == LEFT) ? "l" : "r";
@@ -150,7 +159,7 @@ public class DmvModel implements Model {
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        
-        return decision[pid][dir][kids][Constants.END];
+        return decision[pid][dir][kids][DmvModel.END];
     }
     
     public double getContWeight(Label parent, Lr lr, boolean adjacent) {
@@ -158,7 +167,7 @@ public class DmvModel implements Model {
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        
-        return decision[pid][dir][kids][Constants.CONT];
+        return decision[pid][dir][kids][DmvModel.CONT];
     }
 
     @Deprecated
@@ -171,8 +180,8 @@ public class DmvModel implements Model {
         int dir = lr.getAsInt();
         // Note this is backwards from how adjacency is encoded for the ILPs
         int kids = adjacent ? 0 : 1;        
-        decision[pid][dir][kids][Constants.END] = prob;
-        decision[pid][dir][kids][Constants.CONT] = 1.0 - prob;
+        decision[pid][dir][kids][DmvModel.END] = prob;
+        decision[pid][dir][kids][DmvModel.CONT] = 1.0 - prob;
     }
 
     /** Sets all the stop probabilities to prob. THIS IS SLOW. */

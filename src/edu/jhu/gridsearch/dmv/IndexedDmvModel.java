@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import depparsing.globals.Constants;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
@@ -197,7 +196,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 }
                 int pTag = tags[pIdx];
 
-                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+                int lr = cIdx < pIdx ? DmvModel.LEFT : DmvModel.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
                 maxFreq[rhsToC.lookupIndex(rhs)][m]++;
@@ -213,20 +212,20 @@ public class IndexedDmvModel implements IndexedCpt {
                 int m;
                 // stopAdj
                 rhs = new Rhs(DECISION, cTag, lr, 0);
-                m = Constants.END;
+                m = DmvModel.END;
                 maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                 if (numOnSide > 0) {
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                     // contNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     maxFreq[rhsToC.lookupIndex(rhs)][m] += numOnSide-1;
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
-                    m = Constants.END;
+                    m = DmvModel.END;
                     maxFreq[rhsToC.lookupIndex(rhs)][m]++;
                 }
             }
@@ -272,13 +271,13 @@ public class IndexedDmvModel implements IndexedCpt {
             return String.format("root(%s)", cTag);
         } else if (rhs.get(0) == CHILD) {
             String pTag = alphabet.lookupObject(rhs.get(1)).getLabel();
-            String lr = rhs.get(2) == Constants.LEFT ? "l" : "r";
+            String lr = rhs.get(2) == DmvModel.LEFT ? "l" : "r";
             String cTag = alphabet.lookupObject(m).getLabel();
             return String.format("child_{%s,%s,%d}(%s)", pTag, lr, rhs.get(3), cTag);
         } else if (rhs.get(0) == DECISION) {
             String pTag = alphabet.lookupObject(rhs.get(1)).getLabel();
-            String lr = (rhs.get(2) == Constants.LEFT) ? "l" : "r";
-            String sc = (m == Constants.END) ? "s" : "c";
+            String lr = (rhs.get(2) == DmvModel.LEFT) ? "l" : "r";
+            String sc = (m == DmvModel.END) ? "s" : "c";
             return String.format("dec_{%s,%s,%d}(%s)",  pTag, lr, rhs.get(3), sc);
         } else {
             throw new IllegalStateException("Unsupported type");
@@ -419,7 +418,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 dmv.root[cTag]++;
             } else {
                 int pTag = tags[pIdx];
-                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+                int lr = cIdx < pIdx ? DmvModel.LEFT : DmvModel.RIGHT;
                 dmv.child[cTag][pTag][lr]++;
             }
             for (int lr=0; lr<2; lr++) {
@@ -427,16 +426,16 @@ public class IndexedDmvModel implements IndexedCpt {
                 int numOnSide = depTree.getNodes().get(cIdx+1).getChildrenToSide(lrs).size();
                 if (numOnSide == 0) {
                     // stopAdj
-                    dmv.decision[cTag][lr][0][Constants.END]++;
+                    dmv.decision[cTag][lr][0][DmvModel.END]++;
                 } else {
                     // contAdj
-                    dmv.decision[cTag][lr][0][Constants.CONT]++;
+                    dmv.decision[cTag][lr][0][DmvModel.CONT]++;
                     if (numOnSide - 1 > 0) {
                         // contNonAdj
-                        dmv.decision[cTag][lr][1][Constants.CONT] += numOnSide - 1;
+                        dmv.decision[cTag][lr][1][DmvModel.CONT] += numOnSide - 1;
                     }
                     // stopNonAdj
-                    dmv.decision[cTag][lr][1][Constants.END]++;
+                    dmv.decision[cTag][lr][1][DmvModel.END]++;
                 }
             }
         }
@@ -493,7 +492,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
             } else {
                 int pTag = tags[pIdx];
-                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+                int lr = cIdx < pIdx ? DmvModel.LEFT : DmvModel.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
                 totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
@@ -504,24 +503,24 @@ public class IndexedDmvModel implements IndexedCpt {
                 if (numOnSide == 0) {
                     // stopAdj
                     Rhs rhs = new Rhs(DECISION, cTag, lr, 0);
-                    int m = Constants.END;
+                    int m = DmvModel.END;
                     totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                 } else {
                     Rhs rhs;
                     int m;
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                     if (numOnSide - 1 > 0) {
                         // contNonAdj
                         rhs = new Rhs(DECISION, cTag, lr, 1);
-                        m = Constants.CONT;
+                        m = DmvModel.CONT;
                         totFreqCm[rhsToC.lookupIndex(rhs)][m] += numOnSide - 1;
                     }
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
-                    m = Constants.END;
+                    m = DmvModel.END;
                     totFreqCm[rhsToC.lookupIndex(rhs)][m]++;
                 }
             }
@@ -553,7 +552,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
             } else {
                 int pTag = tags[pIdx];
-                int lr = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+                int lr = cIdx < pIdx ? DmvModel.LEFT : DmvModel.RIGHT;
                 Rhs rhs = new Rhs(CHILD, pTag, lr, 0);
                 int m = cTag;
                 sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
@@ -564,24 +563,24 @@ public class IndexedDmvModel implements IndexedCpt {
                 if (numOnSide == 0) {
                     // stopAdj
                     Rhs rhs = new Rhs(DECISION, cTag, lr, 0);
-                    int m = Constants.END;
+                    int m = DmvModel.END;
                     sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                 } else {
                     Rhs rhs;
                     int m;
                     // contAdj
                     rhs = new Rhs(DECISION, cTag, lr, 0);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                     if (numOnSide - 1 > 0) {
                         // contNonAdj
                         rhs = new Rhs(DECISION, cTag, lr, 1);
-                        m = Constants.CONT;
+                        m = DmvModel.CONT;
                         sentSol[paramToI.lookupIndex(new ParamId(rhs, m))] += numOnSide - 1;
                     }
                     // stopNonAdj
                     rhs = new Rhs(DECISION, cTag, lr, 1);
-                    m = Constants.END;
+                    m = DmvModel.END;
                     sentSol[paramToI.lookupIndex(new ParamId(rhs, m))]++;
                 }
             }

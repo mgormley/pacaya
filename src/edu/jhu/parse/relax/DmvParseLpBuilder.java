@@ -12,7 +12,6 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import depparsing.globals.Constants;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
@@ -680,7 +679,7 @@ public class DmvParseLpBuilder {
                 for (int pIdx = 0; pIdx < sent.size(); pIdx++) {
                     if (pIdx == cIdx) { continue; }             
                     int pTag = tags[pIdx];
-                    int side = cIdx < pIdx ? Constants.LEFT : Constants.RIGHT;
+                    int side = cIdx < pIdx ? DmvModel.LEFT : DmvModel.RIGHT;
                 
                     c = idm.getCChild(pTag, side, 0);
                     featCountExprs[c][m].addTerm(1, pp.arcChild[s][pIdx][cIdx]);
@@ -690,19 +689,19 @@ public class DmvParseLpBuilder {
                 int pTag = tags[pIdx];
                 for (int side = 0; side < 2; side++) {
                     c = idm.getCDecision(pTag, side, 0);
-                    m = Constants.END;
+                    m = DmvModel.END;
                     featCountExprs[c][m].addTerm(1, pp.stopAdj[s][pIdx][side]);
 
                     c = idm.getCDecision(pTag, side, 0);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     featCountExprs[c][m].addTerm(1, pp.genAdj[s][pIdx][side]);
 
                     c = idm.getCDecision(pTag, side, 1);
-                    m = Constants.END;
+                    m = DmvModel.END;
                     featCountExprs[c][m].addTerm(1, pp.genAdj[s][pIdx][side]);
                     
                     c = idm.getCDecision(pTag, side, 1);
-                    m = Constants.CONT;
+                    m = DmvModel.CONT;
                     featCountExprs[c][m].addTerm(1, pp.numNonAdj[s][pIdx][side]);
                 }
             }

@@ -2,7 +2,6 @@ package edu.jhu.parse.dmv;
 
 import java.util.ArrayList;
 
-import depparsing.globals.Constants;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.Tag;
@@ -44,7 +43,7 @@ public class DmvCnfGrammar {
         for (int unanno=0; unanno<labelAlphabet.size(); unanno++) {
             for (int dir=0; dir<2; dir++) {
                 int anno;
-                if (dir == Constants.LEFT) {
+                if (dir == DmvModel.LEFT) {
                     anno = lexAlphabet.lookupIndex(new Word(String.format("%d_{l}", unanno))); 
                 } else {
                     anno = lexAlphabet.lookupIndex(new Word(String.format("%d_{r}", unanno)));
@@ -135,7 +134,7 @@ public class DmvCnfGrammar {
     }
     
     private Rule getChildRule(int c, int p, int dir) {
-        if (dir == Constants.LEFT) {
+        if (dir == DmvModel.LEFT) {
             return getBinaryRule(f("L_{%d}^{1}", p), 
                                  f("L_{%d}", c), 
                                  f("M_{%d,%d*}", c, p), 
@@ -153,7 +152,7 @@ public class DmvCnfGrammar {
     }
 
     private Rule getStructuralRule(int c, int p, int dir) {
-        if (dir == Constants.LEFT) { 
+        if (dir == DmvModel.LEFT) { 
             return getBinaryRule(f("M_{%d,%d*}", c, p),
                                  f("R_{%d}", c),
                                  f("L_{%d}^{*}", p),
@@ -171,12 +170,12 @@ public class DmvCnfGrammar {
     }
 
     private Rule getDecisionRule(int c, int dir, int val, int sc) {
-        String cap = (dir == Constants.LEFT) ? "L" : "R";
+        String cap = (dir == DmvModel.LEFT) ? "L" : "R";
         String parent_ss = (val == 0) ? "" : "^{*}"; // parent superscript
         
         int parent = ntAlphabet.lookupIndex(new Tag(f("%s_{%d}%s", cap, c, parent_ss)));
-        if (sc == Constants.END){
-            int leftChild = (dir == Constants.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
+        if (sc == DmvModel.END){
+            int leftChild = (dir == DmvModel.LEFT) ? getAnnotatedTagLeft(c) : getAnnotatedTagRight(c);
             int rightChild = Rule.LEXICAL_RULE;
             double score = 0.0;
             return new DmvRule(parent, leftChild, rightChild, score, ntAlphabet, lexAlphabet, true, DmvRuleType.DECISION);

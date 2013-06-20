@@ -224,7 +224,7 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
         for (Lr lr : Lr.values()) {
             for (boolean adjacent : DmvModel.ADJACENTS) {
                 String leftRight = lr.toString();
-                // TODO: This integer encoding of adjacency is the reverse from Constants.END and Constants.CONT.
+                // TODO: This integer encoding of adjacency is the reverse from DmvModel.END and DmvModel.CONT.
                 int adja = adjacent ? 1 : 0;
                 double weight;
                 if (lr == Lr.RIGHT) {
@@ -247,7 +247,7 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
                     double weight = Utilities.exp(dmv.getStopWeight(parent, lr, adjacent));
                     double logWeightStop = Utilities.logForIlp(weight);
                     double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
-                    // TODO: This integer encoding of adjacency is the reverse from Constants.END and Constants.CONT.
+                    // TODO: This integer encoding of adjacency is the reverse from DmvModel.END and DmvModel.CONT.
                     int adja = adjacent ? 1 : 0;
                     stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", parent.getLabel(), leftRight, adja, weight, logWeightStop, logWeightNotStop);
                 }

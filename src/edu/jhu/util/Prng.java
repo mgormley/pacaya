@@ -3,15 +3,13 @@ package edu.jhu.util;
 import java.util.Random;
 
 import org.uncommons.maths.random.SeedException;
+import org.uncommons.maths.random.UnlockedCMWC4096RNG;
+import org.uncommons.maths.random.UnlockedXORShiftRNG;
 
-import umontreal.iro.lecuyer.rng.MRG32k3a;
-import umontreal.iro.lecuyer.rng.RandomStream;
 import cern.jet.random.engine.MersenneTwister;
 import cern.jet.random.tdouble.engine.DoubleMersenneTwister;
 import ec.util.MersenneTwisterFast;
 import edu.jhu.util.prng.DeterministicSeedGenerator;
-import edu.jhu.util.prng.UnlockedCMWC4096RNG;
-import edu.jhu.util.prng.UnlockedXORShiftRNG;
 
 public class Prng {
     
@@ -26,7 +24,6 @@ public class Prng {
     public static final long DEFAULT_SEED;
 
     // Using default seed
-    public static final RandomStream stream = new MRG32k3a();
     public static UnlockedXORShiftRNG xorShift;
     public static UnlockedCMWC4096RNG mwc4096;
     public static Random javaRandom;
@@ -48,10 +45,6 @@ public class Prng {
         mtColt = new MersenneTwister((int)seed);
         doubleMtColt = new DoubleMersenneTwister((int)seed);
         
-        long value = seed % 4294944443l;
-        long[] seedArray = new long[]{value,value,value,value,value,value};
-        ((MRG32k3a)stream).setSeed(seedArray);
-
         try {
             xorShift = new UnlockedXORShiftRNG(new DeterministicSeedGenerator(seed));
             mwc4096 = new UnlockedCMWC4096RNG(new DeterministicSeedGenerator(seed));

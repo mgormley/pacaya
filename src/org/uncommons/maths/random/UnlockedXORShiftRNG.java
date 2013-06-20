@@ -1,4 +1,4 @@
-package edu.jhu.util.prng;
+package org.uncommons.maths.random;
 
 import java.util.Random;
 
@@ -10,8 +10,8 @@ import org.uncommons.maths.random.SeedException;
 import org.uncommons.maths.random.SeedGenerator;
 
 /**
- * @author mgormley Removed the Reentrant lock that was ensuring thread safe
- *         operation of this class
+ * Note: Removed the Reentrant lock that was ensuring thread safe
+ *         operation of this class -MRG
  * 
  *         Very fast pseudo random number generator. See <a href=
  *         "http://school.anhb.uwa.edu.au/personalpages/kwessen/shared/Marsaglia03.html"
