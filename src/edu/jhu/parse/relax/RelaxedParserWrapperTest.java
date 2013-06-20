@@ -1,17 +1,17 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Prng;
 
 
 public class RelaxedParserWrapperTest {

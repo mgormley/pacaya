@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 /**
  * A differentiable function.

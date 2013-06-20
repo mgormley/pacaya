@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
 
 import java.util.Collection;
 
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.util.tuple.OrderedPair;
-import edu.jhu.hltcoe.util.tuple.PairSampler;
-import edu.jhu.hltcoe.util.tuple.UnorderedPair;
+import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.PairSampler;
+import edu.jhu.util.tuple.UnorderedPair;
 
 /**
  * Randomly accepts only a fixed proportion of the rows.

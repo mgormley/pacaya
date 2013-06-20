@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.gridsearch.Relaxation;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.gridsearch.Relaxation;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.train.DmvTrainCorpus;
 
 public interface DmvRelaxation extends Relaxation {
 

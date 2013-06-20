@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.NodeResult;
 
 
 public interface NodeOrderer extends Iterable<ProblemNode> {

@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Utilities;
 
 /**
  * Container for lambda expression interfaces.

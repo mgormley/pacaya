@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -6,13 +6,13 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.hltcoe.parse.cky.chart.Chart;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.parse.cky.chart.Chart;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.util.Pair;
 
 public class CkyPcfgParserTest {
 

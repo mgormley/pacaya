@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 
-import edu.jhu.hltcoe.gm.BipartiteGraph.Edge;
-import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
-import edu.jhu.hltcoe.gm.FactorGraph.FgEdge;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gm.BipartiteGraph.Edge;
+import edu.jhu.gm.BipartiteGraph.Node;
+import edu.jhu.gm.FactorGraph.FgEdge;
+import edu.jhu.util.Timer;
+import edu.jhu.util.math.Vectors;
 
 /**
  * Loopy belief propagation inference algorithm.

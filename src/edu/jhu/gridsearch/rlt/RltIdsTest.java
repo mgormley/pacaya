@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.gridsearch.rlt;
 
 import org.junit.Test;
 

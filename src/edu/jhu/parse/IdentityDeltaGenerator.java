@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.util.ArrayList;
 
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.util.Pair;
 
 public class IdentityDeltaGenerator implements DeltaGenerator {
 

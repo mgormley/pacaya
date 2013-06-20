@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -26,7 +26,7 @@ import org.apache.commons.cli.PosixParser;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Command;
+import edu.jhu.util.Command;
 
 public class CplexIlpSolver implements IlpSolver {
     

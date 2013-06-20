@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.cplex;
+package edu.jhu.util.cplex;
 
 import static org.junit.Assert.assertEquals;
 import ilog.concert.IloException;

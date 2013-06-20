@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp.decomp;
+package edu.jhu.ilp.decomp;
 
 import java.io.File;
 

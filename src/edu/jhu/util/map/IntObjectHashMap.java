@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.map;
+package edu.jhu.util.map;
 
 import cern.colt.function.IntProcedure;
 import cern.colt.list.ObjectArrayList;

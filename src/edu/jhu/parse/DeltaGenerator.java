@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
-import edu.jhu.hltcoe.parse.IdentityDeltaGenerator.DeltaList;
+import edu.jhu.parse.IdentityDeltaGenerator.DeltaList;
 
 public interface DeltaGenerator {
 

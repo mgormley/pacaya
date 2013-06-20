@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -11,16 +11,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory.IlpSolverId;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.ilp.IlpSolverFactory;
+import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.util.Files;
+import edu.jhu.util.Prng;
 
 
 public class InitializedIlpDepParserWithDeltasTest {

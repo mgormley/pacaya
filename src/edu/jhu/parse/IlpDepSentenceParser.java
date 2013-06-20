@@ -1,22 +1,22 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.util.Timer;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.ilp.ZimplSolver;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.ilp.IlpSolverFactory;
+import edu.jhu.ilp.ZimplSolver;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.util.Files;
 
 /**
  * TODO: switch this to be a wrapper class for an object implementing the ViterbiParser interface

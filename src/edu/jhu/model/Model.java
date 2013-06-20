@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.model;
+package edu.jhu.model;
 
 public interface Model {
 

@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import java.util.Arrays;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.conll.SrlGraph.SrlArg;
-import edu.jhu.hltcoe.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.conll.SrlGraph.SrlArg;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Utilities;
 
 /**
  * A sentence with side information indicating which child-parent dependency

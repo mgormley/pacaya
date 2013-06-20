@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.tuple;
+package edu.jhu.util.tuple;
 
 import java.util.Collection;
 

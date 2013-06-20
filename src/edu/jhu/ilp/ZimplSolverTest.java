@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.util.Files;
 
 
 /**

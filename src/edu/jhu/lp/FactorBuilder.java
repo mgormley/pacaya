@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
+import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.Sort;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.util.Pair;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Sort;
+import edu.jhu.util.cplex.CplexUtils;
 
 public class FactorBuilder {
 

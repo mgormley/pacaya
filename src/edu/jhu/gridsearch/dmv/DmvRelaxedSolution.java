@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.RelaxStatus;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.RelaxStatus;
+import edu.jhu.gridsearch.RelaxedSolution;
 
 public class DmvRelaxedSolution implements RelaxedSolution {
 

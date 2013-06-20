@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.util.math;
+package edu.jhu.util.math;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.util.Prng;
 
 public class LabeledMultinomial<T> extends TreeMap<T, Double> implements Map<T, Double> {
 

@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.util.Alphabet;
 
 /**
  * Dependency tree that carries the original CoNLL-X sentence as metadata.

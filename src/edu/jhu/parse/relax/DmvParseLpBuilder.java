@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -13,20 +13,20 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import depparsing.globals.Constants;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
-import edu.jhu.hltcoe.lp.IloRangeLpRows;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
-import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.dmv.ShinyEdges;
+import edu.jhu.lp.IloRangeLpRows;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvSentParamCache;
+import edu.jhu.parse.IlpFormulation;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.cplex.CplexUtils;
 
 public class DmvParseLpBuilder {
 

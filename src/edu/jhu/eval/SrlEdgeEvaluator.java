@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.eval;
+package edu.jhu.eval;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.conll.CoNLL09DepTree;
-import edu.jhu.hltcoe.data.conll.SrlGraph;
-import edu.jhu.hltcoe.data.conll.SrlGraph.SrlArg;
-import edu.jhu.hltcoe.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.DepParser;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.conll.CoNLL09DepTree;
+import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlArg;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.model.Model;
+import edu.jhu.parse.DepParser;
 
 /**
  * Computes the proportion of words labeled as arguments that have a syntactic

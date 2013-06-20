@@ -1,12 +1,12 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.lp.FactorBuilder;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
+import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.lp.FactorBuilder;
+import edu.jhu.lp.FactorBuilder.Factor;
 
 public interface RltFactorFilter {
     boolean accept(Factor factor);

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
@@ -12,11 +12,11 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Multinomials;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Multinomials;
+import edu.jhu.util.math.Vectors;
 
 public class Projections {
 

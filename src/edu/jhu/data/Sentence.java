@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
-import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
-import edu.jhu.hltcoe.data.conll.CoNLL09Token;
-import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
-import edu.jhu.hltcoe.data.conll.CoNLLXToken;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.conll.CoNLLXSentence;
+import edu.jhu.data.conll.CoNLLXToken;
+import edu.jhu.util.Alphabet;
 import gnu.trove.TIntArrayList;
 
 import java.util.ArrayList;

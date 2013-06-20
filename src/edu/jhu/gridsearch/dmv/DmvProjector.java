@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.hltcoe.gridsearch.Projector;
+import edu.jhu.gridsearch.Projector;
 
 public interface DmvProjector extends Projector {
 

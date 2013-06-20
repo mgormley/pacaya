@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,17 +9,17 @@ import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
-import edu.jhu.hltcoe.parse.IdentityDeltaGenerator.Delta;
-import edu.jhu.hltcoe.util.Quadruple;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.ilp.IlpSolverFactory;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModel.Lr;
+import edu.jhu.parse.IdentityDeltaGenerator.Delta;
+import edu.jhu.util.Quadruple;
+import edu.jhu.util.Utilities;
 
 public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
 

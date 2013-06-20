@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.util.vector;
+package edu.jhu.util.vector;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.jhu.hltcoe.util.Sort;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Sort;
+import edu.jhu.util.Utilities;
 
 public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 

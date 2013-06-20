@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import static org.junit.Assert.assertEquals;
 

@@ -1,9 +1,9 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.gridsearch.rlt;
 
-import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.util.SafeCast;
 
 
 public class RltIds {

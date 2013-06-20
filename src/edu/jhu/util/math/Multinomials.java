@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.util.math;
+package edu.jhu.util.math;
 
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
 
 public class Multinomials {
 

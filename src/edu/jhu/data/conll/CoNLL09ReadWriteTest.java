@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,7 +7,7 @@ import java.io.StringWriter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.util.Files;
 
 public class CoNLL09ReadWriteTest {
 

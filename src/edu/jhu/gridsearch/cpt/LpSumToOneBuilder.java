@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
@@ -13,11 +13,11 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Sets;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Sets;
+import edu.jhu.util.math.Vectors;
 
 public class LpSumToOneBuilder {
     

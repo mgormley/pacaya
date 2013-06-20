@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.util.math;
+package edu.jhu.util.math;
 
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Utilities;
 
 public class Vectors {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.io.IOException;
 import java.io.InputStream;

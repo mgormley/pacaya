@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,36 +13,36 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
-import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParserTest;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
-import edu.jhu.hltcoe.util.rproj.RDataFrame;
-import edu.jhu.hltcoe.util.rproj.RRow;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.gridsearch.dmv.DmvSolFactory.InitSol;
+import edu.jhu.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.model.dmv.DmvMStep;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.parse.dmv.DmvCkyParserTest;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.DmvViterbiEMTrainer;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.LocalBnBDmvTrainer;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
+import edu.jhu.util.rproj.RDataFrame;
+import edu.jhu.util.rproj.RRow;
 
 
 public class DmvDantzigWolfeRelaxationTest {

@@ -1,14 +1,14 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
 import java.util.Random;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreeNode;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.ProjDepTreeNode;
-import edu.jhu.hltcoe.data.ProjWallDepTreeNode;
-import edu.jhu.hltcoe.util.math.LabeledMultinomial;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreeNode;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.ProjDepTreeNode;
+import edu.jhu.data.ProjWallDepTreeNode;
+import edu.jhu.util.math.LabeledMultinomial;
 
 public class DmvDepTreeGenerator {
     

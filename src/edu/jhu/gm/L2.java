@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.util.math.Vectors;
 
 /**
  * Gaussian prior (L2 regularizer) on the parameters with mean zero and a

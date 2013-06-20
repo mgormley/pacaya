@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.File;
 import java.util.HashMap;

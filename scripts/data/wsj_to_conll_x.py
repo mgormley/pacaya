@@ -6,7 +6,7 @@
 import os
 import sys
 
-java = "java -ea -Xmx512m edu.jhu.hltcoe.data.conll.Ptb2ConllX "
+java = "java -ea -Xmx512m edu.jhu.data.conll.Ptb2ConllX "
 
 cmds = []
 cmds += ["mkdir data/conllx"]

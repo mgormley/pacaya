@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 
 public interface TrainInstance {

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.graph;
+package edu.jhu.graph;
 
 /**
  * Represent a complete weighted graph by using a matrix with n rows and n

@@ -1,33 +1,33 @@
-package edu.jhu.hltcoe.parse.dmv;
+package edu.jhu.parse.dmv;
 
 
 import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.hltcoe.parse.cky.chart.Chart;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
-import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.data.conll.ValidParentsSentence;
+import edu.jhu.gridsearch.dmv.DmvObjective;
+import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.cky.CkyPcfgParser;
+import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.parse.cky.chart.Chart;
+import edu.jhu.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.parse.cky.chart.ChartCell;
+import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Timer;
 
 /**
  * CKY parser for the Dependency Model with Valence (DMV).

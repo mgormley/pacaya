@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 public interface IntIter {
 

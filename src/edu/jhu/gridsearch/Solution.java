@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.model.Model;
 
 public interface Solution {
 

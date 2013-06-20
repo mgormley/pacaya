@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.parse.dep;
+package edu.jhu.parse.dep;
 
 import java.util.Arrays;
 
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 /**
  * Edge-factored projective dependency parser.

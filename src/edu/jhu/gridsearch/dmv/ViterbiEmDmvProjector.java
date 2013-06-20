@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,24 +7,24 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.gridsearch.Projector;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.hltcoe.model.dmv.CopyingDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.gridsearch.Projector;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.Solution;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.model.dmv.CopyingDmvModelFactory;
+import edu.jhu.model.dmv.DmvMStep;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.DmvViterbiEMTrainer;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
 
 public class ViterbiEmDmvProjector implements DmvProjector {
 

@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.gridsearch.Solution;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.gridsearch.Solution;
 
 public class DmvSolution implements Solution {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.Iterator;
 

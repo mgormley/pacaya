@@ -139,7 +139,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
         script = ""
         #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (self.root_dir, self.root_dir)
         script += "echo 'CLASSPATH=$CLASSPATH'\n"
-        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.hltcoe.PipelineRunner  %s \n" % (self.get_args())
+        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.PipelineRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     
@@ -185,7 +185,7 @@ class CkyExpParams(experiment_runner.JavaExpParams):
         script = ""
         #script += "export CLASSPATH=%s/classes:%s/lib/*\n" % (self.root_dir, self.root_dir)
         script += "echo 'CLASSPATH=$CLASSPATH'\n"
-        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.hltcoe.parse.cky.RunCkyParser  %s \n" % (self.get_args())
+        cmd = "java -cp $CLASSPATH " + self.get_java_args() + " edu.jhu.parse.cky.RunCkyParser  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     

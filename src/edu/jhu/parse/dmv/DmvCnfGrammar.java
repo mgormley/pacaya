@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.parse.dmv;
+package edu.jhu.parse.dmv;
 
 import java.util.ArrayList;
 
 import depparsing.globals.Constants;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.cky.CnfGrammar;
-import edu.jhu.hltcoe.parse.cky.Rule;
-import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.Tag;
+import edu.jhu.data.Word;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.cky.CnfGrammar;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Utilities;
 
 public class DmvCnfGrammar {
     

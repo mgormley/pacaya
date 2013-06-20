@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.dep;
+package edu.jhu.parse.dep;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.util.JUnitUtils;
 
 public class ProjectiveDependencyParserTest {
     

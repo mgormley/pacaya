@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.ilp.decomp;
+package edu.jhu.ilp.decomp;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.util.Files;
 
 public class DummyBlockFileWriter implements BlockFileWriter {
 

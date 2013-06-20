@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.parse.cky.chart;
+package edu.jhu.parse.cky.chart;
 
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.parse.cky.CnfGrammar;
-import edu.jhu.hltcoe.parse.cky.Rule;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.BackPointer;
-import edu.jhu.hltcoe.util.map.IntObjectHashMap;
+import edu.jhu.data.Sentence;
+import edu.jhu.parse.cky.CnfGrammar;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.util.map.IntObjectHashMap;
 
 /**
  * Cell that stores every entry in a single hash table.

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.jhu.hltcoe.util.Command;
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.util.Command;
+import edu.jhu.util.Files;
 
 public class ClGurobiIlpSolver implements IlpSolver {
 

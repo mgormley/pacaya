@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import java.util.Arrays;
 
@@ -7,16 +7,16 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModelTest;
-import edu.jhu.hltcoe.util.JUnitUtils;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.dmv.IndexedDmvModelTest;
+import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 
 public class ProjectionsTest {

@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.util.vector;
+package edu.jhu.util.vector;
 
-import edu.jhu.hltcoe.util.Sort;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Sort;
+import edu.jhu.util.Utilities;
 
 /**
  * Infinite length sparse vector.

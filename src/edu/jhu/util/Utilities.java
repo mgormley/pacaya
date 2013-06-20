@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,8 +13,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import cern.colt.list.IntArrayList;
-import edu.jhu.hltcoe.parse.cky.Rule;
-import edu.jhu.hltcoe.util.map.IntObjectHashMap;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.util.map.IntObjectHashMap;
 
 public class Utilities {
 

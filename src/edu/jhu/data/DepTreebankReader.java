@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.cli.Opt;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.cli.Opt;
 
 public class DepTreebankReader {
 

@@ -1,9 +1,9 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
-import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.util.SafeCast;
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
 import ilog.concert.IloException;
@@ -12,7 +12,7 @@ import ilog.concert.IloLPMatrix;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 /**
  * Represents a set of updates to linear programming matrix rows (e.g. the

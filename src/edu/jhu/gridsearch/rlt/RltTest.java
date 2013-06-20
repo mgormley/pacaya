@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
 import gnu.trove.TIntArrayList;
@@ -21,13 +21,13 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt.RltPrm;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.MaxNumRltRowAdder;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.VarRltRowAdder;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.rlt.Rlt.RltPrm;
+import edu.jhu.gridsearch.rlt.filter.MaxNumRltRowAdder;
+import edu.jhu.gridsearch.rlt.filter.VarRltRowAdder;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cplex.CplexUtils;
 
 public class RltTest {
 

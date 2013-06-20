@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableId;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.util.IntTuple;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.VariableId;
+import edu.jhu.gridsearch.cpt.VariableSelector;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.util.IntTuple;
+import edu.jhu.util.Utilities;
 
 public abstract class AbstractScoringVariableSelector implements VariableSelector {
 

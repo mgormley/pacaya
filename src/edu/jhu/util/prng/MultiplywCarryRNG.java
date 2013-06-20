@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.prng;
+package edu.jhu.util.prng;
 
 /**
  * Marsaglia's multiply-with-carry random number generator. Robert Dodier,

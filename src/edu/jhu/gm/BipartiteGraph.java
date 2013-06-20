@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.ArrayList;
 
-import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
+import edu.jhu.gm.BipartiteGraph.Node;
 
 /**
  * Undirected bipartite graph.

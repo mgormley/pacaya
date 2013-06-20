@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import ilog.concert.IloNumVar;
 import ilog.concert.IloRange;

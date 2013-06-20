@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
 import java.util.ArrayList;
 import java.util.Collections;

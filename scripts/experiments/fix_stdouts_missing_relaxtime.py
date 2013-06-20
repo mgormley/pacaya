@@ -43,7 +43,7 @@ class DPScraper(Scraper):
         for i in ilist:
             if stdout_lines[i].find("PipelineRunner  - relaxBound:") != -1:
                 line = stdout_lines[i-1]
-                line = line.replace("edu.jhu.hltcoe.PipelineRunner  - ", "edu.jhu.hltcoe.PipelineRunner  - relaxTime(ms): ")
+                line = line.replace("edu.jhu.PipelineRunner  - ", "edu.jhu.PipelineRunner  - relaxTime(ms): ")
                 stdout_lines[i-1] = line
                 break
 

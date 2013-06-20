@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.parse.relax.RelaxedParserWrapper;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.eval.DependencyParserEvaluator;
+import edu.jhu.model.Model;
+import edu.jhu.model.ModelFactory;
+import edu.jhu.model.dmv.DmvMStep;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.parse.relax.RelaxedParserWrapper;
+import edu.jhu.util.Pair;
 
 public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 

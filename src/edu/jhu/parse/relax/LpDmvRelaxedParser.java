@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
 import ilog.concert.IloException;
 import ilog.cplex.IloCplex;
@@ -7,14 +7,14 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
-import edu.jhu.hltcoe.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.cplex.CplexPrm;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
+import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.cplex.CplexPrm;
+import edu.jhu.util.cplex.CplexUtils;
 
 public class LpDmvRelaxedParser implements RelaxedDepParser {
 

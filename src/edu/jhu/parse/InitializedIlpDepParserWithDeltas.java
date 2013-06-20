@@ -1,14 +1,14 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.io.File;
 import java.util.Map;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.ilp.CopyingMstFileUpdater;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.ilp.ZimplSolver;
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.ilp.CopyingMstFileUpdater;
+import edu.jhu.ilp.IlpSolverFactory;
+import edu.jhu.ilp.ZimplSolver;
+import edu.jhu.model.Model;
 
 public class InitializedIlpDepParserWithDeltas extends IlpDepParserWithDeltas implements DepParser {
     

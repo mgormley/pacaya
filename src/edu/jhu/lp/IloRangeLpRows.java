@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -11,8 +11,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 public class IloRangeLpRows {
     private static final Logger log = Logger.getLogger(IloRangeLpRows.class);

@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import depparsing.globals.Constants;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOneToOne;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.LabeledMultinomial;
-import edu.jhu.hltcoe.util.math.Multinomials;
+import edu.jhu.data.Label;
+import edu.jhu.model.Model;
+import edu.jhu.parse.cky.Lambda.LambdaOneToOne;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.LabeledMultinomial;
+import edu.jhu.util.math.Multinomials;
 
 public class DmvModel implements Model {
     

@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.model.Model;
+import edu.jhu.util.Pair;
 
 public interface EStep<C> {
 

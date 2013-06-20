@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
-import edu.jhu.hltcoe.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
+import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.vector.SortedIntDoubleVector;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.

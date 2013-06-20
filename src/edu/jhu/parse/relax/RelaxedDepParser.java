@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.model.Model;
+import edu.jhu.train.DmvTrainCorpus;
 
 public interface RelaxedDepParser {
 

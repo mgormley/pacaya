@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import static org.junit.Assert.assertEquals;
 
@@ -8,7 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import cern.colt.Arrays;
-import edu.jhu.hltcoe.gm.Var.VarType;
+import edu.jhu.gm.Var.VarType;
 
 public class VarSetTest {
 

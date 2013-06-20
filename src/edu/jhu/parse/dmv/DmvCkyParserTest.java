@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.parse.dmv;
+package edu.jhu.parse.dmv;
 
-import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_A;
-import static edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel.TW_B;
-import static edu.jhu.hltcoe.parse.IlpDepParserTest.getIlpParses;
+import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_A;
+import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_B;
+import static edu.jhu.parse.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 
 import java.util.HashMap;
@@ -14,26 +14,26 @@ import org.junit.Before;
 import org.junit.Test;
 
 import cern.colt.Arrays;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.eval.DependencyParserEvaluator;
+import edu.jhu.gridsearch.dmv.DmvObjective;
+import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.parse.IlpFormulation;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
 
 
 public class DmvCkyParserTest {

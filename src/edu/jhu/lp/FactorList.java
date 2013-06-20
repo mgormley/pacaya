@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -10,13 +10,13 @@ import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactorType;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.lp.FactorBuilder.RowFactor;
+import edu.jhu.lp.FactorBuilder.RowFactorType;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.math.Vectors;
 
 /**
  * Represents a set of constraints or variable bounds as Gx <= g, or

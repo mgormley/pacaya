@@ -1,21 +1,21 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.SupervisedDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.train.TrainCorpus;
-import edu.jhu.hltcoe.train.TrainerFactory;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.model.dmv.SupervisedDmvModelFactory;
+import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.DmvViterbiEMTrainer;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.TrainCorpus;
+import edu.jhu.train.TrainerFactory;
 
 public class DmvSolFactory {
 

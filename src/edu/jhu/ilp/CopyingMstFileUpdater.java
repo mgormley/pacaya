@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.IOException;
 import java.util.Map;

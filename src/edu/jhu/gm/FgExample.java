@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
-import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
+import edu.jhu.util.vector.SortedIntDoubleVector;
 
 public class FgExample {
 

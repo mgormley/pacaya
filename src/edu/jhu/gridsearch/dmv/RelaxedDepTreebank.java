@@ -1,11 +1,11 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.Sentence;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Utilities;
 
 public class RelaxedDepTreebank {
     private double[][] fracRoots;

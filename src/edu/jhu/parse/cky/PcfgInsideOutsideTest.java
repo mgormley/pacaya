@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,14 +6,14 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.parse.cky.PcfgInsideOutside.IoChart;
-import edu.jhu.hltcoe.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.Tag;
+import edu.jhu.parse.cky.PcfgInsideOutside.IoChart;
+import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Utilities;
 
 public class PcfgInsideOutsideTest {
     

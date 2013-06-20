@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.hltcoe.ilp.decomp.BlockFileWriter;
-import edu.jhu.hltcoe.ilp.decomp.DipMilpBlockSolver;
-import edu.jhu.hltcoe.ilp.decomp.DipParseSolver;
+import edu.jhu.ilp.decomp.BlockFileWriter;
+import edu.jhu.ilp.decomp.DipMilpBlockSolver;
+import edu.jhu.ilp.decomp.DipParseSolver;
 
 public class IlpSolverFactory {
     

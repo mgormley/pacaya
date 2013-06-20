@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.TaggedWord;
-import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
+import edu.jhu.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.TaggedWord;
+import edu.jhu.model.dmv.DmvModel.Lr;
 
 public class SimpleStaticDmvModel {
 

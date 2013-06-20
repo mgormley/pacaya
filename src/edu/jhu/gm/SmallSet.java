@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.jhu.hltcoe.util.Sort;
+import edu.jhu.util.Sort;
 
 /**
  * Maintains a set as a sorted list.

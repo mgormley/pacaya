@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.eval;
+package edu.jhu.eval;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.model.Model;
 
 public interface Evaluator {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.rproj;
+package edu.jhu.util.rproj;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

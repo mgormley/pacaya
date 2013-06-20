@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.ilp.decomp;
+package edu.jhu.ilp.decomp;
 
 import java.io.File;
 
-import edu.jhu.hltcoe.ilp.IlpSolver;
+import edu.jhu.ilp.IlpSolver;
 
 /**
  * @author mgormley

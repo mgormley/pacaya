@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.Comparator;
 import java.util.Iterator;

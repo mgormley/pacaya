@@ -1,20 +1,20 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import ilog.concert.IloException;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.gridsearch.Projector;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Sentence;
+import edu.jhu.gridsearch.Projector;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.Solution;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.Projections;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.parse.dep.ProjectiveDependencyParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 public class BasicDmvProjector implements DmvProjector {
 

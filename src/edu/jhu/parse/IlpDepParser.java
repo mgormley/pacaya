@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -9,25 +9,25 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.util.Timer;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.ilp.IlpSolverFactory;
-import edu.jhu.hltcoe.ilp.ZimplSolver;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModel.Lr;
-import edu.jhu.hltcoe.parse.relax.RelaxedDepParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.DelayedDeleter;
-import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.ilp.IlpSolverFactory;
+import edu.jhu.ilp.ZimplSolver;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModel.Lr;
+import edu.jhu.parse.relax.RelaxedDepParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.DelayedDeleter;
+import edu.jhu.util.Files;
+import edu.jhu.util.Utilities;
 
 public class IlpDepParser implements DepParser, RelaxedDepParser {
 

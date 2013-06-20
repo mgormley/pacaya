@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.vector;
+package edu.jhu.util.vector;
 
 import static org.junit.Assert.assertEquals;
 

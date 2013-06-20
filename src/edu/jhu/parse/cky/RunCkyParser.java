@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,23 +11,23 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
-import edu.jhu.hltcoe.parse.cky.NaryTree.NaryTreeNodeFilter;
-import edu.jhu.hltcoe.parse.cky.chart.Chart;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cli.ArgParser;
-import edu.jhu.hltcoe.util.cli.Opt;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.Tag;
+import edu.jhu.data.Word;
+import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.parse.cky.Lambda.LambdaOne;
+import edu.jhu.parse.cky.NaryTree.NaryTreeNodeFilter;
+import edu.jhu.parse.cky.chart.Chart;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cli.ArgParser;
+import edu.jhu.util.cli.Opt;
 
 public class RunCkyParser {
     

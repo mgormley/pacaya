@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
 
 public class SimpleStaticDmvModelTest {
 

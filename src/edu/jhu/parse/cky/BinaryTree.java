@@ -1,14 +1,14 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.parse.cky.Lambda.LambdaOne;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.Tag;
+import edu.jhu.data.Word;
+import edu.jhu.parse.cky.Lambda.LambdaOne;
+import edu.jhu.util.Alphabet;
 
 /**
  * Binary tree for a context free grammar.

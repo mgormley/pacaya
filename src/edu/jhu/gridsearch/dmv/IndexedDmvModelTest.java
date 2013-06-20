@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,24 +10,24 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.Word;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.DmvSentParamCache;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.DmvViterbiEMTrainer;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 
 public class IndexedDmvModelTest {

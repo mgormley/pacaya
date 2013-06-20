@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,17 +6,17 @@ import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.DepTreebankReader;
-import edu.jhu.hltcoe.data.DepTreebankReader.DatasetType;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.cli.ArgParser;
-import edu.jhu.hltcoe.util.cli.Opt;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.DepTreebankReader;
+import edu.jhu.data.DepTreebankReader.DatasetType;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.Prng;
+import edu.jhu.util.cli.ArgParser;
+import edu.jhu.util.cli.Opt;
+import edu.jhu.util.math.Vectors;
 
 /**
  * Converts Penn Treebank data to a CoNLL-X file.

@@ -1,8 +1,8 @@
 package edu.berkeley.nlp.PCFGLA.smoothing;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.Word;
+import edu.jhu.util.Alphabet;
 
 
 /**

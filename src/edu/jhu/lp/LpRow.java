@@ -1,9 +1,9 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 public class LpRow {
     private double lb;

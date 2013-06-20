@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.vector.SortedIntDoubleVector;
 
 /**
  * A model in the exponential family for a factor graph .

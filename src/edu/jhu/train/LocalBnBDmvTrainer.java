@@ -1,41 +1,41 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import java.util.Random;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
-import edu.jhu.hltcoe.gridsearch.Projector;
-import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.eval.DependencyParserEvaluator;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverFactory;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.gridsearch.Projector;
+import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.gridsearch.cpt.RegretVariableSelector;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorFactory;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.gridsearch.dmv.DmvSolFactory;
+import edu.jhu.gridsearch.dmv.DmvSolFactory.DmvSolFactoryPrm;
+import edu.jhu.gridsearch.dmv.DmvSolution;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 

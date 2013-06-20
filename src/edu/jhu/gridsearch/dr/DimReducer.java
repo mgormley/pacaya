@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dr;
+package edu.jhu.gridsearch.dr;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -8,7 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 import org.apache.log4j.Logger;
 
@@ -16,15 +16,15 @@ import cern.colt.matrix.tdouble.DoubleFactory2D;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseRCDoubleMatrix2D;
-import edu.jhu.hltcoe.lp.CcLpConstraints;
-import edu.jhu.hltcoe.lp.FactorList;
-import edu.jhu.hltcoe.lp.LpRows;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
-import edu.jhu.hltcoe.util.dist.Dirichlet;
+import edu.jhu.lp.CcLpConstraints;
+import edu.jhu.lp.FactorList;
+import edu.jhu.lp.LpRows;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.util.Pair;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.dist.Dirichlet;
 
 /**
  * Reduces the dimensionality of a linear program.

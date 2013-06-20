@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp;
+package edu.jhu.ilp;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import edu.jhu.hltcoe.ilp.decomp.AbstractDipSolver;
-import edu.jhu.hltcoe.ilp.decomp.DipMilpBlockSolver;
+import edu.jhu.ilp.decomp.AbstractDipSolver;
+import edu.jhu.ilp.decomp.DipMilpBlockSolver;
 
 public class ZimplSolver  {
     

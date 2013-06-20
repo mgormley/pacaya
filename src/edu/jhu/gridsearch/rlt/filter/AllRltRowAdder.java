@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 /**
  * Adds all RLT rows.

@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.Sentence;
+import edu.jhu.model.Model;
 
 public interface DepSentenceParser {
 

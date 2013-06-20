@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
-import edu.jhu.hltcoe.model.Model;
+import edu.jhu.model.Model;
 
 public interface MStep<C> {
 

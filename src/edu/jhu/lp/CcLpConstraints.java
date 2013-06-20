@@ -1,15 +1,15 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
+import edu.jhu.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.util.SafeCast;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.util.SafeCast;
 
 /**
  * Represents constraints d <= Ax <= b, where A is a matrix in compressed-column form and

@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
-import edu.jhu.hltcoe.util.IntTuple;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.util.IntTuple;
+import edu.jhu.util.Utilities;
 
 public class RegretVariableSelector implements VariableSelector {
 

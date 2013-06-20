@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxSolChildOrderer;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.NodeResult;
+import edu.jhu.gridsearch.dmv.RelaxSolChildOrderer;
 
 /**
  * This class implements Depth First Search for branch-and-bound.

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.cli;
+package edu.jhu.util.cli;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

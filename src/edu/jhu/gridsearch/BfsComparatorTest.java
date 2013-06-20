@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.PriorityQueue;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
 
 
 public class BfsComparatorTest {

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.decomp;
+package edu.jhu.parse.decomp;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.ilp.ZimplRunner;
-import edu.jhu.hltcoe.ilp.decomp.BlockFileWriter;
-import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpDepParser;
-import edu.jhu.hltcoe.util.Files;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.ilp.ZimplRunner;
+import edu.jhu.ilp.decomp.BlockFileWriter;
+import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.IlpDepParser;
+import edu.jhu.util.Files;
+import edu.jhu.util.Utilities;
 
 public class DeltaParseBlockFileWriter implements BlockFileWriter {
 

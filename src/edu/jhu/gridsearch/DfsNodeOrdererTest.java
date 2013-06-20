@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,9 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.DfsNodeOrderer.DfsNodeOrdererPrm;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.DfsNodeOrderer.DfsNodeOrdererPrm;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.NodeResult;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
 
 
 public class DfsNodeOrdererTest {

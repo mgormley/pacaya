@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,14 +9,14 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.PtbDepTree.HeadFinderException;
-import edu.jhu.hltcoe.data.conll.CoNLL09DepTree;
-import edu.jhu.hltcoe.data.conll.CoNLL09FileReader;
-import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
-import edu.jhu.hltcoe.data.conll.CoNLLXDepTree;
-import edu.jhu.hltcoe.data.conll.CoNLLXDirReader;
-import edu.jhu.hltcoe.data.conll.CoNLLXSentence;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.PtbDepTree.HeadFinderException;
+import edu.jhu.data.conll.CoNLL09DepTree;
+import edu.jhu.data.conll.CoNLL09FileReader;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLLXDepTree;
+import edu.jhu.data.conll.CoNLLXDirReader;
+import edu.jhu.data.conll.CoNLLXSentence;
+import edu.jhu.util.Alphabet;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;

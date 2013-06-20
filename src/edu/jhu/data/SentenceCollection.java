@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.util.Alphabet;
 
 public class SentenceCollection implements Iterable<Sentence> {
 

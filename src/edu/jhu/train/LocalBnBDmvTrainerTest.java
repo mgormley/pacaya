@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
+import edu.jhu.util.Prng;
 
 public class LocalBnBDmvTrainerTest {
 

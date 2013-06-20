@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.util.tuple;
+package edu.jhu.util.tuple;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.util.Prng;
 
 public class PairSampler {
 

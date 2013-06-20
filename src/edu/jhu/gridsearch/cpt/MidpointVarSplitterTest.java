@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,9 +7,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.util.Utilities;
 
 
 public class MidpointVarSplitterTest {

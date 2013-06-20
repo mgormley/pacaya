@@ -1,9 +1,9 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.util.tuple;
+package edu.jhu.util.tuple;
 
-import edu.jhu.hltcoe.util.IntTuple;
+import edu.jhu.util.IntTuple;
 
 public class UnorderedPair extends IntTuple {
     public UnorderedPair(int fac1, int fac2) {

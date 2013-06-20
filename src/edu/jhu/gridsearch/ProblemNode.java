@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.List;
 
-import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
+import edu.jhu.gridsearch.dmv.WarmStart;
 
 public interface ProblemNode {
 

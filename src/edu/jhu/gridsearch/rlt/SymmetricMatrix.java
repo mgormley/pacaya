@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.gridsearch.rlt;
 
 import ilog.concert.IloNumVar;
 
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import edu.jhu.hltcoe.util.ComparablePair;
+import edu.jhu.util.ComparablePair;
 
 public class SymmetricMatrix<T> {
 

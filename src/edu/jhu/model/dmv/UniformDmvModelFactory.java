@@ -1,10 +1,10 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.data.Label;
+import edu.jhu.util.Alphabet;
+import edu.jhu.data.Label;
 
 public class UniformDmvModelFactory extends AbstractDmvModelFactory implements DmvModelFactory {
 

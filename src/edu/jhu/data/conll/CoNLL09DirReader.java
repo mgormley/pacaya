@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.FileListIterator;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.FileListIterator;
+import edu.jhu.util.Utilities;
 
 /**
  * Reads a file or directory of CoNLL-2009 files.

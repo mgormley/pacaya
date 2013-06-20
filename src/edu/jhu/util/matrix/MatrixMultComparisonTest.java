@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.matrix;
+package edu.jhu.util.matrix;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,11 +13,11 @@ import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import edu.emory.mathcs.csparsej.tdouble.Dcs_multiply;
 import edu.emory.mathcs.csparsej.tdouble.Dcs_common.Dcs;
-import edu.jhu.hltcoe.gridsearch.dr.DimReducer;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.tuple.OrderedPair;
-import edu.jhu.hltcoe.util.tuple.PairSampler;
+import edu.jhu.gridsearch.dr.DimReducer;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.PairSampler;
 
 public class MatrixMultComparisonTest {
 

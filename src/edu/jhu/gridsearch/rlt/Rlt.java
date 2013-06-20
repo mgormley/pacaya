@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt;
+package edu.jhu.gridsearch.rlt;
 
 import gnu.trove.TIntArrayList;
 import gnu.trove.TLongIntHashMap;
@@ -12,28 +12,28 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
+import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.rlt.SymmetricMatrix.SymVarMat;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.AllRltRowAdder;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RltFactorFilter;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RltRowAdder;
-import edu.jhu.hltcoe.gridsearch.rlt.filter.RowType;
-import edu.jhu.hltcoe.lp.FactorBuilder;
-import edu.jhu.hltcoe.lp.FactorList;
-import edu.jhu.hltcoe.lp.LpMatrixUpdates;
-import edu.jhu.hltcoe.lp.LpRows;
-import edu.jhu.hltcoe.lp.FactorBuilder.BoundFactor;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
-import edu.jhu.hltcoe.util.tuple.OrderedPair;
-import edu.jhu.hltcoe.util.tuple.UnorderedPair;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.gridsearch.rlt.filter.AllRltRowAdder;
+import edu.jhu.gridsearch.rlt.filter.RltFactorFilter;
+import edu.jhu.gridsearch.rlt.filter.RltRowAdder;
+import edu.jhu.gridsearch.rlt.filter.RowType;
+import edu.jhu.lp.FactorBuilder;
+import edu.jhu.lp.FactorList;
+import edu.jhu.lp.LpMatrixUpdates;
+import edu.jhu.lp.LpRows;
+import edu.jhu.lp.FactorBuilder.BoundFactor;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.util.Pair;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.UnorderedPair;
 
 public class Rlt {
 

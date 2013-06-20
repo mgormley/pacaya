@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.Tag;
+import edu.jhu.data.Tag;
 
 public class CnfGrammarBuilderTest {
 

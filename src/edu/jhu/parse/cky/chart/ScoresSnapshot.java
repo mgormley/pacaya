@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky.chart;
+package edu.jhu.parse.cky.chart;
 
 public interface ScoresSnapshot {
 

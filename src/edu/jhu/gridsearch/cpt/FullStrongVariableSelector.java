@@ -1,15 +1,15 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 
 public class FullStrongVariableSelector implements VariableSelector {
 

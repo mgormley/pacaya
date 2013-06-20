@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 public interface SolutionEvaluator {
 

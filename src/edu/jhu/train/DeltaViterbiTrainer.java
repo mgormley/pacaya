@@ -1,16 +1,16 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.model.FixableModelFactory;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.model.FixableModelFactory;
+import edu.jhu.model.Model;
+import edu.jhu.model.ModelFactory;
+import edu.jhu.model.dmv.DmvMStep;
+import edu.jhu.parse.DepParser;
+import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.util.Pair;
 
 public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 

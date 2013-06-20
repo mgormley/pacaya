@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
@@ -17,12 +17,12 @@ import com.joptimizer.optimizers.OptimizationRequest;
 import com.joptimizer.optimizers.OptimizationResponse;
 import com.joptimizer.optimizers.PrimalDualMethod;
 
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Sort;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Sort;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 public class ModelParamSubproblem {
     

@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.eval.DependencyParserEvaluator;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.SolutionEvaluator;
+import edu.jhu.eval.DependencyParserEvaluator;
+import edu.jhu.gridsearch.Solution;
+import edu.jhu.gridsearch.SolutionEvaluator;
 
 public class DmvSolutionEvaluator implements SolutionEvaluator {
 

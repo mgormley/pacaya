@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.parse.dmv;
+package edu.jhu.parse.dmv;
 
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
-import edu.jhu.hltcoe.parse.cky.Rule;
-import edu.jhu.hltcoe.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
-import edu.jhu.hltcoe.parse.dmv.DmvRule.DmvRuleType;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.conll.ValidParentsSentence;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
+import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
 
 public class DmvChartCellConstraint implements ChartCellConstraint {
 

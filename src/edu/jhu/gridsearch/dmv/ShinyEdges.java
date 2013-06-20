@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
+import edu.jhu.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.Tag;
+import edu.jhu.data.WallDepTreeNode;
 
 public class ShinyEdges {
     

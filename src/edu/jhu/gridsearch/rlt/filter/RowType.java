@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 public enum RowType {
     /**

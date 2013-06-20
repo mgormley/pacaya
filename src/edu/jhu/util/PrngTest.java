@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.util.Timer;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.prng.MultiplywCarryRNG;
+import edu.jhu.util.prng.MultiplywCarryRNG;
 
 public class PrngTest {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.graph;
+package edu.jhu.graph;
 
 import java.util.Map;
 import java.util.Map.Entry;

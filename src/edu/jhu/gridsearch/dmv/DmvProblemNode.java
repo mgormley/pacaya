@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -7,12 +7,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.Relaxation;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.Relaxation;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaList;
 
 public class DmvProblemNode implements ProblemNode {
 

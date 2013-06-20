@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.List;
 
-import edu.jhu.hltcoe.gm.FactorGraph.FgEdge;
+import edu.jhu.gm.FactorGraph.FgEdge;
 
 public interface BpSchedule {
 

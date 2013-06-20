@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.Collections;
 import java.util.List;
@@ -6,11 +6,11 @@ import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.FathomStats.FathomStatus;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch

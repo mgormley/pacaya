@@ -1,11 +1,11 @@
-package edu.jhu.hltcoe.util.dist;
+package edu.jhu.util.dist;
 
 import java.util.Arrays;
 
 import cern.jet.random.Gamma;
 
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.math.Multinomials;
+import edu.jhu.util.Prng;
+import edu.jhu.util.math.Multinomials;
 
 public class Dirichlet {
 

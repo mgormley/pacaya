@@ -1,22 +1,22 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
 import depparsing.globals.Constants;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.cpt.IndexedCpt;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvSentParamCache;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.IntTuple;
-import edu.jhu.hltcoe.util.Pair;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.gridsearch.cpt.IndexedCpt;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvSentParamCache;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.IntTuple;
+import edu.jhu.util.Pair;
 
 public class IndexedDmvModel implements IndexedCpt {
     
@@ -235,21 +235,21 @@ public class IndexedDmvModel implements IndexedCpt {
     }
     
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumConds()
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getNumConds()
      */
     public int getNumConds() {
         return rhsToC.size();
     }
 
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumTotalParams()
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getNumTotalParams()
      */
     public int getNumTotalParams() {
         return numTotalParams;
     }
     
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumParams(int)
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getNumParams(int)
      */
     public int getNumParams(int c) { 
         Rhs rhs = rhsToC.lookupObject(c);
@@ -263,7 +263,7 @@ public class IndexedDmvModel implements IndexedCpt {
     }
 
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getName(int, int)
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getName(int, int)
      */
     public String getName(int c, int m) {
         Rhs rhs = rhsToC.lookupObject(c);
@@ -320,21 +320,21 @@ public class IndexedDmvModel implements IndexedCpt {
     }
     
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm()
      */
     public int[][] getTotUnsupervisedMaxFreqCm() {
         return unsupMaxTotFreqCm;
     }
 
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm(int, int)
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getTotalMaxFreqCm(int, int)
      */
     public int getTotUnsupervisedMaxFreqCm(int c, int m) {
         return unsupMaxTotFreqCm[c][m];
     }
     
     /* (non-Javadoc)
-     * @see edu.jhu.hltcoe.gridsearch.dmv.IndexedCpt#getNumNonZeroMaxFreqCms()
+     * @see edu.jhu.gridsearch.dmv.IndexedCpt#getNumNonZeroMaxFreqCms()
      */
     public int getNumNonZeroUnsupMaxFreqCms() {
         return numNZUnsupMaxFreqCms;

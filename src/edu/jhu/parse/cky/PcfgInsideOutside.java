@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.hltcoe.parse.cky.chart.Chart;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ParseType;
-import edu.jhu.hltcoe.parse.cky.chart.ChartCell;
-import edu.jhu.hltcoe.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
-import edu.jhu.hltcoe.parse.cky.chart.ScoresSnapshot;
+import edu.jhu.data.Sentence;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
+import edu.jhu.parse.cky.chart.Chart;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.parse.cky.chart.Chart.ParseType;
+import edu.jhu.parse.cky.chart.ChartCell;
+import edu.jhu.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
+import edu.jhu.parse.cky.chart.ScoresSnapshot;
 
 public class PcfgInsideOutside {
     

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
@@ -9,17 +9,17 @@ import java.util.List;
 import java.util.Set;
 
 import cern.colt.list.IntArrayList;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.lp.FactorBuilder.BoundFactor;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.lp.FactorList;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.map.IntObjectHashMap;
-import edu.jhu.hltcoe.util.tuple.OrderedPair;
-import edu.jhu.hltcoe.util.tuple.UnorderedPair;
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
+import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.lp.FactorBuilder.BoundFactor;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.lp.FactorList;
+import edu.jhu.util.Pair;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.map.IntObjectHashMap;
+import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.util.vector.LongDoubleEntry;
 import gnu.trove.TIntHashSet;
 
 /**

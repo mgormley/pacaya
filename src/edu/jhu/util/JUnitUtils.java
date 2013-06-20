@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
 import org.junit.Assert;
 

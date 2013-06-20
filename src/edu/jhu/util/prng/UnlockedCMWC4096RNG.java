@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util.prng;
+package edu.jhu.util.prng;
 
 //============================================================================
 //Copyright 2006-2010 Daniel W. Dyer

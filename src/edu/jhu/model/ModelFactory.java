@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.model;
+package edu.jhu.model;
 
-import edu.jhu.hltcoe.train.TrainCorpus;
+import edu.jhu.train.TrainCorpus;
 
 public interface ModelFactory {
 

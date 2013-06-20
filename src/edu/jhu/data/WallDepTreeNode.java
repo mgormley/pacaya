@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 
 public class WallDepTreeNode extends NonprojDepTreeNode {

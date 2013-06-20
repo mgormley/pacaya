@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.util.regex.Pattern;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.Tag;
+import edu.jhu.data.Word;
+import edu.jhu.util.Alphabet;
 
 public class GrammarConstants {
     

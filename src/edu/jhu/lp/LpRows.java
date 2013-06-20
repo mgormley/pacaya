@@ -1,10 +1,10 @@
 /**
  * 
  */
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
-import edu.jhu.hltcoe.util.SafeCast;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.cplex.CplexUtils;
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -12,7 +12,7 @@ import ilog.concert.IloRange;
 
 import java.util.ArrayList;
 
-import edu.jhu.hltcoe.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 /**
  * Represents a set of linear programming constraints of the form d <= Ax <= b.

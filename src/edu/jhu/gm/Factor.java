@@ -1,14 +1,14 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
-import edu.jhu.hltcoe.parse.cky.Lambda;
-import edu.jhu.hltcoe.parse.cky.Lambda.LambdaBinOpD;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Multinomials;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gm.BipartiteGraph.Node;
+import edu.jhu.parse.cky.Lambda;
+import edu.jhu.parse.cky.Lambda.LambdaBinOpD;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Multinomials;
+import edu.jhu.util.math.Vectors;
 
 /**
  * A factor in a factor graph.

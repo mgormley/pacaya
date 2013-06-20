@@ -1,16 +1,16 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.hltcoe.gridsearch.ChildOrderer;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.gridsearch.ChildOrderer;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
 
 /**
  * The LP solution guided rule of Martin (1998) to order the children

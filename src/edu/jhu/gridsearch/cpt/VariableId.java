@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
-import edu.jhu.hltcoe.util.IntTuple;
+import edu.jhu.util.IntTuple;
 
 public class VariableId extends IntTuple {
 

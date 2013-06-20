@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.util.vector;
+package edu.jhu.util.vector;
 
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Utilities;
 
 
 /**

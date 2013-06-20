@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import gnu.trove.TDoubleArrayList;
 import gnu.trove.TIntArrayList;
@@ -20,29 +20,29 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.DantzigWolfeRelaxation;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.RelaxStatus;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaList;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.cplex.CplexPrm;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.gridsearch.DantzigWolfeRelaxation;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.RelaxStatus;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaList;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.CutCountComputer;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cplex.CplexPrm;
 
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
 

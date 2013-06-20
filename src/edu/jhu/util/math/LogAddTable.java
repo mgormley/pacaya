@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.util.math;
+package edu.jhu.util.math;
 
 import java.util.Random;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.Utilities;
 
 /**
  * A port of Jason Smith's C++ LogTable code, used for POS tagging.

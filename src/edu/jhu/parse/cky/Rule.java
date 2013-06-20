@@ -1,7 +1,7 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
 
 /**
  * A unary or binary rule (or production) in a CNF grammar.

@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.eval;
+package edu.jhu.eval;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.model.Model;
+import edu.jhu.parse.DepParser;
+import edu.jhu.util.Utilities;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the

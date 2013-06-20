@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dr;
+package edu.jhu.gridsearch.dr;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -18,10 +18,10 @@ import org.junit.Test;
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import cern.jet.random.tdouble.Beta;
-import edu.jhu.hltcoe.gridsearch.dr.DimReducer.ConstraintConversion;
-import edu.jhu.hltcoe.gridsearch.dr.DimReducer.DimReducerPrm;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.cplex.CplexUtils;
+import edu.jhu.gridsearch.dr.DimReducer.ConstraintConversion;
+import edu.jhu.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.util.Prng;
+import edu.jhu.util.cplex.CplexUtils;
 
 public class DimReducerTest {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import gnu.trove.TDoubleArrayList;
 import ilog.concert.IloException;
@@ -15,14 +15,14 @@ import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.dmv.WarmStart;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Triple;
-import edu.jhu.hltcoe.util.cplex.CplexPrm;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.dmv.DmvSolution;
+import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.dmv.WarmStart;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Triple;
+import edu.jhu.util.cplex.CplexPrm;
+import edu.jhu.util.math.Vectors;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     

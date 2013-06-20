@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
 
 import java.io.File;
@@ -7,28 +7,28 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.data.Tag;
-import edu.jhu.hltcoe.data.WallDepTreeNode;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.gridsearch.dmv.ShinyEdges;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.UniformDmvModelFactory;
-import edu.jhu.hltcoe.parse.IlpFormulation;
-import edu.jhu.hltcoe.parse.IlpDepParserTest;
-import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.JUnitUtils;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.Tag;
+import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.gridsearch.dmv.ShinyEdges;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.IlpDepParserTest;
+import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Prng;
+import edu.jhu.util.math.Vectors;
 
 public class LpDmvRelaxedParserTest {
 

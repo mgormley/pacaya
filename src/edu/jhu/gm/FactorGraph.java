@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.hltcoe.gm.BipartiteGraph.Edge;
-import edu.jhu.hltcoe.gm.BipartiteGraph.Node;
+import edu.jhu.gm.BipartiteGraph.Edge;
+import edu.jhu.gm.BipartiteGraph.Node;
 
 /**
  * Factor graph.

@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.gm;
+package edu.jhu.gm;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.util.JUnitUtils;
 
 public class FactorTest {
 

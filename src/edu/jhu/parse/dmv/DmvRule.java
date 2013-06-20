@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.parse.dmv;
+package edu.jhu.parse.dmv;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.parse.cky.Rule;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.parse.cky.Rule;
+import edu.jhu.util.Alphabet;
 
 public class DmvRule extends Rule {
 

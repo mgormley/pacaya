@@ -1,17 +1,17 @@
-package edu.jhu.hltcoe.gridsearch.randwalk;
+package edu.jhu.gridsearch.randwalk;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.Projector;
-import edu.jhu.hltcoe.gridsearch.Relaxation;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.FathomStats.FathomStatus;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.Projector;
+import edu.jhu.gridsearch.Relaxation;
+import edu.jhu.gridsearch.Solution;
+import edu.jhu.gridsearch.FathomStats.FathomStatus;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.math.Vectors;
 import gnu.trove.TDoubleArrayList;
 
 /**

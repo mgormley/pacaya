@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.randwalk;
+package edu.jhu.gridsearch.randwalk;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,10 +8,10 @@ import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.AbstractNodeOrderer;
-import edu.jhu.hltcoe.gridsearch.NodeOrderer;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.gridsearch.AbstractNodeOrderer;
+import edu.jhu.gridsearch.NodeOrderer;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.util.Prng;
 
 public class DfsRandChildAtDepthNodeOrderer extends AbstractNodeOrderer implements NodeOrderer {
 

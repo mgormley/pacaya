@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.util.ArrayList;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.data.Word;
+import edu.jhu.util.Alphabet;
 
 /**
  * Grammar in Chomsky normal form.

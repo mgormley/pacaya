@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import static junit.framework.Assert.assertEquals;
 
@@ -9,22 +9,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.Relaxation;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.Relaxation;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.RandomVariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSplitter;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Prng;
 
 
 public class DmvProblemNodeTest {

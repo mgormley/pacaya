@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;

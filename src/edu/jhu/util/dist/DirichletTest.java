@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.util.dist;
+package edu.jhu.util.dist;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import cern.colt.Arrays;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.util.math.Vectors;
 
 
 public class DirichletTest {

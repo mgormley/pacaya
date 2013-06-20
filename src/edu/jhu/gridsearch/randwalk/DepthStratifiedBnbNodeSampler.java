@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.gridsearch.randwalk;
+package edu.jhu.gridsearch.randwalk;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver;
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.Projector;
-import edu.jhu.hltcoe.gridsearch.Relaxation;
-import edu.jhu.hltcoe.gridsearch.RelaxedSolution;
-import edu.jhu.hltcoe.gridsearch.Solution;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.Projector;
+import edu.jhu.gridsearch.Relaxation;
+import edu.jhu.gridsearch.RelaxedSolution;
+import edu.jhu.gridsearch.Solution;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 
 public class DepthStratifiedBnbNodeSampler extends LazyBranchAndBoundSolver {
     private static final Logger log = Logger.getLogger(DepthStratifiedBnbNodeSampler.class);

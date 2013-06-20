@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
 public class Quadruple<X,Y,Z,A> {
 

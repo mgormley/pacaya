@@ -1,8 +1,8 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 
 public interface VariableSelector {
 

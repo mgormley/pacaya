@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import org.apache.log4j.Logger;
-import edu.jhu.hltcoe.util.Timer;
+import edu.jhu.util.Timer;
 
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.ModelFactory;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.model.Model;
+import edu.jhu.model.ModelFactory;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Utilities;
 
 /**
  * 

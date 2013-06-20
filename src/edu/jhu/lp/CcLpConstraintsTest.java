@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactorType;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.lp.FactorBuilder.RowFactor;
+import edu.jhu.lp.FactorBuilder.RowFactorType;
 
 
 public class CcLpConstraintsTest {

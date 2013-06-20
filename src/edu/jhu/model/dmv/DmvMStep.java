@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.train.MStep;
-import edu.jhu.hltcoe.train.TrainCorpus;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.model.Model;
+import edu.jhu.train.MStep;
+import edu.jhu.train.TrainCorpus;
 
 public class DmvMStep implements MStep<DepTreebank> {
 

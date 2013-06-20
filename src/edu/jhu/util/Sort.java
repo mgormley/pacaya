@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.util;
+package edu.jhu.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.util.math.Vectors;
 
 public class Sort {
 

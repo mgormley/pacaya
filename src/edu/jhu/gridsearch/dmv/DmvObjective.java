@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.PipelineRunner;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel.Rhs;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.PipelineRunner;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel.Rhs;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.util.Utilities;
 
 public class DmvObjective {
     

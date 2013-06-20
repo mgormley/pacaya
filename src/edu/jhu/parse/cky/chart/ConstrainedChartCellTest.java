@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky.chart;
+package edu.jhu.parse.cky.chart;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,23 +8,23 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.Word;
-import edu.jhu.hltcoe.data.conll.CoNLL09Sentence;
-import edu.jhu.hltcoe.data.conll.CoNLL09Token;
-import edu.jhu.hltcoe.data.conll.ValidParentsSentence;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.DmvModelFactory;
-import edu.jhu.hltcoe.model.dmv.RandomDmvModelFactory;
-import edu.jhu.hltcoe.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.JUnitUtils;
-import edu.jhu.hltcoe.util.Pair;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.Word;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.conll.ValidParentsSentence;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Pair;
+import edu.jhu.util.Prng;
 
 public class ConstrainedChartCellTest {
     

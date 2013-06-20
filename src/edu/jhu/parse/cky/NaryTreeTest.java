@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,8 +7,8 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
 
 public class NaryTreeTest {
 

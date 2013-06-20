@@ -1,24 +1,24 @@
-package edu.jhu.hltcoe.gridsearch.randwalk;
+package edu.jhu.gridsearch.randwalk;
 
 import java.io.File;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.RandomVariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
-import edu.jhu.hltcoe.train.BnBDmvTrainer;
-import edu.jhu.hltcoe.train.BnBDmvTrainerTest;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.RandomVariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSplitter;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
+import edu.jhu.gridsearch.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
+import edu.jhu.train.BnBDmvTrainer;
+import edu.jhu.train.BnBDmvTrainerTest;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.BnBDmvTrainer.BnBDmvTrainerPrm;
 
 
 public class DepthStratifiedBnbNodeSamplerTest {

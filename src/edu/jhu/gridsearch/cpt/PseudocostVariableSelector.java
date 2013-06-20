@@ -1,15 +1,15 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.hltcoe.gridsearch.dmv.AbstractScoringVariableSelector;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.gridsearch.dmv.AbstractScoringVariableSelector;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 
 public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
     private static final Logger log = Logger.getLogger(PseudocostVariableSelector.class);

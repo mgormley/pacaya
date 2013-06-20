@@ -1,15 +1,15 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.data.DepTree;
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.data.Sentence;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.util.Alphabet;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.util.Prng;
 
 public class DmvTrainCorpus implements TrainCorpus {
     

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.ilp.decomp;
+package edu.jhu.ilp.decomp;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,9 +16,9 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.ilp.IlpSolver;
-import edu.jhu.hltcoe.util.Command;
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.ilp.IlpSolver;
+import edu.jhu.util.Command;
+import edu.jhu.util.Files;
 
 /**
  * TODO: add handling of initial solution

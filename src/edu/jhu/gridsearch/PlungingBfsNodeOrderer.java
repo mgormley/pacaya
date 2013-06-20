@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch;
+package edu.jhu.gridsearch;
 
 import java.util.Iterator;
 import java.util.List;
@@ -7,10 +7,10 @@ import java.util.Stack;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.NodeResult;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxSolChildOrderer;
-import edu.jhu.hltcoe.util.IterIterator;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.NodeResult;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.gridsearch.dmv.RelaxSolChildOrderer;
+import edu.jhu.util.IterIterator;
 
 /**
  * This class implements Best First Search with Plunging for branch-and-bound.

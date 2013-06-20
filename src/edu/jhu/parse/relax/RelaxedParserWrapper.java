@@ -1,18 +1,18 @@
-package edu.jhu.hltcoe.parse.relax;
+package edu.jhu.parse.relax;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector;
-import edu.jhu.hltcoe.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.hltcoe.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.hltcoe.gridsearch.dmv.RelaxedDepTreebank;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.parse.DepParser;
-import edu.jhu.hltcoe.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector;
+import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.gridsearch.dmv.DmvObjective;
+import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.model.Model;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.DepParser;
+import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
+import edu.jhu.train.DmvTrainCorpus;
 
 public class RelaxedParserWrapper implements DepParser {
     

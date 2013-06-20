@@ -1,13 +1,13 @@
-package edu.jhu.hltcoe.gridsearch.randwalk;
+package edu.jhu.gridsearch.randwalk;
 
 import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.ProblemNode;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvProblemNode;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.gridsearch.ProblemNode;
+import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.util.Prng;
 
 
 public class DfsRandChildNodeOrdererTest {

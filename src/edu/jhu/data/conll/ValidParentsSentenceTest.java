@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.data.conll;
+package edu.jhu.data.conll;
 
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.util.Alphabet;
-import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.JUnitUtils;
 
 public class ValidParentsSentenceTest {
 

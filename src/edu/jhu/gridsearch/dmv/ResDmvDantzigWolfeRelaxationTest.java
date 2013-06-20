@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.gridsearch.dmv;
+package edu.jhu.gridsearch.dmv;
 
-import static edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxationTest.solveRelaxation;
+import static edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxationTest.solveRelaxation;
 import static org.junit.Assert.assertEquals;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
@@ -16,25 +16,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBounds;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvSolFactory.InitSol;
-import edu.jhu.hltcoe.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
-import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvMStep;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.parse.dmv.DmvCkyParserTest;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
-import edu.jhu.hltcoe.train.LocalBnBDmvTrainer;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Timer;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
-import edu.jhu.hltcoe.util.rproj.RDataFrame;
-import edu.jhu.hltcoe.util.rproj.RRow;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.gridsearch.dmv.DmvSolFactory.InitSol;
+import edu.jhu.gridsearch.dmv.ResDmvDantzigWolfeRelaxation.ResDmvDwRelaxPrm;
+import edu.jhu.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.model.dmv.DmvMStep;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.parse.dmv.DmvCkyParserTest;
+import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.LocalBnBDmvTrainer;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
+import edu.jhu.util.rproj.RDataFrame;
+import edu.jhu.util.rproj.RRow;
 
 
 public class ResDmvDantzigWolfeRelaxationTest {

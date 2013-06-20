@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.io.File;
 import java.util.List;
 
-import edu.jhu.hltcoe.util.Command;
-import edu.jhu.hltcoe.util.Files;
+import edu.jhu.util.Command;
+import edu.jhu.util.Files;
 
 public class Evalb {
 

@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse.cky;
+package edu.jhu.parse.cky;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,8 +10,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import edu.jhu.hltcoe.data.Label;
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
 
 public class NaryTreebank extends ArrayList<NaryTree> {
 

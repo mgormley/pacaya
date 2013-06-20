@@ -1,6 +1,6 @@
-package edu.jhu.hltcoe.model.dmv;
+package edu.jhu.model.dmv;
 
-import edu.jhu.hltcoe.data.Sentence;
+import edu.jhu.data.Sentence;
 
 public class DmvSentParamCache {
 

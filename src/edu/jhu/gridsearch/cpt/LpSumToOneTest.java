@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.cpt;
+package edu.jhu.gridsearch.cpt;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -10,12 +10,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
-import edu.jhu.hltcoe.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.hltcoe.util.Prng;
-import edu.jhu.hltcoe.util.Utilities;
-import edu.jhu.hltcoe.util.math.Vectors;
+import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
+import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Vectors;
 
 
 public class LpSumToOneTest {

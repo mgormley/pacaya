@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.gridsearch.rlt.filter;
+package edu.jhu.gridsearch.rlt.filter;
 
 import gnu.trove.TLongHashSet;
 import ilog.concert.IloException;
@@ -6,10 +6,10 @@ import ilog.concert.IloNumVar;
 
 import java.util.List;
 
-import edu.jhu.hltcoe.util.vector.LongDoubleEntry;
-import edu.jhu.hltcoe.gridsearch.rlt.Rlt;
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.util.Utilities;
+import edu.jhu.util.vector.LongDoubleEntry;
+import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.util.Utilities;
 
 /**
  * Accepts only RLT factors that have a non-zero coefficient for one of the given input matrix variable columns.

@@ -1,10 +1,10 @@
-package edu.jhu.hltcoe.data;
+package edu.jhu.data;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import edu.jhu.hltcoe.util.Alphabet;
+import edu.jhu.util.Alphabet;
 
 public class DepTree implements Iterable<DepTreeNode> {
 

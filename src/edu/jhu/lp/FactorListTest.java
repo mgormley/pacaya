@@ -1,12 +1,12 @@
-package edu.jhu.hltcoe.lp;
+package edu.jhu.lp;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.lp.FactorBuilder.Factor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactor;
-import edu.jhu.hltcoe.lp.FactorBuilder.RowFactorType;
-import edu.jhu.hltcoe.util.JUnitUtils;
+import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.lp.FactorBuilder.RowFactor;
+import edu.jhu.lp.FactorBuilder.RowFactorType;
+import edu.jhu.util.JUnitUtils;
 
 
 public class FactorListTest {

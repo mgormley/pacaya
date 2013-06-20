@@ -1,9 +1,9 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.model.Model;
-import edu.jhu.hltcoe.train.DmvTrainCorpus;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.model.Model;
+import edu.jhu.train.DmvTrainCorpus;
 
 public interface DepParser {
 

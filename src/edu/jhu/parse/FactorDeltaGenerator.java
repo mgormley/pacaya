@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.parse;
+package edu.jhu.parse;
 
 
 public class FactorDeltaGenerator extends IdentityDeltaGenerator implements DeltaGenerator {

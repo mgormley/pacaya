@@ -1,4 +1,4 @@
-package edu.jhu.hltcoe.train;
+package edu.jhu.train;
 
 import junit.framework.Assert;
 
@@ -6,25 +6,25 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import edu.jhu.hltcoe.data.DepTreebank;
-import edu.jhu.hltcoe.data.SentenceCollection;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
-import edu.jhu.hltcoe.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
-import edu.jhu.hltcoe.gridsearch.cpt.BasicCptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.CptBoundsDeltaFactory;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.RegretVariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSelector;
-import edu.jhu.hltcoe.gridsearch.cpt.VariableSplitter;
-import edu.jhu.hltcoe.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
-import edu.jhu.hltcoe.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
-import edu.jhu.hltcoe.model.dmv.DmvDepTreeGenerator;
-import edu.jhu.hltcoe.model.dmv.DmvModel;
-import edu.jhu.hltcoe.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.hltcoe.train.BnBDmvTrainer.BnBDmvTrainerPrm;
-import edu.jhu.hltcoe.util.Prng;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
+import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.RegretVariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSelector;
+import edu.jhu.gridsearch.cpt.VariableSplitter;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
+import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
+import edu.jhu.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.train.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.util.Prng;
 
 
 public class BnBDmvTrainerTest {
