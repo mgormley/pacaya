@@ -13,7 +13,7 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import cern.colt.Arrays;
+import java.util.Arrays;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;

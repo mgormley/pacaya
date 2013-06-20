@@ -3,7 +3,7 @@ package edu.jhu.util.dist;
 import org.junit.Assert;
 import org.junit.Test;
 
-import cern.colt.Arrays;
+import java.util.Arrays;
 import edu.jhu.util.math.Vectors;
 
 
