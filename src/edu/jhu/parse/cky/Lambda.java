@@ -30,7 +30,7 @@ public class Lambda {
     public interface LambdaTwoToOne<T,S,V> {
         public V call(T obj1, S obj2);
     }
-    
+        
     /** A binary operator on doubles. */
     public interface LambdaBinOpD {
         public double call(double v1, double v2);

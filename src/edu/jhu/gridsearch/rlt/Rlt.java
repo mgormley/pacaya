@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.rlt;
 
-import edu.jhu.util.collections.PIntArrayList;
-import edu.jhu.util.collections.PLongIntHashMap;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -12,9 +10,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import edu.jhu.util.vector.SortedLongDoubleVector;
-import edu.jhu.util.vector.LongDoubleEntry;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
@@ -24,16 +19,20 @@ import edu.jhu.gridsearch.rlt.filter.RltFactorFilter;
 import edu.jhu.gridsearch.rlt.filter.RltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.RowType;
 import edu.jhu.lp.FactorBuilder;
+import edu.jhu.lp.FactorBuilder.BoundFactor;
+import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpMatrixUpdates;
 import edu.jhu.lp.LpRows;
-import edu.jhu.lp.FactorBuilder.BoundFactor;
-import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.PLongIntHashMap;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.util.vector.LongDoubleEntry;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 public class Rlt {
 
@@ -437,7 +436,7 @@ public class Rlt {
         for (int m=0; m<rows.size(); m++) {
             for (LongDoubleEntry ve : rows.get(m)) {
                 long id = ve.index();
-                if (!idToColIdx.contains(id)) {
+                if (!idToColIdx.containsKey(id)) {
                     int i = idsForRltVars.getI(id);
                     int j = idsForRltVars.getJ(id);
                     

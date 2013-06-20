@@ -5,6 +5,8 @@ import java.util.Iterator;
 
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
 /**
  * Sorted mapping of ints to doubles.
@@ -91,7 +93,7 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 	private final int[] insert(int[] array, int i, int val) {
 		if (used >= array.length) {
 			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+			array = PIntArrayList.ensureCapacity(array, used+1);
 		}
 		if (i < used) {
 			// Shift the values over.
@@ -105,7 +107,7 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 	private final double[] insert(double[] array, int i, double val) {
 		if (used >= array.length) {
 			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+			array = PDoubleArrayList.ensureCapacity(array, used+1);
 		}
 		if (i < used) {
 			// Shift the values over.

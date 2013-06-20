@@ -5,6 +5,7 @@ import java.util.Iterator;
 
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.PIntArrayList;
 
 public class SortedIntIntMap implements Iterable<IntIntEntry> {
 
@@ -85,7 +86,7 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 	private final int[] insert(int[] array, int i, int val) {
 		if (used >= array.length) {
 			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+			array = PIntArrayList.ensureCapacity(array, used+1);
 		}
 		if (i < used) {
 			// Shift the values over.

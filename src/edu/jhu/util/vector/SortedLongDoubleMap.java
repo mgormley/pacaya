@@ -5,6 +5,8 @@ import java.util.Iterator;
 
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PLongArrayList;
 
 public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 
@@ -85,7 +87,7 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 	private final long[] insert(long[] array, int i, long val) {
 		if (used >= array.length) {
 			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+			array = PLongArrayList.ensureCapacity(array, used+1);
 		}
 		if (i < used) {
 			// Shift the values over.
@@ -99,7 +101,7 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 	private final double[] insert(double[] array, int i, double val) {
 		if (used >= array.length) {
 			// Increase the capacity of the array.
-			array = cern.colt.Arrays.ensureCapacity(array, used+1);
+			array = PDoubleArrayList.ensureCapacity(array, used+1);
 		}
 		if (i < used) {
 			// Shift the values over.
