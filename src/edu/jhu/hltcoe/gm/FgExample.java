@@ -30,4 +30,9 @@ public class FgExample {
         return null;
     }
 
+    public FactorGraph getFactorGraph() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

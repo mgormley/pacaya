@@ -1,5 +1,6 @@
 package edu.jhu.hltcoe.gm;
 
+import edu.jhu.hltcoe.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.hltcoe.util.Utilities;
 import edu.jhu.hltcoe.util.vector.SortedIntDoubleVector;
 
@@ -54,9 +55,13 @@ public class CrfTrainer {
             double[] gradient = new double[params.length];
             for (int i=0; i<data.size(); i++) {
                 FgExample ex = data.get(i);
-                FgInferencer inferencer = null;
-                inferencer.set(ex.getFactorGraph()); // TODO: should inference be at the example level or is there a more elegant approach?
+                
+                // TODO: factor out these options.
+                // TODO: should inference be at the example level or is there a more elegant approach?
+                BeliefPropagationPrm prm = new BeliefPropagationPrm(ex.getFactorGraph());
+                FgInferencer inferencer = new BeliefPropagation(prm);
                 inferencer.run();
+                
                 for (int a=0; a<model.getNumFactors(); a++) {
                     // TODO: Should the loop over factors be pushed into the FgExample and FgInferencer?
                     // Get the observed feature counts for this factor.
