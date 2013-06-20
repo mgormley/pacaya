@@ -29,13 +29,10 @@ import org.apache.commons.math3.util.FastMath;
  * NOTICE: Changes made to this class:
  * <ul>
  * <li>This class was renamed from OpenIntToDoubleHashMap to its current name.</li>
- * <li>The keys were converted from int to long and a new hash function was written.</li>
- * <li>The values were converted from double to int.</li>
- * <li>The default value for missing entries was set to 0.</li>
  * </ul> 
  * 
- * Open addressed map from long to int.
- * <p>This class provides a dedicated map from longs to integers with a
+ * Open addressed map from int to double.
+ * <p>This class provides a dedicated map from integers to doubles with a
  * much smaller memory overhead than standard <code>java.util.Map</code>.</p>
  * <p>This class is not synchronized. The specialized iterators returned by
  * {@link #iterator()} are fail-fast: they throw a
@@ -44,7 +41,7 @@ import org.apache.commons.math3.util.FastMath;
  * @version $Id: OpenIntToDoubleHashMap.java 1421448 2012-12-13 19:45:57Z tn $
  * @since 2.0
  */
-public class PLongIntHashMap implements Serializable {
+public class PIntDoubleHashMap implements Serializable {
 
     /** Status indicator for free table entries. */
     protected static final byte FREE    = 0;
@@ -73,21 +70,18 @@ public class PLongIntHashMap implements Serializable {
 
     /** Number of bits to perturb the index when probing for collision resolution. */
     private static final int PERTURB_SHIFT = 5;
-    
-    /** The default value for missing entries. */
-    private static final int DEFAULT_MISSING_ENTRIES_VALUE = 0;
 
     /** Keys table. */
-    private long[] keys;
+    private int[] keys;
 
     /** Values table. */
-    private int[] values;
+    private double[] values;
 
     /** States table. */
     private byte[] states;
 
     /** Return value for missing entries. */
-    private final int missingEntries;
+    private final double missingEntries;
 
     /** Current size of the map. */
     private int size;
@@ -101,25 +95,24 @@ public class PLongIntHashMap implements Serializable {
     /**
      * Build an empty map with default size and using NaN for missing entries.
      */
-    public PLongIntHashMap() {
-        this(DEFAULT_EXPECTED_SIZE, DEFAULT_MISSING_ENTRIES_VALUE);
+    public PIntDoubleHashMap() {
+        this(DEFAULT_EXPECTED_SIZE, Double.NaN);
     }
 
-    // When the values are ints, it doesn't make sense to have this additional constructor.
-    //    /**
-    //     * Build an empty map with default size
-    //     * @param missingEntries value to return when a missing entry is fetched
-    //     */
-    //    public PLongIntHashMap(final int missingEntries) {
-    //        this(DEFAULT_EXPECTED_SIZE, missingEntries);
-    //    }
+    /**
+     * Build an empty map with default size
+     * @param missingEntries value to return when a missing entry is fetched
+     */
+    public PIntDoubleHashMap(final double missingEntries) {
+        this(DEFAULT_EXPECTED_SIZE, missingEntries);
+    }
 
     /**
      * Build an empty map with specified size and using NaN for missing entries.
      * @param expectedSize expected number of elements in the map
      */
-    public PLongIntHashMap(final int expectedSize) {
-        this(expectedSize, DEFAULT_MISSING_ENTRIES_VALUE);
+    public PIntDoubleHashMap(final int expectedSize) {
+        this(expectedSize, Double.NaN);
     }
 
     /**
@@ -127,11 +120,11 @@ public class PLongIntHashMap implements Serializable {
      * @param expectedSize expected number of elements in the map
      * @param missingEntries value to return when a missing entry is fetched
      */
-    public PLongIntHashMap(final int expectedSize,
-                                  final int missingEntries) {
+    public PIntDoubleHashMap(final int expectedSize,
+                                  final double missingEntries) {
         final int capacity = computeCapacity(expectedSize);
-        keys   = new long[capacity];
-        values = new int[capacity];
+        keys   = new int[capacity];
+        values = new double[capacity];
         states = new byte[capacity];
         this.missingEntries = missingEntries;
         mask   = capacity - 1;
@@ -141,11 +134,11 @@ public class PLongIntHashMap implements Serializable {
      * Copy constructor.
      * @param source map to copy
      */
-    public PLongIntHashMap(final PLongIntHashMap source) {
+    public PIntDoubleHashMap(final PIntDoubleHashMap source) {
         final int length = source.keys.length;
-        keys = new long[length];
+        keys = new int[length];
         System.arraycopy(source.keys, 0, keys, 0, length);
-        values = new int[length];
+        values = new double[length];
         System.arraycopy(source.values, 0, values, 0, length);
         states = new byte[length];
         System.arraycopy(source.states, 0, states, 0, length);
@@ -186,7 +179,7 @@ public class PLongIntHashMap implements Serializable {
      * @param key key associated with the data
      * @return data associated with the key
      */
-    public int get(final long key) {
+    public double get(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
@@ -216,7 +209,7 @@ public class PLongIntHashMap implements Serializable {
      * @param key key to check
      * @return true if a value is associated with key
      */
-    public boolean containsKey(final long key) {
+    public boolean containsKey(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
@@ -266,7 +259,7 @@ public class PLongIntHashMap implements Serializable {
      * @param key key to lookup
      * @return index at which key should be inserted
      */
-    private int findInsertionIndex(final long key) {
+    private int findInsertionIndex(final int key) {
         return findInsertionIndex(keys, states, key, mask);
     }
 
@@ -278,8 +271,8 @@ public class PLongIntHashMap implements Serializable {
      * @param mask bit mask for hash values
      * @return index at which key should be inserted
      */
-    private static int findInsertionIndex(final long[] keys, final byte[] states,
-                                          final long key, final int mask) {
+    private static int findInsertionIndex(final int[] keys, final byte[] states,
+                                          final int key, final int mask) {
         final int hash = hashOf(key);
         int index = hash & mask;
         if (states[index] == FREE) {
@@ -360,7 +353,7 @@ public class PLongIntHashMap implements Serializable {
      * @param key key to which the value is associated
      * @return removed value
      */
-    public int remove(final long key) {
+    public double remove(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
@@ -392,7 +385,7 @@ public class PLongIntHashMap implements Serializable {
      * @param index index to check
      * @return true if an element is associated with key at index
      */
-    private boolean containsKey(final long key, final int index) {
+    private boolean containsKey(final int key, final int index) {
         return (key != 0 || states[index] == FULL) && keys[index] == key;
     }
 
@@ -401,10 +394,10 @@ public class PLongIntHashMap implements Serializable {
      * @param index index of the element to remove
      * @return removed value
      */
-    private int doRemove(int index) {
+    private double doRemove(int index) {
         keys[index]   = 0;
         states[index] = REMOVED;
-        final int previous = values[index];
+        final double previous = values[index];
         values[index] = missingEntries;
         --size;
         ++count;
@@ -417,9 +410,9 @@ public class PLongIntHashMap implements Serializable {
      * @param value value to put in the map
      * @return previous value associated with the key
      */
-    public int put(final long key, final int value) {
+    public double put(final int key, final double value) {
         int index = findInsertionIndex(key);
-        int previous = missingEntries;
+        double previous = missingEntries;
         boolean newMapping = true;
         if (index < 0) {
             index = changeIndexSign(index);
@@ -446,18 +439,18 @@ public class PLongIntHashMap implements Serializable {
     private void growTable() {
 
         final int oldLength      = states.length;
-        final long[] oldKeys      = keys;
-        final int[] oldValues = values;
+        final int[] oldKeys      = keys;
+        final double[] oldValues = values;
         final byte[] oldStates   = states;
 
         final int newLength = RESIZE_MULTIPLIER * oldLength;
-        final long[] newKeys = new long[newLength];
-        final int[] newValues = new int[newLength];
+        final int[] newKeys = new int[newLength];
+        final double[] newValues = new double[newLength];
         final byte[] newStates = new byte[newLength];
         final int newMask = newLength - 1;
         for (int i = 0; i < oldLength; ++i) {
             if (oldStates[i] == FULL) {
-                final long key = oldKeys[i];
+                final int key = oldKeys[i];
                 final int index = findInsertionIndex(newKeys, newStates, key, newMask);
                 newKeys[index]   = key;
                 newValues[index] = oldValues[i];
@@ -485,18 +478,7 @@ public class PLongIntHashMap implements Serializable {
      * @param key key to hash
      * @return hash value of the key
      */
-    private static int hashOf(final long key) {
-        // Gets the exclusive-or of the hash values of the first and second 32
-        // bits of the long.
-        return (int) (hashOfInt((int)key) ^ hashOfInt((int) (key >>> 32)));
-    }
-    
-    /**
-     * Compute the hash value of a key
-     * @param key key to hash
-     * @return hash value of the key
-     */
-    private static int hashOfInt(final int key) {
+    private static int hashOf(final int key) {
         final int h = key ^ ((key >>> 20) ^ (key >>> 12));
         return h ^ (h >>> 7) ^ (h >>> 4);
     }
@@ -546,7 +528,7 @@ public class PLongIntHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public long key()
+        public int key()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -563,7 +545,7 @@ public class PLongIntHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public int value()
+        public double value()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
