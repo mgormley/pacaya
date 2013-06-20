@@ -18,6 +18,12 @@ public class PLongArrayList {
         size = 0;
     }
     
+    /** Copy constructor. */
+    public PLongArrayList(PLongArrayList other) {
+        this(other.size);
+        add(other);
+    }
+    
     /**
      * Adds the value to the end of the list.
      * @param value The value to add.
@@ -39,6 +45,18 @@ public class PLongArrayList {
         }
         return elements[i];
     }
+    
+    /**
+     * Sets the i'th element of the array list to the given value.
+     * @param i The index to set.
+     * @param value The value to set.
+     */
+    public void set(int i, long value) {
+        if (i < 0 || i >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+        elements[i] = value;
+    }
 
     /**
      * Adds all the elements in the given array to the array list.
@@ -48,6 +66,17 @@ public class PLongArrayList {
         ensureCapacity(size + values.length);
         for (long element : values) {
             this.add(element);
+        }
+    }
+    
+    /**
+     * Adds all the elements in the given array list to the array list.
+     * @param values The values to add to the array list.
+     */
+    public void add(PLongArrayList values) {
+        ensureCapacity(size + values.size);
+        for (int i=0; i<values.size; i++) {
+            this.add(values.elements[i]);
         }
     }
 
@@ -87,11 +116,21 @@ public class PLongArrayList {
      * @param size The number of elements. 
      */
     private void ensureCapacity(int size) {
+        elements = ensureCapacity(elements, size);
+    }
+    
+    /**
+     * Ensure that the array has space to contain the specified number of elements.
+     * @param elements The array.
+     * @param size The number of elements. 
+     */
+    public static long[] ensureCapacity(long[] elements, int size) {
         if (size > elements.length) {
             long[] tmp = new long[size*2];
             System.arraycopy(elements, 0, tmp, 0, elements.length);
             elements = tmp;
         }
+        return elements;
     }
 
     /**

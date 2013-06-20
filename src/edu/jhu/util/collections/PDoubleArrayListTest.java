@@ -44,7 +44,7 @@ public class PDoubleArrayListTest {
     }
     
     @Test
-    public void testClear() {
+    public void testClearGetSize() {
         PDoubleArrayList list = new PDoubleArrayList();
         list.add(getDouble(1));
         list.add(getDouble(2));
@@ -71,7 +71,51 @@ public class PDoubleArrayListTest {
             
         }
     }
+    
 
+    @Test
+    public void testSet() {
+        PDoubleArrayList list = new PDoubleArrayList();
+        list.add(getDouble(1));
+        list.add(getDouble(2));
+        list.add(getDouble(3));   
+        try {
+            list.set(3, 0);
+            fail("Exception should have been thrown.");
+        } catch(IndexOutOfBoundsException e) {
+            
+        } 
+        try {
+            list.set(-1, 0);
+            fail("Exception should have been thrown.");
+        } catch(IndexOutOfBoundsException e) {
+                        
+        }
+        
+        list.set(0, 3);
+        list.set(1, 3);
+        assertEquals(3, list.size());
+
+        assertEquals(3, toInt(list.get(0)));
+        assertEquals(3, toInt(list.get(1)));
+        assertEquals(3, toInt(list.get(2)));
+    }
+
+    @Test
+    public void testCopyConstructor() {
+        PDoubleArrayList list = new PDoubleArrayList();
+        list.add(getDouble(1));
+        list.add(getDouble(2));
+        list.add(getDouble(3));
+        
+        list = new PDoubleArrayList(list);
+        
+        assertEquals(1, toInt(list.get(0)));
+        assertEquals(2, toInt(list.get(1)));
+        assertEquals(3, toInt(list.get(2)));
+        assertEquals(3, list.size());
+    }
+    
     private int toInt(double d) {
         return (int)d;
     }

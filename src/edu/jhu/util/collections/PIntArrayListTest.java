@@ -1,7 +1,6 @@
 package edu.jhu.util.collections;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 
@@ -45,7 +44,7 @@ public class PIntArrayListTest {
     }
     
     @Test
-    public void testClear() {
+    public void testClearGetSize() {
         PIntArrayList list = new PIntArrayList();
         list.add(getInt(1));
         list.add(getInt(2));
@@ -72,13 +71,61 @@ public class PIntArrayListTest {
             
         }
     }
+    
 
+    @Test
+    public void testSet() {
+        PIntArrayList list = new PIntArrayList();
+        list.add(getInt(1));
+        list.add(getInt(2));
+        list.add(getInt(3));   
+        try {
+            list.set(3, 0);
+            fail("Exception should have been thrown.");
+        } catch(IndexOutOfBoundsException e) {
+            
+        } 
+        try {
+            list.set(-1, 0);
+            fail("Exception should have been thrown.");
+        } catch(IndexOutOfBoundsException e) {
+                        
+        }
+        
+        list.set(0, 3);
+        list.set(1, 3);
+        assertEquals(3, list.size());
+
+        assertEquals(3, toInt(list.get(0)));
+        assertEquals(3, toInt(list.get(1)));
+        assertEquals(3, toInt(list.get(2)));
+    }
+
+    @Test
+    public void testCopyConstructor() {
+        PIntArrayList list = new PIntArrayList();
+        list.add(getInt(1));
+        list.add(getInt(2));
+        list.add(getInt(3));
+        
+        list = new PIntArrayList(list);
+        
+        assertEquals(1, toInt(list.get(0)));
+        assertEquals(2, toInt(list.get(1)));
+        assertEquals(3, toInt(list.get(2)));
+        assertEquals(3, list.size());
+    }
+    
     private int toInt(int d) {
-        return d;
+        return (int)d;
     }
 
     private int[] getInts(int... b) {
-        return b;
+        int[] a = new int[b.length];
+        for (int i=0; i<b.length; i++) {
+            a[i] = b[i];
+        }
+        return a;
     }
 
     private int getInt(int i) {

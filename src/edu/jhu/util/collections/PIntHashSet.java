@@ -1,10 +1,9 @@
 package edu.jhu.util.collections;
 
-import cern.colt.map.OpenIntIntHashMap;
 
 public class PIntHashSet {
 
-    private OpenIntIntHashMap map = new OpenIntIntHashMap();
+    private PIntDoubleHashMap map = new PIntDoubleHashMap();
     
     public void add(int key) {
         map.put(key, 1);
