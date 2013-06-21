@@ -40,6 +40,7 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		this.used = 0;
 	}
 	
+	// TODO: rename to containsKey.
 	public boolean contains(long idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
