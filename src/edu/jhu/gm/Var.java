@@ -1,8 +1,7 @@
 package edu.jhu.gm;
 
 import java.util.ArrayList;
-
-import edu.jhu.gm.BipartiteGraph.Node;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A variable in a factor graph.
@@ -10,7 +9,10 @@ import edu.jhu.gm.BipartiteGraph.Node;
  * @author mgormley
  *
  */
-public class Var extends Node implements Comparable<Var> {
+public class Var implements Comparable<Var> {
+    
+    /** All variables without an id are given this value. */
+    public static final int UNINITIALIZED_NODE_ID = -1;
     
     public enum VarType {
         /** Observed variables will always be observed at training and test time. */
@@ -23,22 +25,37 @@ public class Var extends Node implements Comparable<Var> {
 
     /** The type of variable. */
     private Var.VarType type;
-    /** The unique index for this variable. */
-    private int id;
     /** The number of states that this variable can take on. */
     private int numStates;
     /** The unique name of this variable. */
     private String name;
     /** State names. */
     private ArrayList<String> stateNames;
-        
-    public Var(VarType type, int id, int numStates, String name,
+    /** OPTIONAL: The id of the node corresponding to this variable. */
+    private int nodeId;
+    
+    /** Counter used to create a unique id for each instance of this class. */
+    private static final AtomicInteger instanceCounter = new AtomicInteger();
+    /** An id that is unique to this instance of this class. */
+    private int instanceId = instanceCounter.incrementAndGet();
+    
+    public Var(VarType type, int numStates, String name,
             ArrayList<String> stateNames) {
+        super();
         this.type = type;
-        this.id = id;
         this.numStates = numStates;
         this.name = name;
         this.stateNames = stateNames;
+        this.nodeId = UNINITIALIZED_NODE_ID;
+    }
+
+    public Var(VarType type, int numStates, String name, ArrayList<String> stateNames,
+            int id) {
+        this.type = type;
+        this.numStates = numStates;
+        this.name = name;
+        this.stateNames = stateNames;
+        this.nodeId = id;
     }
 
     public int getNumStates() {
@@ -47,10 +64,6 @@ public class Var extends Node implements Comparable<Var> {
             
     public Var.VarType getType() {
         return type;
-    }
-
-    public int getId() {
-        return id;
     }
     
     public String getName() {
@@ -61,21 +74,44 @@ public class Var extends Node implements Comparable<Var> {
         return stateNames;
     }
 
+    /**
+     * Gets the id of the node corresponding to this variable.
+     * 
+     * For INTERNAL USE ONLY.
+     */
+    int getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * Sets the id of the node corresponding to this variable.
+     *      
+     * For INTERNAL USE ONLY.
+     * 
+     * @throws IllegalStateException if the node id for this variable was already set. 
+     */
+    void setNodeId(int id) {
+        if (this.nodeId != UNINITIALIZED_NODE_ID) {
+            throw new IllegalStateException("The id for this variable was already set: " + id);
+        }
+        this.nodeId = id;
+    }
+
     /*
-     * The compareTo, equals, and hashCode methods only depend on the id of
+     * The compareTo, equals, and hashCode methods only depend on the instanceId of
      * the variable.
      */
 
     @Override
     public int compareTo(Var other) {
-        return this.id - other.id;
+        return this.instanceId - other.instanceId;
     }
     
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + id;
+        result = prime * result + this.instanceId;
         return result;
     }
 
@@ -88,14 +124,14 @@ public class Var extends Node implements Comparable<Var> {
         if (getClass() != obj.getClass())
             return false;
         Var other = (Var) obj;
-        if (id != other.id)
+        if (this.instanceId != other.instanceId)
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "Var [type=" + type + ", id=" + id + ", numStates=" + numStates
+        return "Var [type=" + type + ", nodeId=" + nodeId + ", numStates=" + numStates
                 + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
     

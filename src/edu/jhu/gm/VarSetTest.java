@@ -79,7 +79,7 @@ public class VarSetTest {
         for (int i=0; i<numStates; i++) {
             stateNames.add("state" + i);
         }
-        return new Var(VarType.OBSERVED, id, numStates, "var"+id, stateNames);
+        return new Var(VarType.OBSERVED, numStates, "var"+id, stateNames, id);
     }
     
 }

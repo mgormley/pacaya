@@ -1,11 +1,9 @@
 package edu.jhu.gm;
 
 
-import edu.jhu.gm.BipartiteGraph.Edge;
-import edu.jhu.gm.BipartiteGraph.Node;
 import edu.jhu.gm.FactorGraph.FgEdge;
+import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.Vectors;
 
 /**
  * Loopy belief propagation inference algorithm.
@@ -16,10 +14,10 @@ import edu.jhu.util.math.Vectors;
 public class BeliefPropagation implements FgInferencer {
 
     public static class BeliefPropagationPrm {
-        public BpSchedule schedule;
-        public int maxIterations;
-        public int timeoutSeconds;
-        public BpUpdateOrder updateOrder;
+        public BpSchedule schedule = null;
+        public int maxIterations = 100;
+        public double timeoutSeconds = Double.POSITIVE_INFINITY;
+        public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
         public final FactorGraph fg;
         public BeliefPropagationPrm(FactorGraph fg) {
             this.fg = fg;
@@ -135,7 +133,7 @@ public class BeliefPropagation implements FgInferencer {
 
             // Marginalize over all the assignments to variables for f*, except
             // for v*.
-            msg = prod.getMarginal(new VarSet(var), false);
+            msg = prod.getLogMarginal(new VarSet(var), false);
         }
         
         msg.logNormalize();      
@@ -162,8 +160,8 @@ public class BeliefPropagation implements FgInferencer {
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
      */
-    private void getProductOfMessages(Node node, Factor prod, Node exclNode) {
-        for (FgEdge nbEdge : fg.getEdges(node)) {
+    private void getProductOfMessages(FgNode node, Factor prod, FgNode exclNode) {
+        for (FgEdge nbEdge : node.getInEdges()) {
             if (nbEdge.getParent() == exclNode) {
                 // Don't include the receiving variable.
                 continue;
@@ -240,10 +238,13 @@ public class BeliefPropagation implements FgInferencer {
 
     /** @inheritDoc */
     @Override
-    public double getLogPartition(FgExample ex, FgModel model) {
+    public double getLogPartition() {
         // We just return the normalizing constant for the marginals of any variable.
-        Factor v0Marginal = getMarginalsForVarId(0);
-        return v0Marginal.getLogSum();
+        Var var = fg.getVar(0);
+        Factor prod = new Factor(new VarSet(var));
+        // Compute the product of all messages sent to this variable.
+        getProductOfMessages(fg.getNode(var), prod, null);
+        return prod.getLogSum();
     }
     
 }

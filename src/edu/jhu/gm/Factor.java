@@ -1,9 +1,8 @@
 package edu.jhu.gm;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
-import edu.jhu.gm.BipartiteGraph.Node;
+import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.parse.cky.Lambda;
 import edu.jhu.parse.cky.Lambda.LambdaBinOpD;
 import edu.jhu.util.Utilities;
@@ -16,27 +15,39 @@ import edu.jhu.util.math.Vectors;
  * @author mgormley
  *
  */
-// TODO: maybe this shouldn't extend Node.
-public class Factor extends Node {
-    
+// TODO: Should we instead represent this as a sparse factor? What are the tradeoffs?
+public class Factor {
+
+    /** All variables without an id are given this value. */
+    public static final int UNINITIALIZED_NODE_ID = -1;
+  
     /** The set of variables in this factor. */
     private VarSet vars;
-    /** The values of each entry in this factor. */
-    // TODO: Are these always in the log-domain??
-    // TODO: we could use the ordering used by libDAI to represent.
-    // TODO: should we instead represent this as a sparse factor? what are the tradeoffs?
+    /**
+     * The values of each entry in this factor. These could be probabilities
+     * (normalized or unormalized), in the real or log domain.
+     */
     private double[] values;
+    /**
+     * The id of the node corresponding to this factor. This is primarily used for fast lookups
+     * of factors in a factor graph.
+     */
+    private int nodeId;
     
     public Factor(VarSet vars) {
         this.vars = vars;
         int numConfigs = vars.getNumConfigs();
         this.values = new double[numConfigs];
+        this.nodeId = UNINITIALIZED_NODE_ID;
     }
     
     /** Copy constructor. */
     public Factor(Factor f) {
         this.vars = f.vars;
         this.values = Utilities.copyOf(f.values);
+        // We don't want to copy the node id since it uniquely refers to the
+        // node of the input factor.
+        this.nodeId = UNINITIALIZED_NODE_ID;
     }
     
     /**
@@ -265,6 +276,29 @@ public class Factor extends Node {
     /** For testing only. */
     public double[] getValues() {
         return values;
-    }    
+    }
+    
+    /**
+     * Gets the id of the node corresponding to this variable.
+     * 
+     * For INTERNAL USE ONLY.
+     */
+    int getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * Sets the id of the node corresponding to this variable.
+     *      
+     * For INTERNAL USE ONLY.
+     * 
+     * @throws IllegalStateException if the node id for this variable was already set. 
+     */
+    void setNodeId(int id) {
+        if (this.nodeId != UNINITIALIZED_NODE_ID) {
+            throw new IllegalStateException("The id for this variable was already set: " + id);
+        }
+        this.nodeId = id;
+    }
     
 }

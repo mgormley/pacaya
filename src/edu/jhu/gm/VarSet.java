@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import cern.colt.list.IntArrayList;
@@ -36,6 +37,12 @@ public class VarSet extends SmallSet<Var> {
     @SuppressWarnings("unchecked")
     public VarSet(VarSet vars1, VarSet vars2) {
         super(vars1, vars2);
+    }
+
+    /** Constucts a variable set containing all the given vars. */
+    public VarSet(Var... vars) {
+        super(vars.length);
+        addAll(Arrays.asList(vars));
     }
 
     /**
