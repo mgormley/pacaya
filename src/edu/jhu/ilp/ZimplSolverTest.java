@@ -80,14 +80,14 @@ public class ZimplSolverTest {
 
     private static void runZimplSolverStartvals(File tempDir, IlpSolver ilpSolver) {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
-        URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/startvals.zpl");
+        URL url = ZimplSolverTest.class.getResource("/edu/jhu/ilp/startvals.zpl");
         File zimplFile = new File(url.getFile());
         solver.solve(zimplFile);
     }
 
     private static void runZimplInfeasible(File tempDir, IlpSolver ilpSolver) {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
-        URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/infeasible.zpl");
+        URL url = ZimplSolverTest.class.getResource("/edu/jhu/ilp/infeasible.zpl");
         File zimplFile = new File(url.getFile());
         try {
             solver.solve(zimplFile);
@@ -98,7 +98,7 @@ public class ZimplSolverTest {
     
     private static void runZimplSolver(File tempDir, IlpSolver ilpSolver) {
         ZimplSolver solver = new ZimplSolver(tempDir, ilpSolver);
-        URL url = ZimplSolverTest.class.getResource("/edu/jhu/hltcoe/ilp/chvatal_diet.zpl");
+        URL url = ZimplSolverTest.class.getResource("/edu/jhu/ilp/chvatal_diet.zpl");
         File zimplFile = new File(url.getFile());
         solver.solve(zimplFile);
         Map<String,Double> sol = solver.getResult();

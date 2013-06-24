@@ -44,7 +44,7 @@ public abstract class AbstractDipSolver implements IlpSolver {
             dipDir = "";
         }
     }
-    private static final String PARAM_TEMPLATE = "/edu/jhu/hltcoe/ilp/decomp/milpblock.parm";
+    private static final String PARAM_TEMPLATE = "/edu/jhu/ilp/decomp/milpblock.parm";
     private static final String paramTemplate = readParamTemplateFromResource(PARAM_TEMPLATE);
 
     private static final Pattern spaceRegex = Pattern.compile("\\s+");

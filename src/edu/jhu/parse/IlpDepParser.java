@@ -33,7 +33,7 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
 
     private static final Logger log = Logger.getLogger(IlpDepParser.class);
     
-    public static final String ZIMPL_CODE_XML = "/edu/jhu/hltcoe/parse/zimpl_dep_parse.xml";
+    public static final String ZIMPL_CODE_XML = "/edu/jhu/parse/zimpl_dep_parse.xml";
     private static final int ZIMPL_WALL_POSITION = 0;
     protected ZimplXmlCodeContainerReader codeMap;
     public static final Pattern zimplVarRegex = Pattern.compile("[#$]");

@@ -11,7 +11,7 @@ import edu.jhu.util.Files;
 
 public class CoNLLXReadWriteTest {
 
-    private static final String conllXExample= "/edu/jhu/hltcoe/data/conll/conll-x-example.conll";
+    private static final String conllXExample= "/edu/jhu/data/conll/conll-x-example.conll";
     
     @Test
     public void testReadWrite() throws IOException {

@@ -17,7 +17,7 @@ import edu.jhu.util.Utilities;
 
 public class PcfgInsideOutsideTest {
     
-    public static final String pizzaAnochoviesGrammarResource = "/edu/jhu/hltcoe/parse/cky/pizza-anchovies.gr";
+    public static final String pizzaAnochoviesGrammarResource = "/edu/jhu/parse/cky/pizza-anchovies.gr";
 
     @Test
     public void testSimpleSentence1() throws IOException {

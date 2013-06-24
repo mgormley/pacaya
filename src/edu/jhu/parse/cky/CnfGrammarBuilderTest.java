@@ -10,7 +10,7 @@ import edu.jhu.data.Tag;
 
 public class CnfGrammarBuilderTest {
 
-    public static final String timeFliesGrammarResource = "/edu/jhu/hltcoe/parse/cky/time-flies.gr";
+    public static final String timeFliesGrammarResource = "/edu/jhu/parse/cky/time-flies.gr";
 
     @Test
     public void testLoadGrammarFromFile() throws IOException {
