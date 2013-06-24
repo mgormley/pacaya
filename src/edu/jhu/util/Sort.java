@@ -315,15 +315,15 @@ public class Sort {
             }
         }
 
+        // If there is a list that we didn't get all the way through, add all
+        // the remaining elements. There will never be more than one such list. 
+        assert (!(i < list1.size() && j < list2.size()));
         for (; i < list1.size(); i++) {
             newList.add(list1.get(i));
         }
         for (; j < list2.size(); j++) {
             newList.add(list2.get(j));
         }
-        
-        System.out.println(i);
-        System.out.println(j);
     }
 
     public static <T extends Comparable<T>> ArrayList<T> getMergedList(List<T> list1,

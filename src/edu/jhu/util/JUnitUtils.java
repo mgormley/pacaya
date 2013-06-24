@@ -2,6 +2,8 @@ package edu.jhu.util;
 
 import org.junit.Assert;
 
+import cern.colt.Arrays;
+
 public class JUnitUtils {
 
     private JUnitUtils() {
@@ -25,7 +27,8 @@ public class JUnitUtils {
     public static void assertArrayEquals(double[] a1, double[] a2, double delta) {
         Assert.assertEquals(a1.length, a2.length);
         for (int i=0; i<a1.length; i++) {
-            Assert.assertEquals(a1[i], a2[i], delta);
+            String msg = String.format("expected:<%s> but was:<%s>", Arrays.toString(a1), Arrays.toString(a2));
+            Assert.assertEquals(msg, a1[i], a2[i], delta);
         }
     }
 

@@ -56,9 +56,11 @@ public class FactorTest {
 
     @Test
     public void testGetMarginal() {
+        Var v0 = VarSetTest.getVar(0, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
         VarSet vars1 = new VarSet();
-        vars1.add(VarSetTest.getVar(0, 2));
-        vars1.add(VarSetTest.getVar(1, 3));
+        vars1.add(v0);
+        vars1.add(v1);
         Factor f1 = new Factor(vars1);
         f1.setValue(0, 0);
         f1.setValue(1, 1);
@@ -66,12 +68,12 @@ public class FactorTest {
         f1.setValue(3, 3);
         f1.setValue(4, 4);
         
-        Factor marg = f1.getMarginal(new VarSet(VarSetTest.getVar(0, 2)), false);
+        Factor marg = f1.getMarginal(new VarSet(v0), false);
         System.out.println(marg);
         JUnitUtils.assertArrayEquals(new double[]{6, 4}, marg.getValues(), 1e-13);
         
         // And normalize.
-        marg = f1.getMarginal(new VarSet(VarSetTest.getVar(0, 2)), true);
+        marg = f1.getMarginal(new VarSet(v0), true);
         System.out.println(marg);
         JUnitUtils.assertArrayEquals(new double[]{.6, .4}, marg.getValues(), 1e-13);
     }
@@ -107,18 +109,20 @@ public class FactorTest {
     
     @Test
     public void testFactorAddSuperset() {   
+        Var v0 = VarSetTest.getVar(0, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
 
         // Test where vars1 is a superset of vars2.
         VarSet vars1 = new VarSet();
-        vars1.add(VarSetTest.getVar(0, 2));
-        vars1.add(VarSetTest.getVar(1, 3));        
+        vars1.add(v0);
+        vars1.add(v1);        
         Factor f1 = new Factor(vars1);
         f1.set(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = new VarSet();
-        vars2.add(VarSetTest.getVar(1, 3));        
+        vars2.add(v1);        
         Factor f2 = new Factor(vars2);
         f2.set(2);
         f2.setValue(2, 5);
@@ -136,18 +140,22 @@ public class FactorTest {
 
     @Test
     public void testFactorAddDiff() {   
+        Var v0 = VarSetTest.getVar(0, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
+        Var v2 = VarSetTest.getVar(2, 2);
+
         // Test where the difference of vars1 and vars2 is non-empty and so we must take their union.
         VarSet vars1 = new VarSet();
-        vars1.add(VarSetTest.getVar(0, 2));
-        vars1.add(VarSetTest.getVar(1, 3));        
+        vars1.add(v0);
+        vars1.add(v1);        
         Factor f1 = new Factor(vars1);
         f1.set(1);
         f1.setValue(2, 2);
         f1.setValue(3, 3);
         
         VarSet vars2 = new VarSet();
-        vars2.add(VarSetTest.getVar(1, 3));
-        vars2.add(VarSetTest.getVar(2, 2));    
+        vars2.add(v1);
+        vars2.add(v2);    
         Factor f2 = new Factor(vars2);
         f2.set(2);
         f2.setValue(2, 5);

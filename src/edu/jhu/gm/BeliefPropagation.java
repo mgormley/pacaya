@@ -19,6 +19,9 @@ public class BeliefPropagation implements FgInferencer {
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
         public final FactorGraph fg;
+        public boolean logDomain = true;
+        /** Whether to normalize the messages after sending. */
+        public boolean normalizeMessages = true;
         public BeliefPropagationPrm(FactorGraph fg) {
             this.fg = fg;
         }
@@ -45,10 +48,12 @@ public class BeliefPropagation implements FgInferencer {
         /** The pending messge. */
         public Factor newMessage;
         
-        public Messages(FgEdge edge) {
+        public Messages(FgEdge edge, double initialValue) {
+            // Every message to/from a variable will be a factor whose domain is
+            // that variable only.
             Var var = edge.getVar();
-            message = new Factor(new VarSet(var));
-            newMessage = new Factor(new VarSet(var));
+            message = new Factor(new VarSet(var), initialValue);
+            newMessage = new Factor(new VarSet(var), initialValue);
         }
         
     }
@@ -62,12 +67,6 @@ public class BeliefPropagation implements FgInferencer {
         this.prm = prm;
         this.fg = prm.fg;
         this.msgs = new Messages[fg.getNumEdges()];
-        for (int i=0; i<msgs.length; i++) {
-            msgs[i] = new Messages(fg.getEdge(i));
-            // TODO: consider alternate initializations.
-            msgs[i].message.set(1.0);
-            msgs[i].newMessage.set(1.0);
-        }
     }
     
     /** @inheritDoc */
@@ -75,6 +74,15 @@ public class BeliefPropagation implements FgInferencer {
     public void run() {
         Timer timer = new Timer();
         timer.start();
+        
+        // Initialization.
+        for (int i=0; i<msgs.length; i++) {
+            // Initialize messages to all ones in case we want to run parallel BP.
+            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain ? 0.0 : 1.0);
+            // TODO: consider alternate initializations.
+        }
+        
+        // Message passing.
         for (int iter=0; iter < prm.maxIterations; iter++) {
             if (timer.totSec() > prm.timeoutSeconds) {
                 break;
@@ -109,8 +117,8 @@ public class BeliefPropagation implements FgInferencer {
         
         Factor msg = msgs[edgeId].newMessage;
         
-        // We are working in the log-domain so initialize to 0.0, since we're "multiplying".
-        msg.set(0.0);
+        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+        msg.set(prm.logDomain ? 0.0 : 1.0);
         
         if (edge.isVarToFactor()) {
             // Message from variable v* to factor f*.
@@ -128,15 +136,28 @@ public class BeliefPropagation implements FgInferencer {
             // TODO: we could cache this prod factor in the EdgeContent for this
             // edge if creating it is slow.
             Factor prod = new Factor(factor.getVars());
+            // Set the initial values of the product to those of the sending factor.
             prod.set(factor);
             getProductOfMessages(edge.getParent(), prod, edge.getChild());
 
             // Marginalize over all the assignments to variables for f*, except
             // for v*.
-            msg = prod.getLogMarginal(new VarSet(var), false);
+            if (prm.logDomain) { 
+                msg = prod.getLogMarginal(new VarSet(var), false);
+            } else {
+                msg = prod.getMarginal(new VarSet(var), false);
+            }
         }
         
-        msg.logNormalize();      
+        assert (msg.getVars().equals(new VarSet(var)));
+        
+        if (prm.normalizeMessages) {
+            if (prm.logDomain) { 
+                msg.logNormalize();
+            } else {
+                msg.normalize();
+            }
+        }
         
         // Set the final message in case we created a new object.
         msgs[edgeId].newMessage = msg;
@@ -171,10 +192,24 @@ public class BeliefPropagation implements FgInferencer {
             
             // The neighbor messages have a different domain, but addition
             // should still be well defined.
-            prod.add(nbMsg);
+            if (prm.logDomain) {
+                prod.add(nbMsg);
+            } else {
+                prod.prod(nbMsg);
+            }
         }
     }
 
+    /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
+    private void getProductOfMessagesNormalized(FgNode node, Factor prod, FgNode exclNode) {
+        getProductOfMessages(node, prod, exclNode);
+        if (prm.logDomain) { 
+            prod.logNormalize();
+        } else {
+            prod.normalize();
+        }
+    }
+    
     /**
      * Sends the message that is currently "pending" for this edge. This just
      * copies the message in the "pending slot" to the "message slot" for this
@@ -196,11 +231,9 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc */
     @Override
     public Factor getMarginals(Var var) {
-        Factor prod = new Factor(new VarSet(var));
+        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
-        getProductOfMessages(fg.getNode(var), prod, null);
-        // Normalize the product.
-        prod.logNormalize();
+        getProductOfMessagesNormalized(fg.getNode(var), prod, null);
         return prod;
     }
 
@@ -216,11 +249,9 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc */
     @Override
     public Factor getMarginals(Factor factor) {
-        Factor prod = new Factor(factor.getVars());
-        // Compute the product of all messages sent to this variable.
-        getProductOfMessages(fg.getNode(factor), prod, null);
-        // Normalize the product.
-        prod.logNormalize();
+        Factor prod = new Factor(factor.getVars(), prm.logDomain ? 0.0 : 1.0);
+        // Compute the product of all messages sent to this factor.
+        getProductOfMessagesNormalized(fg.getNode(factor), prod, null);
         return prod;
     }
     
@@ -238,13 +269,17 @@ public class BeliefPropagation implements FgInferencer {
 
     /** @inheritDoc */
     @Override
-    public double getLogPartition() {
+    public double getPartition() {
         // We just return the normalizing constant for the marginals of any variable.
         Var var = fg.getVar(0);
-        Factor prod = new Factor(new VarSet(var));
+        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
         getProductOfMessages(fg.getNode(var), prod, null);
-        return prod.getLogSum();
+        if (prm.logDomain) {
+            return prod.getLogSum();
+        } else {
+            return prod.getSum();
+        }
     }
     
 }

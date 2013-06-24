@@ -1,9 +1,8 @@
 package edu.jhu.gm;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
-import cern.colt.list.IntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
 /**
  * A subset of the variables.
@@ -63,14 +62,17 @@ public class VarSet extends SmallSet<Var> {
         return new IndexFor(this, vars);
     }
     
+    /**
+     * Gets an array version of the configuration iterator.
+     * @see edu.jhu.gm.VarSet#getConfigIter
+     */
     public int[] getConfigArr(VarSet vars) {        
-        IntArrayList a = new IntArrayList(vars.getNumConfigs());
+        PIntArrayList a = new PIntArrayList(vars.getNumConfigs());
         IntIter iter = getConfigIter(vars);
         while (iter.hasNext()) {
             a.add(iter.next());
         }
-        a.trimToSize();
-        return a.elements();
+        return a.toNativeArray();
     }
 
     /**
@@ -85,6 +87,45 @@ public class VarSet extends SmallSet<Var> {
             numConfigs *= var.getNumStates();
         }
         return numConfigs;
+    }
+    
+    /**
+     * Gets the variable configuration corresponding to the given configuration index.
+     * @param configIndex The config index.
+     * @return The variable configuration.
+     */
+    public VarConfig getVarConfig(int configIndex) {
+        // Configuration as an array of ints, one for each variable.
+        int i;
+        int[] states = getVarConfigAsArray(configIndex);
+        
+        VarConfig config = new VarConfig();
+        i=0;
+        for (Var var : this) {
+            config.put(var, states[i++]);
+        }
+        return config;
+    }
+
+    /**
+     * Gets the variable configuration corresponding to the given configuration
+     * index as an array.
+     * 
+     * @param configIndex
+     *            The config index.
+     * @return The variable configuration as an array of ints, where states[i]
+     *         is the state of the i'th variable in this variable set.
+     * @see edu.jhu.gm.VarSet#getVarConfig
+     */
+    public int[] getVarConfigAsArray(int configIndex) {
+        int i;
+        int[] states = new int[this.size()];
+        i=0;
+        for (Var var : this) {
+            states[i++] = configIndex % var.getNumStates();
+            configIndex /= var.getNumStates();
+        }
+        return states;
     }
 
     @Override

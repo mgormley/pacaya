@@ -9,24 +9,51 @@ package edu.jhu.gm;
 public class BruteForceInferencer implements FgInferencer {
 
     private FactorGraph fg;
+    private Factor joint;
+    private boolean logDomain;
     
-    // TODO: add log-domain option.
-    public BruteForceInferencer(FactorGraph fg) {
+    public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
         this.fg = fg;
+        this.logDomain = logDomain;
+    }
+
+    /**
+     * Gets the product of all the factors in the factor graph. If working in
+     * the log-domain, this will do factor addition.
+     * 
+     * @param logDomain
+     *            Whether to work in the log-domain.
+     * @return The product of all the factors.
+     */
+    private static Factor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
+        Factor joint = new Factor(new VarSet(), logDomain ? 0.0 : 1.0);
+        for (int a=0; a<fg.getNumFactors(); a++) {
+            if (logDomain) {
+                joint.add(fg.getFactor(a));
+            } else {
+                joint.prod(fg.getFactor(a));
+            }
+        }
+        return joint;
     }
     
     @Override
     public void run() {
-        // Do nothing.
+        joint = getProductOfAllFactors(fg, logDomain);
     }
 
+    /** Gets the unnormalized joint factor over all variables. */
+    public Factor getJointFactor() {
+        return joint;
+    }
+    
     @Override
     public Factor getMarginals(Var var) {
-        Factor joint = new Factor(new VarSet());
-        for (int a=0; a<fg.getNumFactors(); a++) {
-            joint.add(fg.getFactor(a));
+        if (logDomain) {
+            return joint.getLogMarginal(new VarSet(var), true);
+        } else {
+            return joint.getMarginal(new VarSet(var), true);
         }
-        return joint.getLogMarginal(new VarSet(var), true);        
     }
 
     @Override
@@ -37,26 +64,30 @@ public class BruteForceInferencer implements FgInferencer {
 
     @Override
     public Factor getMarginals(Factor factor) {
-        // TODO Auto-generated method stub
-        return null;
+        if (logDomain) {
+            return joint.getLogMarginal(factor.getVars(), true);
+        } else {
+            return joint.getMarginal(factor.getVars(), true);
+        }        
     }
 
     @Override
     public Factor getMarginalsForVarId(int varId) {
-        // TODO Auto-generated method stub
-        return null;
+        return getMarginals(fg.getVar(varId));
     }
 
     @Override
     public Factor getMarginalsForFactorId(int factorId) {
-        // TODO Auto-generated method stub
-        return null;
+        return getMarginals(fg.getFactor(factorId));
     }
 
     @Override
-    public double getLogPartition() {
-        // TODO Auto-generated method stub
-        return 0;
+    public double getPartition() {
+        if (logDomain) {
+            return joint.getLogSum();
+        } else {
+            return joint.getSum();
+        }
     }
 
 }

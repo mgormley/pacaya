@@ -41,7 +41,7 @@ public class CrfTrainer {
                     ll += ex.getFeatureVector(a).dot(params);
                 }
                 // Subtract off the log of the denominator.                
-                ll -= inferencer.getLogPartition();
+                ll -= inferencer.getPartition();
             }
             return ll;
         }

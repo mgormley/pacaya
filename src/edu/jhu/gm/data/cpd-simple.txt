@@ -1,0 +1,12 @@
+C=Yes A=YY,B=Yes 0.8
+C=No A=YY,B=Yes 0.2
+C=Yes A=YY,B=No 0.5
+C=No A=YY,B=No 0.5
+C=Yes A=NN,B=Yes 0.6
+C=No A=NN,B=Yes 0.4
+C=Yes A=NN,B=No 0.1
+C=No A=NN,B=No 0.9
+B=Yes A=YY 0.6
+B=No A=YY 0.4
+B=Yes A=NN 0.15
+B=No A=NN 0.85

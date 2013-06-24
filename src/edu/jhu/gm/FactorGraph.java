@@ -1,7 +1,9 @@
 package edu.jhu.gm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
@@ -30,16 +32,21 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         
         private boolean isVarToFactor;
         private int id;
+        private boolean marked;
+        private FgEdge opposing;
         
-        public FgEdge(FgNode parent, FgNode child) {
+        public FgEdge(FgNode parent, FgNode child, int id) {
             super(parent, child);
             if (parent.isVar()) {
                 isVarToFactor = true;
             } else {
                 isVarToFactor = false;
             }
+            this.id = id;
+            this.marked = false;
         }
 
+        /** Gets the factor connected to this edge. */
         public Factor getFactor() {
             if (isVarToFactor) {
                 return getChild().factor;
@@ -48,6 +55,7 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
             }
         }
         
+        /** Gets the variable connected to this edge. */
         public Var getVar() {
             if (isVarToFactor) {
                 return getParent().var;
@@ -68,7 +76,62 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         public boolean isVarToFactor() {
             return isVarToFactor;
         }
+
+        /** Whether this edge is marked. */
+        public boolean isMarked() {
+            return marked;
+        }
+
+        /** Sets whether this edge is marked. */
+        public void setMarked(boolean marked) {
+            this.marked = marked;
+        }
+
+        /** Gets the edge identical to this one, except that the parent and child are swapped. */
+        public FgEdge getOpposing() {
+            return opposing;
+        }
+
+        /** 
+         * Sets the edge identical to this one, except that the parent and child are swapped.
+         * @param opposing The opposing edge. 
+         * @throws IllegalStateException If the edge is not the opposing edge. 
+         */
+        public void setOpposing(FgEdge opposing) {
+            if (opposing.getParent() != this.getChild() || opposing.getChild() != this.getParent()) {
+                throw new IllegalStateException("This is not the opposing edge: " + opposing + " for this edge: " + this);
+            }
+            this.opposing = opposing;
+        }
+
+        @Override
+        public String toString() {
+            return "FgEdge [id=" + id
+                    + ", marked=" + marked + ", " + edgeToString(this) +"]";
+        }
         
+        private String edgeToString(FgEdge edge) {
+            return String.format("%s --> %s", nodeToString(edge.getParent()), nodeToString(edge.getChild()));
+        }
+
+        private String nodeToString(FgNode node) {
+            if (node.isVar()) {
+                return "Var[" + node.getVar().getName() + "]";
+            } else {
+                return "Factor[" + varsToString(node.getFactor().getVars()) + "]";
+            }
+        }
+
+        private String varsToString(VarSet vars) {
+            StringBuilder sb  = new StringBuilder();
+            for (Var var : vars) {
+                sb.append(var.getName());
+                sb.append(",");
+            }
+            sb.deleteCharAt(sb.length()-1);
+            return sb.toString();
+        }
+                
     }
             
     /** 
@@ -102,6 +165,23 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         public boolean isFactor() {
             return !isVar;
         }
+        
+        public Factor getFactor() {
+            assert(isFactor());
+            return factor;
+        }
+        
+        public Var getVar() {
+            assert(isVar());
+            return var;
+        }
+
+        @Override
+        public String toString() {
+            return "FgNode [isVar=" + isVar + ", var=" + var + ", factor="
+                    + factor + "]";
+        }
+                
     }
     
     /** The factors in this factor graph. */
@@ -168,9 +248,14 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
             addVar(var);
             FgNode vnode = varNodes.get(var.getNodeId());
             // Add a directed edge between the factor and the variable.
-            super.add(new FgEdge(fnode, vnode));
+            FgEdge edge1 = new FgEdge(fnode, vnode, super.getNumEdges());
+            super.add(edge1);
             // Add a directed edge between the variable and the factor.
-            super.add(new FgEdge(vnode, fnode));
+            FgEdge edge2 = new FgEdge(vnode, fnode, super.getNumEdges());
+            super.add(edge2);
+            
+            edge1.setOpposing(edge2);
+            edge2.setOpposing(edge1);
         }
     }
 
@@ -206,6 +291,14 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
     /** Gets the number of variables in this factor graph. */
     public int getNumVars() {
         return vars.size();
+    }
+
+    public List<Factor> getFactors() {
+        return Collections.unmodifiableList(factors);
+    }
+    
+    public List<Var> getVars() {
+        return Collections.unmodifiableList(vars);
     }
     
 }

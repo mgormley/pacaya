@@ -5,6 +5,7 @@ import java.util.Arrays;
 import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.parse.cky.Lambda;
 import edu.jhu.parse.cky.Lambda.LambdaBinOpD;
+import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Multinomials;
 import edu.jhu.util.math.Vectors;
@@ -34,10 +35,21 @@ public class Factor {
      */
     private int nodeId;
     
+    /** Constructs a factor initializing the values to 0.0. */
     public Factor(VarSet vars) {
+        this(vars, 0.0);
+    }
+    
+    /**
+     * Constructs a factor where each value is set to some initial value.
+     * @param vars The variable set.
+     * @param initialValue The initial value.
+     */
+    public Factor(VarSet vars, double initialValue) {
         this.vars = vars;
         int numConfigs = vars.getNumConfigs();
         this.values = new double[numConfigs];
+        Arrays.fill(values, initialValue);
         this.nodeId = UNINITIALIZED_NODE_ID;
     }
     
@@ -49,7 +61,7 @@ public class Factor {
         // node of the input factor.
         this.nodeId = UNINITIALIZED_NODE_ID;
     }
-    
+
     /**
      * Gets the marginal distribution over a subset of the variables in this
      * factor, optionally normalized. This method assumes the values are reals
@@ -80,7 +92,7 @@ public class Factor {
         VarSet margVars = new VarSet(this.vars);
         margVars.retainAll(vars);
         
-        Factor marg = new Factor(margVars);
+        Factor marg = new Factor(margVars, logDomain ? Double.NEGATIVE_INFINITY : 0.0);
         
         IntIter iter = margVars.getConfigIter(this.vars);
         for (int i=0; i<this.values.length; i++) {
@@ -172,8 +184,6 @@ public class Factor {
      *  The sum of two factors is defined as follows: if
      *  \f$f : \prod_{l\in L} X_l \to [0,\infty)\f$ and \f$g : \prod_{m\in M} X_m \to [0,\infty)\f$, then
      *  \f[f+g : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) + g(x_M).\f]
-     * 
-     * Note: destructive if necessary.
      */
     public void add(Factor f) {
         Factor newFactor = applyBinOp(this, f, new Lambda.DoubleAdd());
@@ -188,8 +198,6 @@ public class Factor {
      *  The product of two factors is defined as follows: if
      *  \f$f : \prod_{l\in L} X_l \to [0,\infty)\f$ and \f$g : \prod_{m\in M} X_m \to [0,\infty)\f$, then
      *  \f[fg : \prod_{l\in L\cup M} X_l \to [0,\infty) : x \mapsto f(x_L) g(x_M).\f]
-     *  
-     * Note: destructive if necessary.
      */
     public void prod(Factor f) {
         Factor newFactor = applyBinOp(this, f, new Lambda.DoubleProd());
@@ -202,8 +210,6 @@ public class Factor {
      * 
      * This is analogous to factor addition, except that the logAdd operator
      * is used instead.
-     * 
-     * Note: destructive if necessary.
      */
     public void logAdd(Factor f) {
         Factor newFactor = applyBinOp(this, f, new Lambda.DoubleLogAdd());
@@ -217,13 +223,21 @@ public class Factor {
      * This method will opt to be destructive on f1 (returing it instead of a
      * new factor) if time/space can be saved by doing so.
      * 
-     * @param f1 The first factor. (destroyed if it will save time/space)
+     * Note: destructive if necessary.
+     * 
+     * @param f1 The first factor. (returned if it will save time/space)
      * @param f2 The second factor.
      * @param op The binary operator.
      * @return The new factor.
      */
     private static Factor applyBinOp(final Factor f1, final Factor f2, final LambdaBinOpD op) {
-        if (f1.vars == f2.vars || f1.vars.equals(f2.vars)) {
+        if (f1.vars.size() == 0) {
+            // Return a copy of f2.
+            return new Factor(f2);
+        } else if (f2.vars.size() == 0) {
+            // Don't use the copy constructor, just return f1.
+            return f1;
+        } else if (f1.vars == f2.vars || f1.vars.equals(f2.vars)) {
             // Special case where the factors have identical variable sets.
             assert (f1.values.length == f2.values.length);
             for (int c = 0; c < f1.values.length; c++) {
@@ -269,8 +283,22 @@ public class Factor {
 
     @Override
     public String toString() {
-        return "Factor [vars=" + vars + ", values=" + Arrays.toString(values)
-                + "]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("Factor [nodeId=" + nodeId + ", \n");
+        for (Var var : vars) {
+            sb.append(String.format("%5s", var.getName()));
+        }
+        sb.append(String.format("  |  %s\n", "value"));
+        for (int c=0; c<vars.getNumConfigs(); c++) {
+            int[] states = vars.getVarConfigAsArray(c);
+            for (int state : states) {
+                // TODO: use string names for states if available.
+                sb.append(String.format("%5d", state));
+            }
+            sb.append(String.format("  |  %f\n", values[c]));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     /** For testing only. */
@@ -300,5 +328,26 @@ public class Factor {
         }
         this.nodeId = id;
     }
+
+    public boolean equals(Factor other, double delta) {
+        if (this == other)
+            return true;
+        if (other == null)
+            return false;
+        if (this.values.length != other.values.length)
+            return false;
+        for (int i=0; i<values.length; i++) {
+            if (!Utilities.equals(values[i], other.values[i], delta))
+                return false;
+        }
+        if (vars == null) {
+            if (other.vars != null)
+                return false;
+        } else if (!vars.equals(other.vars))
+            return false;
+        return true;
+    }
+    
+    
     
 }

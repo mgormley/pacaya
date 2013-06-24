@@ -10,7 +10,7 @@ public class FactorGraphTest {
 
     @Test
     public void testConstruction() {
-        FactorGraph fg = getSimpleGraph();
+        FactorGraph fg = getLinearChainGraph();
         
         assertEquals(5, fg.getNumFactors());
         assertEquals(3, fg.getNumVars());
@@ -19,7 +19,8 @@ public class FactorGraphTest {
         assertEquals(3*2 + 2*2*2, fg.getNumEdges());
     }
 
-    public static FactorGraph getSimpleGraph() {
+    /** Gets a simple linear chain CRF consisting of 3 words and 3 tags. */
+    public static FactorGraph getLinearChainGraph() {
         FactorGraph fg = new FactorGraph();
 
         // Create three words.

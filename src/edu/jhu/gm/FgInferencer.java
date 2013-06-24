@@ -50,6 +50,6 @@ public interface FgInferencer {
      * Gets the log of the (approximate) partition function, which is the
      * normalizing constant for the factor graph.
      */
-    double getLogPartition();
+    double getPartition();
     
 }

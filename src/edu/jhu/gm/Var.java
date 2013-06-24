@@ -1,6 +1,7 @@
 package edu.jhu.gm;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -40,21 +41,19 @@ public class Var implements Comparable<Var> {
     private int instanceId = instanceCounter.incrementAndGet();
     
     public Var(VarType type, int numStates, String name,
-            ArrayList<String> stateNames) {
-        super();
-        this.type = type;
-        this.numStates = numStates;
-        this.name = name;
-        this.stateNames = stateNames;
-        this.nodeId = UNINITIALIZED_NODE_ID;
+            List<String> stateNames) {
+        this(type, numStates, name, stateNames, UNINITIALIZED_NODE_ID);
     }
 
-    public Var(VarType type, int numStates, String name, ArrayList<String> stateNames,
+    public Var(VarType type, int numStates, String name, List<String> stateNames,
             int id) {
         this.type = type;
         this.numStates = numStates;
         this.name = name;
-        this.stateNames = stateNames;
+        if (stateNames != null) {
+            assert(numStates == stateNames.size());
+            this.stateNames = new ArrayList<String>(stateNames);
+        }
         this.nodeId = id;
     }
 
@@ -97,6 +96,18 @@ public class Var implements Comparable<Var> {
         this.nodeId = id;
     }
 
+    /**
+     * Gets the index of the variable state with the specified name.
+     * 
+     * Note: Current implementation takes O(n) time, where n is the number of states.
+     * 
+     * @param stateName The state name.
+     * @return The index of the variable state.
+     */
+    public int getState(String stateName) {
+        return stateNames.indexOf(stateName);
+    }
+    
     /*
      * The compareTo, equals, and hashCode methods only depend on the instanceId of
      * the variable.

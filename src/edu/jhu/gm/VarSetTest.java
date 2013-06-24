@@ -14,24 +14,32 @@ public class VarSetTest {
 
     @Test
     public void testGetNumConfigs() {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        Var v2 = getVar(2, 5);
+
         VarSet vars = new VarSet();
-        vars.add(getVar(0, 2));
-        vars.add(getVar(1, 3));
-        vars.add(getVar(2, 5));
+        vars.add(v0);
+        vars.add(v1);
+        vars.add(v2);
         
         assertEquals(2*3*5, vars.getNumConfigs());
     }
     
     @Test
     public void testGetConfigArray1() {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        Var v2 = getVar(2, 5);
+
         VarSet vars1 = new VarSet();
-        vars1.add(getVar(0, 2));
-        vars1.add(getVar(1, 3));
-        vars1.add(getVar(2, 5));
+        vars1.add(v0);
+        vars1.add(v1);
+        vars1.add(v2);
 
         VarSet vars2 = new VarSet();
-        vars2.add(getVar(1, 3));
-        vars2.add(getVar(2, 5));
+        vars2.add(v1);
+        vars2.add(v2);
         
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
@@ -41,14 +49,18 @@ public class VarSetTest {
 
     @Test
     public void testGetConfigArray2() {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        Var v2 = getVar(2, 5);
+
         VarSet vars1 = new VarSet();
-        vars1.add(getVar(0, 2));
-        vars1.add(getVar(1, 3));
-        vars1.add(getVar(2, 5));
+        vars1.add(v0);
+        vars1.add(v1);
+        vars1.add(v2);
 
         VarSet vars2 = new VarSet();
-        vars2.add(getVar(0, 2));
-        vars2.add(getVar(2, 5));
+        vars2.add(v0);
+        vars2.add(v2);
         
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));
@@ -59,14 +71,18 @@ public class VarSetTest {
 
     @Test
     public void testGetConfigArray3() {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        Var v2 = getVar(2, 5);
+
         VarSet vars1 = new VarSet();
-        vars1.add(getVar(0, 2));
-        vars1.add(getVar(1, 3));
-        vars1.add(getVar(2, 5));
+        vars1.add(v0);
+        vars1.add(v1);
+        vars1.add(v2);
 
         VarSet vars2 = new VarSet();
-        vars2.add(getVar(0, 2));
-        vars2.add(getVar(1, 3));
+        vars2.add(v0);
+        vars2.add(v1);
         
         int[] configs = vars2.getConfigArr(vars1);
         System.out.println(Arrays.toString(configs));

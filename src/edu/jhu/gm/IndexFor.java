@@ -31,7 +31,7 @@ import java.util.Iterator;
 public class IndexFor implements IntIter {
 
     /** The current linear index corresponding to the state of indexVars. */
-    private int                _index;
+    private int _index;
 
     /** For each variable in forVars, the amount of change in _index. */
     private long[] _sum;

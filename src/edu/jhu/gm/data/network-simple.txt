@@ -1,0 +1,7 @@
+3
+A YY,NN
+B Yes,No
+C Yes,No
+A -> B
+A -> C
+B -> C
