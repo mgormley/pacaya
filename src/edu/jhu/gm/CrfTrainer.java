@@ -1,7 +1,10 @@
 package edu.jhu.gm;
 
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.SGD.SGDPrm;
+import edu.jhu.optimize.Function;
+import edu.jhu.optimize.Maximizer;
+import edu.jhu.optimize.SGD;
+import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.vector.SortedIntDoubleVector;
 

@@ -1,4 +1,4 @@
-package edu.jhu.gm;
+package edu.jhu.optimize;
 
 public class L1 implements Regularizer {
 

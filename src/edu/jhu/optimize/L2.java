@@ -1,4 +1,4 @@
-package edu.jhu.gm;
+package edu.jhu.optimize;
 
 import edu.jhu.util.math.Vectors;
 

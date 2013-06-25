@@ -1,4 +1,4 @@
-package edu.jhu.gm;
+package edu.jhu.optimize;
 
 /**
  * A first order optimization technique for minimization.

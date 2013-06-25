@@ -1,4 +1,4 @@
-package edu.jhu.gm;
+package edu.jhu.optimize;
 
 import org.apache.log4j.Logger;
 
