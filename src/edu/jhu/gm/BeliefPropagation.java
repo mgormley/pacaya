@@ -41,19 +41,34 @@ public class BeliefPropagation implements FgInferencer {
      * @author mgormley
      * 
      */
-    private static class Messages {
+    private class Messages {
         
         /** The current message. */
         public Factor message;
         /** The pending messge. */
         public Factor newMessage;
         
-        public Messages(FgEdge edge, double initialValue) {
+        /** Constructs a message container, initializing the messages to the uniform distribution. */
+        public Messages(FgEdge edge) {
+            // Initialize messages to the (possibly unormalized) uniform
+            // distribution in case we want to run parallel BP.
+            double initialValue = prm.logDomain ? 0.0 : 1.0;
             // Every message to/from a variable will be a factor whose domain is
             // that variable only.
             Var var = edge.getVar();
             message = new Factor(new VarSet(var), initialValue);
             newMessage = new Factor(new VarSet(var), initialValue);
+            
+            if (prm.normalizeMessages) {
+                // Normalize the initial messages.
+                if (prm.logDomain) {
+                    message.logNormalize();
+                    newMessage.logNormalize();
+                } else {
+                    message.normalize();
+                    newMessage.normalize();
+                }
+            }
         }
         
     }
@@ -77,9 +92,8 @@ public class BeliefPropagation implements FgInferencer {
         
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
-            // Initialize messages to all ones in case we want to run parallel BP.
-            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain ? 0.0 : 1.0);
             // TODO: consider alternate initializations.
+            msgs[i] = new Messages(fg.getEdge(i));
         }
         
         // Message passing.
@@ -249,7 +263,7 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc */
     @Override
     public Factor getMarginals(Factor factor) {
-        Factor prod = new Factor(factor.getVars(), prm.logDomain ? 0.0 : 1.0);
+        Factor prod = new Factor(factor);
         // Compute the product of all messages sent to this factor.
         getProductOfMessagesNormalized(fg.getNode(factor), prod, null);
         return prod;

@@ -32,7 +32,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         
         private boolean isVarToFactor;
         private int id;
-        private boolean marked;
         private FgEdge opposing;
         
         public FgEdge(FgNode parent, FgNode child, int id) {
@@ -43,7 +42,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
                 isVarToFactor = false;
             }
             this.id = id;
-            this.marked = false;
         }
 
         /** Gets the factor connected to this edge. */
@@ -77,16 +75,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
             return isVarToFactor;
         }
 
-        /** Whether this edge is marked. */
-        public boolean isMarked() {
-            return marked;
-        }
-
-        /** Sets whether this edge is marked. */
-        public void setMarked(boolean marked) {
-            this.marked = marked;
-        }
-
         /** Gets the edge identical to this one, except that the parent and child are swapped. */
         public FgEdge getOpposing() {
             return opposing;
@@ -106,8 +94,7 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
 
         @Override
         public String toString() {
-            return "FgEdge [id=" + id
-                    + ", marked=" + marked + ", " + edgeToString(this) +"]";
+            return "FgEdge [id=" + id + ", " + edgeToString(this) +"]";
         }
         
         private String edgeToString(FgEdge edge) {
@@ -299,6 +286,32 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
     
     public List<Var> getVars() {
         return Collections.unmodifiableList(vars);
+    }
+    
+    /**
+     * Returns whether or not the given node is the root of an UNDIRECTED tree in this
+     * factor graph.
+     */
+    public boolean isUndirectedTree(FgNode node) {
+        setMarkedAllNodes(false);
+        return isUndirectedTreeRecurse(node, null);
+    }
+    
+    private boolean isUndirectedTreeRecurse(FgNode node, FgEdge edgeToSkip) {
+        node.setMarked(true);
+        for (FgEdge e : node.getOutEdges()) {
+            if (e == edgeToSkip) {
+                continue;
+            }
+            FgNode n = e.getChild();
+            if (n.isMarked()) {
+                return false;
+            }
+            if (!isUndirectedTreeRecurse(n, e.getOpposing())) {
+                return false;
+            }
+        }
+        return true;
     }
     
 }

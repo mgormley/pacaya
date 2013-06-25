@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.junit.Test;
 
-import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.data.BayesNetReaderTest;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
@@ -16,48 +15,42 @@ public class BruteForceInferencerTest {
 
     @Test
     public void testOnChainProb() {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
         // Test in the probability domain.
         boolean logDomain = false;
+        FactorGraph fg = getLinearChainGraph(logDomain);
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         testInfOnLinearChainGraph(fg, bf, logDomain);
     }
     
     @Test
     public void testOnChainLogProb() {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
         // Test in the log-probability domain.
         boolean logDomain = true;
+        FactorGraph fg = getLinearChainGraph(logDomain);
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         testInfOnLinearChainGraph(fg, bf, logDomain);
     }
 
     @Test
     public void testOnSimpleProb() throws IOException {
-        FactorGraph fg = BayesNetReaderTest.readSimpleFg();
         // Test in the probability domain.
         boolean logDomain = false;
+        FactorGraph fg = readSimpleFg(logDomain);
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         testInfOnSimpleGraph(fg, bf, logDomain);
     }
-    
+
     @Test
     public void testOnSimpleLogProb() throws IOException {
-        FactorGraph fg = BayesNetReaderTest.readSimpleFg();
         // Test in the log-probability domain.
         boolean logDomain = true;
+        FactorGraph fg = readSimpleFg(logDomain);
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         testInfOnSimpleGraph(fg, bf, logDomain);
     }
 
     public static void testInfOnLinearChainGraph(FactorGraph fg,
-            FgInferencer bp, boolean logDomain) {
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
-            }
-        }
-        
+            FgInferencer bp, boolean logDomain) {        
         bp.run();
 
         Factor marg;
@@ -70,22 +63,17 @@ public class BruteForceInferencerTest {
                 marg.getValues(), 1e-2);
         
         marg = bp.getMarginals(fg.getFactor(3));
-        goldMarg = new double[] { 0.0057, 0.2581, 0.0736, 0.6625 };
+        goldMarg = new double[] { 0.013146806000337095, 0.1774818810045508, 0.06607112759143771, 0.7433001854036744 };
         if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), logDomain ? 1e-2 : 1e-4);
         
-        double goldPartition = 1.046;
+        double goldPartition = 0.5932;
         if (logDomain) { goldPartition = Utilities.log(goldPartition); }
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
     }
     
     public static void testInfOnSimpleGraph(FactorGraph fg, FgInferencer bp, boolean logDomain) {
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
-            }
-        }
         bp.run();
 
         // System.out.println(bp.getJointFactor());
@@ -126,4 +114,24 @@ public class BruteForceInferencerTest {
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
     }
     
+    public static FactorGraph getLinearChainGraph(boolean logDomain) {
+        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
+        if (logDomain) {
+            for (Factor f : fg.getFactors()) {
+                f.convertRealToLog();
+            }
+        }
+        return fg;
+    }
+
+    
+    public static FactorGraph readSimpleFg(boolean logDomain) throws IOException {
+        FactorGraph fg = BayesNetReaderTest.readSimpleFg();
+        if (logDomain) {
+            for (Factor f : fg.getFactors()) {
+                f.convertRealToLog();
+            }
+        }
+        return fg;
+    }
 }

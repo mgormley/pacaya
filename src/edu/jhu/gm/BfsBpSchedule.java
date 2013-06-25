@@ -11,6 +11,13 @@ import edu.jhu.PipelineRunner;
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
 
+/**
+ * A sequential schedule for (optionally disconnected) factor graphs in which
+ * each connected component is a tree.
+ * 
+ * @author mgormley
+ * 
+ */
 public class BfsBpSchedule implements BpSchedule {
 
     private static final Logger log = Logger.getLogger(BfsBpSchedule.class);
@@ -20,35 +27,50 @@ public class BfsBpSchedule implements BpSchedule {
     
     public BfsBpSchedule(FactorGraph fg) {
         this.fg = fg;
-
-        // TODO: check that this factor graph is a tree.
-        //fg.isTree();
         
-        // Choose an arbitrary root node.
-        FgNode root = fg.getNode(0);
-
-        // Run a breadth-first search.
+        // Create the order list.
         order = new ArrayList<FgEdge>();
+        
+        // Add each connected component to the order.
+        for (FgNode root : fg.getConnectedComponents()) {
+            if (!fg.isUndirectedTree(root)) {
+                throw new IllegalStateException("Connected component is not a tree: " + root);
+            }
+            // Choose an arbitrary root node for each connected component.
+            addEdgesFromRoot(root);
+        }
+    }
+
+    private void addEdgesFromRoot(FgNode root) {
         Queue<FgNode> queue = new LinkedList<FgNode>();
         Queue<FgNode> leaves = new LinkedList<FgNode>();
+        
+        // Run a breadth-first search, just to get the leaves.
         queue.add(root);
+        bfsSearch(new ArrayList<FgEdge>(), queue, leaves, true);
+        assert(queue.size() == 0);
+        assert(leaves.size() > 0);
+        
+        // Now start by sending messages from the leaves up to the root, and
+        // then letting the messages propagate back down to the leaves again.
+        //
+        // Add edges starting at the leaves and going to the root.
+        bfsSearch(order, leaves, queue, false);
+        // The "queue" should now contain only the root node.
+        assert(queue.size() == 1);
+        assert(queue.peek() == root);
+        assert(leaves.size() == 0);
+        //
         // Add edges starting at the root and going to the leaves.
         bfsSearch(order, queue, leaves, true);
         assert(queue.size() == 0);
         assert(leaves.size() > 0);
-        // Unmark all the edges.
-        for (FgEdge edge : fg.getEdges()) {
-            edge.setMarked(false);
-        }
-        // Add edges starting at the leaves and going to the root.
-        bfsSearch(order, leaves, queue, false);    
-        
-        // The "queue" should now contain only the root node.
-        assert(queue.size() == 1);
-        assert(queue.poll() == root);
     }
     
     private void bfsSearch(ArrayList<FgEdge> order, Queue<FgNode> queue, Queue<FgNode> leaves, boolean topDown) {
+        // Unmark all the edges.
+        fg.setMarkedAllEdges(false);
+        
         while (queue.size() > 0) {
             // Process the next node in the queue.
             FgNode node = queue.remove();
