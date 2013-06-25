@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
 
 public class SGDTest {
@@ -60,13 +61,24 @@ public class SGDTest {
     public static class SumSquares implements Function {
         
         private int dim;
+        private double[] offsets;
         
         public SumSquares(int dim) {
             this.dim = dim;
+            this.offsets = new double[dim];
+        }
+        
+        public SumSquares(double[] offsets) {
+            this.dim = offsets.length;
+            this.offsets = offsets;
         }
         
         @Override
         public double getValue(double[] point) {
+            point = Utilities.copyOf(point);
+            for (int i=0; i<point.length; i++) {
+                point[i] += offsets[i];
+            }
             return Vectors.dotProduct(point, point);
         }
 
@@ -74,7 +86,7 @@ public class SGDTest {
         public double[] getGradient(double[] point) {
             double[] gradient = new double[point.length];
             for (int i=0; i<gradient.length; i++) {
-                gradient[i] = 2*point[i];
+                gradient[i] = 2*(point[i] + offsets[i]);
             }
             return gradient;
         }
@@ -86,7 +98,6 @@ public class SGDTest {
         
     }
     
-
     @Test
     public void testNegXSquared() {
         SGD opt = new SGD(0.1, 100);
@@ -112,4 +123,13 @@ public class SGDTest {
         JUnitUtils.assertArrayEquals(new double[] {0.0, 0.0, 0.0} , max, 1e-10);
     }
     
+    @Test
+    public void testOffsetNegSumSquares() {
+        SGD opt = new SGD(0.1, 100);
+        double[] initial = new double[] { 9, 2, -7};
+        double[] offsets = new double[] { 3, -5, 11};
+        double[] max = opt.maximize(new NegateFunction(new SumSquares(offsets)), initial);
+        Vectors.scale(offsets, -1.0);
+        JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
+    }
 }
