@@ -288,6 +288,16 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         return Collections.unmodifiableList(vars);
     }
     
+    /** Returns whether this factor graph consists of connected components which are all trees. */
+    public boolean hasTreeComponents() {
+        for (FgNode node : getConnectedComponents()) {
+            if (!isUndirectedTree(node)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     /**
      * Returns whether or not the given node is the root of an UNDIRECTED tree in this
      * factor graph.

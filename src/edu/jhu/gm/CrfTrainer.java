@@ -1,6 +1,7 @@
 package edu.jhu.gm;
 
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.SGD.SGDPrm;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.vector.SortedIntDoubleVector;
 
@@ -110,7 +111,8 @@ public class CrfTrainer {
     
     // TODO: finish this method.
     public void train() {
-        maximizer = new SGD();
+        SGDPrm sgdPrm = new SGDPrm();
+        maximizer = new SGD(sgdPrm);
         double[] initial = new double[model.getNumParams()];
         // TODO: how to initialize the model parameters?
         double[] params = maximizer.maximize(objective, initial);
