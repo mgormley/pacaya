@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 import cern.colt.list.IntArrayList;
 import edu.jhu.parse.cky.Rule;
-import edu.jhu.util.map.IntObjectHashMap;
+import edu.jhu.util.collections.PIntObjectHashMap;
 
 public class Utilities {
 
@@ -125,7 +125,7 @@ public class Utilities {
     /**
      * @return The resulting list.
      */
-    public static IntArrayList addToList(IntObjectHashMap<IntArrayList> map, int key, int value) {
+    public static IntArrayList addToList(PIntObjectHashMap<IntArrayList> map, int key, int value) {
         IntArrayList values;
         if (map.containsKey(key)) {
             values = map.get(key);
@@ -138,7 +138,7 @@ public class Utilities {
         return values;
     }
 
-    public static IntArrayList safeGetList(IntObjectHashMap<IntArrayList> map, int key) {
+    public static IntArrayList safeGetList(PIntObjectHashMap<IntArrayList> map, int key) {
         IntArrayList list = map.get(key);
         if (list == null) {
             return new IntArrayList();

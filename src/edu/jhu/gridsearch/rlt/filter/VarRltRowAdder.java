@@ -16,10 +16,10 @@ import edu.jhu.lp.FactorList;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.map.IntObjectHashMap;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
 import edu.jhu.util.vector.LongDoubleEntry;
+import edu.jhu.util.collections.PIntObjectHashMap;
 import edu.jhu.util.collections.PIntHashSet;
 
 /**
@@ -59,7 +59,7 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList eqFactors = rlt.getEqFactors().sublist(startFac, endFac);
 
         // Get a mapping of variables ids to factors indices.
-        IntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(eqFactors);
+        PIntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(eqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<OrderedPair> rltRows = new HashSet<OrderedPair>();
@@ -89,7 +89,7 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList leqFactors = rlt.getLeqFactors();
 
         // Get a mapping of variables ids to factors indices.
-        IntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(leqFactors);
+        PIntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(leqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
@@ -119,8 +119,8 @@ public class VarRltRowAdder implements RltRowAdder {
      * containing a non-zero coefficient for variable k, add an entry for (k
      * --> i).
      */ 
-    private IntObjectHashMap<IntArrayList> getVarConsMap(FactorList factors) {
-        IntObjectHashMap<IntArrayList> varConsMap = new IntObjectHashMap<IntArrayList>();
+    private PIntObjectHashMap<IntArrayList> getVarConsMap(FactorList factors) {
+        PIntObjectHashMap<IntArrayList> varConsMap = new PIntObjectHashMap<IntArrayList>();
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);
             if (boundsOnly && !(factor instanceof BoundFactor)){

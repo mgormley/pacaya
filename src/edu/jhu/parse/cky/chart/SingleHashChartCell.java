@@ -4,7 +4,7 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
-import edu.jhu.util.map.IntObjectHashMap;
+import edu.jhu.util.collections.PIntObjectHashMap;
 
 /**
  * Cell that stores every entry in a single hash table.
@@ -23,12 +23,12 @@ public class SingleHashChartCell implements ChartCell {
         }
     }
     
-    private IntObjectHashMap<Storage> table;
+    private PIntObjectHashMap<Storage> table;
     private int[] ntsArray;    
     private boolean isClosed;
 
     public SingleHashChartCell(CnfGrammar grammar) {
-        table = new IntObjectHashMap<Storage>();
+        table = new PIntObjectHashMap<Storage>();
         isClosed = false;
     }
 
@@ -68,9 +68,9 @@ public class SingleHashChartCell implements ChartCell {
 
     private static class SingleHashScores implements ScoresSnapshot {
 
-        private IntObjectHashMap<Storage> table;
+        private PIntObjectHashMap<Storage> table;
 
-        public SingleHashScores(IntObjectHashMap<Storage> table) {
+        public SingleHashScores(PIntObjectHashMap<Storage> table) {
             this.table = table;
         }
 
@@ -82,7 +82,7 @@ public class SingleHashChartCell implements ChartCell {
     }
     
     public ScoresSnapshot getScoresSnapshot() {
-        return new SingleHashScores(new IntObjectHashMap<Storage>(table));
+        return new SingleHashScores(new PIntObjectHashMap<Storage>(table));
     }
 
     @Override

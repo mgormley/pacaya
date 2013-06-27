@@ -20,6 +20,7 @@ package edu.jhu.util.collections;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 
@@ -32,6 +33,7 @@ import org.apache.commons.math3.util.FastMath;
  * <li>The keys were converted from int to long and a new hash function was written.</li>
  * <li>The values were converted from double to int.</li>
  * <li>The default value for missing entries was set to 0.</li>
+ * <li>A clear() method was added to this class.</li>
  * </ul> 
  * 
  * Open addressed map from long to int.
@@ -134,7 +136,9 @@ public class PLongIntHashMap implements Serializable {
         values = new int[capacity];
         states = new byte[capacity];
         this.missingEntries = missingEntries;
+        size = 0;
         mask   = capacity - 1;
+        count = 0;
     }
 
     /**
@@ -383,6 +387,17 @@ public class PLongIntHashMap implements Serializable {
 
         return missingEntries;
 
+    }
+    
+    /** Removes all entries from the hash map. */
+    public void clear() {
+        final int capacity = keys.length;
+        Arrays.fill(keys, 0);
+        Arrays.fill(values, 0);
+        Arrays.fill(states, FREE);
+        size = 0;
+        mask   = capacity - 1;
+        count = 0;
     }
 
     /**

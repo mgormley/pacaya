@@ -4,8 +4,8 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
-import edu.jhu.util.map.IntObjectHashMap;
-import edu.jhu.util.map.OpenIntDoubleHashMapWithDefault;
+import edu.jhu.util.collections.PIntObjectHashMap;
+import edu.jhu.util.collections.PIntDoubleHashMap;
 
 /**
  * Cell that stores every entries in two hash tables.
@@ -15,14 +15,14 @@ import edu.jhu.util.map.OpenIntDoubleHashMapWithDefault;
  */
 public class DoubleHashChartCell implements ChartCell {
 
-    private OpenIntDoubleHashMapWithDefault scores;
-    private IntObjectHashMap<BackPointer> bps;
+    private PIntDoubleHashMap scores;
+    private PIntObjectHashMap<BackPointer> bps;
     private int[] ntsArray;    
     private boolean isClosed;
 
     public DoubleHashChartCell(CnfGrammar grammar) {
-        scores = new OpenIntDoubleHashMapWithDefault(Double.NEGATIVE_INFINITY);
-        bps = new IntObjectHashMap<BackPointer>();
+        scores = new PIntDoubleHashMap(Double.NEGATIVE_INFINITY);
+        bps = new PIntObjectHashMap<BackPointer>();
 
         isClosed = false;
     }
@@ -61,9 +61,9 @@ public class DoubleHashChartCell implements ChartCell {
 
     private static class DoubleHashScores implements ScoresSnapshot {
 
-        private OpenIntDoubleHashMapWithDefault scores;
+        private PIntDoubleHashMap scores;
 
-        public DoubleHashScores(OpenIntDoubleHashMapWithDefault scores) {
+        public DoubleHashScores(PIntDoubleHashMap scores) {
             this.scores = scores;
         }
 
@@ -75,7 +75,7 @@ public class DoubleHashChartCell implements ChartCell {
     }
     
     public ScoresSnapshot getScoresSnapshot() {
-        return new DoubleHashScores((OpenIntDoubleHashMapWithDefault)scores.clone());
+        return new DoubleHashScores(new PIntDoubleHashMap(scores));
     }
 
     @Override

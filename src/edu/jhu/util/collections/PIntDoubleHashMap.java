@@ -20,6 +20,7 @@ package edu.jhu.util.collections;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.NoSuchElementException;
 
@@ -29,6 +30,7 @@ import org.apache.commons.math3.util.FastMath;
  * NOTICE: Changes made to this class:
  * <ul>
  * <li>This class was renamed from OpenIntToDoubleHashMap to its current name.</li>
+ * <li>A clear() method was added to this class.</li>
  * </ul> 
  * 
  * Open addressed map from int to double.
@@ -127,7 +129,9 @@ public class PIntDoubleHashMap implements Serializable {
         values = new double[capacity];
         states = new byte[capacity];
         this.missingEntries = missingEntries;
+        size = 0;
         mask   = capacity - 1;
+        count = 0;
     }
 
     /**
@@ -376,6 +380,17 @@ public class PIntDoubleHashMap implements Serializable {
 
         return missingEntries;
 
+    }
+    
+    /** Removes all entries from the hash map. */
+    public void clear() {
+        final int capacity = keys.length;
+        Arrays.fill(keys, 0);
+        Arrays.fill(values, 0);
+        Arrays.fill(states, FREE);
+        size = 0;
+        mask   = capacity - 1;
+        count = 0;
     }
 
     /**
