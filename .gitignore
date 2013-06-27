@@ -7,11 +7,13 @@
 /other_repos
 /bin
 /classes
+/target
 /tests
 /exp
 /dantzig_wolfe
 
 # /lib/
+/lib/cplex.jar
 /lib/*/
 /lib/*.tgz
 /lib/*.tar.gz
@@ -34,11 +36,21 @@
 /papers/**/_region_.tex
 /papers/**/_region_.pdf
 
+# Final versions.
+/papers/coe_2013_presentation/giie-coe-2013.pdf
+/papers/dep_parse_notes/dep-parse.pdf
+/papers/emnlp_2012/dw-emnlp-2012.pdf
+/papers/masc_2012/dw-masc-2012.pdf
+/papers/masc_2012_poster/latex_scratch/dw-masc-12-scratch.pdf
+/papers/nips_2012/dw-emnlp-2012.pdf
+/papers/nips_2012/dw-nips-2012.pdf
+
+
 # /scripts/plot/
 /scripts/plot/.Rhistory
 
 # /src/ (for src/com/ibm/cplex)
-/src/com
+/src/main/java/com
 
 # /data
 /data/Web2.0Dataset/
