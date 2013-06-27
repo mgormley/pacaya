@@ -12,8 +12,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import cern.colt.list.IntArrayList;
-import edu.jhu.parse.cky.Rule;
+import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.collections.PIntObjectHashMap;
 
 public class Utilities {
@@ -125,23 +124,23 @@ public class Utilities {
     /**
      * @return The resulting list.
      */
-    public static IntArrayList addToList(PIntObjectHashMap<IntArrayList> map, int key, int value) {
-        IntArrayList values;
+    public static PIntArrayList addToList(PIntObjectHashMap<PIntArrayList> map, int key, int value) {
+        PIntArrayList values;
         if (map.containsKey(key)) {
             values = map.get(key);
             values.add(value);
         } else {
-            values = new IntArrayList();
+            values = new PIntArrayList();
             values.add(value);
             map.put(key, values);
         }
         return values;
     }
 
-    public static IntArrayList safeGetList(PIntObjectHashMap<IntArrayList> map, int key) {
-        IntArrayList list = map.get(key);
+    public static PIntArrayList safeGetList(PIntObjectHashMap<PIntArrayList> map, int key) {
+        PIntArrayList list = map.get(key);
         if (list == null) {
-            return new IntArrayList();
+            return new PIntArrayList();
         } else {
             return list;
         }
