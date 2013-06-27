@@ -90,6 +90,8 @@
       <compilerarg value="-Xlint:cast"/>
       <compilerarg value="-Xlint:finally"/>
       <compilerarg value="-Xlint:path"/>
+      <!-- Skip ERMA files. -->
+      <exclude name="**/*Erma*.java" />
     </javac>
   </target>
 
