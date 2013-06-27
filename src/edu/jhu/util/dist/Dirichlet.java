@@ -29,7 +29,7 @@ public class Dirichlet {
     public static double[] staticDraw(double[] alpha) {
         double dist[] = new double[alpha.length];
 
-        Gamma gammaDist = new Gamma(1, 1, Prng.mtColt);
+        Gamma gammaDist = new Gamma(1, 1);
         
         // For each dimension, draw a sample from Gamma(mp_i, 1).
         for (int i = 0; i < dist.length; i++) {
