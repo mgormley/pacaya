@@ -7,7 +7,6 @@ import ilog.concert.IloRange;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.IntParam;
 
-
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
@@ -17,7 +16,6 @@ import org.junit.Test;
 
 import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import cern.jet.random.tdouble.Beta;
 import edu.jhu.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.gridsearch.dr.DimReducer.DimReducerPrm;
 import edu.jhu.util.Prng;
@@ -188,23 +186,6 @@ public class DimReducerTest {
         Assert.assertEquals(C1, C2);
     }
     
-    @Test
-    public void testBeta() {
-        double alpha = 0.01;
-        double beta = 1;
-        int nRows = 3;
-        int nCols = 3;
-        
-        DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
-        Beta betaDist = new Beta(alpha, beta, Prng.doubleMtColt);
-        for (int i = 0; i < nRows; i++) {
-            for (int j = 0; j < nCols; j++) {
-                S.set(i, j, betaDist.nextDouble());
-            }
-        }
-        System.out.println(S);
-    }
-
     private IloLPMatrix getOrigMatrix(IloCplex cplex) throws IloException {
         // Turn off stdout but not stderr
         // cplex.setOut(null);

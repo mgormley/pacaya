@@ -37,24 +37,8 @@ public class PrngTest {
         timer = new Timer();
         timer.start();
         for (int i = 0; i < NUM_DOUBLES; i++) {
-            Prng.mtColt.nextDouble();
-        }
-        timer.stop();
-        System.out.println(timer.totMs());
-
-        timer = new Timer();
-        timer.start();
-        for (int i = 0; i < NUM_DOUBLES; i++) {
             // Current fastest
             Prng.xorShift.nextDouble();
-        }
-        timer.stop();
-        System.out.println(timer.totMs());
-        
-        timer = new Timer();
-        timer.start();
-        for (int i = 0; i < NUM_DOUBLES; i++) {
-            Prng.mwc4096.nextDouble();
         }
         timer.stop();
         System.out.println(timer.totMs());
