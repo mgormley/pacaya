@@ -13,6 +13,7 @@
 /dantzig_wolfe
 
 # /lib/
+/lib/cplex.jar
 /lib/*/
 /lib/*.tgz
 /lib/*.tar.gz
