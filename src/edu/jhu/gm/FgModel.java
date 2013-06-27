@@ -1,7 +1,6 @@
 package edu.jhu.gm;
 
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.vector.SortedIntDoubleVector;
 
 /**
  * A model in the exponential family for a factor graph .

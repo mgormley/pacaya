@@ -1,6 +1,5 @@
 package edu.jhu.gm;
 
-import edu.jhu.util.vector.SortedIntDoubleVector;
 
 /**
  * An inference algorithm for a factor graph.

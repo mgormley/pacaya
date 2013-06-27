@@ -3,10 +3,10 @@ package edu.jhu.gm;
 import java.util.Arrays;
 
 import edu.jhu.gm.FactorGraph.FgNode;
-import edu.jhu.parse.cky.Lambda;
-import edu.jhu.parse.cky.Lambda.LambdaBinOpD;
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Lambda;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.math.Multinomials;
 import edu.jhu.util.math.Vectors;
 
@@ -230,7 +230,7 @@ public class Factor {
      * @param op The binary operator.
      * @return The new factor.
      */
-    private static Factor applyBinOp(final Factor f1, final Factor f2, final LambdaBinOpD op) {
+    private static Factor applyBinOp(final Factor f1, final Factor f2, final LambdaBinOpDouble op) {
         if (f1.vars.size() == 0) {
             // Return a copy of f2.
             return new Factor(f2);

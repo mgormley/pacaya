@@ -1,9 +1,10 @@
 package edu.jhu.gm;
 
-import edu.jhu.util.vector.SortedIntDoubleVector;
 
 public class FgExample {
 
+    private FactorGraph fg;
+    
     /**
      * Gets the feature vector for the specified factor using the values of the
      * variables observed at training time.
@@ -11,7 +12,7 @@ public class FgExample {
      * @param factorId The id of the factor.
      * @return The feature vector.
      */
-    public SortedIntDoubleVector getFeatureVector(int factorId) {
+    public FeatureVector getFeatureVector(int factorId) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -25,7 +26,7 @@ public class FgExample {
      * @param configId The id of the configuration for the PREDICTED variables.          
      * @return The feature vector.
      */
-    public SortedIntDoubleVector getFeatureVector(int factorId, int configId) {
+    public FeatureVector getFeatureVector(int factorId, int configId) {
         // TODO Auto-generated method stub
         return null;
     }
