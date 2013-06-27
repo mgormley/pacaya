@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import cern.colt.list.IntArrayList;
 import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.lp.FactorBuilder.BoundFactor;
 import edu.jhu.lp.FactorBuilder.Factor;
@@ -16,11 +15,12 @@ import edu.jhu.lp.FactorList;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.PIntHashSet;
+import edu.jhu.util.collections.PIntObjectHashMap;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
 import edu.jhu.util.vector.LongDoubleEntry;
-import edu.jhu.util.collections.PIntObjectHashMap;
-import edu.jhu.util.collections.PIntHashSet;
 
 /**
  * Adds only RLT rows that have a non-zero coefficient for some RLT variable corresponding
@@ -59,21 +59,21 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList eqFactors = rlt.getEqFactors().sublist(startFac, endFac);
 
         // Get a mapping of variables ids to factors indices.
-        PIntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(eqFactors);
+        PIntObjectHashMap<PIntArrayList> varConsMap = getVarConsMap(eqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<OrderedPair> rltRows = new HashSet<OrderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
+            PIntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
             for (int i=0; i<list1.size(); i++) {
-                int consId1 = list1.getQuick(i);
+                int consId1 = list1.get(i);
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the second variable in this pair.
                 rltRows.add(new OrderedPair(consId1, varIdPair.get2()));
             }
-            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            PIntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
             for (int i=0; i<list2.size(); i++) {
-                int consId2 = list2.getQuick(i);
+                int consId2 = list2.get(i);
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the first variable in this pair.
                 rltRows.add(new OrderedPair(consId2, varIdPair.get1()));
@@ -89,17 +89,17 @@ public class VarRltRowAdder implements RltRowAdder {
         FactorList leqFactors = rlt.getLeqFactors();
 
         // Get a mapping of variables ids to factors indices.
-        PIntObjectHashMap<IntArrayList> varConsMap = getVarConsMap(leqFactors);
+        PIntObjectHashMap<PIntArrayList> varConsMap = getVarConsMap(leqFactors);
         
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
-            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            PIntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
+            PIntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
             for (int i=0; i<list1.size(); i++) {
-                int consId1 = list1.getQuick(i);
+                int consId1 = list1.get(i);
                 for (int j=0; j<list2.size(); j++) {
-                    int consId2 = list2.getQuick(j);
+                    int consId2 = list2.get(j);
                     if ((      startFac1 <= consId1 && consId1 < endFac1 
                             && startFac2 <= consId2 && consId2 < endFac2) ||
                         (      startFac2 <= consId1 && consId1 < endFac2 
@@ -119,8 +119,8 @@ public class VarRltRowAdder implements RltRowAdder {
      * containing a non-zero coefficient for variable k, add an entry for (k
      * --> i).
      */ 
-    private PIntObjectHashMap<IntArrayList> getVarConsMap(FactorList factors) {
-        PIntObjectHashMap<IntArrayList> varConsMap = new PIntObjectHashMap<IntArrayList>();
+    private PIntObjectHashMap<PIntArrayList> getVarConsMap(FactorList factors) {
+        PIntObjectHashMap<PIntArrayList> varConsMap = new PIntObjectHashMap<PIntArrayList>();
         for (int i=0; i<factors.size(); i++) {
             Factor factor = factors.get(i);
             if (boundsOnly && !(factor instanceof BoundFactor)){
