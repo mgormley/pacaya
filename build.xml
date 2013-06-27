@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <project name="dep_parse" default="compile" basedir=".">
 
-  <property name="classes.path"     value="${basedir}/classes" />
-  <property name="source.path"    value="${basedir}/src" />
+  <property name="classes.path"     value="${basedir}/target/classes" />
+  <property name="source.path"    value="${basedir}/src/main/java" />
+  <property name="resources.path"    value="${basedir}/src/main/resources" />
   <property name="test.path"    value="${basedir}/tests" />
   <property name="test.raw.path"    value="${test.path}/raw-test-output" />
   <property name="test.reports.path"    value="${test.path}/test-reports" />
-  <property name="classes.path"     value="${basedir}/build" />
+  <property name="classes.path"     value="${basedir}/build" /> <!--TODO: remove this line. -->
   <property name="app.jar.path"     value="${classes.path}/prunner.jar" />
   <property name="mega.jar.path"     value="${classes.path}/mega.jar" />
   <property name="gcj.path"     value="${classes.path}/PipelineRunner" />
@@ -14,8 +15,8 @@
   <property name="compile.debug"       value="true"/>
   <property name="compile.deprecation" value="false"/>
   <property name="compile.optimize"    value="true"/>
-  <property name="compile.source"      value="1.7" />
-  <property name="compile.target"      value="1.7" />
+  <property name="compile.source"      value="1.6" />
+  <property name="compile.target"      value="1.6" />
   <property name="compile.encoding"    value="utf-8" />
 
   <target name="classpath" description="Sets the classpath">
@@ -49,6 +50,10 @@
   </target>
 
   <target name="resources" description="Copy resources to build output directory">
+    <copy todir="${classes.path}">
+      <fileset dir="${resources.path}"/>
+    </copy>
+<!-- TODO: remove:
     <mkdir dir="${classes.path}/edu/jhu/hltcoe/parse" />
     <copy todir="${classes.path}/edu/jhu/hltcoe/parse">
       <fileset dir="${source.path}/edu/jhu/hltcoe/parse">
@@ -66,6 +71,7 @@
     	<include name="*.properties"/>
       </fileset>
     </copy>
+-->
   </target>
   
   <target name="compile" depends="classpath,build-dir,resources"

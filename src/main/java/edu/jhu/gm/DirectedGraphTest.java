@@ -1,23 +1,14 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import edu.jhu.gm.DirectedGraphTest.MockDigraph.MockEdge;
-import edu.jhu.gm.DirectedGraphTest.MockDigraph.MockNode;
+import edu.jhu.gm.MockDigraph.MockEdge;
+import edu.jhu.gm.MockDigraph.MockNode;
 
 public class DirectedGraphTest {
-
-    public static class MockDigraph extends DirectedGraph<MockNode,MockEdge> {
-        public class MockEdge extends DirectedGraph<MockNode,MockEdge>.Edge {
-            public MockEdge(MockNode parent, MockNode child) {
-                super(parent, child);
-            }
-        }
-        public class MockNode extends DirectedGraph<MockNode,MockEdge>.Node {
-        }
-    }
 
     @Test
     public void testIsTree() {

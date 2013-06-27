@@ -29,6 +29,10 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+          <!-- Skip ERMA files. -->
+          <excludes>
+            <exclude>**/*Erma*.java</exclude>
+          </excludes>
         </configuration>
         <version>3.0</version>
       </plugin>
@@ -47,7 +51,7 @@
             <configuration>
               <sources>
                 <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source>
-                <source>/Users/mgormley/research/ERMA/src</source>
+                <!-- <source>/Users/mgormley/research/ERMA/src</source> -->
               </sources>
             </configuration>
           </execution>
@@ -104,6 +108,7 @@
     <!-- TODO: cplex (just copy the source over)-->
     <!-- TODO: ERMA (just copy the source over)-->
     <!-- Below are the ERMA dependencies -->
+    <!--
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
@@ -123,6 +128,13 @@
       <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
       <artifactId>java-cup</artifactId>
       <version>0.11a</version>
+      <scope>system</scope>
+      <systemPath>/Users/mgormley/research/ERMA/lib/java-cup-11a-runtime.jar</systemPath>
     </dependency>
+    -->
+    <!-- Alternate system paths for java cup. 
+	 <systemPath>/Users/mgormley/.m2/repository//net/sf/squirrel-sql/thirdparty-non-maven/java-cup/0.11a/java-cup-0.11a.jar</systemPath> 
+	 <systemPath>${project.basedir}/lib/swingx-0.9.3.jar</systemPath> 
+    -->
   </dependencies>
 </project>
