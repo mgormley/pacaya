@@ -1,6 +1,10 @@
 package edu.jhu.util.vector;
 
+import edu.jhu.util.Lambda;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaBinOpLong;
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.PLongArrayList;
 
 
 /**
@@ -12,7 +16,7 @@ import edu.jhu.util.Utilities;
 public class SortedIntLongVector extends SortedIntLongMap {
 
     boolean norm2Cached = false;
-    double norm2Value;
+    long norm2Value;
     
     public SortedIntLongVector() {
         super();
@@ -51,20 +55,16 @@ public class SortedIntLongVector extends SortedIntLongMap {
     	}
     }
 
-    public void add(SortedIntLongVector other) {
-        // TODO: this could be done much faster with a merge of the two arrays.
-        for (IntLongEntry ve : other) {
-            add(ve.index(), ve.get());
+    /** Computes the dot product of this vector with the given vector. */
+    public long dot(long[] other) {
+        long ret = 0;
+        for (int c = 0; c < used && indices[c] < other.length; c++) {
+            ret += values[c] * other[indices[c]];
         }
+        return ret;
     }
-    
-	public void set(SortedIntLongVector other) {
-		// TODO: this could be done much faster with a merge of the two arrays.
-		for (IntLongEntry ve : other) {
-			set(ve.index(), ve.get());
-		}
-	}
 
+    /** Computes the dot product of this vector with the given vector. */   
     public long dot(SortedIntLongVector y) {
         if (y instanceof SortedIntLongVector) {
             SortedIntLongVector other = ((SortedIntLongVector) y);
@@ -141,10 +141,18 @@ public class SortedIntLongVector extends SortedIntLongMap {
         return this;
     }
 
+    /** Sets all values in this vector to those in the other vector. */
+    public void set(SortedIntLongVector other) {
+        this.used = other.used;
+        this.indices = Utilities.copyOf(other.indices);
+        this.values = Utilities.copyOf(other.values);
+    }
+    
     /**
      * Computes the Hadamard product (or entry-wise product) of this vector with
      * another.
      */
+    // TODO: this could just be a binaryOp call.
     public SortedIntLongVector hadamardProd(SortedIntLongVector other) {
     	SortedIntLongVector ip = new SortedIntLongVector();
         int oc = 0;
@@ -163,6 +171,109 @@ public class SortedIntLongVector extends SortedIntLongMap {
         return ip;
     }
 
+    public void add(SortedIntLongVector other) {
+        binaryOp(other, new Lambda.LongAdd());
+    }
+    
+    public void subtract(SortedIntLongVector other) {
+        binaryOp(other, new Lambda.LongSubtract());
+    }
+    
+    public void binaryOp(SortedIntLongVector other, LambdaBinOpLong lambda) {
+        PIntArrayList newIndices = new PIntArrayList(Math.max(this.indices.length, other.indices.length));
+        PLongArrayList newValues = new PLongArrayList(Math.max(this.indices.length, other.indices.length));
+        int i=0; 
+        int j=0;
+        while(i < this.used && j < other.used) {
+            int e1 = this.indices[i];
+            long v1 = this.values[i];
+            int e2 = other.indices[j];
+            long v2 = other.values[j];
+            
+            int diff = e1 - e2;
+            if (diff == 0) {
+                // Elements are equal. Add both of them.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, v2));
+                i++;
+                j++;
+            } else if (diff < 0) {
+                // e1 is less than e2, so only add e1 this round.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, 0));
+                i++;
+            } else {
+                // e2 is less than e1, so only add e2 this round.
+                newIndices.add(e2);
+                newValues.add(lambda.call(0, v2));
+                j++;
+            }
+        }
+
+        // If there is a list that we didn't get all the way through, add all
+        // the remaining elements. There will never be more than one such list. 
+        assert (!(i < this.used && j < other.used));
+        for (; i < this.used; i++) {
+            int e1 = this.indices[i];
+            long v1 = this.values[i];
+            newIndices.add(e1);
+            newValues.add(lambda.call(v1, 0));
+        }
+        for (; j < other.used; j++) {
+            int e2 = other.indices[j];
+            long v2 = other.values[j];
+            newIndices.add(e2);
+            newValues.add(lambda.call(0, v2));
+        }
+        
+        this.used = newIndices.size();
+        this.indices = newIndices.toNativeArray();
+        this.values = newValues.toNativeArray();
+    }
+    
+    /**
+     * Counts the number of unique indices in two arrays.
+     * @param indices1 Sorted array of indices.
+     * @param indices2 Sorted array of indices.
+     */
+    public static int countUnique(int[] indices1, int[] indices2) {
+        int numUniqueIndices = 0;
+        int i = 0;
+        int j = 0;
+        while (i < indices1.length && j < indices2.length) {
+            if (indices1[i] < indices2[j]) {
+                numUniqueIndices++;
+                i++;
+            } else if (indices2[j] < indices1[i]) {
+                numUniqueIndices++;
+                j++;
+            } else {
+                // Equal indices.
+                i++;
+                j++;
+            }
+        }
+        for (; i < indices1.length; i++) {
+            numUniqueIndices++;
+        }
+        for (; j < indices2.length; j++) {
+            numUniqueIndices++;
+        }
+        return numUniqueIndices;
+    }
+    
+    public SortedIntLongVector getElementwiseSum(SortedIntLongVector other) {
+        SortedIntLongVector sum = new SortedIntLongVector(this);
+        sum.add(other);
+        return sum;
+    }
+    
+    public SortedIntLongVector getElementwiseDiff(SortedIntLongVector other) {
+        SortedIntLongVector sum = new SortedIntLongVector(this);
+        sum.subtract(other);
+        return sum;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

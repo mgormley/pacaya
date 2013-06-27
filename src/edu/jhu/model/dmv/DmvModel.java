@@ -6,10 +6,10 @@ import java.util.Set;
 
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
-import edu.jhu.parse.cky.Lambda.LambdaOneToOne;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.math.LabeledMultinomial;
 import edu.jhu.util.math.Multinomials;
 

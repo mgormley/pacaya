@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.math.Vectors;
 
 public class Sort {
@@ -333,5 +334,40 @@ public class Sort {
         return newList;
     }
 
+    public static int[] getMergedSortedArray(int[] list1, int[] list2) {
+        PIntArrayList newList = new PIntArrayList();
+        int i=0; 
+        int j=0;
+        while(i < list1.length && j < list2.length) {
+            int e1 = list1[i];
+            int e2 = list2[j];
+            int diff = e1 - e2;
+            if (diff == 0) {
+                // Elements are equal. Only add one.
+                newList.add(e1);
+                i++;
+                j++;
+            } else if (diff < 0) {
+                // e1 is less than e2, so only add e1 this round.
+                newList.add(e1);
+                i++;
+            } else {
+                // e2 is less than e1, so only add e2 this round.
+                newList.add(e2);
+                j++;
+            }
+        }
+
+        // If there is a list that we didn't get all the way through, add all
+        // the remaining elements. There will never be more than one such list. 
+        assert (!(i < list1.length && j < list2.length));
+        for (; i < list1.length; i++) {
+            newList.add(list1[i]);
+        }
+        for (; j < list2.length; j++) {
+            newList.add(list2[j]);
+        }
+        return newList.toNativeArray();
+    }
 
 }

@@ -124,7 +124,7 @@ public class SortedIntLongVectorTest {
         v1.set(v2);
 
         assertEquals(11, v1.get(1));
-        assertEquals(22, v1.get(2));
+        assertEquals(0, v1.get(2));
         assertEquals(33, v1.get(3));
         assertEquals(0, v1.get(4));
         assertEquals(55, v1.get(5));
@@ -153,4 +153,26 @@ public class SortedIntLongVectorTest {
         assertEquals(55, v1.get(5));        
     }
     
+    @Test
+    public void testGetElementwiseSum() {
+        SortedIntLongVector v1 = new SortedIntLongVector();
+        SortedIntLongVector v2 = new SortedIntLongVector();
+        
+        v1.set(1, 11);
+        v1.set(2, 22);
+        v1.set(4, 44);
+        
+        v2.set(1, 11);
+        v2.set(3, 33);
+        v2.set(4, 0);
+        v2.set(5, 55);
+        
+        SortedIntLongVector v3 = v1.getElementwiseSum(v2);
+
+        assertEquals(22, v3.get(1), 1e-13);
+        assertEquals(22, v3.get(2), 1e-13);
+        assertEquals(33, v3.get(3), 1e-13);
+        assertEquals(44, v3.get(4), 1e-13);
+        assertEquals(55, v3.get(5), 1e-13);        
+    }
 }    

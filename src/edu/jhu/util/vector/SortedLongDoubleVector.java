@@ -1,7 +1,11 @@
 package edu.jhu.util.vector;
 
-import edu.jhu.util.Sort;
+import edu.jhu.util.Lambda;
+import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaBinOpDouble;
+import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.PLongArrayList;
 
 /**
  * Infinite length sparse vector.
@@ -51,54 +55,19 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
     	}
     }
 
-	public void add(SortedLongDoubleVector other) {
-		// TODO: this could be done much faster with a merge of the two arrays.
-		for (LongDoubleEntry ve : other) {
-			add(ve.index(), ve.get());
-		}
-	}
-	
-	public void set(SortedLongDoubleVector other) {
-	    //int numUniqueIndices = countUnique(this.indices, other.indices);
-	    //long[] tmpIndices = new long[numUniqueIndices];
-	    //double[] tmpValues = new double[numUniqueIndices];
-		// TODO: this could be done much faster with a merge of the two arrays.
-		for (LongDoubleEntry ve : other) {
-			set(ve.index(), ve.get());
-		}
-	}
-	
-	/**
-	 * Counts the number of unique indices in two arrays.
-	 * @param indices1 Sorted array of indices.
-	 * @param indices2 Sorted array of indices.
-	 */
-	public static int countUnique(long[] indices1, long[] indices2) {
-        int numUniqueIndices = 0;
-        int i = 0;
-        int j = 0;
-        while (i < indices1.length && j < indices2.length) {
-            if (indices1[i] < indices2[j]) {
-                numUniqueIndices++;
-                i++;
-            } else if (indices2[j] < indices1[i]) {
-                numUniqueIndices++;
-                j++;
-            } else {
-                // Equal indices.
-                i++;
-                j++;
+    /** Computes the dot product of this vector with the given vector. */
+    public double dot(double[] other) {
+        double ret = 0;
+        for (int c = 0; c < used && indices[c] < other.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
             }
+            ret += values[c] * other[SafeCast.safeLongToInt(indices[c])];
         }
-        for (; i < indices1.length; i++) {
-            numUniqueIndices++;
-        }
-        for (; j < indices2.length; j++) {
-            numUniqueIndices++;
-        }
-        return numUniqueIndices;
-	}
+        return ret;
+    }
 
+    /** Computes the dot product of this vector with the given vector. */   
     public double dot(SortedLongDoubleVector y) {
         if (y instanceof SortedLongDoubleVector) {
             SortedLongDoubleVector other = ((SortedLongDoubleVector) y);
@@ -176,10 +145,18 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
         return this;
     }
 
+    /** Sets all values in this vector to those in the other vector. */
+    public void set(SortedLongDoubleVector other) {
+        this.used = other.used;
+        this.indices = Utilities.copyOf(other.indices);
+        this.values = Utilities.copyOf(other.values);
+    }
+    
     /**
      * Computes the Hadamard product (or entry-wise product) of this vector with
      * another.
      */
+    // TODO: this could just be a binaryOp call.
     public SortedLongDoubleVector hadamardProd(SortedLongDoubleVector other) {
     	SortedLongDoubleVector ip = new SortedLongDoubleVector();
         int oc = 0;
@@ -198,6 +175,109 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
         return ip;
     }
 
+    public void add(SortedLongDoubleVector other) {
+        binaryOp(other, new Lambda.DoubleAdd());
+    }
+    
+    public void subtract(SortedLongDoubleVector other) {
+        binaryOp(other, new Lambda.DoubleSubtract());
+    }
+    
+    public void binaryOp(SortedLongDoubleVector other, LambdaBinOpDouble lambda) {
+        PLongArrayList newIndices = new PLongArrayList(Math.max(this.indices.length, other.indices.length));
+        PDoubleArrayList newValues = new PDoubleArrayList(Math.max(this.indices.length, other.indices.length));
+        int i=0; 
+        int j=0;
+        while(i < this.used && j < other.used) {
+            long e1 = this.indices[i];
+            double v1 = this.values[i];
+            long e2 = other.indices[j];
+            double v2 = other.values[j];
+            
+            long diff = e1 - e2;
+            if (diff == 0) {
+                // Elements are equal. Add both of them.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, v2));
+                i++;
+                j++;
+            } else if (diff < 0) {
+                // e1 is less than e2, so only add e1 this round.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, 0.0));
+                i++;
+            } else {
+                // e2 is less than e1, so only add e2 this round.
+                newIndices.add(e2);
+                newValues.add(lambda.call(0.0, v2));
+                j++;
+            }
+        }
+
+        // If there is a list that we didn't get all the way through, add all
+        // the remaining elements. There will never be more than one such list. 
+        assert (!(i < this.used && j < other.used));
+        for (; i < this.used; i++) {
+            long e1 = this.indices[i];
+            double v1 = this.values[i];
+            newIndices.add(e1);
+            newValues.add(lambda.call(v1, 0.0));
+        }
+        for (; j < other.used; j++) {
+            long e2 = other.indices[j];
+            double v2 = other.values[j];
+            newIndices.add(e2);
+            newValues.add(lambda.call(0.0, v2));
+        }
+        
+        this.used = newIndices.size();
+        this.indices = newIndices.toNativeArray();
+        this.values = newValues.toNativeArray();
+    }
+    
+    /**
+     * Counts the number of unique indices in two arrays.
+     * @param indices1 Sorted array of indices.
+     * @param indices2 Sorted array of indices.
+     */
+    public static int countUnique(long[] indices1, long[] indices2) {
+        int numUniqueIndices = 0;
+        int i = 0;
+        int j = 0;
+        while (i < indices1.length && j < indices2.length) {
+            if (indices1[i] < indices2[j]) {
+                numUniqueIndices++;
+                i++;
+            } else if (indices2[j] < indices1[i]) {
+                numUniqueIndices++;
+                j++;
+            } else {
+                // Equal indices.
+                i++;
+                j++;
+            }
+        }
+        for (; i < indices1.length; i++) {
+            numUniqueIndices++;
+        }
+        for (; j < indices2.length; j++) {
+            numUniqueIndices++;
+        }
+        return numUniqueIndices;
+    }
+    
+    public SortedLongDoubleVector getElementwiseSum(SortedLongDoubleVector other) {
+        SortedLongDoubleVector sum = new SortedLongDoubleVector(this);
+        sum.add(other);
+        return sum;
+    }
+    
+    public SortedLongDoubleVector getElementwiseDiff(SortedLongDoubleVector other) {
+        SortedLongDoubleVector sum = new SortedLongDoubleVector(this);
+        sum.subtract(other);
+        return sum;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -237,6 +317,11 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
             }
         }
         return true;
+    }
+    
+    @Override
+    public int hashCode() {
+        throw new RuntimeException("not implemented");
     }
 
 }

@@ -1,6 +1,9 @@
 package edu.jhu.util.vector;
 
+import edu.jhu.util.Lambda;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaBinOpInt;
+import edu.jhu.util.collections.PIntArrayList;
 
 
 /**
@@ -51,20 +54,16 @@ public class SortedIntIntVector extends SortedIntIntMap {
     	}
     }
 
-    public void add(SortedIntIntVector other) {
-        // TODO: this could be done much faster with a merge of the two arrays.
-        for (IntIntEntry ve : other) {
-            add(ve.index(), ve.get());
+    /** Computes the dot product of this vector with the given vector. */
+    public int dot(int[] other) {
+        int ret = 0;
+        for (int c = 0; c < used && indices[c] < other.length; c++) {
+            ret += values[c] * other[indices[c]];
         }
+        return ret;
     }
-    
-	public void set(SortedIntIntVector other) {
-		// TODO: this could be done much faster with a merge of the two arrays.
-		for (IntIntEntry ve : other) {
-			set(ve.index(), ve.get());
-		}
-	}
 
+    /** Computes the dot product of this vector with the given vector. */   
     public int dot(SortedIntIntVector y) {
         if (y instanceof SortedIntIntVector) {
             SortedIntIntVector other = ((SortedIntIntVector) y);
@@ -130,7 +129,7 @@ public class SortedIntIntVector extends SortedIntIntMap {
     
 
     /**
-     * TODO: Make a SortedIntLongVectorWithExplicitZeros class and move this method there.
+     * TODO: Make a SortedIntIntVectorWithExplicitZeros class and move this method there.
      * 
      * Here we override the zero method so that it doesn't set the number of
      * used values to 0. This ensures that we keep explicit zeros in.
@@ -141,10 +140,18 @@ public class SortedIntIntVector extends SortedIntIntMap {
         return this;
     }
 
+    /** Sets all values in this vector to those in the other vector. */
+    public void set(SortedIntIntVector other) {
+        this.used = other.used;
+        this.indices = Utilities.copyOf(other.indices);
+        this.values = Utilities.copyOf(other.values);
+    }
+    
     /**
      * Computes the Hadamard product (or entry-wise product) of this vector with
      * another.
      */
+    // TODO: this could just be a binaryOp call.
     public SortedIntIntVector hadamardProd(SortedIntIntVector other) {
     	SortedIntIntVector ip = new SortedIntIntVector();
         int oc = 0;
@@ -163,6 +170,109 @@ public class SortedIntIntVector extends SortedIntIntMap {
         return ip;
     }
 
+    public void add(SortedIntIntVector other) {
+        binaryOp(other, new Lambda.IntAdd());
+    }
+    
+    public void subtract(SortedIntIntVector other) {
+        binaryOp(other, new Lambda.IntSubtract());
+    }
+    
+    public void binaryOp(SortedIntIntVector other, LambdaBinOpInt lambda) {
+        PIntArrayList newIndices = new PIntArrayList(Math.max(this.indices.length, other.indices.length));
+        PIntArrayList newValues = new PIntArrayList(Math.max(this.indices.length, other.indices.length));
+        int i=0; 
+        int j=0;
+        while(i < this.used && j < other.used) {
+            int e1 = this.indices[i];
+            int v1 = this.values[i];
+            int e2 = other.indices[j];
+            int v2 = other.values[j];
+            
+            int diff = e1 - e2;
+            if (diff == 0) {
+                // Elements are equal. Add both of them.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, v2));
+                i++;
+                j++;
+            } else if (diff < 0) {
+                // e1 is less than e2, so only add e1 this round.
+                newIndices.add(e1);
+                newValues.add(lambda.call(v1, 0));
+                i++;
+            } else {
+                // e2 is less than e1, so only add e2 this round.
+                newIndices.add(e2);
+                newValues.add(lambda.call(0, v2));
+                j++;
+            }
+        }
+
+        // If there is a list that we didn't get all the way through, add all
+        // the remaining elements. There will never be more than one such list. 
+        assert (!(i < this.used && j < other.used));
+        for (; i < this.used; i++) {
+            int e1 = this.indices[i];
+            int v1 = this.values[i];
+            newIndices.add(e1);
+            newValues.add(lambda.call(v1, 0));
+        }
+        for (; j < other.used; j++) {
+            int e2 = other.indices[j];
+            int v2 = other.values[j];
+            newIndices.add(e2);
+            newValues.add(lambda.call(0, v2));
+        }
+        
+        this.used = newIndices.size();
+        this.indices = newIndices.toNativeArray();
+        this.values = newValues.toNativeArray();
+    }
+    
+    /**
+     * Counts the number of unique indices in two arrays.
+     * @param indices1 Sorted array of indices.
+     * @param indices2 Sorted array of indices.
+     */
+    public static int countUnique(int[] indices1, int[] indices2) {
+        int numUniqueIndices = 0;
+        int i = 0;
+        int j = 0;
+        while (i < indices1.length && j < indices2.length) {
+            if (indices1[i] < indices2[j]) {
+                numUniqueIndices++;
+                i++;
+            } else if (indices2[j] < indices1[i]) {
+                numUniqueIndices++;
+                j++;
+            } else {
+                // Equal indices.
+                i++;
+                j++;
+            }
+        }
+        for (; i < indices1.length; i++) {
+            numUniqueIndices++;
+        }
+        for (; j < indices2.length; j++) {
+            numUniqueIndices++;
+        }
+        return numUniqueIndices;
+    }
+    
+    public SortedIntIntVector getElementwiseSum(SortedIntIntVector other) {
+        SortedIntIntVector sum = new SortedIntIntVector(this);
+        sum.add(other);
+        return sum;
+    }
+    
+    public SortedIntIntVector getElementwiseDiff(SortedIntIntVector other) {
+        SortedIntIntVector sum = new SortedIntIntVector(this);
+        sum.subtract(other);
+        return sum;
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

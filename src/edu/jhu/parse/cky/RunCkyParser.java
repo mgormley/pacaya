@@ -17,7 +17,6 @@ import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.parse.cky.Lambda.LambdaOne;
 import edu.jhu.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
@@ -26,6 +25,7 @@ import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.Lambda.LambdaOne;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 
