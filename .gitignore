@@ -7,6 +7,7 @@
 /other_repos
 /bin
 /classes
+/target
 /tests
 /exp
 /dantzig_wolfe
@@ -38,7 +39,7 @@
 /scripts/plot/.Rhistory
 
 # /src/ (for src/com/ibm/cplex)
-/src/com
+/src/main/java/com
 
 # /data
 /data/Web2.0Dataset/
