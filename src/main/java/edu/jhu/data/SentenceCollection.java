@@ -55,7 +55,8 @@ public class SentenceCollection implements Iterable<Sentence> {
         }
     }
 
-    private void add(Sentence sentence) {
+    // TODO: should this be private?
+    public void add(Sentence sentence) {
         addSentenceToAlphabet(sentence);
         sents.add(sentence);
         numTokens += sentence.size();
