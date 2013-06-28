@@ -12,11 +12,11 @@ import java.util.List;
 public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> {
 
     public class Node {
-        private ArrayList<E> inEdges;
-        private ArrayList<E> outEdges;
+        ArrayList<E> inEdges;
+        ArrayList<E> outEdges;
         /** Whether this node has been added to the graph. */
-        private boolean added;
-        private boolean marked;
+        boolean added;
+        boolean marked;
         public Node() {
             added = false;
             inEdges = new ArrayList<E>();
@@ -42,10 +42,10 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
     }
     
     public class Edge {
-        private N n1;
-        private N n2;
-        private boolean added;
-        private boolean marked;
+        N n1;
+        N n2;
+        boolean added;
+        boolean marked;
         @SuppressWarnings("unchecked")
         public Edge(N parent, N child) {
             this.added = false;
