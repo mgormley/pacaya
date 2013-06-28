@@ -36,11 +36,11 @@
             <include>**/*.java</include>
 	  </includes>
           <excludes>
-	    <!-- Skip anything depending on joptimizer. -->
+	    <!-- Skip anything depending on joptimizer. 
             <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
             <exclude>**/*ModelParamSubproblem*.java</exclude>
             <exclude>**/ModelParamSubproblem.java</exclude>
-            <exclude>**/ModelParamSubproblemTest.java</exclude>
+            <exclude>**/ModelParamSubproblemTest.java</exclude> -->
 	    <!-- Skip CRF.
             <exclude>**/edu/jhu/gm/*.java</exclude>
             <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
@@ -130,6 +130,11 @@
       <version>1.2</version>
     </dependency>
     <dependency>
+      <groupId>edu.jhu.erma</groupId>
+      <artifactId>erma</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>cplex</groupId>
       <artifactId>cplex</artifactId>
       <version>12.5</version>
@@ -144,40 +149,25 @@
       <systemPath>${project.basedir}/lib/gurobi.jar</systemPath> 
     </dependency>
     <dependency>
-      <groupId>edu.jhu.erma</groupId>
-      <artifactId>erma</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
-    </dependency>
-    <!-- TODO: cplex (just copy the source over)-->
-    <!-- TODO: ERMA (just copy the source over)-->
-    <!-- Below are the ERMA dependencies -->
-    <!--
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1.3</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-configuration</groupId>
-      <artifactId>commons-configuration</artifactId>
-      <version>1.9</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>3.2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
-      <artifactId>java-cup</artifactId>
-      <version>0.11a</version>
+      <groupId>joptimizer</groupId>
+      <artifactId>joptimizer</artifactId>
+      <version>1.3.0</version>
       <scope>system</scope>
-      <systemPath>/Users/mgormley/research/ERMA/lib/java-cup-11a-runtime.jar</systemPath>
+      <systemPath>${project.basedir}/lib/joptimizer-1.3.0.jar</systemPath> 
     </dependency>
-    -->
-    <!-- Alternate system paths for java cup. 
-	 <systemPath>/Users/mgormley/.m2/repository//net/sf/squirrel-sql/thirdparty-non-maven/java-cup/0.11a/java-cup-0.11a.jar</systemPath> 
-	 <systemPath>${project.basedir}/lib/swingx-0.9.3.jar</systemPath> 
-    -->
+    <dependency>
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/colt-1.2.0.jar</systemPath> 
+    </dependency>
+    <dependency>
+      <groupId>parallelcolt-0.9.4</groupId>
+      <artifactId>parallelcolt-0.9.4</artifactId>
+      <version>0.9.4</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/parallelcolt-0.9.4.jar</systemPath> 
+    </dependency>
   </dependencies>
 </project>
