@@ -13,7 +13,7 @@
   <property name="gcj.path"     value="${classes.path}/PipelineRunner" />
 
   <property name="compile.debug"       value="true"/>
-  <property name="compile.deprecation" value="false"/>
+  <property name="compile.deprecation" value="true"/>
   <property name="compile.optimize"    value="true"/>
   <property name="compile.source"      value="1.6" />
   <property name="compile.target"      value="1.6" />
@@ -53,25 +53,6 @@
     <copy todir="${classes.path}">
       <fileset dir="${resources.path}"/>
     </copy>
-<!-- TODO: remove:
-    <mkdir dir="${classes.path}/edu/jhu/hltcoe/parse" />
-    <copy todir="${classes.path}/edu/jhu/hltcoe/parse">
-      <fileset dir="${source.path}/edu/jhu/hltcoe/parse">
-    	<include name="*.xml"/>
-      </fileset>
-    </copy>
-    <mkdir dir="${classes.path}/edu/jhu/hltcoe/ilp/decomp" />
-    <copy todir="${classes.path}/edu/jhu/hltcoe/ilp/decomp">
-      <fileset dir="${source.path}/edu/jhu/hltcoe/ilp/decomp">
-    	<include name="*.parm"/>
-      </fileset>
-    </copy>
-    <copy todir="${classes.path}">
-      <fileset dir="${source.path}">
-    	<include name="*.properties"/>
-      </fileset>
-    </copy>
--->
   </target>
   
   <target name="compile" depends="classpath,build-dir,resources"
@@ -95,6 +76,9 @@
       <!-- Skip anything depending on joptimizer. -->
       <exclude name="**/*ModelParamSubproblem*.java" />
       <exclude name="**/*ResDmvDantzigWolfeRelaxation*.java" /> 
+      <!-- Skip the CRF training. 
+      <exclude name="**/edu/jhu/gm/*.java" />
+      <exclude name="**/edu/jhu/gm/**/*.java" /> -->
     </javac>
   </target>
 

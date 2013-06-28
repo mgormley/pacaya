@@ -29,16 +29,27 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+	  <useIncrementalCompilation>true</useIncrementalCompilation>
+	  <fork>true</fork>
           <!-- <compilerArgument>-verbose</compilerArgument> -->
+	  <includes>
+            <include>**/*.java</include>
+	  </includes>
           <excludes>
 	    <!-- Skip anything depending on joptimizer. -->
             <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
             <exclude>**/*ModelParamSubproblem*.java</exclude>
+            <exclude>**/ModelParamSubproblem.java</exclude>
+            <exclude>**/ModelParamSubproblemTest.java</exclude>
+	    <!-- Skip CRF.
+            <exclude>**/edu/jhu/gm/*.java</exclude>
+            <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
           </excludes>
         </configuration>
         <version>3.0</version>
       </plugin>
       <!-- The following plugin includes alternate source directories in the compilation -->
+      <!--
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -52,13 +63,14 @@
             </goals>
             <configuration>
               <sources>
-                <!-- <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source> -->
-                <!-- <source>/Users/mgormley/research/ERMA/src</source> -->
+                <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source>
+                <source>/Users/mgormley/research/ERMA/src</source>
               </sources>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      -->
     </plugins>
   </build>
 
@@ -105,6 +117,13 @@
       <version>12.5</version>
       <scope>system</scope>
       <systemPath>${project.basedir}/lib/cplex.jar</systemPath> 
+    </dependency>
+    <dependency>
+      <groupId>gurobi</groupId>
+      <artifactId>gurobi</artifactId>
+      <version>3.0.1</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/gurobi.jar</systemPath> 
     </dependency>
     <dependency>
       <groupId>edu.jhu.erma</groupId>
