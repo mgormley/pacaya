@@ -14,6 +14,7 @@
 
 # /lib/
 /lib/cplex.jar
+/lib/gurobi.jar
 /lib/*/
 /lib/*.tgz
 /lib/*.tar.gz
