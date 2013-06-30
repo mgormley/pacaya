@@ -3,6 +3,7 @@ package edu.jhu.gm;
 import java.util.Arrays;
 
 import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.SmallSet;
 
 /**
  * A subset of the variables.
@@ -15,6 +16,7 @@ import edu.jhu.util.collections.PIntArrayList;
  * @author mgormley
  * 
  */
+// TODO: Move all the VarConfig related methods to VarConfig.
 public class VarSet extends SmallSet<Var> {
 
     public VarSet() {
@@ -67,7 +69,7 @@ public class VarSet extends SmallSet<Var> {
      * @see edu.jhu.gm.VarSet#getConfigIter
      */
     public int[] getConfigArr(VarSet vars) {        
-        PIntArrayList a = new PIntArrayList(vars.getNumConfigs());
+        PIntArrayList a = new PIntArrayList(vars.calcNumConfigs());
         IntIter iter = getConfigIter(vars);
         while (iter.hasNext()) {
             a.add(iter.next());
@@ -78,7 +80,8 @@ public class VarSet extends SmallSet<Var> {
     /**
      * Gets the number of possible configurations for this set of variables.
      */
-    public int getNumConfigs() {
+    // TODO: ensure that this isn't called within any for-loops.
+    public int calcNumConfigs() {
         if (this.size() == 0) {
             return 0;
         }
@@ -130,7 +133,21 @@ public class VarSet extends SmallSet<Var> {
 
     @Override
     public String toString() {
-        return "VarSet [" + super.toString() + "]";
+        StringBuilder sb = new StringBuilder();
+        sb.append("VarSet [");
+        sb.append("size=");
+        sb.append(size());
+        sb.append(", list=[");
+        int i=0;
+        for (Var v : this) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(v.getName());
+            i++;
+        }
+        sb.append("]]");
+        return sb.toString();
     }
             
 }

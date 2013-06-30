@@ -32,21 +32,13 @@ public class Var implements Comparable<Var> {
     private String name;
     /** State names. */
     private ArrayList<String> stateNames;
-    /** OPTIONAL: The id of the node corresponding to this variable. */
-    private int nodeId;
     
     /** Counter used to create a unique id for each instance of this class. */
     private static final AtomicInteger instanceCounter = new AtomicInteger();
     /** An id that is unique to this instance of this class. */
     private int instanceId = instanceCounter.incrementAndGet();
     
-    public Var(VarType type, int numStates, String name,
-            List<String> stateNames) {
-        this(type, numStates, name, stateNames, UNINITIALIZED_NODE_ID);
-    }
-
-    public Var(VarType type, int numStates, String name, List<String> stateNames,
-            int id) {
+    public Var(VarType type, int numStates, String name, List<String> stateNames) {
         this.type = type;
         this.numStates = numStates;
         this.name = name;
@@ -54,7 +46,6 @@ public class Var implements Comparable<Var> {
             assert(numStates == stateNames.size());
             this.stateNames = new ArrayList<String>(stateNames);
         }
-        this.nodeId = id;
     }
 
     public int getNumStates() {
@@ -71,29 +62,6 @@ public class Var implements Comparable<Var> {
 
     public ArrayList<String> getStateNames() {
         return stateNames;
-    }
-
-    /**
-     * Gets the id of the node corresponding to this variable.
-     * 
-     * For INTERNAL USE ONLY.
-     */
-    int getNodeId() {
-        return nodeId;
-    }
-
-    /**
-     * Sets the id of the node corresponding to this variable.
-     *      
-     * For INTERNAL USE ONLY.
-     * 
-     * @throws IllegalStateException if the node id for this variable was already set. 
-     */
-    void setNodeId(int id) {
-        if (this.nodeId != UNINITIALIZED_NODE_ID) {
-            throw new IllegalStateException("The id for this variable was already set: " + id);
-        }
-        this.nodeId = id;
     }
 
     /**
@@ -142,7 +110,7 @@ public class Var implements Comparable<Var> {
 
     @Override
     public String toString() {
-        return "Var [type=" + type + ", nodeId=" + nodeId + ", numStates=" + numStates
+        return "Var [type=" + type + ", numStates=" + numStates
                 + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
     

@@ -244,41 +244,57 @@ public class BeliefPropagation implements FgInferencer {
 
     /** @inheritDoc */
     @Override
-    public Factor getMarginals(Var var) {
-        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
-        // Compute the product of all messages sent to this variable.
-        getProductOfMessagesNormalized(fg.getNode(var), prod, null);
-        return prod;
-    }
-
-    /** @inheritDoc */
-    @Override
     public Factor getMarginals(VarSet varSet) {
         // We could implement this method, but it will be slow since we'll have
         // to find a factor that contains all of these variables.
         // For now we just throw an exception.
         throw new RuntimeException("not implemented");
     }
-    
-    /** @inheritDoc */
-    @Override
-    public Factor getMarginals(Factor factor) {
+
+    private Factor getMarginals(Var var, FgNode node) {
+        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        // Compute the product of all messages sent to this variable.
+        getProductOfMessagesNormalized(node, prod, null);
+        return prod;
+    }
+
+    private Factor getMarginals(Factor factor, FgNode node) {
         Factor prod = new Factor(factor);
         // Compute the product of all messages sent to this factor.
-        getProductOfMessagesNormalized(fg.getNode(factor), prod, null);
+        getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
     
+    /** @inheritDoc
+     * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
+     */
+    @Override
+    public Factor getMarginals(Var var) {
+        FgNode node = fg.getNode(var);
+        return getMarginals(var, node);
+    }
+    
+    /** @inheritDoc
+     * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
+     */
+    @Override
+    public Factor getMarginals(Factor factor) {
+        FgNode node = fg.getNode(factor);
+        return getMarginals(factor, node);
+    }
+        
     /** @inheritDoc */
     @Override
     public Factor getMarginalsForVarId(int varId) {
-        return getMarginals(fg.getVar(varId));
+        FgNode node = fg.getVarNode(varId);
+        return getMarginals(node.getVar(), node);
     }
 
     /** @inheritDoc */
     @Override
     public Factor getMarginalsForFactorId(int factorId) {
-        return getMarginals(fg.getFactor(factorId));
+        FgNode node = fg.getFactorNode(factorId);
+        return getMarginals(node.getFactor(), node);
     }
 
     /** @inheritDoc */

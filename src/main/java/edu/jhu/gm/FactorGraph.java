@@ -2,6 +2,7 @@ package edu.jhu.gm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -176,11 +177,9 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
     /** The variables in this factor graph. */
     private ArrayList<Var> vars;
     /**
-     * A set of the variables in this factor graph. This is used only during
-     * construction of the factor graph. At all other times, we defer to the
-     * list of variables in <code>vars</code>.
+     * Map from {@link Factor} and {@link Var} objects to their respective nodes.
      */
-    private HashSet<Var> varSet;
+    private HashMap<Object,FgNode> nodeMap;
     /**
      * Internal list of factor nodes allowing for fast lookups of nodes. It is
      * always true that factors.get(i) corresponds to the node
@@ -196,18 +195,52 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
     public FactorGraph() {
         super();
         factors = new ArrayList<Factor>();
-        vars = new ArrayList<Var>();  
-        varSet = new HashSet<Var>();
+        vars = new ArrayList<Var>();
+        nodeMap = new HashMap<Object,FgNode>();
         factorNodes = new ArrayList<FgNode>();
-        varNodes = new ArrayList<FgNode>();            
+        varNodes = new ArrayList<FgNode>();
     }
-        
+    
+    /** Copy constructor. */    
+    public FactorGraph(FactorGraph fg) {
+        super();
+        for (Factor f : fg.getFactors()) {
+            this.addFactor(new Factor(f));
+        }
+    }
+
+    /**
+     * Gets a new factor graph, identical to this one, except that specified variables are clamped to their values.
+     * 
+     * Each clamped variable will be removed from the factor graph. All factors,
+     * even those with zero variables will be preserved.
+     * 
+     * @param clampVars The variables to clamp.
+     */
+    public FactorGraph getClamped(VarConfig clampVars) {
+        FactorGraph clmpFg = new FactorGraph();
+        for (Factor origFactor : this.getFactors()) {
+            VarConfig factorConfig = clampVars.getIntersection(origFactor.getVars());
+            Factor clmpFactor = origFactor.getClamped(factorConfig);
+            clmpFg.addFactor(clmpFactor);
+        }
+        return clmpFg;
+    }
+    
     public FgNode getNode(Var var) {
-        return varNodes.get(var.getNodeId());
+        return nodeMap.get(var);
     }
 
     public FgNode getNode(Factor factor) {
-        return factorNodes.get(factor.getNodeId());
+        return nodeMap.get(factor);
+    }
+
+    public FgNode getVarNode(int varId) {
+        return varNodes.get(varId);
+    }
+    
+    public FgNode getFactorNode(int factorId) {
+        return factorNodes.get(factorId);
     }
 
     public Var getVar(int varId) {
@@ -217,57 +250,61 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
     public Factor getFactor(int factorId) {
         return factors.get(factorId);
     }
-
+    
     /**
-     * Adds the factor to this factor graph, additionally adding any variables
+     * Adds a factor to this factor graph, if not already present, additionally adding any variables
      * in its VarSet which have not already been added.
+     * 
+     * @param var The factor to add.
+     * @return The node for this factor.
      */
-    public void addFactor(Factor factor) {
-        // Add the factor.
-        factor.setNodeId(factors.size());
-        factors.add(factor);
-        FgNode fnode = new FgNode(factor);
-        factorNodes.add(fnode);
-        super.add(fnode);
-        
-        for (Var var : factor.getVars()) {
-            // Add the variable.
-            addVar(var);
-            FgNode vnode = varNodes.get(var.getNodeId());
-            // Add a directed edge between the factor and the variable.
-            FgEdge edge1 = new FgEdge(fnode, vnode, super.getNumEdges());
-            super.add(edge1);
-            // Add a directed edge between the variable and the factor.
-            FgEdge edge2 = new FgEdge(vnode, fnode, super.getNumEdges());
-            super.add(edge2);
+    public FgNode addFactor(Factor factor) {
+        FgNode fnode = nodeMap.get(factor);
+        if (fnode == null) {
+            // Factor was not yet in the factor graph.
+            //
+            // Add the factor.
+            fnode = new FgNode(factor);
+            factors.add(factor);
+            factorNodes.add(fnode);
+            nodeMap.put(factor, fnode);
+            super.add(fnode);
             
-            edge1.setOpposing(edge2);
-            edge2.setOpposing(edge1);
+            // Add each variable...
+            for (Var var : factor.getVars()) {
+                // Add the variable.
+                FgNode vnode = addVar(var);
+                // Add a directed edge between the factor and the variable.
+                FgEdge edge1 = new FgEdge(fnode, vnode, super.getNumEdges());
+                super.add(edge1);
+                // Add a directed edge between the variable and the factor.
+                FgEdge edge2 = new FgEdge(vnode, fnode, super.getNumEdges());
+                super.add(edge2);
+                
+                edge1.setOpposing(edge2);
+                edge2.setOpposing(edge1);
+            }
         }
+        return fnode;
     }
 
     /**
-     * Adds a variable to this factor graph.
+     * Adds a variable to this factor graph, if not already present.
      * 
-     * @param var
-     *            The variable to add.
-     * @return Whether or not the factor graph changed as a result of adding
-     *         this variable.
+     * @param var The variable to add.
+     * @return The node for this variable.
      */
-    public boolean addVar(Var var) {
-        if (varSet.add(var)) {
-            // Variable was not yet in the factor graph.
-            var.setNodeId(vars.size());
+    public FgNode addVar(Var var) {
+        FgNode vnode = nodeMap.get(var);
+        if (vnode == null) {
+            // Variable was not yet in the factor graph, so add it.
+            vnode = new FgNode(var);
             vars.add(var);
-            assert(varSet.size() == vars.size());
-            FgNode vnode = new FgNode(var);
             varNodes.add(vnode);
+            nodeMap.put(var, vnode);
             super.add(vnode);
-            return true;
-        } else {
-            // Variable was already in this factor graph.
-            return false;
         }
+        return vnode;
     }
 
     /** Gets the number of factors in this factor graph. */

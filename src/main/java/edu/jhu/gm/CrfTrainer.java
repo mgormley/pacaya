@@ -1,15 +1,11 @@
 package edu.jhu.gm;
 
-import java.util.List;
-
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.Var.VarType;
 import edu.jhu.optimize.Function;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 import edu.jhu.util.vector.IntDoubleEntry;
 
 /**
@@ -25,33 +21,48 @@ public class CrfTrainer {
     // variables for use by SGD.
     public static class CrfObjective implements Function {
 
-        private FgModel model;
+        private FgModel model; // TODO: what is this doing?
         private FgExamples data;
-        private FgInferencer inferencer;
 
-        public CrfObjective(FgModel model, FgExamples data, FgInferencer inferencer) {
+        public CrfObjective(FgModel model, FgExamples data) {
             this.model = model;
             this.data = data;
-            this.inferencer = inferencer;
         }
         
         /**
-         * Gets the conditional log-likelihood of the model for the given model parameters.
+         * Gets the marginal conditional log-likelihood of the model for the given model parameters.
+         * 
+         * <p>
+         * \log p(y|x) = \log \sum_z p(y, z | x)
+         * </p>
+         * 
+         * where y are the predicted variables, x are the observed variables, and z are the latent variables.
+         * 
          * @inheritDoc
          */
         @Override
         public double getValue(double[] params) {
             double ll = 0.0;
             for (int i=0; i<data.size(); i++) {
-                // TODO: add support for LATENT variables (This will then compute the conditional log-likelihood marginalized over the latent variables.).
-                FgExample ex = data.get(i);
-                // Add in the log of the numerator.
-                for (int a=0; a<model.getNumFactors(); a++) {
-                    ll += ex.getFeatureVector(a).dot(params);
-                }
-                // Subtract off the log of the denominator.                
-                ll -= inferencer.getPartition();
+                ll += getMarginalLogLikelihoodForExample(i, params);
             }
+            return ll;
+        }
+        
+        private double getMarginalLogLikelihoodForExample(int i, double[] params) {
+            double ll = 0.0;
+            FgExample ex = data.get(i);
+            // Run inference to compute the marginals for each factor.
+            FactorGraph fgLat = ex.getFgLat(params);
+            FgInferencer inferencer = getInferencer(fgLat);
+            inferencer.run();
+            
+            // Get the "observed" feature counts for this factor, by summing over the latent variables.
+            FeatureVector observedFeats = calcExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), inferencer);                
+            ll += observedFeats.dot(params);
+            
+            // Subtract off the log of the denominator.      
+            ll -= inferencer.getPartition();            
             return ll;
         }
 
@@ -79,39 +90,60 @@ public class CrfTrainer {
                 double[] gradient) {
             FgExample ex = data.get(i);
             
-            // TODO: factor out these options.
-            // TODO: should inference be at the example level or is there a more elegant approach?
-            FactorGraph fg = ex.getFactorGraph();
-            BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
-            FgInferencer inferencer = new BeliefPropagation(prm);
-            inferencer.run();
-            
-            for (int a=0; a<model.getNumFactors(); a++) {
-                // TODO: Should the loop over factors be pushed into the FgExample and FgInferencer?
-                // Get the observed feature counts for this factor.
-                FeatureVector observedFeats = ex.getFeatureVector(a);
-                
-                // Compute the expected feature counts for this factor.
-                FeatureVector expectedFeats = new FeatureVector();
-                Factor factorMarginal = inferencer.getMarginalsForFactorId(a);
-                for (int c=0; c<factorMarginal.getVars().getNumConfigs(); c++) {
-                    // Get the log-probability of the c'th configuration for this factor.
-                    // TODO: should factors just store probabilities?
-                    double logProb = factorMarginal.getValue(c);
-                    double prob = Utilities.exp(logProb);
-                    // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                    FeatureVector tmpFeats = ex.getFeatureVector(a, c); //TODO:sGivenPredictedAndHidden(a, c);
-                    // Scale the feature counts by the marginal probability of the c'th configuration.
-                    tmpFeats.scale(prob);
-                    // TODO: internally this add() will be very slow...we could speed it up if needed.
-                    expectedFeats.add(tmpFeats);
-                }
+            // Get the "observed" feature counts for this factor, by summing over the latent variables.
+            FeatureVector observedFeats = calcExpectedFeatureCounts(ex.getFgLat(params), ex.getFeatCacheLat());
+        
+            // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
+            FeatureVector expectedFeats = calcExpectedFeatureCounts(ex.getFgLatPred(params), ex.getFeatCacheLatPred());
 
-                // Update the gradient for each feature.
-                for (IntDoubleEntry entry : observedFeats.getElementwiseDiff(expectedFeats)) {
-                    gradient[entry.index()] += entry.get();
+            // Update the gradient for each feature.
+            for (IntDoubleEntry entry : observedFeats.getElementwiseDiff(expectedFeats)) {
+                gradient[entry.index()] += entry.get();
+            }
+        }
+
+        /** Computes the expected feature counts for a factor graph. */
+        private FeatureVector calcExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache) {            
+            // Run inference to compute the marginals for each factor.
+            FgInferencer inferencer = getInferencer(fg);
+            inferencer.run();
+            return calcExpectedFeatureCounts(fg, featCache, inferencer);
+        }
+        
+        /** 
+         * Computes the expected feature counts for a factor graph.
+         *  
+         * @param factorId The id of the factor.
+         * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
+         * @param inferencer The inferencer for a clamped factor graph, which has already been run.
+         * @return The feature vector.
+         */
+        private FeatureVector calcExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer) {            
+            FeatureVector expectedFeats = new FeatureVector();
+            
+            // For each factor...
+            for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {                  
+                Factor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
+                
+                int numConfigs = factorMarginal.getVars().calcNumConfigs();
+                if (numConfigs == 0) {
+                    // If there are no variables in this factor, we still need to get the cached features.
+                    expectedFeats.add(featCache.getFeatureVector(factorId, 0));
+                } else {
+                    for (int c=0; c<numConfigs; c++) {       
+                        // Get the log-probability of the c'th configuration for this factor.
+                        // TODO: should factors just store probabilities?
+                        double logProb = factorMarginal.getValue(c);
+                        double prob = Utilities.exp(logProb);
+                        // Get the feature counts when they are clamped to the c'th configuration for this factor.
+                        FeatureVector tmpFeats = new FeatureVector(featCache.getFeatureVector(factorId, c));
+                        // Scale the feature counts by the marginal probability of the c'th configuration.
+                        tmpFeats.scale(prob);
+                        expectedFeats.add(tmpFeats);
+                    }
                 }
             }
+            return expectedFeats;
         }
         
         /**
@@ -121,7 +153,13 @@ public class CrfTrainer {
         public int getNumDimensions() {
             return model.getNumParams();
         }
-        
+
+        private FgInferencer getInferencer(FactorGraph fg) {
+            // TODO: factor out these BeliefPropagation options.
+            BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
+            FgInferencer infForExpFeats = new BeliefPropagation(prm);
+            return infForExpFeats;
+        }
     }
     
     private FgModel model;

@@ -11,6 +11,42 @@ import edu.jhu.gm.Var.VarType;
 public class VarConfigTest {
 
     @Test
+    public void testGetState() {
+
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
+        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        
+        VarConfig config = new VarConfig();
+        config.put(w0, 1);
+        config.put(w1, 4);
+        config.put(w2, 0);
+        
+        assertEquals(1, config.getState(w0));
+        assertEquals(4, config.getState(w1));
+        assertEquals(0, config.getState(w2));
+    }
+    
+    @Test
+    public void testGetIntersection() {
+
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
+        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        
+        VarConfig config = new VarConfig();
+        config.put(w0, 1);
+        config.put(w1, 4);
+        config.put(w2, 0);
+        
+        VarConfig inter = config.getIntersection(new VarSet(w1, w2));
+        
+        assertEquals(2, inter.size());
+        assertEquals(4, inter.getState(w1));
+        assertEquals(0, inter.getState(w2));
+    }
+    
+    @Test
     public void testGetConfigIndex() {
 
         Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
@@ -70,6 +106,6 @@ public class VarConfigTest {
         config.put(w1, 4);
         config.put(w2, 2);
         
-        assertEquals(config.getVars().getNumConfigs()-1, config.getConfigIndex());
+        assertEquals(config.getVars().calcNumConfigs()-1, config.getConfigIndex());
     }
 }

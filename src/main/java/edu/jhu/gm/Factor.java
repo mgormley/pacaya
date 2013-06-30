@@ -29,11 +29,6 @@ public class Factor {
      * (normalized or unormalized), in the real or log domain.
      */
     private double[] values;
-    /**
-     * The id of the node corresponding to this factor. This is primarily used for fast lookups
-     * of factors in a factor graph.
-     */
-    private int nodeId;
     
     /** Constructs a factor initializing the values to 0.0. */
     public Factor(VarSet vars) {
@@ -47,10 +42,9 @@ public class Factor {
      */
     public Factor(VarSet vars, double initialValue) {
         this.vars = vars;
-        int numConfigs = vars.getNumConfigs();
+        int numConfigs = vars.calcNumConfigs();
         this.values = new double[numConfigs];
         Arrays.fill(values, initialValue);
-        this.nodeId = UNINITIALIZED_NODE_ID;
     }
     
     /** Copy constructor. */
@@ -59,7 +53,6 @@ public class Factor {
         this.values = Utilities.copyOf(f.values);
         // We don't want to copy the node id since it uniquely refers to the
         // node of the input factor.
-        this.nodeId = UNINITIALIZED_NODE_ID;
     }
 
     /**
@@ -113,6 +106,31 @@ public class Factor {
         }
         
         return marg;
+    }
+    
+    public Factor getClamped(VarConfig clmpVarConfig) {
+        VarSet clmpVars = clmpVarConfig.getVars();
+        VarSet unclmpVars = new VarSet(this.vars);
+        unclmpVars.removeAll(clmpVars); 
+
+        Factor clmp = new Factor(unclmpVars);
+        IntIter iter = unclmpVars.getConfigIter(this.vars);
+        
+        int numEqual = 0;
+        if (clmp.values.length > 0) {
+            int numConfigs = vars.calcNumConfigs();
+            for (int c=0; c<numConfigs; c++) {
+                VarConfig curClmpSubset = this.vars.getVarConfig(c).getSubset(clmpVars);
+                assert curClmpSubset.size() == clmpVarConfig.size();
+                int uc = iter.next();
+                if (clmpVarConfig.equals(curClmpSubset)) {
+                    clmp.values[uc] = this.values[c];
+                    numEqual++;
+                }
+            }
+        }
+        assert numEqual == unclmpVars.calcNumConfigs() : "numEqual=" + numEqual;
+        return clmp;
     }
     
     /** Gets the variables associated with this factor. */
@@ -247,7 +265,7 @@ public class Factor {
         } else if (f1.vars.isSuperset(f2.vars)) {
             // Special case where f1 is a superset of f2.
             IntIter iter2 = f2.vars.getConfigIter(f1.vars);
-            for (int c = 0; c < f1.vars.getNumConfigs(); c++) {
+            for (int c = 0; c < f1.vars.calcNumConfigs(); c++) {
                 f1.values[c] = op.call(f1.values[c], f2.values[iter2.next()]);
             }
             assert(!iter2.hasNext());
@@ -258,7 +276,7 @@ public class Factor {
             Factor out = new Factor(union);
             IntIter iter1 = f1.vars.getConfigIter(union);
             IntIter iter2 = f2.vars.getConfigIter(union);
-            for (int c = 0; c < out.vars.getNumConfigs(); c++) {
+            for (int c = 0; c < out.vars.calcNumConfigs(); c++) {
                 out.values[c] = op.call(f1.values[iter1.next()], f2.values[iter2.next()]);
             }
             assert(!iter1.hasNext());
@@ -284,12 +302,12 @@ public class Factor {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Factor [nodeId=" + nodeId + ", \n");
+        sb.append("Factor [\n");
         for (Var var : vars) {
             sb.append(String.format("%5s", var.getName()));
         }
         sb.append(String.format("  |  %s\n", "value"));
-        for (int c=0; c<vars.getNumConfigs(); c++) {
+        for (int c=0; c<vars.calcNumConfigs(); c++) {
             int[] states = vars.getVarConfigAsArray(c);
             for (int state : states) {
                 // TODO: use string names for states if available.
@@ -306,29 +324,9 @@ public class Factor {
         return values;
     }
     
-    /**
-     * Gets the id of the node corresponding to this variable.
-     * 
-     * For INTERNAL USE ONLY.
-     */
-    int getNodeId() {
-        return nodeId;
-    }
-
-    /**
-     * Sets the id of the node corresponding to this variable.
-     *      
-     * For INTERNAL USE ONLY.
-     * 
-     * @throws IllegalStateException if the node id for this variable was already set. 
-     */
-    void setNodeId(int id) {
-        if (this.nodeId != UNINITIALIZED_NODE_ID) {
-            throw new IllegalStateException("The id for this variable was already set: " + id);
-        }
-        this.nodeId = id;
-    }
-
+    /* Note that Factors do not implement the standard hashCode() or equals() methods. */
+    
+    /** Special equals with a tolerance. */
     public boolean equals(Factor other, double delta) {
         if (this == other)
             return true;
@@ -346,8 +344,6 @@ public class Factor {
         } else if (!vars.equals(other.vars))
             return false;
         return true;
-    }
-    
-    
+    }    
     
 }

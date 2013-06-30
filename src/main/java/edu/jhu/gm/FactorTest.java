@@ -77,6 +77,37 @@ public class FactorTest {
         System.out.println(marg);
         JUnitUtils.assertArrayEquals(new double[]{.6, .4}, marg.getValues(), 1e-13);
     }
+
+    @Test
+    public void testGetClamped() {
+        Var v0 = VarSetTest.getVar(0, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
+        VarSet vars1 = new VarSet();
+        vars1.add(v0);
+        vars1.add(v1);
+        Factor f1 = new Factor(vars1);
+        f1.setValue(0, 0);
+        f1.setValue(1, 1);
+        f1.setValue(2, 2);
+        f1.setValue(3, 3);
+        f1.setValue(4, 4);
+        f1.setValue(5, 5);
+        
+        System.out.println(f1);
+        
+        VarConfig vc0 = new VarConfig();
+        vc0.put(v0, 0);
+        Factor clmp = f1.getClamped(vc0);
+        System.out.println(clmp);
+        JUnitUtils.assertArrayEquals(new double[]{0, 2, 4}, clmp.getValues(), 1e-13);
+        
+
+        VarConfig vc1 = new VarConfig();
+        vc1.put(v1, 1);    
+        clmp = f1.getClamped(vc1);
+        System.out.println(clmp);
+        JUnitUtils.assertArrayEquals(new double[]{2, 3}, clmp.getValues(), 1e-13);
+    }
     
 
     @Test

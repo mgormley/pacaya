@@ -3,19 +3,29 @@ package edu.jhu.gm;
 import java.util.HashMap;
 
 /**
- * A configuration of a set of variables. 
+ * A configuration of (i.e. assignment to) a set of variables. 
  * 
  * @author mgormley
  *
  */
+// TODO: Maybe rename this to VarsAssignment.
 public class VarConfig {
 
     private HashMap<Var,Integer> config;
     private VarSet vars;
     
+    /** Constructs an empty variable configuration. */
     public VarConfig() {
         config = new HashMap<Var,Integer>();
         vars = new VarSet();
+    }
+
+    /** Constructs a variable configuration by adding each of the configs in order. */
+    public VarConfig(VarConfig... configs) {
+        this();
+        for (VarConfig other : configs) {
+            put(other);
+        }
     }
 
     /**
@@ -33,6 +43,13 @@ public class VarConfig {
             numStatesProd *= var.getNumStates();
         }
         return configIndex;
+    }
+
+
+    /** Sets all variable assignments in other. */
+    public void put(VarConfig other) { 
+        this.config.putAll(other.config);
+        this.vars.addAll(other.vars);
     }
     
     /** Sets the state value to stateName for the given variable, adding it if necessary. */
@@ -52,8 +69,34 @@ public class VarConfig {
         return config.get(var);
     }
 
+    /** Gets the variable set. */
     public VarSet getVars() {
         return vars;
+    }
+
+    /** Gets the number of variables in this configuration. */
+    public int size() {
+        return vars.size();
+    }
+    
+    /** Gets a new variable configuration that contains only a subset of the variables. */
+    public VarConfig getSubset(VarSet subsetVars) {
+        if (!vars.isSuperset(subsetVars)) {
+            throw new IllegalStateException("This config does not contain all the given variables.");
+        }
+        return getIntersection(subsetVars);
+    }
+
+    /** Gets a new variable configuration that keeps only variables in otherVars. */
+    public VarConfig getIntersection(Iterable<Var> otherVars) {
+        VarConfig subset = new VarConfig();
+        for (Var v : otherVars) {
+            Integer state = config.get(v);
+            if (state != null) {
+                subset.put(v, state);
+            }
+        }
+        return subset;
     }
 
     @Override
@@ -77,14 +120,35 @@ public class VarConfig {
         if (config == null) {
             if (other.config != null)
                 return false;
-        } else if (!config.equals(other.config))
-            return false;
+        }
         if (vars == null) {
             if (other.vars != null)
                 return false;
-        } else if (!vars.equals(other.vars))
+        }
+        
+        if (!config.equals(other.config))
+            return false;
+        if (!vars.equals(other.vars))
             return false;
         return true;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder configSb = new StringBuilder();
+        int i=0;
+        for (Var v : vars) {
+            if (i > 0) {
+                configSb.append(", ");
+            }
+            configSb.append(v.getName());
+            configSb.append("=");
+            configSb.append(getState(v));
+            i++;
+        }
+        return "VarConfig [config=[" + configSb.toString() + "], vars=" + vars + "]";
+    }
+    
+    
         
 }

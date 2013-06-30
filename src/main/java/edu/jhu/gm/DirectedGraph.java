@@ -11,6 +11,9 @@ import java.util.List;
  */
 public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> {
 
+    // Due to a compiler error in Java 1.7, the fields in Node/Edge are package
+    // private instead of private.
+    
     public class Node {
         ArrayList<E> inEdges;
         ArrayList<E> outEdges;

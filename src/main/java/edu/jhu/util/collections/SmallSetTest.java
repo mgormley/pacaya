@@ -1,4 +1,4 @@
-package edu.jhu.gm;
+package edu.jhu.util.collections;
 
 import static org.junit.Assert.*;
 

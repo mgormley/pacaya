@@ -23,7 +23,7 @@ public class VarSetTest {
         vars.add(v1);
         vars.add(v2);
         
-        assertEquals(2*3*5, vars.getNumConfigs());
+        assertEquals(2*3*5, vars.calcNumConfigs());
     }
     
     @Test
@@ -95,7 +95,7 @@ public class VarSetTest {
         for (int i=0; i<numStates; i++) {
             stateNames.add("state" + i);
         }
-        return new Var(VarType.OBSERVED, numStates, "var"+id, stateNames, id);
+        return new Var(VarType.OBSERVED, numStates, "var"+id, stateNames);
     }
     
 }
