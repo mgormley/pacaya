@@ -14,9 +14,6 @@ import edu.jhu.util.Alphabet;
 /**
  * Reads a brown clusters file and tags a sentence, by replacing each word with
  * its corresponding cluster.
- * 
- * @author mgormley
- * 
  */
 public class BrownClusterTagger {
 
