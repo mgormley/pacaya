@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import edu.jhu.data.conll.CoNLL09FileReader;
+import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -48,6 +50,14 @@ public class BrownClusterTagger {
             map.put(word, cutCluster);
         }
     }
+
+    public String getCluster(String word) {
+        String cluster = map.get(word);
+        if (cluster == null) {
+            cluster = "NONE";
+        }
+        return map.get(word);
+    }
     
     public SentenceCollection getTagged(SentenceCollection sents) {
         SentenceCollection newSents = new SentenceCollection(alphabet);
@@ -61,11 +71,17 @@ public class BrownClusterTagger {
         int[] labelIds = new int[sent.size()];
         int i=0; 
         for (Label l : sent) {
-            String cluster = map.get(l.getLabel());
-            if (cluster == null) {
-                cluster = "NONE";
-            }            
-            labelIds[i] = alphabet.lookupIndex(new TaggedWord(l.getLabel(), cluster));
+            String word;
+            if (l instanceof Word) {
+                word = ((Word)l).getLabel();
+            } else if (l instanceof TaggedWord) {
+                word = ((TaggedWord)l).getWord();
+            } else {
+                throw new RuntimeException("Unable to tag labels of type: " + l.getClass());
+            }
+
+            String cluster = getCluster(word);
+            labelIds[i] = alphabet.lookupIndex(new TaggedWord(word, cluster));
             i++;
         }
         return new Sentence(alphabet, labelIds);        

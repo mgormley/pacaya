@@ -345,5 +345,61 @@ public class CoNLL09Token {
     public void setPhead(int phead) {
         this.phead = phead;
     }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setForm(String form) {
+        this.form = form;
+    }
+
+    public void setLemma(String lemma) {
+        this.lemma = lemma;
+    }
+
+    public void setPlemma(String plemma) {
+        this.plemma = plemma;
+    }
+
+    public void setPos(String pos) {
+        this.pos = pos;
+    }
+
+    public void setPpos(String ppos) {
+        this.ppos = ppos;
+    }
+
+    public void setFeat(List<String> feat) {
+        this.feat = feat;
+    }
+
+    public void setPfeat(List<String> pfeat) {
+        this.pfeat = pfeat;
+    }
+
+    public void setHead(int head) {
+        this.head = head;
+    }
+
+    public void setDeprel(String deprel) {
+        this.deprel = deprel;
+    }
+
+    public void setPdeprel(String pdeprel) {
+        this.pdeprel = pdeprel;
+    }
+
+    public void setFillpred(boolean fillpred) {
+        this.fillpred = fillpred;
+    }
+
+    public void setPred(String pred) {
+        this.pred = pred;
+    }
+
+    public void setApreds(List<String> apreds) {
+        this.apreds = apreds;
+    }
     
 }
