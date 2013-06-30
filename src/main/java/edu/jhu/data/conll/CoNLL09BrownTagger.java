@@ -28,6 +28,8 @@ public class CoNLL09BrownTagger {
         for (CoNLL09Sentence sent : reader) {
             for (CoNLL09Token tok : sent) {
                 String word = tok.getForm();
+                // To Lower case...
+                word = word.toLowerCase();
                 String cluster = tagger.getCluster(word);
                 tok.setPos(cluster);
                 tok.setPpos(cluster);
