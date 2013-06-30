@@ -51,12 +51,13 @@ public class BrownClusterTagger {
         }
     }
 
+    /** Lowercases the input word, and looks up its cluster. */
     public String getCluster(String word) {
         String cluster = map.get(word);
         if (cluster == null) {
             cluster = "NONE";
         }
-        return map.get(word);
+        return cluster;
     }
     
     public SentenceCollection getTagged(SentenceCollection sents) {
