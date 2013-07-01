@@ -1,7 +1,11 @@
 package edu.jhu.parse.cky;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
+import org.apache.log4j.Logger;
+
+import edu.jhu.PipelineRunner;
 import edu.jhu.data.Label;
 import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
@@ -13,7 +17,9 @@ import edu.jhu.util.Alphabet;
  *
  */
 public class CnfGrammar {
-
+    
+    private static final Logger log = Logger.getLogger(CnfGrammar.class);
+    
     private int rootSymbol;
     private ArrayList<Rule> allRules;
 
@@ -45,12 +51,15 @@ public class CnfGrammar {
         binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
         binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
 
+        log.info("Num lexical types: " + lexAlphabet.size());
+        log.info("Num nonterminals: " + ntAlphabet.size());
+        
         fill(lexRulesForChild);
         fill(unaryRulesForChild);
         fill(unaryRulesForParent);
         for (int i=0; i<binaryRulesForChildren.length; i++) {
             for (int j=0; j<binaryRulesForChildren[i].length; j++) {
-                binaryRulesForChildren[i][j] = new ArrayList<Rule>();
+                binaryRulesForChildren[i][j] = new ArrayList<Rule>(0);
             }
         }
         fill(binaryRulesWithLeftChild);
