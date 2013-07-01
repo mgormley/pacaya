@@ -1,6 +1,7 @@
 package edu.jhu.gm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,7 +38,7 @@ public class Var implements Comparable<Var> {
     private static final AtomicInteger instanceCounter = new AtomicInteger();
     /** An id that is unique to this instance of this class. */
     private int instanceId = instanceCounter.incrementAndGet();
-    
+        
     public Var(VarType type, int numStates, String name, List<String> stateNames) {
         this.type = type;
         this.numStates = numStates;

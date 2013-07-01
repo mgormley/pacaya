@@ -109,6 +109,9 @@ public class Factor {
     }
     
     public Factor getClamped(VarConfig clmpVarConfig) {
+        if (clmpVarConfig.size() == 0) {
+            return new Factor(this);
+        }
         VarSet clmpVars = clmpVarConfig.getVars();
         VarSet unclmpVars = new VarSet(this.vars);
         unclmpVars.removeAll(clmpVars); 

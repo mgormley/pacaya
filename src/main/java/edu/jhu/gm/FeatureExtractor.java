@@ -1,5 +1,8 @@
 package edu.jhu.gm;
 
+import java.util.List;
+
+
 public interface FeatureExtractor {
 
     /**

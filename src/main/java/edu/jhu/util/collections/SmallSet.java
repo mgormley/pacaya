@@ -40,6 +40,7 @@ public class SmallSet<E extends Comparable<E>> implements Set<E> {
         Sort.mergeSortedLists(set1.list, set2.list, this.list);
     }
         
+    // TODO: containsAll should call this and it should become private.
     public boolean isSuperset(SmallSet<E> other) {
         if (this.list.size() < other.list.size()) {
             return false;

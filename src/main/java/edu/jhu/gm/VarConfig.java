@@ -63,6 +63,11 @@ public class VarConfig {
         config.put(var, state);
         vars.add(var);
     }
+
+    /** Gets the state name (in this config) for a given variable. */
+    public String getStateName(Var var) {
+        return var.getStateNames().get(config.get(var));
+    }
     
     /** Gets the state (in this config) for a given variable. */
     public int getState(Var var) {

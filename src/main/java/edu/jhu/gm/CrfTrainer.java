@@ -3,8 +3,6 @@ package edu.jhu.gm;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.optimize.Function;
 import edu.jhu.optimize.Maximizer;
-import edu.jhu.optimize.SGD;
-import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.vector.IntDoubleEntry;
 
@@ -21,11 +19,11 @@ public class CrfTrainer {
     // variables for use by SGD.
     public static class CrfObjective implements Function {
 
-        private FgModel model; // TODO: what is this doing?
+        private int numParams;
         private FgExamples data;
 
-        public CrfObjective(FgModel model, FgExamples data) {
-            this.model = model;
+        public CrfObjective(int numParams, FgExamples data) {
+            this.numParams = numParams;
             this.data = data;
         }
         
@@ -151,7 +149,7 @@ public class CrfTrainer {
          */
         @Override
         public int getNumDimensions() {
-            return model.getNumParams();
+            return numParams;
         }
 
         private FgInferencer getInferencer(FactorGraph fg) {
@@ -161,21 +159,31 @@ public class CrfTrainer {
             return infForExpFeats;
         }
     }
+
+    public static class CrfTrainerPrm {
+        
+    }
     
     private FgModel model;
     private FgExamples data;
     
     private Maximizer maximizer;
     private CrfObjective objective;
+        
+    public CrfTrainer(FgModel model, FgExamples data, Maximizer maximizer) {
+        this.model = model;
+        this.maximizer = maximizer;
+        this.data = data;
+        objective = new CrfObjective(model.getNumParams(), data);
+    }
     
     // TODO: finish this method.
-    public void train() {
-        SGDPrm sgdPrm = new SGDPrm();
-        maximizer = new SGD(sgdPrm);
+    public FgModel train() {
         double[] initial = new double[model.getNumParams()];
         // TODO: how to initialize the model parameters?
         double[] params = maximizer.maximize(objective, initial);
-        
+        model.setParams(params);
+        return model;
     }
     
 
