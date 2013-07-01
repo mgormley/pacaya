@@ -2,10 +2,10 @@ package edu.jhu.parse.cky;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.PipelineRunner;
 import edu.jhu.data.Label;
 import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
@@ -26,7 +26,7 @@ public class CnfGrammar {
     private ArrayList<Rule>[] lexRulesForChild;
     private ArrayList<Rule>[] unaryRulesForChild;
     private ArrayList<Rule>[] unaryRulesForParent; // Used by the outside algorithm.
-    private ArrayList<Rule>[][] binaryRulesForChildren;
+    private List<Rule>[][] binaryRulesForChildren;
     private ArrayList<Rule>[] binaryRulesWithLeftChild;
     private ArrayList<Rule>[] binaryRulesWithRightChild;
     
@@ -59,7 +59,7 @@ public class CnfGrammar {
         fill(unaryRulesForParent);
         for (int i=0; i<binaryRulesForChildren.length; i++) {
             for (int j=0; j<binaryRulesForChildren[i].length; j++) {
-                binaryRulesForChildren[i][j] = new ArrayList<Rule>(0);
+                binaryRulesForChildren[i][j] = Collections.emptyList();
             }
         }
         fill(binaryRulesWithLeftChild);
@@ -72,6 +72,9 @@ public class CnfGrammar {
                 unaryRulesForChild[r.getLeftChild()].add(r);
                 unaryRulesForParent[r.getParent()].add(r);
             } else {
+                if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].size() == 0) {
+                    binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>(0);
+                }
                 binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
                         .add(r);
                 binaryRulesWithLeftChild[r.getLeftChild()].add(r);
@@ -92,7 +95,7 @@ public class CnfGrammar {
         return b;
     }
 
-    private static Rule[][][] getAsArrays(ArrayList<Rule>[][] a) {
+    private static Rule[][][] getAsArrays(List<Rule>[][] a) {
         Rule[][][] b = new Rule[a.length][a[0].length][];
         for (int i=0; i<a.length; i++) {
             for (int j=0; j<a[i].length; j++) {
