@@ -33,8 +33,8 @@ public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 		}
 	}
 
-	public int getColumnCount(int k) {
-		return columnCounts.get(k);
+	public int getColumnCount(int col) {
+		return columnCounts.get(col);
 	}
 
 	public int getNumRows() {
@@ -52,36 +52,36 @@ public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 	public boolean[][] getMatrix() {
 		boolean[][] bmat = new boolean[numRows][curMaxCol];
 		for (int i = 0; i < bmat.length; i++) {
-			for (int k = 0; k < bmat[i].length; k++) {
-				bmat[i][k] = (matrix[i].get(k) == 1.0);
+			for (int col = 0; col < bmat[i].length; col++) {
+				bmat[i][col] = (matrix[i].get(col) == 1.0);
 			}
 		}
 		return bmat;
 	}
 
-	public boolean decrement(int row, int k) {
-		checkIndices(row, k);
+	public boolean decrement(int row, int col) {
+		checkIndices(row, col);
 
 		// TODO: Speedup: Change SparseVector to return old value from set
-		// this saves us the get(k).
-		if (matrix[row].get(k) == 1.0) {
-			columnCounts.decrement(k);
-			if (columnCounts.get(k) == 0) {
-				Integer kInteger = Integer.valueOf(k);
-				inactiveCols.addFirst(kInteger);
+		// this saves us the get(col).
+		if (matrix[row].get(col) == 1.0) {
+			columnCounts.decrement(col);
+			if (columnCounts.get(col) == 0) {
+				Integer colInteger = Integer.valueOf(col);
+				inactiveCols.addFirst(colInteger);
 			}
-			matrix[row].set(k, 0.0);
+			matrix[row].set(col, 0.0);
 			return true;
 		}
 		return false;
 	}
 
-	public boolean increment(int row, int k) {
-		checkIndices(row, k);
+	public boolean increment(int row, int col) {
+		checkIndices(row, col);
 
-		if (matrix[row].get(k) == 0.0) {
-			columnCounts.increment(k);
-			matrix[row].set(k, 1.0);
+		if (matrix[row].get(col) == 0.0) {
+			columnCounts.increment(col);
+			matrix[row].set(col, 1.0);
 			return false;
 		}
 		return true;
@@ -110,15 +110,15 @@ public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 		return k;
 	}
 
-	private void checkIndices(int row, int k) {
+	private void checkIndices(int row, int col) {
 		checkRow(row);
-		checkColumn(k);
+		checkColumn(col);
 	}
 
-	private void checkColumn(int k) {
-		if (k > curMaxCol) {
+	private void checkColumn(int col) {
+		if (col > curMaxCol) {
 			throw new IllegalArgumentException(
-					"Cannot change an inactive column: " + k);
+					"Cannot change an inactive column: " + col);
 		}
 	}
 

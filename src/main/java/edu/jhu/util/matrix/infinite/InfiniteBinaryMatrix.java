@@ -2,21 +2,21 @@ package edu.jhu.util.matrix.infinite;
 
 public interface InfiniteBinaryMatrix {
 
-    public int getColumnCount(int k);
+    public int getColumnCount(int col);
 
     public int getNumRows();
 
     public int getCurMaxColumn();
 
     /**
-     * @return Previous value of Z[row][k]
+     * @return Previous value of Z[row][col]
      */
-    public boolean decrement(int row, int k);
+    public boolean decrement(int row, int col);
 
     /**
-     * @return Previous value of Z[row][k]
+     * @return Previous value of Z[row][col]
      */
-    public boolean increment(int row, int k);
+    public boolean increment(int row, int col);
 
     public void incrementInactives(int row, int numInactives);
 

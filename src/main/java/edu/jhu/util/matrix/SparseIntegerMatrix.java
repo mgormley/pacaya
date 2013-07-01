@@ -38,8 +38,8 @@ public class SparseIntegerMatrix implements IntegerMatrix {
         }
     }
 
-	public int get(int row, int k) {
-		return matrix[row].get(k);
+	public int get(int row, int col) {
+		return matrix[row].get(col);
 	}
 
 	public int getNumRows() {
@@ -50,22 +50,22 @@ public class SparseIntegerMatrix implements IntegerMatrix {
         return numCols;
     }
 
-	public void increment(int row, int k) {
-	    matrix[row].add(k, 1);
+	public void increment(int row, int col) {
+	    matrix[row].add(col, 1);
 	}
 
-    public void decrement(int row, int k) {
-        matrix[row].add(k, -1);
-        assert(matrix[row].get(k) >= 0);
+    public void decrement(int row, int col) {
+        matrix[row].add(col, -1);
+        assert(matrix[row].get(col) >= 0);
     }
 
-	public void increment(int row, int k, int incr) {
-        matrix[row].add(k, incr);
+	public void increment(int row, int col, int incr) {
+        matrix[row].add(col, incr);
 	}
 
-    public void decrement(int row, int k, int decr) {
-        matrix[row].add(k, -decr);
-        assert(matrix[row].get(k) >= 0);
+    public void decrement(int row, int col, int decr) {
+        matrix[row].add(col, -decr);
+        assert(matrix[row].get(col) >= 0);
     }
     
     public Iterable<IntIntEntry> getRowEntries(int row) {

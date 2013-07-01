@@ -32,8 +32,8 @@ public class BitSetInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
         }
     }
 
-    public int getColumnCount(int k) {
-        return columnCounts.get(k);
+    public int getColumnCount(int col) {
+        return columnCounts.get(col);
     }
 
     public int getNumRows() {
@@ -58,27 +58,27 @@ public class BitSetInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
         return bmat;
     }
 
-    public boolean decrement(int row, int k) {
-        checkIndices(row, k);
+    public boolean decrement(int row, int col) {
+        checkIndices(row, col);
 
-        if (matrix[row].get(k)) {
-            columnCounts.decrement(k);
-            if (columnCounts.get(k) == 0) {
-                Integer kInteger = Integer.valueOf(k);
+        if (matrix[row].get(col)) {
+            columnCounts.decrement(col);
+            if (columnCounts.get(col) == 0) {
+                Integer kInteger = Integer.valueOf(col);
                 inactiveCols.addFirst(kInteger);
             }
-            matrix[row].set(k, false);
+            matrix[row].set(col, false);
             return true;
         }
         return false;
     }
 
-    public boolean increment(int row, int k) {
-        checkIndices(row, k);
+    public boolean increment(int row, int col) {
+        checkIndices(row, col);
 
-        if (!matrix[row].get(k)) {
-            columnCounts.increment(k);
-            matrix[row].set(k, true);
+        if (!matrix[row].get(col)) {
+            columnCounts.increment(col);
+            matrix[row].set(col, true);
             return false;
         }
         return true;
@@ -107,14 +107,14 @@ public class BitSetInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
     	return k;
     }
 
-    private void checkIndices(int row, int k) {
+    private void checkIndices(int row, int col) {
         checkRow(row);
-        checkColumn(k);
+        checkColumn(col);
     }
 
-    private void checkColumn(int k) {
-        if (k >= curMaxCol) {
-            throw new IllegalArgumentException("Cannot change an inactive column: " + k);
+    private void checkColumn(int col) {
+        if (col >= curMaxCol) {
+            throw new IllegalArgumentException("Cannot change an inactive column: " + col);
         }
     }
 

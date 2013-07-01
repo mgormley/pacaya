@@ -21,8 +21,8 @@ public class DenseBinaryMatrix implements BinaryMatrix {
         columnCounts = new int[numCols];
     }
 
-    public int getColumnCount(int k) {
-        return columnCounts[k];
+    public int getColumnCount(int col) {
+        return columnCounts[col];
     }
 
     public int getNumRows() {
@@ -41,10 +41,10 @@ public class DenseBinaryMatrix implements BinaryMatrix {
         return matrix;
     }
 
-    public boolean decrement(int row, int k) {
-        if (matrix[row][k]) {
-            columnCounts[k]--;
-            matrix[row][k] = false;
+    public boolean decrement(int row, int col) {
+        if (matrix[row][col]) {
+            columnCounts[col]--;
+            matrix[row][col] = false;
             return true;
         }
         return false;
@@ -59,8 +59,8 @@ public class DenseBinaryMatrix implements BinaryMatrix {
         return true;
     }
 
-	public boolean get(int row, int k) {
-		return matrix[row][k];
+	public boolean get(int row, int col) {
+		return matrix[row][col];
 	}
 	
 	@Override

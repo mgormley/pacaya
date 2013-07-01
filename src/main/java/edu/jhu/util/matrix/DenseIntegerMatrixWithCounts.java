@@ -29,9 +29,9 @@ public class DenseIntegerMatrixWithCounts implements IntegerMatrix {
 	    rowCounts = Utilities.copyOf(dim.rowCounts, dim.rowCounts.length);
     }
 	
-	public void set(IntegerMatrix im) {
-        if (im instanceof DenseIntegerMatrixWithCounts) {
-            DenseIntegerMatrixWithCounts dim = (DenseIntegerMatrixWithCounts)im;
+	public void set(IntegerMatrix other) {
+        if (other instanceof DenseIntegerMatrixWithCounts) {
+            DenseIntegerMatrixWithCounts dim = (DenseIntegerMatrixWithCounts)other;
             assert(numRows == dim.numRows);
             assert(numCols == dim.numCols);
             Utilities.copy(dim.colCounts, colCounts);
@@ -40,24 +40,24 @@ public class DenseIntegerMatrixWithCounts implements IntegerMatrix {
                 Utilities.copy(dim.matrix[row], matrix[row]);
             }
         } else {
-            throw new IllegalArgumentException("unhandled type: " + im.getClass().getCanonicalName());
+            throw new IllegalArgumentException("unhandled type: " + other.getClass().getCanonicalName());
         }
     }
 
-    public void decrement(int row, int k) {
-		matrix[row][k]--;
-		colCounts[k]--;
+    public void decrement(int row, int col) {
+		matrix[row][col]--;
+		colCounts[col]--;
 		rowCounts[row]--;
-		assert(matrix[row][k] >= 0);
+		assert(matrix[row][col] >= 0);
 	    assert(rowCounts[row] >= 0);
 	}
 
-	public int get(int row, int k) {
-		return matrix[row][k];
+	public int get(int row, int col) {
+		return matrix[row][col];
 	}
 
-    public int getColumnCount(int k) {
-        return colCounts[k];
+    public int getColumnCount(int col) {
+        return colCounts[col];
     }
 
     public int getRowCount(int row) {

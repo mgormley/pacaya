@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public interface BinaryMatrix extends Serializable {
 
-    public int getColumnCount(int k);
+    public int getColumnCount(int col);
     
     public int getRowCount(int row);
 
@@ -13,18 +13,18 @@ public interface BinaryMatrix extends Serializable {
     public int getNumColumns();
 
     /**
-     * @return Previous value of Z[row][k]
+     * @return Previous value of matrix[row][col]
      */
-    public boolean decrement(int row, int k);
+    public boolean decrement(int row, int col);
 
     /**
-     * @return Previous value of Z[row][k]
+     * @return Previous value of matrix[row][col]
      */
-    public boolean increment(int row, int k);
+    public boolean increment(int row, int col);
 
     public boolean[][] getMatrix();
 
-	public boolean get(int r, int k);
+	public boolean get(int row, int col);
 
     public void set(BinaryMatrix matrix);
     

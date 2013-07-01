@@ -38,13 +38,13 @@ public class DenseIntegerMatrix implements IntegerMatrix {
         }
     }
     
-    public void decrement(int row, int k) {
-		matrix[row][k]--;
-		assert(matrix[row][k] >= 0);
+    public void decrement(int row, int col) {
+		matrix[row][col]--;
+		assert(matrix[row][col] >= 0);
 	}
 
-	public int get(int row, int k) {
-		return matrix[row][k];
+	public int get(int row, int col) {
+		return matrix[row][col];
 	}
 
 	public int getNumRows() {
@@ -59,17 +59,17 @@ public class DenseIntegerMatrix implements IntegerMatrix {
         return matrix;
     }
     
-	public void increment(int row, int k) {
-		matrix[row][k]++;
+	public void increment(int row, int col) {
+		matrix[row][col]++;
 	}
 
-	public void decrement(int row, int k, int decr) {
-	    matrix[row][k] -= decr;
-	    assert(matrix[row][k] >= 0);
+	public void decrement(int row, int col, int decr) {
+	    matrix[row][col] -= decr;
+	    assert(matrix[row][col] >= 0);
 	}
 
-	public void increment(int row, int k, int incr) {
-	    matrix[row][k] += incr;
+	public void increment(int row, int col, int incr) {
+	    matrix[row][col] += incr;
 	}
 
     @Override

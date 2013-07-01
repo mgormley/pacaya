@@ -15,28 +15,28 @@ public class DenseInfiniteIntegerMatrix implements InfiniteIntegerMatrix {
 		}
 	}
 
-	public void decrement(int row, int k) {
-		rows[row].decrement(k);
+	public void decrement(int row, int col) {
+		rows[row].decrement(col);
 	}
 
-	public int get(int row, int k) {
-		return rows[row].get(k);
+	public int get(int row, int col) {
+		return rows[row].get(col);
 	}
 
 	public int getNumRows() {
 		return rows.length;
 	}
 
-	public void increment(int row, int k) {
-		rows[row].increment(k);
+	public void increment(int row, int col) {
+		rows[row].increment(col);
 	}
 
-	public void decrement(int row, int k, int decr) {
-		rows[row].decrement(k, decr);
+	public void decrement(int row, int col, int decr) {
+		rows[row].decrement(col, decr);
 	}
 
-	public void increment(int row, int k, int incr) {
-		rows[row].increment(k, incr);		
+	public void increment(int row, int col, int incr) {
+		rows[row].increment(col, incr);		
 	}
 
 }

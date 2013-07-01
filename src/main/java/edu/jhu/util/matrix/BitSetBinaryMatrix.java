@@ -66,8 +66,8 @@ public class BitSetBinaryMatrix implements BinaryMatrix {
         }
     }
 
-    public int getColumnCount(int k) {
-        return columnCounts[k];
+    public int getColumnCount(int col) {
+        return columnCounts[col];
     }
 
     public int getRowCount(int row) {
@@ -96,38 +96,38 @@ public class BitSetBinaryMatrix implements BinaryMatrix {
         return bmat;
     }
 
-    public boolean decrement(int row, int k) {
-        checkIndices(row, k);
+    public boolean decrement(int row, int col) {
+        checkIndices(row, col);
 
-        if (matrix[row].get(k)) {
-            columnCounts[k]--;
+        if (matrix[row].get(col)) {
+            columnCounts[col]--;
             rowCounts[row]--;
-            matrix[row].set(k, false);
+            matrix[row].set(col, false);
             return true;
         }
         return false;
     }
 
-    public boolean increment(int row, int k) {
-        checkIndices(row, k);
+    public boolean increment(int row, int col) {
+        checkIndices(row, col);
 
-        if (!matrix[row].get(k)) {
-            columnCounts[k]++;
+        if (!matrix[row].get(col)) {
+            columnCounts[col]++;
             rowCounts[row]++;
-            matrix[row].set(k, true);
+            matrix[row].set(col, true);
             return false;
         }
         return true;
     }
 
-    private void checkIndices(int row, int k) {
+    private void checkIndices(int row, int col) {
         checkRow(row);
-        checkColumn(k);
+        checkColumn(col);
     }
 
-    private void checkColumn(int k) {
-        if (k >= numCols) {
-            throw new IllegalArgumentException("Column exceeds numCols: " + k);
+    private void checkColumn(int col) {
+        if (col >= numCols) {
+            throw new IllegalArgumentException("Column exceeds numCols: " + col);
         }
     }
 
@@ -137,8 +137,8 @@ public class BitSetBinaryMatrix implements BinaryMatrix {
         }
     }
 
-    public boolean get(int row, int k) {
-        return matrix[row].get(k);
+    public boolean get(int row, int col) {
+        return matrix[row].get(col);
     }
 
     @Override
