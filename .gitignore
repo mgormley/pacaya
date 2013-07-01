@@ -1,0 +1,17 @@
+
+# /fig/
+/fig/*.synctex.gz
+/fig/*.bbl
+/fig/*.blg
+/fig/*.aux
+/fig/*.rel
+/fig/*.log
+/fig/*.toc
+/fig/*.out
+/fig/*.snm
+/fig/*.nav
+/fig/.Rhistory
+/fig/.DS_Store
+/fig/_region_.*
+/fig/_region_.tex
+/fig/_region_.pdf
