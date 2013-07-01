@@ -47,7 +47,7 @@ public class CnfGrammar {
         lexRulesForChild = new ArrayList[lexAlphabet.size()];
         unaryRulesForChild = new ArrayList[ntAlphabet.size()];
         unaryRulesForParent = new ArrayList[ntAlphabet.size()];
-        binaryRulesForChildren = new ArrayList[ntAlphabet.size()][ntAlphabet.size()];
+        // TODO: only optionally create this. binaryRulesForChildren = new List[ntAlphabet.size()][ntAlphabet.size()];
         binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
         binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
 
@@ -57,11 +57,11 @@ public class CnfGrammar {
         fill(lexRulesForChild);
         fill(unaryRulesForChild);
         fill(unaryRulesForParent);
-        for (int i=0; i<binaryRulesForChildren.length; i++) {
-            for (int j=0; j<binaryRulesForChildren[i].length; j++) {
-                binaryRulesForChildren[i][j] = Collections.emptyList();
-            }
-        }
+        // for (int i=0; i<binaryRulesForChildren.length; i++) {
+        //     for (int j=0; j<binaryRulesForChildren[i].length; j++) {
+        //         binaryRulesForChildren[i][j] = Collections.emptyList();
+        //     }
+        // }
         fill(binaryRulesWithLeftChild);
         fill(binaryRulesWithRightChild);
         
@@ -72,17 +72,17 @@ public class CnfGrammar {
                 unaryRulesForChild[r.getLeftChild()].add(r);
                 unaryRulesForParent[r.getParent()].add(r);
             } else {
-                if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].size() == 0) {
-                    binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>(0);
-                }
-                binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
-                        .add(r);
+                // if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].size() == 0) {
+                //     binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>(0);
+                // }
+                // binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
+                //         .add(r);
                 binaryRulesWithLeftChild[r.getLeftChild()].add(r);
                 binaryRulesWithRightChild[r.getRightChild()].add(r);
             }
         }
         
-        brfc = getAsArrays(binaryRulesForChildren);
+        //brfc = getAsArrays(binaryRulesForChildren);
         brwlc = getAsArrays(binaryRulesWithLeftChild);
         brwrc = getAsArrays(binaryRulesWithRightChild);
     }
