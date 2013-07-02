@@ -8,23 +8,22 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
-import edu.jhu.util.vector.SortedLongDoubleVector;
-
 import org.apache.log4j.Logger;
 
-import cern.colt.matrix.tdouble.DoubleFactory2D;
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.SparseRCDoubleMatrix2D;
 import edu.jhu.lp.CcLpConstraints;
+import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpRows;
-import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.dist.Dirichlet;
+import edu.jhu.util.matrix.DenseDoubleMatrix;
+import edu.jhu.util.matrix.DoubleMatrixFactory;
+import edu.jhu.util.matrix.SparseColDoubleMatrix;
+import edu.jhu.util.matrix.SparseRowDoubleMatrix;
+import edu.jhu.util.vector.SortedLongDoubleVector;
 
 /**
  * Reduces the dimensionality of a linear program.
@@ -167,43 +166,43 @@ public class DimReducer {
     private void projectAndAddConstraints(CcLpConstraints lc, IloLPMatrix drMatrix, int drMaxCons)
             throws IloException {
         // Sample a random projection matrix.
-        DenseDoubleMatrix2D S;
+        DenseDoubleMatrix S;
         if (prm.useIdentityMatrix) {
             log.debug("Using identity matrix for projection.");
-            S = (DenseDoubleMatrix2D) DoubleFactory2D.dense.identity(lc.A.rows());
+            S = DoubleMatrixFactory.getDenseDoubleIdentity(lc.A.getNumRows());
         } else {
-            S = sampleMatrix(drMaxCons, lc.A.rows());
+            S = sampleMatrix(drMaxCons, lc.A.getNumRows());
         }
         log.debug("Number of nonzeros in S matrix: " + getNumNonZeros(S));        
         
         // Multiply the random projection with A and b, d.
-        DenseDoubleMatrix2D Sd = fastMultiply(S, lc.d);
-        DenseDoubleMatrix2D SA = fastMultiply(S, lc.A);
-        DenseDoubleMatrix2D Sb = fastMultiply(S, lc.b);
+        DenseDoubleMatrix Sd = fastMultiply(S, lc.d);
+        DenseDoubleMatrix SA = fastMultiply(S, lc.A);
+        DenseDoubleMatrix Sb = fastMultiply(S, lc.b);
 
         // Construct the lower-dimensional constraints: Sd <= SA x <= Sb.
         LpRows rows = new LpRows(prm.setNames);
-        for (int i=0; i<SA.rows(); i++) {
+        for (int i=0; i<SA.getNumRows(); i++) {
             SortedLongDoubleVector coef = new SortedLongDoubleVector();
-            for (int j=0; j<SA.columns(); j++) {
-                double SA_ij = SA.getQuick(i, j);
+            for (int j=0; j<SA.getNumColumns(); j++) {
+                double SA_ij = SA.get(i, j);
                 if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
                     coef.set(j, SA_ij);
                 }
             }
-            double lb = Sd.getQuick(i,0);
-            double ub = Sb.getQuick(i,0);
+            double lb = Sd.get(i,0);
+            double ub = Sb.get(i,0);
             String name = String.format("dr_%d", i);
             rows.addRow(lb, coef, ub, name);
         }
         rows.addRowsToMatrix(drMatrix);
     }
 
-    private int getNumNonZeros(DenseDoubleMatrix2D S) {
+    private int getNumNonZeros(DenseDoubleMatrix S) {
         int count = 0;
-        for (int i=0; i<S.rows(); i++) {
-            for (int j=0; j<S.columns(); j++) {
-                double SA_ij = S.getQuick(i, j);
+        for (int i=0; i<S.getNumRows(); i++) {
+            for (int j=0; j<S.getNumColumns(); j++) {
+                double SA_ij = S.get(i, j);
                 if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
                     count++;
                 }
@@ -258,20 +257,20 @@ public class DimReducer {
     }
     
     /** Multiplies S x A. */
-    public static DenseDoubleMatrix2D fastMultiply(DenseDoubleMatrix2D S, SparseCCDoubleMatrix2D A) {
-        // Doing this: S.zMult(A, SA); would ignore the sparsity of the matrix A.
-        // Instead, we call zMult and transpose all the matrices.
+    public static DenseDoubleMatrix fastMultiply(DenseDoubleMatrix S, SparseColDoubleMatrix A) {
+        // Doing this: S.multT(A, SA); would ignore the sparsity of the matrix A.
+        // Instead, we call multT and transpose all the matrices.
         // (A B)^T = A^T B^T
-        DenseDoubleMatrix2D SA = new DenseDoubleMatrix2D(S.rows(), A.columns());
-        A.zMult(S, SA.viewDice(), 1.0, 0, true, true);
+        DenseDoubleMatrix SA = new DenseDoubleMatrix(S.getNumRows(), A.getNumColumns());
+        A.multT(S, SA.viewTranspose(), true, true);
         return SA;
     }
     
-    public static DenseDoubleMatrix2D fastMultiply(DenseDoubleMatrix2D S, DenseDoubleMatrix2D b) {
+    public static DenseDoubleMatrix fastMultiply(DenseDoubleMatrix S, DenseDoubleMatrix b) {
         boolean allInfinite = true;
         boolean someInfinite = false;
-        for (int i=0; i<b.rows(); i++) {
-            if (CplexUtils.isInfinite(b.getQuick(i, 0))) {
+        for (int i=0; i<b.getNumRows(); i++) {
+            if (CplexUtils.isInfinite(b.get(i, 0))) {
                 someInfinite = true;
             } else {
                 allInfinite = false;
@@ -286,23 +285,23 @@ public class DimReducer {
             throw new RuntimeException("Mixture of EQ and LEQ constraints in a projection will result in NaNs.");
         }
         
-        DenseDoubleMatrix2D Sb = new DenseDoubleMatrix2D(S.rows(), b.columns());
-        S.zMult(b, Sb);
+        DenseDoubleMatrix Sb = new DenseDoubleMatrix(S.getNumRows(), b.getNumColumns());
+        S.mult(b, Sb);
         return Sb;
     }
 
     // Allow this to be overriden in unit tests.
-    protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) throws IloException {
+    protected DenseDoubleMatrix sampleMatrix(int nRows, int nCols) throws IloException {
         if (prm.maxNonZerosPerRow != Integer.MAX_VALUE && prm.maxNonZerosPerRow > nCols) {
             log.warn(String.format("Parameter maxNonZerosPerRow set to %d but matrix only has %d columns. " + 
                     "Ignoring parameter.", prm.maxNonZerosPerRow, nCols));
         }
         
-        DenseDoubleMatrix2D S = new DenseDoubleMatrix2D(nRows, nCols);
+        DenseDoubleMatrix S = new DenseDoubleMatrix(nRows, nCols);
         
         // Setup Dirichlet distribution.
         double alphaVal = (prm.dist == SamplingDistribution.UNIFORM ? 1 : prm.alpha);
-        int numNonZerosPerRow = Math.min(S.columns(), prm.maxNonZerosPerRow);
+        int numNonZerosPerRow = Math.min(S.getNumColumns(), prm.maxNonZerosPerRow);
         Dirichlet dirichletDist = new Dirichlet(alphaVal, numNonZerosPerRow);
         
         // Initialize to all the column indices.
@@ -312,7 +311,7 @@ public class DimReducer {
         Arrays.fill(colVals, 1.0);
         
         int numNonZeros = 0;
-        for (int i=0; i<S.rows(); i++) {
+        for (int i=0; i<S.getNumRows(); i++) {
             if (nCols > numNonZerosPerRow) {
                 // Choose a subset of columns to be nonzeros.
                 colInds = Utilities.sampleWithoutReplacement(numNonZerosPerRow, nCols);
@@ -340,7 +339,7 @@ public class DimReducer {
                 File sFile = File.createTempFile("projectedMatrix", ".txt", prm.tempDir);
                 log.info("Writing projected matrix to file: " + sFile);
                 FileWriter writer = new FileWriter(sFile);
-                writer.write(new SparseRCDoubleMatrix2D(S.toArray()).toString());
+                writer.write(new SparseRowDoubleMatrix(S.getMatrix()).toString());
                 writer.close();
             } catch (IOException e) {
                 throw new RuntimeException(e);

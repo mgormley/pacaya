@@ -14,12 +14,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.tdouble.impl.SparseCCDoubleMatrix2D;
 import edu.jhu.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.matrix.DenseDoubleMatrix;
+import edu.jhu.util.matrix.SparseColDoubleMatrix;
 
 public class DimReducerTest {
 
@@ -43,10 +44,10 @@ public class DimReducerTest {
         }
 
         @Override
-        protected DenseDoubleMatrix2D sampleMatrix(int nRows, int nCols) {
+        protected DenseDoubleMatrix sampleMatrix(int nRows, int nCols) {
             Assert.assertEquals(svals.length, nRows);
             Assert.assertEquals(svals[0].length, nCols);
-            return new DenseDoubleMatrix2D(svals);
+            return new DenseDoubleMatrix(svals);
         }
 
     }
@@ -176,14 +177,14 @@ public class DimReducerTest {
     
     @Test
     public void testFastMultiply() {
-        DenseDoubleMatrix2D A = new DenseDoubleMatrix2D(new double[][]{ {1, 2, 3}});
-        SparseCCDoubleMatrix2D B = new SparseCCDoubleMatrix2D(new double[][]{ {1}, {2}, {3}});
+        DenseDoubleMatrix A = new DenseDoubleMatrix(new double[][]{ {1, 2, 3}});
+        SparseColDoubleMatrix B = new SparseColDoubleMatrix(new double[][]{ {1}, {2}, {3}});
         
-        DenseDoubleMatrix2D C1 = new DenseDoubleMatrix2D(1, 1);
-        A.zMult(B, C1);
-        DenseDoubleMatrix2D C2 = DimReducer.fastMultiply(A, B);
+        DenseDoubleMatrix C1 = new DenseDoubleMatrix(1, 1);
+        A.mult(B, C1);
+        DenseDoubleMatrix C2 = DimReducer.fastMultiply(A, B);
         
-        Assert.assertEquals(C1, C2);
+        JUnitUtils.assertArrayEquals(C1.getMatrix(), C2.getMatrix(), 1e-13);
     }
     
     private IloLPMatrix getOrigMatrix(IloCplex cplex) throws IloException {

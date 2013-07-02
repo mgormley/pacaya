@@ -42,6 +42,14 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
 	    set(other);
     }
 
+    public SparseColDoubleMatrix(int numRows, int numCols, int[] rowIndexes,
+            int[] colIndexes, double[] values) {
+        this(numRows, numCols);
+        for (int i=0; i<rowIndexes.length; i++) {
+            set(rowIndexes[i], colIndexes[i], values[i]);
+        }
+    }
+
     public void set(DoubleMatrix other) {
         if (other instanceof SparseColDoubleMatrix) {
             SparseColDoubleMatrix sim = (SparseColDoubleMatrix)other;
@@ -126,7 +134,7 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
      * @param transposeA Whether to transpose A prior to multiplication.
      * @param transposeB Whether to transpose B prior to multiplication.
      */
-    public void multT(DoubleMatrix bMat, DenseDoubleMatrix cMat, boolean transposeA, boolean transposeB) {
+    public void multT(DoubleMatrix bMat, DoubleMatrix cMat, boolean transposeA, boolean transposeB) {
         if (!transposeA) {            
             throw new IllegalArgumentException("Multiplication where this matrix NOT transposed is not implemented.");
         }
