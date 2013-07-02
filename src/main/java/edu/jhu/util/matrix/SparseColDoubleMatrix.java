@@ -133,29 +133,32 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
         
         SparseRowDoubleMatrix.checkMultDimensions(this.viewTranspose(), transposeB ? bMat.viewTranspose() : bMat, cMat);
 
+        int numRowsC = cMat.getNumRows();
+        int numColsC = cMat.getNumColumns();
+        
         if (bMat instanceof DenseDoubleMatrix) {
             DenseDoubleMatrix denseBMat = (DenseDoubleMatrix) bMat;
-            for (int row = 0; row < cMat.numRows; row++) {
-                for (int col = 0; col < cMat.numCols; col++) {
+            for (int row = 0; row < numRowsC; row++) {
+                for (int col = 0; col < numColsC; col++) {
                     if (transposeB) {
-                        cMat.matrix[row][col] = this.cols[row].dot(denseBMat.matrix[col]);
+                        cMat.set(row, col, this.cols[row].dot(denseBMat.matrix[col]));
                     } else {
-                        cMat.matrix[row][col] = this.cols[row].dot(denseBMat.matrix, col);
+                        cMat.set(row, col, this.cols[row].dot(denseBMat.matrix, col));
                     }
                 }
             }
         } else if (bMat instanceof SparseColDoubleMatrix && !transposeB) {
             SparseColDoubleMatrix sparseBMat = (SparseColDoubleMatrix) bMat;
-            for (int row = 0; row < cMat.numRows; row++) {
-                for (int col = 0; col < cMat.numCols; col++) {
-                    cMat.matrix[row][col] = this.cols[row].dot(sparseBMat.cols[col]);
+            for (int row = 0; row < numRowsC; row++) {
+                for (int col = 0; col < numColsC; col++) {
+                    cMat.set(row, col, this.cols[row].dot(sparseBMat.cols[col]));
                 }
             }
         } else if (bMat instanceof SparseRowDoubleMatrix && transposeB) {
             SparseRowDoubleMatrix sparseBMat = (SparseRowDoubleMatrix) bMat;
-            for (int row = 0; row < cMat.numRows; row++) {
-                for (int col = 0; col < cMat.numCols; col++) {
-                    cMat.matrix[row][col] = this.cols[row].dot(sparseBMat.rows[col]);
+            for (int row = 0; row < numRowsC; row++) {
+                for (int col = 0; col < numColsC; col++) {
+                    cMat.set(row, col, this.cols[row].dot(sparseBMat.rows[col]));
                 }
             }
         } else {

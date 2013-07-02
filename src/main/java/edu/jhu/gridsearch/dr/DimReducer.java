@@ -257,6 +257,7 @@ public class DimReducer {
         return new Pair<CcLpConstraints, CcLpConstraints>(eqLc, leqLc);
     }
     
+    /** Multiplies S x A. */
     public static DenseDoubleMatrix2D fastMultiply(DenseDoubleMatrix2D S, SparseCCDoubleMatrix2D A) {
         // Doing this: S.zMult(A, SA); would ignore the sparsity of the matrix A.
         // Instead, we call zMult and transpose all the matrices.

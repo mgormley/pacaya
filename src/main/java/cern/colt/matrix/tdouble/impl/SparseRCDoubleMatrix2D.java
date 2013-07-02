@@ -6,4 +6,10 @@ public class SparseRCDoubleMatrix2D {
         // TODO Auto-generated constructor stub
     }
 
+    @Override
+    public String toString() {
+        // TODO:
+        return null;
+    }
+    
 }

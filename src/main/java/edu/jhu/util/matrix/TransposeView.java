@@ -28,17 +28,17 @@ public class TransposeView implements DoubleMatrix {
 
     @Override
     public void set(int row, int col, double value) {
-        set(col, row, value);
+        mat.set(col, row, value);
     }
 
     @Override
     public void decrement(int row, int col, double decr) {
-        decrement(col, row, decr);
+        mat.decrement(col, row, decr);
     }
 
     @Override
     public void increment(int row, int col, double incr) {
-        increment(col, row, incr);            
+        mat.increment(col, row, incr);            
     }
 
     @Override
