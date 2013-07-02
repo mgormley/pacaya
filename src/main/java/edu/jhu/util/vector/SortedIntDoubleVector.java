@@ -62,6 +62,15 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
         }
         return ret;
     }
+    
+    /** Computes the dot product of this vector with the column of the given matrix. */
+    public double dot(double[][] matrix, int col) {
+        double ret = 0;
+        for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            ret += values[c] * matrix[indices[c]][col];
+        }
+        return ret;
+    }
 
     /** Computes the dot product of this vector with the given vector. */
     public double dot(SortedIntDoubleVector y) {

@@ -9,9 +9,10 @@ public class DenseDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2148653126472159945L;
     
-    private double[][] matrix;
-	private final int numRows;
-	private final int numCols;
+    // Package private to give access to other matrix classes during multiplication.
+    double[][] matrix;
+	final int numRows;
+	final int numCols;
 
 	public DenseDoubleMatrix(int numRows, int numCols) {
 	    this.numRows = numRows;
@@ -81,11 +82,39 @@ public class DenseDoubleMatrix implements DoubleMatrix {
 	    matrix[row][col] += incr;
 	}
 	
-	public void viewTranspose() {
-	    //return new TransposeView()
+	public DoubleMatrix viewTranspose() {
+	    return new TransposeView(this);
 	}
+	
+    public void mult(DoubleMatrix bMat, DenseDoubleMatrix cMat) {
+        SparseRowDoubleMatrix.checkMultDimensions(this, bMat, cMat);
 
-    @Override
+        if (bMat instanceof DenseDoubleMatrix) {
+            // This is the standard slow implementation of dense matrix multiplication. Nothing fancy.            
+            DenseDoubleMatrix denseBMat = (DenseDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    // Compute the dot product of the row in A with the column in B.
+                    double value = 0.0;
+                    for (int i=0; i<matrix[row].length; i++) {
+                        value += matrix[row][i] * denseBMat.matrix[col][i];
+                    }
+                    cMat.matrix[row][col] = value;
+                }
+            }
+        } else if (bMat instanceof SparseColDoubleMatrix) {
+            SparseColDoubleMatrix sparseBMat = (SparseColDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    cMat.matrix[row][col] = sparseBMat.cols[col].dot(this.matrix[row]);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("unhandled type: " + bMat.getClass().getCanonicalName());
+        }
+    }
+
+	@Override
     public Iterable<IntDoubleEntry> getRowEntries(int row) {
         return new DenseDoubleVectorIterator(matrix[row]);
     }

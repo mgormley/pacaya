@@ -7,7 +7,8 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2296616647180858488L;
     
-    private SortedIntDoubleVector[] cols;
+    // Package private to give access to other matrix classes during multiplication.
+    SortedIntDoubleVector[] cols;
 	private final int numRows;
 	private final int numCols;
 
@@ -98,7 +99,7 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
     }
 
     public void mult(DenseDoubleMatrix bMat, DenseDoubleMatrix cMat) {
-        // TODO:  
+        
         
     }
 }

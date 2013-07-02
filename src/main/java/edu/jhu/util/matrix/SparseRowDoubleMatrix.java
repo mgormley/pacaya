@@ -102,4 +102,35 @@ public class SparseRowDoubleMatrix implements DoubleMatrix {
         return rows[row];
     }
 
+    public void mult(DoubleMatrix bMat, DenseDoubleMatrix cMat) {
+        SparseRowDoubleMatrix.checkMultDimensions(this, bMat, cMat);
+
+        if (bMat instanceof DenseDoubleMatrix) {
+            DenseDoubleMatrix denseBMat = (DenseDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    cMat.matrix[row][col] = this.rows[row].dot(denseBMat.matrix, col);
+                }
+            }
+        } else if (bMat instanceof SparseColDoubleMatrix) {
+            SparseColDoubleMatrix sparseBMat = (SparseColDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    cMat.matrix[row][col] = this.rows[row].dot(sparseBMat.cols[col]);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("unhandled type: " + bMat.getClass().getCanonicalName());
+        }
+    }
+
+    public static void checkMultDimensions(
+            DoubleMatrix aMat,
+            DoubleMatrix bMat, DoubleMatrix cMat) {
+        if (aMat.getNumColumns() != bMat.getNumRows() || aMat.getNumRows() != cMat.getNumRows() || bMat.getNumColumns() != cMat.getNumColumns()) {
+            throw new IllegalArgumentException("Invalid matrix dimensions for multiplication.");
+        }
+    }
+
+    
 }
