@@ -21,7 +21,8 @@ getDataset <- function(mydata) {
 
 ## Read B&B status data.
 results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data"
-##results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data.r860"
+##results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data.5sent"
+##results.file = "/Users/mgormley/research/parsing/results/bnb/bnb-status.data.8sent"
 df <- read.table(results.file, header=TRUE)
 df <- df[order(df$time),]
 
