@@ -102,6 +102,12 @@ public class SparseRowDoubleMatrix implements DoubleMatrix {
         return rows[row];
     }
 
+    public DenseDoubleMatrix mult(DoubleMatrix bMat) {
+        DenseDoubleMatrix cMat = new DenseDoubleMatrix(this.getNumRows(), bMat.getNumColumns());
+        this.mult(bMat, cMat);
+        return cMat;
+    }
+    
     public void mult(DoubleMatrix bMat, DenseDoubleMatrix cMat) {
         SparseRowDoubleMatrix.checkMultDimensions(this, bMat, cMat);
 

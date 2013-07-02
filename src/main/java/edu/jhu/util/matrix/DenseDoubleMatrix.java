@@ -85,7 +85,13 @@ public class DenseDoubleMatrix implements DoubleMatrix {
 	public DoubleMatrix viewTranspose() {
 	    return new TransposeView(this);
 	}
-	
+
+    public DenseDoubleMatrix mult(DoubleMatrix bMat) {
+        DenseDoubleMatrix cMat = new DenseDoubleMatrix(this.getNumRows(), bMat.getNumColumns());
+        this.mult(bMat, cMat);
+        return cMat;
+    }
+    
     public void mult(DoubleMatrix bMat, DenseDoubleMatrix cMat) {
         SparseRowDoubleMatrix.checkMultDimensions(this, bMat, cMat);
 
@@ -97,7 +103,7 @@ public class DenseDoubleMatrix implements DoubleMatrix {
                     // Compute the dot product of the row in A with the column in B.
                     double value = 0.0;
                     for (int i=0; i<matrix[row].length; i++) {
-                        value += matrix[row][i] * denseBMat.matrix[col][i];
+                        value += matrix[row][i] * denseBMat.matrix[i][col];
                     }
                     cMat.matrix[row][col] = value;
                 }
