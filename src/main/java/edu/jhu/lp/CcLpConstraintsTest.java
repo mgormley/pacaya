@@ -3,10 +3,10 @@ package edu.jhu.lp;
 import org.junit.Assert;
 import org.junit.Test;
 
-import cern.colt.matrix.tdouble.impl.DenseDoubleMatrix2D;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
+import edu.jhu.util.matrix.DenseDoubleMatrix;
 
 
 public class CcLpConstraintsTest {
@@ -22,10 +22,10 @@ public class CcLpConstraintsTest {
         CcLpConstraints lc = CcLpConstraints.getLeqFactorsAsLeqConstraints(factors, 3);
         
         double[][] avals = new double[][]{{1, 0, 2}, {4, 5, 0}}; 
-        Assert.assertEquals(new DenseDoubleMatrix2D(avals), lc.A);
+        Assert.assertEquals(new DenseDoubleMatrix(avals), lc.A);
 
         double[][] bvals = new double[][]{{1}, {8}}; 
-        Assert.assertEquals(new DenseDoubleMatrix2D(bvals), lc.b);
+        Assert.assertEquals(new DenseDoubleMatrix(bvals), lc.b);
     }
 
     @Test
@@ -56,11 +56,11 @@ public class CcLpConstraintsTest {
         CcLpConstraints lc = CcLpConstraints.getEqFactorsAsEqConstraints(factors, 3);
 
         double[][] avals = new double[][]{{1, 0, 2}, {4, 5, 0}}; 
-        Assert.assertEquals(new DenseDoubleMatrix2D(avals), lc.A);
+        Assert.assertEquals(new DenseDoubleMatrix(avals), lc.A);
 
         double[][] bdvals = new double[][]{{1}, {8}}; 
-        Assert.assertEquals(new DenseDoubleMatrix2D(bdvals), lc.d);
-        Assert.assertEquals(new DenseDoubleMatrix2D(bdvals), lc.b);
+        Assert.assertEquals(new DenseDoubleMatrix(bdvals), lc.d);
+        Assert.assertEquals(new DenseDoubleMatrix(bdvals), lc.b);
     }
 
     @Test
