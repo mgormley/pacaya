@@ -331,7 +331,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         conll09_sp_train = conll09_sp_dev + DPExpParams(dataset="conll09-sp-train")
         conll09_sp_train.set("test", os.path.join(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt"), False, True)
         
-        synth_alt_three = DPExpParams(synthetic="alt-three")
+        synth_alt_three = DPExpParams(synthetic="alt-three", trainType="SYNTHETIC")
         synth_alt_three.set("dataset", "alt-three", True, False)
 
         wsj = wsj_full if not self.fast else wsj_02

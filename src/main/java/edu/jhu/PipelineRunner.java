@@ -63,7 +63,7 @@ public class PipelineRunner {
     public static boolean relaxOnly = false;
 
     // Options for data
-    @Opt(name="train", hasArg=true, required=true, description="Training data input file or directory.")
+    @Opt(name="train", hasArg=true, description="Training data input file or directory.")
     public static String train = null;
     @Opt(name="trainType", hasArg=true, required=true, description="Type of training data.")
     public static DatasetType trainType = null;
