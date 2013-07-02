@@ -14,12 +14,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.util.matrix.DenseDoubleMatrix;
-import edu.jhu.util.matrix.SparseColDoubleMatrix;
 import edu.jhu.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.matrix.DenseDoubleMatrix;
+import edu.jhu.util.matrix.SparseColDoubleMatrix;
 
 public class DimReducerTest {
 
@@ -183,7 +184,7 @@ public class DimReducerTest {
         A.mult(B, C1);
         DenseDoubleMatrix C2 = DimReducer.fastMultiply(A, B);
         
-        Assert.assertEquals(C1, C2);
+        JUnitUtils.assertArrayEquals(C1.getMatrix(), C2.getMatrix(), 1e-13);
     }
     
     private IloLPMatrix getOrigMatrix(IloCplex cplex) throws IloException {
