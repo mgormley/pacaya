@@ -3,23 +3,23 @@ package edu.jhu.util.matrix;
 import java.util.Iterator;
 
 import edu.jhu.util.Utilities;
-import edu.jhu.util.vector.IntIntEntry;
+import edu.jhu.util.vector.IntDoubleEntry;
 
-public class DenseIntegerMatrix implements IntegerMatrix {
+public class DenseDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2148653126472159945L;
     
-    private int[][] matrix;
+    private double[][] matrix;
 	private final int numRows;
 	private final int numCols;
 
-	public DenseIntegerMatrix(int numRows, int numCols) {
+	public DenseDoubleMatrix(int numRows, int numCols) {
 	    this.numRows = numRows;
 	    this.numCols = numCols;
-		matrix = new int[numRows][numCols];
+		matrix = new double[numRows][numCols];
 	} 
-
-    public DenseIntegerMatrix(int[][] matrix) {
+	
+	public DenseDoubleMatrix(double[][] matrix) {
         numRows = matrix.length;
         numCols = matrix[0].length;
         for (int row=0; row<matrix.length; row++) {
@@ -27,23 +27,23 @@ public class DenseIntegerMatrix implements IntegerMatrix {
         }
         this.matrix = matrix;        
     }
-    
-	public DenseIntegerMatrix(DenseIntegerMatrix dim) {
+	
+	public DenseDoubleMatrix(DenseDoubleMatrix dim) {
 	    numRows = dim.numRows;
 	    numCols = dim.numCols;
 	    matrix = Utilities.copyOf(dim.matrix);
     }
 
-    public void set(IntegerMatrix im) {
-        if (im instanceof DenseIntegerMatrix) {
-            DenseIntegerMatrix dim = (DenseIntegerMatrix)im;
+    public void set(DoubleMatrix other) {
+        if (other instanceof DenseDoubleMatrix) {
+            DenseDoubleMatrix dim = (DenseDoubleMatrix)other;
             assert(numRows == dim.numRows);
             assert(numCols == dim.numCols);
             for (int row=0; row<numRows; row++) {
                 Utilities.copy(dim.matrix[row], matrix[row]);
             }
         } else {
-            throw new IllegalArgumentException("unhandled type: " + im.getClass().getCanonicalName());
+            throw new IllegalArgumentException("unhandled type: " + other.getClass().getCanonicalName());
         }
     }
     
@@ -52,11 +52,11 @@ public class DenseIntegerMatrix implements IntegerMatrix {
 		assert(matrix[row][col] >= 0);
 	}
 
-	public int get(int row, int col) {
+	public double get(int row, int col) {
 		return matrix[row][col];
 	}
-
-    public void set(int row, int col, int value) {
+	
+    public void set(int row, int col, double value) {
         matrix[row][col] = value;
     }
 
@@ -68,48 +68,48 @@ public class DenseIntegerMatrix implements IntegerMatrix {
         return numCols;
     }
 
-    public int[][] getMatrix() {
+    public double[][] getMatrix() {
         return matrix;
     }
     
-	public void increment(int row, int col) {
-		matrix[row][col]++;
-	}
-
-	public void decrement(int row, int col, int decr) {
+	public void decrement(int row, int col, double decr) {
 	    matrix[row][col] -= decr;
 	    assert(matrix[row][col] >= 0);
 	}
 
-	public void increment(int row, int col, int incr) {
+	public void increment(int row, int col, double incr) {
 	    matrix[row][col] += incr;
+	}
+	
+	public void viewTranspose() {
+	    //return new TransposeView()
 	}
 
     @Override
-    public Iterable<IntIntEntry> getRowEntries(int row) {
-        return new DenseIntVectorIterator(matrix[row]);
+    public Iterable<IntDoubleEntry> getRowEntries(int row) {
+        return new DenseDoubleVectorIterator(matrix[row]);
     }
     
     /**
      * Iterator over a sparse vector
      */
-    private static class DenseIntVectorIterator implements Iterator<IntIntEntry>, Iterable<IntIntEntry> {
+    private static class DenseDoubleVectorIterator implements Iterator<IntDoubleEntry>, Iterable<IntDoubleEntry> {
 
         private int cursor;
-        private int[] row;
+        private double[] row;
         
-        public DenseIntVectorIterator(int[] row) {
+        public DenseDoubleVectorIterator(double[] row) {
             cursor = 0;
             this.row = row;
         }
 
-        private final DenseIntIntEntry entry = new DenseIntIntEntry();
+        private final DenseIntDoubleEntry entry = new DenseIntDoubleEntry();
 
         public boolean hasNext() {
             return cursor < row.length;
         }
 
-        public IntIntEntry next() {
+        public IntDoubleEntry next() {
             entry.update(cursor);
             
             cursor++;
@@ -125,14 +125,14 @@ public class DenseIntegerMatrix implements IntegerMatrix {
         }
 
         @Override
-        public Iterator<IntIntEntry> iterator() {
+        public Iterator<IntDoubleEntry> iterator() {
             return this;
         }
         
         /**
          * Entry of a dense vector
          */
-        private class DenseIntIntEntry implements IntIntEntry {
+        private class DenseIntDoubleEntry implements IntDoubleEntry {
 
             private int cursor = 0;
 
@@ -144,18 +144,16 @@ public class DenseIntegerMatrix implements IntegerMatrix {
                 return cursor;
             }
 
-            public int get() {
+            public double get() {
                 return row[cursor];
             }
 
-            public void set(int value) {
+            public void set(double value) {
                 row[cursor] = value;
             }
 
         }
 
-    }
-
-    
+    }    
 
 }

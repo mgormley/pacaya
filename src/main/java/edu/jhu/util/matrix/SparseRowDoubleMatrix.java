@@ -1,26 +1,26 @@
 package edu.jhu.util.matrix;
 
-import edu.jhu.util.vector.IntIntEntry;
-import edu.jhu.util.vector.SortedIntIntVector;
+import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.vector.SortedIntDoubleVector;
 
-public class SparseIntegerMatrix implements IntegerMatrix {
+public class SparseRowDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2296616647180858488L;
     
-    private SortedIntIntVector[] rows;
+    private SortedIntDoubleVector[] rows;
 	private final int numRows;
 	private final int numCols;
 
-	public SparseIntegerMatrix(int numRows, int numCols) {
+	public SparseRowDoubleMatrix(int numRows, int numCols) {
 	    this.numRows = numRows;
 	    this.numCols = numCols;
-		rows = new SortedIntIntVector[numRows];
+		rows = new SortedIntDoubleVector[numRows];
 		for (int row=0; row<numRows; row++) {
-		    rows[row] = new SortedIntIntVector();
+		    rows[row] = new SortedIntDoubleVector();
 		}
 	}
 
-    public SparseIntegerMatrix(int[][] matrix) {
+    public SparseRowDoubleMatrix(double[][] matrix) {
         this(matrix.length, matrix[0].length);
         for (int row=0; row<matrix.length; row++) {
             assert(numCols == matrix[row].length);
@@ -32,34 +32,44 @@ public class SparseIntegerMatrix implements IntegerMatrix {
                     // Set a non-zero value.
                     set(row, col, matrix[row][col]);
                 }
-            }                
+            }
         }
     }
     
-	public SparseIntegerMatrix(SparseIntegerMatrix dim) {
-	    this(dim.numRows, dim.numCols);
-	    set(dim);
+	public SparseRowDoubleMatrix(SparseRowDoubleMatrix other) {
+	    this(other.numRows, other.numCols);
+	    set(other);
     }
 
-    public void set(IntegerMatrix im) {
-        if (im instanceof SparseIntegerMatrix) {
-            SparseIntegerMatrix sim = (SparseIntegerMatrix)im;
+    public void set(DoubleMatrix other) {
+        if (other instanceof SparseRowDoubleMatrix) {
+            SparseRowDoubleMatrix sim = (SparseRowDoubleMatrix)other;
             assert(numRows == sim.numRows);
             assert(numCols == sim.numCols);
             for (int row=0; row<numRows; row++) {
                 rows[row].set(sim.rows[row]);
             }
         } else {
-            throw new IllegalArgumentException("unhandled type: " + im.getClass().getCanonicalName());
+            throw new IllegalArgumentException("unhandled type: " + other.getClass().getCanonicalName());
         }
     }
 
-    public int get(int row, int col) {
+    public double get(int row, int col) {
         return rows[row].get(col);
     }
     
-    public void set(int row, int col, int value) {
+    public void set(int row, int col, double value) {
+        checkDimensions(row, col);
         rows[row].set(col, value);
+    }
+
+    private void checkDimensions(int row, int col) {
+        if (row < 0 || row >= numRows || col < 0 || col >= numCols) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "Invalid row or column. row=%d, col=%d, numRows=%d, numCols=%d",
+                            row, col, numRows, numCols));
+        }
     }
 
 	public int getNumRows() {
@@ -79,16 +89,16 @@ public class SparseIntegerMatrix implements IntegerMatrix {
         assert(rows[row].get(col) >= 0);
     }
 
-	public void increment(int row, int col, int incr) {
+	public void increment(int row, int col, double incr) {
         rows[row].add(col, incr);
 	}
 
-    public void decrement(int row, int col, int decr) {
+    public void decrement(int row, int col, double decr) {
         rows[row].add(col, -decr);
         assert(rows[row].get(col) >= 0);
     }
     
-    public Iterable<IntIntEntry> getRowEntries(int row) {
+    public Iterable<IntDoubleEntry> getRowEntries(int row) {
         return rows[row];
     }
 

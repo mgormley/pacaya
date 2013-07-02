@@ -16,6 +16,8 @@ public interface IntegerMatrix extends Serializable {
 
     public int get(int row, int col);
 
+    public void set(int row, int col, int value);
+
     public void decrement(int row, int col, int decr);
     
     public void increment(int row, int col, int incr);

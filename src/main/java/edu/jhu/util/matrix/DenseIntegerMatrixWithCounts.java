@@ -56,6 +56,13 @@ public class DenseIntegerMatrixWithCounts implements IntegerMatrix {
 		return matrix[row][col];
 	}
 
+    public void set(int row, int col, int value) {
+        int diff = value - matrix[row][col];
+        colCounts[col] += diff;
+        rowCounts[row] += diff;
+        matrix[row][col] = value;
+    }
+
     public int getColumnCount(int col) {
         return colCounts[col];
     }
@@ -72,23 +79,23 @@ public class DenseIntegerMatrixWithCounts implements IntegerMatrix {
         return numCols;
     }
 
-	public void increment(int row, int k) {
-		matrix[row][k]++;
-		colCounts[k]++;
+	public void increment(int row, int col) {
+		matrix[row][col]++;
+		colCounts[col]++;
 		rowCounts[row]++;
 	}
 
-	public void decrement(int row, int k, int decr) {
-	    matrix[row][k] -= decr;
-	    colCounts[k] -= decr;
+	public void decrement(int row, int col, int decr) {
+	    matrix[row][col] -= decr;
+	    colCounts[col] -= decr;
 	    rowCounts[row] -= decr;
-	    assert(matrix[row][k] >= 0);
+	    assert(matrix[row][col] >= 0);
 	    assert(rowCounts[row] >= 0);
 	}
 
-	public void increment(int row, int k, int incr) {
-	    matrix[row][k] += incr;
-	    colCounts[k] += incr;
+	public void increment(int row, int col, int incr) {
+	    matrix[row][col] += incr;
+	    colCounts[col] += incr;
 	    rowCounts[row] += incr;
 	}
 
