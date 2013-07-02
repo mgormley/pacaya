@@ -21,4 +21,6 @@ public interface DoubleMatrix extends Serializable {
     public void set(DoubleMatrix other);
     
     public Iterable<IntDoubleEntry> getRowEntries(int row);
+    
+    public DoubleMatrix viewTranspose();
 }

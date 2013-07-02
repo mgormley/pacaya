@@ -98,8 +98,69 @@ public class SparseColDoubleMatrix implements DoubleMatrix {
         return cols[col];
     }
 
-    public void mult(DenseDoubleMatrix bMat, DenseDoubleMatrix cMat) {
-        
-        
+    public DoubleMatrix viewTranspose() {
+        return new TransposeView(this);
     }
+    
+    /**
+     * Multiplies A x B = C, where A is this matrix. 
+     * 
+     * @param bMat The matrix B.
+     * @param transposeA Whether to transpose A prior to multiplication.
+     * @param transposeB Whether to transpose B prior to multiplication.
+     * @return The matrix C.
+     */
+    public DenseDoubleMatrix multT(DoubleMatrix bMat, boolean transposeA, boolean transposeB) {
+        int numRowsC = transposeA ? this.getNumColumns() : this.getNumRows();
+        int numColsC = transposeB ? bMat.getNumRows() : bMat.getNumColumns();
+        DenseDoubleMatrix cMat = new DenseDoubleMatrix(numRowsC, numColsC);
+        this.multT(bMat, cMat, transposeA, transposeB);
+        return cMat;
+    }
+    
+    /**
+     * Multiplies A x B = C, where A is this matrix. 
+     * 
+     * @param bMat The matrix B.
+     * @param cMat The matrix C.
+     * @param transposeA Whether to transpose A prior to multiplication.
+     * @param transposeB Whether to transpose B prior to multiplication.
+     */
+    public void multT(DoubleMatrix bMat, DenseDoubleMatrix cMat, boolean transposeA, boolean transposeB) {
+        if (!transposeA) {            
+            throw new IllegalArgumentException("Multiplication where this matrix NOT transposed is not implemented.");
+        }
+        
+        SparseRowDoubleMatrix.checkMultDimensions(this.viewTranspose(), transposeB ? bMat.viewTranspose() : bMat, cMat);
+
+        if (bMat instanceof DenseDoubleMatrix) {
+            DenseDoubleMatrix denseBMat = (DenseDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    if (transposeB) {
+                        cMat.matrix[row][col] = this.cols[row].dot(denseBMat.matrix[col]);
+                    } else {
+                        cMat.matrix[row][col] = this.cols[row].dot(denseBMat.matrix, col);
+                    }
+                }
+            }
+        } else if (bMat instanceof SparseColDoubleMatrix && !transposeB) {
+            SparseColDoubleMatrix sparseBMat = (SparseColDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    cMat.matrix[row][col] = this.cols[row].dot(sparseBMat.cols[col]);
+                }
+            }
+        } else if (bMat instanceof SparseRowDoubleMatrix && transposeB) {
+            SparseRowDoubleMatrix sparseBMat = (SparseRowDoubleMatrix) bMat;
+            for (int row = 0; row < cMat.numRows; row++) {
+                for (int col = 0; col < cMat.numCols; col++) {
+                    cMat.matrix[row][col] = this.cols[row].dot(sparseBMat.rows[col]);
+                }
+            }
+        } else {
+            throw new IllegalArgumentException("unhandled type: " + bMat.getClass().getCanonicalName());
+        }
+    }
+
 }

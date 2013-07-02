@@ -61,8 +61,12 @@ public class TransposeView implements DoubleMatrix {
 
     @Override
     public Iterable<IntDoubleEntry> getRowEntries(int row) {
-        // TODO Auto-generated method stub
-        return null;
+        throw new RuntimeException();
+    }
+
+    @Override
+    public DoubleMatrix viewTranspose() {
+        return mat;
     }
     
 }

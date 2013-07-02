@@ -7,7 +7,8 @@ public class SparseRowDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2296616647180858488L;
     
-    private SortedIntDoubleVector[] rows;
+    // Package private to give access to other matrix classes during multiplication.
+    SortedIntDoubleVector[] rows;
 	private final int numRows;
 	private final int numCols;
 
@@ -102,6 +103,10 @@ public class SparseRowDoubleMatrix implements DoubleMatrix {
         return rows[row];
     }
 
+    public DoubleMatrix viewTranspose() {
+        return new TransposeView(this);
+    }
+    
     public DenseDoubleMatrix mult(DoubleMatrix bMat) {
         DenseDoubleMatrix cMat = new DenseDoubleMatrix(this.getNumRows(), bMat.getNumColumns());
         this.mult(bMat, cMat);
