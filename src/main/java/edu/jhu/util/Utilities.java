@@ -739,4 +739,21 @@ public class Utilities {
            System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
         }
     }
+
+    public static <T> List<T> getList(T... args) {
+        return Arrays.asList(args);
+    }
+
+    public static String toString(double[] array, String formatString) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{");
+        for (int i=0; i<array.length; i++) {
+            sb.append(String.format(formatString, array[i]));
+            if (i < array.length -1) {
+                sb.append(", ");
+            }
+        }
+        sb.append("}");
+        return sb.toString();
+    }
 }
