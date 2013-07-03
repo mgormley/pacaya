@@ -54,6 +54,7 @@ public class BetterLimitedMemoryBFGS implements Optimizer
 	public BetterLimitedMemoryBFGS (Optimizable.ByGradientValue function) {
 		this.optimizable = function;
 		lineMaximizer = new BackTrackLineSearch (function);
+		logger.setLevel(Level.FINEST);
 	}
 	
 	public Optimizable getOptimizable () { return this.optimizable; }
