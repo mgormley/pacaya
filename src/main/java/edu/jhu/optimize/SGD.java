@@ -18,11 +18,9 @@ public class SGD implements Maximizer, Minimizer {
     /** Options for this optimizer. */
     public static class SGDPrm {
         /** The desired learning rate after (maxIterations / 2) iterations. */
-        public double lrAtMidpoint = 1;
+        public double lrAtMidpoint = 0.1;
         /** The number of iterations to perform. */
         public int iterations = 10;
-        /** The optimization will stop when this convergence tolerance is reached. */
-        public double convergenceTolerance;
         public SGDPrm() { } 
         public SGDPrm(double lrAtMidpoint, int iterations) {
             this.lrAtMidpoint = lrAtMidpoint;
