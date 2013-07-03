@@ -130,6 +130,12 @@
       <version>1.2</version>
     </dependency>
     <dependency>
+      <!-- Required only for code using joptimizer -->
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>edu.jhu.erma</groupId>
       <artifactId>erma</artifactId>
       <version>1.0.0-SNAPSHOT</version>
@@ -154,13 +160,6 @@
       <version>1.3.0</version>
       <scope>system</scope>
       <systemPath>${project.basedir}/lib/joptimizer-1.3.0.jar</systemPath> 
-    </dependency>
-    <dependency>
-      <groupId>colt</groupId>
-      <artifactId>colt</artifactId>
-      <version>1.2.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/colt-1.2.0.jar</systemPath> 
     </dependency>
   </dependencies>
 </project>
