@@ -102,8 +102,8 @@ public class BruteForceInferencerTest {
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-4);
         
-        assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(1).getVars());
-        marg = bp.getMarginals(fg.getFactor(1));
+        assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(0).getVars());
+        marg = bp.getMarginals(fg.getFactor(0));
         goldMarg = new double[] { 0.3, 0.075, 0.2, 0.425 };
         if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
@@ -115,23 +115,13 @@ public class BruteForceInferencerTest {
     }
     
     public static FactorGraph getLinearChainGraph(boolean logDomain) {
-        FactorGraph fg = FactorGraphTest.getLinearChainGraph();
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
-            }
-        }
+        FactorGraph fg = FactorGraphTest.getLinearChainGraph(logDomain);
         return fg;
     }
 
     
     public static FactorGraph readSimpleFg(boolean logDomain) throws IOException {
-        FactorGraph fg = BayesNetReaderTest.readSimpleFg();
-        if (logDomain) {
-            for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
-            }
-        }
+        FactorGraph fg = BayesNetReaderTest.readSimpleFg(logDomain);
         return fg;
     }
 }

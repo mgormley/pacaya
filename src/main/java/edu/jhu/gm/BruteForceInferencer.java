@@ -1,5 +1,7 @@
 package edu.jhu.gm;
 
+import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
+
 /**
  * Inference by brute force summation.
  * 
@@ -7,7 +9,17 @@ package edu.jhu.gm;
  *
  */
 public class BruteForceInferencer implements FgInferencer {
-
+    
+    public static class BruteForceInferencerPrm implements FgInferencerFactory {
+        public boolean logDomain = true;
+        public BruteForceInferencerPrm(boolean logDomain) {
+            this.logDomain = logDomain;
+        }
+        public FgInferencer getInferencer(FactorGraph fg) {
+            return new BruteForceInferencer(fg, this.logDomain);
+        }
+    }
+    
     private FactorGraph fg;
     private Factor joint;
     private boolean logDomain;

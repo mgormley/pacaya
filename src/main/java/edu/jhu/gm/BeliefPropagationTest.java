@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.Var.VarType;
 
@@ -35,10 +36,10 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
-        BeliefPropagation bp = new BeliefPropagation(prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         assertEqualMarginals(fg, bf, bp);
@@ -60,10 +61,10 @@ public class BeliefPropagationTest {
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
-        emit1.setValue(0, 0.3);
-        emit1.setValue(1, 0.7);
-        emit2.setValue(0, 0.5);
-        emit2.setValue(1, 0.5);
+        emit1.setValue(0, 3);
+        emit1.setValue(1, 7);
+        emit2.setValue(0, 1);
+        emit2.setValue(1, 1);
                 
         fg.addFactor(emit0);
         fg.addFactor(emit1);
@@ -80,15 +81,15 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.logDomain = logDomain;
-        prm.schedule = new BfsBpSchedule(fg);
+        prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         // Don't normalize the messages, so that the partition function is the
         // same as in the brute force approach.
         prm.normalizeMessages = false;
-        BeliefPropagation bp = new BeliefPropagation(prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
                     
         assertEqualMarginals(fg, bf, bp);
@@ -127,11 +128,11 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
         prm.normalizeMessages = true;
-        BeliefPropagation bp = new BeliefPropagation(prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         //BruteForceInferencerTest.testInfOnSimpleGraph(fg, bp, logDomain);
@@ -147,15 +148,15 @@ public class BeliefPropagationTest {
         BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
         bf.run();
 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm(fg);
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 1;
         prm.logDomain = logDomain;
-        prm.schedule = new BfsBpSchedule(fg);
+        prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         // Don't normalize the messages, so that the partition function is the
         // same as in the brute force approach.
         prm.normalizeMessages = false;
-        BeliefPropagation bp = new BeliefPropagation(prm);
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
 
         BruteForceInferencerTest.testInfOnLinearChainGraph(fg, bp, logDomain);

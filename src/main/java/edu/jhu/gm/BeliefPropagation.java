@@ -13,18 +13,31 @@ import edu.jhu.util.Timer;
  */
 public class BeliefPropagation implements FgInferencer {
 
-    public static class BeliefPropagationPrm {
-        public BpSchedule schedule = null;
+    public interface FgInferencerFactory {
+        FgInferencer getInferencer(FactorGraph fg);
+    }
+    
+    public static class BeliefPropagationPrm implements FgInferencerFactory {
+        public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
         public int maxIterations = 100;
         public double timeoutSeconds = Double.POSITIVE_INFINITY;
         public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
-        public final FactorGraph fg;
+        //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;
-        public BeliefPropagationPrm(FactorGraph fg) {
-            this.fg = fg;
+        public BeliefPropagationPrm() {
         }
+        public FgInferencer getInferencer(FactorGraph fg) {
+            return new BeliefPropagation(fg, this);
+        }
+    }
+    
+    public enum BpScheduleType {
+        /** Send messages from a root to the leaves and back. */
+        TREE_LIKE,
+        /** Send messages in a random order. */
+        RANDOM
     }
     
     public enum BpUpdateOrder {
@@ -77,11 +90,22 @@ public class BeliefPropagation implements FgInferencer {
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
-
-    public BeliefPropagation(BeliefPropagationPrm prm) {
+    private BpSchedule sched;
+    
+    public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
-        this.fg = prm.fg;
+        this.fg = fg;
         this.msgs = new Messages[fg.getNumEdges()];
+
+        if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+            if (prm.schedule == BpScheduleType.TREE_LIKE) {
+                sched = new BfsBpSchedule(fg);
+            } else if (prm.schedule == BpScheduleType.RANDOM) {
+                sched = new RandomBpSchedule(fg);
+            } else {
+                throw new RuntimeException("Unknown schedule type: " + prm.schedule);
+            }
+        }
     }
     
     /** @inheritDoc */
@@ -102,7 +126,7 @@ public class BeliefPropagation implements FgInferencer {
                 break;
             }
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                for (FgEdge edge : prm.schedule.getOrder()) {
+                for (FgEdge edge : sched.getOrder()) {
                     createMessage(edge);
                     sendMessage(edge);
                 }
@@ -300,11 +324,43 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc */
     @Override
     public double getPartition() {
+        // The factor graph's overall partition function is the product of the
+        // partition functions for each connected component. 
+        double partition = prm.logDomain ? 0.0 : 1.0;
+        for (FgNode node : fg.getConnectedComponents()) {
+            if (node.isFactor()) {
+                if (node.getOutEdges().size() == 0) {
+                    // This is an empty factor that makes no contribution to the partition function.
+                    continue;
+                } else {
+                    // Get a variable node in this connected component.
+                    node = node.getOutEdges().get(0).getChild();
+                    assert(node.isVar());
+                }
+            }
+            
+            double nodePartition = getPartitionFunctionAtVarNode(node);
+            if (prm.logDomain) {
+                partition += nodePartition;
+            } else {
+                partition *= nodePartition;   
+            }
+        }
+        return partition;
+    }
+
+    /**
+     * Gets the partition function for the connected component containing the given node.
+     */
+    private double getPartitionFunctionAtVarNode(FgNode node) {
         // We just return the normalizing constant for the marginals of any variable.
-        Var var = fg.getVar(0);
+        if (!node.isVar()) {
+            throw new IllegalArgumentException("Node must be a variable node.");
+        }
+        Var var = node.getVar();
         Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
-        // Compute the product of all messages sent to this variable.
-        getProductOfMessages(fg.getNode(var), prod, null);
+        // Compute the product of all messages sent to this node.
+        getProductOfMessages(node, prod, null);
         if (prm.logDomain) {
             return prod.getLogSum();
         } else {

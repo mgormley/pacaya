@@ -1,16 +1,27 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
+import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.BeliefPropagation.BpScheduleType;
+import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.CrfObjectiveTest.LogLinearEDs;
+import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.FactorGraphTest.FgAndVars;
+import edu.jhu.optimize.MalletLBFGS;
+import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.math.Multinomials;
 
 public class CrfTrainerTest {
 
@@ -42,17 +53,28 @@ public class CrfTrainerTest {
         }
         
     }
+
+    @Test
+    public void testLogLinearModelShapes() {
+        LogLinearEDs exs = new LogLinearEDs();
+        exs.addEx(30, "circle", "solid");
+        exs.addEx(15, "circle");
+        exs.addEx(10, "solid");
+        exs.addEx(5);
+
+        double[] params = new double[]{3.0, 2.0};
+        FgModel model = new FgModel(exs.getAlphabet());
+        model.setParams(params);
+        
+        model = train(model, exs.getData());
+        
+        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, model.getParams(), 1e-3);
+    }
     
     @Test
-    public void test() {
-        SGDPrm sgdPrm = new SGDPrm();
-        SGD maximizer = new SGD(sgdPrm);
-        
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars();
+    public void testTrainNoLatentVars() {
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars(true);
 
-        // TODO: add a latent var.
-        // Var l0 = new Var(VarType.LATENT, 3, "l0", getList("TOPIC1", "TOPIC2", "TOPIC3"));
-        
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
         trainConfig.put(fgv.w1, 1);
@@ -67,11 +89,57 @@ public class CrfTrainerTest {
         FgExamples data = new FgExamples();
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
         FgModel model = new FgModel(alphabet);
+
+        model = train(model, data);
         
-        CrfTrainer trainer = new CrfTrainer(model, data, maximizer);
-        trainer.train();
+        System.out.println(Utilities.toString(model.getParams(), "%.2f"));
+        JUnitUtils.assertArrayEquals(new double[]{4.79, -4.79, 2.47, -2.47, 3.82, -3.82, 0.65, -2.31, 1.66}, model.getParams(), 1e-2);
+    }
+    
+    @Test
+    public void testTrainWithLatentVars() {
+        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVarsLatent(true);
+
+        VarConfig trainConfig = new VarConfig();
+        trainConfig.put(fgv.w0, 0);
+        trainConfig.put(fgv.w1, 1);
+        trainConfig.put(fgv.w2, 0);
+        trainConfig.put(fgv.t0, 0);
+        trainConfig.put(fgv.t1, 1);
+        trainConfig.put(fgv.t2, 1);
+
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureExtractor featExtractor = new MockFeatureExtractor(fgv.fg, alphabet);
         
-        fail("Not yet implemented");
+        FgExamples data = new FgExamples();
+        data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
+        FgModel model = new FgModel(alphabet);
+        //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
+        model = train(model, data);
+        
+        System.out.println(alphabet.getObjects());
+        System.out.println(Utilities.toString(model.getParams(), "%.2f"));
+        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, 1.64, -10.18, 8.54}, model.getParams(), 1e-2);
+    }
+
+    private FgModel train(FgModel model, FgExamples data) {
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+        bpPrm.logDomain = true;
+        bpPrm.schedule = BpScheduleType.TREE_LIKE;
+        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        bpPrm.normalizeMessages = false;
+        
+        CrfTrainerPrm prm = new CrfTrainerPrm();
+        prm.infFactory = bpPrm;
+        
+        // To run with SGD, uncomment these lines.
+        //        SGDPrm optPrm = new SGDPrm();
+        //        optPrm.iterations = 100;
+        //        optPrm.lrAtMidpoint = 0.1;
+        //        prm.maximizer = new SGD(optPrm);
+        
+        CrfTrainer trainer = new CrfTrainer(prm);
+        return trainer.train(model, data);
     }
 
 }

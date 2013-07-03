@@ -42,7 +42,7 @@ public class BfsBpScheduleTest {
         
         // This is valid test, but not an ideal test setup that we depend on toString().
         Assert.assertEquals(
-                "[FgEdge [id=2, marked=true, Factor[t1] --> Var[t1]], FgEdge [id=4, marked=true, Factor[t2] --> Var[t2]], FgEdge [id=13, marked=true, Var[t2] --> Factor[t1,t2]], FgEdge [id=10, marked=true, Factor[t1,t2] --> Var[t1]], FgEdge [id=9, marked=true, Var[t1] --> Factor[t0,t1]], FgEdge [id=6, marked=true, Factor[t0,t1] --> Var[t0]], FgEdge [id=1, marked=true, Var[t0] --> Factor[t0]], FgEdge [id=0, marked=true, Factor[t0] --> Var[t0]], FgEdge [id=7, marked=true, Var[t0] --> Factor[t0,t1]], FgEdge [id=8, marked=true, Factor[t0,t1] --> Var[t1]], FgEdge [id=3, marked=true, Var[t1] --> Factor[t1]], FgEdge [id=11, marked=true, Var[t1] --> Factor[t1,t2]], FgEdge [id=12, marked=true, Factor[t1,t2] --> Var[t2]], FgEdge [id=5, marked=true, Var[t2] --> Factor[t2]]]",
+                "[FgEdge [id=2, Factor[t1] --> Var[t1]], FgEdge [id=4, Factor[t2] --> Var[t2]], FgEdge [id=13, Var[t2] --> Factor[t1,t2]], FgEdge [id=10, Factor[t1,t2] --> Var[t1]], FgEdge [id=9, Var[t1] --> Factor[t0,t1]], FgEdge [id=6, Factor[t0,t1] --> Var[t0]], FgEdge [id=1, Var[t0] --> Factor[t0]], FgEdge [id=0, Factor[t0] --> Var[t0]], FgEdge [id=7, Var[t0] --> Factor[t0,t1]], FgEdge [id=8, Factor[t0,t1] --> Var[t1]], FgEdge [id=3, Var[t1] --> Factor[t1]], FgEdge [id=11, Var[t1] --> Factor[t1,t2]], FgEdge [id=12, Factor[t1,t2] --> Var[t2]], FgEdge [id=5, Var[t2] --> Factor[t2]]]",
                 schedule.getOrder().toString());
     }
 
