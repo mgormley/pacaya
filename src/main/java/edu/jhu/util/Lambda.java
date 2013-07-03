@@ -47,7 +47,7 @@ public class Lambda {
     /** Subtraction operator on doubles. */
     public static final class DoubleSubtract implements LambdaBinOpDouble {
         public double call(double v1, double v2) {
-            return v1 + v2;
+            return v1 - v2;
         }
     }
     
@@ -90,7 +90,7 @@ public class Lambda {
     /** Subtraction operator on longs. */
     public static final class LongSubtract implements LambdaBinOpLong {
         public long call(long v1, long v2) {
-            return v1 + v2;
+            return v1 - v2;
         }
     }
     
@@ -126,7 +126,7 @@ public class Lambda {
     /** Subtraction operator on ints. */
     public static final class IntSubtract implements LambdaBinOpInt {
         public int call(int v1, int v2) {
-            return v1 + v2;
+            return v1 - v2;
         }
     }
     
