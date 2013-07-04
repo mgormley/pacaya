@@ -37,13 +37,14 @@ public class MalletLBFGS implements Maximizer {
         private Function function;
         private double[] params;
         private double[] gradient;
-        private boolean isGradientCached; 
+        private double value; 
+        private boolean areGradientAndValueCached;
         
         public MalletFunction(Function function) {
             this.function = function;
             params = new double[function.getNumDimensions()];
             gradient = new double[function.getNumDimensions()];
-            isGradientCached = false;
+            areGradientAndValueCached = false;
         }
         
         @Override
@@ -66,7 +67,7 @@ public class MalletLBFGS implements Maximizer {
         public void setParameter(int i, double value) {
             params[i] = value;
             // Invalidate the cached gradient.
-            isGradientCached = false;
+            areGradientAndValueCached = false;
         }
 
         @Override
@@ -74,22 +75,30 @@ public class MalletLBFGS implements Maximizer {
             // Copy the parameters from the buffer to params.
             System.arraycopy(buffer, 0, params, 0, params.length);
             // Invalidate the cached gradient.
-            isGradientCached = false;
+            areGradientAndValueCached = false;
         }
 
         @Override
         public double getValue() {
-            return function.getValue(params);
+            maybeUpdateGradientAndValue();
+            return value;
         }
 
         @Override
         public void getValueGradient(double[] buffer) {
-            if (!isGradientCached) {
-                // Recompute the gradient.
-                gradient = function.getGradient(params);
-            }            
+            maybeUpdateGradientAndValue();            
             // Copy the gradient to the buffer.
             System.arraycopy(gradient, 0, buffer, 0, gradient.length);            
+        }
+
+        private void maybeUpdateGradientAndValue() {
+            if (!areGradientAndValueCached) {
+                // Recompute the value:
+                value = function.getValue(params);
+                // Recompute the gradient.
+                gradient = function.getGradient(params);
+                areGradientAndValueCached = true;
+            }
         }
         
     }

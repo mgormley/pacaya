@@ -41,7 +41,4 @@ public class CrfTrainer {
         return model;
     }
     
-
-
-    
 }

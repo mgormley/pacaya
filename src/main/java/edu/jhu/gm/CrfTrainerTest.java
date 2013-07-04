@@ -124,13 +124,16 @@ public class CrfTrainerTest {
 
     @Test
     public void testTrainErmaInput() {
-        ErmaReader er = new ErmaReader(false);
+        ErmaReader er = new ErmaReader(true);
         er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE);
         FgExamples data = er.getDataExs();
         Alphabet<Feature> alphabet = data.getAlphabet();
         
         FgModel model = new FgModel(alphabet);
         model = train(model, data);
+        
+        // ERMA achieves the following log-likelihood: 0.5802548014360731.
+        // Our CRF obtains LL: -0.0013527881300134936.
         
         // Note: This doesn't test the result, just that nothing throws an exception.
     }
