@@ -3,6 +3,8 @@ package edu.jhu.gm;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import edu.jhu.util.Alphabet;
+
 /**
  * A collection of samples for a graphical model represented as factor graphs.
  * 
@@ -12,9 +14,11 @@ import java.util.Iterator;
 public class FgExamples implements Iterable<FgExample> {
         
     private ArrayList<FgExample> examples;
+    private Alphabet<Feature> alphabet;
 
-    public FgExamples() {
-        examples = new ArrayList<FgExample>();
+    public FgExamples(Alphabet<Feature> alphabet) {
+        this.examples = new ArrayList<FgExample>();
+        this.alphabet = alphabet;  
     }
     
     /** Adds an example. */
@@ -35,6 +39,10 @@ public class FgExamples implements Iterable<FgExample> {
     @Override
     public Iterator<FgExample> iterator() {
         return examples.iterator();
+    }
+    
+    public Alphabet<Feature> getAlphabet() {
+        return alphabet;
     }
     
 }

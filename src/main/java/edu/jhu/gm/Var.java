@@ -31,7 +31,7 @@ public class Var implements Comparable<Var> {
     private int numStates;
     /** The unique name of this variable. */
     private String name;
-    /** State names. */
+    /** State names, where the i'th entry gives the state names of the i'th state. */
     private ArrayList<String> stateNames;
     
     /** Counter used to create a unique id for each instance of this class. */
@@ -39,6 +39,13 @@ public class Var implements Comparable<Var> {
     /** An id that is unique to this instance of this class. */
     private int instanceId = instanceCounter.incrementAndGet();
         
+    /**
+     * 
+     * @param type  The type of variable.
+     * @param numStates  The number of states that this variable can take on.
+     * @param name The unique name of this variable. 
+     * @param stateNames The state names, where the i'th entry gives the state names of the i'th state.
+     */
     public Var(VarType type, int numStates, String name, List<String> stateNames) {
         this.type = type;
         this.numStates = numStates;

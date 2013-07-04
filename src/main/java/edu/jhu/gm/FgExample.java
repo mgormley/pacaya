@@ -171,5 +171,10 @@ public class FgExample {
     public FeatureCache getFeatCacheLatPred() {
         return cacheLatPred;
     }
+
+    /** Gets the original input factor graph. */
+    public FactorGraph getOriginalFactorGraph() {
+        return fg;
+    }
     
 }
