@@ -70,7 +70,7 @@ public class CrfObjectiveTest {
         }
         
         public FgExamples getData() {
-            FgExamples data = new FgExamples();
+            FgExamples data = new FgExamples(alphabet);
             int state=0;
             for (LogLinearExDesc desc : descList) {
                 for (int i=0; i<desc.getCount(); i++) {
