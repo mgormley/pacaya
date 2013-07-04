@@ -1,8 +1,5 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
@@ -14,23 +11,26 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfObjectiveTest.LogLinearEDs;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.FactorGraphTest.FgAndVars;
-import edu.jhu.optimize.MalletLBFGS;
-import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.SGD;
-import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.gm.data.ErmaReader;
+import edu.jhu.gm.data.ErmaReaderTest;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
 
 public class CrfTrainerTest {
 
-    public static class MockFeatureExtractor implements FeatureExtractor {
+    /**
+     * Constructs features for each factor graph configuration by creating a
+     * sorted list of all the variable states and concatenating them together.
+     * 
+     * @author mgormley
+     */
+    public static class SimpleVCFeatureExtractor implements FeatureExtractor {
 
         private FactorGraph fg;
         private Alphabet<Feature> alphabet;
         
-        public MockFeatureExtractor(FactorGraph fg, Alphabet<Feature> alphabet) {
+        public SimpleVCFeatureExtractor(FactorGraph fg, Alphabet<Feature> alphabet) {
             this.fg = fg;
             this.alphabet = alphabet;
         }
@@ -84,9 +84,9 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new MockFeatureExtractor(fgv.fg, alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, alphabet);
         
-        FgExamples data = new FgExamples();
+        FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
         FgModel model = new FgModel(alphabet);
 
@@ -109,9 +109,9 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new MockFeatureExtractor(fgv.fg, alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, alphabet);
         
-        FgExamples data = new FgExamples();
+        FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
         FgModel model = new FgModel(alphabet);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -122,6 +122,19 @@ public class CrfTrainerTest {
         JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, 1.64, -10.18, 8.54}, model.getParams(), 1e-2);
     }
 
+    @Test
+    public void testTrainErmaInput() {
+        ErmaReader er = new ErmaReader(false);
+        er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE);
+        FgExamples data = er.getDataExs();
+        Alphabet<Feature> alphabet = data.getAlphabet();
+        
+        FgModel model = new FgModel(alphabet);
+        model = train(model, data);
+        
+        // Note: This doesn't test the result, just that nothing throws an exception.
+    }
+    
     private FgModel train(FgModel model, FgExamples data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
