@@ -4,9 +4,13 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.optimize.Function;
+import edu.jhu.optimize.FunctionOpts.AddFunctions;
+import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
+import edu.jhu.optimize.Regularizer;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -22,7 +26,12 @@ public class CrfTrainer {
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public Maximizer maximizer = new MalletLBFGS(new MalletLBFGSPrm());
-
+        public Regularizer regularizer = new L2(1.0);
+        //TODO: public InitParams initParams = InitParams.UNIFORM;
+    }
+    
+    public static enum InitParams {
+        UNIFORM, RANDOM
     }
     
     private CrfTrainerPrm prm; 
@@ -33,7 +42,11 @@ public class CrfTrainer {
     
     // TODO: finish this method.
     public FgModel train(FgModel model, FgExamples data) {
-        CrfObjective objective = new CrfObjective(model.getNumParams(), data, prm.infFactory);
+        Function objective = new CrfObjective(model.getNumParams(), data, prm.infFactory);
+        if (prm.regularizer != null) {
+            prm.regularizer.setNumDimensions(model.getNumParams());
+            objective = new AddFunctions(objective, prm.regularizer);
+        }
         double[] initial = model.getParams();
         // TODO: how to initialize the model parameters?
         double[] params = prm.maximizer.maximize(objective, initial);

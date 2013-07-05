@@ -27,11 +27,9 @@ public class CrfTrainerTest {
      */
     public static class SimpleVCFeatureExtractor implements FeatureExtractor {
 
-        private FactorGraph fg;
         private Alphabet<Feature> alphabet;
         
-        public SimpleVCFeatureExtractor(FactorGraph fg, Alphabet<Feature> alphabet) {
-            this.fg = fg;
+        public SimpleVCFeatureExtractor(Alphabet<Feature> alphabet) {
             this.alphabet = alphabet;
         }
         
@@ -84,7 +82,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(alphabet);
         
         FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -109,7 +107,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(alphabet);
         
         FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -153,6 +151,7 @@ public class CrfTrainerTest {
         //        optPrm.iterations = 100;
         //        optPrm.lrAtMidpoint = 0.1;
         //        prm.maximizer = new SGD(optPrm);
+        prm.regularizer = null;
         
         CrfTrainer trainer = new CrfTrainer(prm);
         return trainer.train(model, data);

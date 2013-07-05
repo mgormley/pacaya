@@ -148,7 +148,12 @@ public class VarConfig {
             }
             configSb.append(v.getName());
             configSb.append("=");
-            configSb.append(getState(v));
+            if (v.getStateNames() != null) {
+                configSb.append(getStateName(v));
+            } else {
+                configSb.append("id:");
+                configSb.append(getState(v));
+            }
             i++;
         }
         return "VarConfig [config=[" + configSb.toString() + "], vars=" + vars + "]";

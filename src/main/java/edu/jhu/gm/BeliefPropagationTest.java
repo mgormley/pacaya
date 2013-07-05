@@ -10,6 +10,7 @@ import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.util.Utilities;
 
 
 public class BeliefPropagationTest {
@@ -47,13 +48,36 @@ public class BeliefPropagationTest {
     
     @Test
     public void testThreeConnectedComponents() {
+        
+        boolean logDomain = true;
+        
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph(logDomain);
+        
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        // Don't normalize the messages, so that the partition function is the
+        // same as in the brute force approach.
+        prm.normalizeMessages = false;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+
+        assertEqualMarginals(fg, bf, bp);
+    }
+
+    public static FactorGraph getThreeConnectedComponentsFactorGraph(boolean logDomain) {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
-
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Utilities.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Utilities.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
+        
         // Emission factors. 
         Factor emit0 = new Factor(new VarSet(t0)); 
         Factor emit1 = new Factor(new VarSet(t1)); 
@@ -69,30 +93,13 @@ public class BeliefPropagationTest {
         fg.addFactor(emit0);
         fg.addFactor(emit1);
         fg.addFactor(emit2);
-        
-        boolean logDomain = true;
 
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
                 f.convertRealToLog();
             }
         }
-        
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 1;
-        prm.logDomain = logDomain;
-        prm.schedule = BpScheduleType.TREE_LIKE;
-        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        // Don't normalize the messages, so that the partition function is the
-        // same as in the brute force approach.
-        prm.normalizeMessages = false;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-                    
-        assertEqualMarginals(fg, bf, bp);
+        return fg;
     }
     
     @Test

@@ -189,6 +189,14 @@ public class Vectors {
         }
     }
     
+    /** Each element of the second array is added to each element of the first. */
+    public static void add(double[] array1, double[] array2) {
+        assert (array1.length == array2.length);
+        for (int i=0; i<array1.length; i++) {
+            array1[i] += array2[i];
+        }
+    }
+    
     public static double mean(double[] array) {
         return sum(array) / array.length;
     }

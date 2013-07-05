@@ -14,6 +14,10 @@ public class L2 implements Regularizer {
     private double variance;
     private int numParams;
     
+    public L2(double variance) {
+        this.variance = variance;
+    }
+    
     /**
      * Builds a Gaussian prior (L2 regularizer) on the parameters.
      * 
@@ -51,6 +55,10 @@ public class L2 implements Regularizer {
     @Override
     public int getNumDimensions() {
         return numParams;
+    }
+
+    public void setNumDimensions(int numParams) {
+        this.numParams = numParams ;
     }
 
 }

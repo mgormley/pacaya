@@ -47,4 +47,15 @@ public class FgModel {
         return alphabet;
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int k=0; k<params.length; k++) {
+            sb.append(alphabet.lookupObject(k));
+            sb.append("=");
+            sb.append(params[k]);
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+    
 }

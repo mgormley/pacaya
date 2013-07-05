@@ -16,6 +16,10 @@ public class L1 implements Regularizer {
 
     private double lambda;
     private int numParams;
+
+    public L1(double lambda) {
+        this.lambda = lambda;
+    }
     
     /**
      * Builds an L1 regularizer on the parameters.
@@ -61,6 +65,10 @@ public class L1 implements Regularizer {
     @Override
     public int getNumDimensions() {
         return numParams;
+    }
+    
+    public void setNumDimensions(int numParams) {
+        this.numParams = numParams ;
     }
 
 }

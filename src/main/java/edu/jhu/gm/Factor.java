@@ -347,6 +347,11 @@ public class Factor {
         } else if (!vars.equals(other.vars))
             return false;
         return true;
+    }
+
+    /** Gets the ID of the configuration with the maximum value. */
+    public int getArgmaxConfigId() {
+        return Vectors.argmax(values);
     }    
     
 }
