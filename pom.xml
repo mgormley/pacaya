@@ -130,6 +130,21 @@
       <version>1.2</version>
     </dependency>
     <dependency>
+		<groupId>org.uncommons.maths</groupId>
+		<artifactId>uncommons-maths</artifactId>
+		<version>1.2.2</version>
+		<exclusions>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jcommon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jfreechart</artifactId>
+        </exclusion>
+      </exclusions> 
+	</dependency>
+    <dependency>
       <!-- Required only for code using joptimizer -->
       <groupId>colt</groupId>
       <artifactId>colt</artifactId>

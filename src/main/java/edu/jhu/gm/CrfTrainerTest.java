@@ -124,8 +124,8 @@ public class CrfTrainerTest {
     public void testTrainErmaInput() {
         ErmaReader er = new ErmaReader(true);
         er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE);
-        FgExamples data = er.getDataExs();
-        Alphabet<Feature> alphabet = data.getAlphabet();
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FgExamples data = er.getDataExs(alphabet);
         
         FgModel model = new FgModel(alphabet);
         model = train(model, data);

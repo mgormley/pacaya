@@ -2,15 +2,21 @@ package edu.jhu.util;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Files {
 
@@ -166,5 +172,39 @@ public class Files {
             }
         }
     }
+
+    public static void serialize(Object obj, String stateFile) {
+        serialize(obj, new File(stateFile));
+    }
+
+    public static void serialize(Object obj, File stateFile) {
+        try {
+            FileOutputStream fos = new FileOutputStream(stateFile);
+            GZIPOutputStream gos = new GZIPOutputStream(fos);
+            ObjectOutputStream out = new ObjectOutputStream(gos);
+            out.writeObject(obj);
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     
+    public static Object deserialize(String stateFile) {
+        return deserialize(new File(stateFile));
+    }
+    
+    public static Object deserialize(File stateFile) {
+        try {
+            FileInputStream fis = new FileInputStream(stateFile);
+            GZIPInputStream gis = new GZIPInputStream(fis);
+            ObjectInputStream in = new ObjectInputStream(gis);
+            Object inObj = in.readObject();
+            in.close();
+            return inObj;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

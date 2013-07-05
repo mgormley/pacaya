@@ -1,5 +1,10 @@
 package edu.jhu.gm;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 
@@ -20,9 +25,10 @@ public class MbrDecoder {
         ACCURACY
     }
 
-    private MbrDecoderPrm prm;
-    private VarConfig mbrVarConfig;
+    private MbrDecoderPrm prm;    
+    private ArrayList<VarConfig> mbrVarConfigList;
     private FeatureVector mbrFeats;
+    private Map<Var,Double> varMargMap;
 
     public MbrDecoder(MbrDecoderPrm prm) {
         this.prm = prm;
@@ -39,10 +45,13 @@ public class MbrDecoder {
     // since we might not know the true values of the predicted variables.
     public void decode(FgModel model, FgExamples data) {
         if (prm.loss == Loss.ACCURACY) {
-            mbrVarConfig = new VarConfig();
+            mbrVarConfigList = new ArrayList<VarConfig>();
             mbrFeats = new FeatureVector();
-
+            varMargMap = new HashMap<Var,Double>();
+            
             for (int i = 0; i < data.size(); i++) {
+                VarConfig mbrVarConfig = new VarConfig();
+                
                 FgExample ex = data.get(i);
                 FactorGraph fgLatPred = ex.getFgLatPred(model.getParams());
                 FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
@@ -58,8 +67,10 @@ public class MbrDecoder {
                     Factor marg = inf.getMarginalsForVarId(varId);
                     int argmaxState = marg.getArgmaxConfigId();
                     mbrVarConfig.put(var, argmaxState);
+                    varMargMap.put(var, marg.getValue(argmaxState));
                 }
-
+                mbrVarConfigList.add(mbrVarConfig);
+                
                 // Get the features that fire on the MBR variable configuration.
                 for (int a = 0; a < fgLatPred.getNumFactors(); a++) {
                     Factor factor = fgLatPred.getFactor(a);
@@ -68,21 +79,30 @@ public class MbrDecoder {
                     // We use add here since we want the sum across all factors
                     // and all examples.
                     mbrFeats.add(fv);
-                }
+                }                
             }
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
     }
-
-    /** Gets the MBR variable configuration. */
-    public VarConfig getMbrVarConfig() {
-        return mbrVarConfig;
+    
+    /** Gets the MBR variable configuration for the i'th example. */
+    public VarConfig getMbrVarConfig(int i) {
+        return mbrVarConfigList.get(i);
     }
 
     /** Gets the features that fire on the MBR variable configuration. */
     public FeatureVector getMbrFeats() {
         return mbrFeats;
+    }
+
+    /** Gets a map from the variable to the value of its maximum marginal. */
+    public Map<Var, Double> getVarMargMap() {
+        return varMargMap;
+    }
+
+    public List<VarConfig> getMbrVarConfigList() {
+        return mbrVarConfigList;
     }
 
 }

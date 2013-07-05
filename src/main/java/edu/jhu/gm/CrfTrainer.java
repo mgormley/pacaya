@@ -29,11 +29,7 @@ public class CrfTrainer {
         public Regularizer regularizer = new L2(1.0);
         //TODO: public InitParams initParams = InitParams.UNIFORM;
     }
-    
-    public static enum InitParams {
-        UNIFORM, RANDOM
-    }
-    
+        
     private CrfTrainerPrm prm; 
         
     public CrfTrainer(CrfTrainerPrm prm) {

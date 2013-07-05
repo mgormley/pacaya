@@ -53,7 +53,7 @@ import edu.jhu.util.cli.Opt;
 public class PipelineRunner {
     
     private static final Logger log = Logger.getLogger(PipelineRunner.class);
-    
+
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
@@ -63,11 +63,11 @@ public class PipelineRunner {
     public static boolean relaxOnly = false;
 
     // Options for data
-    @Opt(name="train", hasArg=true, description="Training data input file or directory.")
+    @Opt(name = "train", hasArg = true, description = "Training data input file or directory.")
     public static String train = null;
-    @Opt(name="trainType", hasArg=true, required=true, description="Type of training data.")
+    @Opt(name = "trainType", hasArg = true, required = true, description = "Type of training data.")
     public static DatasetType trainType = null;
-    @Opt(name="trainOut", hasArg=true, description="Training data output file.")
+    @Opt(name = "trainOut", hasArg = true, description = "Training data output file.")
     public static File trainOut = null;
     @Opt(name = "synthetic", hasArg = true, description = "Generate synthetic training data.")
     public static String synthetic = null;
@@ -79,11 +79,11 @@ public class PipelineRunner {
     public static double propSupervised = 0.0;
 
     // Options for test data
-    @Opt(name="test", hasArg=true, description="Testing data input file or directory.")
+    @Opt(name = "test", hasArg = true, description = "Testing data input file or directory.")
     public static String test = null;
-    @Opt(name="testType", hasArg=true, description="Type of testing data.")
+    @Opt(name = "testType", hasArg = true, description = "Type of testing data.")
     public static DatasetType testType = null;
-    @Opt(name="testOut", hasArg=true, description="Testing data output file.")
+    @Opt(name = "testOut", hasArg = true, description = "Testing data output file.")
     public static File testOut = null;
     @Opt(hasArg = true, description = "Maximum sentence length for test data.")
     public static int maxSentenceLengthTest = Integer.MAX_VALUE;
@@ -91,7 +91,7 @@ public class PipelineRunner {
     // Options to restrict the initialization
     @Opt(name = "initBounds", hasArg = true, description = "How to initialize the bounds. [VITERBI_EM, GOLD, RANDOM, UNIFORM, SUPERVISED, NONE]")
     public static InitSol initBounds = null;
-    
+
     public PipelineRunner() {
     }
 

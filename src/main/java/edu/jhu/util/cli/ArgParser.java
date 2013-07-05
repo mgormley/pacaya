@@ -152,6 +152,7 @@ public class ArgParser {
         String name = mainClass == null ? "<MainClass>" : mainClass.getName();
         String usage = "java " + name + " [OPTIONS]";
         final HelpFormatter formatter = new HelpFormatter();
+        formatter.setWidth(120);
         formatter.printHelp(usage, options, true);
     }
 

@@ -26,7 +26,6 @@ public class Prng {
     public static ec.util.MersenneTwister mt;
         
     public static Random curRandom;
-    
     public static long seed;
     
     public static void seed(long seed) {

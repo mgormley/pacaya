@@ -2,6 +2,7 @@ package edu.jhu.gm;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import edu.jhu.util.Alphabet;
 
@@ -43,6 +44,14 @@ public class FgExamples implements Iterable<FgExample> {
     
     public Alphabet<Feature> getAlphabet() {
         return alphabet;
+    }
+
+    public List<VarConfig> getGoldConfigs() {
+        List<VarConfig> varConfigList = new ArrayList<VarConfig>();
+        for (FgExample ex : examples) {
+            varConfigList.add(ex.getGoldConfig());
+        }
+        return varConfigList;
     }
     
 }

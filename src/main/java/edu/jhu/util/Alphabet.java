@@ -1,5 +1,6 @@
 package edu.jhu.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,9 +13,10 @@ import java.util.Map;
  * @author mgormley
  *
  */
-public class Alphabet<T> {
+public class Alphabet<T> implements Serializable {
 
-	private static final int MISSING_OBJECT_INDEX = -1;
+    private static final long serialVersionUID = -3703345017300334421L;
+    private static final int MISSING_OBJECT_INDEX = -1;
 	private ArrayList<T> idxObjMap;
 	private Map<T, Integer> objIdxMap;
 	private boolean isGrowing;

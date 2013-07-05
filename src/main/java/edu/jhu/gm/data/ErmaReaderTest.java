@@ -11,17 +11,18 @@ import java.util.List;
 import org.junit.Test;
 
 import data.DataSample;
-import data.Feature;
 import data.FeatureFile;
 import data.RV;
 import data.VariableSet;
 import edu.jhu.gm.Factor;
 import edu.jhu.gm.FactorGraph;
+import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureCache;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarSet;
+import edu.jhu.util.Alphabet;
 
 public class ErmaReaderTest {
 
@@ -40,7 +41,8 @@ public class ErmaReaderTest {
         
         System.out.println(ff);
         // Just test that we can construct these without error.
-        FgExamples data = er.getDataExs();
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FgExamples data = er.getDataExs(alphabet);
         assertEquals(samples.size(), data.size());
         for (int i=0; i<samples.size(); i++) {
             DataSample samp = samples.get(i);
@@ -97,10 +99,10 @@ public class ErmaReaderTest {
         HashSet<String> ermaObsFeatNames = new HashSet<String>();
         for (DataSample samp : samples) {
             data.FeatureFactorGraph ermaFg = (data.FeatureFactorGraph)samp.toFactorGraph();
-            ArrayList<ArrayList<HashMap<Feature, Double>>> featureRefs = ermaFg.getFeatureRefs();
-            for (ArrayList<HashMap<Feature, Double>> featVecList : featureRefs) {
-                for (HashMap<Feature, Double> featVec : featVecList) {
-                    for (Feature f : featVec.keySet()) {
+            ArrayList<ArrayList<HashMap<data.Feature, Double>>> featureRefs = ermaFg.getFeatureRefs();
+            for (ArrayList<HashMap<data.Feature, Double>> featVecList : featureRefs) {
+                for (HashMap<data.Feature, Double> featVec : featVecList) {
+                    for (data.Feature f : featVec.keySet()) {
                         ermaObsFeatNames.add(f.getName());
                         //System.out.println(f.getName());
                     }

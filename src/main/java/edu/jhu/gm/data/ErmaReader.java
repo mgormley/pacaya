@@ -1,5 +1,6 @@
 package edu.jhu.gm.data;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,10 @@ public class ErmaReader {
         this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
+    public void read(File featureTemplate, File dataFile) {
+        read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath());
+    }
+    
     /**
      * Reads a feature file containing templates of features and a data file
      * containing a list of examples.
@@ -103,8 +108,7 @@ public class ErmaReader {
     /**
      * Converts all the DataSample objects to FgExamples and returns them.
      */
-    public FgExamples getDataExs() {
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+    public FgExamples getDataExs(Alphabet<Feature> alphabet) {
         FgExamples data = new FgExamples(alphabet);
         for (DataSample s : samples) {            
             data.add(toFgExample(s, ff, alphabet));

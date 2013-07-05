@@ -1,5 +1,8 @@
 package edu.jhu.gm;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.Writer;
 import java.util.List;
 
 import edu.jhu.util.Alphabet;
@@ -10,8 +13,9 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  *
  */
-public class FgModel {
+public class FgModel implements Serializable {
 
+    private static final long serialVersionUID = 4477788767217412525L;
     /** The model parameters. */
     private double[] params;
     /** A mapping of feature objects to model parameter indices. */
@@ -56,6 +60,15 @@ public class FgModel {
             sb.append("\n");
         }
         return sb.toString();
+    }
+    
+    public void printModel(Writer writer) throws IOException {
+        for (int k=0; k<params.length; k++) {
+            writer.write(alphabet.lookupObject(k).toString());
+            writer.write("=");
+            writer.write(String.format("%.13g", params[k]));
+            writer.write("\n");
+        }
     }
     
 }

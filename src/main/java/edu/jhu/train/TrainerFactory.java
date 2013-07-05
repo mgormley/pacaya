@@ -103,7 +103,7 @@ public class TrainerFactory {
     public static String dwTempDir = "";
     @Opt(name = "timeoutSeconds", hasArg = true, description = "The timeout in seconds for training run")
     public static double timeoutSeconds = Double.POSITIVE_INFINITY;
-    
+
     // EM parameters.
     @Opt(name = "lambda", hasArg = true, description = "Value for add-lambda smoothing")
     public static double lambda = 0.1;
@@ -113,7 +113,7 @@ public class TrainerFactory {
     public static double convergenceRatio = 0.99999;
     @Opt(name = "numRestarts", hasArg = true, description = "Number of random restarts")
     public static int numRestarts = 0;
-    
+
     // Initialization parameters.
     @Opt(name = "initWeights", hasArg = true, description = "Method for initializing the weights [uniform, random, supervised]")
     public static String initWeights = "uniform";
@@ -121,7 +121,7 @@ public class TrainerFactory {
     public static double offsetProb = 1.0;
     @Opt(name = "probOfSkipCm", hasArg = true, description = "The probability of not bounding a particular variable")
     public static double probOfSkipCm = 0.0;
-    
+
     // Branch-and-bound parameters.
     @Opt(name = "bnbTimeoutSeconds", hasArg = true, description = "[Viterbi-B&B only] The timeout in seconds for branch-and-bound")
     public static double bnbTimeoutSeconds = Double.POSITIVE_INFINITY;
@@ -141,7 +141,7 @@ public class TrainerFactory {
     // Knuth's random walk sampler parameters.
     @Opt(name = "maxRandWalkSamples", hasArg = true, description = "The maximum number of random walks to take when estimating tree size/time.")
     public static int maxRandWalkSamples = 10000;
-    
+
     // Relaxation parameters.
     @Opt(name = "relaxation", hasArg = true, description = "Relaxation [dw,dw-res,rlt]")
     public static String relaxation = "dw";
@@ -159,7 +159,7 @@ public class TrainerFactory {
     public static double minSumForCuts = 1.01;
     @Opt(name = "maxStoCuts", hasArg = true, description = "(STO only) The maximum number of sum-to-one cuts")
     public static int maxStoCuts = 1000;
-    
+
     // MILP / LP Solver parameters.
     @Opt(name = "ilpSolver", hasArg = true, description = "The ILP solver to use")
     public static String ilpSolver = "cplex";
@@ -169,11 +169,11 @@ public class TrainerFactory {
     public static int numThreads = 2;
     @Opt(name = "ilpWorkMemMegs", hasArg = true, description = "The working memory allotted for the ILP solver in megabytes")
     public static double ilpWorkMemMegs = 512.0;
-    
+
     // Dynamic programming parser parameters.
     @Opt(hasArg = true, description = "Whether dependency arcs must come from the set of PRED/ARG arcs given by CoNLL-2009 data.")
-    public static boolean usePredArgSupervision = false;    
-    
+    public static boolean usePredArgSupervision = false;
+
     // Parse formulation parameters.
     @Opt(name = "formulation", hasArg = true, description = "ILP formulation for parsing")
     public static IlpFormulation formulation = IlpFormulation.DP_PROJ;
@@ -195,13 +195,13 @@ public class TrainerFactory {
     public static double factor = 1.1;
     @Opt(name = "numPerSide", hasArg = true, description = "For symmetric delta generators")
     public static int numPerSide = 2;
-    
-    // B&B initial solution parameters. 
+
+    // B&B initial solution parameters.
     @Opt(name = "initSolNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for initial solution.")
     public static int initSolNumRestarts = 9;
     @Opt(name = "initSolTimeoutSeconds", hasArg = true, description = "(B&B only) The timeout in seconds for finding an initial solution.")
     public static double initSolTimeoutSeconds = Double.POSITIVE_INFINITY;
-    
+
     // Projection parameters.
     @Opt(name = "vemProjNumRestarts", hasArg = true, description = "(B&B only) Number of random restarts for the viterbi EM projector.")
     public static int vemProjNumRestarts = 0;
@@ -213,9 +213,11 @@ public class TrainerFactory {
     public static ProjectionType projType = ProjectionType.UNBOUNDED_MIN_EUCLIDEAN;
     @Opt(hasArg = true, description = "(B&B only) The type of projection algorithm to use.")
     public static ProjectionAlgo projAlgo = ProjectionAlgo.VEM;
-    
-    public static enum ProjectionAlgo { VEM, BASIC }
-    
+
+    public static enum ProjectionAlgo {
+        VEM, BASIC
+    }
+
     // RLT parameters.
     @Opt(name = "envelopeOnly", hasArg = true, description = "Whether to use only the convex/concave envelope for the RLT relaxation")
     public static boolean envelopeOnly = true;
@@ -234,7 +236,7 @@ public class TrainerFactory {
     public static boolean rltNames = false;
     @Opt(name = "addBindingCons", hasArg = true, description = "Whether to add binding constraints as factors to RLT.")
     public static boolean addBindingCons = false;
-    
+
     // Dimensionality Reduction parameters.
     @Opt(hasArg = true, description = "The max number of dimensionality reduced constraints.")
     public static int drMaxCons = Integer.MAX_VALUE;
@@ -244,8 +246,8 @@ public class TrainerFactory {
     public static SamplingDistribution drSamplingDist = SamplingDistribution.ALL_ONES;
     @Opt(hasArg = true, description = "The alpha parameter for the symmetric Dirichlet distributions.")
     public static double drAlpha = 1;
-    @Opt(hasArg = true, description = "The delta for testing equality with zero after the multiplication for projection. " +
-    		"Caution should be used when adjusting this paramter as it may cause infeasibilities.")
+    @Opt(hasArg = true, description = "The delta for testing equality with zero after the multiplication for projection. "
+            + "Caution should be used when adjusting this paramter as it may cause infeasibilities.")
     public static double drMultZeroDelta = 1e-13;
     @Opt(hasArg = true, description = "The delta for testing equality with zero when sampling the projection matrix.")
     public static double drSampZeroDelta = 1e-2;
@@ -257,7 +259,7 @@ public class TrainerFactory {
     public static boolean drUseIdentityMatrix = false;
     @Opt(hasArg = true, description = "The type of constraint conversion.")
     public static ConstraintConversion drConversion = ConstraintConversion.SEPARATE_EQ_AND_LEQ;
-        
+
     public static DmvRelaxationFactory getDmvRelaxationFactory() throws ParseException {
         CplexPrm cplexPrm = getCplexPrm();
 

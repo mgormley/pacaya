@@ -361,4 +361,13 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         return true;
     }
     
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (FgEdge e : getEdges()) {
+            sb.append(e.toString());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+    
 }

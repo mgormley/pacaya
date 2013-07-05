@@ -29,25 +29,25 @@ public class FgExample {
     private FeatureCache cacheNone;
     /** Whether the original factor graph contains latent variables. */
     private boolean hasLatentVars;
-    /** The variable assignments given in the training data for all the variables in the factor graph. */
-    private VarConfig trainConfig;
+    /** The variable assignments given in the gold data for all the variables in the factor graph. */
+    private VarConfig goldConfig;
     /** The feature extract for the original factor graph. */
     private FeatureExtractor featExtractor;
     
-    public FgExample(FactorGraph fg, VarConfig trainConfig, FeatureExtractor featExtractor) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
         this.fg = fg;
-        this.trainConfig = trainConfig;
+        this.goldConfig = goldConfig;
         this.featExtractor = featExtractor;
         
         // TODO: assert that the training config contains assignments for all the observed and predicted variables.
         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = getVarsOfType(fg.getVars(), VarType.OBSERVED);
-        fgLatPred = fg.getClamped(trainConfig.getIntersection(observedVars));        
+        fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));        
         
         // Get a copy of the factor graph where the observed and predicted variables are clamped.
         List<Var> predictedVars = getVarsOfType(fg.getVars(), VarType.PREDICTED);
-        fgLat = fgLatPred.getClamped(trainConfig.getIntersection(predictedVars));
+        fgLat = fgLatPred.getClamped(goldConfig.getIntersection(predictedVars));
         
         // Does this factor graph contain latent variables?
         hasLatentVars = fg.getVars().size() - observedVars.size() - predictedVars.size() > 0;
@@ -65,8 +65,8 @@ public class FgExample {
             VarSet varsPred = getVarsOfType(vars, VarType.PREDICTED);
             
             // Get the configuration of the specified variables as given in the training data.
-            VarConfig obsConfig = trainConfig.getSubset(varsObs);
-            VarConfig predConfig = trainConfig.getSubset(varsPred);
+            VarConfig obsConfig = goldConfig.getSubset(varsObs);
+            VarConfig predConfig = goldConfig.getSubset(varsPred);
                         
             // Cache the features for this factor.
             cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a);
@@ -175,6 +175,11 @@ public class FgExample {
     /** Gets the original input factor graph. */
     public FactorGraph getOriginalFactorGraph() {
         return fg;
+    }
+
+    /** Gets the gold configuration of the variables. */
+    public VarConfig getGoldConfig() {
+        return goldConfig;
     }
     
 }

@@ -1,16 +1,11 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.BeliefPropagation.BpScheduleType;
-import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.Var.VarType;
 import edu.jhu.util.Alphabet;
 
 public class MbrDecoderTest {
@@ -40,7 +35,7 @@ public class MbrDecoderTest {
         
         decoder.decode(model, data);
         
-        VarConfig mbrVc = decoder.getMbrVarConfig();
+        VarConfig mbrVc = decoder.getMbrVarConfig(0);
         
         assertEquals("V", mbrVc.getStateName(fg.getVars().get(0)));
         System.out.println(mbrVc);
