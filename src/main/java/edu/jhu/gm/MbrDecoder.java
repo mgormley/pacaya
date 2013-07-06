@@ -53,7 +53,7 @@ public class MbrDecoder {
                 VarConfig mbrVarConfig = new VarConfig();
                 
                 FgExample ex = data.get(i);
-                FactorGraph fgLatPred = ex.getFgLatPred(model.getParams());
+                FactorGraph fgLatPred = ex.updateFgLatPred(model.getParams());
                 FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
 
                 // Run inference.

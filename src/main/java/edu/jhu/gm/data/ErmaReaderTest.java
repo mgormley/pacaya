@@ -27,9 +27,10 @@ import edu.jhu.util.Alphabet;
 public class ErmaReaderTest {
 
     // TODO: remove dependence on hard-coded paths.
-    public static final String ERMA_TOY_TRAIN_DATA_FILE = "/Users/mgormley/research/erma/src/main/resources/tutorial/toy.train.data.ff";
-    public static final String ERMA_TOY_TEST_DATA_FILE = "/Users/mgormley/research/erma/src/main/resources/tutorial/toy.test.data.ff";
-    public static final String ERMA_TOY_FEATURE_FILE = "/Users/mgormley/research/erma/src/main/resources/tutorial/toy.template.ff";
+    private static final String ERMA_TUTORIAL_DIR = "/Users/mgormley/research/erma/tmp/tutorial";
+    public static final String ERMA_TOY_TRAIN_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.train.data.ff";
+    public static final String ERMA_TOY_TEST_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.test.data.ff";
+    public static final String ERMA_TOY_FEATURE_FILE = ERMA_TUTORIAL_DIR + "/toy.template.ff";
     
     @Test
     public void testErmaReader() {
@@ -74,14 +75,14 @@ public class ErmaReaderTest {
             {
                 System.out.println("\n\nFeatures for fgLat: ");
                 FeatureCache cacheLat = ex.getFeatCacheLat();
-                FactorGraph fgLat = ex.getFgLat(new double[] { data
+                FactorGraph fgLat = ex.updateFgLat(new double[] { data
                         .getAlphabet().size() });
                 System.out.println(cacheLat.toString(data.getAlphabet()));
             }
             {
                 System.out.println("\n\nFeatures for fgLatPred: ");
                 FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
-                FactorGraph fgLatPred = ex.getFgLatPred(new double[] { data
+                FactorGraph fgLatPred = ex.updateFgLatPred(new double[] { data
                         .getAlphabet().size() });
                 System.out.println(cacheLatPred.toString(data.getAlphabet()));
             }

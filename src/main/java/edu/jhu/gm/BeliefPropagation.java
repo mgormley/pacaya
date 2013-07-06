@@ -1,6 +1,8 @@
 package edu.jhu.gm;
 
 
+import java.util.List;
+
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.util.Timer;
@@ -91,6 +93,7 @@ public class BeliefPropagation implements FgInferencer {
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
     private BpSchedule sched;
+    private List<FgEdge> order;
     
     public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
@@ -98,6 +101,7 @@ public class BeliefPropagation implements FgInferencer {
         this.msgs = new Messages[fg.getNumEdges()];
 
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
+            // Cache the order if this is a sequential update.
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
                 sched = new BfsBpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
@@ -105,6 +109,7 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
+            order = sched.getOrder();
         }
     }
     
@@ -126,7 +131,7 @@ public class BeliefPropagation implements FgInferencer {
                 break;
             }
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                for (FgEdge edge : sched.getOrder()) {
+                for (FgEdge edge : order) {
                     createMessage(edge);
                     sendMessage(edge);
                 }

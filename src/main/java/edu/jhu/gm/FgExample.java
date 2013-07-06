@@ -127,21 +127,38 @@ public class FgExample {
         }
         return subset;      
     }
-    
+
     /**
      * Gets the factor graph with the OBSERVED variables clamped to their values
      * from the training example.
      */
-    public FactorGraph getFgLatPred(double[] params) {
-        return getUpdatedFactorGraph(fgLatPred, cacheLatPred, params);
+    public FactorGraph getFgLatPred() {
+        return fgLatPred;
     }
 
     /**
      * Gets the factor graph with the OBSERVED and PREDICTED variables clamped
      * to their values from the training example.
-     * @param params 
      */
-    public FactorGraph getFgLat(double[] params) {
+    public FactorGraph getFgLat() {
+        return fgLat;
+    }
+    
+    /**
+     * Updates the factor graph with the OBSERVED variables clamped to their values
+     * from the training example.
+     * @param params The parameters with which to update.
+     */
+    public FactorGraph updateFgLatPred(double[] params) {
+        return getUpdatedFactorGraph(fgLatPred, cacheLatPred, params);
+    }
+
+    /**
+     * Updates the factor graph with the OBSERVED and PREDICTED variables clamped
+     * to their values from the training example.
+     * @param params The parameters with which to update.
+     */
+    public FactorGraph updateFgLat(double[] params) {
         return getUpdatedFactorGraph(fgLat, cacheLat, params);
     }
 

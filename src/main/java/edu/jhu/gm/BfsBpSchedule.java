@@ -22,12 +22,9 @@ public class BfsBpSchedule implements BpSchedule {
 
     private static final Logger log = Logger.getLogger(BfsBpSchedule.class);
 
-    private FactorGraph fg;
     private ArrayList<FgEdge> order;
     
     public BfsBpSchedule(FactorGraph fg) {
-        this.fg = fg;
-        
         // Create the order list.
         order = new ArrayList<FgEdge>();
         
@@ -37,37 +34,31 @@ public class BfsBpSchedule implements BpSchedule {
                 throw new IllegalStateException("Connected component is not a tree: " + root);
             }
             // Choose an arbitrary root node for each connected component.
-            addEdgesFromRoot(root);
+            addEdgesFromRoot(root, order, fg);
         }
     }
 
-    private void addEdgesFromRoot(FgNode root) {
+    public static void addEdgesFromRoot(FgNode root, ArrayList<FgEdge> order, FactorGraph fg) {
         Queue<FgNode> queue = new LinkedList<FgNode>();
         Queue<FgNode> leaves = new LinkedList<FgNode>();
         
-        // Run a breadth-first search, just to get the leaves.
+        // Run a breadth-first search, to get a topographically ordered list of
+        // the edges going from the root down to the leaves.
         queue.add(root);
-        bfsSearch(new ArrayList<FgEdge>(), queue, leaves, true);
+        ArrayList<FgEdge> rootToLeavesOrder = new ArrayList<FgEdge>();
+        bfsSearch(rootToLeavesOrder, queue, leaves, fg);
         assert(queue.size() == 0);
         assert(leaves.size() > 0);
         
-        // Now start by sending messages from the leaves up to the root, and
-        // then letting the messages propagate back down to the leaves again.
-        //
-        // Add edges starting at the leaves and going to the root.
-        bfsSearch(order, leaves, queue, false);
-        // The "queue" should now contain only the root node.
-        assert(queue.size() == 1);
-        assert(queue.peek() == root);
-        assert(leaves.size() == 0);
-        //
-        // Add edges starting at the root and going to the leaves.
-        bfsSearch(order, queue, leaves, true);
-        assert(queue.size() == 0);
-        assert(leaves.size() > 0);
+        // Add the opposing edges in reverse order of the BFS search from above.
+        for (int i=rootToLeavesOrder.size()-1; i >= 0; i--) {
+            order.add(rootToLeavesOrder.get(i).getOpposing());
+        }
+        // Add the BFS search edges in order.
+        order.addAll(rootToLeavesOrder);
     }
     
-    private void bfsSearch(ArrayList<FgEdge> order, Queue<FgNode> queue, Queue<FgNode> leaves, boolean topDown) {
+    public static void bfsSearch(ArrayList<FgEdge> order, Queue<FgNode> queue, Queue<FgNode> leaves, FactorGraph fg) {
         // Unmark all the edges.
         fg.setMarkedAllEdges(false);
         
@@ -88,11 +79,8 @@ public class BfsBpSchedule implements BpSchedule {
                 FgNode child = edge.getChild();
                 order.add(edge);
                 numAdded++;
-                // If this is running top down (from root to leaves), always queue the node.
-                // Otherwise, only queue a node if all but one of its incoming edges is marked.
-                if (topDown || getNumMarked(child.getInEdges()) >= child.getInEdges().size() - 1) {
-                    queue.add(child);
-                }
+                // Since this is running top down (from root to leaves), always queue the node.
+                queue.add(child);
             }
             if (numAdded == 0) {
                 leaves.add(node);
@@ -100,7 +88,7 @@ public class BfsBpSchedule implements BpSchedule {
         }
     }
 
-    private int getNumMarked(List<FgEdge> edges) {
+    private static int getNumMarked(List<FgEdge> edges) {
         int numMarked = 0;
         for (FgEdge e : edges) {
             if (e.isMarked()) {

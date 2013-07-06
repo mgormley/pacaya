@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.collections.PIntObjectHashMap;
+import edu.jhu.util.math.LogAddTable;
 
 public class Utilities {
 
@@ -203,8 +204,8 @@ public class Utilities {
      * @return log(p + q) = log(exp(x) + exp(y))
      */
     public static double logAdd(double x, double y) {
-        return logAddExact(x,y);
-        //return LogAddTable.logAdd(x,y);
+        //return logAddExact(x,y);
+        return LogAddTable.logAdd(x,y);
     }
     
     /**
@@ -217,8 +218,8 @@ public class Utilities {
      * @throws IllegalStateException if x < y
      */
     public static double logSubtract(double x, double y) {
-        return logSubtractExact(x,y);
-        //return LogAddTable.logSubtract(x,y);
+        //return logSubtractExact(x,y);
+        return LogAddTable.logSubtract(x,y);
     }
     
     public static double logAddExact(double x, double y) {

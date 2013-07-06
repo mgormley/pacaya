@@ -95,7 +95,9 @@ public class CrfRunner {
             // Train a model.
             ErmaReader er = new ErmaReader(true);
             er.read(featureFileIn, train);
-            FgExamples data = er.getDataExs(alphabet);
+            FgExamples data = er.getDataExs(alphabet);  
+            er = null; // Allow for GC.
+            log.info(String.format("Read %d train examples", data.size()));
             
             if (model == null) {
                 model = new FgModel(alphabet);
@@ -154,7 +156,9 @@ public class CrfRunner {
             ErmaReader er = new ErmaReader(true);
             er.read(featureFileIn, train);
             FgExamples data = er.getDataExs(alphabet);
-            
+            er = null; // Allow for GC.
+            log.info(String.format("Read %d test examples", data.size()));
+
             // Decode the test data.
             log.info("Running the decoder on test data.");
             MbrDecoder decoder = getDecoder();
@@ -210,6 +214,7 @@ public class CrfRunner {
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
+        bpPrm.maxIterations = 1;
         return bpPrm;
     }    
     
