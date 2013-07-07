@@ -1,6 +1,7 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,7 @@ import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
@@ -100,7 +102,20 @@ public class CrfObjectiveTest {
     }
     
     @Test
-    public void testLogLinearModelShapes() {
+    public void testLogLinearModelShapesLogProbs() {
+        // Test with inference in the log-domain.
+        boolean logDomain = true;        
+        testLogLinearModelShapesHelper(logDomain);
+    }
+    
+    @Test
+    public void testLogLinearModelShapesProbs() {
+        // Test with inference in the prob-domain.
+        boolean logDomain = false;        
+        testLogLinearModelShapesHelper(logDomain);
+    }
+
+    private void testLogLinearModelShapesHelper(boolean logDomain) {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(30, "circle", "solid");
         exs.addEx(15, "circle");
@@ -110,7 +125,9 @@ public class CrfObjectiveTest {
         double[] params = new double[]{3.0, 2.0};
 
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(2, exs.getData(), getInfFactory());
+        CrfObjective obj = new CrfObjective(2, exs.getData(), getInfFactory(logDomain));
+        
+        // Test log-likelihood.
         double ll = obj.getValue(params);
         System.out.println(ll);
         assertEquals(-95.531, ll, 1e-3);
@@ -123,28 +140,60 @@ public class CrfObjectiveTest {
         // Test expected feature counts.
         FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
         assertArrayEquals(new int[]{0, 1}, expFeats.getIndices());
-        JUnitUtils.assertArrayEquals(new double[]{57.15444760934599, 52.84782467867294}, expFeats.getValues(), 1e-13);
+        JUnitUtils.assertArrayEquals(new double[]{57.15444760934599, 52.84782467867294}, expFeats.getValues(), 1e-3);
         
         // Test gradient.        
         double[] gradient = obj.getGradient(params);        
-        JUnitUtils.assertArrayEquals(new double[]{-12.154447609345993, -12.847824678672943}, gradient, 1e-10);
+        JUnitUtils.assertArrayEquals(new double[]{-12.154447609345993, -12.847824678672943}, gradient, 1e-3);
+    }
+    
+    @Test
+    public void testLogLinearModelShapesOneExampleLogProbs() {
+        boolean logDomain = true;
+        testLogLinearModelShapesOneExampleHelper(logDomain);
     }
 
     @Test
-    public void testLogLinearModelShapesOneExample() {
+    public void testLogLinearModelShapesOneExampleProbs() {
+        boolean logDomain = false;
+        testLogLinearModelShapesOneExampleHelper(logDomain);
+    }
+    
+    private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(1, "circle");
         exs.addEx(0, "solid");
+        double[] params = new double[]{3.0, 2.0};
         
-        CrfObjective obj = new CrfObjective(2, exs.getData(), getInfFactory());
-        double ll = obj.getValue(new double[]{3.0, 2.0});
+        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
+        infFactory = getInfFactory(logDomain);
+        CrfObjective obj = new CrfObjective(2, exs.getData(), infFactory);
+                
+        assertEquals(2, exs.getAlphabet().size());
+
+        // Test log-likelihood.
+        double ll = obj.getValue(params);
         System.out.println(ll);
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
+        
+        // Test observed feature counts.
+        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        assertArrayEquals(new int[]{0}, obsFeats.getIndices());
+        JUnitUtils.assertArrayEquals(new double[]{1}, obsFeats.getValues(), 1e-13);
+        
+        // Test expected feature counts.
+        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        assertArrayEquals(new int[]{0, 1}, expFeats.getIndices());
+        JUnitUtils.assertArrayEquals(new double[]{0.7310, 0.2689}, expFeats.getValues(), 1e-3);
+        
+        // Test gradient.        
+        double[] gradient = obj.getGradient(params);        
+        JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
     }
     
-    public FgInferencerFactory getInfFactory() {
+    public FgInferencerFactory getInfFactory(boolean logDomain) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.logDomain = logDomain;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;

@@ -67,11 +67,11 @@ public class CrfObjective implements Function {
         log.warn("Running inference an extra time to compute marginal likelihood.");
         
         // Run inference to compute Z(y,x) by summing over the latent variables w.
-        FactorGraph fgLat = ex.updateFgLat(params);
         FgInferencer infLat = infLatList.get(i);
+        FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
         infLat.run();
 
-        double numerator = infLat.getPartition();
+        double numerator = infLat.isLogDomain() ? infLat.getPartition() : Utilities.log(infLat.getPartition());
 
         // "Multiply" in all the fully clamped factors. These are the
         // factors which do not include any latent variables. 
@@ -84,11 +84,11 @@ public class CrfObjective implements Function {
         }
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        FactorGraph fgLatPred = ex.updateFgLatPred(params);
         FgInferencer infLatPred = infLatPredList.get(i);
+        FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
         infLatPred.run();
 
-        double denominator = infLatPred.getPartition();
+        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : Utilities.log(infLatPred.getPartition());
 
         // TODO: We could multiply in any fully clamped factors in fgLatPred.
         
@@ -121,14 +121,14 @@ public class CrfObjective implements Function {
         FgExample ex = data.get(i);
         
         // Get the "observed" feature counts for this factor, by summing over the latent variables.
-        FactorGraph fgLat = ex.updateFgLat(params);
         FgInferencer infLat = infLatList.get(i);
+        FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
         infLat.run();
         FeatureVector observedFeats = calcExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat);
     
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        FactorGraph fgLatPred = ex.updateFgLatPred(params);
         FgInferencer infLatPred = infLatPredList.get(i);
+        FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
         infLatPred.run();
         FeatureVector expectedFeats = calcExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred);
 
@@ -159,10 +159,11 @@ public class CrfObjective implements Function {
                 expectedFeats.add(featCache.getFeatureVector(factorId, 0));
             } else {
                 for (int c=0; c<numConfigs; c++) {       
-                    // Get the log-probability of the c'th configuration for this factor.
-                    // TODO: should factors just store probabilities?
-                    double logProb = factorMarginal.getValue(c);
-                    double prob = Utilities.exp(logProb);
+                    // Get the probability of the c'th configuration for this factor.
+                    double prob = factorMarginal.getValue(c);
+                    if (inferencer.isLogDomain()) {
+                        prob = Utilities.exp(prob);
+                    }
                     // Get the feature counts when they are clamped to the c'th configuration for this factor.
                     FeatureVector tmpFeats = new FeatureVector(featCache.getFeatureVector(factorId, c));
                     // Scale the feature counts by the marginal probability of the c'th configuration.
@@ -179,8 +180,8 @@ public class CrfObjective implements Function {
         FeatureVector obsFeats = new FeatureVector();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FactorGraph fgLat = ex.updateFgLat(params);
             FgInferencer infLat = infLatList.get(i);
+            FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
             infLat.run();
             obsFeats.add(calcExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat));
         }
@@ -192,8 +193,8 @@ public class CrfObjective implements Function {
         FeatureVector expFeats = new FeatureVector();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FactorGraph fgLatPred = ex.updateFgLatPred(params);
             FgInferencer infLatPred = infLatPredList.get(i);
+            FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
             infLatPred.run();
             expFeats.add(calcExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred));
         }

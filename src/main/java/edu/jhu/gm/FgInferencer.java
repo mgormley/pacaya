@@ -1,11 +1,10 @@
 package edu.jhu.gm;
 
-
 /**
  * An inference algorithm for a factor graph.
  * 
  * @author mgormley
- *
+ * 
  */
 public interface FgInferencer {
 
@@ -16,39 +15,63 @@ public interface FgInferencer {
     void run();
 
     /**
-     * Gets the approximate log-probabilities for the marginal distribution of a
-     * single variable.
+     * Gets the approximate (log-)probabilities for the marginal distribution of
+     * a single variable.
+     * 
+     * @return The marginal distribution as log-probabilities if isLogDomain()
+     *         == true, and probabilities otherwise.
      */
     Factor getMarginals(Var var);
 
     /**
-     * Gets the approximate log-probabilities for the marginal distribution of a
-     * set of variables.
+     * Gets the approximate (log-)probabilities for the marginal distribution of
+     * a set of variables.
+     * 
+     * @return The marginal distribution as log-probabilities if isLogDomain()
+     *         == true, and probabilities otherwise.
      */
     Factor getMarginals(VarSet varSet);
 
     /**
-     * Gets the approximate log-probabilities for the marginal distribution of a
-     * single factor.
+     * Gets the approximate (log-)probabilities for the marginal distribution of
+     * a single factor.
+     * 
+     * @return The marginal distribution as log-probabilities if isLogDomain()
+     *         == true, and probabilities otherwise.
      */
     Factor getMarginals(Factor factor);
 
     /**
-     * Gets the approximate log-probabilities for the marginal distribution of a
-     * single variable specified by its index.
+     * Gets the approximate (log-)probabilities for the marginal distribution of
+     * a single variable specified by its index.
+     * 
+     * @return The marginal distribution as log-probabilities if isLogDomain()
+     *         == true, and probabilities otherwise.
      */
     Factor getMarginalsForVarId(int varId);
 
     /**
-     * Gets the approximate log-probabilities for the marginal distribution of a
-     * single factor specified by its index.
+     * Gets the approximate (log-)probabilities for the marginal distribution of
+     * a single factor specified by its index.
+     * 
+     * @return The marginal distribution as log-probabilities if isLogDomain()
+     *         == true, and probabilities otherwise.
      */
     Factor getMarginalsForFactorId(int factorId);
 
     /**
-     * Gets the log of the (approximate) partition function, which is the
+     * Gets the log of the (approximate) (log-)partition function, which is the
      * normalizing constant for the factor graph.
+     * 
+     * @return The log-partition function if isLogDomain() == true, the
+     *         partition function otherwise.
      */
     double getPartition();
-    
+
+    /**
+     * Whether the inferencer returns marginals and the partition function in
+     * the log-domain or the probability domain.
+     */
+    boolean isLogDomain();
+
 }

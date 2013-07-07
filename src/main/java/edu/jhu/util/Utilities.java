@@ -12,12 +12,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.collections.PIntObjectHashMap;
 import edu.jhu.util.math.LogAddTable;
 
 public class Utilities {
 
+    @Opt(hasArg = true, description = "Whether to use a log-add table or log-add exact.")
+    public static boolean useLogAddTable = false;
+    
     private static final double DEFAULT_DELTA = 1e-13;
 
     private Utilities() {
@@ -204,8 +208,11 @@ public class Utilities {
      * @return log(p + q) = log(exp(x) + exp(y))
      */
     public static double logAdd(double x, double y) {
-        //return logAddExact(x,y);
-        return LogAddTable.logAdd(x,y);
+        if (useLogAddTable) {
+            return LogAddTable.logAdd(x,y);
+        } else {
+            return logAddExact(x,y);
+        }
     }
     
     /**
@@ -218,8 +225,11 @@ public class Utilities {
      * @throws IllegalStateException if x < y
      */
     public static double logSubtract(double x, double y) {
-        //return logSubtractExact(x,y);
-        return LogAddTable.logSubtract(x,y);
+        if (useLogAddTable) {
+            return LogAddTable.logSubtract(x,y);
+        } else {
+            return logSubtractExact(x,y);
+        }
     }
     
     public static double logAddExact(double x, double y) {

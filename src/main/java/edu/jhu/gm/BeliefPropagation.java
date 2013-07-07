@@ -372,5 +372,10 @@ public class BeliefPropagation implements FgInferencer {
             return prod.getSum();
         }
     }
+
+    @Override
+    public boolean isLogDomain() {
+        return prm.logDomain;
+    }
     
 }

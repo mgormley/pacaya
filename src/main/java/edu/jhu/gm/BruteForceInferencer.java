@@ -95,11 +95,19 @@ public class BruteForceInferencer implements FgInferencer {
 
     @Override
     public double getPartition() {
+        if (joint.getVars().size() == 0) {
+            return logDomain ? 0.0 : 1.0;
+        }
         if (logDomain) {
             return joint.getLogSum();
         } else {
             return joint.getSum();
         }
+    }
+
+    @Override
+    public boolean isLogDomain() {
+        return logDomain;
     }
 
 }

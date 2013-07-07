@@ -28,6 +28,7 @@ import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.dist.Gaussian;
@@ -74,10 +75,19 @@ public class CrfRunner {
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
     public static InitParams initParams = InitParams.UNIFORM;
     
+    // Options for inference.
+    @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
+    public static boolean logDomain = true;
+    
+    
     public CrfRunner() {
     }
 
     public void run() throws ParseException, IOException {  
+        if (logDomain) {
+            Utilities.useLogAddTable = true;
+        }
+        
         // Get a model.
         FgModel model = null;
         Alphabet<Feature> alphabet;
@@ -93,8 +103,10 @@ public class CrfRunner {
         if (trainType != null && train != null) {
             assert(trainType == DatasetType.ERMA);
             // Train a model.
+            // TODO: add option for useUnsupportedFeatures.
             ErmaReader er = new ErmaReader(true);
             er.read(featureFileIn, train);
+            log.info("Converting ERMA objects to our objects.");
             FgExamples data = er.getDataExs(alphabet);  
             er = null; // Allow for GC.
             log.info(String.format("Read %d train examples", data.size()));
@@ -210,10 +222,10 @@ public class CrfRunner {
 
     private static BeliefPropagationPrm getInfFactory() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = true;
+        bpPrm.logDomain = logDomain;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        bpPrm.normalizeMessages = false;
+        bpPrm.normalizeMessages = logDomain ? false : true;
         bpPrm.maxIterations = 1;
         return bpPrm;
     }    

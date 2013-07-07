@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.util.Utilities;
 
 /**
  * Factor graph example. This class facilitates creation of the clamped factor
@@ -148,28 +149,35 @@ public class FgExample {
      * Updates the factor graph with the OBSERVED variables clamped to their values
      * from the training example.
      * @param params The parameters with which to update.
+     * @param logDomain TODO
      */
-    public FactorGraph updateFgLatPred(double[] params) {
-        return getUpdatedFactorGraph(fgLatPred, cacheLatPred, params);
+    public FactorGraph updateFgLatPred(double[] params, boolean logDomain) {
+        return getUpdatedFactorGraph(fgLatPred, cacheLatPred, params, logDomain);
     }
 
     /**
      * Updates the factor graph with the OBSERVED and PREDICTED variables clamped
      * to their values from the training example.
      * @param params The parameters with which to update.
+     * @param logDomain TODO
      */
-    public FactorGraph updateFgLat(double[] params) {
-        return getUpdatedFactorGraph(fgLat, cacheLat, params);
+    public FactorGraph updateFgLat(double[] params, boolean logDomain) {
+        return getUpdatedFactorGraph(fgLat, cacheLat, params, logDomain);
     }
 
-    /** Updates the factor graph with the latest parameter vector. */
-    private static FactorGraph getUpdatedFactorGraph(FactorGraph fg, FeatureCache cache, double[] params) {
+    /** Updates the factor graph with the latest parameter vector. 
+     * @param logDomain TODO*/
+    private static FactorGraph getUpdatedFactorGraph(FactorGraph fg, FeatureCache cache, double[] params, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
             Factor factor = fg.getFactor(a);
             int numConfigs = factor.getVars().calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {
-                // Set to log of the factor's value.
-                factor.setValue(c, cache.getFeatureVector(a, c).dot(params));
+                if (logDomain) {
+                    // Set to log of the factor's value.
+                    factor.setValue(c, cache.getFeatureVector(a, c).dot(params));
+                } else {
+                    factor.setValue(c, Utilities.exp(cache.getFeatureVector(a, c).dot(params)));
+                }
             }
         }
         return fg;

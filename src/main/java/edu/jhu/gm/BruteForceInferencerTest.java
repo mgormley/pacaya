@@ -103,8 +103,8 @@ public class BruteForceInferencerTest {
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-3);
         
-        assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(0).getVars());
-        marg = bp.getMarginals(fg.getFactor(0));
+        assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(1).getVars());
+        marg = bp.getMarginals(fg.getFactor(1));
         goldMarg = new double[] { 0.3, 0.075, 0.2, 0.425 };
         if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
