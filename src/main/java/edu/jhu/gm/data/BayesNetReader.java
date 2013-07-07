@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -66,7 +67,7 @@ public class BayesNetReader {
         // Read CPD file.
         BufferedReader cpdReader = new BufferedReader(new InputStreamReader(cpdIs));
         
-        factorMap = new HashMap<VarSet, Factor>();
+        factorMap = new LinkedHashMap<VarSet, Factor>();
         String line;
         while ((line = cpdReader.readLine()) != null) {
             // Parse out the variable configuration.           
