@@ -53,5 +53,21 @@ public class FgExamples implements Iterable<FgExample> {
         }
         return varConfigList;
     }
+
+    public int getNumFactors() {
+        int numFactors = 0;
+        for (FgExample ex : examples) {
+            numFactors += ex.getOriginalFactorGraph().getNumFactors();
+        }
+        return numFactors;
+    }
+
+    public int getNumVars() {
+        int numVars = 0;
+        for (FgExample ex : examples) {
+            numVars += ex.getOriginalFactorGraph().getNumVars();
+        }
+        return numVars;
+    }
     
 }

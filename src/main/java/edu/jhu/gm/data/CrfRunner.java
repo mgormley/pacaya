@@ -109,8 +109,12 @@ public class CrfRunner {
             log.info("Converting ERMA objects to our objects.");
             FgExamples data = er.getDataExs(alphabet);  
             er = null; // Allow for GC.
-            log.info(String.format("Read %d train examples", data.size()));
             
+            log.info("Num examples in train: " + data.size());
+            log.info("Num factors in train: " + data.getNumFactors());
+            log.info("Num variables in train: " + data.getNumVars());
+            log.info("Num features: " + data.getAlphabet().size());
+                        
             if (model == null) {
                 model = new FgModel(alphabet);
                 if (initParams == InitParams.RANDOM) {
@@ -225,7 +229,8 @@ public class CrfRunner {
         bpPrm.logDomain = logDomain;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        bpPrm.normalizeMessages = logDomain ? false : true;
+        // TODO: we need to figure out how to compute the log-likelihood AND normalize the marginals.
+        bpPrm.normalizeMessages = false;
         bpPrm.maxIterations = 1;
         return bpPrm;
     }    
