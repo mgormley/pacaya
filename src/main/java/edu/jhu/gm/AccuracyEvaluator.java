@@ -2,8 +2,11 @@ package edu.jhu.gm;
 
 import java.util.List;
 
+import edu.jhu.gm.Var.VarType;
+
 public class AccuracyEvaluator {
 
+    /** Computes the accuracy on the PREDICTED variables. */
     public double evaluate(List<VarConfig> goldConfigs, List<VarConfig> predictedConfigs) {
         int numCorrect = 0;
         int numTotal = 0;
@@ -12,14 +15,16 @@ public class AccuracyEvaluator {
         for (int i=0; i<goldConfigs.size(); i++) {
             VarConfig gold = goldConfigs.get(i);
             VarConfig pred = predictedConfigs.get(i);
-            assert (gold.getVars().equals(pred.getVars()));
+            //assert (gold.getVars().equals(pred.getVars()));
             for (Var v : gold.getVars()) {
-                int goldState = gold.getState(v);
-                int predState = pred.getState(v);
-                if (goldState == predState) {
-                    numCorrect++;
+                if (v.getType() == VarType.PREDICTED) {
+                    int goldState = gold.getState(v);
+                    int predState = pred.getState(v);
+                    if (goldState == predState) {
+                        numCorrect++;
+                    }
+                    numTotal++;
                 }
-                numTotal++;
             }
         }
         

@@ -22,6 +22,7 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;

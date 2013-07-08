@@ -71,7 +71,11 @@ public class VarConfig {
     
     /** Gets the state (in this config) for a given variable. */
     public int getState(Var var) {
-        return config.get(var);
+        Integer state = config.get(var);
+        if (state == null) {
+            throw new RuntimeException("VarConfig does not contain var: " + var);
+        }
+        return state;
     }
 
     /** Gets the variable set. */
