@@ -1,5 +1,7 @@
 package edu.jhu.optimize;
 
+import edu.jhu.util.math.Vectors;
+
 /**
  * L1 regularizer on the parameters.
  * 
@@ -33,7 +35,7 @@ public class L1 implements Regularizer {
     }
     
     /**
-     * Gets \lambda * |\theta|_1.
+     * Gets - \lambda * |\theta|_1.
      */
     @Override
     public double getValue(double[] params) {
@@ -41,7 +43,7 @@ public class L1 implements Regularizer {
         for (int i=0; i<params.length; i++) {
             sum += Math.abs(params[i]);
         }
-        return lambda * sum;
+        return - lambda * sum;
     }
 
     @Override
@@ -59,6 +61,8 @@ public class L1 implements Regularizer {
                 //throw new RuntimeException("The derivative is undefined at zero.");
             }
         }
+        // Since we're subtracting this norm.
+        Vectors.scale(gradient, -1);
         return gradient;
     }
 

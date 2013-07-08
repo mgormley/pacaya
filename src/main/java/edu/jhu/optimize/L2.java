@@ -30,24 +30,24 @@ public class L2 implements Regularizer {
     }
     
     /**
-     * Gets the sum of squares times 1/(2\sigma^2).
+     * Gets the negated sum of squares times 1/(2\sigma^2).
      */
     @Override
     public double getValue(double[] params) {
         double sum = Vectors.dotProduct(params, params);
         sum /= (2 * variance);
-        return sum;
+        return - sum;
     }
 
     /**
-     * Gets the parameter value times 1/(\sigma^2).
+     * Gets the negative parameter value times 1/(\sigma^2).
      */
     // TODO: Why do Sutton & McCallum include the sum of the parameters here and not just the value for each term of the gradient.
     @Override
     public double[] getGradient(double[] params) {
         double[] gradient = new double[params.length];
         for (int j=0; j<gradient.length; j++) {
-            gradient[j] = params[j] / (variance);
+            gradient[j] = - params[j] / variance;
         }
         return gradient;
     }
