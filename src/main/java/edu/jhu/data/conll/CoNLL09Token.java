@@ -77,7 +77,7 @@ public class CoNLL09Token {
         String[] splits = whitespace.split(line);
         id = Integer.parseInt(splits[0]);
         form = splits[1];
-        lemma = fromUnderscoreString(splits[2]);
+        lemma = splits[2];
         plemma = fromUnderscoreString(splits[3]);
         pos = fromUnderscoreString(splits[4]);
         ppos = fromUnderscoreString(splits[5]);

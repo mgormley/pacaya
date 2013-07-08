@@ -111,6 +111,7 @@ public class CnfGrammar {
         }
     }
 
+    /** Gets all lexical rules with the given child. */
     public final ArrayList<Rule> getLexicalRulesWithChild(int child) {
         return lexRulesForChild[child];
     }

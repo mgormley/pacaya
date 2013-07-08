@@ -6,6 +6,7 @@ import edu.jhu.util.vector.IntDoubleEntry;
 /** Cache of feature vectors for a factor graph. */
 public class FeatureCache {
     
+    /** Indexed by factor ID, and the variable configuration. */
     private FeatureVector[][] feats;
     
     public FeatureCache(FactorGraph fg) {
