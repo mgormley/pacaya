@@ -22,7 +22,6 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.Var.VarType;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
@@ -105,17 +104,8 @@ public class CrfRunner {
             assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            ErmaReader er = new ErmaReader(true);
-            er.read(featureFileIn, train);
-            log.info("Converting ERMA objects to our objects.");
-            FgExamples data = er.getDataExs(alphabet);  
-            er = null; // Allow for GC.
+            FgExamples data = getData(alphabet, trainType, train, "train");
             
-            log.info("Num examples in train: " + data.size());
-            log.info("Num factors in train: " + data.getNumFactors());
-            log.info("Num variables in train: " + data.getNumVars());
-            log.info("Num features: " + data.getAlphabet().size());
-                        
             if (model == null) {
                 model = new FgModel(alphabet);
                 if (initParams == InitParams.RANDOM) {
@@ -136,19 +126,8 @@ public class CrfRunner {
             model = trainer.train(model, data);
             trainer = null; // Allow for GC.
             
-            // Decode the training data.
-            log.info("Running the decoder on training data.");
-            MbrDecoder decoder = getDecoder();
-            decoder.decode(model, data);
-            
-            AccuracyEvaluator accEval = new AccuracyEvaluator();
-            double accuracy = accEval.evaluate(data.getGoldConfigs(), decoder.getMbrVarConfigList());
-            log.info("Train accuracy: " + accuracy);
-            
-            if (trainPredOut != null) {
-                ErmaWriter ew = new ErmaWriter();
-                ew.writePredictions(trainPredOut, decoder.getMbrVarConfigList(), decoder.getVarMargMap());
-            }
+            // Decode and evaluate the train data.
+            decodeAndEval(model, data, trainPredOut, "train");
         } else {
             throw new ParseException("Either train/trainType or modelIn must be specified.");
         }
@@ -167,38 +146,45 @@ public class CrfRunner {
         }
 
         if (test != null && testType != null) {
-            alphabet.stopGrowth();
-            
-            assert(testType == DatasetType.ERMA);
             // Test the model on test data.
-            ErmaReader er = new ErmaReader(true);
-            er.read(featureFileIn, train);
-            FgExamples data = er.getDataExs(alphabet);
-            er = null; // Allow for GC.
-            log.info(String.format("Read %d test examples", data.size()));
+            alphabet.stopGrowth();
+            FgExamples data = getData(alphabet, testType, test, "test");
 
-            // Decode the test data.
-            log.info("Running the decoder on test data.");
-            MbrDecoder decoder = getDecoder();
-            decoder.decode(model, data);
-            
-            AccuracyEvaluator accEval = new AccuracyEvaluator();
-            double accuracy = accEval.evaluate(data.getGoldConfigs(), decoder.getMbrVarConfigList());
-            log.info("Test accuracy: " + accuracy);
-
-            if (testPredOut != null) {
-                ErmaWriter ew = new ErmaWriter();
-                ew.writePredictions(testPredOut, decoder.getMbrVarConfigList(), decoder.getVarMargMap());
-            }
+            // Decode and evaluate the test data.
+            decodeAndEval(model, data, testPredOut, "test");
         }
     }
 
-    private MbrDecoder getDecoder() {
-        MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
-        decoderPrm.infFactory = getInfFactory();
-        decoderPrm.loss = Loss.ACCURACY;
-        MbrDecoder decoder = new MbrDecoder(decoderPrm);
-        return decoder;
+    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) {
+        if (dataType != DatasetType.ERMA){ 
+            throw new IllegalStateException();
+        }
+        ErmaReader er = new ErmaReader(true);
+        er.read(featureFileIn, dataFile);
+        log.info("Converting ERMA objects to our objects.");
+        FgExamples data = er.getDataExs(alphabet);  
+        
+        log.info(String.format("Num examples in %s: %d", name, data.size()));
+        log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        log.info(String.format("Num features: %d", data.getAlphabet().size()));
+        return data;
+    }
+
+    private void decodeAndEval(FgModel model, FgExamples data, File predOut, String name) throws IOException {
+        // Decode the training data.
+        log.info("Running the decoder on " + name + " data.");
+        MbrDecoder decoder = getDecoder();
+        decoder.decode(model, data);
+        
+        AccuracyEvaluator accEval = new AccuracyEvaluator();
+        double accuracy = accEval.evaluate(data.getGoldConfigs(), decoder.getMbrVarConfigList());
+        log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
+        
+        if (predOut != null) {
+            ErmaWriter ew = new ErmaWriter();
+            ew.writePredictions(predOut, decoder.getMbrVarConfigList(), decoder.getVarMargMap());
+        }
     }
 
     /* --------- Factory Methods ---------- */
@@ -236,6 +222,14 @@ public class CrfRunner {
         bpPrm.maxIterations = 1;
         return bpPrm;
     }    
+
+    private MbrDecoder getDecoder() {
+        MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
+        decoderPrm.infFactory = getInfFactory();
+        decoderPrm.loss = Loss.ACCURACY;
+        MbrDecoder decoder = new MbrDecoder(decoderPrm);
+        return decoder;
+    }
     
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(CrfRunner.class);
