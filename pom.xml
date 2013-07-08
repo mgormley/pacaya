@@ -52,19 +52,19 @@
 
 	   Compile goal should be added before assembly:single or
 	   otherwise the code on your own project is not included.
-	   --> 
+    	   -->
       <plugin>
-	<artifactId>maven-assembly-plugin</artifactId>
-	<configuration>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
           <archive>
             <manifest>
               <mainClass>edu.jhu.PipelineRunner</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
+            <descriptorRef>jar-with-deps</descriptorRef>
           </descriptorRefs>
-	</configuration>
+        </configuration>
       </plugin>
       <!-- The following plugin includes alternate source directories in the compilation -->
       <!--
