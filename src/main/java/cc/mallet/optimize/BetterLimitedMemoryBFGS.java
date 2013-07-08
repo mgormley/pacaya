@@ -26,7 +26,7 @@ import cc.mallet.types.MatrixOps;
 import cc.mallet.util.MalletLogger;
 
 /**
- * NOTICE: Improved this class by exposing more of the parameters.
+ * NOTICE: Modified this class to give public access to more of the parameters.
  * 
  * @author mgormley
  *
@@ -207,6 +207,37 @@ public class BetterLimitedMemoryBFGS implements Optimizer
 			}
 
 			if ( sy > 0 ) {
+			    /*
+                 * From :
+                 * http://comments.gmane.org/gmane.comp.ai.mallet.devel/1927
+                 * 
+                 * From my recent experience working with L-BFGS implementation
+                 * in Mallet, I found out that the exception/error sy > 0 (sy <
+                 * 0 is the so called curvature condition) occurs when the line
+                 * search returns the next point such that it doesn't satisfy
+                 * this curvature condition anymore. At a high level, the
+                 * curvature condition needs to be satisfied in order to ensure
+                 * that the step directions computed by L-BFGS continue to be
+                 * ascent directions (in case of objective function
+                 * maximization). Now if the objective function is concave, the
+                 * curvature condition is always automatically satisfied even if
+                 * we find the next point inside the line search using just the
+                 * first Wolfe's condition (the so called sufficient function
+                 * increase condition). However, for my case, my objective was
+                 * non-concave and the line search with just first Wolfe's
+                 * condition was insufficient. So I have to explicitly add the
+                 * second or the strong Wolfe's condition to the backtrack line
+                 * search implementation within Mallet. Then everything worked
+                 * out just fine for me and I never saw this exception again.
+                 * 
+                 * Regardless of whether your experience matches with mine or
+                 * not (perhaps because your objective is already concave), I
+                 * would suggest you to read Ch 3 and 6 of the book Numerical
+                 * Optimization by Nocedal and Wright which covers this issue
+                 * (look at the beginning of Ch 6) and provides nice
+                 * introduction to line search and quasi-newton methods for
+                 * unconstrained optimization.
+                 */
 				throw new InvalidOptimizableException ("sy = "+sy+" > 0" );
 			}
 
