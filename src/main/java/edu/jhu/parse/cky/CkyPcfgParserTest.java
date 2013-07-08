@@ -19,14 +19,29 @@ public class CkyPcfgParserTest {
     public static final String r0GrammarFile = "/Users/mgormley/research/parsing/data/grammars/eng.R0.gr.gz";
     
     @Test
-    public void testSimpleSentence1() throws IOException {
+    public void testSimpleSentence1() throws IOException {        
+        testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.FULL);
+        testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.FULL);
+        testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.FULL);
+        testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.DOUBLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.DOUBLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.DOUBLE_HASH);
+    }
+
+    private void testSimpleSentence1Helper(LoopOrder loopOrder, ChartCellType cellType) throws IOException {
         // time flies like an arrow.
         CnfGrammarBuilder builder = new CnfGrammarBuilder();
         builder.loadFromResource(CnfGrammarBuilderTest.timeFliesGrammarResource);
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar);
+        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
@@ -40,14 +55,29 @@ public class CkyPcfgParserTest {
     }
     
     @Test
-    public void testSimpleSentence2() throws IOException {
+    public void testSimpleSentence2() throws IOException {      
+        testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.FULL);
+        testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.FULL);
+        testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.FULL);
+        testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.FULL_BREAK_TIES);
+        testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.DOUBLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.DOUBLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.DOUBLE_HASH);
+    }
+
+    private void testSimpleSentence2Helper(LoopOrder loopOrder, ChartCellType cellType) throws IOException {
         // an arrow flies like time
         CnfGrammarBuilder builder = new CnfGrammarBuilder();
         builder.loadFromResource(CnfGrammarBuilderTest.timeFliesGrammarResource);
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<BinaryTree, Double> pair = parseSentence("an arrow flies like time", grammar);
+        Pair<BinaryTree, Double> pair = parseSentence("an arrow flies like time", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
@@ -63,13 +93,16 @@ public class CkyPcfgParserTest {
     
     @Test
     public void testLargeGrammar() throws IOException {
+        LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        ChartCellType cellType = ChartCellType.FULL;
+        
         // time flies like an arrow.
         CnfGrammarBuilder builder = new CnfGrammarBuilder();
         builder.loadFromFile(r0GrammarFile);
         
         CnfGrammar grammar = builder.getGrammar();
                 
-        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar);
+        Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
         double logProb = pair.get2();
         
@@ -84,13 +117,13 @@ public class CkyPcfgParserTest {
     }
     
     // TODO: we should parse with each method and check that we get the same solution.
-    public static Pair<BinaryTree, Double> parseSentence(String sentStr, CnfGrammar grammar) {
+    public static Pair<BinaryTree, Double> parseSentence(String sentStr, CnfGrammar grammar, LoopOrder loopOrder, ChartCellType cellType) {
         SentenceCollection sentences = new SentenceCollection(grammar.getLexAlphabet());
         sentences.addSentenceFromString(sentStr);
         Sentence sentence = sentences.get(0);
         CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
-        prm.loopOrder = LoopOrder.LEFT_CHILD;
-        prm.cellType = ChartCellType.FULL;
+        prm.loopOrder = loopOrder;
+        prm.cellType = cellType;
         prm.cacheChart = true;
         Chart chart = new CkyPcfgParser(prm).parseSentence(sentence, grammar);
         return chart.getViterbiParse();
