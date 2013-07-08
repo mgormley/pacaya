@@ -30,6 +30,7 @@ public class ErmaWriter {
                 writer.write(config.getStateName(var));
                 writer.write(" ");
                 writer.write(String.valueOf(marginals.get(var)));
+                writer.write("\n");
             }
             i++;
         }
