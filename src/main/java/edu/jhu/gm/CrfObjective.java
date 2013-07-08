@@ -87,6 +87,7 @@ public class CrfObjective implements Function {
                 numerator += cacheLat.getFeatureVector(a, 0).dot(params);
             }
         }
+        infLat.clear();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
         FgInferencer infLatPred = infLatPredList.get(i);
@@ -96,6 +97,7 @@ public class CrfObjective implements Function {
         double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : Utilities.log(infLatPred.getPartition());
 
         // TODO: We could multiply in any fully clamped factors in fgLatPred.
+        infLatPred.clear();
         
         return numerator - denominator;
     }
@@ -130,12 +132,14 @@ public class CrfObjective implements Function {
         FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
         infLat.run();
         addExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat, 1.0, gradient);
-    
+        infLat.clear();
+        
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
         FgInferencer infLatPred = infLatPredList.get(i);
         FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
         infLatPred.run();
         addExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred, -1.0, gradient);
+        infLatPred.clear();
     }
 
     /** 

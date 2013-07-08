@@ -133,6 +133,7 @@ public class CrfRunner {
             CrfTrainerPrm prm = getCrfTrainerPrm();
             CrfTrainer trainer = new CrfTrainer(prm);
             model = trainer.train(model, data);
+            trainer = null; // Allow for GC.
             
             // Decode the training data.
             log.info("Running the decoder on training data.");
