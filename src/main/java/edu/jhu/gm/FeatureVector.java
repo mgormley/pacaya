@@ -12,4 +12,8 @@ public class FeatureVector extends SortedIntDoubleVector {
         super(featureVector);
     }
 
+    public FeatureVector(double[] feats) {
+        super(feats);
+    }
+
 }

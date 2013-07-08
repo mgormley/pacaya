@@ -52,19 +52,24 @@ public class CrfObjective implements Function {
      */
     @Override
     public double getValue(double[] params) {
+        // TODO: we shouldn't run inference again just to compute this!!
+        log.warn("Running inference an extra time to compute marginal likelihood.");
+
         double ll = 0.0;
         for (int i=0; i<data.size(); i++) {
+            log.trace("Computing marginal log-likelihood for example " + i);
             ll += getMarginalLogLikelihoodForExample(i, params);
+        }
+        log.info("Marginal log-likelihood: " + ll);
+        assert ll <= 0 : "Log-likelihood should be <= 0";
+        if (ll > 0) {
+            throw new IllegalStateException();
         }
         return ll;
     }
     
     private double getMarginalLogLikelihoodForExample(int i, double[] params) {
-        log.debug("Computing marginal log-likelihood for example " + i);
         FgExample ex = data.get(i);
-
-        // TODO: we shouldn't run inference again just to compute this!!
-        log.warn("Running inference an extra time to compute marginal likelihood.");
         
         // Run inference to compute Z(y,x) by summing over the latent variables w.
         FgInferencer infLat = infLatList.get(i);
@@ -103,6 +108,7 @@ public class CrfObjective implements Function {
     public double[] getGradient(double[] params) {
         double[] gradient = new double[params.length];
         for (int i=0; i<data.size(); i++) {
+            log.trace("Computing gradient for example " + i);
             addGradientForExample(params, i, gradient);
         }
         return gradient;
@@ -117,38 +123,32 @@ public class CrfObjective implements Function {
      */
     private void addGradientForExample(double[] params, int i,
             double[] gradient) {
-        log.debug("Computing gradient for example " + i);
         FgExample ex = data.get(i);
         
-        // Get the "observed" feature counts for this factor, by summing over the latent variables.
+        // Compute the "observed" feature counts for this factor, by summing over the latent variables.
         FgInferencer infLat = infLatList.get(i);
         FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
         infLat.run();
-        FeatureVector observedFeats = calcExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat);
+        addExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat, 1.0, gradient);
     
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
         FgInferencer infLatPred = infLatPredList.get(i);
         FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
         infLatPred.run();
-        FeatureVector expectedFeats = calcExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred);
-
-        // Update the gradient for each feature.
-        for (IntDoubleEntry entry : observedFeats.getElementwiseDiff(expectedFeats)) {
-            gradient[entry.index()] += entry.get();
-        }
+        addExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred, -1.0, gradient);
     }
-    
+
     /** 
-     * Computes the expected feature counts for a factor graph.
+     * Computes the expected feature counts for a factor graph, and adds them to the gradient after scaling them.
      *  
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      * @param inferencer The inferencer for a clamped factor graph, which has already been run.
-     * @return The feature vector.
+     * @param multiplier The value which the expected features will be multiplied by.
+     * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
      */
-    private FeatureVector calcExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer) {            
-        FeatureVector expectedFeats = new FeatureVector();
-        
+    private void addExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer, double multiplier,
+            double[] gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {                  
             Factor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
@@ -156,7 +156,10 @@ public class CrfObjective implements Function {
             int numConfigs = factorMarginal.getVars().calcNumConfigs();
             if (numConfigs == 0) {
                 // If there are no variables in this factor, we still need to get the cached features.
-                expectedFeats.add(featCache.getFeatureVector(factorId, 0));
+                // Update the gradient for each feature.
+                for (IntDoubleEntry entry : featCache.getFeatureVector(factorId, 0)) {
+                    gradient[entry.index()] += multiplier * entry.get();
+                }
             } else {
                 for (int c=0; c<numConfigs; c++) {       
                     // Get the probability of the c'th configuration for this factor.
@@ -165,40 +168,40 @@ public class CrfObjective implements Function {
                         prob = Utilities.exp(prob);
                     }
                     // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                    FeatureVector tmpFeats = new FeatureVector(featCache.getFeatureVector(factorId, c));
-                    // Scale the feature counts by the marginal probability of the c'th configuration.
-                    tmpFeats.scale(prob);
-                    expectedFeats.add(tmpFeats);
+                    for (IntDoubleEntry entry : featCache.getFeatureVector(factorId, c)) {
+                        // Scale the feature counts by the marginal probability of the c'th configuration.
+                        // Update the gradient for each feature.
+                        gradient[entry.index()] += multiplier * prob * entry.get();
+                    }
                 }
             }
         }
-        return expectedFeats;
     }
 
     /** Gets the "observed" feature counts. */
     public FeatureVector getObservedFeatureCounts(double[] params) {
-        FeatureVector obsFeats = new FeatureVector();
+        double[] feats = new double[numParams];
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
             FgInferencer infLat = infLatList.get(i);
             FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
             infLat.run();
-            obsFeats.add(calcExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat));
+            addExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat, 1.0, feats);
         }
-        return obsFeats;
+        return new FeatureVector(feats);
     }
     
     /** Gets the "expected" feature counts. */
     public FeatureVector getExpectedFeatureCounts(double[] params) {
-        FeatureVector expFeats = new FeatureVector();
+        double[] feats = new double[numParams];
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
             FgInferencer infLatPred = infLatPredList.get(i);
             FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
             infLatPred.run();
-            expFeats.add(calcExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred));
+            addExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred, 1.0, feats);
         }
-        return expFeats;
+        return new FeatureVector(feats);
     }
     
     /**

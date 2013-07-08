@@ -1,6 +1,5 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -134,13 +133,13 @@ public class CrfObjectiveTest {
         
         // Test observed feature counts.
         FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertArrayEquals(new int[]{0, 1}, obsFeats.getIndices());
-        JUnitUtils.assertArrayEquals(new double[]{45, 40}, obsFeats.getValues(), 1e-13);
+        assertEquals(45, obsFeats.get(0), 1e-13);
+        assertEquals(40, obsFeats.get(1), 1e-13);
         
         // Test expected feature counts.
         FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
-        assertArrayEquals(new int[]{0, 1}, expFeats.getIndices());
-        JUnitUtils.assertArrayEquals(new double[]{57.15444760934599, 52.84782467867294}, expFeats.getValues(), 1e-3);
+        assertEquals(57.15444760934599, expFeats.get(0), 1e-3);
+        assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
         // Test gradient.        
         double[] gradient = obj.getGradient(params);        
@@ -178,13 +177,13 @@ public class CrfObjectiveTest {
         
         // Test observed feature counts.
         FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertArrayEquals(new int[]{0}, obsFeats.getIndices());
-        JUnitUtils.assertArrayEquals(new double[]{1}, obsFeats.getValues(), 1e-13);
+        assertEquals(1, obsFeats.get(0), 1e-13);
+        assertEquals(0, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
         FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
-        assertArrayEquals(new int[]{0, 1}, expFeats.getIndices());
-        JUnitUtils.assertArrayEquals(new double[]{0.7310, 0.2689}, expFeats.getValues(), 1e-3);
+        assertEquals(0.7310, expFeats.get(0), 1e-3);
+        assertEquals(0.2689, expFeats.get(1), 1e-3);
         
         // Test gradient.        
         double[] gradient = obj.getGradient(params);        
