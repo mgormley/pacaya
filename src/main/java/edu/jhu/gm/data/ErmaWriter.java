@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import edu.jhu.gm.Var;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 
 public class ErmaWriter {
@@ -26,6 +27,7 @@ public class ErmaWriter {
             writer.write("example:\n");
             for (Var var : config.getVars()) {
                 writer.write(var.getName());
+                writer.write(toErmaLetter(var.getType()));
                 writer.write("=");
                 writer.write(config.getStateName(var));
                 writer.write(" ");
@@ -33,6 +35,19 @@ public class ErmaWriter {
                 writer.write("\n");
             }
             i++;
+        }
+    }
+
+    private String toErmaLetter(VarType type) {
+        switch(type) {
+        case OBSERVED:
+            return "in";
+        case LATENT:
+            return "h";
+        case PREDICTED:
+            return "o";
+        default:
+            throw new RuntimeException("Unhandled type: " + type);
         }
     }
     
