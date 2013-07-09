@@ -39,7 +39,7 @@ public class CkyPcfgParserTest {
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
@@ -75,7 +75,7 @@ public class CkyPcfgParserTest {
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("an arrow flies like time", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
@@ -100,7 +100,7 @@ public class CkyPcfgParserTest {
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromFile(r0GrammarFile);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();

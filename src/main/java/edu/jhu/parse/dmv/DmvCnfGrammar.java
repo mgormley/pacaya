@@ -7,6 +7,7 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
@@ -34,7 +35,7 @@ public class DmvCnfGrammar {
     private int[] annoToUnanno; // Mapping of annotated tags to unannotated tags.
     private int[][] unannoToAnno; // Mapping of annotated tags to annotated tags.
     
-    public DmvCnfGrammar(DmvModel dmv, Alphabet<Label> labelAlphabet) {
+    public DmvCnfGrammar(DmvModel dmv, Alphabet<Label> labelAlphabet, LoopOrder loopOrder) {
         numTags = labelAlphabet.size();
         this.lexAlphabet = new Alphabet<Label>();
         // Cache mapping of unannoated tags to annotated tags.
@@ -79,7 +80,7 @@ public class DmvCnfGrammar {
         
         updateLogProbs(dmv);
         
-        this.cnfGrammar = new CnfGrammar(getAllRules(), rootSymbol, lexAlphabet, ntAlphabet);
+        this.cnfGrammar = new CnfGrammar(getAllRules(), rootSymbol, lexAlphabet, ntAlphabet, loopOrder);
     }
 
     public int getAnnotatedTagRight(int tag) {

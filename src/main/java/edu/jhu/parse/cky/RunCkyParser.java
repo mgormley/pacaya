@@ -69,7 +69,7 @@ public class RunCkyParser {
         log.info("Reading grammar from file");
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromFile(grammar);        
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
 
         log.info("# Nonterminals in grammar: " + grammar.getNumNonTerminals());
         log.info("# Lexical types in grammar: " + grammar.getNumLexicalTypes());

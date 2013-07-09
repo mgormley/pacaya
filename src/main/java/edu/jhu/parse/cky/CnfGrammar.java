@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.Label;
 import edu.jhu.data.Word;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -17,7 +18,7 @@ import edu.jhu.util.Alphabet;
  *
  */
 public class CnfGrammar {
-    
+
     private static final Logger log = Logger.getLogger(CnfGrammar.class);
     
     private int rootSymbol;
@@ -26,9 +27,6 @@ public class CnfGrammar {
     private ArrayList<Rule>[] lexRulesForChild;
     private ArrayList<Rule>[] unaryRulesForChild;
     private ArrayList<Rule>[] unaryRulesForParent; // Used by the outside algorithm.
-    private List<Rule>[][] binaryRulesForChildren;
-    private ArrayList<Rule>[] binaryRulesWithLeftChild;
-    private ArrayList<Rule>[] binaryRulesWithRightChild;
     
     // Arrays corresponding to binaryRulesForChildren, binaryRulesWithLeftChild, binaryRulesWithRightChild.
     private Rule[][][] brfc;
@@ -39,7 +37,7 @@ public class CnfGrammar {
     private Alphabet<Label> ntAlphabet;
     
     @SuppressWarnings("unchecked")
-    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet) {
+    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, LoopOrder loopOrder) {
         this.rootSymbol = rootSymbol;
         this.lexAlphabet = lexAlphabet;
         this.ntAlphabet = ntAlphabet;
@@ -47,9 +45,6 @@ public class CnfGrammar {
         lexRulesForChild = new ArrayList[lexAlphabet.size()];
         unaryRulesForChild = new ArrayList[ntAlphabet.size()];
         unaryRulesForParent = new ArrayList[ntAlphabet.size()];
-        // TODO: only optionally create this. binaryRulesForChildren = new List[ntAlphabet.size()][ntAlphabet.size()];
-        binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
-        binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
 
         log.info("Num lexical types: " + lexAlphabet.size());
         log.info("Num nonterminals: " + ntAlphabet.size());
@@ -57,34 +52,51 @@ public class CnfGrammar {
         fill(lexRulesForChild);
         fill(unaryRulesForChild);
         fill(unaryRulesForParent);
-        // for (int i=0; i<binaryRulesForChildren.length; i++) {
-        //     for (int j=0; j<binaryRulesForChildren[i].length; j++) {
-        //         binaryRulesForChildren[i][j] = Collections.emptyList();
-        //     }
-        // }
-        fill(binaryRulesWithLeftChild);
-        fill(binaryRulesWithRightChild);
-        
+
         for (Rule r : allRules) {
             if (r.isLexical()) {
                 lexRulesForChild[r.getLeftChild()].add(r);
             } else if (r.isUnary()) {
                 unaryRulesForChild[r.getLeftChild()].add(r);
                 unaryRulesForParent[r.getParent()].add(r);
-            } else {
-                // if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].size() == 0) {
-                //     binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>(0);
-                // }
-                // binaryRulesForChildren[r.getLeftChild()][r.getRightChild()]
-                //         .add(r);
-                binaryRulesWithLeftChild[r.getLeftChild()].add(r);
-                binaryRulesWithRightChild[r.getRightChild()].add(r);
             }
         }
-        
-        //brfc = getAsArrays(binaryRulesForChildren);
-        brwlc = getAsArrays(binaryRulesWithLeftChild);
-        brwrc = getAsArrays(binaryRulesWithRightChild);
+
+        if (loopOrder == LoopOrder.CARTESIAN_PRODUCT) {
+            List<Rule>[][] binaryRulesForChildren = new List[ntAlphabet.size()][ntAlphabet.size()];
+            for (int i = 0; i < binaryRulesForChildren.length; i++) {
+                for (int j = 0; j < binaryRulesForChildren[i].length; j++) {
+                    binaryRulesForChildren[i][j] = Collections.emptyList();
+                }
+            }        
+            for (Rule r : allRules) {
+                if (r.isBinary()) {
+                    if (binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].size() == 0) {
+                        binaryRulesForChildren[r.getLeftChild()][r.getRightChild()] = new ArrayList<Rule>(0);
+                    }
+                    binaryRulesForChildren[r.getLeftChild()][r.getRightChild()].add(r);
+                }
+            }
+            brfc = getAsArrays(binaryRulesForChildren);
+        } else if (loopOrder == LoopOrder.LEFT_CHILD) {
+            ArrayList<Rule>[] binaryRulesWithLeftChild = new ArrayList[ntAlphabet.size()];
+            fill(binaryRulesWithLeftChild);
+            for (Rule r : allRules) {
+                if (r.isBinary()) {
+                    binaryRulesWithLeftChild[r.getLeftChild()].add(r);
+                }
+            }
+            brwlc = getAsArrays(binaryRulesWithLeftChild);
+        } else if (loopOrder == LoopOrder.RIGHT_CHILD) {
+            ArrayList<Rule>[] binaryRulesWithRightChild = new ArrayList[ntAlphabet.size()];
+            fill(binaryRulesWithRightChild);
+            for (Rule r : allRules) {
+                if (r.isBinary()) {
+                    binaryRulesWithRightChild[r.getRightChild()].add(r);
+                }
+            }
+            brwrc = getAsArrays(binaryRulesWithRightChild);
+        }
     }
     
     private static Rule[][] getAsArrays(ArrayList<Rule>[] a) {

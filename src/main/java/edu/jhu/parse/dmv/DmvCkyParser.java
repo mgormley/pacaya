@@ -143,7 +143,7 @@ public class DmvCkyParser implements DepParser {
     private DmvCnfGrammar getDmvGrammar(Sentence sentence, DmvModel dmv) {
         if (this.grammar == null || this.dmv != dmv) {
             this.dmv = dmv;
-            this.grammar = new DmvCnfGrammar(dmv, sentence.getAlphabet());
+            this.grammar = new DmvCnfGrammar(dmv, sentence.getAlphabet(), prm.ckyPrm.loopOrder);
         } else {
             this.grammar.updateLogProbs(dmv);
         }

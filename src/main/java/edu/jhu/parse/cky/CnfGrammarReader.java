@@ -13,6 +13,7 @@ import java.util.zip.GZIPInputStream;
 import edu.jhu.data.Label;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.util.Alphabet;
 
 public class CnfGrammarReader {
@@ -47,8 +48,8 @@ public class CnfGrammarReader {
         binaryRules = new ArrayList<Rule>();                
     }
 
-    public CnfGrammar getGrammar() {
-        return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet);
+    public CnfGrammar getGrammar(LoopOrder loopOrder) {
+        return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet, loopOrder);
     }
     
     public void loadFromFile(String filename) throws IOException {

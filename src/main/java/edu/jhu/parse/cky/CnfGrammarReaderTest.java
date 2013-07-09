@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.junit.Test;
 
 import edu.jhu.data.Tag;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 
 public class CnfGrammarReaderTest {
 
@@ -18,7 +19,7 @@ public class CnfGrammarReaderTest {
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(timeFliesGrammarResource);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(LoopOrder.CARTESIAN_PRODUCT);
         
         System.out.println(grammar);
         assertEquals(5, grammar.getNumLexicalTypes());

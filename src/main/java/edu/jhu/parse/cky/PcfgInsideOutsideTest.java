@@ -31,7 +31,7 @@ public class PcfgInsideOutsideTest {
         // time flies like an arrow.
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Sentence sent = getSentenceFromString("time flies like an arrow", grammar.getLexAlphabet());
         IoChart chart = parseSentence(sent , grammar, loopOrder);
@@ -81,7 +81,7 @@ public class PcfgInsideOutsideTest {
     private void testSimpleSentence2Helper(LoopOrder loopOrder) throws IOException {
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(pizzaAnochoviesGrammarResource);
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Sentence sent = getSentenceFromString("she eats pizza without anchovies", grammar.getLexAlphabet());
         IoChart chart = parseSentence(sent , grammar, loopOrder);
