@@ -29,8 +29,8 @@ public class PcfgInsideOutsideTest {
 
     private void testSimpleSentence1Helper(LoopOrder loopOrder) throws IOException {
         // time flies like an arrow.
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
-        builder.loadFromResource(CnfGrammarBuilderTest.timeFliesGrammarResource);
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
         CnfGrammar grammar = builder.getGrammar();
                 
         Sentence sent = getSentenceFromString("time flies like an arrow", grammar.getLexAlphabet());
@@ -79,7 +79,7 @@ public class PcfgInsideOutsideTest {
     }
 
     private void testSimpleSentence2Helper(LoopOrder loopOrder) throws IOException {
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
+        CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(pizzaAnochoviesGrammarResource);
         CnfGrammar grammar = builder.getGrammar();
                 

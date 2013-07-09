@@ -20,6 +20,7 @@ import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
@@ -66,7 +67,7 @@ public class RunCkyParser {
     
     public void run() throws IOException {
         log.info("Reading grammar from file");
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
+        CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromFile(grammar);        
         CnfGrammar grammar = builder.getGrammar();
 
@@ -112,6 +113,7 @@ public class RunCkyParser {
         prm.loopOrder = loopOrder;
         prm.cellType = cellType;
         prm.cacheChart = true;
+        prm.parseType = ParseType.VITERBI;
         CkyPcfgParser parser = new CkyPcfgParser(prm);
         for (NaryTree tree : naryTrees) {            
             Sentence sent = tree.getSentence();

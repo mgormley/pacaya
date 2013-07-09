@@ -8,14 +8,14 @@ import org.junit.Test;
 
 import edu.jhu.data.Tag;
 
-public class CnfGrammarBuilderTest {
+public class CnfGrammarReaderTest {
 
     public static final String timeFliesGrammarResource = "/edu/jhu/parse/cky/time-flies.gr";
 
     @Test
     public void testLoadGrammarFromFile() throws IOException {
 
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
+        CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromResource(timeFliesGrammarResource);
         
         CnfGrammar grammar = builder.getGrammar();

@@ -15,7 +15,7 @@ import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
 
-public class CnfGrammarBuilder {
+public class CnfGrammarReader {
 
     private int rootSymbol;
     private ArrayList<Rule> allRules;
@@ -26,11 +26,11 @@ public class CnfGrammarBuilder {
     private Alphabet<Label> lexAlphabet;
     private Alphabet<Label> ntAlphabet;
     
-    public CnfGrammarBuilder() {
+    public CnfGrammarReader() {
         this(new Alphabet<Label>(), new Alphabet<Label>());
     }
     
-    public CnfGrammarBuilder(Alphabet<Label> lexAlphabet,
+    public CnfGrammarReader(Alphabet<Label> lexAlphabet,
             Alphabet<Label> ntAlphabet) {
         if (lexAlphabet.size() > 0) {
             throw new IllegalArgumentException("Lexical alphabet must by empty.");
