@@ -32,7 +32,11 @@ public class ErmaWriter {
                 writer.write("=");
                 writer.write(config.getStateName(var));
                 writer.write(" ");
-                writer.write(String.valueOf(Utilities.exp(marginals.get(var))));
+                if (var.getType() == VarType.OBSERVED) {
+                    writer.write("1.0");
+                } else {
+                    writer.write(String.valueOf(Utilities.exp(marginals.get(var))));
+                }
                 writer.write("\n");
             }
             i++;
