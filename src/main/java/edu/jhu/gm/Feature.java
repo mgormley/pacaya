@@ -1,13 +1,16 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
+
 /**
  * A feature in a factor graph model.
  * 
  * @author mgormley
  *
  */
-public class Feature {
+public class Feature implements Serializable {
 
+    private static final long serialVersionUID = -5575331602054552730L;
     private String name;
     
     public Feature(String name) {
