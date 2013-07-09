@@ -41,6 +41,7 @@ public class ErmaWriter {
             }
             i++;
         }
+        writer.close();
     }
 
     private String toErmaLetter(VarType type) {
