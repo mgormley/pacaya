@@ -1,6 +1,5 @@
 package edu.jhu.gm;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.gm.Var.VarType;
@@ -43,11 +42,11 @@ public class FgExample {
         // TODO: assert that the training config contains assignments for all the observed and predicted variables.
         
         // Get a copy of the factor graph where the observed variables are clamped.
-        List<Var> observedVars = getVarsOfType(fg.getVars(), VarType.OBSERVED);
+        List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
         fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));        
         
         // Get a copy of the factor graph where the observed and predicted variables are clamped.
-        List<Var> predictedVars = getVarsOfType(fg.getVars(), VarType.PREDICTED);
+        List<Var> predictedVars = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED);
         fgLat = fgLatPred.getClamped(goldConfig.getIntersection(predictedVars));
         
         // Does this factor graph contain latent variables?
@@ -62,8 +61,8 @@ public class FgExample {
         for (int a=0; a<fg.getNumFactors(); a++) {
             // Get only the predicted and latent variables for this factor.
             VarSet vars = fg.getFactor(a).getVars();
-            VarSet varsObs =  getVarsOfType(vars, VarType.OBSERVED);
-            VarSet varsPred = getVarsOfType(vars, VarType.PREDICTED);
+            VarSet varsObs =  VarSet.getVarsOfType(vars, VarType.OBSERVED);
+            VarSet varsPred = VarSet.getVarsOfType(vars, VarType.PREDICTED);
             
             // Get the configuration of the specified variables as given in the training data.
             VarConfig obsConfig = goldConfig.getSubset(varsObs);
@@ -105,28 +104,6 @@ public class FgExample {
                 featCache.setFv(factorId, configId, fv);
             }
         }
-    }
-
-    /** Gets the subset of vars with the specified type. */
-    private List<Var> getVarsOfType(List<Var> vars, VarType type) {
-        ArrayList<Var> subset = new ArrayList<Var>();
-        for (Var v : vars) {
-            if (v.getType() == type) {
-                subset.add(v);
-            }
-        }
-        return subset;      
-    }
-    
-    /** Gets the subset of vars with the specified type. */
-    private VarSet getVarsOfType(VarSet vars, VarType type) {
-        VarSet subset = new VarSet();
-        for (Var v : vars) {
-            if (v.getType() == type) {
-                subset.add(v);
-            }
-        }
-        return subset;      
     }
 
     /**

@@ -1,7 +1,10 @@
 package edu.jhu.gm;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.collections.SmallSet;
 
@@ -148,6 +151,28 @@ public class VarSet extends SmallSet<Var> {
         }
         sb.append("]]");
         return sb.toString();
+    }
+
+    /** Gets the subset of vars with the specified type. */
+    public static List<Var> getVarsOfType(List<Var> vars, VarType type) {
+        ArrayList<Var> subset = new ArrayList<Var>();
+        for (Var v : vars) {
+            if (v.getType() == type) {
+                subset.add(v);
+            }
+        }
+        return subset;      
+    }
+
+    /** Gets the subset of vars with the specified type. */
+    public static VarSet getVarsOfType(VarSet vars, VarType type) {
+        VarSet subset = new VarSet();
+        for (Var v : vars) {
+            if (v.getType() == type) {
+                subset.add(v);
+            }
+        }
+        return subset;      
     }
             
 }

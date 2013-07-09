@@ -12,6 +12,7 @@ import java.util.Map;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
+import edu.jhu.util.Utilities;
 
 public class ErmaWriter {
 
@@ -31,7 +32,7 @@ public class ErmaWriter {
                 writer.write("=");
                 writer.write(config.getStateName(var));
                 writer.write(" ");
-                writer.write(String.valueOf(marginals.get(var)));
+                writer.write(String.valueOf(Utilities.exp(marginals.get(var))));
                 writer.write("\n");
             }
             i++;

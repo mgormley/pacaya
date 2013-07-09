@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.Var.VarType;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.
@@ -50,15 +51,18 @@ public class MbrDecoder {
             varMargMap = new HashMap<Var,Double>();
             
             for (int i = 0; i < data.size(); i++) {
-                VarConfig mbrVarConfig = new VarConfig();
                 FgExample ex = data.get(i);
-                
+                VarConfig mbrVarConfig = new VarConfig();
+
+                // Add in the observed variables.
+                VarSet obsVars = VarSet.getVarsOfType(ex.getGoldConfig().getVars(), VarType.OBSERVED);
+                mbrVarConfig.put(ex.getGoldConfig().getSubset(obsVars));
+
+                // Run inference.
                 FactorGraph fgLatPred = ex.getFgLatPred();
                 FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
                 fgLatPred = ex.updateFgLatPred(model.getParams(), inf.isLogDomain());
                 FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
-
-                // Run inference.
                 inf.run();
 
                 // Get the MBR configuration of all the latent and predicted
@@ -70,6 +74,7 @@ public class MbrDecoder {
                     mbrVarConfig.put(var, argmaxState);
                     varMargMap.put(var, marg.getValue(argmaxState));
                 }
+                
                 mbrVarConfigList.add(mbrVarConfig);
                 
                 // Get the features that fire on the MBR variable configuration.
