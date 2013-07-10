@@ -1,11 +1,12 @@
 package edu.jhu.util.vector;
 
 import edu.jhu.util.Lambda;
+import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.Primitives;
 
 /**
  * Infinite length sparse vector.
@@ -117,8 +118,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
         int numNonZeros = 0;
         boolean[] isNonZero = new boolean[row.getUsed()];
         for (int i = 0; i < row.getUsed(); i++) {
-            double absVal = Math.abs(origData[i]);
-            if (absVal < -zeroThreshold || zeroThreshold < absVal) {
+            if (!Primitives.isZero(origData[i], zeroThreshold)) {
                 isNonZero[i] = true;
                 numNonZeros++;
             } else {
