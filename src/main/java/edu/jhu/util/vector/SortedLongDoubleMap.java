@@ -148,7 +148,7 @@ public class SortedLongDoubleMap implements LongDoubleMap {
 		public double get() {
 			return values[i];
 		}
-	}
+    }
 
     /**
      * This iterator is fast in the case of for(Entry e : vector) { }, however a
@@ -156,28 +156,30 @@ public class SortedLongDoubleMap implements LongDoubleMap {
      */
     public class LongDoubleIterator implements Iterator<LongDoubleEntry> {
 
-	    // The current entry.
+        // The current entry.
         private LongDoubleEntryImpl entry = new LongDoubleEntryImpl(-1);
-		
-		@Override
-		public boolean hasNext() {
-			return entry.i+1 < used;
-		}
 
-		@Override
-		public LongDoubleEntry next() {
-		    entry.i++;
-			return entry;
-		}
+        @Override
+        public boolean hasNext() {
+            return entry.i + 1 < used;
+        }
 
-		@Override
-		public void remove() {
-			throw new RuntimeException("operation not supported");
-		}
-		
-	}
+        @Override
+        public LongDoubleEntry next() {
+            entry.i++;
+            return entry;
+        }
 
-	/* (non-Javadoc)
+        @Override
+        public void remove() {
+            throw new RuntimeException("operation not supported");
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see edu.jhu.util.vector.LongDoubleMap#iterator()
      */
 	@Override

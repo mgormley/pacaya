@@ -69,6 +69,18 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
         return ret;
     }
 
+    /** Computes the dot product of this vector with the column of the given matrix. */
+    public double dot(double[][] matrix, int col) {
+        double ret = 0;
+        for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
+            ret += values[c] * matrix[SafeCast.safeLongToInt(indices[c])][col];
+        }
+        return ret;
+    }
+    
     /** Computes the dot product of this vector with the given vector. */   
     public double dot(SortedLongDoubleVector y) {
         if (y instanceof SortedLongDoubleVector) {
