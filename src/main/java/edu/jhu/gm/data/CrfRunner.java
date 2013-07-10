@@ -128,8 +128,6 @@ public class CrfRunner {
             
             // Decode and evaluate the train data.
             decodeAndEval(model, data, trainPredOut, "train");
-        } else {
-            throw new ParseException("Either train/trainType or modelIn must be specified.");
         }
         
         if (modelOut != null) {
