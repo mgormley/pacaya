@@ -125,7 +125,7 @@ public class EMTrainer<C> implements Trainer<C> {
             prevLogLikelihood = logLikelihood;
             
             // M-step
-            model = mStep.getModel(corpus, counts);
+            model = mStep.getModel(corpus, counts, model);
             
             log.debug("Time remaining: " + Timer.durAsStr(iterTimer.avgMs()*(prm.iterations - iterCount)));
             iterTimer.stop();

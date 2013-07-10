@@ -377,4 +377,13 @@ public class ErmaReader {
         
     }
     
+    private static class ConvertingDataParser extends DataParser {
+        
+        @Override
+        protected void addDataSample(DataSample example) {
+            
+        }
+        
+    }
+    
 }

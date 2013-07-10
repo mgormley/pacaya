@@ -53,15 +53,21 @@ public class CnfGrammar {
         fill(unaryRulesForChild);
         fill(unaryRulesForParent);
 
+        int numLexicalRules = 0;
+        int numUnaryRules = 0;
         for (Rule r : allRules) {
             if (r.isLexical()) {
                 lexRulesForChild[r.getLeftChild()].add(r);
+                numLexicalRules++;
             } else if (r.isUnary()) {
                 unaryRulesForChild[r.getLeftChild()].add(r);
                 unaryRulesForParent[r.getParent()].add(r);
+                numUnaryRules++;
             }
         }
-
+        int numBinaryRules = allRules.size() - numLexicalRules - numUnaryRules;
+        log.info(String.format("Rules: total=%d binary=%d unary=%d lexical=%d", allRules.size(), numBinaryRules, numUnaryRules, numLexicalRules));
+        
         if (loopOrder == LoopOrder.CARTESIAN_PRODUCT) {
             List<Rule>[][] binaryRulesForChildren = new List[ntAlphabet.size()][ntAlphabet.size()];
             for (int i = 0; i < binaryRulesForChildren.length; i++) {
