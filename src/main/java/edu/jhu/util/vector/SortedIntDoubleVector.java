@@ -311,7 +311,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedIntDoubleVector other, double delta) {
+    public boolean eq(SortedIntDoubleVector other, double delta) {
         // This is slow, but correct.
         SortedIntDoubleVector v1 = SortedIntDoubleVector.getWithNoZeroValues(this, delta);
         SortedIntDoubleVector v2 = SortedIntDoubleVector.getWithNoZeroValues(other, delta);

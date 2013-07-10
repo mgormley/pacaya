@@ -205,7 +205,7 @@ public class CplexUtils {
             SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, delta)) {
+            if (row.eq(expectedRow, delta)) {
                 return;
             }
         }
@@ -236,7 +236,7 @@ public class CplexUtils {
             SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.equals(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)
+            if (row.eq(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)
                     && Utilities.equals(ub, ubs[m], delta)) {
                 return;
             }

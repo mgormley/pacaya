@@ -311,7 +311,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedLongDoubleVector other, double delta) {
+    public boolean eq(SortedLongDoubleVector other, double delta) {
         // This is slow, but correct.
         SortedLongDoubleVector v1 = SortedLongDoubleVector.getWithNoZeroValues(this, delta);
         SortedLongDoubleVector v2 = SortedLongDoubleVector.getWithNoZeroValues(other, delta);

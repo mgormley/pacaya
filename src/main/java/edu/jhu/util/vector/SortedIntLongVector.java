@@ -311,7 +311,7 @@ public class SortedIntLongVector extends SortedIntLongMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedIntLongVector other) {
+    public boolean eq(SortedIntLongVector other) {
         // This is slow, but correct.
         SortedIntLongVector v1 = SortedIntLongVector.getWithNoZeroValues(this);
         SortedIntLongVector v2 = SortedIntLongVector.getWithNoZeroValues(other);
