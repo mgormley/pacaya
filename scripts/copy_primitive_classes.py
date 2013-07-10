@@ -67,14 +67,14 @@ def copy_pair(dest_key, dest_val):
     assert len(re_subs) == len(repls) + len(add_re_subs)
         
     classes = [
-#               "edu.jhu.util.vector.LongDoubleMap",
-#               "edu.jhu.util.vector.LongDoubleEntry",
-#                 "edu.jhu.util.vector.SortedLongDoubleMap",
-#                 "edu.jhu.util.vector.SortedLongDoubleMapTest",
+               "edu.jhu.util.vector.LongDoubleMap",
+               "edu.jhu.util.vector.LongDoubleEntry",
+                 "edu.jhu.util.vector.SortedLongDoubleMap",
+                 "edu.jhu.util.vector.SortedLongDoubleMapTest",
                  "edu.jhu.util.vector.SortedLongDoubleVector",
-#                 "edu.jhu.util.vector.SortedLongDoubleVectorTest",
-#                 "edu.jhu.util.collections.PLongDoubleHashMap",
-#                 "edu.jhu.util.collections.PLongDoubleHashMapTest",
+                 "edu.jhu.util.vector.SortedLongDoubleVectorTest",
+                 "edu.jhu.util.collections.PLongDoubleHashMap",
+                 "edu.jhu.util.collections.PLongDoubleHashMapTest",
                  # "edu.jhu.util.collections.PLongHashSet",
                  ]
     java_dir = os.path.join("src", "main", "java")
@@ -106,13 +106,13 @@ def get_typedefs():
         }
         
 if __name__ == "__main__":
-    #copy_pair("Int", "Double", "int", "double", "INT", "DOUBLE")
     tds = get_typedefs()
     copy_pair(tds.get("int"), tds.get("double"))
     copy_pair(tds.get("int"), tds.get("long"))
-    #TODO: copy_pair(tds.get("long"), tds.get("int"))
+    
+    #TODO: Should only make a subset:
+    #copy_pair(tds.get("long"), tds.get("int"))
 
     #TODO: IntInt sort of works, but requires the removal of some duplicate methods/constructors:
-    # 
-    copy_pair(tds.get("int"), tds.get("int"))
+    # copy_pair(tds.get("int"), tds.get("int"))
 
