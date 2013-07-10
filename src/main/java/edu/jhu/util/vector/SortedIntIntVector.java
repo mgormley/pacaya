@@ -1,10 +1,12 @@
 package edu.jhu.util.vector;
 
 import edu.jhu.util.Lambda;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.Lambda.LambdaBinOpInt;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PIntArrayList;
-
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.Primitives;
 
 /**
  * Infinite length sparse vector.
@@ -14,8 +16,10 @@ import edu.jhu.util.collections.PIntArrayList;
  */
 public class SortedIntIntVector extends SortedIntIntMap {
 
+    private static final int ZERO = (int) 0;
+    
     boolean norm2Cached = false;
-    double norm2Value;
+    int norm2Value;
     
     public SortedIntIntVector() {
         super();
@@ -35,7 +39,7 @@ public class SortedIntIntVector extends SortedIntIntMap {
 
 	// TODO: This could be done with a single binary search instead of two.
     public void add(int idx, int val) {
-    	int curVal = getWithDefault(idx, 0);
+    	int curVal = getWithDefault(idx, ZERO);
     	put(idx, curVal + val);
     }
     
@@ -45,10 +49,10 @@ public class SortedIntIntVector extends SortedIntIntMap {
     
     @Override
 	public int get(int idx) {
-		return getWithDefault(idx, 0);
+		return getWithDefault(idx, ZERO);
 	}
     
-    public void scale(double multiplier) {
+    public void scale(int multiplier) {
     	for (int i=0; i<used; i++) {
     		values[i] *= multiplier;
     	}
@@ -58,11 +62,26 @@ public class SortedIntIntVector extends SortedIntIntMap {
     public int dot(int[] other) {
         int ret = 0;
         for (int c = 0; c < used && indices[c] < other.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
             ret += values[c] * other[indices[c]];
         }
         return ret;
     }
 
+    /** Computes the dot product of this vector with the column of the given matrix. */
+    public int dot(int[][] matrix, int col) {
+        int ret = 0;
+        for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
+            ret += values[c] * matrix[indices[c]][col];
+        }
+        return ret;
+    }
+    
     /** Computes the dot product of this vector with the given vector. */   
     public int dot(SortedIntIntVector y) {
         if (y instanceof SortedIntIntVector) {
@@ -99,7 +118,7 @@ public class SortedIntIntVector extends SortedIntIntMap {
         int numNonZeros = 0;
         boolean[] isNonZero = new boolean[row.getUsed()];
         for (int i = 0; i < row.getUsed(); i++) {
-            if (origData[i] != 0) {
+            if (!Primitives.isZero(origData[i])) {
                 isNonZero[i] = true;
                 numNonZeros++;
             } else {
@@ -199,12 +218,12 @@ public class SortedIntIntVector extends SortedIntIntMap {
             } else if (diff < 0) {
                 // e1 is less than e2, so only add e1 this round.
                 newIndices.add(e1);
-                newValues.add(lambda.call(v1, 0));
+                newValues.add(lambda.call(v1, ZERO));
                 i++;
             } else {
                 // e2 is less than e1, so only add e2 this round.
                 newIndices.add(e2);
-                newValues.add(lambda.call(0, v2));
+                newValues.add(lambda.call(ZERO, v2));
                 j++;
             }
         }
@@ -216,13 +235,13 @@ public class SortedIntIntVector extends SortedIntIntMap {
             int e1 = this.indices[i];
             int v1 = this.values[i];
             newIndices.add(e1);
-            newValues.add(lambda.call(v1, 0));
+            newValues.add(lambda.call(v1, ZERO));
         }
         for (; j < other.used; j++) {
             int e2 = other.indices[j];
             int v2 = other.values[j];
             newIndices.add(e2);
-            newValues.add(lambda.call(0, v2));
+            newValues.add(lambda.call(ZERO, v2));
         }
         
         this.used = newIndices.size();
@@ -292,36 +311,31 @@ public class SortedIntIntVector extends SortedIntIntMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    @Override
-    public boolean equals(Object obj) {
-    	if (obj instanceof SortedIntIntVector) {
-    		SortedIntIntVector other = (SortedIntIntVector) obj;
+    public boolean equals(SortedIntIntVector other) {
+        // This is slow, but correct.
+        SortedIntIntVector v1 = SortedIntIntVector.getWithNoZeroValues(this);
+        SortedIntIntVector v2 = SortedIntIntVector.getWithNoZeroValues(other);
+                
+        if (v2.size() != v1.size()) {
+            return false;
+        }
 
-            SortedIntIntVector v1 = SortedIntIntVector.getWithNoZeroValues(this);
-            SortedIntIntVector v2 = SortedIntIntVector.getWithNoZeroValues(other);
-            
-	        if (v2.size() != v1.size()) {
-	            return false;
-	        }
-	        // This is slow, but correct.
-	        for (IntIntEntry ve : v1) {
-	            if (ve.get() != v2.get(ve.index())) {
-	                return false;
-	            }
-	        }
-	        for (IntIntEntry ve : v2) {
-	            if (ve.get() != v1.get(ve.index())) {
-	                return false;
-	            }
-	        }
-	        return true;
-    	}
-    	return false;
+        for (IntIntEntry ve : v1) {
+            if (!Utilities.equals(ve.get(), v2.get(ve.index()))) {
+                return false;
+            }
+        }
+        for (IntIntEntry ve : v2) {
+            if (!Utilities.equals(ve.get(), v1.get(ve.index()))) {
+                return false;
+            }
+        }
+        return true;
     }
     
     @Override
     public int hashCode() {
-    	throw new RuntimeException("not implemented");
+        throw new RuntimeException("not implemented");
     }
 
 }

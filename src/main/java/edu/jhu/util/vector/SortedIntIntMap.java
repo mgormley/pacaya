@@ -6,8 +6,9 @@ import java.util.Iterator;
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
-public class SortedIntIntMap implements Iterable<IntIntEntry> {
+public class SortedIntIntMap implements IntIntMap {
 
 	protected int[] indices;
 	protected int[] values;
@@ -35,15 +36,28 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		this.values = Utilities.copyOf(other.values);
 	}
 
-	public void clear() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#clear()
+     */
+	@Override
+    public void clear() {
 		this.used = 0;
 	}
 	
-	public boolean contains(int idx) {
+	// TODO: rename to containsKey.
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#contains(int)
+     */
+	@Override
+    public boolean contains(int idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
 	
-	public int get(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#get(int)
+     */
+	@Override
+    public int get(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -51,7 +65,11 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		return values[i];
 	}
 	
-	public int getWithDefault(int idx, int defaultVal) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#getWithDefault(int, int)
+     */
+	@Override
+    public int getWithDefault(int idx, int defaultVal) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			return defaultVal;
@@ -59,7 +77,11 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		return values[i];
 	}
 	
-	public void remove(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#remove(int)
+     */
+	@Override
+    public void remove(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -70,7 +92,11 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		used--;
 	}
 	
-	public void put(int idx, int val) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#put(int, int)
+     */
+	@Override
+    public void put(int idx, int val) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i >= 0) {
 			// Just update the value.
@@ -108,7 +134,7 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		public int get() {
 			return values[i];
 		}
-	}
+    }
 
     /**
      * This iterator is fast in the case of for(Entry e : vector) { }, however a
@@ -118,10 +144,10 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 
         // The current entry.
         private IntIntEntryImpl entry = new IntIntEntryImpl(-1);
-        
+
         @Override
         public boolean hasNext() {
-            return entry.i+1 < used;
+            return entry.i + 1 < used;
         }
 
         @Override
@@ -134,16 +160,25 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
         public void remove() {
             throw new RuntimeException("operation not supported");
         }
-        
+
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.jhu.util.vector.IntIntMap#iterator()
+     */
 	@Override
 	public Iterator<IntIntEntry> iterator() {
 		return new IntIntIterator();
 	}
 
 
-	public int size() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#size()
+     */
+	@Override
+    public int size() {
 		return used;
 	}
 
@@ -151,9 +186,10 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
 		return used;
 	}	
 
-    /**
-     * Returns the indices.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#getIndices()
      */
+    @Override
     public int[] getIndices() {
         if (used == indices.length)
             return indices;
@@ -165,9 +201,10 @@ public class SortedIntIntMap implements Iterable<IntIntEntry> {
         return tmpIndices;
     }
     
-    /**
-     * Returns the values.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntIntMap#getValues()
      */
+    @Override
     public int[] getValues() {
         if (used == values.length)
             return values;
