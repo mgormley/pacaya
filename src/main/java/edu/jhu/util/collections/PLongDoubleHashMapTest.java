@@ -53,7 +53,7 @@ public class PLongDoubleHashMapTest {
             }
     
             for (int i=0; i<max * 2; i++) {
-                map.containsKey(i);
+                map.contains(i);
             }
             timer.stop();        
             System.out.println("Primitive: " + timer.totMs());

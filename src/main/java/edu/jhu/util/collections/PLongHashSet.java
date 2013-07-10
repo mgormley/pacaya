@@ -10,7 +10,7 @@ public class PLongHashSet {
     }
 
     public boolean contains(long key) {
-        return map.containsKey(key);
+        return map.contains(key);
     }
 
 }

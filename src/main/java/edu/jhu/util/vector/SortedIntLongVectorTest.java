@@ -11,16 +11,16 @@ public class SortedIntLongVectorTest {
         SortedIntLongVector v1 = new SortedIntLongVector();
         SortedIntLongVector v2 = new SortedIntLongVector();
         
-        v1.set(4,5308);
-        v1.set(49,23);
-        v1.set(32,22);
-        v1.set(23,10);
+        v1.set(4, 5308);
+        v1.set(49, 23);
+        v1.set(32, 22);
+        v1.set(23, 10);
         
-        v2.set(3,204);
-        v2.set(2,11);
-        v2.set(4,11);
-        v2.set(23,24);
-        v2.set(10,0001);
+        v2.set(3, 204);
+        v2.set(2, 11);
+        v2.set(4, 11);
+        v2.set(23, 24);
+        v2.set(10, 0001);
         v2.set(52, 11);
         v2.set(49, 7);
         

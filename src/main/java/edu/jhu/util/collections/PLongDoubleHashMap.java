@@ -22,9 +22,14 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
+
+import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.vector.LongDoubleEntry;
+import edu.jhu.util.vector.LongDoubleMap;
 
 /**
  * NOTICE: Changes made to this class:
@@ -44,7 +49,7 @@ import org.apache.commons.math3.util.FastMath;
  * @version $Id: OpenIntToDoubleHashMap.java 1421448 2012-12-13 19:45:57Z tn $
  * @since 2.0
  */
-public class PLongDoubleHashMap implements Serializable {
+public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
 
     /** Status indicator for free table entries. */
     protected static final byte FREE    = 0;
@@ -185,10 +190,14 @@ public class PLongDoubleHashMap implements Serializable {
      * @return data associated with the key
      */
     public double get(final long key) {
-
+        return getWithDefault(key, missingEntries);
+    }
+    
+    @Override
+    public double getWithDefault(long key, double missingEntries) {
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return values[index];
         }
 
@@ -200,13 +209,12 @@ public class PLongDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return values[index];
             }
         }
 
         return missingEntries;
-
     }
 
     /**
@@ -214,11 +222,11 @@ public class PLongDoubleHashMap implements Serializable {
      * @param key key to check
      * @return true if a value is associated with key
      */
-    public boolean containsKey(final long key) {
+    public boolean contains(final long key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return true;
         }
 
@@ -230,7 +238,7 @@ public class PLongDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return true;
             }
         }
@@ -246,8 +254,8 @@ public class PLongDoubleHashMap implements Serializable {
      * has been modified during iteration.</p>
      * @return iterator over the map elements
      */
-    public Iterator iterator() {
-        return new Iterator();
+    public Iterator<LongDoubleEntry> iterator() {
+        return new MapIterator();
     }
 
     /**
@@ -352,17 +360,20 @@ public class PLongDoubleHashMap implements Serializable {
         return size;
     }
 
-
+    public void remove(final long key) {
+        removeAndGet(key);
+    }
+    
     /**
      * Remove the value associated with a key.
      * @param key key to which the value is associated
      * @return removed value
      */
-    public double remove(final long key) {
+    public double removeAndGet(final long key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return doRemove(index);
         }
 
@@ -374,13 +385,12 @@ public class PLongDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return doRemove(index);
             }
         }
 
         return missingEntries;
-
     }
     
     /** Removes all entries from the hash map. */
@@ -401,7 +411,7 @@ public class PLongDoubleHashMap implements Serializable {
      * @param index index to check
      * @return true if an element is associated with key at index
      */
-    private boolean containsKey(final long key, final int index) {
+    private boolean contains(final long key, final int index) {
         return (key != 0 || states[index] == FULL) && keys[index] == key;
     }
 
@@ -420,13 +430,17 @@ public class PLongDoubleHashMap implements Serializable {
         return previous;
     }
 
+    public void put(final long key, final double value) {
+        putAndGet(key, value);
+    }
+    
     /**
      * Put a value associated with a key in the map.
      * @param key key to which value is associated
      * @param value value to put in the map
      * @return previous value associated with the key
      */
-    public double put(final long key, final double value) {
+    public double putAndGet(final long key, final double value) {
         int index = findInsertionIndex(key);
         double previous = missingEntries;
         boolean newMapping = true;
@@ -495,24 +509,11 @@ public class PLongDoubleHashMap implements Serializable {
      * @return hash value of the key
      */
     private static int hashOf(final long key) {
-        // Gets the exclusive-or of the hash values of the first and second 32
-        // bits of the long.
-        return (int) (hashOfInt((int)key) ^ hashOfInt((int) (key >>> 32)));
+        return Hash.hashOfLong(key);
     }
-    
-    /**
-     * Compute the hash value of a key
-     * @param key key to hash
-     * @return hash value of the key
-     */
-    private static int hashOfInt(final int key) {
-        final int h = key ^ ((key >>> 20) ^ (key >>> 12));
-        return h ^ (h >>> 7) ^ (h >>> 4);
-    }
-
 
     /** Iterator class for the map. */
-    public class Iterator {
+    public class MapIterator implements Iterator<LongDoubleEntry>, LongDoubleEntry {
 
         /** Reference modification count. */
         private final int referenceCount;
@@ -526,7 +527,7 @@ public class PLongDoubleHashMap implements Serializable {
         /**
          * Simple constructor.
          */
-        private Iterator() {
+        private MapIterator() {
 
             // preserve the modification count of the map to detect concurrent modifications later
             referenceCount = count;
@@ -548,6 +549,15 @@ public class PLongDoubleHashMap implements Serializable {
         public boolean hasNext() {
             return next >= 0;
         }
+        
+        public LongDoubleEntry next() {
+            advance();
+            return this;
+        }
+        
+        public void remove() {
+            throw new RuntimeException("not implemented");
+        }
 
         /**
          * Get the key of current entry.
@@ -555,7 +565,7 @@ public class PLongDoubleHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public long key()
+        public long index()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -572,7 +582,7 @@ public class PLongDoubleHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public double value()
+        public double get()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -626,6 +636,29 @@ public class PLongDoubleHashMap implements Serializable {
         stream.defaultReadObject();
         count = 0;
     }
+    
+    @Override
+    public long[] getIndices() {
+        int cur = 0;
+        long[] tmpKeys = new long[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpKeys[cur++] = keys[i];
+            }
+        }
+        return tmpKeys;
+    }
 
+    @Override
+    public double[] getValues() {
+        int cur = 0;
+        double[] tmpVals = new double[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpVals[cur++] = values[i];
+            }
+        }
+        return tmpVals;
+    }
 
 }

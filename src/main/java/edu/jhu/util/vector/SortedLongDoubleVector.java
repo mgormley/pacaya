@@ -15,6 +15,8 @@ import edu.jhu.util.collections.PLongArrayList;
  */
 public class SortedLongDoubleVector extends SortedLongDoubleMap {
 
+    private static final double ZERO = (double) 0;
+    
     boolean norm2Cached = false;
     double norm2Value;
     
@@ -36,7 +38,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
 
 	// TODO: This could be done with a single binary search instead of two.
     public void add(long idx, double val) {
-    	double curVal = getWithDefault(idx, 0.0);
+    	double curVal = getWithDefault(idx, ZERO);
     	put(idx, curVal + val);
     }
     
@@ -46,7 +48,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
     
     @Override
 	public double get(long idx) {
-		return getWithDefault(idx, 0.0);
+		return getWithDefault(idx, ZERO);
 	}
     
     public void scale(double multiplier) {
@@ -204,12 +206,12 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
             } else if (diff < 0) {
                 // e1 is less than e2, so only add e1 this round.
                 newIndices.add(e1);
-                newValues.add(lambda.call(v1, 0.0));
+                newValues.add(lambda.call(v1, ZERO));
                 i++;
             } else {
                 // e2 is less than e1, so only add e2 this round.
                 newIndices.add(e2);
-                newValues.add(lambda.call(0.0, v2));
+                newValues.add(lambda.call(ZERO, v2));
                 j++;
             }
         }
@@ -221,13 +223,13 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
             long e1 = this.indices[i];
             double v1 = this.values[i];
             newIndices.add(e1);
-            newValues.add(lambda.call(v1, 0.0));
+            newValues.add(lambda.call(v1, ZERO));
         }
         for (; j < other.used; j++) {
             long e2 = other.indices[j];
             double v2 = other.values[j];
             newIndices.add(e2);
-            newValues.add(lambda.call(0.0, v2));
+            newValues.add(lambda.call(ZERO, v2));
         }
         
         this.used = newIndices.size();
