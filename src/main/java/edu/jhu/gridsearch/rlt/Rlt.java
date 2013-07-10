@@ -436,7 +436,7 @@ public class Rlt {
         for (int m=0; m<rows.size(); m++) {
             for (LongDoubleEntry ve : rows.get(m)) {
                 long id = ve.index();
-                if (!idToColIdx.containsKey(id)) {
+                if (!idToColIdx.contains(id)) {
                     int i = idsForRltVars.getI(id);
                     int j = idsForRltVars.getJ(id);
                     
