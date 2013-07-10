@@ -160,9 +160,7 @@ public class CrfRunner {
             throw new IllegalStateException();
         }
         ErmaReader er = new ErmaReader(true);
-        er.read(featureFileIn, dataFile);
-        log.info("Converting ERMA objects to our objects.");
-        FgExamples data = er.getDataExs(alphabet);  
+        FgExamples data = er.read(featureFileIn, dataFile, alphabet);
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
