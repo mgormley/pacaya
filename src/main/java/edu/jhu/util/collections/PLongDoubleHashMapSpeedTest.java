@@ -14,7 +14,7 @@ public class PLongDoubleHashMapSpeedTest {
     public void testPowersOf2() {
         PLongDoubleHashMap map = new PLongDoubleHashMap();
         int start = 0;
-        int end = Hash.LONG_NUM_BITS;
+        int end = Primitives.LONG_NUM_BITS;
         for (int i=start; i<end; i++) {
             long key = toLong(2) << i;
             System.out.print(key + " ");

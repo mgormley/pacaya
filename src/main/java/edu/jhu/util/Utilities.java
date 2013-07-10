@@ -470,6 +470,14 @@ public class Utilities {
         return log(weight);
     }
 
+    public static boolean equals(int a, int b) {
+        return a == b;
+    }
+
+    public static boolean equals(long a, long b) {
+        return a == b;
+    }
+    
     public static boolean equals(double a, double b, double delta) {
         return Math.abs(a - b) < delta;
     }

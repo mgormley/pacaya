@@ -104,7 +104,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * Build an empty map with default size and using NaN for missing entries.
      */
     public PLongDoubleHashMap() {
-        this(DEFAULT_EXPECTED_SIZE, Double.NaN);
+        this(DEFAULT_EXPECTED_SIZE, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
     }
 
     /**
@@ -120,7 +120,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param expectedSize expected number of elements in the map
      */
     public PLongDoubleHashMap(final int expectedSize) {
-        this(expectedSize, Double.NaN);
+        this(expectedSize, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
     }
 
     /**
@@ -509,7 +509,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @return hash value of the key
      */
     private static int hashOf(final long key) {
-        return Hash.hashOfLong(key);
+        return Primitives.hashOfLong(key);
     }
 
     /** Iterator class for the map. */
