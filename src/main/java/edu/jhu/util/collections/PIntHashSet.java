@@ -10,7 +10,7 @@ public class PIntHashSet {
     }
 
     public boolean contains(int key) {
-        return map.containsKey(key);
+        return map.contains(key);
     }
 
 }

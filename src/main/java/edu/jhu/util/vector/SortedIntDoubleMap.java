@@ -8,13 +8,7 @@ import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PIntArrayList;
 
-/**
- * Sorted mapping of ints to doubles.
- * 
- * @author mgormley
- *
- */
-public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
+public class SortedIntDoubleMap implements IntDoubleMap {
 
 	protected int[] indices;
 	protected double[] values;
@@ -42,15 +36,28 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		this.values = Utilities.copyOf(other.values);
 	}
 
-	public void clear() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#clear()
+     */
+	@Override
+    public void clear() {
 		this.used = 0;
 	}
 	
-	public boolean contains(int idx) {
+	// TODO: rename to containsKey.
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#contains(int)
+     */
+	@Override
+    public boolean contains(int idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
 	
-	public double get(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#get(int)
+     */
+	@Override
+    public double get(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -58,7 +65,11 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		return values[i];
 	}
 	
-	public double getWithDefault(int idx, double defaultVal) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#getWithDefault(int, double)
+     */
+	@Override
+    public double getWithDefault(int idx, double defaultVal) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			return defaultVal;
@@ -66,7 +77,11 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		return values[i];
 	}
 	
-	public void remove(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#remove(int)
+     */
+	@Override
+    public void remove(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -77,7 +92,11 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		used--;
 	}
 	
-	public void put(int idx, double val) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#put(int, double)
+     */
+	@Override
+    public void put(int idx, double val) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i >= 0) {
 			// Just update the value.
@@ -129,7 +148,7 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		public double get() {
 			return values[i];
 		}
-	}
+    }
 
     /**
      * This iterator is fast in the case of for(Entry e : vector) { }, however a
@@ -139,10 +158,10 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 
         // The current entry.
         private IntDoubleEntryImpl entry = new IntDoubleEntryImpl(-1);
-        
+
         @Override
         public boolean hasNext() {
-            return entry.i+1 < used;
+            return entry.i + 1 < used;
         }
 
         @Override
@@ -155,16 +174,25 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
         public void remove() {
             throw new RuntimeException("operation not supported");
         }
-        
+
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.jhu.util.vector.IntDoubleMap#iterator()
+     */
 	@Override
 	public Iterator<IntDoubleEntry> iterator() {
 		return new IntDoubleIterator();
 	}
 
 
-	public int size() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#size()
+     */
+	@Override
+    public int size() {
 		return used;
 	}
 
@@ -172,9 +200,10 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
 		return used;
 	}	
 
-    /**
-     * Returns the indices.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#getIndices()
      */
+    @Override
     public int[] getIndices() {
         if (used == indices.length)
             return indices;
@@ -186,9 +215,10 @@ public class SortedIntDoubleMap implements Iterable<IntDoubleEntry> {
         return tmpIndices;
     }
     
-    /**
-     * Returns the values.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntDoubleMap#getValues()
      */
+    @Override
     public double[] getValues() {
         if (used == values.length)
             return values;

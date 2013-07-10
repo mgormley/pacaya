@@ -6,6 +6,9 @@ public class Hash {
         // Private constructor.
     }
     
+    public static int LONG_NUM_BITS = 64;
+    public static int INT_NUM_BITS = 32;
+    
     /**
      * Compute the hash value of a key
      * @param key key to hash
