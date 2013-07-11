@@ -2,18 +2,21 @@ package edu.jhu.gm.data;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import data.DataSample;
 import data.FeatureFile;
 import data.RV;
 import data.VariableSet;
+import dataParser.DataParser;
 import edu.jhu.gm.Factor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
@@ -23,6 +26,7 @@ import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarSet;
 import edu.jhu.util.Alphabet;
+import featParser.FeatureFileParser;
 
 public class ErmaReaderTest {
 
@@ -34,16 +38,20 @@ public class ErmaReaderTest {
     
     @Test
     public void testErmaReader() {
+        // Read the ERMA files to get our objects.
         boolean includeUnsupportedFeatures = true;
         ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
-        er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE);
-        List<DataSample> samples = er.getDataSamples();
-        FeatureFile ff = er.getFeatureFile();
-        
-        System.out.println(ff);
-        // Just test that we can construct these without error.
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExamples data = er.getDataExs(alphabet);
+        FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
+
+        // Read the ERMA files to get ERMA objects.
+        SimpleErmaReader ser = new SimpleErmaReader();
+        ser.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE);
+        List<DataSample> samples = ser.getDataSamples();
+        FeatureFile ff = ser.getFeatureFile();
+        System.out.println(ff);
+
+        // Just test that we can construct these without error.
         assertEquals(samples.size(), data.size());
         for (int i=0; i<samples.size(); i++) {
             DataSample samp = samples.get(i);
@@ -118,4 +126,74 @@ public class ErmaReaderTest {
         }
     }
     
+    
+    /**
+     * Reads input files in ERMA format.
+     * 
+     * @author mgormley
+     * 
+     */
+    public static class SimpleErmaReader {
+
+        private static final Logger log = Logger.getLogger(SimpleErmaReader.class);
+        private ArrayList<DataSample> samples;
+        private FeatureFile ff;
+
+        /**
+         * Constructs an ERMA reader, including all the unsupported features (ERMA's default).
+         */
+        public SimpleErmaReader() {
+        }
+        
+        public void read(File featureTemplate, File dataFile) {
+            read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath());
+        }
+        
+        /**
+         * Reads a feature file containing templates of features and a data file
+         * containing a list of examples.
+         * 
+         * @param featureTemplate
+         *            The path to the feature file.
+         * @param dataFile
+         *            The path to the data file.
+         */
+        public void read(String featureTemplate, String dataFile) {
+            FeatureFileParser fp;
+            log.info("Reading features from " + featureTemplate);
+            try {
+                fp = FeatureFileParser.createParser(featureTemplate);
+                ff = fp.parseFile();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            log.info("Reading data from " + dataFile);
+            DataParser dp;
+            try {
+                dp = DataParser.createParser(dataFile, ff);
+                samples = dp.parseFile();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /**
+         * Gets the feature templates read from the feature file.
+         * 
+         * @return An object representing the feature file.
+         */
+        public FeatureFile getFeatureFile() {
+            return ff;
+        }
+
+        /**
+         * Gets the data read from the data file.
+         * 
+         * @return A list of data samples.
+         */
+        public ArrayList<DataSample> getDataSamples() {
+            return samples;
+        }
+    }
 }

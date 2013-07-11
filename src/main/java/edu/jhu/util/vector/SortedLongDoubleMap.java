@@ -8,7 +8,7 @@ import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PLongArrayList;
 
-public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
+public class SortedLongDoubleMap implements LongDoubleMap {
 
 	protected long[] indices;
 	protected double[] values;
@@ -36,16 +36,28 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		this.values = Utilities.copyOf(other.values);
 	}
 
-	public void clear() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#clear()
+     */
+	@Override
+    public void clear() {
 		this.used = 0;
 	}
 	
 	// TODO: rename to containsKey.
-	public boolean contains(long idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#contains(long)
+     */
+	@Override
+    public boolean contains(long idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
 	
-	public double get(long idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#get(long)
+     */
+	@Override
+    public double get(long idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -53,7 +65,11 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		return values[i];
 	}
 	
-	public double getWithDefault(long idx, double defaultVal) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#getWithDefault(long, double)
+     */
+	@Override
+    public double getWithDefault(long idx, double defaultVal) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			return defaultVal;
@@ -61,7 +77,11 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		return values[i];
 	}
 	
-	public void remove(long idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#remove(long)
+     */
+	@Override
+    public void remove(long idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -72,7 +92,11 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		used--;
 	}
 	
-	public void put(long idx, double val) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#put(long, double)
+     */
+	@Override
+    public void put(long idx, double val) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i >= 0) {
 			// Just update the value.
@@ -124,7 +148,7 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		public double get() {
 			return values[i];
 		}
-	}
+    }
 
     /**
      * This iterator is fast in the case of for(Entry e : vector) { }, however a
@@ -132,34 +156,43 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
      */
     public class LongDoubleIterator implements Iterator<LongDoubleEntry> {
 
-	    // The current entry.
+        // The current entry.
         private LongDoubleEntryImpl entry = new LongDoubleEntryImpl(-1);
-		
-		@Override
-		public boolean hasNext() {
-			return entry.i+1 < used;
-		}
 
-		@Override
-		public LongDoubleEntry next() {
-		    entry.i++;
-			return entry;
-		}
+        @Override
+        public boolean hasNext() {
+            return entry.i + 1 < used;
+        }
 
-		@Override
-		public void remove() {
-			throw new RuntimeException("operation not supported");
-		}
-		
-	}
+        @Override
+        public LongDoubleEntry next() {
+            entry.i++;
+            return entry;
+        }
 
+        @Override
+        public void remove() {
+            throw new RuntimeException("operation not supported");
+        }
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.jhu.util.vector.LongDoubleMap#iterator()
+     */
 	@Override
 	public Iterator<LongDoubleEntry> iterator() {
 		return new LongDoubleIterator();
 	}
 
 
-	public int size() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#size()
+     */
+	@Override
+    public int size() {
 		return used;
 	}
 
@@ -167,9 +200,10 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
 		return used;
 	}	
 
-    /**
-     * Returns the indices.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#getIndices()
      */
+    @Override
     public long[] getIndices() {
         if (used == indices.length)
             return indices;
@@ -181,9 +215,10 @@ public class SortedLongDoubleMap implements Iterable<LongDoubleEntry> {
         return tmpIndices;
     }
     
-    /**
-     * Returns the values.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.LongDoubleMap#getValues()
      */
+    @Override
     public double[] getValues() {
         if (used == values.length)
             return values;

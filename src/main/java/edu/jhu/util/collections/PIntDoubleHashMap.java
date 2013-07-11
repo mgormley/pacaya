@@ -22,19 +22,25 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
+
+import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.vector.IntDoubleMap;
 
 /**
  * NOTICE: Changes made to this class:
  * <ul>
  * <li>This class was renamed from OpenIntToDoubleHashMap to its current name.</li>
+ * <li>The keys were converted from int to int and a new hash function was written.</li>
  * <li>A clear() method was added to this class.</li>
  * </ul> 
  * 
  * Open addressed map from int to double.
- * <p>This class provides a dedicated map from integers to doubles with a
+ * <p>This class provides a dedicated map from ints to doubles with a
  * much smaller memory overhead than standard <code>java.util.Map</code>.</p>
  * <p>This class is not synchronized. The specialized iterators returned by
  * {@link #iterator()} are fail-fast: they throw a
@@ -43,7 +49,7 @@ import org.apache.commons.math3.util.FastMath;
  * @version $Id: OpenIntToDoubleHashMap.java 1421448 2012-12-13 19:45:57Z tn $
  * @since 2.0
  */
-public class PIntDoubleHashMap implements Serializable {
+public class PIntDoubleHashMap implements Serializable, IntDoubleMap {
 
     /** Status indicator for free table entries. */
     protected static final byte FREE    = 0;
@@ -98,7 +104,7 @@ public class PIntDoubleHashMap implements Serializable {
      * Build an empty map with default size and using NaN for missing entries.
      */
     public PIntDoubleHashMap() {
-        this(DEFAULT_EXPECTED_SIZE, Double.NaN);
+        this(DEFAULT_EXPECTED_SIZE, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
     }
 
     /**
@@ -114,7 +120,7 @@ public class PIntDoubleHashMap implements Serializable {
      * @param expectedSize expected number of elements in the map
      */
     public PIntDoubleHashMap(final int expectedSize) {
-        this(expectedSize, Double.NaN);
+        this(expectedSize, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
     }
 
     /**
@@ -184,10 +190,14 @@ public class PIntDoubleHashMap implements Serializable {
      * @return data associated with the key
      */
     public double get(final int key) {
-
+        return getWithDefault(key, missingEntries);
+    }
+    
+    @Override
+    public double getWithDefault(int key, double missingEntries) {
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return values[index];
         }
 
@@ -199,13 +209,12 @@ public class PIntDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return values[index];
             }
         }
 
         return missingEntries;
-
     }
 
     /**
@@ -213,11 +222,11 @@ public class PIntDoubleHashMap implements Serializable {
      * @param key key to check
      * @return true if a value is associated with key
      */
-    public boolean containsKey(final int key) {
+    public boolean contains(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return true;
         }
 
@@ -229,7 +238,7 @@ public class PIntDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return true;
             }
         }
@@ -245,8 +254,8 @@ public class PIntDoubleHashMap implements Serializable {
      * has been modified during iteration.</p>
      * @return iterator over the map elements
      */
-    public Iterator iterator() {
-        return new Iterator();
+    public Iterator<IntDoubleEntry> iterator() {
+        return new MapIterator();
     }
 
     /**
@@ -351,17 +360,20 @@ public class PIntDoubleHashMap implements Serializable {
         return size;
     }
 
-
+    public void remove(final int key) {
+        removeAndGet(key);
+    }
+    
     /**
      * Remove the value associated with a key.
      * @param key key to which the value is associated
      * @return removed value
      */
-    public double remove(final int key) {
+    public double removeAndGet(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
-        if (containsKey(key, index)) {
+        if (contains(key, index)) {
             return doRemove(index);
         }
 
@@ -373,13 +385,12 @@ public class PIntDoubleHashMap implements Serializable {
         for (int perturb = perturb(hash); states[index] != FREE; perturb >>= PERTURB_SHIFT) {
             j = probe(perturb, j);
             index = j & mask;
-            if (containsKey(key, index)) {
+            if (contains(key, index)) {
                 return doRemove(index);
             }
         }
 
         return missingEntries;
-
     }
     
     /** Removes all entries from the hash map. */
@@ -400,7 +411,7 @@ public class PIntDoubleHashMap implements Serializable {
      * @param index index to check
      * @return true if an element is associated with key at index
      */
-    private boolean containsKey(final int key, final int index) {
+    private boolean contains(final int key, final int index) {
         return (key != 0 || states[index] == FULL) && keys[index] == key;
     }
 
@@ -419,13 +430,17 @@ public class PIntDoubleHashMap implements Serializable {
         return previous;
     }
 
+    public void put(final int key, final double value) {
+        putAndGet(key, value);
+    }
+    
     /**
      * Put a value associated with a key in the map.
      * @param key key to which value is associated
      * @param value value to put in the map
      * @return previous value associated with the key
      */
-    public double put(final int key, final double value) {
+    public double putAndGet(final int key, final double value) {
         int index = findInsertionIndex(key);
         double previous = missingEntries;
         boolean newMapping = true;
@@ -494,13 +509,11 @@ public class PIntDoubleHashMap implements Serializable {
      * @return hash value of the key
      */
     private static int hashOf(final int key) {
-        final int h = key ^ ((key >>> 20) ^ (key >>> 12));
-        return h ^ (h >>> 7) ^ (h >>> 4);
+        return Primitives.hashOfInt(key);
     }
 
-
     /** Iterator class for the map. */
-    public class Iterator {
+    public class MapIterator implements Iterator<IntDoubleEntry>, IntDoubleEntry {
 
         /** Reference modification count. */
         private final int referenceCount;
@@ -514,7 +527,7 @@ public class PIntDoubleHashMap implements Serializable {
         /**
          * Simple constructor.
          */
-        private Iterator() {
+        private MapIterator() {
 
             // preserve the modification count of the map to detect concurrent modifications later
             referenceCount = count;
@@ -536,6 +549,15 @@ public class PIntDoubleHashMap implements Serializable {
         public boolean hasNext() {
             return next >= 0;
         }
+        
+        public IntDoubleEntry next() {
+            advance();
+            return this;
+        }
+        
+        public void remove() {
+            throw new RuntimeException("not implemented");
+        }
 
         /**
          * Get the key of current entry.
@@ -543,7 +565,7 @@ public class PIntDoubleHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public int key()
+        public int index()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -560,7 +582,7 @@ public class PIntDoubleHashMap implements Serializable {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public double value()
+        public double get()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -614,6 +636,29 @@ public class PIntDoubleHashMap implements Serializable {
         stream.defaultReadObject();
         count = 0;
     }
+    
+    @Override
+    public int[] getIndices() {
+        int cur = 0;
+        int[] tmpKeys = new int[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpKeys[cur++] = keys[i];
+            }
+        }
+        return tmpKeys;
+    }
 
+    @Override
+    public double[] getValues() {
+        int cur = 0;
+        double[] tmpVals = new double[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpVals[cur++] = values[i];
+            }
+        }
+        return tmpVals;
+    }
 
 }

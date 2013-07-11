@@ -1,6 +1,7 @@
 package edu.jhu.gm.data;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +36,6 @@ import featParser.FeatureFileParser;
 public class ErmaReader {
 
     private static final Logger log = Logger.getLogger(ErmaReader.class);
-    private ArrayList<DataSample> samples;
-    private FeatureFile ff;
     private boolean includeUnsupportedFeatures;
 
     /**
@@ -54,73 +53,73 @@ public class ErmaReader {
         this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
-    public void read(File featureTemplate, File dataFile) {
-        read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath());
+    public FgExamples read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
+        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
     }
     
     /**
      * Reads a feature file containing templates of features and a data file
-     * containing a list of examples.
+     * containing a list of examples. Converts all the DataSample objects to
+     * FgExamples and returns them.
      * 
-     * @param featureTemplate
-     *            The path to the feature file.
-     * @param dataFile
-     *            The path to the data file.
+     * @param featureTemplate The path to the feature file.
+     * @param dataFile The path to the data file.
+     * @param alphabet The alphabet used to create the FgExamples.
+     * @return The new FgExamples.
      */
-    public void read(String featureTemplate, String dataFile) {
-        FeatureFileParser fp;
+    public FgExamples read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+        FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
-            fp = FeatureFileParser.createParser(featureTemplate);
+            FeatureFileParser fp = FeatureFileParser.createParser(featureTemplate);
             ff = fp.parseFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
-        log.info("Reading data from " + dataFile);
-        DataParser dp;
+        log.info("Reading and converting data from " + dataFile);  
+        FgExamples data = new FgExamples(alphabet);
         try {
-            dp = DataParser.createParser(dataFile, ff);
-            samples = dp.parseFile();
+            // This will convert each DataSample to an FgExample and add it to data.
+            ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
+            dp.parseFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * Gets the feature templates read from the feature file.
-     * 
-     * @return An object representing the feature file.
-     */
-    public FeatureFile getFeatureFile() {
-        return ff;
-    }
-
-    /**
-     * Gets the data read from the data file.
-     * 
-     * @return A list of data samples.
-     */
-    public ArrayList<DataSample> getDataSamples() {
-        return samples;
-    }
-
-    /**
-     * Converts all the DataSample objects to FgExamples and returns them.
-     */
-    public FgExamples getDataExs(Alphabet<Feature> alphabet) {
-        FgExamples data = new FgExamples(alphabet);
-        for (DataSample s : samples) {            
-            data.add(toFgExample(s, ff, alphabet));
-        }
         
         if (includeUnsupportedFeatures) {
+            log.info("Including unsupported features in the model.");
             for (data.Feature feat : ff.getFeatures()) {
                 alphabet.lookupIndex(new Feature(feat.getName()));
             }
+        } else {
+            log.info("Excluding unsupported features from the model.");
         }
         
         return data;
+    }
+
+    /**
+     * The ERMA data structures use a lot of memory. This data parser,
+     * immediately converts each one to an FgExample and then discards the ERMA
+     * version.
+     * 
+     * @author mgormley
+     */
+    private static class ConvertingDataParser extends DataParser {
+        
+        private FgExamples data;
+        
+        public ConvertingDataParser(String filename, FeatureFile ff, FgExamples data) throws FileNotFoundException {
+            super(filename, ff);
+            this.data = data;
+        }
+        
+        @Override
+        protected void addDataSample(DataSample s) {
+            data.add(toFgExample(s, this.features, data.getAlphabet()));
+        }
+        
     }
     
     /* -------  Notes on ERMA internal representations.  ------ */

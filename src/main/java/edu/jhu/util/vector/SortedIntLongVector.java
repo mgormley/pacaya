@@ -1,11 +1,12 @@
 package edu.jhu.util.vector;
 
 import edu.jhu.util.Lambda;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.Lambda.LambdaBinOpLong;
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PLongArrayList;
-
+import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.Primitives;
 
 /**
  * Infinite length sparse vector.
@@ -15,6 +16,8 @@ import edu.jhu.util.collections.PLongArrayList;
  */
 public class SortedIntLongVector extends SortedIntLongMap {
 
+    private static final long ZERO = (long) 0;
+    
     boolean norm2Cached = false;
     long norm2Value;
     
@@ -33,10 +36,10 @@ public class SortedIntLongVector extends SortedIntLongMap {
 	public SortedIntLongVector(long[] denseRow) {
 		this(Utilities.getIndexArray(denseRow.length), denseRow);
 	}
-	
+
 	// TODO: This could be done with a single binary search instead of two.
     public void add(int idx, long val) {
-    	long curVal = getWithDefault(idx, 0);
+    	long curVal = getWithDefault(idx, ZERO);
     	put(idx, curVal + val);
     }
     
@@ -46,7 +49,7 @@ public class SortedIntLongVector extends SortedIntLongMap {
     
     @Override
 	public long get(int idx) {
-		return getWithDefault(idx, 0);
+		return getWithDefault(idx, ZERO);
 	}
     
     public void scale(long multiplier) {
@@ -59,11 +62,26 @@ public class SortedIntLongVector extends SortedIntLongMap {
     public long dot(long[] other) {
         long ret = 0;
         for (int c = 0; c < used && indices[c] < other.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
             ret += values[c] * other[indices[c]];
         }
         return ret;
     }
 
+    /** Computes the dot product of this vector with the column of the given matrix. */
+    public long dot(long[][] matrix, int col) {
+        long ret = 0;
+        for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
+            ret += values[c] * matrix[indices[c]][col];
+        }
+        return ret;
+    }
+    
     /** Computes the dot product of this vector with the given vector. */   
     public long dot(SortedIntLongVector y) {
         if (y instanceof SortedIntLongVector) {
@@ -100,7 +118,7 @@ public class SortedIntLongVector extends SortedIntLongMap {
         int numNonZeros = 0;
         boolean[] isNonZero = new boolean[row.getUsed()];
         for (int i = 0; i < row.getUsed(); i++) {
-            if (origData[i] != 0) {
+            if (!Primitives.isZero(origData[i])) {
                 isNonZero[i] = true;
                 numNonZeros++;
             } else {
@@ -200,12 +218,12 @@ public class SortedIntLongVector extends SortedIntLongMap {
             } else if (diff < 0) {
                 // e1 is less than e2, so only add e1 this round.
                 newIndices.add(e1);
-                newValues.add(lambda.call(v1, 0));
+                newValues.add(lambda.call(v1, ZERO));
                 i++;
             } else {
                 // e2 is less than e1, so only add e2 this round.
                 newIndices.add(e2);
-                newValues.add(lambda.call(0, v2));
+                newValues.add(lambda.call(ZERO, v2));
                 j++;
             }
         }
@@ -217,13 +235,13 @@ public class SortedIntLongVector extends SortedIntLongMap {
             int e1 = this.indices[i];
             long v1 = this.values[i];
             newIndices.add(e1);
-            newValues.add(lambda.call(v1, 0));
+            newValues.add(lambda.call(v1, ZERO));
         }
         for (; j < other.used; j++) {
             int e2 = other.indices[j];
             long v2 = other.values[j];
             newIndices.add(e2);
-            newValues.add(lambda.call(0, v2));
+            newValues.add(lambda.call(ZERO, v2));
         }
         
         this.used = newIndices.size();
@@ -293,36 +311,31 @@ public class SortedIntLongVector extends SortedIntLongMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof SortedIntLongVector) {
-            SortedIntLongVector other = (SortedIntLongVector) obj;
+    public boolean eq(SortedIntLongVector other) {
+        // This is slow, but correct.
+        SortedIntLongVector v1 = SortedIntLongVector.getWithNoZeroValues(this);
+        SortedIntLongVector v2 = SortedIntLongVector.getWithNoZeroValues(other);
+                
+        if (v2.size() != v1.size()) {
+            return false;
+        }
 
-            SortedIntLongVector v1 = SortedIntLongVector.getWithNoZeroValues(this);
-            SortedIntLongVector v2 = SortedIntLongVector.getWithNoZeroValues(other);
-            
-            if (v2.size() != v1.size()) {
+        for (IntLongEntry ve : v1) {
+            if (!Utilities.equals(ve.get(), v2.get(ve.index()))) {
                 return false;
             }
-            // This is slow, but correct.
-            for (IntLongEntry ve : v1) {
-                if (ve.get() != v2.get(ve.index())) {
-                    return false;
-                }
-            }
-            for (IntLongEntry ve : v2) {
-                if (ve.get() != v1.get(ve.index())) {
-                    return false;
-                }
-            }
-            return true;
         }
-        return false;
+        for (IntLongEntry ve : v2) {
+            if (!Utilities.equals(ve.get(), v1.get(ve.index()))) {
+                return false;
+            }
+        }
+        return true;
     }
     
     @Override
     public int hashCode() {
-    	throw new RuntimeException("not implemented");
+        throw new RuntimeException("not implemented");
     }
 
 }

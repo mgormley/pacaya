@@ -13,9 +13,10 @@ import java.util.zip.GZIPInputStream;
 import edu.jhu.data.Label;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
+import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.util.Alphabet;
 
-public class CnfGrammarBuilder {
+public class CnfGrammarReader {
 
     private int rootSymbol;
     private ArrayList<Rule> allRules;
@@ -26,11 +27,11 @@ public class CnfGrammarBuilder {
     private Alphabet<Label> lexAlphabet;
     private Alphabet<Label> ntAlphabet;
     
-    public CnfGrammarBuilder() {
+    public CnfGrammarReader() {
         this(new Alphabet<Label>(), new Alphabet<Label>());
     }
     
-    public CnfGrammarBuilder(Alphabet<Label> lexAlphabet,
+    public CnfGrammarReader(Alphabet<Label> lexAlphabet,
             Alphabet<Label> ntAlphabet) {
         if (lexAlphabet.size() > 0) {
             throw new IllegalArgumentException("Lexical alphabet must by empty.");
@@ -47,8 +48,8 @@ public class CnfGrammarBuilder {
         binaryRules = new ArrayList<Rule>();                
     }
 
-    public CnfGrammar getGrammar() {
-        return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet);
+    public CnfGrammar getGrammar(LoopOrder loopOrder) {
+        return new CnfGrammar(allRules, rootSymbol, lexAlphabet, ntAlphabet, loopOrder);
     }
     
     public void loadFromFile(String filename) throws IOException {

@@ -36,10 +36,10 @@ public class CkyPcfgParserTest {
 
     private void testSimpleSentence1Helper(LoopOrder loopOrder, ChartCellType cellType) throws IOException {
         // time flies like an arrow.
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
-        builder.loadFromResource(CnfGrammarBuilderTest.timeFliesGrammarResource);
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
@@ -72,10 +72,10 @@ public class CkyPcfgParserTest {
 
     private void testSimpleSentence2Helper(LoopOrder loopOrder, ChartCellType cellType) throws IOException {
         // an arrow flies like time
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
-        builder.loadFromResource(CnfGrammarBuilderTest.timeFliesGrammarResource);
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("an arrow flies like time", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();
@@ -97,10 +97,10 @@ public class CkyPcfgParserTest {
         ChartCellType cellType = ChartCellType.FULL;
         
         // time flies like an arrow.
-        CnfGrammarBuilder builder = new CnfGrammarBuilder();
+        CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromFile(r0GrammarFile);
         
-        CnfGrammar grammar = builder.getGrammar();
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Pair<BinaryTree, Double> pair = parseSentence("time flies like an arrow", grammar, loopOrder, cellType);
         BinaryTree tree = pair.get1();

@@ -470,6 +470,14 @@ public class Utilities {
         return log(weight);
     }
 
+    public static boolean equals(int a, int b) {
+        return a == b;
+    }
+
+    public static boolean equals(long a, long b) {
+        return a == b;
+    }
+    
     public static boolean equals(double a, double b, double delta) {
         return Math.abs(a - b) < delta;
     }
@@ -711,13 +719,17 @@ public class Utilities {
      * memset, and only iterates over the array filling each value. This method
      * works out to be much faster and seems to be using memset as appropriate.
      */
-    public static void fill(double[] array, double value) {
-        final int n = array.length;
-        if (n > 0) {
-            array[0] = value;
-        }
-        for (int i = 1; i < n; i += i) {
-           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+    // TODO: Iterating is still the fastest way to fill an array.
+    public static void fill(final double[] array, final double value) {
+        //        final int n = array.length;
+        //        if (n > 0) {
+        //            array[0] = value;
+        //        }
+        //        for (int i = 1; i < n; i += i) {
+        //           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        //        }
+        for (int i=0; i<array.length; i++) {
+            array[i] = value;
         }
     }
     
@@ -726,13 +738,16 @@ public class Utilities {
      * memset, and only iterates over the array filling each value. This method
      * works out to be much faster and seems to be using memset as appropriate.
      */
-    public static void fill(boolean[] array, boolean value) {
-        final int n = array.length;
-        if (n > 0) {
-            array[0] = value;
-        }
-        for (int i = 1; i < n; i += i) {
-           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+    public static void fill(final boolean[] array, final boolean value) {
+        //        final int n = array.length;
+        //        if (n > 0) {
+        //            array[0] = value;
+        //        }
+        //        for (int i = 1; i < n; i += i) {
+        //           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        //        }
+        for (int i=0; i<array.length; i++) {
+            array[i] = value;
         }
     }
 
@@ -741,14 +756,17 @@ public class Utilities {
      * memset, and only iterates over the array filling each value. This method
      * works out to be much faster and seems to be using memset as appropriate.
      */
-    public static void fill(Object[] array, Object value) {
-        final int n = array.length;
-        if (n > 0) {
-            array[0] = value;
-        }
-        for (int i = 1; i < n; i += i) {
-           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
-        }
+    public static void fill(final Object[] array, final Object value) {
+        //        final int n = array.length;
+        //        if (n > 0) {
+        //            array[0] = value;
+        //        }
+        //        for (int i = 1; i < n; i += i) {
+        //           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
+        //        }
+        for (int i=0; i<array.length; i++) {
+            array[i] = value;
+        }        
     }
 
     public static <T> List<T> getList(T... args) {

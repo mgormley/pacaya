@@ -10,101 +10,101 @@ public class SortedIntDoubleMapTest {
 
 	@Test
 	public void testOrderedUsage() {
-		SortedIntDoubleMap map = new SortedIntDoubleMap();
-		map.put(1, 11.);
-		map.put(2, 22.);
-		map.put(3, 33.);
+		IntDoubleMap map = new SortedIntDoubleMap();
+		map.put(1, toDouble(11));
+		map.put(2, toDouble(22));
+		map.put(3, toDouble(33));
 		
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(33., map.get(3), 1e-13);
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(33, toInt(map.get(3)));
 	}
 	
 	@Test
 	public void testNormalUsage() {
-		SortedIntDoubleMap map = new SortedIntDoubleMap();
-		map.put(2, 22.);
-		map.put(1, 11.);
-		map.put(3, 33.);
-		map.put(-1, -11.);
-		map.put(8, 88.);
-		map.put(6, 66.);
+		IntDoubleMap map = new SortedIntDoubleMap();
+		map.put(2, toDouble(22));
+		map.put(1, toDouble(11));
+		map.put(3, toDouble(33));
+		map.put(-1, toDouble(-11));
+		map.put(8, toDouble(88));
+		map.put(6, toDouble(66));
 
-		assertEquals(33., map.get(3), 1e-13);		
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(-11., map.get(-1), 1e-13);
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(88., map.get(8), 1e-13);
-		assertEquals(66., map.get(6), 1e-13);
+		assertEquals(33, toInt(map.get(3)));		
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(-11, toInt(map.get(-1)));
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(88, toInt(map.get(8)));
+		assertEquals(66, toInt(map.get(6)));
 		
 		// Clear the map.
 		map.clear();
 		
-		map.put(3, 33.);
-		map.put(2, 22.);
-		map.put(1, 11.);
+		map.put(3, toDouble(33));
+		map.put(2, toDouble(22));
+		map.put(1, toDouble(11));
 		
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(33., map.get(3), 1e-13);
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(33, toInt(map.get(3)));
 	}
 
 
 	@Test
 	public void testRemove() {
 		// First element.
-		SortedIntDoubleMap map = new SortedIntDoubleMap();
-		map.put(2, 22.);
-		map.put(1, 11.);
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(11., map.get(1), 1e-13);
+		IntDoubleMap map = new SortedIntDoubleMap();
+		map.put(2, toDouble(22));
+		map.put(1, toDouble(11));
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(11, toInt(map.get(1)));
 		
 		map.remove(1);
 		assertEquals(false, map.contains(1));
-		assertEquals(22., map.get(2), 1e-13);
+		assertEquals(22, toInt(map.get(2)));
 		assertEquals(1, map.size());
 		
 		// Middle element.
 		map = new SortedIntDoubleMap();
-		map.put(2, 22.);
-		map.put(3, 33.);
-		map.put(1, 11.);
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(33., map.get(3), 1e-13);		
+		map.put(2, toDouble(22));
+		map.put(3, toDouble(33));
+		map.put(1, toDouble(11));
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(33, toInt(map.get(3)));		
 		
 		map.remove(2);
 		assertEquals(false, map.contains(2));
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(33., map.get(3), 1e-13);		
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(33, toInt(map.get(3)));		
 		assertEquals(2, map.size());
 		
 		// Last element.
 		map = new SortedIntDoubleMap();
-		map.put(2, 22.);
-		map.put(3, 33.);
-		map.put(1, 11.);
-		assertEquals(22., map.get(2), 1e-13);
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(33., map.get(3), 1e-13);		
+		map.put(2, toDouble(22));
+		map.put(3, toDouble(33));
+		map.put(1, toDouble(11));
+		assertEquals(22, toInt(map.get(2)));
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(33, toInt(map.get(3)));		
 		
 		map.remove(3);
 		assertEquals(false, map.contains(3));
-		assertEquals(11., map.get(1), 1e-13);
-		assertEquals(22., map.get(2), 1e-13);		
+		assertEquals(11, toInt(map.get(1)));
+		assertEquals(22, toInt(map.get(2)));		
 		assertEquals(2, map.size());
 	}
 
 	@Test
 	public void testBadGets() {
-		SortedIntDoubleMap map = new SortedIntDoubleMap();
+		IntDoubleMap map = new SortedIntDoubleMap();
 
 		try {
 			map.get(2);
 		} catch(Exception e) {
 			// pass
 		}
-		map.put(3, 33.);
+		map.put(3, toDouble(33));
 		try {
 			map.get(-3);
 		} catch(Exception e) {
@@ -115,8 +115,8 @@ public class SortedIntDoubleMapTest {
     @Test
     public void testIterator() {
         SortedIntDoubleMap map = new SortedIntDoubleMap();
-        map.put(2, 22.);
-        map.put(1, 11.);
+        map.put(2, toDouble(22));
+        map.put(1, toDouble(11));
         
         IntDoubleEntry cur;
         Iterator<IntDoubleEntry> iter = map.iterator();
@@ -124,11 +124,28 @@ public class SortedIntDoubleMapTest {
         assertEquals(true, iter.hasNext()); 
         cur = iter.next();
         assertEquals(1, cur.index()); 
-        assertEquals(11, cur.get(), 1e-13); 
+        assertEquals(11, toInt(cur.get())); 
         assertEquals(true, iter.hasNext()); 
         cur = iter.next();
         assertEquals(2, cur.index()); 
-        assertEquals(22, cur.get(), 1e-13); 
+        assertEquals(22, toInt(cur.get())); 
         assertEquals(false, iter.hasNext());
     }
+    
+    private int toInt(double d) {
+        return (int)d;
+    }
+
+    private double[] toDoubles(int... b) {
+        double[] a = new double[b.length];
+        for (int i=0; i<b.length; i++) {
+            a[i] = b[i];
+        }
+        return a;
+    }
+
+    private double toDouble(int i) {
+        return i;
+    }
+    
 }

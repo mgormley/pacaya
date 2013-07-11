@@ -1,11 +1,12 @@
 package edu.jhu.util.vector;
 
 import edu.jhu.util.Lambda;
+import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PLongArrayList;
+import edu.jhu.util.collections.Primitives;
 
 /**
  * Infinite length sparse vector.
@@ -15,6 +16,8 @@ import edu.jhu.util.collections.PLongArrayList;
  */
 public class SortedLongDoubleVector extends SortedLongDoubleMap {
 
+    private static final double ZERO = (double) 0;
+    
     boolean norm2Cached = false;
     double norm2Value;
     
@@ -36,7 +39,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
 
 	// TODO: This could be done with a single binary search instead of two.
     public void add(long idx, double val) {
-    	double curVal = getWithDefault(idx, 0.0);
+    	double curVal = getWithDefault(idx, ZERO);
     	put(idx, curVal + val);
     }
     
@@ -46,7 +49,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
     
     @Override
 	public double get(long idx) {
-		return getWithDefault(idx, 0.0);
+		return getWithDefault(idx, ZERO);
 	}
     
     public void scale(double multiplier) {
@@ -67,6 +70,18 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
         return ret;
     }
 
+    /** Computes the dot product of this vector with the column of the given matrix. */
+    public double dot(double[][] matrix, int col) {
+        double ret = 0;
+        for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
+            ret += values[c] * matrix[SafeCast.safeLongToInt(indices[c])][col];
+        }
+        return ret;
+    }
+    
     /** Computes the dot product of this vector with the given vector. */   
     public double dot(SortedLongDoubleVector y) {
         if (y instanceof SortedLongDoubleVector) {
@@ -103,8 +118,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
         int numNonZeros = 0;
         boolean[] isNonZero = new boolean[row.getUsed()];
         for (int i = 0; i < row.getUsed(); i++) {
-            double absVal = Math.abs(origData[i]);
-            if (absVal < -zeroThreshold || zeroThreshold < absVal) {
+            if (!Primitives.isZero(origData[i], zeroThreshold)) {
                 isNonZero[i] = true;
                 numNonZeros++;
             } else {
@@ -204,12 +218,12 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
             } else if (diff < 0) {
                 // e1 is less than e2, so only add e1 this round.
                 newIndices.add(e1);
-                newValues.add(lambda.call(v1, 0.0));
+                newValues.add(lambda.call(v1, ZERO));
                 i++;
             } else {
                 // e2 is less than e1, so only add e2 this round.
                 newIndices.add(e2);
-                newValues.add(lambda.call(0.0, v2));
+                newValues.add(lambda.call(ZERO, v2));
                 j++;
             }
         }
@@ -221,13 +235,13 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
             long e1 = this.indices[i];
             double v1 = this.values[i];
             newIndices.add(e1);
-            newValues.add(lambda.call(v1, 0.0));
+            newValues.add(lambda.call(v1, ZERO));
         }
         for (; j < other.used; j++) {
             long e2 = other.indices[j];
             double v2 = other.values[j];
             newIndices.add(e2);
-            newValues.add(lambda.call(0.0, v2));
+            newValues.add(lambda.call(ZERO, v2));
         }
         
         this.used = newIndices.size();
@@ -297,7 +311,7 @@ public class SortedLongDoubleVector extends SortedLongDoubleMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedLongDoubleVector other, double delta) {
+    public boolean eq(SortedLongDoubleVector other, double delta) {
         // This is slow, but correct.
         SortedLongDoubleVector v1 = SortedLongDoubleVector.getWithNoZeroValues(this, delta);
         SortedLongDoubleVector v2 = SortedLongDoubleVector.getWithNoZeroValues(other, delta);

@@ -318,7 +318,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         #conll09_dir = "/export/common/data/corpora/LDC/LDC2012T03/data"
         #conll09_sp_dir = os.path.join(conll09_dir, "CoNLL2009-ST-Spanish")
-        conll09_sp_dir = os.path.join(data_dir, "CoNLL2009-ST-Spanish-BrownClusters")
+        conll09_sp_dir = os.path.abspath(os.path.join("data", "conll2009", "CoNLL2009-ST-Spanish"))
+        #conll09_sp_dir = os.path.join(data_dir, "conll2009", "CoNLL2009-ST-Spanish-BrownClusters")
         conll09_sp_dev = self.get_data(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt") + \
             DPExpParams(dataset="conll09-sp-dev",
                         trainType="CONLL_2009",

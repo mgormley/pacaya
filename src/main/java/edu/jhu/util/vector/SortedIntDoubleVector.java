@@ -1,10 +1,12 @@
 package edu.jhu.util.vector;
 
 import edu.jhu.util.Lambda;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.Lambda.LambdaBinOpDouble;
+import edu.jhu.util.SafeCast;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.Primitives;
 
 /**
  * Infinite length sparse vector.
@@ -14,6 +16,8 @@ import edu.jhu.util.collections.PIntArrayList;
  */
 public class SortedIntDoubleVector extends SortedIntDoubleMap {
 
+    private static final double ZERO = (double) 0;
+    
     boolean norm2Cached = false;
     double norm2Value;
     
@@ -35,7 +39,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
 
 	// TODO: This could be done with a single binary search instead of two.
     public void add(int idx, double val) {
-    	double curVal = getWithDefault(idx, 0.0);
+    	double curVal = getWithDefault(idx, ZERO);
     	put(idx, curVal + val);
     }
     
@@ -45,7 +49,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     
     @Override
 	public double get(int idx) {
-		return getWithDefault(idx, 0.0);
+		return getWithDefault(idx, ZERO);
 	}
     
     public void scale(double multiplier) {
@@ -58,21 +62,27 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     public double dot(double[] other) {
         double ret = 0;
         for (int c = 0; c < used && indices[c] < other.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
             ret += values[c] * other[indices[c]];
         }
         return ret;
     }
-    
+
     /** Computes the dot product of this vector with the column of the given matrix. */
     public double dot(double[][] matrix, int col) {
         double ret = 0;
         for (int c = 0; c < used && indices[c] < matrix.length; c++) {
+            if (indices[c] > Integer.MAX_VALUE) {
+                break;
+            }
             ret += values[c] * matrix[indices[c]][col];
         }
         return ret;
     }
-
-    /** Computes the dot product of this vector with the given vector. */
+    
+    /** Computes the dot product of this vector with the given vector. */   
     public double dot(SortedIntDoubleVector y) {
         if (y instanceof SortedIntDoubleVector) {
             SortedIntDoubleVector other = ((SortedIntDoubleVector) y);
@@ -108,8 +118,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
         int numNonZeros = 0;
         boolean[] isNonZero = new boolean[row.getUsed()];
         for (int i = 0; i < row.getUsed(); i++) {
-            double absVal = Math.abs(origData[i]);
-            if (absVal < -zeroThreshold || zeroThreshold < absVal) {
+            if (!Primitives.isZero(origData[i], zeroThreshold)) {
                 isNonZero[i] = true;
                 numNonZeros++;
             } else {
@@ -139,7 +148,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     
 
     /**
-     * TODO: Make a SortedIntIntVectorWithExplicitZeros class and move this method there.
+     * TODO: Make a SortedIntDoubleVectorWithExplicitZeros class and move this method there.
      * 
      * Here we override the zero method so that it doesn't set the number of
      * used values to 0. This ensures that we keep explicit zeros in.
@@ -209,12 +218,12 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
             } else if (diff < 0) {
                 // e1 is less than e2, so only add e1 this round.
                 newIndices.add(e1);
-                newValues.add(lambda.call(v1, 0.0));
+                newValues.add(lambda.call(v1, ZERO));
                 i++;
             } else {
                 // e2 is less than e1, so only add e2 this round.
                 newIndices.add(e2);
-                newValues.add(lambda.call(0.0, v2));
+                newValues.add(lambda.call(ZERO, v2));
                 j++;
             }
         }
@@ -226,13 +235,13 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
             int e1 = this.indices[i];
             double v1 = this.values[i];
             newIndices.add(e1);
-            newValues.add(lambda.call(v1, 0.0));
+            newValues.add(lambda.call(v1, ZERO));
         }
         for (; j < other.used; j++) {
             int e2 = other.indices[j];
             double v2 = other.values[j];
             newIndices.add(e2);
-            newValues.add(lambda.call(0.0, v2));
+            newValues.add(lambda.call(ZERO, v2));
         }
         
         this.used = newIndices.size();
@@ -302,7 +311,7 @@ public class SortedIntDoubleVector extends SortedIntDoubleMap {
     /**
      * Returns true if the input vector is equal to this one.
      */
-    public boolean equals(SortedIntDoubleVector other, double delta) {
+    public boolean eq(SortedIntDoubleVector other, double delta) {
         // This is slow, but correct.
         SortedIntDoubleVector v1 = SortedIntDoubleVector.getWithNoZeroValues(this, delta);
         SortedIntDoubleVector v2 = SortedIntDoubleVector.getWithNoZeroValues(other, delta);

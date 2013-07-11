@@ -27,29 +27,29 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
 
-import edu.jhu.util.vector.IntDoubleEntry;
-import edu.jhu.util.vector.LongDoubleEntry;
-import edu.jhu.util.vector.LongDoubleMap;
+import edu.jhu.util.vector.IntIntEntry;
+import edu.jhu.util.vector.IntIntEntry;
+import edu.jhu.util.vector.IntIntMap;
 
 /**
  * NOTICE: Changes made to this class:
  * <ul>
- * <li>This class was renamed from OpenIntToDoubleHashMap to its current name.</li>
- * <li>The keys were converted from int to long and a new hash function was written.</li>
+ * <li>This class was renamed from OpenIntToIntHashMap to its current name.</li>
+ * <li>The keys were converted from int to int and a new hash function was written.</li>
  * <li>A clear() method was added to this class.</li>
  * </ul> 
  * 
- * Open addressed map from long to double.
- * <p>This class provides a dedicated map from longs to doubles with a
+ * Open addressed map from int to int.
+ * <p>This class provides a dedicated map from ints to ints with a
  * much smaller memory overhead than standard <code>java.util.Map</code>.</p>
  * <p>This class is not synchronized. The specialized iterators returned by
  * {@link #iterator()} are fail-fast: they throw a
  * <code>ConcurrentModificationException</code> when they detect the map has been
  * modified during iteration.</p>
- * @version $Id: OpenIntToDoubleHashMap.java 1421448 2012-12-13 19:45:57Z tn $
+ * @version $Id: OpenIntToIntHashMap.java 1421448 2012-12-13 19:45:57Z tn $
  * @since 2.0
  */
-public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
+public class PIntIntHashMap implements Serializable, IntIntMap {
 
     /** Status indicator for free table entries. */
     protected static final byte FREE    = 0;
@@ -80,16 +80,16 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
     private static final int PERTURB_SHIFT = 5;
 
     /** Keys table. */
-    private long[] keys;
+    private int[] keys;
 
     /** Values table. */
-    private double[] values;
+    private int[] values;
 
     /** States table. */
     private byte[] states;
 
     /** Return value for missing entries. */
-    private final double missingEntries;
+    private final int missingEntries;
 
     /** Current size of the map. */
     private int size;
@@ -103,24 +103,8 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
     /**
      * Build an empty map with default size and using NaN for missing entries.
      */
-    public PLongDoubleHashMap() {
-        this(DEFAULT_EXPECTED_SIZE, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
-    }
-
-    /**
-     * Build an empty map with default size
-     * @param missingEntries value to return when a missing entry is fetched
-     */
-    public PLongDoubleHashMap(final double missingEntries) {
-        this(DEFAULT_EXPECTED_SIZE, missingEntries);
-    }
-
-    /**
-     * Build an empty map with specified size and using NaN for missing entries.
-     * @param expectedSize expected number of elements in the map
-     */
-    public PLongDoubleHashMap(final int expectedSize) {
-        this(expectedSize, Primitives.DEFAULT_MISSING_ENTRY_DOUBLE);
+    public PIntIntHashMap() {
+        this(DEFAULT_EXPECTED_SIZE, Primitives.DEFAULT_MISSING_ENTRY_INT);
     }
 
     /**
@@ -128,11 +112,11 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param expectedSize expected number of elements in the map
      * @param missingEntries value to return when a missing entry is fetched
      */
-    public PLongDoubleHashMap(final int expectedSize,
-                                  final double missingEntries) {
+    public PIntIntHashMap(final int expectedSize,
+                                  final int missingEntries) {
         final int capacity = computeCapacity(expectedSize);
-        keys   = new long[capacity];
-        values = new double[capacity];
+        keys   = new int[capacity];
+        values = new int[capacity];
         states = new byte[capacity];
         this.missingEntries = missingEntries;
         size = 0;
@@ -144,11 +128,11 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * Copy constructor.
      * @param source map to copy
      */
-    public PLongDoubleHashMap(final PLongDoubleHashMap source) {
+    public PIntIntHashMap(final PIntIntHashMap source) {
         final int length = source.keys.length;
-        keys = new long[length];
+        keys = new int[length];
         System.arraycopy(source.keys, 0, keys, 0, length);
-        values = new double[length];
+        values = new int[length];
         System.arraycopy(source.values, 0, values, 0, length);
         states = new byte[length];
         System.arraycopy(source.states, 0, states, 0, length);
@@ -189,12 +173,12 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param key key associated with the data
      * @return data associated with the key
      */
-    public double get(final long key) {
+    public int get(final int key) {
         return getWithDefault(key, missingEntries);
     }
     
     @Override
-    public double getWithDefault(long key, double missingEntries) {
+    public int getWithDefault(int key, int missingEntries) {
         final int hash  = hashOf(key);
         int index = hash & mask;
         if (contains(key, index)) {
@@ -222,7 +206,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param key key to check
      * @return true if a value is associated with key
      */
-    public boolean contains(final long key) {
+    public boolean contains(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
@@ -254,7 +238,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * has been modified during iteration.</p>
      * @return iterator over the map elements
      */
-    public Iterator<LongDoubleEntry> iterator() {
+    public Iterator<IntIntEntry> iterator() {
         return new MapIterator();
     }
 
@@ -272,7 +256,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param key key to lookup
      * @return index at which key should be inserted
      */
-    private int findInsertionIndex(final long key) {
+    private int findInsertionIndex(final int key) {
         return findInsertionIndex(keys, states, key, mask);
     }
 
@@ -284,8 +268,8 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param mask bit mask for hash values
      * @return index at which key should be inserted
      */
-    private static int findInsertionIndex(final long[] keys, final byte[] states,
-                                          final long key, final int mask) {
+    private static int findInsertionIndex(final int[] keys, final byte[] states,
+                                          final int key, final int mask) {
         final int hash = hashOf(key);
         int index = hash & mask;
         if (states[index] == FREE) {
@@ -360,7 +344,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
         return size;
     }
 
-    public void remove(final long key) {
+    public void remove(final int key) {
         removeAndGet(key);
     }
     
@@ -369,7 +353,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param key key to which the value is associated
      * @return removed value
      */
-    public double removeAndGet(final long key) {
+    public int removeAndGet(final int key) {
 
         final int hash  = hashOf(key);
         int index = hash & mask;
@@ -411,7 +395,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param index index to check
      * @return true if an element is associated with key at index
      */
-    private boolean contains(final long key, final int index) {
+    private boolean contains(final int key, final int index) {
         return (key != 0 || states[index] == FULL) && keys[index] == key;
     }
 
@@ -420,17 +404,17 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param index index of the element to remove
      * @return removed value
      */
-    private double doRemove(int index) {
+    private int doRemove(int index) {
         keys[index]   = 0;
         states[index] = REMOVED;
-        final double previous = values[index];
+        final int previous = values[index];
         values[index] = missingEntries;
         --size;
         ++count;
         return previous;
     }
 
-    public void put(final long key, final double value) {
+    public void put(final int key, final int value) {
         putAndGet(key, value);
     }
     
@@ -440,9 +424,9 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param value value to put in the map
      * @return previous value associated with the key
      */
-    public double putAndGet(final long key, final double value) {
+    public int putAndGet(final int key, final int value) {
         int index = findInsertionIndex(key);
-        double previous = missingEntries;
+        int previous = missingEntries;
         boolean newMapping = true;
         if (index < 0) {
             index = changeIndexSign(index);
@@ -469,18 +453,18 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
     private void growTable() {
 
         final int oldLength      = states.length;
-        final long[] oldKeys      = keys;
-        final double[] oldValues = values;
+        final int[] oldKeys      = keys;
+        final int[] oldValues = values;
         final byte[] oldStates   = states;
 
         final int newLength = RESIZE_MULTIPLIER * oldLength;
-        final long[] newKeys = new long[newLength];
-        final double[] newValues = new double[newLength];
+        final int[] newKeys = new int[newLength];
+        final int[] newValues = new int[newLength];
         final byte[] newStates = new byte[newLength];
         final int newMask = newLength - 1;
         for (int i = 0; i < oldLength; ++i) {
             if (oldStates[i] == FULL) {
-                final long key = oldKeys[i];
+                final int key = oldKeys[i];
                 final int index = findInsertionIndex(newKeys, newStates, key, newMask);
                 newKeys[index]   = key;
                 newValues[index] = oldValues[i];
@@ -508,12 +492,12 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
      * @param key key to hash
      * @return hash value of the key
      */
-    private static int hashOf(final long key) {
-        return Primitives.hashOfLong(key);
+    private static int hashOf(final int key) {
+        return Primitives.hashOfInt(key);
     }
 
     /** Iterator class for the map. */
-    public class MapIterator implements Iterator<LongDoubleEntry>, LongDoubleEntry {
+    public class MapIterator implements Iterator<IntIntEntry>, IntIntEntry {
 
         /** Reference modification count. */
         private final int referenceCount;
@@ -550,7 +534,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
             return next >= 0;
         }
         
-        public LongDoubleEntry next() {
+        public IntIntEntry next() {
             advance();
             return this;
         }
@@ -565,7 +549,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public long index()
+        public int index()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -582,7 +566,7 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
          * @exception ConcurrentModificationException if the map is modified during iteration
          * @exception NoSuchElementException if there is no element left in the map
          */
-        public double get()
+        public int get()
             throws ConcurrentModificationException, NoSuchElementException {
             if (referenceCount != count) {
                 throw new ConcurrentModificationException();
@@ -638,9 +622,9 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
     }
     
     @Override
-    public long[] getIndices() {
+    public int[] getIndices() {
         int cur = 0;
-        long[] tmpKeys = new long[size()];
+        int[] tmpKeys = new int[size()];
         for (int i=0; i<keys.length; i++) {
             if (states[i] == FULL) {
                 tmpKeys[cur++] = keys[i];
@@ -650,9 +634,9 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
     }
 
     @Override
-    public double[] getValues() {
+    public int[] getValues() {
         int cur = 0;
-        double[] tmpVals = new double[size()];
+        int[] tmpVals = new int[size()];
         for (int i=0; i<keys.length; i++) {
             if (states[i] == FULL) {
                 tmpVals[cur++] = values[i];

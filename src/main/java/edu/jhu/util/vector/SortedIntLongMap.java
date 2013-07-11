@@ -5,10 +5,10 @@ import java.util.Iterator;
 
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.collections.PIntArrayList;
 import edu.jhu.util.collections.PLongArrayList;
+import edu.jhu.util.collections.PIntArrayList;
 
-public class SortedIntLongMap implements Iterable<IntLongEntry> {
+public class SortedIntLongMap implements IntLongMap {
 
 	protected int[] indices;
 	protected long[] values;
@@ -36,15 +36,28 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		this.values = Utilities.copyOf(other.values);
 	}
 
-	public void clear() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#clear()
+     */
+	@Override
+    public void clear() {
 		this.used = 0;
 	}
 	
-	public boolean contains(int idx) {
+	// TODO: rename to containsKey.
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#contains(int)
+     */
+	@Override
+    public boolean contains(int idx) {
 		return Arrays.binarySearch(indices, 0, used, idx) >= 0;
 	}
 	
-	public long get(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#get(int)
+     */
+	@Override
+    public long get(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -52,7 +65,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return values[i];
 	}
 	
-	public long getWithDefault(int idx, long defaultVal) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#getWithDefault(int, long)
+     */
+	@Override
+    public long getWithDefault(int idx, long defaultVal) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			return defaultVal;
@@ -60,7 +77,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return values[i];
 	}
 	
-	public void remove(int idx) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#remove(int)
+     */
+	@Override
+    public void remove(int idx) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i < 0) {
 			throw new IllegalArgumentException("This map does not contain the key: " + idx);
@@ -71,7 +92,11 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		used--;
 	}
 	
-	public void put(int idx, long val) {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#put(int, long)
+     */
+	@Override
+    public void put(int idx, long val) {
 		int i = Arrays.binarySearch(indices, 0, used, idx);
 		if (i >= 0) {
 			// Just update the value.
@@ -111,7 +136,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		array[i] = val;
 		return array;
 	}
-	
+
 	public class IntLongEntryImpl implements IntLongEntry {
 		private int i;
 		public IntLongEntryImpl(int i) {
@@ -123,7 +148,7 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		public long get() {
 			return values[i];
 		}
-	}
+    }
 
     /**
      * This iterator is fast in the case of for(Entry e : vector) { }, however a
@@ -133,10 +158,10 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 
         // The current entry.
         private IntLongEntryImpl entry = new IntLongEntryImpl(-1);
-        
+
         @Override
         public boolean hasNext() {
-            return entry.i+1 < used;
+            return entry.i + 1 < used;
         }
 
         @Override
@@ -149,16 +174,25 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
         public void remove() {
             throw new RuntimeException("operation not supported");
         }
-        
+
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see edu.jhu.util.vector.IntLongMap#iterator()
+     */
 	@Override
 	public Iterator<IntLongEntry> iterator() {
 		return new IntLongIterator();
 	}
 
 
-	public int size() {
+	/* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#size()
+     */
+	@Override
+    public int size() {
 		return used;
 	}
 
@@ -166,9 +200,10 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
 		return used;
 	}	
 
-    /**
-     * Returns the indices.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#getIndices()
      */
+    @Override
     public int[] getIndices() {
         if (used == indices.length)
             return indices;
@@ -180,9 +215,10 @@ public class SortedIntLongMap implements Iterable<IntLongEntry> {
         return tmpIndices;
     }
     
-    /**
-     * Returns the values.
+    /* (non-Javadoc)
+     * @see edu.jhu.util.vector.IntLongMap#getValues()
      */
+    @Override
     public long[] getValues() {
         if (used == values.length)
             return values;
