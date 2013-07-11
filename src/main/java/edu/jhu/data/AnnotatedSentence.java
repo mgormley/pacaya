@@ -29,6 +29,21 @@ public class AnnotatedSentence {
     private BinaryTree binaryTree;
     private SrlGraph srlGraph;
         
+    /** Gets the i'th word as a String. */
+    public String getWord(int i) {
+        return words.get(i).getLabel();
+    }
+    
+    /** Gets the i'th POS tag as a String. */
+    public String getPosTag(int i) {
+        return posTags.get(i).getLabel();
+    }
+    
+    /** Gets the i'th lemma as a String. */
+    public String getLemma(int i) {
+        return lemmas.get(i).getLabel();
+    }
+    
     /**
      * Gets a list of words corresponding to a token span.
      */
@@ -63,7 +78,7 @@ public class AnnotatedSentence {
     }
     
     /**
-     * Fetches the words in a given token span.
+     * Gets a single string representing the words in a given token span.
      * 
      * @param span
      */
@@ -72,7 +87,7 @@ public class AnnotatedSentence {
     }
 
     /**
-     * Fetches the POS tags in a given token span.
+     * Gets a single string representing the POS tags in a given token span.
      * 
      * @param span
      */
@@ -81,7 +96,7 @@ public class AnnotatedSentence {
     }
 
     /**
-     * Fetches the lemmas in a given token span.
+     * Gets a single string representing the lemmas in a given token span.
      * 
      * @param span
      */
@@ -90,7 +105,7 @@ public class AnnotatedSentence {
     }
 
     /**
-     * Fetches the Word/POS in a given token span.
+     * Gets a single string representing the Word/POS in a given token span.
      * 
      * @param span
      */
