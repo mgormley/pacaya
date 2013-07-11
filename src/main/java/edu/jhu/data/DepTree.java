@@ -193,6 +193,10 @@ public class DepTree implements Iterable<DepTreeNode> {
         return nodes.toString();
     }
 
+    public DepTreeNode getWallNode() {
+        return nodes.get(0);
+    }
+    
     public List<DepTreeNode> getNodes() {
         return nodes;
     }

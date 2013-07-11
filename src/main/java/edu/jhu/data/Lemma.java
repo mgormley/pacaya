@@ -1,35 +1,35 @@
 package edu.jhu.data;
 
 
-public class Word implements Label {
+public class Lemma implements Label {
 
-    private String word;
+    private String lemma;
     
-    public Word(String word) {
+    public Lemma(String word) {
         if (word == null) {
-            throw new IllegalArgumentException("word is null");
+            throw new IllegalArgumentException("lemma is null");
         }
-        this.word = word.intern();
+        this.lemma = word.intern();
     }
-
-    public String getWord() {
-        return word;
+    
+    public String getLemma() {
+        return lemma;
     }
     
     public String getLabel() {
-        return word;
+        return lemma;
     }
 
     @Override
     public int hashCode() {
-        return word.hashCode();
+        return lemma.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Word) {
-            Word other = (Word) obj;
-            return word.equals(other.word);
+        if (obj instanceof Lemma) {
+            Lemma other = (Lemma) obj;
+            return lemma.equals(other.lemma);
         } else {
             return false;
         }
@@ -37,7 +37,7 @@ public class Word implements Label {
 
     @Override
     public int compareTo(Label label) {
-        if (label instanceof Word) {
+        if (label instanceof Lemma) {
             return getLabel().compareTo(label.getLabel());
         } else {
             return -1;
@@ -46,7 +46,7 @@ public class Word implements Label {
     
     @Override
     public String toString() {
-        return word;
+        return lemma;
     }
 
 }

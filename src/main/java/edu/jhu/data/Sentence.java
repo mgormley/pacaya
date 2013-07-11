@@ -5,25 +5,14 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXToken;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.collections.PIntArrayList;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 
-public class Sentence implements Iterable<Label> {
+public class Sentence extends LabelSequence<Label> {
 
     private static final long serialVersionUID = 1L;
-    private ArrayList<Label> labels;
-    private PIntArrayList labelIds;     // TODO: cache an int[] version of this.
-    private Alphabet<Label> alphabet;
     
     protected Sentence(Alphabet<Label> alphabet) {
-        labels = new ArrayList<Label>();
-        labelIds = new PIntArrayList();
-        this.alphabet = alphabet; 
+        super(alphabet); 
     }
     
     public Sentence(Alphabet<Label> alphabet, DepTree tree) {
@@ -50,62 +39,11 @@ public class Sentence implements Iterable<Label> {
     }
 
     public Sentence(Alphabet<Label> alphabet, Iterable<Label> labels) {
-        this(alphabet);
-        for (Label l : labels) {
-            add(l);
-        }
+        super(alphabet, labels);
     }
     
     public Sentence(Alphabet<Label> alphabet, int[] labelIds) {
-        this(alphabet);
-        for (int labelId : labelIds) {
-            add(labelId);
-        }
-    }
-    
-    protected boolean add(Label label) {
-        labelIds.add(alphabet.lookupIndex(label));
-        return labels.add(label);
-    }
-    
-    protected boolean add(int labelId) {
-        labelIds.add(labelId);
-        return labels.add(alphabet.lookupObject(labelId));
-    }
-    
-    public Label get(int i) {
-        return labels.get(i);
-    }
-    
-    public int size() {
-        return labels.size();
-    }
-
-    @Override
-    public Iterator<Label> iterator() {
-        return labels.iterator();
-    }
-    
-    public int[] getLabelIds() {
-        return labelIds.toNativeArray();
-    }
-
-    public Alphabet<Label> getAlphabet() {
-        return alphabet;
-    }
-    
-    public List<Label> getLabels() {
-        return Collections.unmodifiableList(labels);
-    }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (Label label : this) {
-            sb.append(label);
-            sb.append(" ");
-        }
-        return sb.toString();
+        super(alphabet, labelIds);
     }
 
 }
