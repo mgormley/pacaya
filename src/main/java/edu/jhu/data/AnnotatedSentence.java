@@ -12,6 +12,14 @@ import edu.jhu.parse.cky.NaryTree;
  * @author mgormley
  */
 public class AnnotatedSentence {
+
+    /*
+     * TODO: Additional annotations we should add:
+     * 1. NER
+     * 2. Relations (e.g. ACE relations)
+     * 3. Token offsets
+     * 4. Labeled dependency tree.
+     */
     
     private LabelSequence<Word> words;
     private LabelSequence<Lemma> lemmas;
@@ -21,13 +29,6 @@ public class AnnotatedSentence {
     private BinaryTree binaryTree;
     private SrlGraph srlGraph;
         
-    /*
-     * TODO: Additional annotations we should add:
-     * 1. NER
-     * 2. Relations (e.g. ACE relations)
-     * 3. Token offsets
-     */
-
     /**
      * Gets a list of words corresponding to a token span.
      */
