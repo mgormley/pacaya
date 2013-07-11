@@ -3,10 +3,12 @@ package edu.jhu.util.vector;
 import java.util.Arrays;
 import java.util.Iterator;
 
+import edu.jhu.util.Pair;
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PLongArrayList;
+import edu.jhu.util.collections.PLongDoubleHashMap;
 
 public class SortedLongDoubleMap implements LongDoubleMap {
 
@@ -35,6 +37,15 @@ public class SortedLongDoubleMap implements LongDoubleMap {
 		this.indices = Utilities.copyOf(other.indices);
 		this.values = Utilities.copyOf(other.values);
 	}
+	
+    //	// TODO: we need to break up Sort into SortLongDouble, SortIntDouble before adding this constructor.
+    //	public SortedLongDoubleMap(PLongDoubleHashMap other) {
+    //        Pair<long[], double[]> ivs = other.getIndicesAndValues();
+    //        this.indices = ivs.get1();
+    //        this.values = ivs.get2();
+    //        this.used = indices.length;
+    //        Sort.sortIndexAsc(indices, values);
+    //	}
 
 	/* (non-Javadoc)
      * @see edu.jhu.util.vector.LongDoubleMap#clear()
