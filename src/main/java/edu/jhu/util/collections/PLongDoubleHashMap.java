@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
 
-import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.Pair;
 import edu.jhu.util.vector.LongDoubleEntry;
 import edu.jhu.util.vector.LongDoubleMap;
 
@@ -660,5 +660,19 @@ public class PLongDoubleHashMap implements Serializable, LongDoubleMap {
         }
         return tmpVals;
     }
-
+    
+    public Pair<long[], double[]> getIndicesAndValues() {
+        int cur = 0;
+        long[] tmpKeys = new long[size()];
+        double[] tmpVals = new double[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpKeys[cur] = keys[i];
+                tmpVals[cur] = values[i];
+                cur++;
+            }
+        }
+        return new Pair<long[], double[]>(tmpKeys, tmpVals);
+    }
+    
 }

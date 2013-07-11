@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
 
-import edu.jhu.util.vector.IntLongEntry;
+import edu.jhu.util.Pair;
 import edu.jhu.util.vector.IntLongEntry;
 import edu.jhu.util.vector.IntLongMap;
 
@@ -660,5 +660,19 @@ public class PIntLongHashMap implements Serializable, IntLongMap {
         }
         return tmpVals;
     }
-
+    
+    public Pair<int[], long[]> getIndicesAndValues() {
+        int cur = 0;
+        int[] tmpKeys = new int[size()];
+        long[] tmpVals = new long[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpKeys[cur] = keys[i];
+                tmpVals[cur] = values[i];
+                cur++;
+            }
+        }
+        return new Pair<int[], long[]>(tmpKeys, tmpVals);
+    }
+    
 }

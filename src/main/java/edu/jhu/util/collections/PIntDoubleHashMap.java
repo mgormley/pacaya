@@ -27,7 +27,7 @@ import java.util.NoSuchElementException;
 
 import org.apache.commons.math3.util.FastMath;
 
-import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.util.Pair;
 import edu.jhu.util.vector.IntDoubleEntry;
 import edu.jhu.util.vector.IntDoubleMap;
 
@@ -660,5 +660,19 @@ public class PIntDoubleHashMap implements Serializable, IntDoubleMap {
         }
         return tmpVals;
     }
-
+    
+    public Pair<int[], double[]> getIndicesAndValues() {
+        int cur = 0;
+        int[] tmpKeys = new int[size()];
+        double[] tmpVals = new double[size()];
+        for (int i=0; i<keys.length; i++) {
+            if (states[i] == FULL) {
+                tmpKeys[cur] = keys[i];
+                tmpVals[cur] = values[i];
+                cur++;
+            }
+        }
+        return new Pair<int[], double[]>(tmpKeys, tmpVals);
+    }
+    
 }
