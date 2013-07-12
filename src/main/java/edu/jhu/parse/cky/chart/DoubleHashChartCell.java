@@ -4,8 +4,8 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
-import edu.jhu.util.collections.IntObjectHashMap;
-import edu.jhu.util.collections.IntDoubleHashMap;
+import edu.jhu.prim.map.IntDoubleHashMap;
+import edu.jhu.prim.map.IntObjectHashMap;
 
 /**
  * Cell that stores every entries in two hash tables.

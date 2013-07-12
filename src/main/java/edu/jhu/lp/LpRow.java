@@ -3,7 +3,7 @@
  */
 package edu.jhu.lp;
 
-import edu.jhu.util.vector.LongDoubleSortedVector;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 
 public class LpRow {
     private double lb;

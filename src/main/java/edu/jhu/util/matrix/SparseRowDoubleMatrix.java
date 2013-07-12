@@ -1,7 +1,7 @@
 package edu.jhu.util.matrix;
 
-import edu.jhu.util.vector.IntDoubleEntry;
-import edu.jhu.util.vector.IntDoubleSortedVector;
+import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class SparseRowDoubleMatrix implements DoubleMatrix {
     

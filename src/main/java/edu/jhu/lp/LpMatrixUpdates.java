@@ -3,16 +3,16 @@
  */
 package edu.jhu.lp;
 
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.SafeCast;
-import edu.jhu.util.collections.DoubleArrayList;
-import edu.jhu.util.collections.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.jhu.util.vector.LongDoubleSortedVector;
 
 /**
  * Represents a set of updates to linear programming matrix rows (e.g. the

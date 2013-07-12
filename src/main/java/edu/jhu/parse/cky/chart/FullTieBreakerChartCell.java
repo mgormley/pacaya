@@ -4,9 +4,9 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.collections.IntArrayList;
 
 /**
  * This class is identical to <code>FullChartCell</code> except that it adds the

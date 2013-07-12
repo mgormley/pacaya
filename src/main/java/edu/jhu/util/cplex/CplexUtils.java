@@ -13,10 +13,10 @@ import java.util.Arrays;
 import org.junit.Assert;
 
 import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
-import edu.jhu.util.vector.IntDoubleSortedVector;
 
 public class CplexUtils {
 

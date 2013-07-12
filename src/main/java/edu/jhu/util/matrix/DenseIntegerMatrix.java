@@ -2,8 +2,8 @@ package edu.jhu.util.matrix;
 
 import java.util.Iterator;
 
+import edu.jhu.prim.map.IntIntEntry;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.vector.IntIntEntry;
 
 public class DenseIntegerMatrix implements IntegerMatrix {
     

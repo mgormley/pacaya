@@ -11,8 +11,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.vector.LongDoubleSortedVector;
 
 public class IloRangeLpRows {
     private static final Logger log = Logger.getLogger(IloRangeLpRows.class);

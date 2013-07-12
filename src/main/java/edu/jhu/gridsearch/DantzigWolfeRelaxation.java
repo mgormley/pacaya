@@ -1,6 +1,6 @@
 package edu.jhu.gridsearch;
 
-import edu.jhu.util.collections.DoubleArrayList;
+import edu.jhu.prim.list.DoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;

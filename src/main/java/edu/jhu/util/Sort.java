@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.util.collections.IntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.math.Vectors;
 
 public class Sort {

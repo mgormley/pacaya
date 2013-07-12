@@ -1,6 +1,6 @@
 package edu.jhu.gridsearch.cpt;
 
-import edu.jhu.util.collections.IntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;

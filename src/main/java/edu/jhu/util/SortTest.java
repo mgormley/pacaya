@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.util.collections.IntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 
 public class SortTest {
     

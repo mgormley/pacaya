@@ -1,6 +1,6 @@
 package edu.jhu.gm;
 
-import edu.jhu.util.vector.IntDoubleSortedVector;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class FeatureVector extends IntDoubleSortedVector {
 

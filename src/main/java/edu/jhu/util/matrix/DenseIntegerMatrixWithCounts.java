@@ -1,7 +1,7 @@
 package edu.jhu.util.matrix;
 
+import edu.jhu.prim.map.IntIntEntry;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.vector.IntIntEntry;
 
 public class DenseIntegerMatrixWithCounts implements IntegerMatrix {
     

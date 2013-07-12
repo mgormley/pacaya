@@ -2,13 +2,13 @@ package edu.jhu.lp;
 
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
-import edu.jhu.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.util.matrix.DenseDoubleMatrix;
 import edu.jhu.util.matrix.SparseColDoubleMatrix;
 import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.util.SafeCast;
 
 /**

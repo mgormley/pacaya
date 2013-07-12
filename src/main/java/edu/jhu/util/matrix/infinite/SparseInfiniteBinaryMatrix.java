@@ -2,7 +2,7 @@ package edu.jhu.util.matrix.infinite;
 
 import java.util.LinkedList;
 
-import edu.jhu.util.vector.IntDoubleSortedVector;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 

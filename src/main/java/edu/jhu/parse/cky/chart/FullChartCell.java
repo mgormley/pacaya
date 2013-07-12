@@ -7,8 +7,8 @@ import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.collections.IntArrayList;
 
 /**
  * Cell that stores every possible entry explicitly. This is suitable for

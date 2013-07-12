@@ -6,8 +6,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.optimize.Function;
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.vector.IntDoubleEntry;
 
 // TODO: Add an option which computes the gradient on only a subset of the
 // variables for use by SGD.

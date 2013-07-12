@@ -1,7 +1,7 @@
 package edu.jhu.util.matrix;
 
-import edu.jhu.util.vector.IntIntEntry;
-import edu.jhu.util.vector.IntIntSortedVector;
+import edu.jhu.prim.map.IntIntEntry;
+import edu.jhu.prim.vector.IntIntSortedVector;
 
 public class SparseIntegerMatrix implements IntegerMatrix {
     

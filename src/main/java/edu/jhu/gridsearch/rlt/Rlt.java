@@ -24,15 +24,15 @@ import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpMatrixUpdates;
 import edu.jhu.lp.LpRows;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.map.LongIntHashMap;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
-import edu.jhu.util.collections.IntArrayList;
-import edu.jhu.util.collections.LongIntHashMap;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
-import edu.jhu.util.vector.LongDoubleEntry;
-import edu.jhu.util.vector.LongDoubleSortedVector;
 
 public class Rlt {
 

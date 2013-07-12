@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.DoubleArrayList;
-import edu.jhu.util.collections.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumExpr;
@@ -38,6 +36,8 @@ import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;

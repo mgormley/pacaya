@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
-import edu.jhu.util.collections.IntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;

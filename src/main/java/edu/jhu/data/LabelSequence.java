@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.collections.IntArrayList;
 
 
 public class LabelSequence<X extends Label> implements Iterable<X>, Serializable {

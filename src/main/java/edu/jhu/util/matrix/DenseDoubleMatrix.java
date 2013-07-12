@@ -2,8 +2,8 @@ package edu.jhu.util.matrix;
 
 import java.util.Iterator;
 
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.vector.IntDoubleEntry;
 
 public class DenseDoubleMatrix implements DoubleMatrix {
     

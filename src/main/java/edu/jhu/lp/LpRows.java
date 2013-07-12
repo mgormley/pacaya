@@ -3,16 +3,16 @@
  */
 package edu.jhu.lp;
 
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.collections.DoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloRange;
 
 import java.util.ArrayList;
 
-import edu.jhu.util.vector.LongDoubleSortedVector;
 
 /**
  * Represents a set of linear programming constraints of the form d <= Ax <= b.

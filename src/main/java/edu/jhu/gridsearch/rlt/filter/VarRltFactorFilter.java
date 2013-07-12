@@ -1,14 +1,14 @@
 package edu.jhu.gridsearch.rlt.filter;
 
-import edu.jhu.util.collections.LongHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 
 import java.util.List;
 
-import edu.jhu.util.vector.LongDoubleEntry;
 import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.set.LongHashSet;
 import edu.jhu.util.Utilities;
 
 /**

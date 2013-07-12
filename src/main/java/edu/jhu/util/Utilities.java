@@ -12,9 +12,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.IntArrayList;
-import edu.jhu.util.collections.IntObjectHashMap;
 import edu.jhu.util.math.LogAddTable;
 
 public class Utilities {

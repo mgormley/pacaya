@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.DoubleArrayList;
-import edu.jhu.util.collections.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -46,6 +44,8 @@ import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.relax.DmvParseLpBuilder;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;

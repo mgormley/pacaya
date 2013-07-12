@@ -13,9 +13,9 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.vector.IntDoubleEntry;
 
 public class CrfObjectiveTest {
     

@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.jhu.gm.Var.VarType;
-import edu.jhu.util.collections.IntArrayList;
-import edu.jhu.util.collections.SmallSet;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.set.SmallSet;
 
 /**
  * A subset of the variables.

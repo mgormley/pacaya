@@ -3,8 +3,8 @@ package edu.jhu.lp;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
-import edu.jhu.util.vector.LongDoubleSortedVector;
-import edu.jhu.util.vector.LongDoubleEntry;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 
 import org.apache.log4j.Logger;
 

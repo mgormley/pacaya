@@ -12,15 +12,15 @@ import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.lp.FactorBuilder.BoundFactor;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.map.IntObjectHashMap;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.collections.IntArrayList;
-import edu.jhu.util.collections.IntHashSet;
-import edu.jhu.util.collections.IntObjectHashMap;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
-import edu.jhu.util.vector.LongDoubleEntry;
 
 /**
  * Adds only RLT rows that have a non-zero coefficient for some RLT variable corresponding
