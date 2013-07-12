@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.data.Lemma;
+import edu.jhu.data.Tag;
+import edu.jhu.data.Word;
+
 /**
  * One sentence from a CoNLL-2009 formatted file.
  */
@@ -80,6 +84,38 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return parents;
     }
 
+    public List<Word> getWords() {
+        ArrayList<Word> words = new ArrayList<Word>(size());
+        for (int i=0; i<size(); i++) {
+            words.add(new Word(tokens.get(i).getForm()));            
+        }
+        return words;
+    }
+    
+    public List<Lemma> getLemmas() {
+        ArrayList<Lemma> words = new ArrayList<Lemma>(size());
+        for (int i=0; i<size(); i++) {
+            words.add(new Lemma(tokens.get(i).getLemma()));            
+        }
+        return words;
+    }
+    
+    public List<Tag> getPosTags() {
+        ArrayList<Tag> words = new ArrayList<Tag>(size());
+        for (int i=0; i<size(); i++) {
+            words.add(new Tag(tokens.get(i).getPos()));            
+        }
+        return words;
+    }
+    
+    public List<Tag> getPredictedPosTags() {
+        ArrayList<Tag> words = new ArrayList<Tag>(size());
+        for (int i=0; i<size(); i++) {
+            words.add(new Tag(tokens.get(i).getPpos()));            
+        }
+        return words;
+    }
+    
     public void setPheadsFromParents(int[] parents) {
         for (int i = 0; i < parents.length; i++) {
             tokens.get(i).setPhead(parents[i] + 1);

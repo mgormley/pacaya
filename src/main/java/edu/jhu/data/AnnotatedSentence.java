@@ -3,6 +3,7 @@ package edu.jhu.data;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.parse.cky.BinaryTree;
 import edu.jhu.parse.cky.NaryTree;
@@ -29,6 +30,18 @@ public class AnnotatedSentence {
     private BinaryTree binaryTree;
     private SrlGraph srlGraph;
         
+    public AnnotatedSentence() {
+        
+    }
+    
+//    public AnnotatedSentence(CoNLL09Sentence cos, boolean useGold) {
+//        cos.getWords();
+//        cos.getLemmas();
+//        cos.getPredictedPosTags();
+//        cos.getParents();
+//        srlGraph = cos.getSrlGraph();
+//    }
+    
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
         return words.get(i).getLabel();
