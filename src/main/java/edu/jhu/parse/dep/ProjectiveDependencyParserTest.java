@@ -7,9 +7,41 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Timer;
+import edu.jhu.util.math.Multinomials;
 
 public class ProjectiveDependencyParserTest {
     
+    /**
+     * Output:
+     * SEED=123456789101112
+     * Total time: 231.0
+     * Sentences per second: 432.90043290043286
+     */
+    @Test
+    public void testParseSpeed() {
+        int trials = 100;
+        int n = 30;
+
+        // Just create one tree.
+        double[] root = Multinomials.randomMultinomial(n);
+        double[][] child = new double[n][];
+        for (int i=0; i<n; i++) {
+            child[i] =  Multinomials.randomMultinomial(n);
+        }
+        
+        Timer timer = new Timer();
+        timer.start();
+        for (int t=0; t<trials; t++) {
+            int[] parents = new int[n];
+            ProjectiveDependencyParser.parse(root, child, parents);
+        }
+        timer.stop();
+        System.out.println("Total time: " + timer.totMs());
+        int numSents = trials;
+        System.out.println("Sentences per second: " + numSents / timer.totSec());
+    }
+        
     @Test
     public void testParse1() {
         double[] root = new double[] {1, 2.2, 3}; 
