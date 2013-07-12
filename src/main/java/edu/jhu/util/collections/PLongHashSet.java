@@ -1,6 +1,9 @@
 package edu.jhu.util.collections;
 
-
+/**
+ * Hash set for long primitives.
+ * @author mgormley
+ */
 public class PLongHashSet {
 
     private PLongDoubleHashMap map = new PLongDoubleHashMap();

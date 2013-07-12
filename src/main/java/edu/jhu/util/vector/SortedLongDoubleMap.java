@@ -10,6 +10,13 @@ import edu.jhu.util.collections.PDoubleArrayList;
 import edu.jhu.util.collections.PLongArrayList;
 import edu.jhu.util.collections.PLongDoubleHashMap;
 
+/**
+ * A primitives map from longs to doubles. The map is stored by keeping a sorted
+ * array of indices, and an array of their corresponding values. This is useful
+ * when an extremely compact representation of the map is needed.
+ * 
+ * @author mgormley
+ */
 public class SortedLongDoubleMap implements LongDoubleMap {
 
 	protected long[] indices;

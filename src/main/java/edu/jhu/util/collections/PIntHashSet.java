@@ -1,6 +1,9 @@
 package edu.jhu.util.collections;
 
-
+/**
+ * Hash set for int primitives.
+ * @author mgormley
+ */
 public class PIntHashSet {
 
     private PIntDoubleHashMap map = new PIntDoubleHashMap();

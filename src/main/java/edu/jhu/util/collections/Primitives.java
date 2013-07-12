@@ -1,5 +1,9 @@
 package edu.jhu.util.collections;
 
+/**
+ * Methods and constants for primitive collections.
+ * @author mgormley
+ */
 public class Primitives {
     
     /** The default value for missing entries. */

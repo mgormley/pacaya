@@ -2,6 +2,10 @@ package edu.jhu.util.collections;
 
 import java.util.Arrays;
 
+/**
+ * Array list of long primitives.
+ * @author mgormley
+ */
 public class PLongArrayList {
 
     /** The internal array representing this list. */

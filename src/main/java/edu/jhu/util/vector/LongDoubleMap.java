@@ -2,6 +2,10 @@ package edu.jhu.util.vector;
 
 import java.util.Iterator;
 
+/**
+ * A primitives map from longs to doubles.
+ * @author mgormley
+ */
 public interface LongDoubleMap extends Iterable<LongDoubleEntry> {
 
     public abstract void clear();

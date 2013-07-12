@@ -2,6 +2,10 @@ package edu.jhu.util.collections;
 
 import java.util.Arrays;
 
+/**
+ * Array list for double primitives.
+ * @author mgormley
+ */
 public class PDoubleArrayList {
 
     /** The internal array representing this list. */

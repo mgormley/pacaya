@@ -2,6 +2,10 @@ package edu.jhu.util.collections;
 
 import java.util.Arrays;
 
+/**
+ * Array list for int primitives.
+ * @author mgormley
+ */
 public class PIntArrayList {
 
     /** The internal array representing this list. */
