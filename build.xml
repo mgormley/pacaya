@@ -22,8 +22,6 @@
   <target name="classpath" description="Sets the classpath">
     <echo message="${ant.project.name}" />
     <path id="classpath">
-      <pathelement path="/home/hltcoe/mgormley/working/tagging/bin/gurobi301/linux64/lib/gurobi.jar" />
-      <pathelement path="/home/hltcoe/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/lib/cplex.jar" />
       <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
       </fileset>
@@ -71,14 +69,6 @@
       <compilerarg value="-Xlint:cast"/>
       <compilerarg value="-Xlint:finally"/>
       <compilerarg value="-Xlint:path"/>
-      <!-- Skip ErmaReader files. -->
-      <exclude name="**/*Erma*.java" />
-      <!-- Skip anything depending on joptimizer. -->
-      <exclude name="**/*ModelParamSubproblem*.java" />
-      <exclude name="**/*ResDmvDantzigWolfeRelaxation*.java" /> 
-      <!-- Skip the CRF training. 
-      <exclude name="**/edu/jhu/gm/*.java" />
-      <exclude name="**/edu/jhu/gm/**/*.java" /> -->
     </javac>
   </target>
 
