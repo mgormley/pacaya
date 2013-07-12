@@ -3,15 +3,15 @@
  */
 package edu.jhu.lp;
 
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 
 public class LpRow {
     private double lb;
     private double ub;
-    private SortedLongDoubleVector coefs;
+    private LongDoubleSortedVector coefs;
     private String name;
 
-    public LpRow(double lb, SortedLongDoubleVector coefs, double ub, String name) {
+    public LpRow(double lb, LongDoubleSortedVector coefs, double ub, String name) {
         super();
         this.lb = lb;
         this.coefs = coefs;
@@ -27,7 +27,7 @@ public class LpRow {
         return ub;
     }
 
-    public SortedLongDoubleVector getCoefs() {
+    public LongDoubleSortedVector getCoefs() {
         return coefs;
     }
 

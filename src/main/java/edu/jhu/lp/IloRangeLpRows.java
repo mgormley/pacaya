@@ -12,7 +12,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 
 public class IloRangeLpRows {
     private static final Logger log = Logger.getLogger(IloRangeLpRows.class);
@@ -37,7 +37,7 @@ public class IloRangeLpRows {
 		if (range == null) { return; }
     	IloLinearNumExpr expr = (IloLinearNumExpr) range.getExpr();
     	IloLinearNumExprIterator iter = expr.linearIterator();
-		SortedLongDoubleVector coef = new SortedLongDoubleVector();
+		LongDoubleSortedVector coef = new LongDoubleSortedVector();
     	while (iter.hasNext()) {
     		int idx = alphabet.lookupIndex(iter.nextNumVar());
     		coef.add(idx, iter.getValue());

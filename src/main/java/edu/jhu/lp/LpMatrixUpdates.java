@@ -4,15 +4,15 @@
 package edu.jhu.lp;
 
 import edu.jhu.util.SafeCast;
-import edu.jhu.util.collections.PDoubleArrayList;
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.DoubleArrayList;
+import edu.jhu.util.collections.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 
 /**
  * Represents a set of updates to linear programming matrix rows (e.g. the
@@ -25,26 +25,26 @@ import edu.jhu.util.vector.SortedLongDoubleVector;
  * 
  */
 public class LpMatrixUpdates {
-    private PIntArrayList rowIdxs;
-    private ArrayList<SortedLongDoubleVector> coefs;
+    private IntArrayList rowIdxs;
+    private ArrayList<LongDoubleSortedVector> coefs;
 
     public LpMatrixUpdates() {
-        rowIdxs = new PIntArrayList();
-        coefs = new ArrayList<SortedLongDoubleVector>();
+        rowIdxs = new IntArrayList();
+        coefs = new ArrayList<LongDoubleSortedVector>();
     }
 
-    public void add(int rowIdx, SortedLongDoubleVector coef) {
+    public void add(int rowIdx, LongDoubleSortedVector coef) {
         rowIdxs.add(rowIdx);
         coefs.add(coef);
     }
 
     public void updateRowsInMatrix(IloLPMatrix mat) throws IloException {
-        PIntArrayList rowInd = new PIntArrayList();
-        PIntArrayList colInd = new PIntArrayList();
-        PDoubleArrayList val = new PDoubleArrayList();
+        IntArrayList rowInd = new IntArrayList();
+        IntArrayList colInd = new IntArrayList();
+        DoubleArrayList val = new DoubleArrayList();
         for (int i = 0; i < rowIdxs.size(); i++) {
             int rowind = rowIdxs.get(i);
-            SortedLongDoubleVector row = coefs.get(i);
+            LongDoubleSortedVector row = coefs.get(i);
             rowInd.add(getRowIndArray(row, rowind));
             colInd.add(SafeCast.safeLongToInt(row.getIndices()));
             val.add(row.getValues());
@@ -52,11 +52,11 @@ public class LpMatrixUpdates {
         mat.setNZs(rowInd.toNativeArray(), colInd.toNativeArray(), val.toNativeArray());
     }
 
-    public ArrayList<SortedLongDoubleVector> getAllCoefs() {
+    public ArrayList<LongDoubleSortedVector> getAllCoefs() {
         return coefs;
     }
 
-    public void setAllCoefs(ArrayList<SortedLongDoubleVector> coefs) {
+    public void setAllCoefs(ArrayList<LongDoubleSortedVector> coefs) {
         this.coefs = coefs;
     }
 
@@ -64,7 +64,7 @@ public class LpMatrixUpdates {
      * Gets an int array of the same length as row.getIndex() and filled
      * with rowind.
      */
-    private static int[] getRowIndArray(SortedLongDoubleVector row, int rowind) {
+    private static int[] getRowIndArray(LongDoubleSortedVector row, int rowind) {
         int[] array = new int[row.getIndices().length];
         Arrays.fill(array, rowind);
         return array;

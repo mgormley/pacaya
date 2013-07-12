@@ -5,14 +5,14 @@ package edu.jhu.lp;
 
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.collections.PDoubleArrayList;
+import edu.jhu.util.collections.DoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloRange;
 
 import java.util.ArrayList;
 
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 
 /**
  * Represents a set of linear programming constraints of the form d <= Ax <= b.
@@ -22,21 +22,21 @@ import edu.jhu.util.vector.SortedLongDoubleVector;
  * 
  */
 public class LpRows {
-    private PDoubleArrayList lbs;
-    private PDoubleArrayList ubs;
-    private ArrayList<SortedLongDoubleVector> coefs;
+    private DoubleArrayList lbs;
+    private DoubleArrayList ubs;
+    private ArrayList<LongDoubleSortedVector> coefs;
     private ArrayList<String> names;
     private boolean setNames;
 
     public LpRows(boolean setNames) {
-        lbs = new PDoubleArrayList();
-        coefs = new ArrayList<SortedLongDoubleVector>();
-        ubs = new PDoubleArrayList();
+        lbs = new DoubleArrayList();
+        coefs = new ArrayList<LongDoubleSortedVector>();
+        ubs = new DoubleArrayList();
         names = new ArrayList<String>();
         this.setNames = setNames;
     }
 
-    public int addRow(double lb, SortedLongDoubleVector coef, double ub) {
+    public int addRow(double lb, LongDoubleSortedVector coef, double ub) {
         return addRow(lb, coef, ub, null);
     }
 
@@ -44,7 +44,7 @@ public class LpRows {
         addRow(row.getLb(), row.getCoefs(), row.getUb(), row.getName());
     }
 
-    public int addRow(double lb, SortedLongDoubleVector coef, double ub, String name) {
+    public int addRow(double lb, LongDoubleSortedVector coef, double ub, String name) {
         lbs.add(lb);
         coefs.add(coef);
         ubs.add(ub);
@@ -90,11 +90,11 @@ public class LpRows {
         return lbs.size();
     }
 
-    public ArrayList<SortedLongDoubleVector> getAllCoefs() {
+    public ArrayList<LongDoubleSortedVector> getAllCoefs() {
         return coefs;
     }
 
-    public void setAllCoefs(ArrayList<SortedLongDoubleVector> coefs) {
+    public void setAllCoefs(ArrayList<LongDoubleSortedVector> coefs) {
         this.coefs = coefs;
     }
 

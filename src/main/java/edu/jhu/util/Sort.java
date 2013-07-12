@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.IntArrayList;
 import edu.jhu.util.math.Vectors;
 
 public class Sort {
@@ -473,7 +473,7 @@ public class Sort {
     }
 
     public static int[] getMergedSortedArray(int[] list1, int[] list2) {
-        PIntArrayList newList = new PIntArrayList();
+        IntArrayList newList = new IntArrayList();
         int i=0; 
         int j=0;
         while(i < list1.length && j < list2.length) {

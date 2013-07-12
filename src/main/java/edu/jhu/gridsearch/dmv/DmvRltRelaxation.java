@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.PDoubleArrayList;
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.DoubleArrayList;
+import edu.jhu.util.collections.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -397,7 +397,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds  : prm.maxCutRounds;
         
         RelaxStatus status = RelaxStatus.Unknown;
-        PDoubleArrayList cutIterLowerBounds = new PDoubleArrayList();
+        DoubleArrayList cutIterLowerBounds = new DoubleArrayList();
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
@@ -522,7 +522,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
-        PIntArrayList rows = new PIntArrayList(); 
+        IntArrayList rows = new IntArrayList(); 
 
         if (prm.addBindingCons) {
             // TODO: add binding bounds as factors too.

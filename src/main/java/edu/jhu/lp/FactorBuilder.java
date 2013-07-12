@@ -3,7 +3,7 @@ package edu.jhu.lp;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 import edu.jhu.util.vector.LongDoubleEntry;
 
 import org.apache.log4j.Logger;
@@ -24,7 +24,7 @@ public class FactorBuilder {
     public abstract static class Factor {
         public double g;
         // TODO: This should really be a FastSparseVector without longs.
-        public SortedLongDoubleVector G;
+        public LongDoubleSortedVector G;
         protected IloLPMatrix mat;
         
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {
@@ -32,11 +32,11 @@ public class FactorBuilder {
             if (!Sort.isSortedAscAndUnique(Gind)) {
                 Sort.sortIndexAsc(Gind, Gval);
             }
-            this.G = new SortedLongDoubleVector(SafeCast.toLong(Gind), Gval);
+            this.G = new LongDoubleSortedVector(SafeCast.toLong(Gind), Gval);
             this.mat = mat;
         }
         
-        public Factor(double g, SortedLongDoubleVector G, IloLPMatrix mat) {
+        public Factor(double g, LongDoubleSortedVector G, IloLPMatrix mat) {
             this.g = g;
             this.G = G;
             this.mat = mat;
@@ -87,7 +87,7 @@ public class FactorBuilder {
             this.rowIdx = rowIdx;
             this.type = type;
         }
-        public RowFactor(double g, SortedLongDoubleVector G, int rowIdx, RowFactorType type, IloLPMatrix mat) {
+        public RowFactor(double g, LongDoubleSortedVector G, int rowIdx, RowFactorType type, IloLPMatrix mat) {
             super(g, G, mat);
             this.rowIdx = rowIdx;
             this.type = type;
@@ -112,7 +112,7 @@ public class FactorBuilder {
             this.colIdx = colIdx;
             this.lu = lu;
         }
-        public BoundFactor(double g, SortedLongDoubleVector G, int colIdx, Lu lu, IloLPMatrix mat) {
+        public BoundFactor(double g, LongDoubleSortedVector G, int colIdx, Lu lu, IloLPMatrix mat) {
             super(g, G, mat);
             this.colIdx = colIdx;
             this.lu = lu;
@@ -168,12 +168,12 @@ public class FactorBuilder {
 
         Factor leq1;
         Factor leq2;
-        SortedLongDoubleVector negG = new SortedLongDoubleVector(eq.G);
+        LongDoubleSortedVector negG = new LongDoubleSortedVector(eq.G);
         negG.scale(-1.0);
         if (eq instanceof RowFactor) {
             RowFactor rf = (RowFactor)eq;
             // (g - Gx) >= 0 ==> Gx <= g
-            leq1 = new RowFactor(rf.g, new SortedLongDoubleVector(rf.G), rf.rowIdx, RowFactorType.UPPER, rf.mat);
+            leq1 = new RowFactor(rf.g, new LongDoubleSortedVector(rf.G), rf.rowIdx, RowFactorType.UPPER, rf.mat);
             // (g - Gx) <= 0 ==> g <= Gx ==> (-g + Gx) >= 0 
             leq2 = new RowFactor(-rf.g, negG, rf.rowIdx, RowFactorType.LOWER, rf.mat);
         } else if (eq instanceof BoundFactor) {

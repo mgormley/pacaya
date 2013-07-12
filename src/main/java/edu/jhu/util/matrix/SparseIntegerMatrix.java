@@ -1,22 +1,22 @@
 package edu.jhu.util.matrix;
 
 import edu.jhu.util.vector.IntIntEntry;
-import edu.jhu.util.vector.SortedIntIntVector;
+import edu.jhu.util.vector.IntIntSortedVector;
 
 public class SparseIntegerMatrix implements IntegerMatrix {
     
     private static final long serialVersionUID = -2296616647180858488L;
     
-    private SortedIntIntVector[] rows;
+    private IntIntSortedVector[] rows;
 	private final int numRows;
 	private final int numCols;
 
 	public SparseIntegerMatrix(int numRows, int numCols) {
 	    this.numRows = numRows;
 	    this.numCols = numCols;
-		rows = new SortedIntIntVector[numRows];
+		rows = new IntIntSortedVector[numRows];
 		for (int row=0; row<numRows; row++) {
-		    rows[row] = new SortedIntIntVector();
+		    rows[row] = new IntIntSortedVector();
 		}
 	}
 

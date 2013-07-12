@@ -26,13 +26,13 @@ import edu.jhu.lp.LpMatrixUpdates;
 import edu.jhu.lp.LpRows;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
-import edu.jhu.util.collections.PIntArrayList;
-import edu.jhu.util.collections.PLongIntHashMap;
+import edu.jhu.util.collections.IntArrayList;
+import edu.jhu.util.collections.LongIntHashMap;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.tuple.OrderedPair;
 import edu.jhu.util.tuple.UnorderedPair;
 import edu.jhu.util.vector.LongDoubleEntry;
-import edu.jhu.util.vector.SortedLongDoubleVector;
+import edu.jhu.util.vector.LongDoubleSortedVector;
 
 public class Rlt {
 
@@ -78,13 +78,13 @@ public class Rlt {
             tempRltConsInd = new SymIntMat();
         }
 
-        public void addRow(double lb, SortedLongDoubleVector coef, double ub, String name) throws IloException {
+        public void addRow(double lb, LongDoubleSortedVector coef, double ub, String name) throws IloException {
             rows.addRow(lb, coef, ub, name);
             numRowsAdded++;
             maybePush();
         }
 
-        public void addRow(double cplexNegInf, SortedLongDoubleVector row, double d, String rowName, int i, int j) throws IloException {
+        public void addRow(double cplexNegInf, LongDoubleSortedVector row, double d, String rowName, int i, int j) throws IloException {
             int rowind = rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName);
             tempRltConsInd.set(i, j, rowind);
             numRowsAdded++;
@@ -132,7 +132,7 @@ public class Rlt {
     // w_{ij} in the RLT matrix.
     private SymIntMat rltVarsIdx;
     // Mapping of INDENTIFIERS for RLT matrix vars to INTERNAL column indices.
-    private PLongIntHashMap idToColIdx;
+    private LongIntHashMap idToColIdx;
     // The columns of the RLT matrix.
     private ArrayList<IloNumVar> rltMatVars;
     
@@ -174,7 +174,7 @@ public class Rlt {
         rltMatVars.add(rltMat.getNumVar(constantVarColIdx));
 
         // Setup the ID to column index map. Set the values for the non-RLT variables.
-        idToColIdx = new PLongIntHashMap();
+        idToColIdx = new LongIntHashMap();
         for (int i=0; i<numVars.length; i++) {
             idToColIdx.put(i, i);
         }
@@ -333,7 +333,7 @@ public class Rlt {
         }
         
         String rowName = prm.nameRltVarsAndCons ? String.format("eqcons_{%s,%s}", facI.getName(), inputMatrix.getNumVar(k).getName()) : null;
-        SortedLongDoubleVector row = getRltRowForEq(facI, k, idsForRltVars);
+        LongDoubleSortedVector row = getRltRowForEq(facI, k, idsForRltVars);
         // Add the complete constraint.
         rows.addRow(0.0, row, 0.0, rowName);
     }
@@ -358,7 +358,7 @@ public class Rlt {
         }
 
         String rowName = prm.nameRltVarsAndCons ? String.format("lecons_{%s,%s}", facI.getName(), facJ.getName()) : null;
-        SortedLongDoubleVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
+        LongDoubleSortedVector row = getRltRowForLeq(facJ, facI, constantVarColIdx, idsForRltVars);
         // Add the complete constraint.
         rows.addRow(CplexUtils.CPLEX_NEG_INF, row, 0.0, rowName, i, j);
     }
@@ -391,7 +391,7 @@ public class Rlt {
             Factor facI = leqFactors.get(i);
             if (rltLeqConsIdx.contains(factorIdx, i)) {
                 // A bound will have only been added if it passed the filter. 
-                SortedLongDoubleVector row = getRltRowForLeq(newBj, facI, constantVarColIdx, idsForRltVars);
+                LongDoubleSortedVector row = getRltRowForLeq(newBj, facI, constantVarColIdx, idsForRltVars);
                 int rowind = rltLeqConsIdx.get(factorIdx, i);
                 rows.add(rowind, row);
             }
@@ -403,7 +403,7 @@ public class Rlt {
     /**
      * @return The number of rows added to the RLT matrix.
      */
-    public int addRowsAsFactors(PIntArrayList rowIds) throws IloException {
+    public int addRowsAsFactors(IntArrayList rowIds) throws IloException {
         if (prm.envelopeOnly) {
             // Don't add the rows.
             return 0;
@@ -428,7 +428,7 @@ public class Rlt {
         rows.setAllCoefs(convertRltVarIdsToColumIndices(rows.getAllCoefs()));
     }
     
-    private ArrayList<SortedLongDoubleVector> convertRltVarIdsToColumIndices(List<SortedLongDoubleVector> rows)  throws IloException {
+    private ArrayList<LongDoubleSortedVector> convertRltVarIdsToColumIndices(List<LongDoubleSortedVector> rows)  throws IloException {
         // Make sure all the IDs are added as columns.
         log.trace("Creating new first-order RLT variables.");
         int numRltCols = rltMat.getNcols();
@@ -459,11 +459,11 @@ public class Rlt {
         
         // Convert the IDs to indices.
         log.trace("Converting IDs to column indices");
-        ArrayList<SortedLongDoubleVector> rowsWithColIdx = new ArrayList<SortedLongDoubleVector>();
+        ArrayList<LongDoubleSortedVector> rowsWithColIdx = new ArrayList<LongDoubleSortedVector>();
         for (int m=0; m<rows.size(); m++) {
-            SortedLongDoubleVector oldCoefs = rows.get(m);
+            LongDoubleSortedVector oldCoefs = rows.get(m);
             // TODO: This should really be a FastSparseVector without longs.
-            SortedLongDoubleVector newCoefs = new SortedLongDoubleVector();
+            LongDoubleSortedVector newCoefs = new LongDoubleSortedVector();
             for (LongDoubleEntry ve : oldCoefs) {
                 long id = ve.index();
                 int index = idToColIdx.get(id);
@@ -501,7 +501,7 @@ public class Rlt {
     /**
      * Returns true iff the list of integers is a consecutive list.
      */
-    private static boolean areConsecutive(PIntArrayList rows) {
+    private static boolean areConsecutive(IntArrayList rows) {
         if (rows.size() <= 1) {
             return true;
         }
@@ -517,7 +517,7 @@ public class Rlt {
         return true;
     }
 
-    private static SortedLongDoubleVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)
+    private static LongDoubleSortedVector getRltRowForLeq(Factor facJ, Factor facI, int constantVarColIdx, RltIds rltVarsInd)
             throws IloException {
         // Here we add the following constraint:
         // \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
@@ -525,19 +525,19 @@ public class Rlt {
         // + \sum_{k=1}^n \sum_{l=1}^{k-1} -(G_{ik} G_{jl}+ G_{il} G_{jk})
         // w_{kl} &\leq g_ig_j
 
-        SortedLongDoubleVector row = new SortedLongDoubleVector();
+        LongDoubleSortedVector row = new LongDoubleSortedVector();
         // Part 1: \sum_{k=1}^n (g_j G_{ik} + g_i G_{jk}) x_k
-        SortedLongDoubleVector facIG = new SortedLongDoubleVector(facI.G);
-        SortedLongDoubleVector facJG = new SortedLongDoubleVector(facJ.G);
+        LongDoubleSortedVector facIG = new LongDoubleSortedVector(facI.G);
+        LongDoubleSortedVector facJG = new LongDoubleSortedVector(facJ.G);
         facIG.scale(facJ.g);
         facJG.scale(facI.g);
         row.add(facIG);
         row.add(facJG);
 
         // Part 2: + \sum_{k=1}^n -G_{ik} G_{jk} w_{kk}
-        SortedLongDoubleVector ip = facI.G.hadamardProd(facJ.G);
+        LongDoubleSortedVector ip = facI.G.hadamardProd(facJ.G);
         ip.scale(-1.0);
-        SortedLongDoubleVector shiftedIp = new SortedLongDoubleVector();
+        LongDoubleSortedVector shiftedIp = new LongDoubleSortedVector();
         for (int idx = 0; idx < ip.getUsed(); idx++) {
             int k = SafeCast.safeLongToInt(ip.getIndices()[idx]);
             double val = ip.getValues()[idx];
@@ -566,8 +566,8 @@ public class Rlt {
         return row;
     }
 
-    private static SortedLongDoubleVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
-        SortedLongDoubleVector row = new SortedLongDoubleVector();
+    private static LongDoubleSortedVector getRltRowForEq(Factor facI, int k, RltIds rltVarsInd) throws IloException {
+        LongDoubleSortedVector row = new LongDoubleSortedVector();
 
         // Original: x_k * g_i + sum_{l=1}^n - x_k * G_{il} * x_l = 0
         // Linearized: x_k * g_i + sum_{l=1}^n - G_{il} w_{kl} = 0

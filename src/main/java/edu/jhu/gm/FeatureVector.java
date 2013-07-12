@@ -1,8 +1,8 @@
 package edu.jhu.gm;
 
-import edu.jhu.util.vector.SortedIntDoubleVector;
+import edu.jhu.util.vector.IntDoubleSortedVector;
 
-public class FeatureVector extends SortedIntDoubleVector {
+public class FeatureVector extends IntDoubleSortedVector {
 
     /**
      * Feature Vectors should almost always be constructed via a

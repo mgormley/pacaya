@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.jhu.gm.Var.VarType;
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.util.collections.IntArrayList;
 import edu.jhu.util.collections.SmallSet;
 
 /**
@@ -72,7 +72,7 @@ public class VarSet extends SmallSet<Var> {
      * @see edu.jhu.gm.VarSet#getConfigIter
      */
     public int[] getConfigArr(VarSet vars) {        
-        PIntArrayList a = new PIntArrayList(vars.calcNumConfigs());
+        IntArrayList a = new IntArrayList(vars.calcNumConfigs());
         IntIter iter = getConfigIter(vars);
         while (iter.hasNext()) {
             a.add(iter.next());
