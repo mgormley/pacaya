@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 
 public class SortTest {
     
@@ -224,8 +224,8 @@ public class SortTest {
 
     @Test
     public void testMergeSortedArrays() {
-        PIntArrayList l1 = new PIntArrayList();
-        PIntArrayList l2 = new PIntArrayList();
+        IntArrayList l1 = new IntArrayList();
+        IntArrayList l2 = new IntArrayList();
         // Add some fib nums
         l1.add(1);
         l1.add(2);

@@ -1,6 +1,6 @@
 package edu.jhu.util.matrix;
 
-import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.prim.map.IntDoubleEntry;
 
 public class TransposeView implements DoubleMatrix {
 

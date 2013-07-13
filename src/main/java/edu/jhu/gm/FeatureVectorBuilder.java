@@ -1,14 +1,14 @@
 package edu.jhu.gm;
 
+import edu.jhu.prim.map.IntDoubleHashMap;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Sort;
-import edu.jhu.util.collections.PIntDoubleHashMap;
 
 /**
  * For building large (e.g. 20000+) sparse feature vectors quickly.
  * @author mgormley
  */
-public class FeatureVectorBuilder extends PIntDoubleHashMap {
+public class FeatureVectorBuilder extends IntDoubleHashMap {
 
     public FeatureVectorBuilder() {
         super(0.0);

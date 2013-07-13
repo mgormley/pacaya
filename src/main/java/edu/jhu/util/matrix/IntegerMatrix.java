@@ -2,7 +2,7 @@ package edu.jhu.util.matrix;
 
 import java.io.Serializable;
 
-import edu.jhu.util.vector.IntIntEntry;
+import edu.jhu.prim.map.IntIntEntry;
 
 public interface IntegerMatrix extends Serializable {
 

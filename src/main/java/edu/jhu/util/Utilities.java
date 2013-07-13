@@ -12,9 +12,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.PIntArrayList;
-import edu.jhu.util.collections.PIntObjectHashMap;
 import edu.jhu.util.math.LogAddTable;
 
 public class Utilities {
@@ -129,23 +129,23 @@ public class Utilities {
     /**
      * @return The resulting list.
      */
-    public static PIntArrayList addToList(PIntObjectHashMap<PIntArrayList> map, int key, int value) {
-        PIntArrayList values;
+    public static IntArrayList addToList(IntObjectHashMap<IntArrayList> map, int key, int value) {
+        IntArrayList values;
         if (map.containsKey(key)) {
             values = map.get(key);
             values.add(value);
         } else {
-            values = new PIntArrayList();
+            values = new IntArrayList();
             values.add(value);
             map.put(key, values);
         }
         return values;
     }
 
-    public static PIntArrayList safeGetList(PIntObjectHashMap<PIntArrayList> map, int key) {
-        PIntArrayList list = map.get(key);
+    public static IntArrayList safeGetList(IntObjectHashMap<IntArrayList> map, int key) {
+        IntArrayList list = map.get(key);
         if (list == null) {
-            return new PIntArrayList();
+            return new IntArrayList();
         } else {
             return list;
         }

@@ -1,7 +1,7 @@
 package edu.jhu.gm;
 
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.vector.IntDoubleEntry;
 
 /** Cache of feature vectors for a factor graph. */
 public class FeatureCache {

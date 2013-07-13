@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.PDoubleArrayList;
-import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumExpr;
@@ -38,6 +36,8 @@ import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
@@ -559,7 +559,7 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         return new SubproblemRetVal(sumReducedCost, numPositiveRedCosts, false);
     }
 
-    protected int addCuts(IloCplex cplex, PDoubleArrayList iterationObjVals,
+    protected int addCuts(IloCplex cplex, DoubleArrayList iterationObjVals,
             ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
         // Reset the objective values list, since we would expect the next iteration
         // to increase, not decrease, after adding the cut below.
@@ -611,9 +611,9 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
                 sto.updateModelParamBounds(c, m, newLb, newUb);
 
                 // Update lambda column if it uses parameter c,m
-                PIntArrayList rowind = new PIntArrayList();
-                PIntArrayList colind = new PIntArrayList();
-                PDoubleArrayList val = new PDoubleArrayList();
+                IntArrayList rowind = new IntArrayList();
+                IntArrayList colind = new IntArrayList();
+                DoubleArrayList val = new DoubleArrayList();
                 int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
                 int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
                 for (LambdaVar lv : mp.lambdaVars) {

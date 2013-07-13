@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.PDoubleArrayList;
-import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloNumExpr;
 import ilog.concert.IloNumVar;
@@ -28,6 +26,8 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
@@ -567,7 +567,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
         return new SubproblemRetVal(sumReducedCost, numPositiveRedCosts, false);
     }
 
-    protected int addCuts(IloCplex cplex, PDoubleArrayList iterationObjVals,
+    protected int addCuts(IloCplex cplex, DoubleArrayList iterationObjVals,
             ArrayList<Status> iterationStatus, int cut) throws UnknownObjectException, IloException {
         return 0;
     }
@@ -598,9 +598,9 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             bounds.set(Type.PARAM, c, m, newLb, newUb);
 
             // Update lambda column if it uses parameter c,m
-            PIntArrayList rowind = new PIntArrayList();
-            PIntArrayList colind = new PIntArrayList();
-            PDoubleArrayList val = new PDoubleArrayList();
+            IntArrayList rowind = new IntArrayList();
+            IntArrayList colind = new IntArrayList();
+            DoubleArrayList val = new DoubleArrayList();
             int lowCmInd = mp.lpMatrix.getIndex(mp.couplConsLower[c][m]);
             int upCmInd = mp.lpMatrix.getIndex(mp.couplConsUpper[c][m]);
             for (LambdaVar lv : mp.lambdaVars) {
@@ -655,9 +655,9 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
     }
     
     private void updateGammaVar(GammaVar gv, int c) throws IloException {
-        PIntArrayList rowind = new PIntArrayList();
-        PIntArrayList colind = new PIntArrayList();
-        PDoubleArrayList val = new PDoubleArrayList();
+        IntArrayList rowind = new IntArrayList();
+        IntArrayList colind = new IntArrayList();
+        DoubleArrayList val = new DoubleArrayList();
 
         int colindForGv = mp.lpMatrix.getIndex(gv.gammaVar);
 

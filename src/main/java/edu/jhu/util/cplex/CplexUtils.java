@@ -13,10 +13,10 @@ import java.util.Arrays;
 import org.junit.Assert;
 
 import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
-import edu.jhu.util.vector.SortedIntDoubleVector;
 
 public class CplexUtils {
 
@@ -198,11 +198,11 @@ public class CplexUtils {
         double[][] val = new double[nRows][];
         rltMat.getRows(0, nRows, lbs, ubs, ind, val);
 
-        SortedIntDoubleVector expectedRow = new SortedIntDoubleVector(denseRow);
+        IntDoubleSortedVector expectedRow = new IntDoubleSortedVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
             Sort.sortIndexAsc(ind[m], val[m]);
-            SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
+            IntDoubleSortedVector row = new IntDoubleSortedVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
             if (row.eq(expectedRow, delta)) {
@@ -229,11 +229,11 @@ public class CplexUtils {
         double[][] val = new double[nRows][];
         rltMat.getRows(0, nRows, lbs, ubs, ind, val);
 
-        SortedIntDoubleVector expectedRow = new SortedIntDoubleVector(denseRow);
+        IntDoubleSortedVector expectedRow = new IntDoubleSortedVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
             Sort.sortIndexAsc(ind[m], val[m]);
-            SortedIntDoubleVector row = new SortedIntDoubleVector(ind[m], val[m]);
+            IntDoubleSortedVector row = new IntDoubleSortedVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
             if (row.eq(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)

@@ -6,20 +6,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.collections.PIntArrayList;
 
 
 public class LabelSequence<X extends Label> implements Iterable<X>, Serializable {
 
     private static final long serialVersionUID = 1L;
     private ArrayList<X> labels;
-    private PIntArrayList labelIds;     // TODO: cache an int[] version of this.
+    private IntArrayList labelIds;     // TODO: cache an int[] version of this.
     private Alphabet<X> alphabet;
     
     protected LabelSequence(Alphabet<X> alphabet) {
         labels = new ArrayList<X>();
-        labelIds = new PIntArrayList();
+        labelIds = new IntArrayList();
         this.alphabet = alphabet; 
     }
 

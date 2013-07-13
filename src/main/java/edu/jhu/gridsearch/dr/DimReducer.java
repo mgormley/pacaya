@@ -14,6 +14,7 @@ import edu.jhu.lp.CcLpConstraints;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpRows;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
@@ -23,7 +24,6 @@ import edu.jhu.util.matrix.DenseDoubleMatrix;
 import edu.jhu.util.matrix.DoubleMatrixFactory;
 import edu.jhu.util.matrix.SparseColDoubleMatrix;
 import edu.jhu.util.matrix.SparseRowDoubleMatrix;
-import edu.jhu.util.vector.SortedLongDoubleVector;
 
 /**
  * Reduces the dimensionality of a linear program.
@@ -183,7 +183,7 @@ public class DimReducer {
         // Construct the lower-dimensional constraints: Sd <= SA x <= Sb.
         LpRows rows = new LpRows(prm.setNames);
         for (int i=0; i<SA.getNumRows(); i++) {
-            SortedLongDoubleVector coef = new SortedLongDoubleVector();
+            LongDoubleSortedVector coef = new LongDoubleSortedVector();
             for (int j=0; j<SA.getNumColumns(); j++) {
                 double SA_ij = SA.get(i, j);
                 if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {

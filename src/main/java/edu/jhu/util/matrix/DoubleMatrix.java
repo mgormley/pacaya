@@ -2,7 +2,7 @@ package edu.jhu.util.matrix;
 
 import java.io.Serializable;
 
-import edu.jhu.util.vector.IntDoubleEntry;
+import edu.jhu.prim.map.IntDoubleEntry;
 
 public interface DoubleMatrix extends Serializable {
 

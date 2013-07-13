@@ -1,14 +1,14 @@
 package edu.jhu.gridsearch.rlt.filter;
 
-import edu.jhu.util.collections.PLongHashSet;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 
 import java.util.List;
 
-import edu.jhu.util.vector.LongDoubleEntry;
 import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.set.LongHashSet;
 import edu.jhu.util.Utilities;
 
 /**
@@ -16,7 +16,7 @@ import edu.jhu.util.Utilities;
  */
 public class VarRltFactorFilter implements RltFactorFilter {
     
-    private PLongHashSet cols;
+    private LongHashSet cols;
     private List<IloNumVar> vars;
 
     public VarRltFactorFilter(List<IloNumVar> vars) {
@@ -25,7 +25,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
 
     @Override
     public void init(Rlt rlt) throws IloException {
-        cols = new PLongHashSet();
+        cols = new LongHashSet();
         for (IloNumVar var : vars) {
             cols.add(rlt.getInputMatrix().getIndex(var));
         }

@@ -9,10 +9,10 @@ import edu.jhu.gridsearch.Relaxation;
 import edu.jhu.gridsearch.Solution;
 import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.math.Vectors;
-import edu.jhu.util.collections.PDoubleArrayList;
 
 /**
  * Implementation of the random walk algorithm (Knuth, 1975) for estimating tree
@@ -25,7 +25,7 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
 
     public static class CostEstimator {
 
-        private PDoubleArrayList estimates = new PDoubleArrayList();
+        private DoubleArrayList estimates = new DoubleArrayList();
         private double weight = 1;
         private double sum = 0;
         

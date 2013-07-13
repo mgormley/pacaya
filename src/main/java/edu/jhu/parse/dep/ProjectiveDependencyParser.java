@@ -172,6 +172,8 @@ public class ProjectiveDependencyParser {
     
 
     /**
+     * Computes the maximum projective spanning tree with multiple root nodes using the algorithm of
+     * (Eisner, 1996).
      * 
      * @param fracRoot
      * @param fracChild

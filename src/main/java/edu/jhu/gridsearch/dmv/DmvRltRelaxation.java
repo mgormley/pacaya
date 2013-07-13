@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.dmv;
 
-import edu.jhu.util.collections.PDoubleArrayList;
-import edu.jhu.util.collections.PIntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -46,6 +44,8 @@ import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.relax.DmvParseLpBuilder;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
@@ -397,7 +397,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         int maxCutRounds = (depth == 0) ? prm.rootMaxCutRounds  : prm.maxCutRounds;
         
         RelaxStatus status = RelaxStatus.Unknown;
-        PDoubleArrayList cutIterLowerBounds = new PDoubleArrayList();
+        DoubleArrayList cutIterLowerBounds = new DoubleArrayList();
         ArrayList<Status> cutIterStatuses = new ArrayList<Status>();
         WarmStart warmStart = null;
         cutIterLowerBounds.add(INTERNAL_BEST_SCORE);        
@@ -522,7 +522,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
     }
 
     private int addCuts(IloCplex cplex, int cut) throws UnknownObjectException, IloException {
-        PIntArrayList rows = new PIntArrayList(); 
+        IntArrayList rows = new IntArrayList(); 
 
         if (prm.addBindingCons) {
             // TODO: add binding bounds as factors too.

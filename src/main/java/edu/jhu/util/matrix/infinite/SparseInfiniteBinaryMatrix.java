@@ -2,11 +2,11 @@ package edu.jhu.util.matrix.infinite;
 
 import java.util.LinkedList;
 
-import edu.jhu.util.vector.SortedIntDoubleVector;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 
-	private SortedIntDoubleVector[] matrix;
+	private IntDoubleSortedVector[] matrix;
 	private InfiniteIntegerVector columnCounts;
 	private LinkedList<Integer> inactiveCols = new LinkedList<Integer>();
 
@@ -23,9 +23,9 @@ public class SparseInfiniteBinaryMatrix implements InfiniteBinaryMatrix {
 	public SparseInfiniteBinaryMatrix(int numRows, int initialNumberOfColumns) {
 		this.numRows = numRows;
 		curMaxCol = initialNumberOfColumns;
-		matrix = new SortedIntDoubleVector[numRows];
+		matrix = new IntDoubleSortedVector[numRows];
 		for (int i = 0; i < numRows; i++) {
-			matrix[i] = new SortedIntDoubleVector();
+			matrix[i] = new IntDoubleSortedVector();
 		}
 		columnCounts = new DenseInfiniteIntegerVector(curMaxCol);
 		for (int i = 0; i < curMaxCol; i++) {

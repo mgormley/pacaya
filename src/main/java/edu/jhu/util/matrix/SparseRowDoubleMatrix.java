@@ -1,23 +1,23 @@
 package edu.jhu.util.matrix;
 
-import edu.jhu.util.vector.IntDoubleEntry;
-import edu.jhu.util.vector.SortedIntDoubleVector;
+import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class SparseRowDoubleMatrix implements DoubleMatrix {
     
     private static final long serialVersionUID = -2296616647180858488L;
     
     // Package private to give access to other matrix classes during multiplication.
-    SortedIntDoubleVector[] rows;
+    IntDoubleSortedVector[] rows;
 	private final int numRows;
 	private final int numCols;
 
 	public SparseRowDoubleMatrix(int numRows, int numCols) {
 	    this.numRows = numRows;
 	    this.numCols = numCols;
-		rows = new SortedIntDoubleVector[numRows];
+		rows = new IntDoubleSortedVector[numRows];
 		for (int row=0; row<numRows; row++) {
-		    rows[row] = new SortedIntDoubleVector();
+		    rows[row] = new IntDoubleSortedVector();
 		}
 	}
 

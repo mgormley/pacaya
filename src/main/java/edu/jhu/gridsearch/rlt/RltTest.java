@@ -1,7 +1,7 @@
 package edu.jhu.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
-import edu.jhu.util.collections.PIntArrayList;
+import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -417,7 +417,7 @@ public class RltTest {
             Rlt rlt = new Rlt(cplex, mat, RltPrm.getFirstOrderRlt());
             
             // Then add two more.
-            PIntArrayList newCons = new PIntArrayList();
+            IntArrayList newCons = new IntArrayList();
             newCons.add(mat.addRow(c2));
             newCons.add(mat.addRow(c4));
             rlt.addRowsAsFactors(newCons);
@@ -457,7 +457,7 @@ public class RltTest {
         assertEquals(11, rltMat.getNrows());
 
         // Then add two more.
-        PIntArrayList newCons = new PIntArrayList();
+        IntArrayList newCons = new IntArrayList();
         newCons.add(mat.addRow(c2));
         newCons.add(mat.addRow(c4));
         rlt.addRowsAsFactors(newCons);
@@ -498,7 +498,7 @@ public class RltTest {
         assertEquals(4, rltMat.getNrows());
 
         // Then add two more.
-        PIntArrayList newCons = new PIntArrayList();
+        IntArrayList newCons = new IntArrayList();
         newCons.add(mat.addRow(c2));
         newCons.add(mat.addRow(c4));
         rlt.addRowsAsFactors(newCons);
@@ -539,7 +539,7 @@ public class RltTest {
         assertEquals(4, rltMat.getNrows());
 
         // Then add two more.
-        PIntArrayList newCons = new PIntArrayList();
+        IntArrayList newCons = new IntArrayList();
         newCons.add(mat.addRow(c2));
         newCons.add(mat.addRow(c4));
         rlt.addRowsAsFactors(newCons);
