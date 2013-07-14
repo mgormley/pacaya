@@ -88,13 +88,16 @@ public class ProjectiveDependencyParser {
     }
 
     /**
-     * This gives the maximum projective dependency tree with a unique head of the sentence
-     * using the algorithm of (Eisner, 1996) as described in McDonald (2006).
+     * This gives the maximum projective dependency tree using the algorithm of
+     * (Eisner, 1996) as described in McDonald (2006). In the resulting tree,
+     * the wall node (denoted as the parent -1) will be the root, and will have
+     * exactly one child.
      * 
      * @param fracRoot Input: The edge weights from the wall to each child.
      * @param fracChild Input: The edge weights from parent to child.
-     * @param parents Output: The parent index of each node or -1 if it has no parent.
-     * @return The score of the maximum projective spanning tree.
+     * @param parents Output: The parent index of each node or -1 if its parent
+     *            is the wall node.
+     * @return The score of the parse.
      */
     public static double parse(double[] fracRoot, double[][] fracChild, int[] parents) {
         assert (parents.length == fracRoot.length);
@@ -132,7 +135,8 @@ public class ProjectiveDependencyParser {
 
     /**
      * Computes the maximum projective spanning tree with a single root node using the algorithm of
-     * (Eisner, 1996) as described in McDonald (2006).
+     * (Eisner, 1996) as described in McDonald (2006).  In the resulting tree,
+     * the root node will have parent -1 and may have multiple children.
      * 
      * @param scores Input: The edge weights.
      * @param parents Output: The parent index of each node or -1 if it has no parent.
@@ -192,13 +196,16 @@ public class ProjectiveDependencyParser {
     
 
     /**
-     * Computes the maximum projective spanning tree with multiple root nodes using the algorithm of
-     * (Eisner, 1996).
+     * Computes the maximum projective vine-parse tree with multiple root nodes
+     * using the algorithm of (Eisner, 1996). In the resulting tree, the root
+     * node will be the wall node (denoted by index -1), and may have multiple
+     * children.
      * 
-     * @param fracRoot
-     * @param fracChild
-     * @param parents
-     * @return
+     * @param fracRoot Input: The edge weights from the wall to each child.
+     * @param fracChild Input: The edge weights from parent to child.
+     * @param parents Output: The parent index of each node or -1 if its parent
+     *            is the wall node.
+     * @return The score of the parse.
      */
     public static double vineParse(double[] fracRoot, double[][] fracChild,
             int[] parents) {
@@ -229,6 +236,12 @@ public class ProjectiveDependencyParser {
         return score;
     }
 
+    /**
+     * Computes the vine parse with the given scores. This method is similar to
+     * maxProjSpanning tree except that it enforces that the single root be the
+     * leftmost node, which (by construction in the calling method) will be the
+     * wall node.
+     */
     private static double vineParse(final double[][] scores, final int[] parents) {
         final DepParseChart c = parse(scores, DepParseType.VITERBI);
         final double[][][][] chart = c.chart;
