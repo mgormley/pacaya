@@ -1,0 +1,185 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>edu.jhu.parsing</groupId>
+  <artifactId>parsing</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>edu.jhu.parsing</name>
+
+<!--
+  <parent>
+    <groupId>edu.jhu.parent</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+--> 
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+	  <useIncrementalCompilation>true</useIncrementalCompilation>
+	  <fork>true</fork>
+          <!-- <compilerArgument>-verbose</compilerArgument> -->
+	  <includes>
+            <include>**/*.java</include>
+	  </includes>
+          <excludes>
+	    <!-- Skip anything depending on joptimizer. 
+            <exclude>**/*ResDmvDantzigWolfeRelaxation*.java</exclude>
+            <exclude>**/*ModelParamSubproblem*.java</exclude>
+            <exclude>**/ModelParamSubproblem.java</exclude>
+            <exclude>**/ModelParamSubproblemTest.java</exclude> -->
+	    <!-- Skip CRF.
+            <exclude>**/edu/jhu/gm/*.java</exclude>
+            <exclude>**/edu/jhu/gm/**/*.java</exclude> -->
+          </excludes>
+        </configuration>
+        <version>3.0</version>
+      </plugin>
+      <!-- For use with: mvn clean compile assembly:single 
+
+	   Compile goal should be added before assembly:single or
+	   otherwise the code on your own project is not included.
+    	   -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>edu.jhu.PipelineRunner</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      <!-- The following plugin includes alternate source directories in the compilation -->
+      <!--
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>/Users/mgormley/research/other_lib/cplex-decompiled/src</source>
+                <source>/Users/mgormley/research/ERMA/src</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      -->
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.8</version>
+      <!-- <scope>test</scope> -->
+    </dependency>
+    <dependency>
+      <groupId>cc.mallet</groupId>
+      <artifactId>mallet</artifactId>
+      <version>2.0.7-RC2</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.stanford.nlp</groupId>
+      <artifactId>stanford-corenlp</artifactId>
+      <version>1.3.4</version>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-cli</groupId>
+      <artifactId>commons-cli</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+		<groupId>org.uncommons.maths</groupId>
+		<artifactId>uncommons-maths</artifactId>
+		<version>1.2.2</version>
+		<exclusions>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jcommon</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>jfree</groupId>
+          <artifactId>jfreechart</artifactId>
+        </exclusion>
+      </exclusions> 
+	</dependency>
+    <dependency>
+      <!-- Required only for code using joptimizer -->
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.erma</groupId>
+      <artifactId>erma</artifactId>
+      <version>1.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.prim</groupId>
+      <artifactId>prim</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>cplex</groupId>
+      <artifactId>cplex</artifactId>
+      <version>12.5</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/cplex.jar</systemPath> 
+    </dependency>
+    <dependency>
+      <groupId>gurobi</groupId>
+      <artifactId>gurobi</artifactId>
+      <version>3.0.1</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/gurobi.jar</systemPath> 
+    </dependency>
+    <dependency>
+      <groupId>joptimizer</groupId>
+      <artifactId>joptimizer</artifactId>
+      <version>1.3.0</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/joptimizer-1.3.0.jar</systemPath> 
+    </dependency>
+  </dependencies>
+</project>
