@@ -29,6 +29,7 @@ public class AnnotatedSentence {
     private NaryTree naryTree;
     private BinaryTree binaryTree;
     private SrlGraph srlGraph;
+    private boolean hasPred;
         
     public AnnotatedSentence() {
         
@@ -202,6 +203,9 @@ public class AnnotatedSentence {
     }
     public void setSrlGraph(SrlGraph srlGraph) {
         this.srlGraph = srlGraph;
-    }    
+    }
+    public void setHasPred(boolean hasPred) {
+        this.hasPred = hasPred;
+    }
         
 }
