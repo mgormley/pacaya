@@ -17,6 +17,10 @@ public class ProjectiveDependencyParserTest {
      * SEED=123456789101112
      * Total time: 231.0
      * Sentences per second: 432.90043290043286
+     * Total time: 183.0
+     * Sentences per second: 546.448087431694
+     * Total time: 195.0
+     * Sentences per second: 512.8205128205128
      */
     @Test
     public void testParseSpeed() {
@@ -94,7 +98,7 @@ public class ProjectiveDependencyParserTest {
     public void testMaxProjSpanTree1() {
         double[][] scores = new double[][]{ {0, 1, 2}, {3, 0, 5}, {70, 90, 0} };
         int[] parents = new int[3];
-        double score = ProjectiveDependencyParser.parse(scores, parents);
+        double score = ProjectiveDependencyParser.maxProjSpanTree(scores, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(160.0, score, 1e-13);
         // TODO: Note that this wouldn't be a valid dependency tree (assumming
@@ -108,7 +112,7 @@ public class ProjectiveDependencyParserTest {
     public void testMaxProjSpanTree2() {
         double[][] scores = new double[][]{ {0, 1.1, 2}, {30, 0, 50}, {7, 9, 0} };
         int[] parents = new int[3];        
-        double score = ProjectiveDependencyParser.parse(scores, parents);
+        double score = ProjectiveDependencyParser.maxProjSpanTree(scores, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(80, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{1, -1, 1}, parents);
@@ -118,7 +122,7 @@ public class ProjectiveDependencyParserTest {
     public void testMaxProjSpanTree3() {
         double[][] scores = new double[][]{ {0, 10, 2}, {3, 0, 50}, {7, 9, 0} };
         int[] parents = new int[3];        
-        double score = ProjectiveDependencyParser.parse(scores, parents);
+        double score = ProjectiveDependencyParser.maxProjSpanTree(scores, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(60.0, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{-1, 0, 1}, parents);
@@ -128,7 +132,7 @@ public class ProjectiveDependencyParserTest {
     public void testMaxProjSpanTree4() {
         double[][] scores = new double[][]{ {0, 1, 20, 3}, {4, 0, 5, 6}, {7, 80, 0, 90}, {10, 11, 12, 0} };
         int[] parents = new int[4];        
-        double score = ProjectiveDependencyParser.parse(scores, parents);
+        double score = ProjectiveDependencyParser.maxProjSpanTree(scores, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(190.0, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{-1, 2, 0, 2}, parents);
@@ -138,7 +142,7 @@ public class ProjectiveDependencyParserTest {
     public void testMaxProjSpanTree5() {
         double[][] scores = new double[][]{ {0, 1, 2, 3}, {4, 0, 5, 6}, {70, 80, 0, 90}, {10, 11, 12, 0} };
         int[] parents = new int[4];        
-        double score = ProjectiveDependencyParser.parse(scores, parents);
+        double score = ProjectiveDependencyParser.maxProjSpanTree(scores, parents);
         System.out.println(Arrays.toString(parents));        
         assertEquals(240, score, 1e-13);
         JUnitUtils.assertArrayEquals(new int[]{2, 2, -1, 2}, parents);

@@ -14,14 +14,68 @@ import edu.jhu.util.math.Vectors;
  *
  */
 public class ProjectiveDependencyParser {
-
+    
+    public enum DepParseType { VITERBI, INSIDE };
+    
     private static class DepParseChart {
-        double[][][][] chart;
-        int[][][][] bps;
-        public DepParseChart(double[][][][] chart, int[][][][] bps) {
-            this.chart = chart;
-            this.bps = bps;
+        
+        // Indexed by left position (s), right position (t), direction of dependency (d),
+        // and whether or not the constituent is complete (c).
+        //
+        // The value at chart[s][t][d][COMPLETE] will be the weight of the
+        // maximum projective spanning tree rooted at s (if d == RIGHT) or
+        // rooted at t (if d == LEFT). 
+        //
+        // For incomplete constituents chart[s][t][d][INCOMPLETE] indicates that
+        // s is the parent of t if (d == RIGHT) or that t is the parent of s if
+        // (d==LEFT). That is the direction, d, indicates which side is the dependent.
+        final double[][][][] chart;
+
+        // Backpointers, indexed just like the chart.
+        //
+        // The value at bps[s][t][d][c] will be the split point (r) for the
+        // maximum chart entry.
+        final int[][][][] bps;
+        
+        final DepParseType type;
+        
+        public DepParseChart(int n, DepParseType type) {
+            this.type = type;
+            chart = new double[n][n][2][2];
+            bps = new int[n][n][2][2];
+            
+            // Initialize chart to negative infinities.
+            Utilities.fill(chart, Double.NEGATIVE_INFINITY);
+            for (int s = 0; s < n; s++) {
+                chart[s][s][RIGHT][COMPLETE] = 0.0;
+                chart[s][s][LEFT][COMPLETE] = 0.0;
+            }
+            
+            // Fill backpointers with -1.
+            Utilities.fill(bps, -1);            
         }
+        
+        // TODO: Consider using this method and making chart/bps private.
+        public double getScore(int s, int t, int d, int ic) {
+            return chart[s][t][d][ic];
+        }
+        
+        public int getBp(int s, int t, int d, int ic) {
+            return bps[s][t][d][ic];
+        }
+        
+        public void updateCell(int s, int t, int d, int ic, double score, int r) {
+            if (this.type == DepParseType.VITERBI) {
+                if (score > chart[s][t][d][ic]) {
+                    chart[s][t][d][ic] = score;
+                    bps[s][t][d][ic] = r;
+                }
+            } else {
+                chart[s][t][d][ic] += score;
+                // Don't update the backpointer.
+            }
+        }
+        
     }
     
     private static int LEFT = 0;
@@ -34,7 +88,7 @@ public class ProjectiveDependencyParser {
     }
 
     /**
-     * This gives the maximum projective spanning tree with a unique head of the sentence
+     * This gives the maximum projective dependency tree with a unique head of the sentence
      * using the algorithm of (Eisner, 1996) as described in McDonald (2006).
      * 
      * @param fracRoot Input: The edge weights from the wall to each child.
@@ -46,7 +100,7 @@ public class ProjectiveDependencyParser {
         assert (parents.length == fracRoot.length);
         assert (fracChild.length == fracRoot.length);    
         
-        final DepParseChart c = parse(fracChild);
+        final DepParseChart c = parse(fracChild, DepParseType.VITERBI);
         final double[][][][] chart = c.chart;
         final int[][][][] bps = c.bps;
         final int n = parents.length;
@@ -63,8 +117,8 @@ public class ProjectiveDependencyParser {
         }
         
         // Trace the backpointers to extract the parents.
+        
         Arrays.fill(parents, -2);
-
         // Get the head of the sentence.
         int head = Vectors.argmax(goal);
         parents[head] = -1; // The wall (-1) is its parent.
@@ -84,45 +138,20 @@ public class ProjectiveDependencyParser {
      * @param parents Output: The parent index of each node or -1 if it has no parent.
      * @return The score of the maximum projective spanning tree.
      */
-    public static double parse(double[][] scores, int[] parents) {
+    public static double maxProjSpanTree(double[][] scores, int[] parents) {
         return parse(new double[scores.length], scores, parents);
     }
-            
+    
     /**
      * Runs the parsing algorithm of (Eisner, 1996) as described in McDonald (2006).
      * 
      * @param scores Input: The edge weights.
      * @return The parse chart.
      */
-    private static DepParseChart parse(final double[][] scores) {
-             
-        final int n = scores.length;
-        // Indexed by left position (s), right position (t), direction of dependency (d),
-        // and whether or not the constituent is complete (c).
-        //
-        // The value at chart[s][t][d][COMPLETE] will be the weight of the
-        // maximum projective spanning tree rooted at s (if d == RIGHT) or
-        // rooted at t (if d == LEFT). 
-        //
-        // For incomplete constituents chart[s][t][d][INCOMPLETE] indicates that
-        // s is the parent of t if (d == RIGHT) or that t is the parent of s if
-        // (d==LEFT). That is the direction, d, indicates which side is the dependent.
-        double[][][][] chart = new double[n][n][2][2];
-        // Backpointers, indexed just like the chart.
-        //
-        // The value at bps[s][t][d][c] will be the split point (r) for the
-        // maximum chart entry.
-        int[][][][] bps = new int[n][n][2][2];
+    private static DepParseChart parse(final double[][] scores, DepParseType type) {             
+        final int n = scores.length;        
+        final DepParseChart dpc = new DepParseChart(n, type);
 
-        // Initialize chart to negative infinities.
-        Utilities.fill(chart, Double.NEGATIVE_INFINITY);
-        for (int s = 0; s < n; s++) {
-            chart[s][s][RIGHT][COMPLETE] = 0.0;
-            chart[s][s][LEFT][COMPLETE] = 0.0;
-        }
-        // Fill backpointers with -1.
-        Utilities.fill(bps, -1);
-        
         // Parse.
         for (int width = 1; width < n; width++) {
             for (int s = 0; s < n - width; s++) {
@@ -132,13 +161,10 @@ public class ProjectiveDependencyParser {
                 for (int r=s; r<t; r++) {
                     for (int d=0; d<2; d++) {
                         double edgeScore = (d==LEFT) ? scores[t][s] : scores[s][t];
-                        double score = chart[s][r][RIGHT][COMPLETE] +
-                                       chart[r+1][t][LEFT][COMPLETE] +  
+                        double score = dpc.chart[s][r][RIGHT][COMPLETE] +
+                                       dpc.chart[r+1][t][LEFT][COMPLETE] +  
                                        edgeScore;
-                        if (score > chart[s][t][d][INCOMPLETE]) {
-                            chart[s][t][d][INCOMPLETE] = score;
-                            bps[s][t][d][INCOMPLETE] = r;
-                        }
+                        dpc.updateCell(s, t, d, INCOMPLETE, score, r);
                     }
                 }
                 
@@ -146,28 +172,22 @@ public class ProjectiveDependencyParser {
                 // -- Left side.
                 for (int r=s; r<t; r++) {
                     final int d = LEFT;
-                    double score = chart[s][r][d][COMPLETE] +
-                                chart[r][t][d][INCOMPLETE];
-                    if (score > chart[s][t][d][COMPLETE]) {
-                        chart[s][t][d][COMPLETE] = score;
-                        bps[s][t][d][COMPLETE] = r;
-                    }
+                    double score = dpc.chart[s][r][d][COMPLETE] +
+                                dpc.chart[r][t][d][INCOMPLETE];
+                    dpc.updateCell(s, t, d, COMPLETE, score, r);
                 }
                 // -- Right side.
                 for (int r=s+1; r<=t; r++) {
                     final int d = RIGHT;
-                    double score = chart[s][r][d][INCOMPLETE] +
-                                   chart[r][t][d][COMPLETE];
-                    if (score > chart[s][t][d][COMPLETE]) {
-                        chart[s][t][d][COMPLETE] = score;
-                        bps[s][t][d][COMPLETE] = r;
-                    }
+                    double score = dpc.chart[s][r][d][INCOMPLETE] +
+                                   dpc.chart[r][t][d][COMPLETE];
+                    dpc.updateCell(s, t, d, COMPLETE, score, r);
                 }
                 
             }
         }
         
-        return new DepParseChart(chart, bps);
+        return dpc;
     }
     
 
@@ -210,7 +230,7 @@ public class ProjectiveDependencyParser {
     }
 
     private static double vineParse(final double[][] scores, final int[] parents) {
-        final DepParseChart c = parse(scores);
+        final DepParseChart c = parse(scores, DepParseType.VITERBI);
         final double[][][][] chart = c.chart;
         final int[][][][] bps = c.bps;
         final int n = parents.length;
