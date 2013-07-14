@@ -5,10 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.jhu.util.cli.Opt;
+
 /**
  * A graph representing SRL annotations on a sentence.
  * 
  * @author mgormley
+ * @author mmitchell
  *
  */
 public class SrlGraph {
@@ -19,6 +22,9 @@ public class SrlGraph {
      * @author mgormley
      *
      */
+    @Opt(name="noTheta", hasArg=false, description="Do not include thematic assignment in role")
+    public static boolean noTheta = true;
+    
     public static class SrlPred extends SrlNode {
         private String label;
         
@@ -44,11 +50,11 @@ public class SrlGraph {
      *
      */
     public static class SrlArg extends SrlNode {
-
+        
         public SrlArg(int position) {
             super(position);
         }
-
+        
         @Override
         public String toString() {
             return "SrlArg [position=" + position + "]";
@@ -88,6 +94,7 @@ public class SrlGraph {
      * A labeled edge between an SRL predicate and argument.
      * 
      * @author mgormley
+     * @author mmitchell
      * 
      */
     public static class SrlEdge {
@@ -97,8 +104,14 @@ public class SrlGraph {
         public SrlEdge(SrlPred pred, SrlArg arg, String label) {
             this.pred = pred;
             this.arg = arg;
-            this.label = label;
-            
+            // Case where thematic roles are stripped.
+            if (noTheta) {
+                String[] splitArg = label.split("-");
+                String newLabel = splitArg[0].toString();
+                this.label = newLabel;
+           } else {
+                this.label = label;
+           }
             pred.add(this);
             arg.add(this);
         }
