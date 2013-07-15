@@ -322,7 +322,7 @@ public class GetFeatures {
                 System.out.println(pairs.getKey());
                 System.out.println(pairs.getValue());
                 System.out.println(feat);
-                feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                feat = feat.replace((String) pairs.getKey(), (String) pairs.getValue());
                 System.out.println(feat);
             }
             bw.write(feat);
@@ -350,7 +350,7 @@ public class GetFeatures {
             Iterator it = stringMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pairs = (Map.Entry)it.next();
-                feature = feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                feature = feature.replace((String) pairs.getKey(), (String) pairs.getValue());
             }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
@@ -371,7 +371,7 @@ public class GetFeatures {
         stringMap.put("&","_AMP_");
         stringMap.put(":","_COL_");
         stringMap.put(";","_SCOL_");
-        stringMap.put("\\","_BSL_");
+        stringMap.put("\\/","_BSL_");
         stringMap.put("/","_SL_");
         stringMap.put("`","_QT_"); 
         stringMap.put("?","_Q_");
