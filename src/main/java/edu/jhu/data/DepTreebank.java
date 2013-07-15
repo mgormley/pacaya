@@ -62,7 +62,7 @@ public class DepTreebank implements Iterable<DepTree> {
      * @param trainPath
      */
     // TODO: move to 
-    public void loadPtbPath(String trainPath) {
+    public void loadPtbPath(File trainPath) {
         Treebank stanfordTreebank = new DiskTreebank();
         CategoryWordTag.suppressTerminalDetails = true;
         stanfordTreebank.loadPath(trainPath);
@@ -90,7 +90,7 @@ public class DepTreebank implements Iterable<DepTree> {
      * 
      * @param trainPath
      */
-    public void loadCoNLLXPath(String trainPath) {
+    public void loadCoNLLXPath(File trainPath) {
         CoNLLXDirReader reader = new CoNLLXDirReader(trainPath);
         for (CoNLLXSentence sent : reader) {
             if (this.size() >= maxNumSentences) {
@@ -106,8 +106,8 @@ public class DepTreebank implements Iterable<DepTree> {
         }
     }
     
-    public void loadCoNLL09Path(String trainPath) throws IOException {
-        CoNLL09FileReader reader = new CoNLL09FileReader(new File(trainPath));
+    public void loadCoNLL09Path(File trainPath) throws IOException {
+        CoNLL09FileReader reader = new CoNLL09FileReader(trainPath);
         for (CoNLL09Sentence sent : reader) {
             if (this.size() >= maxNumSentences) {
                 break;

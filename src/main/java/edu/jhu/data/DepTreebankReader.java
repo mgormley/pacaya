@@ -22,12 +22,14 @@ public class DepTreebankReader {
     public static boolean mustContainVerb = false;
     @Opt(hasArg = true, description = "Type or file indicating tag mapping")
     public static String reduceTags = "none";
-        
-    public static DepTreebank getTreebank(String trainPath, DatasetType trainType, Alphabet<Label> alphabet) throws IOException {
+    @Opt(hasArg = true, description = "Whether to use predicted POS tags (if available).")
+    public static boolean usePredictedPosTags = false;
+    
+    public static DepTreebank getTreebank(File trainPath, DatasetType trainType, Alphabet<Label> alphabet) throws IOException {
         return getTreebank(trainPath, trainType, maxSentenceLength, alphabet);
     }
     
-    public static DepTreebank getTreebank(String trainPath, DatasetType trainType, int maxSentenceLength, Alphabet<Label> alphabet) throws IOException {
+    public static DepTreebank getTreebank(File trainPath, DatasetType trainType, int maxSentenceLength, Alphabet<Label> alphabet) throws IOException {
         DepTreebank trainTreebank;
 
         // Create the original trainTreebank with a throw-away alphabet.

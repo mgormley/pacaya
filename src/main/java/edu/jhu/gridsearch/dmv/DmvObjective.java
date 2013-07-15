@@ -2,7 +2,6 @@ package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.PipelineRunner;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel.Rhs;
 import edu.jhu.model.dmv.DmvModel;

@@ -14,7 +14,7 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class DependencyParserEvaluator implements Evaluator {
+public class DependencyParserEvaluator {
 
     private static final Logger log = Logger.getLogger(DependencyParserEvaluator.class);
 
@@ -34,7 +34,6 @@ public class DependencyParserEvaluator implements Evaluator {
         this.dataName = dataName;
     }
 
-    @Override
     public void evaluate(Model model) {
         SentenceCollection sentences = goldTreebank.getSentences();
         parses = parser.getViterbiParse(sentences, model);
@@ -60,19 +59,9 @@ public class DependencyParserEvaluator implements Evaluator {
             }
         }
         accuracy = (double) correct / (double) total;
-        return accuracy;
-    }
-
-    @Override
-    public void print() {
+        
         log.info(String.format("Accuracy on %s: %.4f", dataName, accuracy));
-        log.info(String.format("LogLikelihood on %s: %.4f", dataName, logLikelihood));
-        log.info(String.format("Per token cross entropy on %s: %.3f", dataName, perTokenCrossEnt));
-    }
-
-    @Override
-    public DepTreebank getParses() {
-        return parses;
+        return accuracy;
     }
 
 }
