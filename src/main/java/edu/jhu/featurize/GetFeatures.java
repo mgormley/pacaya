@@ -122,7 +122,7 @@ public class GetFeatures {
                 for (CoNLL09Token word : sent) {
                     for (int j = 0; j< word.getApreds().size(); j++) {
                         String[] splitRole = word.getApreds().get(j).split("-");
-                        String role = splitRole[0];
+                        String role = splitRole[0].toLowerCase();
                         knownRoles.add(role);
                     }
                     String wordForm = word.getForm();
@@ -200,19 +200,19 @@ public class GetFeatures {
                 Set<Integer> key = new HashSet<Integer>();
                 key.add(e.getPred().getId());
                 key.add(e.getArg().getId());
-                truePreds.put(key, e.getLabel());
+                truePreds.put(key, e.getLabel().toLowerCase());
             }
             Set<String> features = new HashSet<String>();
             Set<String> variables = new HashSet<String>();
             for (int i = 0;i < sent.size();i++) {
                 // Get words for annotated sentence
                 for (int j = 0; j < sent.size(); j++) {
-                    if (Math.abs(i-j) <= maxSentLength) {
+                    //if (Math.abs(i-j) <= maxSentLength) {
                         Set<String> suffixes = new HashSet<String>();
                         suffixes = getSuffixes(i, j, sent);
                         features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                         variables = getVariables(i, j, sent, truePreds, variables);
-                    } 
+                    //} 
                 }
             }
             printOut(variables, features, example, bw);
@@ -284,13 +284,16 @@ public class GetFeatures {
         Set<Integer> key = new HashSet<Integer>();
         key.add(i);
         key.add(j);
+        String variable;
         if (truePreds.containsKey(key)) {
             String label = (String) truePreds.get(key);
             // Will Matt's implementation break if I don't handle this case? if (knownRoles.contains(label)) {
-            String variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
             //} 
-            variables.add(variable);
+        } else {
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ";";
         }
+        variables.add(variable);
         return variables;
     }
     
@@ -313,6 +316,15 @@ public class GetFeatures {
         bw.write("features:");
         bw.newLine();
         for (String feat : sentenceFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                System.out.println(pairs.getKey());
+                System.out.println(pairs.getValue());
+                System.out.println(feat);
+                feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                System.out.println(feat);
+            }
             bw.write(feat);
             bw.newLine();
         }
@@ -323,7 +335,7 @@ public class GetFeatures {
         String delim = "";
         tw.write("types:");
         tw.newLine();
-        sb.append("ROLES:=[");
+        sb.append("ROLE:=[");
         for (String role : knownRoles) {
             sb.append(delim).append(role);
             delim = ",";
@@ -335,6 +347,11 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                feature = feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+            }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
         }

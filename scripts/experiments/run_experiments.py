@@ -137,7 +137,8 @@ class DPExpParams(experiment_runner.JavaExpParams):
     
     def create_experiment_script(self, exp_dir):
         script = ""
-        cmd = "mvn-java " + self.get_java_args() + " edu.jhu.PipelineRunner  %s \n" % (self.get_args())
+        script += "echo 'CLASSPATH=$CLASSPATH'\n"
+        cmd = "java " + self.get_java_args() + " edu.jhu.DepParserRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     
@@ -181,7 +182,8 @@ class CkyExpParams(experiment_runner.JavaExpParams):
     
     def create_experiment_script(self, exp_dir):
         script = ""
-        cmd = "mvn-java " + self.get_java_args() + " edu.jhu.parse.cky.RunCkyParser  %s \n" % (self.get_args())
+        script += "echo 'CLASSPATH=$CLASSPATH'\n"
+        cmd = "java " + self.get_java_args() + " edu.jhu.parse.cky.RunCkyParser  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     
@@ -410,6 +412,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             # Full length test sentences.
             setup.update(maxNumSentences=100000000, maxSentenceLengthTest=1000)
             setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
+            setup.update(usePredictedPosTags=True)
             setup.set("lambda", 1)
             exps = []
             for maxSentenceLength in [10, 20, 1000]:

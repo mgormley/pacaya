@@ -65,11 +65,11 @@ public class CrfRunner {
 
     // Options for model IO
     @Opt(hasArg = true, description = "File from which we should read a serialized model.")
-    public static String modelIn = null;
+    public static File modelIn = null;
     @Opt(hasArg = true, description = "File to which we should serialize the model.")
-    public static String modelOut = null;
+    public static File modelOut = null;
     @Opt(hasArg = true, description = "File to which we should print a human readable version of the model.")
-    public static String printModel = null;
+    public static File printModel = null;
 
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")

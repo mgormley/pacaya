@@ -1,5 +1,6 @@
 package edu.jhu.model.dmv;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -7,13 +8,13 @@ import java.util.Set;
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.math.LabeledMultinomial;
 import edu.jhu.util.math.Multinomials;
 
-public class DmvModel implements Model {
+public class DmvModel implements Model, Serializable {
     
     // Constants for whether a left or right child is generated.
     public static final int LEFT = 0; 

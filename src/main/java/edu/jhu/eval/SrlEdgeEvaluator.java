@@ -20,7 +20,7 @@ import edu.jhu.parse.DepParser;
  * 
  * @author mgormley
  */
-public class SrlEdgeEvaluator implements Evaluator {
+public class SrlEdgeEvaluator {
 
     private static final Logger log = Logger.getLogger(SrlEdgeEvaluator.class);
 
@@ -37,7 +37,6 @@ public class SrlEdgeEvaluator implements Evaluator {
         this.dataName = dataName;
     }
 
-    @Override
     public void evaluate(Model model) {
         SentenceCollection sentences = goldTreebank.getSentences();
         parses = parser.getViterbiParse(sentences, model);        
@@ -73,17 +72,8 @@ public class SrlEdgeEvaluator implements Evaluator {
             }
         }
         accuracy = (double) correct / (double) total;
+        log.info(String.format("Proportion semantically valid deps on %s: %.4f", dataName, accuracy));
         return accuracy;
     }
     
-    @Override
-    public void print() {
-        log.info(String.format("Proportion semantically valid deps on %s: %.4f", dataName, accuracy));
-    }
-
-    @Override
-    public DepTreebank getParses() {
-        return parses;
-    }
-
 }
