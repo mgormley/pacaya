@@ -326,7 +326,7 @@ public class GetFeatures {
         String delim = "";
         tw.write("types:");
         tw.newLine();
-        sb.append("ROLES:=[");
+        sb.append("ROLE:=[");
         for (String role : knownRoles) {
             sb.append(delim).append(role);
             delim = ",";
