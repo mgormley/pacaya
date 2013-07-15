@@ -89,7 +89,7 @@ public class GetFeatures {
     public static void main(String[] args) throws IOException {
         ArgParser parser = new ArgParser(GetFeatures.class);
         parser.addClass(GetFeatures.class);
-        parser.addClass(SrlGraph.class);
+        parser.addClass(CoNLL09Sentence.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {
