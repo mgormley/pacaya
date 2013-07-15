@@ -207,12 +207,12 @@ public class GetFeatures {
             for (int i = 0;i < sent.size();i++) {
                 // Get words for annotated sentence
                 for (int j = 0; j < sent.size(); j++) {
-                    if (Math.abs(i-j) <= maxSentLength) {
+                    //if (Math.abs(i-j) <= maxSentLength) {
                         Set<String> suffixes = new HashSet<String>();
                         suffixes = getSuffixes(i, j, sent);
                         features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                         variables = getVariables(i, j, sent, truePreds, variables);
-                    } 
+                    //} 
                 }
             }
             printOut(variables, features, example, bw);
@@ -284,13 +284,16 @@ public class GetFeatures {
         Set<Integer> key = new HashSet<Integer>();
         key.add(i);
         key.add(j);
+        String variable;
         if (truePreds.containsKey(key)) {
             String label = (String) truePreds.get(key);
             // Will Matt's implementation break if I don't handle this case? if (knownRoles.contains(label)) {
-            String variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
             //} 
-            variables.add(variable);
+        } else {
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ";";
         }
+        variables.add(variable);
         return variables;
     }
     
