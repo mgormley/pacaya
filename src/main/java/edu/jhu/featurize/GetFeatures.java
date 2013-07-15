@@ -260,7 +260,9 @@ public class GetFeatures {
         for (String feat : instFeats) {
             if (isTrain || allFeatures.contains(feat)) {
                 if (isTrain) {
-                    allFeatures.add(feat);
+                    if (!allFeatures.contains(feat)) {
+                        allFeatures.add(feat);
+                    }
                 }
                 for (String suf : suffixes) {
                     feats.add(feat + suf);
@@ -344,11 +346,6 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
-            Iterator it = stringMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pairs = (Map.Entry)it.next();
-                feature = feature.replace((String) pairs.getKey(), (String) pairs.getValue());
-            }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
         }
