@@ -319,7 +319,7 @@ public class GetFeatures {
             Iterator it = stringMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pairs = (Map.Entry)it.next();
-                feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
             }
             bw.write(feat);
             bw.newLine();
@@ -346,7 +346,7 @@ public class GetFeatures {
             Iterator it = stringMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pairs = (Map.Entry)it.next();
-                feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                feature = feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
             }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
