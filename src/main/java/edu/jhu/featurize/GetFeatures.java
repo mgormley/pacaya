@@ -346,7 +346,7 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
-            tw.write(feature + "(ROLE):=[*]");
+            tw.write(feature + "_role(ROLE):=[*]");
             tw.newLine();
         }
     }
