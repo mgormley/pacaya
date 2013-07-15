@@ -30,9 +30,13 @@ import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
 import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.cky.chart.Chart.ChartCellType;
+import edu.jhu.parse.dep.ProjectiveDependencyParser;
+import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
 
 
@@ -212,6 +216,48 @@ public class DmvCkyParserTest {
         for (ParentsArray pa : counter.keySet()) {
             System.out.printf("%5d %s\n", counter.get(pa), pa);
         }
+    }
+    
+
+    /**
+     * Output: WITH ChartCellType.FULL_BREAK_TIES
+     * Average seconds per sentence: 0.09532673267326733
+     * Total time: 9130.0
+     * Sentences per second: 10.952902519167578
+     * 
+     * WITH ChartCellType.FULL
+     * Average seconds per sentence: 0.06728712871287129 
+     * Total time: 6338.0
+     * Sentences per second: 15.77784790154623
+     */
+    @Test
+    public void testSpeed() {
+        int trials = 100;
+        int n = 30;
+        String sent = "";
+        for (int i=0; i<n; i++) {
+            sent += " " + i;
+        }
+
+        SentenceCollection sentences = new SentenceCollection();
+        sentences.addSentenceFromString(sent); //"NNP , CD NNS JJ , MD VB DT NN IN DT NNP , CD NNS JJ , MD VB DT NN IN DT");
+        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
+
+        DmvCkyParserPrm prm = new DmvCkyParserPrm();
+        prm.ckyPrm.cellType = ChartCellType.FULL;
+        DmvCkyParser parser = new DmvCkyParser(prm);
+        parser.getViterbiParse(sentences, model);
+
+        Timer timer = new Timer();
+        timer.start();
+        for (int t=0; t<trials; t++) {
+            parser.getViterbiParse(sentences, model);
+        }
+        timer.stop();
+        System.out.println("Total time: " + timer.totMs());
+        int numSents = trials;
+        System.out.println("Sentences per second: " + numSents / timer.totSec());
     }
     
     public static class ParentsArray {

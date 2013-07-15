@@ -61,6 +61,7 @@ public class DepTreebank implements Iterable<DepTree> {
      * 
      * @param trainPath
      */
+    // TODO: move to 
     public void loadPtbPath(String trainPath) {
         Treebank stanfordTreebank = new DiskTreebank();
         CategoryWordTag.suppressTerminalDetails = true;

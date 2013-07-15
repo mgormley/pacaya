@@ -57,6 +57,9 @@ public class SentenceCollection implements Iterable<Sentence> {
 
     // TODO: should this be private?
     public void add(Sentence sentence) {
+        if (sentence.getAlphabet() != alphabet) {
+            throw new IllegalArgumentException("Alphabets do not match.");
+        }
         addSentenceToAlphabet(sentence);
         sents.add(sentence);
         numTokens += sentence.size();
