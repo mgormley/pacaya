@@ -275,7 +275,13 @@ public class GetFeatures {
             wordForm = sig.getSignature(wordForm, idx, language);
             if (!knownUnks.contains(wordForm)) {
                 wordForm = "UNK";
+                return wordForm;
             }
+        }
+        Iterator<Entry<String, String>> it = stringMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pairs = (Map.Entry)it.next();
+            wordForm = wordForm.replace((String) pairs.getKey(), (String) pairs.getValue());
         }
         return wordForm;
     }
@@ -316,11 +322,6 @@ public class GetFeatures {
         bw.write("features:");
         bw.newLine();
         for (String feat : sentenceFeatures) {
-            Iterator it = stringMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pairs = (Map.Entry)it.next();
-                feat = feat.replace((String) pairs.getKey(), (String) pairs.getValue());
-            }
             bw.write(feat);
             bw.newLine();
         }
