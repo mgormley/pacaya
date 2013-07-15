@@ -1,6 +1,5 @@
 package edu.jhu.data;
 
-import java.util.Arrays;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,8 +9,6 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -31,7 +28,7 @@ public class BrownClusterTagger {
     
     public BrownClusterTagger(Alphabet<Label> alphabet, int maxTagLength) {
         this.alphabet = alphabet;
-	this.maxTagLength = maxTagLength;
+        this.maxTagLength = maxTagLength;
         map = new HashMap<String,String>();
     }
     

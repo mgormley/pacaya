@@ -3,6 +3,7 @@ package edu.jhu.data;
 
 public class Word implements Label {
 
+    private static final long serialVersionUID = 6261153458236675157L;
     private String word;
     
     public Word(String word) {

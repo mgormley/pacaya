@@ -47,7 +47,7 @@ public class Alphabet<T> implements Serializable {
 				idxObjMap.add(object);
 				objIdxMap.put(object, index);
 			} else {
-				return MISSING_OBJECT_INDEX;
+			    return MISSING_OBJECT_INDEX;
 			}
 		}
 		return index;

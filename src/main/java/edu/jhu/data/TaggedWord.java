@@ -1,8 +1,9 @@
 package edu.jhu.data;
 
 
-public class TaggedWord extends AbstractLabel implements Label {
+public class TaggedWord implements Label {
 
+    private static final long serialVersionUID = -3732352766423007305L;
     private String word;
     private String tag;
     

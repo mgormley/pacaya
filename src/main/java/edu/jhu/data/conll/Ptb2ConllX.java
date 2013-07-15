@@ -37,7 +37,7 @@ public class Ptb2ConllX {
 
     public void run() throws IOException {
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        DepTreebank trees = DepTreebankReader.getTreebank(ptbIn.getAbsolutePath(), DatasetType.PTB, alphabet);
+        DepTreebank trees = DepTreebankReader.getTreebank(ptbIn, DatasetType.PTB, alphabet);
         CoNLLXWriter conllxWriter = new CoNLLXWriter(conllxOut);
         for (int i=0; i<trees.size(); i++) {
             DepTree tree = trees.get(i);

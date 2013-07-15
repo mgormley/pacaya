@@ -3,6 +3,7 @@ package edu.jhu.data;
 
 public class Lemma implements Label {
 
+    private static final long serialVersionUID = -3390519842985192429L;
     private String lemma;
     
     public Lemma(String word) {

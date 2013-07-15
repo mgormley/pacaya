@@ -1,8 +1,9 @@
 package edu.jhu.data;
 
 
-public class Tag extends AbstractLabel implements Label {
+public class Tag implements Label {
 
+    private static final long serialVersionUID = 4793821671729002922L;
     private String tag;
     
     public Tag(String tag) {

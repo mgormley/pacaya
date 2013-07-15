@@ -7,7 +7,6 @@ import java.util.Queue;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.PipelineRunner;
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
 
