@@ -10,7 +10,6 @@
 /target
 /tests
 /exp
-/dantzig_wolfe
 
 # /lib/
 /lib/cplex.jar
