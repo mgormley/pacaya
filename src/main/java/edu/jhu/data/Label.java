@@ -1,6 +1,8 @@
 package edu.jhu.data;
 
-public interface Label extends Comparable<Label> {
+import java.io.Serializable;
+
+public interface Label extends Comparable<Label>, Serializable {
     
     String getLabel();
     

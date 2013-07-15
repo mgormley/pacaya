@@ -1,7 +1,15 @@
 package edu.jhu.data;
 
+import java.io.Serializable;
+
+/** 
+ * Implements the hashCode, equals, and compareTo methods based on the getLabel() method.
+ * @author mgormley
+ */
 // TODO: maybe this should be removed?
 public abstract class AbstractLabel implements Label {
+
+    private static final long serialVersionUID = -4701339749849686569L;
 
     public abstract String getLabel();
     

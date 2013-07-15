@@ -34,7 +34,11 @@ public class Sentence extends LabelSequence<Label> {
     public Sentence(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
         this(alphabet);
         for (CoNLL09Token token : sent) {
-            add(new TaggedWord(token.getForm(), token.getPos()));
+            if (DepTreebankReader.usePredictedPosTags) {
+                add(new TaggedWord(token.getForm(), token.getPpos()));
+            } else {
+                add(new TaggedWord(token.getForm(), token.getPos()));
+            }
         }
     }
 
