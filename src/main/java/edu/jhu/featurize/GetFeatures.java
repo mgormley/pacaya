@@ -316,6 +316,11 @@ public class GetFeatures {
         bw.write("features:");
         bw.newLine();
         for (String feat : sentenceFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+            }
             bw.write(feat);
             bw.newLine();
         }
@@ -338,6 +343,11 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+            }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
         }
