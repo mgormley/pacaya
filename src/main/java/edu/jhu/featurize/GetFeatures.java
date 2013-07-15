@@ -121,7 +121,9 @@ public class GetFeatures {
                 }
                 for (CoNLL09Token word : sent) {
                     for (int j = 0; j< word.getApreds().size(); j++) {
-                        knownRoles.add(word.getApreds().get(j));
+                        String[] splitRole = word.getApreds().get(j).split("-");
+                        String role = splitRole[0];
+                        knownRoles.add(role);
                     }
                     String wordForm = word.getForm();
                     String cleanWord = normalize.clean(wordForm);
