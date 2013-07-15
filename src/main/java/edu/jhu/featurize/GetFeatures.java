@@ -122,7 +122,7 @@ public class GetFeatures {
                 for (CoNLL09Token word : sent) {
                     for (int j = 0; j< word.getApreds().size(); j++) {
                         String[] splitRole = word.getApreds().get(j).split("-");
-                        String role = splitRole[0];
+                        String role = splitRole[0].toLowerCase();
                         knownRoles.add(role);
                     }
                     String wordForm = word.getForm();
@@ -200,7 +200,7 @@ public class GetFeatures {
                 Set<Integer> key = new HashSet<Integer>();
                 key.add(e.getPred().getId());
                 key.add(e.getArg().getId());
-                truePreds.put(key, e.getLabel());
+                truePreds.put(key, e.getLabel().toLowerCase());
             }
             Set<String> features = new HashSet<String>();
             Set<String> variables = new HashSet<String>();
@@ -316,6 +316,15 @@ public class GetFeatures {
         bw.write("features:");
         bw.newLine();
         for (String feat : sentenceFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                System.out.println(pairs.getKey());
+                System.out.println(pairs.getValue());
+                System.out.println(feat);
+                feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                System.out.println(feat);
+            }
             bw.write(feat);
             bw.newLine();
         }
@@ -326,7 +335,7 @@ public class GetFeatures {
         String delim = "";
         tw.write("types:");
         tw.newLine();
-        sb.append("ROLES:=[");
+        sb.append("ROLE:=[");
         for (String role : knownRoles) {
             sb.append(delim).append(role);
             delim = ",";
@@ -338,6 +347,11 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
+            Iterator it = stringMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pairs = (Map.Entry)it.next();
+                feature = feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+            }
             tw.write(feature + "(ROLE):=[*]");
             tw.newLine();
         }
