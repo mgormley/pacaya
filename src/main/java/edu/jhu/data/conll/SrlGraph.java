@@ -22,8 +22,6 @@ public class SrlGraph {
      * @author mgormley
      *
      */
-    @Opt(name="noTheta", hasArg=false, description="Do not include thematic assignment in role")
-    public static boolean noTheta = true;
     
     public static class SrlPred extends SrlNode {
         private String label;
@@ -66,6 +64,7 @@ public class SrlGraph {
      * A node in an SRL Graph.
      * 
      * @author mgormley
+     * @author mmitchell
      *
      */
     private static class SrlNode {
@@ -85,6 +84,11 @@ public class SrlGraph {
             return position;
         }
 
+        public int getId() {
+            // ... Right? =/
+            return position+1;
+        }
+        
         public List<SrlEdge> getEdges() {
             return edges;
         }
@@ -101,11 +105,13 @@ public class SrlGraph {
         private SrlPred pred;
         private SrlArg arg;
         private String label;
+        private boolean withTheta = true;
+        
         public SrlEdge(SrlPred pred, SrlArg arg, String label) {
             this.pred = pred;
             this.arg = arg;
             // Case where thematic roles are stripped.
-            if (noTheta) {
+            if (!this.withTheta) {
                 String[] splitArg = label.split("-");
                 String newLabel = splitArg[0].toString();
                 this.label = newLabel;
@@ -115,6 +121,7 @@ public class SrlGraph {
             pred.add(this);
             arg.add(this);
         }
+
         public SrlPred getPred() {
             return pred;
         }
@@ -128,12 +135,18 @@ public class SrlGraph {
         public String toString() {
             return "SrlEdge [pred=" + pred + ", arg=" + arg + ", label="
                     + label + "]";
+        }
+
+        public SrlEdge setTheta(boolean withThetaIn) {
+            this.withTheta = withThetaIn;
+            return this;
         }        
     }
     
     private List<SrlPred> preds;
     private List<SrlArg> args;
     private List<SrlEdge> edges;
+    private boolean withTheta;
     
     public SrlGraph(CoNLL09Sentence sent) {
         this.preds = new ArrayList<SrlPred>();
@@ -147,8 +160,9 @@ public class SrlGraph {
                 preds.add(new SrlPred(i, tok.getPred()));
             }
         }
+        
         // For each token, check whether it is an argument. If so, add all
-        // the edges between that argument and its predicates.           
+        // the edges between that argument and its predicates.         
         for (int j = 0; j < sent.size(); j++) {
             CoNLL09Token tok = sent.get(j);
             List<String> apreds = tok.getApreds();
@@ -162,7 +176,7 @@ public class SrlGraph {
                 if (apred != null && !"_".equals(apred)) {
                     SrlPred pred = preds.get(i);
                     // Add the edge.
-                    SrlEdge edge = new SrlEdge(pred, arg, apred);
+                    SrlEdge edge = new SrlEdge(pred, arg, apred).setTheta(this.withTheta);
                     edges.add(edge);
                     if (!argAdded) {
                         // Add the argument.
@@ -173,6 +187,7 @@ public class SrlGraph {
             }
         }
     }
+
 
     public List<SrlPred> getPreds() {
         return preds;
@@ -201,6 +216,11 @@ public class SrlGraph {
             map.put(arg.getPosition(), arg);
         }
         return map;        
+    }
+
+    public SrlGraph setTheta(boolean withThetaIn) {
+        this.withTheta = withThetaIn;
+        return this;
     }
     
 }
