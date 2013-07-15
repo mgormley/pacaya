@@ -319,7 +319,11 @@ public class GetFeatures {
             Iterator it = stringMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry pairs = (Map.Entry)it.next();
+                System.out.println(pairs.getKey());
+                System.out.println(pairs.getValue());
+                System.out.println(feat);
                 feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
+                System.out.println(feat);
             }
             bw.write(feat);
             bw.newLine();
