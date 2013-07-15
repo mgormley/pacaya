@@ -122,7 +122,7 @@ public class GetFeatures {
                 for (CoNLL09Token word : sent) {
                     for (int j = 0; j< word.getApreds().size(); j++) {
                         String[] splitRole = word.getApreds().get(j).split("-");
-                        String role = splitRole[0];
+                        String role = splitRole[0].toLowerCase();
                         knownRoles.add(role);
                     }
                     String wordForm = word.getForm();
@@ -200,7 +200,7 @@ public class GetFeatures {
                 Set<Integer> key = new HashSet<Integer>();
                 key.add(e.getPred().getId());
                 key.add(e.getArg().getId());
-                truePreds.put(key, e.getLabel());
+                truePreds.put(key, e.getLabel().toLowerCase());
             }
             Set<String> features = new HashSet<String>();
             Set<String> variables = new HashSet<String>();
