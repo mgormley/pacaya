@@ -98,26 +98,17 @@ public class SrlGraph {
      * A labeled edge between an SRL predicate and argument.
      * 
      * @author mgormley
-     * @author mmitchell
      * 
      */
     public static class SrlEdge {
         private SrlPred pred;
         private SrlArg arg;
         private String label;
-        private boolean withTheta = true;
         
         public SrlEdge(SrlPred pred, SrlArg arg, String label) {
             this.pred = pred;
             this.arg = arg;
-            // Case where thematic roles are stripped.
-            if (!this.withTheta) {
-                String[] splitArg = label.split("-");
-                String newLabel = splitArg[0].toString();
-                this.label = newLabel;
-           } else {
-                this.label = label;
-           }
+            this.label = label;
             pred.add(this);
             arg.add(this);
         }
@@ -137,16 +128,11 @@ public class SrlGraph {
                     + label + "]";
         }
 
-        public SrlEdge setTheta(boolean withThetaIn) {
-            this.withTheta = withThetaIn;
-            return this;
-        }        
     }
     
     private List<SrlPred> preds;
     private List<SrlArg> args;
     private List<SrlEdge> edges;
-    private boolean withTheta;
     
     public SrlGraph(CoNLL09Sentence sent) {
         this.preds = new ArrayList<SrlPred>();
@@ -176,7 +162,7 @@ public class SrlGraph {
                 if (apred != null && !"_".equals(apred)) {
                     SrlPred pred = preds.get(i);
                     // Add the edge.
-                    SrlEdge edge = new SrlEdge(pred, arg, apred).setTheta(this.withTheta);
+                    SrlEdge edge = new SrlEdge(pred, arg, apred);
                     edges.add(edge);
                     if (!argAdded) {
                         // Add the argument.
@@ -216,11 +202,5 @@ public class SrlGraph {
             map.put(arg.getPosition(), arg);
         }
         return map;        
-    }
-
-    public SrlGraph setTheta(boolean withThetaIn) {
-        this.withTheta = withThetaIn;
-        return this;
-    }
-    
+    }    
 }
