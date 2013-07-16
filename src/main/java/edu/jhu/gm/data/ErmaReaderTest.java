@@ -38,18 +38,18 @@ public class ErmaReaderTest {
     
     @Test
     public void testErmaReader() {
-        // Read the ERMA files to get our objects.
-        boolean includeUnsupportedFeatures = true;
-        ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
-
         // Read the ERMA files to get ERMA objects.
         SimpleErmaReader ser = new SimpleErmaReader();
         ser.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE);
         List<DataSample> samples = ser.getDataSamples();
         FeatureFile ff = ser.getFeatureFile();
         System.out.println(ff);
+        
+        // Read the ERMA files to get our objects.
+        boolean includeUnsupportedFeatures = true;
+        ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
 
         // Just test that we can construct these without error.
         assertEquals(samples.size(), data.size());
