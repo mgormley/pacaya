@@ -288,7 +288,7 @@ public class GetFeatures {
         String variable;
         if (knownArgs.containsKey(j)) {
             String label = knownArgs.get(j);
-            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label.toLowerCase() + ";";
         } else {
             variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=_;";
         }
