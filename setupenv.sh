@@ -4,11 +4,12 @@ ROOT_DIR=`pwd`
 #ROOT_DIR=`dirname $0`
 
 echo "Setting CLASSPATH by running mvn-classpath."
-export CLASSPATH=`$ROOT_DIR/scripts/experiments/mvn-classpath`
+export CLASSPATH=$ROOT_DIR/target/classes:$ROOT_DIR/lib/*
+export CLASSPATH=$CLASSPATH:`$ROOT_DIR/scripts/experiments/mvn-classpath`
 # The old way of setting the class path is below, we simply used the
 # output classes and the lib directory. Yet, we now have maven dependencies
 # that are not included in the lib directory.
-# export CLASSPATH=$ROOT_DIR/target/classes:$ROOT_DIR/lib/*:
+
 
 echo "Setting PYTHONPATH."
 export PYTHONPATH=$ROOT_DIR/scripts:$PYTHONPATH:/Library/Python/2.6/site-packages/

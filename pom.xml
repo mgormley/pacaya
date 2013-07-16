@@ -151,9 +151,31 @@
       <version>1.2.0</version>
     </dependency>
     <dependency>
+      <!-- This is the correct ERMA dependency. -->
+      <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+      <artifactId>java-cup-runtime</artifactId>
+      <version>0.11a</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/java-cup-11a-runtime.jar</systemPath>
+    </dependency>
+    <dependency>
+      <!-- This is the correct ERMA dependency. -->
+      <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+      <artifactId>java-cup</artifactId>
+      <version>0.11a</version>
+      <scope>system</scope>
+      <systemPath>${project.basedir}/lib/java-cup-11a.jar</systemPath>
+    </dependency>
+    <dependency>
       <groupId>edu.jhu.erma</groupId>
       <artifactId>erma</artifactId>
       <version>1.0.1-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>  <!-- declare the exclusion here -->
+          <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+          <artifactId>java-cup</artifactId>
+        </exclusion>
+      </exclusions> 
     </dependency>
     <dependency>
       <groupId>edu.jhu.prim</groupId>
