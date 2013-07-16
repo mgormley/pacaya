@@ -51,7 +51,7 @@ public class GetFeatures {
     @Opt(name="out-dir", hasArg=true, description="Output directory.")
     public static String outDir="train_test/";
     @Opt(name="note", hasArg=true, description="Note to append to files.")
-    public static String note=null;
+    public static String note="";
     @Opt(name="brown", hasArg=true, description="--brown [FILE] = Use Brown Clusters from [FILE] rather than POS tags at cut = 5.")
     public static String brown="";
     @Opt(name="cutoff", hasArg=true, description="Cutoff for OOV words.")
@@ -192,27 +192,23 @@ public class GetFeatures {
         CoNLL09FileReader cr = new CoNLL09FileReader(new File(inFile));
         int example = 0;
         for (CoNLL09Sentence sent : cr) {
+            Set<String> variables = new HashSet<String>();
+            Set<String> features = new HashSet<String>();
             System.out.println(example);
             example++;
-            Map<Set<Integer>,String> truePreds = new HashMap<Set<Integer>,String>();
             List<SrlEdge> srlEdges = sent.getSrlGraph().getEdges();
+            // all the "Y"s
             for (SrlEdge e : srlEdges) {
-                Set<Integer> key = new HashSet<Integer>();
-                key.add(e.getPred().getId());
-                key.add(e.getArg().getId());
-                truePreds.put(key, e.getLabel().toLowerCase());
-            }
-            Set<String> features = new HashSet<String>();
-            Set<String> variables = new HashSet<String>();
-            for (int i = 0;i < sent.size();i++) {
-                // Get words for annotated sentence
-                for (int j = 0; j < sent.size(); j++) {
-                    //if (Math.abs(i-j) <= maxSentLength) {
-                        Set<String> suffixes = new HashSet<String>();
-                        suffixes = getSuffixes(i, j, sent);
-                        features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
-                        variables = getVariables(i, j, sent, truePreds, variables);
-                    //} 
+                Integer i = e.getPred().getId();
+                // all the args for that Y.  Assigns one label for every arg it selects for.
+                Map<Integer,String> knownArgs = new HashMap<Integer,String>();
+                for (SrlEdge e2 : e.getPred().getEdges()) {
+                    knownArgs.put(e2.getArg().getId(), e2.getLabel());
+                }
+                for (int j = 0; j < sent.size();j++) {
+                    Set<String> suffixes = getSuffixes(i, j, sent);
+                    variables = getVariables(i, j, sent, knownArgs, variables);
+                    features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                 }
             }
             printOut(variables, features, example, bw);
@@ -260,9 +256,9 @@ public class GetFeatures {
         for (String feat : instFeats) {
             if (isTrain || allFeatures.contains(feat)) {
                 if (isTrain) {
-                    if (!allFeatures.contains(feat)) {
+                    //if (!allFeatures.contains(feat)) {
                         allFeatures.add(feat);
-                    }
+                    //}
                 }
                 for (String suf : suffixes) {
                     feats.add(feat + suf);
@@ -288,18 +284,13 @@ public class GetFeatures {
         return wordForm;
     }
 
-    public Set<String> getVariables(int i, int j, CoNLL09Sentence sent, Map truePreds, Set<String> variables) {
-        Set<Integer> key = new HashSet<Integer>();
-        key.add(i);
-        key.add(j);
+    public Set<String> getVariables(int i, int j, CoNLL09Sentence sent, Map<Integer,String> knownArgs, Set<String> variables) {
         String variable;
-        if (truePreds.containsKey(key)) {
-            String label = (String) truePreds.get(key);
-            // Will Matt's implementation break if I don't handle this case? if (knownRoles.contains(label)) {
+        if (knownArgs.containsKey(j)) {
+            String label = knownArgs.get(j);
             variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label + ";";
-            //} 
         } else {
-            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ";";
+            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=_;";
         }
         variables.add(variable);
         return variables;
