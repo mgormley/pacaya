@@ -260,7 +260,9 @@ public class GetFeatures {
         for (String feat : instFeats) {
             if (isTrain || allFeatures.contains(feat)) {
                 if (isTrain) {
-                    allFeatures.add(feat);
+                    if (!allFeatures.contains(feat)) {
+                        allFeatures.add(feat);
+                    }
                 }
                 for (String suf : suffixes) {
                     feats.add(feat + suf);
@@ -275,7 +277,13 @@ public class GetFeatures {
             wordForm = sig.getSignature(wordForm, idx, language);
             if (!knownUnks.contains(wordForm)) {
                 wordForm = "UNK";
+                return wordForm;
             }
+        }
+        Iterator<Entry<String, String>> it = stringMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pairs = (Map.Entry)it.next();
+            wordForm = wordForm.replace((String) pairs.getKey(), (String) pairs.getValue());
         }
         return wordForm;
     }
@@ -316,15 +324,6 @@ public class GetFeatures {
         bw.write("features:");
         bw.newLine();
         for (String feat : sentenceFeatures) {
-            Iterator it = stringMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pairs = (Map.Entry)it.next();
-                System.out.println(pairs.getKey());
-                System.out.println(pairs.getValue());
-                System.out.println(feat);
-                feat = feat.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
-                System.out.println(feat);
-            }
             bw.write(feat);
             bw.newLine();
         }
@@ -347,12 +346,7 @@ public class GetFeatures {
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
-            Iterator it = stringMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pairs = (Map.Entry)it.next();
-                feature = feature.replaceAll((String) pairs.getKey(), (String) pairs.getValue());
-            }
-            tw.write(feature + "(ROLE):=[*]");
+            tw.write(feature + "_role(ROLE):=[*]");
             tw.newLine();
         }
     }
@@ -371,7 +365,7 @@ public class GetFeatures {
         stringMap.put("&","_AMP_");
         stringMap.put(":","_COL_");
         stringMap.put(";","_SCOL_");
-        stringMap.put("\\","_BSL_");
+        stringMap.put("\\/","_BSL_");
         stringMap.put("/","_SL_");
         stringMap.put("`","_QT_"); 
         stringMap.put("?","_Q_");
