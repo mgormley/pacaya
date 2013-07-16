@@ -14,7 +14,12 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
-    /** Internal representation of a dependency parse. */
+    /**
+     * Internal representation of a dependency parse: parents[i] gives the index
+     * of the parent of the word at index i. The Wall node has index -1. If a
+     * word has no parent, it has index -2 (e.g. if punctuation was not marked
+     * with a head).
+     */
     private int[] parents;
     
     // TODO: add constituency parse as NaryTree<String>
