@@ -211,7 +211,7 @@ public class GetFeatures {
                 }
                 for (int j = 0; j < sent.size();j++) {
                     Set<String> suffixes = getSuffixes(i, j, sent);
-                    variables = getVariables(i, j, sent, knownArgs, variables);
+                    variables = getVariables(i, j, sent, knownArgs, variables, isTrain);
                     features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                 }
             }
@@ -290,13 +290,17 @@ public class GetFeatures {
         return wordForm;
     }
 
-    public Set<String> getVariables(int i, int j, CoNLL09Sentence sent, Map<Integer,String> knownArgs, Set<String> variables) {
+    public Set<String> getVariables(int i, int j, CoNLL09Sentence sent, Map<Integer,String> knownArgs, Set<String> variables, boolean isTrain) {
         String variable;
         if (knownArgs.containsKey(j)) {
             String label = knownArgs.get(j);
             variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label.toLowerCase() + ";";
         } else {
-            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=_;";
+            if (isTrain) {
+                variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ";";
+            } else {
+                variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "_;";
+            }
         }
         variables.add(variable);
         return variables;
