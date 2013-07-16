@@ -192,6 +192,7 @@ public class GetFeatures {
         CoNLL09FileReader cr = new CoNLL09FileReader(new File(inFile));
         int example = 0;
         for (CoNLL09Sentence sent : cr) {
+            boolean hasPred = false;
             Set<String> variables = new HashSet<String>();
             Set<String> features = new HashSet<String>();
             System.out.println(example);
@@ -200,10 +201,13 @@ public class GetFeatures {
             // all the "Y"s
             for (SrlEdge e : srlEdges) {
                 Integer i = e.getPred().getId();
+                hasPred = true;
                 // all the args for that Y.  Assigns one label for every arg it selects for.
                 Map<Integer,String> knownArgs = new HashMap<Integer,String>();
                 for (SrlEdge e2 : e.getPred().getEdges()) {
-                    knownArgs.put(e2.getArg().getId(), e2.getLabel());
+                    String[] splitRole = e2.getLabel().split("-");
+                    String role = splitRole[0].toLowerCase();
+                    knownArgs.put(e2.getArg().getId(), role);
                 }
                 for (int j = 0; j < sent.size();j++) {
                     Set<String> suffixes = getSuffixes(i, j, sent);
@@ -211,12 +215,14 @@ public class GetFeatures {
                     features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                 }
             }
-            printOut(variables, features, example, bw);
+            if(hasPred) {
+                printOut(variables, features, example, bw);
+            }
         }
     }
     
     // Naradowsky argument features.
-    public Set<String> getArgumentFeatures(int aidx, int pidx, Set<String> suffixes, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
+    public Set<String> getArgumentFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
