@@ -11,7 +11,7 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.data.Tag;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.parse.cky.PcfgInsideOutside.IoChart;
+import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Utilities;
@@ -34,7 +34,7 @@ public class PcfgInsideOutsideTest {
         CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Sentence sent = getSentenceFromString("time flies like an arrow", grammar.getLexAlphabet());
-        IoChart chart = parseSentence(sent , grammar, loopOrder);
+        PcfgIoChart chart = parseSentence(sent , grammar, loopOrder);
         
         // There are three valid trees with weights -11, -12, -15.
         double sum = Utilities.logAdd(-11, -12);
@@ -84,7 +84,7 @@ public class PcfgInsideOutsideTest {
         CnfGrammar grammar = builder.getGrammar(loopOrder);
                 
         Sentence sent = getSentenceFromString("she eats pizza without anchovies", grammar.getLexAlphabet());
-        IoChart chart = parseSentence(sent , grammar, loopOrder);
+        PcfgIoChart chart = parseSentence(sent , grammar, loopOrder);
 
         // There is only one parse of this sentence, so all the expected
         // inside(A, i, j) * outside(A, i, j) should equal -9.
@@ -105,7 +105,7 @@ public class PcfgInsideOutsideTest {
                     if (product != Double.NEGATIVE_INFINITY) {
                         System.out.println(msg);
                         assertEquals(msg, -9.0, product, 1e-13);
-                        assertEquals(msg, -9.0, chart.getLogExpected(nt, start, end), 1e-13);
+                        assertEquals(msg, -9.0, chart.getLogSumOfPotentials(nt, start, end), 1e-13);
                         numNonInfs++;
                     }
                 }
@@ -115,10 +115,10 @@ public class PcfgInsideOutsideTest {
     }
 
     // TODO: we should parse with each method and check that we get the same solution.
-    public static IoChart parseSentence(Sentence sentence, CnfGrammar grammar, LoopOrder loopOrder) {
+    public static PcfgIoChart parseSentence(Sentence sentence, CnfGrammar grammar, LoopOrder loopOrder) {
         PcfgInsideOutsidePrm prm = new PcfgInsideOutsidePrm();
         prm.loopOrder = loopOrder;
-        IoChart charts = new PcfgInsideOutside(prm).runInsideOutside(sentence, grammar);
+        PcfgIoChart charts = new PcfgInsideOutside(prm).runInsideOutside(sentence, grammar);
         return charts;
     }
 

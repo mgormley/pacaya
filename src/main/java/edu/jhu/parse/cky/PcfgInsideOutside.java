@@ -18,28 +18,45 @@ public class PcfgInsideOutside {
     }
     
     /**
-     * An inside/outside chart.
+     * An inside/outside chart for a PCFG parse.
      * 
      * @author mgormley
-     *
+     * 
      */
-    public static class IoChart {
+    public static class PcfgIoChart {
         /** Length of the sentence. */
         private final int n;
+        private CnfGrammar grammar;
         private Chart insideChart;
         private Chart outsideChart;
-        public IoChart(Sentence sentence, Chart insideChart, Chart outsideChart) {
+
+        public PcfgIoChart(Sentence sentence, CnfGrammar grammar, Chart insideChart, Chart outsideChart) {
             this.n = sentence.size();
+            this.grammar = grammar;
             this.insideChart = insideChart;
             this.outsideChart = outsideChart;
         }
+
         public double getLogInsideScore(int symbol, int start, int end) {
             checkCell(start, end);
             return insideChart.getCell(start, end).getScore(symbol);
         }
+
         public double getLogOutsideScore(int symbol, int start, int end) {
             checkCell(start, end);
             return outsideChart.getCell(start, end).getScore(symbol);
+        }
+
+        public double getLogPartitionFunction() {
+            return getLogInsideScore(grammar.getRootSymbol(), 0, n);
+        }
+
+        public double getLogSumOfPotentials(int nt, int start, int end) {
+            return getLogInsideScore(nt, start, end) + getLogOutsideScore(nt, start, end);
+        }
+
+        public double getLogExpectedCount(int nt, int start, int end) {
+            return getLogSumOfPotentials(nt, start, end) - getLogPartitionFunction();
         }
 
         /**
@@ -50,9 +67,6 @@ public class PcfgInsideOutside {
             if (start > n - 1 || end > n || start < 0 || end < 1) {
                 throw new IllegalStateException(String.format("Invalid cell: start=%d end=%d", start, end));
             }
-        }
-        public double getLogExpected(int nt, int start, int end) {
-            return getLogInsideScore(nt, start, end) + getLogOutsideScore(nt, start, end);
         }
     }
     
@@ -78,7 +92,7 @@ public class PcfgInsideOutside {
         this.cacheChart = prm.cacheChart;
     }
     
-    public final IoChart runInsideOutside(final Sentence sentence, final CnfGrammar grammar) {
+    public final PcfgIoChart runInsideOutside(final Sentence sentence, final CnfGrammar grammar) {
         if (sentence.getAlphabet() != grammar.getLexAlphabet()) {
             throw new IllegalArgumentException("Alphabets for sentence and grammar must be the same.");
         }
@@ -95,7 +109,7 @@ public class PcfgInsideOutside {
         int[] sent = sentence.getLabelIds();
         CkyPcfgParser.parseSentence(sent, grammar, loopOrder, inChart);
         runOutsideAlgorithm(sent, grammar, loopOrder, inChart, outChart);
-        return new IoChart(sentence, inChart, outChart);    
+        return new PcfgIoChart(sentence, grammar, inChart, outChart);    
      }
     
     /**
