@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jhu.util.cli.Opt;
-
 /**
  * A graph representing SRL annotations on a sentence.
  * 
