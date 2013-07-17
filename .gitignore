@@ -10,6 +10,7 @@
 /target
 /tests
 /exp
+/other/dantzig_wolfe/VRP
 
 # /lib/
 /lib/cplex.jar

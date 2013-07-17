@@ -65,6 +65,12 @@ public class Vectors {
         }
     }
     
+    public static void log(double[][] phi) {
+        for (int i=0; i<phi.length; i++) {
+            Vectors.log(phi[i]);
+        }
+    }
+    
     public static void logForIlp(double[] phi) {
         for (int i=0; i<phi.length; i++) {
             phi[i] = Utilities.logForIlp(phi[i]);
