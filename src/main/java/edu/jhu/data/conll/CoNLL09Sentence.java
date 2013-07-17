@@ -7,7 +7,6 @@ import java.util.List;
 import edu.jhu.data.Lemma;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
-import edu.jhu.util.cli.Opt;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
