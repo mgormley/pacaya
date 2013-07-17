@@ -127,7 +127,7 @@ public class DepParserRunner {
             }
             
             // Train a model.
-            DepTreebank trainTreebank = getData(alphabet, trainType, train, "train");
+            DepTreebank trainTreebank = getData(alphabet, trainType, train, DepTreebankReader.maxSentenceLength, "train");
             
             // Divide into labeled and unlabeled data.
             DmvTrainCorpus trainCorpus = new DmvTrainCorpus(trainTreebank, propSupervised);             
@@ -186,7 +186,7 @@ public class DepParserRunner {
             
             // Read the data and (maybe) reduce size of treebank
             log.info("Reading test data: " + test);
-            DepTreebank testTreebank = getData(alphabet, testType, test, "test");
+            DepTreebank testTreebank = getData(alphabet, testType, test, maxSentenceLengthTest, "test");
 
             // Parse and evaluate the test data.
             evalAndWrite(model, testTreebank, "test", testOut, testType);
@@ -221,7 +221,7 @@ public class DepParserRunner {
         }
     }
     
-    private DepTreebank getData(Alphabet<Label> alphabet, DatasetType dataType, File dataFile, String dataName) throws ParseException, IOException {
+    private DepTreebank getData(Alphabet<Label> alphabet, DatasetType dataType, File dataFile, int maxSentenceLength, String dataName) throws ParseException, IOException {
         // Get the training data
         DepTreebank goldTreebank;
         DmvModel goldModel = null;
@@ -229,7 +229,7 @@ public class DepParserRunner {
                 || dataType == DatasetType.CONLL_2009) {
             // Read the data and (maybe) reduce size of treebank
             log.info("Reading " + dataName + " data: " + dataFile);
-            goldTreebank = DepTreebankReader.getTreebank(dataFile, dataType, DepTreebankReader.maxSentenceLength, alphabet);
+            goldTreebank = DepTreebankReader.getTreebank(dataFile, dataType, maxSentenceLength, alphabet);
         } else if (dataType == DatasetType.SYNTHETIC) {
             if (synthetic == null) {
                 throw new ParseException("--synthetic must be specified");
