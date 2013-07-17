@@ -243,6 +243,10 @@ public class GetFeatures {
         String argForm = decideForm(arg.getForm(), aidx);
         String predPos = pred.getPos();
         String argPos = arg.getPos();
+        if (!goldHead) {
+            predPos = pred.getPpos();
+            argPos = arg.getPpos();
+        }
         String dir;
         int dist = Math.abs(aidx - pidx);
         if (aidx > pidx) 
