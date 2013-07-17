@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Pair;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
@@ -219,6 +222,66 @@ public class DepTree implements Iterable<DepTreeNode> {
 
     public Sentence getSentence(Alphabet<Label> alphabet) {
         return new Sentence(alphabet, this);
+    }
+
+    public enum Dir {
+        UP, DOWN
+    }
+    
+    /**
+     * Gets the shortest dependency path between two tokens.
+     * 
+     * <p>
+     * For the tree: x0 <-- x1 --> x2, represented by parents=[1, -1, 1] the
+     * dependency path from x0 to x2 would be a list [(0, UP), (1, DOWN)]
+     * </p>
+     * 
+     * @param start The position of the start token.
+     * @param end The position of the end token.
+     * @param parents The parents array.
+     * @return The path as a list of pairs containing the word positions and the
+     *         direction of the edge, inclusive of the start position and
+     *         exclusive of the end.
+     */
+    public static List<Pair<Integer,Dir>> getDependencyPath(int start, int end, int[] parents) {
+        int n = parents.length;
+        if (start < -1 || start >= n || end < -1 || end >= n) {
+            throw new IllegalArgumentException(String.format("Invalid start/end: %d/%d", start, end));
+        }
+        
+        // Build a hash set of the ancestors of end, including end and the
+        // wall node.
+        IntHashSet endAncSet = new IntHashSet();
+        IntArrayList endAncList = new IntArrayList();
+        int curPos = end;
+        while (curPos != WallDepTreeNode.WALL_POSITION) {
+            endAncSet.add(curPos);
+            endAncList.add(curPos);
+            curPos = parents[curPos];
+        }
+        endAncSet.add(curPos); // Don't forget the wall node.
+        endAncList.add(curPos);
+        
+        // Create the dependency path.
+        List<Pair<Integer,Dir>> path = new ArrayList<Pair<Integer,Dir>>();
+        
+        // Add all the "edges" from the start up to the one pointing at the LCA.
+        curPos = start;
+        while (!endAncSet.contains(curPos)) {
+            path.add(new Pair<Integer,Dir>(curPos, Dir.UP));
+            curPos = parents[curPos];
+        }
+
+        // Least common ancestor.
+        int lca = curPos;
+        
+        // Add all the edges from the LCA to the end position.
+        int lcaIndex = endAncList.lookupIndex(lca);
+        for (int i = lcaIndex; i > 0; i--) {
+            path.add(new Pair<Integer,Dir>(endAncList.get(i), Dir.DOWN));
+        }
+        
+        return path;
     }
     
 }

@@ -3,7 +3,10 @@ package edu.jhu.data.concrete;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
+import edu.jhu.util.Pair;
 
 /**
  * Simple representation of a single sentence with many annotations.
@@ -150,6 +153,28 @@ public class SimpleAnnoSentence {
             sb.append(seq.get(i));
         }
         return sb.toString();
+    }
+    
+    /**
+     * Gets the shortest dependency path between two tokens.
+     * 
+     * <p>
+     * For the tree: x0 <-- x1 --> x2, represented by parents=[1, -1, 1] the
+     * dependency path from x0 to x2 would be a list [(0, UP), (1, DOWN)]
+     * </p>
+     * 
+     * <p>
+     * See DepTreeTest for examples.
+     * </p>
+     * 
+     * @param start The position of the start token.
+     * @param end The position of the end token.
+     * @return The path as a list of pairs containing the word positions and the
+     *         direction of the edge, inclusive of the start position and
+     *         exclusive of the end.
+     */
+    public List<Pair<Integer, Dir>> getDependencyPath(int start, int end) {
+        return DepTree.getDependencyPath(start, end, parents);
     }
     
     /* ----------- Getters/Setters for internal storage ------------ */
