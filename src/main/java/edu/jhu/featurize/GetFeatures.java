@@ -72,6 +72,7 @@ public class GetFeatures {
     public Set<Set<String>> knownBigrams = new HashSet<Set<String>>();
     public Set<String> knownPostags = new HashSet<String>();
     public Set<String> knownRoles = new HashSet<String>();
+    public Set<String> knownLinks = new HashSet<String>();
     public Integer maxSentLength = 0;
     
     private static Map<String,String> stringMap;
@@ -113,6 +114,8 @@ public class GetFeatures {
     
     public void preprocess() throws IOException {
             makeOutFiles();
+            knownLinks.add("True");
+            knownLinks.add("False");
             knownUnks.add("UNK");
             CoNLL09FileReader cr = new CoNLL09FileReader(new File(trainingFile));
             for (CoNLL09Sentence sent : cr) {
@@ -193,25 +196,36 @@ public class GetFeatures {
         int example = 0;
         for (CoNLL09Sentence sent : cr) {
             boolean hasPred = false;
+            Map<Set<Integer>,String> knownPairs = new HashMap<Set<Integer>,String>();
+            List<SrlEdge> srlEdges = sent.getSrlGraph().getEdges();
+            Set<Integer> knownPreds = new HashSet<Integer>();
+            // all the "Y"s
+            for (SrlEdge e : srlEdges) {
+                Integer a = e.getPred().getPosition();
+                hasPred = true;
+                knownPreds.add(a);
+                // all the args for that Y.  Assigns one label for every arg it selects for.
+                //Map<Integer,String> knownLinks = new HashMap<Integer,String>();
+                for (SrlEdge e2 : e.getPred().getEdges()) {
+                    String[] splitRole = e2.getLabel().split("-");
+                    String role = splitRole[0].toLowerCase();
+                    Integer b = e2.getArg().getPosition();
+                    Set<Integer> key = new HashSet<Integer>();
+                    key.add(a);
+                    key.add(b);
+                    knownPairs.put(key, role);
+                }
+            }
             Set<String> variables = new HashSet<String>();
             Set<String> features = new HashSet<String>();
             System.out.println(example);
             example++;
-            List<SrlEdge> srlEdges = sent.getSrlGraph().getEdges();
-            // all the "Y"s
-            for (SrlEdge e : srlEdges) {
-                Integer i = e.getPred().getId();
-                hasPred = true;
-                // all the args for that Y.  Assigns one label for every arg it selects for.
-                Map<Integer,String> knownArgs = new HashMap<Integer,String>();
-                for (SrlEdge e2 : e.getPred().getEdges()) {
-                    String[] splitRole = e2.getLabel().split("-");
-                    String role = splitRole[0].toLowerCase();
-                    knownArgs.put(e2.getArg().getId(), role);
-                }
+            for (int i = 0; i < sent.size(); i++) {
+                String pred = Integer.toString(sent.get(i).getId());
                 for (int j = 0; j < sent.size();j++) {
-                    Set<String> suffixes = getSuffixes(i, j, sent);
-                    variables = getVariables(i, j, sent, knownArgs, variables, isTrain);
+                    String arg = Integer.toString(sent.get(j).getId());
+                    Set<String> suffixes = getSuffixes(pred, arg, knownPreds, isTrain);
+                    variables = getVariables(i, j, pred, arg, sent, knownPairs, knownPreds, variables, isTrain);
                     features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                 }
             }
@@ -290,25 +304,42 @@ public class GetFeatures {
         return wordForm;
     }
 
-    public Set<String> getVariables(int i, int j, CoNLL09Sentence sent, Map<Integer,String> knownArgs, Set<String> variables, boolean isTrain) {
-        String variable;
-        if (knownArgs.containsKey(j)) {
-            String label = knownArgs.get(j);
-            variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "=" + label.toLowerCase() + ";";
+    public Set<String> getVariables(int i, int j, String pred, String arg, CoNLL09Sentence sent, Map<Set<Integer>,String> knownPairs, Set<Integer> knownPreds, Set<String> variables, boolean isTrain) {
+        String link_variable;
+        String role_variable;
+        // Syntactic head, from dependency parse.
+        int head = sent.get(j).getHead();
+        if (head != i) {
+            link_variable = "LINK Link_" + pred + "_" + arg + "=False in;";
         } else {
-            if (isTrain) {
-                variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ";";
-            } else {
-                variable = "ROLE Role_" + Integer.toString(i) + "_" + Integer.toString(j) + "_;";
-            }
+            link_variable = "LINK Link_" + pred + "_" + arg + "=True in;";
         }
-        variables.add(variable);
+        variables.add(link_variable);
+        // Semantic relations.
+        Set<Integer> key = new HashSet<Integer>();
+        key.add(i);
+        key.add(j);
+        if (knownPreds.contains((Integer) i)) {
+            if (knownPairs.containsKey(key)) {
+                String label = knownPairs.get(key);
+                role_variable = "ROLE Role_" + pred + "_" + arg + "=" + label.toLowerCase() + ";";
+            } else {
+                role_variable = "ROLE Role_" + pred + "_" + arg + "=_;";
+            }
+        } else {
+            role_variable = "ROLE Role_" + pred + "_" + arg + ";";
+        }
+        variables.add(role_variable);
         return variables;
     }
     
-    public Set<String> getSuffixes(int i, int j, CoNLL09Sentence sent) {
+    public Set<String> getSuffixes(String pred, String arg, Set<Integer> knownPreds, boolean isTrain) {
         Set<String> suffixes = new HashSet<String>();
-        suffixes.add("_role(Role_" + Integer.toString(i) + "_" + Integer.toString(j) + ");");
+        // If this is testing data, or training data where i is a pred
+        //if (!isTrain || knownPreds.contains(i)) {
+        suffixes.add("_role(Role_" + pred + "_" + arg + ");");
+        //}
+        suffixes.add("_link_role(Link_" + pred + "_" + arg + ",Role_" + pred + "_" + arg + ");");
         return suffixes;
     }
     
@@ -342,12 +373,21 @@ public class GetFeatures {
         }
         sb.append("]");
         tw.write(sb.toString());
+        sb = new StringBuilder();
+        sb.append("LINK:=[");
+        for (String link : knownLinks) {
+            sb.append(delim).append(link);
+            delim = ",";
+        }
+        sb.append("]");
+        tw.write(sb.toString());
         tw.newLine();
         tw.newLine();
         tw.write("features:");
         tw.newLine();
         for (String feature : allFeatures) {
             tw.write(feature + "_role(ROLE):=[*]");
+            tw.write(feature + "_link_role(LINK,ROLE):=[*]");
             tw.newLine();
         }
     }

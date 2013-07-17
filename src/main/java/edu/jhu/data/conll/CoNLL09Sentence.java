@@ -15,9 +15,6 @@ import edu.jhu.util.cli.Opt;
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
     private ArrayList<CoNLL09Token> tokens;
-
-    @Opt(name="withTheta", hasArg=false, description="Include thematic assignment in role")
-    public static boolean withTheta = false;
     
     public CoNLL09Sentence(List<CoNLL09Token> tokens) {
         this.tokens = new ArrayList<CoNLL09Token>(tokens);
@@ -127,7 +124,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
     public SrlGraph getSrlGraph() {
-        return new SrlGraph(this).setTheta(withTheta);
+        return new SrlGraph(this);
     }
 
 }
