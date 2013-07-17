@@ -197,7 +197,6 @@ public class GetFeatures {
         for (CoNLL09Sentence sent : cr) {
             boolean hasPred = false;
             Map<Set<Integer>,String> knownPairs = new HashMap<Set<Integer>,String>();
-            System.out.println(sent.getSrlGraph());
             List<SrlEdge> srlEdges = sent.getSrlGraph().getEdges();
             Set<Integer> knownPreds = new HashSet<Integer>();
             // all the "Y"s
@@ -227,7 +226,7 @@ public class GetFeatures {
                     String arg = Integer.toString(sent.get(j).getId());
                     Set<String> suffixes = getSuffixes(pred, arg, knownPreds, isTrain);
                     variables = getVariables(i, j, pred, arg, sent, knownPairs, knownPreds, variables, isTrain);
-                    features = getArgumentFeatures(i, j, suffixes, sent, srlEdges, features, isTrain);
+                    features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
                 }
             }
             if(hasPred) {
@@ -237,23 +236,13 @@ public class GetFeatures {
     }
     
     // Naradowsky argument features.
-    public Set<String> getArgumentFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Set<String> feats, boolean isTrain) {
-        feats = getNaradowskyFeatures(pidx, aidx, suffixes, sent, feats, isTrain);
-        feats = getZhaoFeatures(pidx, aidx, suffixes, sent, srlEdges, feats, isTrain);
-        return feats;
-    }
-    
-    public Set<String> getNaradowskyFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
+    public Set<String> getArgumentFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
         String argForm = decideForm(arg.getForm(), aidx);
         String predPos = pred.getPos();
         String argPos = arg.getPos();
-        if (!goldHead) {
-            predPos = pred.getPpos();
-            argPos = arg.getPpos();
-        } 
         String dir;
         int dist = Math.abs(aidx - pidx);
         if (aidx > pidx) 
@@ -299,22 +288,6 @@ public class GetFeatures {
         return feats;
     }
         
-    public Set<String> getZhaoFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Set<String> feats, boolean isTrain) {
-        System.out.println("pred idx");
-        System.out.println(pidx + 1);
-        System.out.println("arg idx");
-        System.out.println(aidx + 1);
-        CoNLL09Token arg = sent.get(aidx);
-        Integer syntacticHead = arg.getHead();
-        SrlEdge semanticHead = srlEdges.get(aidx); //.getPred().getPosition();
-        System.out.println("syntactic head");
-        System.out.println(syntacticHead);
-        System.out.println("semantic head");
-        System.out.println(semanticHead);
-
-        return feats;
-    }
-    
     private String decideForm(String wordForm, int idx) {
         if (!knownWords.contains(wordForm)) {
             wordForm = sig.getSignature(wordForm, idx, language);
