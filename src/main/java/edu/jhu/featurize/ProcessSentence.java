@@ -57,6 +57,8 @@ public class ProcessSentence {
     private HashMap<String, ArrayList<FeatureVector>> featureRefs;
 
     private Alphabet<Feature> alphabet;
+
+    private HashMap<VarConfig,Set<Feature>> configToFeature;
     
     private static Alphabet<Label> lexAlphabet = new Alphabet<Label>();
     private static BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(lexAlphabet);
@@ -122,44 +124,18 @@ public class ProcessSentence {
     public void extractFeatsAndVars(int i, int j, String pred, String arg, CoNLL09Sentence sent, Map<Pair<Integer,Integer>, String> knownPairs, Set<Integer> knownPreds, List<SrlEdge> srlEdges, boolean isTrain) {
         VarConfig varGroup = new VarConfig();
         Set<Feature> featGroup = new HashSet<Feature>();
-        ArrayList<FeatureVector> featRef = new ArrayList<FeatureVector>();
         // Get variables for this feature instance
         varGroup = getVariables(i, j, pred, arg, sent, knownPairs, knownPreds, isTrain);
-        // Set these variables
+        // Add these variables to the set we know about
         addVarConfig(pred, arg, knownPreds, isTrain, varGroup);
         // Get features for this feature instance
         featGroup = getFeatures(i, j, sent, srlEdges, featGroup, knownPairs, isTrain);
-        featRef = updateFacs(varGroup);
-        updateFeatures(featGroup, varGroup, featRef);
-    }
-
-    
-    public void updateFeatures(Set<Feature> featGroup, VarConfig varGroup, ArrayList<FeatureVector> featRef) {
-        // For each feature in this feature instance's feature group
-        // (featGroup), the feature is added to the feature vector for the
-        // appropriate configuration of the variables.
-        for (Feature feat : featGroup) {
-            // Compute the state corresponding to the variable setting
-            VarConfig varVals = new VarConfig();
-            int k = 0;
-            for(Var v : varGroup.getVars()) {
-                varVals.put(v, k);
-                k++;
-            }
-            int state = varVals.getConfigIndex();
-
-            // Look up this feature's index.
-            int featIdx = this.alphabet.lookupIndex(feat);           
-            FeatureVector featureVector = featRef.get(state);
-            // Add the feature weight for this feature to the feature vector.
-            // Don't currently use this; I will set to 1.0.
-            featureVector.add(featIdx, 1.0);                
-        }
-    }
+        updateFacs(varGroup, featGroup);
+    }    
     
     
-    
-    public ArrayList<FeatureVector> updateFacs(VarConfig varGroup) {
+    public void updateFacs(VarConfig varGroup, Set<Feature> featGroup) {
+        this.configToFeature.put(varGroup, featGroup);
         String key = makeKey(varGroup);        
         // a factor
         Factor fac;
@@ -171,20 +147,17 @@ public class ProcessSentence {
             }
             fac = new Factor(Ivars, 1.0);
             // key made out of this feature instance to a Factor from this variable configuration
-            this.facs.put(key,fac);
+            this.facs.put(key, fac);
             // One feature vector for each configuration of the variables for this factor.
             featRef = new ArrayList<FeatureVector>();
             int numConfigs = fac.getVars().calcNumConfigs();
             for (int t = 0; t < numConfigs; t++){
+                // But where do we say what the values of this feature vector are?
                 featRef.add(new FeatureVector());
             }
             this.featureRefs.put(key, featRef);
-        } else {
-            fac = facs.get(key);
-            featRef = featureRefs.get(key);
-        }
-        return featRef;
-  }
+        } 
+    }
 
     
     
@@ -382,8 +355,8 @@ public class ProcessSentence {
         return this.hasPred;
     }
 
-    public ArrayList<Feature> getFeatures() {
-        return this.features;
+    public HashMap<VarConfig,Set<Feature>> getFeatures() {
+        return this.configToFeature;
     }
     
     public VarConfig getVarConfig() {

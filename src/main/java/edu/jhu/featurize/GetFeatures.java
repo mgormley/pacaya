@@ -219,10 +219,10 @@ public class GetFeatures {
         boolean hasPred;
         for (CoNLL09Sentence sent : cr) {
             ProcessSentence ps = new ProcessSentence();
-            ps.getFGExample(sent, isTrain, predsGiven, goldHead, language, knownLinks, knownRoles);
+            FgExample fg = ps.getFGExample(sent, isTrain, predsGiven, goldHead, language, knownLinks, knownRoles, new Alphabet());
             example++;
             if(ps.getHasPred()) {
-                printOut(ps.getVariableAssignments(), ps.getFeatures(), example, bw);
+                printOut(ps.getVarConfig(), ps.getFeatures(), example, bw);
                 //setData(variables, features, example, bw);
             }
 
