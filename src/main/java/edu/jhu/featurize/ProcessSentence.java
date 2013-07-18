@@ -36,7 +36,7 @@ import edu.jhu.util.Alphabet;
 public class ProcessSentence {
     public FactorGraph fg;
     
-    public Set<Feature> allFeatures = new HashSet<Feature>();
+    public Set<String> allFeatures = new HashSet<String>();
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
     // Currently not using this (will it matter?);
@@ -101,6 +101,7 @@ public class ProcessSentence {
         if (this.predsGiven) {
             // CoNLL-friendly model; preds given
             for (int i : knownPreds) {
+                // senseGroup = getSenseFeatures(i, sent, srlEdges, knownPairs, isTrain);
                 String pred = Integer.toString(sent.get(i).getId());
                 for (int j = 0; j < sent.size();j++) {
                     String arg = Integer.toString(sent.get(j).getId());
@@ -110,6 +111,7 @@ public class ProcessSentence {
         } else {
             // n**2 model
             for (int i = 0; i < sent.size(); i++) {
+                // senseGroup = getSenseFeatures(i, sent, srlEdges, knownPairs, isTrain);
                 String pred = Integer.toString(sent.get(i).getId());
                 for (int j = 0; j < sent.size();j++) {
                     String arg = Integer.toString(sent.get(j).getId());
@@ -123,23 +125,27 @@ public class ProcessSentence {
     
     public void extractFeatsAndVars(int i, int j, String pred, String arg, CoNLL09Sentence sent, Map<Pair<Integer,Integer>, String> knownPairs, Set<Integer> knownPreds, List<SrlEdge> srlEdges, boolean isTrain) {
         VarConfig varGroup = new VarConfig();
-        Set<Feature> featGroup = new HashSet<Feature>();
         // Get variables for this feature instance
         varGroup = getVariables(i, j, pred, arg, sent, knownPairs, knownPreds, isTrain);
         // Add these variables to the set we know about
         addVarConfig(pred, arg, knownPreds, isTrain, varGroup);
         // Get features for this feature instance
-        featGroup = getFeatures(i, j, sent, srlEdges, featGroup, knownPairs, isTrain);
+        Set<String> featGroup = getFeatures(i, j, sent, srlEdges, knownPairs, isTrain);
+         // Should send something like varSet, so we know all the possible variables (and all their possible values).
         updateFacs(varGroup, featGroup);
+        // What are the features that apply to that factor id, and the variables indexed by that factor id
+        // Given a factor ID, get the features
     }    
     
     
-    public void updateFacs(VarConfig varGroup, Set<Feature> featGroup) {
+    public void updateFacs(VarConfig varGroup, Set<String> featGroup) {
+        
         this.configToFeature.put(varGroup, featGroup);
         String key = makeKey(varGroup);        
         // a factor
         Factor fac;
         ArrayList<FeatureVector> featRef;
+        // set pointer to current variable configuration in this.facs
         if (!this.facs.containsKey(key)) {
             VarSet Ivars = new VarSet();
             for (Var v : varGroup.getVars()){
@@ -240,7 +246,8 @@ public class ProcessSentence {
     }    
     
     // ----------------- Extracting Features -----------------
-    public Set<Feature> getFeatures(int pidx, int aidx, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Set<Feature> feats, Map<Pair<Integer,Integer>,String> knownPairs, boolean isTrain) {
+    public Set<String> getFeatures(int pidx, int aidx, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Map<Pair<Integer,Integer>,String> knownPairs, boolean isTrain) {
+        Set<String> feats = new HashSet<String>();
         // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
         feats = getNaradowskyFeatures(pidx, aidx, sent, feats, isTrain);
         feats = getZhaoFeatures(pidx, aidx, sent, srlEdges, feats, knownPairs, isTrain);
@@ -248,7 +255,12 @@ public class ProcessSentence {
         return feats;
     }
     
-    public Set<Feature> getNaradowskyFeatures(int pidx, int aidx, CoNLL09Sentence sent, Set<Feature> feats, boolean isTrain) {
+    public Set<String> getSenseFeatures(int pidx, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Map<Pair<Integer,Integer>,String> knownPairs, boolean isTrain) {
+        Set<String> senseFeats = new HashSet<String>();
+        return senseFeats;
+    }
+    
+    public Set<String> getNaradowskyFeatures(int pidx, int aidx, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
@@ -270,27 +282,27 @@ public class ProcessSentence {
         else 
             dir = "SAME";
     
-        Set<Feature> instFeats = new HashSet<Feature>();
-        instFeats.add(new Feature("head_" + predForm + "dep_" + argForm + "_word"));
-        instFeats.add(new Feature("head_" + predPos + "_dep_" + argPos + "_pos"));
-        instFeats.add(new Feature("head_" + predForm + "_dep_" + argPos + "_wordpos"));
-        instFeats.add(new Feature("head_" + predPos + "_dep_" + argForm + "_posword"));
-        instFeats.add(new Feature("head_" + predForm + "_dep_" + argForm + "_head_" + predPos + "_dep_" + argPos + "_wordwordpospos"));
+        Set<String> instFeats = new HashSet<String>();
+        instFeats.add("head_" + predForm + "dep_" + argForm + "_word");
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_pos");
+        instFeats.add("head_" + predForm + "_dep_" + argPos + "_wordpos");
+        instFeats.add("head_" + predPos + "_dep_" + argForm + "_posword");
+        instFeats.add("head_" + predForm + "_dep_" + argForm + "_head_" + predPos + "_dep_" + argPos + "_wordwordpospos");
     
-        instFeats.add(new Feature("head_" + predPos + "_dep_" + argPos + "_dist_" + dist + "_posdist"));
-        instFeats.add(new Feature("head_" + predPos + "_dep_" + argPos + "_dir_" + dir + "_posdir"));
-        instFeats.add(new Feature("head_" + predPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir"));
-        instFeats.add(new Feature("head_" + argPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir"));
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dist_" + dist + "_posdist");
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dir_" + dir + "_posdir");
+        instFeats.add("head_" + predPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
+        instFeats.add("head_" + argPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
     
-        instFeats.add(new Feature("slen_" + sent.size()));
-        instFeats.add(new Feature("dir_" + dir));
-        instFeats.add(new Feature("dist_" + dist));
-        instFeats.add(new Feature("dir_dist_" + dir + dist));
+        instFeats.add("slen_" + sent.size());
+        instFeats.add("dir_" + dir);
+        instFeats.add("dist_" + dist);
+        instFeats.add("dir_dist_" + dir + dist);
     
-        instFeats.add(new Feature("head_" + predForm + "_word"));
-        instFeats.add(new Feature("head_" + predPos + "_tag"));
-        instFeats.add(new Feature("arg_" + argForm + "_word"));
-        instFeats.add(new Feature("arg_" + argPos + "_tag"));
+        instFeats.add("head_" + predForm + "_word");
+        instFeats.add("head_" + predPos + "_tag");
+        instFeats.add("arg_" + argForm + "_word");
+        instFeats.add("arg_" + argPos + "_tag");
         
         // TBD:  Add morph features for comparison with supervised case.
         /*     if (mode >= 4) {
@@ -299,7 +311,7 @@ public class ProcessSentence {
       for (m1 <- m1s; m2 <- m2s) {
         feats += "P-%sxA-%s".format(m1, m2)
       } */
-        for (Feature feat : instFeats) {
+        for (String feat : instFeats) {
             if (isTrain || allFeatures.contains(feat)) {
                 if (isTrain) {
                     allFeatures.add(feat);
@@ -309,7 +321,7 @@ public class ProcessSentence {
         return feats;
     }
         
-    public Set<Feature> getZhaoFeatures(int pidx, int aidx, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Set<Feature> feats, Map<Pair<Integer,Integer>,String> knownPairs, boolean isTrain) {
+    public Set<String> getZhaoFeatures(int pidx, int aidx, CoNLL09Sentence sent, List<SrlEdge> srlEdges, Set<String> feats, Map<Pair<Integer,Integer>,String> knownPairs, boolean isTrain) {
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
