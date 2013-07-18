@@ -94,6 +94,8 @@ public class FgExample {
             FeatureVector fv = featExtractor.calcFeatureVector(factorId, clampedVarConfig);
             featCache.setFv(factorId, 0, fv);
         } else {
+            // TODO: For global factors, we do NOT cache any feature vectors.
+            
             // For each configuration of the marginalized variables.
             for (int configId = 0; configId < numConfigs; configId++) {
                 VarConfig varConfig = vars.getVarConfig(configId);

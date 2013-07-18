@@ -311,6 +311,8 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     private Factor getMarginals(Factor factor, FgNode node) {
+        // TODO: need a special case for GlobalFactors.
+        
         Factor prod = new Factor(factor);
         // Compute the product of all messages sent to this factor.
         getProductOfMessagesNormalized(node, prod, null);
