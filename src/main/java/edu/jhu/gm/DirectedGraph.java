@@ -198,6 +198,28 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
             }
         }
     }
+    
+    /**
+     * Gets a pre-order traversal over the nodes reachable from this one.
+     * @param root
+     */
+    public List<N> preOrderTraversal(N root) {
+        setMarkedAllNodes(false);
+        ArrayList<N> nodes = new ArrayList<N>();
+        preOrderTraversal(root, nodes);
+        return nodes;
+    }
+        
+    private void preOrderTraversal(N root, List<N> nodes) {
+        root.setMarked(true);
+        nodes.add(root);
+        for (Edge e : root.getOutEdges()) {
+            N n = e.getChild();
+            if (!n.isMarked()) {
+                preOrderTraversal(n, nodes);
+            }
+        }
+    }
 
     /**
      * Calls setMarked(marked) on all the nodes.

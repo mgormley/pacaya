@@ -57,7 +57,7 @@ public class BeliefPropagation implements FgInferencer {
      * @author mgormley
      * 
      */
-    private class Messages {
+    public static class Messages {
         
         /** The current message. */
         public Factor message;
@@ -65,7 +65,7 @@ public class BeliefPropagation implements FgInferencer {
         public Factor newMessage;
         
         /** Constructs a message container, initializing the messages to the uniform distribution. */
-        public Messages(FgEdge edge) {
+        public Messages(FgEdge edge, BeliefPropagationPrm prm) {
             // Initialize messages to the (possibly unormalized) uniform
             // distribution in case we want to run parallel BP.
             double initialValue = prm.logDomain ? 0.0 : 1.0;
@@ -131,7 +131,7 @@ public class BeliefPropagation implements FgInferencer {
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
-            msgs[i] = new Messages(fg.getEdge(i));
+            msgs[i] = new Messages(fg.getEdge(i), prm);
         }
         
         // Message passing.
@@ -141,12 +141,12 @@ public class BeliefPropagation implements FgInferencer {
             }
             if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
                 for (FgEdge edge : order) {
-                    createMessage(edge);
+                    createMessage(edge, iter);
                     sendMessage(edge);
                 }
             } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
                 for (FgEdge edge : fg.getEdges()) {
-                    createMessage(edge);
+                    createMessage(edge, iter);
                 }
                 for (FgEdge edge : fg.getEdges()) {
                     sendMessage(edge);
@@ -165,8 +165,9 @@ public class BeliefPropagation implements FgInferencer {
     /**
      * Creates a message and stores it in the "pending message" slot for this edge.
      * @param edge The directed edge for which the message should be created.
+     * @param iter The iteration number.
      */
-    private void createMessage(FgEdge edge) {
+    private void createMessage(FgEdge edge, int iter) {
         int edgeId = edge.getId();
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
@@ -189,19 +190,28 @@ public class BeliefPropagation implements FgInferencer {
             // of which will have a different domain) with the factor f* itself.
             // Exclude the message going out to the variable, v*.
 
-            // TODO: we could cache this prod factor in the EdgeContent for this
-            // edge if creating it is slow.
-            Factor prod = new Factor(factor.getVars());
-            // Set the initial values of the product to those of the sending factor.
-            prod.set(factor);
-            getProductOfMessages(edge.getParent(), prod, edge.getChild());
-
-            // Marginalize over all the assignments to variables for f*, except
-            // for v*.
-            if (prm.logDomain) { 
-                msg = prod.getLogMarginal(new VarSet(var), false);
+            if (factor instanceof GlobalFactor) {
+                // Since this is a global factor, we pass the incoming messages to it, 
+                // and efficiently marginalize over the variables. The current setup is
+                // create all the messages from this factor to its variables, but only 
+                // once per iteration.
+                GlobalFactor globalFac = (GlobalFactor) factor;
+                globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
             } else {
-                msg = prod.getMarginal(new VarSet(var), false);
+                // TODO: we could cache this prod factor in the EdgeContent for this
+                // edge if creating it is slow.
+                Factor prod = new Factor(factor.getVars());
+                // Set the initial values of the product to those of the sending factor.
+                prod.set(factor);
+                getProductOfMessages(edge.getParent(), prod, edge.getChild());
+    
+                // Marginalize over all the assignments to variables for f*, except
+                // for v*.
+                if (prm.logDomain) { 
+                    msg = prod.getLogMarginal(new VarSet(var), false);
+                } else {
+                    msg = prod.getMarginal(new VarSet(var), false);
+                }
             }
         }
         
