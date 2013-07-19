@@ -98,7 +98,16 @@ public class FgExample {
      * @param factorId The id of the factor.
      */
     private void cacheFeats(FactorGraph fgClamped, FeatureCache featCache,
-            VarConfig clampedVarConfig, int factorId) {        
+            VarConfig clampedVarConfig, int factorId) {
+        if (fg.getFactor(factorId) instanceof GlobalFactor) {
+            // For global factors, we do NOT cache any feature vectors.
+            //
+            // TODO: to support arbitrary global factors (not just constraints)
+            // we should extend global factors to support feature caching of
+            // some sort.
+            return;
+        }
+        
         // Get the variables that are marginalized for this factor.
         VarSet vars = fgClamped.getFactor(factorId).getVars();
         int numConfigs = vars.calcNumConfigs();
@@ -107,8 +116,6 @@ public class FgExample {
             FeatureVector fv = featExtractor.calcFeatureVector(factorId, clampedVarConfig);
             featCache.setFv(factorId, 0, fv);
         } else {
-            // TODO: For global factors, we do NOT cache any feature vectors.
-            
             // For each configuration of the marginalized variables.
             for (int configId = 0; configId < numConfigs; configId++) {
                 VarConfig varConfig = vars.getVarConfig(configId);
@@ -162,6 +169,12 @@ public class FgExample {
     private static FactorGraph getUpdatedFactorGraph(FactorGraph fg, FeatureCache cache, double[] params, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
             Factor factor = fg.getFactor(a);
+            if (factor instanceof GlobalFactor) {
+                // Currently, global factors do not support features, and
+                // therefore have no model parameters.
+                continue;
+            }
+            
             int numConfigs = factor.getVars().calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {
                 if (logDomain) {

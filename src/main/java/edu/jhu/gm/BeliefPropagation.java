@@ -311,7 +311,10 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     private Factor getMarginals(Factor factor, FgNode node) {
-        // TODO: need a special case for GlobalFactors.
+        if (factor instanceof GlobalFactor) {
+            throw new IllegalArgumentException("Getting marginals of a global factor is not supported."
+                    + " This would require exponential space to store the resulting factor.");
+        }
         
         Factor prod = new Factor(factor);
         // Compute the product of all messages sent to this factor.
@@ -358,7 +361,7 @@ public class BeliefPropagation implements FgInferencer {
         // partition functions for each connected component. 
         double partition = prm.logDomain ? 0.0 : 1.0;
         for (FgNode node : fg.getConnectedComponents()) {
-            if (node.isFactor()) {
+            if (!node.isVar()) {
                 if (node.getOutEdges().size() == 0) {
                     // This is an empty factor that makes no contribution to the partition function.
                     continue;

@@ -154,7 +154,12 @@ public class CrfObjective implements Function {
     private void addExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer, double multiplier,
             double[] gradient) {
         // For each factor...
-        for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {                  
+        for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
+            if (fg.getFactor(factorId) instanceof GlobalFactor) {
+                // Special case for global factors.
+                continue;
+            }
+            
             Factor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
             
             int numConfigs = factorMarginal.getVars().calcNumConfigs();

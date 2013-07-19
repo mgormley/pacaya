@@ -3,6 +3,13 @@ package edu.jhu.gm;
 import edu.jhu.gm.BeliefPropagation.Messages;
 import edu.jhu.gm.FactorGraph.FgNode;
 
+/**
+ * A constraint global factor.
+ * 
+ * Unlike a full global factor, this may not have any parameters or features.
+ * 
+ * @author mgormley
+ */
 public interface GlobalFactor {
 
     /**

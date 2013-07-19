@@ -55,6 +55,7 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         
     }
     
+    private final VarSet vars;
     /** The sentence length. */
     private final int n;
     private int iterAtLastCreateMessagesCall = -1;
@@ -66,7 +67,9 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
      * @param n The length of the sentence.
      */
     public ProjDepTreeFactor(int n, VarType type) {
-        super(createVarSet(n, type));
+        // This is a hack so that we can extend Factor without actually building a massive factor.
+        super(new VarSet());
+        this.vars = createVarSet(n, type);
         this.n = n;
 
         // TODO: We create the VarSet statically and then find extract the vars
@@ -198,6 +201,19 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
 
     public LinkVar[][] getChildVars() {
         return childVars;
+    }
+    
+    @Override
+    public VarSet getVars() {
+        return vars;
+    }
+    
+    @Override
+    public Factor getClamped(VarConfig clmpVarConfig) {
+        if (clmpVarConfig.size() > 0) {
+            throw new IllegalStateException("Unable to clamp these variables.");
+        }
+        return this;
     }
 
 }
