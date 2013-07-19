@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.List;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
@@ -22,6 +23,7 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.VarConfig;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
@@ -33,6 +35,13 @@ import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.dist.Gaussian;
 
+/**
+ * Runner for the CRF library. This is meant to be used for arbitrary graphical
+ * model input files (e.g. ERMA format) and shouldn't be specialized to any
+ * particular model.
+ * 
+ * @author mgormley
+ */
 public class CrfRunner {
 
     public static enum DatasetType { ERMA };
@@ -78,8 +87,7 @@ public class CrfRunner {
     // Options for inference.
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
-    
-    
+
     public CrfRunner() {
     }
 
@@ -101,10 +109,11 @@ public class CrfRunner {
         }
         
         if (trainType != null && train != null) {
+            String name = "train";
             assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(alphabet, trainType, train, "train");
+            FgExamples data = getData(alphabet, trainType, train, name);
             
             if (model == null) {
                 model = new FgModel(alphabet);
@@ -127,7 +136,8 @@ public class CrfRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            decodeAndEval(model, data, trainPredOut, "train");
+            List<VarConfig> predictions = decode(model, data, trainPredOut, name);        
+            eval(data, name, predictions);
         }
         
         if (modelOut != null) {
@@ -146,19 +156,23 @@ public class CrfRunner {
         if (test != null && testType != null) {
             // Test the model on test data.
             alphabet.stopGrowth();
-            FgExamples data = getData(alphabet, testType, test, "test");
+            String name = "test";
+            FgExamples data = getData(alphabet, testType, test, name);
 
             // Decode and evaluate the test data.
-            decodeAndEval(model, data, testPredOut, "test");
+            List<VarConfig> predictions = decode(model, data, testPredOut, name);
+            eval(data, name, predictions);
         }
     }
 
-    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) {
-        if (dataType != DatasetType.ERMA){ 
-            throw new IllegalStateException();
+    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+        FgExamples data;
+        if (dataType != DatasetType.ERMA){
+            ErmaReader er = new ErmaReader(true);
+            data = er.read(featureFileIn, dataFile, alphabet);        
+        } else {
+            throw new ParseException("Unsupported data type: " + dataType);
         }
-        ErmaReader er = new ErmaReader(true);
-        FgExamples data = er.read(featureFileIn, dataFile, alphabet);
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
@@ -167,20 +181,23 @@ public class CrfRunner {
         return data;
     }
 
-    private void decodeAndEval(FgModel model, FgExamples data, File predOut, String name) throws IOException {
-        // Decode the training data.
+    private void eval(FgExamples data, String name, List<VarConfig> predictions) {
+        AccuracyEvaluator accEval = new AccuracyEvaluator();
+        double accuracy = accEval.evaluate(data.getGoldConfigs(), predictions);
+        log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
+    }
+
+    private List<VarConfig> decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
         MbrDecoder decoder = getDecoder();
         decoder.decode(model, data);
-        
-        AccuracyEvaluator accEval = new AccuracyEvaluator();
-        double accuracy = accEval.evaluate(data.getGoldConfigs(), decoder.getMbrVarConfigList());
-        log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
-        
+
+        List<VarConfig> predictions = decoder.getMbrVarConfigList();
         if (predOut != null) {
             ErmaWriter ew = new ErmaWriter();
-            ew.writePredictions(predOut, decoder.getMbrVarConfigList(), decoder.getVarMargMap());
+            ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
         }
+        return predictions;
     }
 
     /* --------- Factory Methods ---------- */
