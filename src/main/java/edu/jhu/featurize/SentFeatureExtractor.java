@@ -14,6 +14,7 @@ import edu.jhu.featurize.CorpusStatistics.Normalize;
  * @author mmitchell
  * @author mgormley
  */
+// TODO: (Eventually) move this out of the SRL package.
 public class SentFeatureExtractor {
 
     public static class SentFeatureExtractorPrm {
