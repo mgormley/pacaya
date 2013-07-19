@@ -37,7 +37,7 @@ public class SrlFgExamplesBuilder {
 
         FgExamples data = new FgExamples(alphabet);
         for (CoNLL09Sentence sent : sents) {
-            data.add(ps.getFgExample(sent));
+            data.add(ps.getFGExample(sent));
         }
         return data;
     }    
