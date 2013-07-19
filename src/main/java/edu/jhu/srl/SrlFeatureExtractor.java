@@ -5,6 +5,7 @@ import java.util.Set;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureVector;

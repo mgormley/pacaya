@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -23,18 +23,19 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 //import com.google.common.collect.Maps;
 
 /**
+ * Converts CoNLL 2009 input files to featurized "ERMA" train/test files with a feature template.
+ * 
  * Featurize sentence with CoNLL annotations.
+ * 
  * @author mmitchell
  * 
  */
-
 public class GetFeatures {
     
     private static final Logger log = Logger.getLogger(GetFeatures.class);

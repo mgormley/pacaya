@@ -1,4 +1,4 @@
-package edu.jhu.srl;
+package edu.jhu.featurize;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,6 +6,7 @@ import java.util.Set;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.Normalize;
 
 /**
