@@ -32,8 +32,31 @@ public class BfsBpSchedule implements BpSchedule {
             if (!fg.isUndirectedTree(root)) {
                 throw new IllegalStateException("Connected component is not a tree: " + root);
             }
+            // If we have a single global factor, make it the root.
+            int numGlobalFactors = 0;
+            FgNode lastGlobalFactor = null;
+            for (FgNode node : fg.preOrderTraversal(root)) {
+                if (node.isFactor() && node.getFactor() instanceof GlobalFactor) {
+                    lastGlobalFactor = node;
+                    numGlobalFactors++;
+                }
+            }
+            if (numGlobalFactors > 1) {
+                // TODO: How could we handle this case?
+                throw new RuntimeException("More than one global factor is not (yet) supported with BfsBpSchedule.");
+            } else if (numGlobalFactors == 1) {
+                // Setting the (unique) global factor to the root, given that
+                // the connected component is a tree will ensure that the factor
+                // only needs to compute all its messages once per iteration,
+                // the first time an outgoing edge from it is seen.
+                //
+                // TODO: This approach is very brittle. It would be nice to have
+                // a more general purpose solution.
+                root = lastGlobalFactor;
+            }
+            
             // Choose an arbitrary root node for each connected component.
-            addEdgesFromRoot(root, order, fg);
+            addEdgesFromRoot(root, order, fg);            
         }
     }
 
