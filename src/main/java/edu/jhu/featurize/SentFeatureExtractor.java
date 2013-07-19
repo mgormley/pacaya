@@ -1,5 +1,6 @@
 package edu.jhu.featurize;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -8,7 +9,7 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.CorpusStatistics.Normalize;
 
 /**
- * Feature extraction from the observations on a sentence.
+ * Feature extraction from the observations on a particular sentence.
  * 
  * @author mmitchell
  * @author mgormley
@@ -33,30 +34,58 @@ public class SentFeatureExtractor {
     }
 
     // ----------------- Extracting Features on the Observations ONLY -----------------
-    
+
+    /**
+     * Creates a feature set for the given word position.
+     * 
+     * This defines a feature function of the form f(x, i), where x is a vector
+     * representing all the observations about a sentence and i is a position in
+     * the sentence.
+     * 
+     * Examples where this feature function would be used include a unary factor
+     * on a Sense variable in SRL, or a syntactic Link variable where the parent
+     * is the "Wall" node.
+     * 
+     * @param idx The position of a word in the sentence.
+     * @return The features.
+     */
     public Set<String> createFeatureSet(int idx) {
         Set<String> feats = new HashSet<String>();
         feats.add("BIAS_FEATURE");
-        addSenseFeatures(idx, feats);
+        addNaradowskySoloFeatures(idx, feats);
+        addZhaoSoloFeatures(idx, feats);
         return feats;
     }
     
+    /**
+     * Creates a feature set for the given pair of word positions.
+     * 
+     * This defines a feature function of the form f(x, i, j), where x is a
+     * vector representing all the observations about a sentence and i and j are
+     * positions in the sentence.
+     * 
+     * Examples where this feature function would be used include factors
+     * including a Role or Link variable in the SRL model, where both the parent
+     * and child are tokens in the sentence.
+     * 
+     * @param pidx The "parent" position.
+     * @param aidx The "child" position.
+     * @return The features.
+     */
     public Set<String> createFeatureSet(int pidx, int aidx) {
         Set<String> feats = new HashSet<String>();
         // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
-        addNaradowskyFeatures(pidx, aidx, feats);
-        addZhaoFeatures(pidx, aidx, feats);
+        addNaradowskyPairFeatures(pidx, aidx, feats);
+        addZhaoPairFeatures(pidx, aidx, feats);
         // feats = getNuguesFeatures();
         return feats;
     }
     
-    // TODO: These features would be used for both the Unary link factors
-    // where the parent is the wall node, and the sense factors.
-    public void addSenseFeatures(int pidx, Set<String> feats) {
+    public void addNaradowskySoloFeatures(int pidx, Collection<String> feats) {
         // TODO: 
     }
     
-    public void addNaradowskyFeatures(int pidx, int aidx, Set<String> feats) {
+    public void addNaradowskyPairFeatures(int pidx, int aidx, Collection<String> feats) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
@@ -108,13 +137,19 @@ public class SentFeatureExtractor {
         feats += "P-%sxA-%s".format(m1, m2)
       } */
     }
-        
-    public void addZhaoFeatures(int pidx, int aidx, Set<String> feats) {
+
+    public void addZhaoSoloFeatures(int idx, Collection<String> feats) {
+        // TODO:
+    }    
+    
+    public void addZhaoPairFeatures(int pidx, int aidx, Collection<String> feats) {
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
         // Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou
-        // Feature template 1:  Syntactic path based on semantic dependencies            
+        // Feature template 1:  Syntactic path based on semantic dependencies
+        
+        // TODO:
     }
     
     private String decideForm(String wordForm, int idx) {
