@@ -4,52 +4,37 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.regex.Pattern;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 
-//import com.google.common.collect.Maps;
-
-import edu.berkeley.nlp.PCFGLA.smoothing.*;
-
-import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.srl.MutableInt;
-import edu.jhu.util.cli.ArgParser;
-import edu.jhu.util.cli.Opt;
-
+import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.featurize.ProcessSentence;
+import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
-import edu.jhu.data.Label;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
-import edu.jhu.gm.FeatureVector;
-import edu.jhu.gm.FgExample;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.VarConfig;
-import edu.jhu.gm.VarSet;
-import edu.jhu.gm.CrfObjectiveTest.LogLinearExDesc;
-import edu.jhu.gm.Var.VarType;
+import edu.jhu.util.cli.ArgParser;
+import edu.jhu.util.cli.Opt;
+//import com.google.common.collect.Maps;
 
 /**
  * Featurize sentence with CoNLL annotations.
  * @author mmitchell
  * 
  */
+
 public class GetFeatures {
     
     private static final Logger log = Logger.getLogger(GetFeatures.class);
@@ -70,8 +55,8 @@ public class GetFeatures {
     public static int cutoff=3;
     @Opt(name="use-PHEAD", hasArg=false, description="Use Predicted HEAD rather than Gold HEAD.")
     public static boolean goldHead = true;
-    @Opt(name="predsGiven", hasArg=false, description="Semantic preds are given during training/testing.")
-    public static boolean predsGiven = false;
+    @Opt(name="no-link-factor", hasArg=false, description="Do not factor model on input dependency links.")
+    public static boolean linkFactor = false;
     @Opt(name="dep-features", hasArg=false, description="Use dependency parse as features.")
     public static boolean depFeatures = false;
     @Opt(name="fast-crf", hasArg=false, description="Whether to use our fast CRF framework instead of ERMA")
@@ -116,28 +101,21 @@ public class GetFeatures {
     }
     
     public void run() throws IOException {
-        System.out.println(predsGiven);
         preprocess();
         knownWords = setDictionary(words);
         knownUnks = setDictionary(unks);
         // Currently not actually using bigram dictionary.
-        //knownBigrams = setBigramDictionary(bigrams);
+        knownBigrams = setBigramDictionary(bigrams);
         process();
     }
     
     public void preprocess() throws IOException {
             makeOutFiles();
-            // Store the variable states we have seen before so 
-            // we know what our vocabulary of possible states are for
-            // the Link variable.  Applies to knownLinks, knownRoles.
             knownLinks.add("True");
             knownLinks.add("False");
             knownUnks.add("UNK");
             CoNLL09FileReader cr = new CoNLL09FileReader(new File(trainingFile));
             for (CoNLL09Sentence sent : cr) {
-                // Need to know max sent length because distance features
-                // use these values explicitly; an unknown sentence length in
-                // test data will result in an unknown feature.
                 if (sent.size() > maxSentLength) {
                     maxSentLength = sent.size();
                 }
@@ -153,8 +131,6 @@ public class GetFeatures {
                     unkWord = normalize.escape(unkWord);
                     words = addWord(words, cleanWord);
                     unks = addWord(unks, unkWord);
-                    // Learn what Postags are in our vocabulary
-                    // Later, can then back off to NONE if we haven't seen it before.
                     if (!goldHead) {
                         knownPostags.add(word.getPpos());
                     } else {
@@ -164,7 +140,6 @@ public class GetFeatures {
                         String wordForm2 = word2.getForm();
                         String cleanWord2 = normalize.clean(wordForm2);
                         String unkWord2 = sig.getSignature(wordForm2, word2.getId(), language);
-                        // TBD:  Actually use the seen/unseen bigrams to shrink the feature space.
                         addBigrams(cleanWord, cleanWord2);
                         addBigrams(unkWord, unkWord2);
                         addBigrams(cleanWord, unkWord2);
@@ -216,19 +191,158 @@ public class GetFeatures {
     public void featuresToPrint(String inFile, BufferedWriter bw, boolean isTrain) throws IOException {
         CoNLL09FileReader cr = new CoNLL09FileReader(new File(inFile));
         int example = 0;
-        boolean hasPred;
         for (CoNLL09Sentence sent : cr) {
-            ProcessSentence ps = new ProcessSentence();
-            FgExample fg = ps.getFGExample(sent, isTrain, predsGiven, goldHead, language, knownLinks, knownRoles, new Alphabet());
-            example++;
-            if(ps.getHasPred()) {
-                printOut(ps.getVarConfig(), ps.getFeatures(), example, bw);
-                //setData(variables, features, example, bw);
+            boolean hasPred = false;
+            Map<Set<Integer>,String> knownPairs = new HashMap<Set<Integer>,String>();
+            List<SrlEdge> srlEdges = sent.getSrlGraph().getEdges();
+            Set<Integer> knownPreds = new HashSet<Integer>();
+            // all the "Y"s
+            for (SrlEdge e : srlEdges) {
+                Integer a = e.getPred().getPosition();
+                hasPred = true;
+                knownPreds.add(a);
+                // all the args for that Y.  Assigns one label for every arg it selects for.
+                //Map<Integer,String> knownLinks = new HashMap<Integer,String>();
+                for (SrlEdge e2 : e.getPred().getEdges()) {
+                    String[] splitRole = e2.getLabel().split("-");
+                    String role = splitRole[0].toLowerCase();
+                    Integer b = e2.getArg().getPosition();
+                    Set<Integer> key = new HashSet<Integer>();
+                    key.add(a);
+                    key.add(b);
+                    knownPairs.put(key, role);
+                }
             }
-
+            Set<String> variables = new HashSet<String>();
+            Set<String> features = new HashSet<String>();
+            System.out.println(example);
+            example++;
+            for (int i = 0; i < sent.size(); i++) {
+                String pred = Integer.toString(sent.get(i).getId());
+                for (int j = 0; j < sent.size();j++) {
+                    String arg = Integer.toString(sent.get(j).getId());
+                    Set<String> suffixes = getSuffixes(pred, arg, knownPreds, isTrain);
+                    variables = getVariables(i, j, pred, arg, sent, knownPairs, knownPreds, variables, isTrain);
+                    features = getArgumentFeatures(i, j, suffixes, sent, features, isTrain);
+                }
+            }
+            if(hasPred) {
+                printOut(variables, features, example, bw);
+            }
         }
     }
     
+    // Naradowsky argument features.
+    public Set<String> getArgumentFeatures(int pidx, int aidx, Set<String> suffixes, CoNLL09Sentence sent, Set<String> feats, boolean isTrain) {
+        CoNLL09Token pred = sent.get(pidx);
+        CoNLL09Token arg = sent.get(aidx);
+        String predForm = decideForm(pred.getForm(), pidx);
+        String argForm = decideForm(arg.getForm(), aidx);
+        String predPos = pred.getPos();
+        String argPos = arg.getPos();
+        if (!goldHead) {
+            predPos = pred.getPpos();
+            argPos = arg.getPpos();
+        }
+        String dir;
+        int dist = Math.abs(aidx - pidx);
+        if (aidx > pidx) 
+            dir = "RIGHT";
+        else if (aidx < pidx) 
+            dir = "LEFT";
+        else 
+            dir = "SAME";
+
+        Set<String> instFeats = new HashSet<String>();
+        instFeats.add("head_" + predForm + "dep_" + argForm + "_word");
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_pos");
+        instFeats.add("head_" + predForm + "_dep_" + argPos + "_wordpos");
+        instFeats.add("head_" + predPos + "_dep_" + argForm + "_posword");
+        instFeats.add("head_" + predForm + "_dep_" + argForm + "_head_" + predPos + "_dep_" + argPos + "_wordwordpospos");
+
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dist_" + dist + "_posdist");
+        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dir_" + dir + "_posdir");
+        instFeats.add("head_" + predPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
+        instFeats.add("head_" + argPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
+
+        instFeats.add("slen_" + sent.size());
+        instFeats.add("dir_" + dir);
+        instFeats.add("dist_" + dist);
+        instFeats.add("dir_dist_" + dir + dist);
+
+        instFeats.add("head_" + predForm + "_word");
+        instFeats.add("head_" + predPos + "_tag");
+        instFeats.add("arg_" + argForm + "_word");
+        instFeats.add("arg_" + argPos + "_tag");
+        for (String feat : instFeats) {
+            if (isTrain || allFeatures.contains(feat)) {
+                if (isTrain) {
+                    //if (!allFeatures.contains(feat)) {
+                        allFeatures.add(feat);
+                    //}
+                }
+                for (String suf : suffixes) {
+                    feats.add(feat + suf);
+                }
+            }
+        }
+        return feats;
+    }
+        
+    private String decideForm(String wordForm, int idx) {
+        if (!knownWords.contains(wordForm)) {
+            wordForm = sig.getSignature(wordForm, idx, language);
+            if (!knownUnks.contains(wordForm)) {
+                wordForm = "UNK";
+                return wordForm;
+            }
+        }
+        Iterator<Entry<String, String>> it = stringMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pairs = (Map.Entry)it.next();
+            wordForm = wordForm.replace((String) pairs.getKey(), (String) pairs.getValue());
+        }
+        return wordForm;
+    }
+
+    public Set<String> getVariables(int i, int j, String pred, String arg, CoNLL09Sentence sent, Map<Set<Integer>,String> knownPairs, Set<Integer> knownPreds, Set<String> variables, boolean isTrain) {
+        String link_variable;
+        String role_variable;
+        // Syntactic head, from dependency parse.
+        int head = sent.get(j).getHead();
+        if (head != i) {
+            link_variable = "LINK Link_" + pred + "_" + arg + "=False in;";
+        } else {
+            link_variable = "LINK Link_" + pred + "_" + arg + "=True in;";
+        }
+        variables.add(link_variable);
+        // Semantic relations.
+        Set<Integer> key = new HashSet<Integer>();
+        key.add(i);
+        key.add(j);
+        if (knownPreds.contains((Integer) i)) {
+            if (knownPairs.containsKey(key)) {
+                String label = knownPairs.get(key);
+                role_variable = "ROLE Role_" + pred + "_" + arg + "=" + label.toLowerCase() + ";";
+            } else {
+                role_variable = "ROLE Role_" + pred + "_" + arg + "=_;";
+            }
+        } else {
+            role_variable = "ROLE Role_" + pred + "_" + arg + ";";
+        }
+        variables.add(role_variable);
+        return variables;
+    }
+    
+    public Set<String> getSuffixes(String pred, String arg, Set<Integer> knownPreds, boolean isTrain) {
+        Set<String> suffixes = new HashSet<String>();
+        // If this is testing data, or training data where i is a pred
+        //if (!isTrain || knownPreds.contains(i)) {
+        suffixes.add("_role(Role_" + pred + "_" + arg + ");");
+        //}
+        suffixes.add("_link_role(Link_" + pred + "_" + arg + ",Role_" + pred + "_" + arg + ");");
+        return suffixes;
+    }
     
     
     public void printOut(Set<String> sentenceVariables, Set<String> sentenceFeatures, int example, BufferedWriter bw) throws IOException {
@@ -247,9 +361,7 @@ public class GetFeatures {
             bw.newLine();
         }
     }
-    
 
-    
     public void printTemplate(BufferedWriter tw) throws IOException {
         StringBuilder sb = new StringBuilder();
         String delim = "";
