@@ -20,22 +20,31 @@ import edu.jhu.gm.VarSet;
  */
 public class SrlFactorGraph extends FactorGraph {
 
+    /**
+     * Parameters for the SrlFactorGraph.
+     * @author mgormley
+     */
     public static class SrlFactorGraphPrm {
+        
         /** The structure of the Role variables. */
         public RoleStructure roleStructure = RoleStructure.ALL_PAIRS;
+        
         /**
          * Whether the Role variables (if any) that correspond to predicates not
          * marked with a "Y" should be latent, as opposed to predicted
          * variables.
          */
         public boolean makeUnknownPredRolesLatent = true;
+        
         /** The type of the link variables. */
         public VarType linkVarType = VarType.LATENT;
+        
         /**
          * Whether to include a global factor which constrains the Link
          * variables to form a projective dependency tree.
          */
         public boolean useProjDepTreeFactor = false;
+        
     }
 
     public enum RoleStructure {

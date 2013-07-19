@@ -22,8 +22,10 @@ import edu.jhu.util.Alphabet;
 public class SrlFgExamplesBuilder {
 
     private Alphabet<Feature> alphabet;
+    private SrlFgExampleBuilderPrm prm;
     
-    public SrlFgExamplesBuilder(Alphabet<Feature> alphabet) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet) {
+        this.prm = prm;
         this.alphabet = alphabet;
     }
         
@@ -37,7 +39,6 @@ public class SrlFgExamplesBuilder {
         cs.init(sents);
 
         // TODO: set these params.
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs);
 
         FgExamples data = new FgExamples(alphabet);
@@ -45,7 +46,7 @@ public class SrlFgExamplesBuilder {
             data.add(ps.getFGExample(sent));
         }
         return data;
-    }    
+    }
 
     public Alphabet<Feature> getAlphabet() {
         return alphabet;

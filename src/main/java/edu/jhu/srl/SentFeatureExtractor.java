@@ -17,6 +17,10 @@ import edu.jhu.srl.CorpusStatistics.Normalize;
 // TODO: (Eventually) move this out of the SRL package.
 public class SentFeatureExtractor {
 
+    /**
+     * Parameters for the SentFeatureExtractor.
+     * @author mgormley
+     */
     public static class SentFeatureExtractorPrm {
         public boolean useGoldPos = false;
         public String language = "es";
@@ -108,27 +112,26 @@ public class SentFeatureExtractor {
         else 
             dir = "SAME";
     
-        Set<String> instFeats = new HashSet<String>();
-        instFeats.add("head_" + predForm + "dep_" + argForm + "_word");
-        instFeats.add("head_" + predPos + "_dep_" + argPos + "_pos");
-        instFeats.add("head_" + predForm + "_dep_" + argPos + "_wordpos");
-        instFeats.add("head_" + predPos + "_dep_" + argForm + "_posword");
-        instFeats.add("head_" + predForm + "_dep_" + argForm + "_head_" + predPos + "_dep_" + argPos + "_wordwordpospos");
+        feats.add("head_" + predForm + "dep_" + argForm + "_word");
+        feats.add("head_" + predPos + "_dep_" + argPos + "_pos");
+        feats.add("head_" + predForm + "_dep_" + argPos + "_wordpos");
+        feats.add("head_" + predPos + "_dep_" + argForm + "_posword");
+        feats.add("head_" + predForm + "_dep_" + argForm + "_head_" + predPos + "_dep_" + argPos + "_wordwordpospos");
     
-        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dist_" + dist + "_posdist");
-        instFeats.add("head_" + predPos + "_dep_" + argPos + "_dir_" + dir + "_posdir");
-        instFeats.add("head_" + predPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
-        instFeats.add("head_" + argPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
+        feats.add("head_" + predPos + "_dep_" + argPos + "_dist_" + dist + "_posdist");
+        feats.add("head_" + predPos + "_dep_" + argPos + "_dir_" + dir + "_posdir");
+        feats.add("head_" + predPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
+        feats.add("head_" + argPos + "_dist_" + dist + "_dir_" + dir + "_posdistdir");
     
-        instFeats.add("slen_" + sent.size());
-        instFeats.add("dir_" + dir);
-        instFeats.add("dist_" + dist);
-        instFeats.add("dir_dist_" + dir + dist);
+        feats.add("slen_" + sent.size());
+        feats.add("dir_" + dir);
+        feats.add("dist_" + dist);
+        feats.add("dir_dist_" + dir + dist);
     
-        instFeats.add("head_" + predForm + "_word");
-        instFeats.add("head_" + predPos + "_tag");
-        instFeats.add("arg_" + argForm + "_word");
-        instFeats.add("arg_" + argPos + "_tag");
+        feats.add("head_" + predForm + "_word");
+        feats.add("head_" + predPos + "_tag");
+        feats.add("arg_" + argForm + "_word");
+        feats.add("arg_" + argPos + "_tag");
         
         // TBD:  Add morph features for comparison with supervised case.
         /*     if (mode >= 4) {
