@@ -1,21 +1,23 @@
 package edu.jhu.featurize;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.math3.util.Pair;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.Factor;
 import edu.jhu.gm.FactorGraph;
+import edu.jhu.gm.ProjDepTreeFactor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 
+/**
+ * A factor graph for SRL.
+ * 
+ * @author mmitchell
+ * @author mgormley
+ */
 public class SrlFactorGraph extends FactorGraph {
 
     public static class SrlFactorGraphPrm {
@@ -33,7 +35,7 @@ public class SrlFactorGraph extends FactorGraph {
          * Whether to include a global factor which constrains the Link
          * variables to form a projective dependency tree.
          */
-        public boolean useProjDepTreeGlobalFactor = false;
+        public boolean useProjDepTreeFactor = false;
     }
 
     public enum RoleStructure {
@@ -49,6 +51,10 @@ public class SrlFactorGraph extends FactorGraph {
         LINK_UNARY,
     }
     
+    /**
+     * An SRL factor, which includes its type (i.e. template).
+     * @author mgormley
+     */
     public static class SrlFactor extends Factor {
 
         private SrlFactorTemplate template;
@@ -96,14 +102,18 @@ public class SrlFactorGraph extends FactorGraph {
 
     // Cache of the variables for this factor graph. These arrays may contain
     // null for variables we didn't include in the model.
-    private LinkVar[][] linkVars;
+    private LinkVar[] rootVars;
+    private LinkVar[][] childVars;
     private RoleVar[][] roleVars;
+
+    // The sentence length.
+    private int n;
                 
     public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
         super();
         this.prm = prm;
         
-        final int n = sent.size();
+        n = sent.size();
         
         // Create the Role variables.
         roleVars = new RoleVar[n][n];
@@ -126,13 +136,47 @@ public class SrlFactorGraph extends FactorGraph {
         }
         
         // Create the Link variables.
-        linkVars = new LinkVar[n][n];
-        if (prm.useProjDepTreeGlobalFactor) {
-
+        if (prm.useProjDepTreeFactor && prm.linkVarType != VarType.OBSERVED) {
+            ProjDepTreeFactor treeFactor = new ProjDepTreeFactor(n, prm.linkVarType);
+            rootVars = treeFactor.getRootVars();
+            childVars = treeFactor.getChildVars();
+            // Add the global factor.
+            addFactor(treeFactor);
         } else {
-            for (int i = 0; i < sent.size(); i++) {
+            rootVars = new LinkVar[n];
+            childVars = new LinkVar[n][n];
+            for (int i = -1; i < sent.size(); i++) {
                 for (int j = 0; j < sent.size();j++) {
-                    linkVars[i][j] = createLinkVar(i, j);
+                    if (i == -1) {
+                        rootVars[j] = createLinkVar(i, j);
+                    } else {
+                        childVars[i][j] = createLinkVar(i, j);
+                    }
+                }
+            }
+        }
+        
+        // Add the factors.
+        for (int i = -1; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                if (i == -1) {
+                    // Add unary factors on child Links
+                    if (rootVars[j] != null) {
+                        addFactor(new Factor(new VarSet(rootVars[j])));
+                    }
+                } else {
+                    // Add unary factors on Roles
+                    if (roleVars[i][j] != null) {
+                        addFactor(new Factor(new VarSet(roleVars[i][j])));
+                    }
+                    // Add unary factors on child Links
+                    if (childVars[i][j] != null) {
+                        addFactor(new Factor(new VarSet(childVars[i][j])));
+                    }
+                    // Add binary factors between Roles and Links.
+                    if (roleVars[i][j] != null && childVars[i][j] != null) {
+                        addFactor(new Factor(new VarSet(roleVars[i][j], childVars[i][j])));
+                    }
                 }
             }
         }
@@ -157,18 +201,23 @@ public class SrlFactorGraph extends FactorGraph {
     }
     
     // ----------------- Public Getters -----------------
-
+    
     /**
-     * Gets a Link variable.
-     * @param i The parent position.
-     * @param j The child position.
+     * Get the link var corresponding to the specified parent and child position.
+     * 
+     * @param parent The parent word position, or -1 to indicate the wall node.
+     * @param child The child word position.
      * @return The link variable or null if it doesn't exist.
      */
-    public LinkVar getLinkVar(int i, int j) {
-        if (0 <= i && i < linkVars.length && 0 <= j && j < linkVars[i].length) {
-            return linkVars[i][j];
-        } else {
+    public LinkVar getLinkVar(int parent, int child) {
+        if (! (-1 <= parent && parent < n && 0 <= child && child < n)) {
             return null;
+        }
+        
+        if (parent == -1) {
+            return rootVars[child];
+        } else {
+            return childVars[parent][child];
         }
     }
 

@@ -192,4 +192,12 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         
     }
 
+    public LinkVar[] getRootVars() {
+        return rootVars;
+    }
+
+    public LinkVar[][] getChildVars() {
+        return childVars;
+    }
+
 }

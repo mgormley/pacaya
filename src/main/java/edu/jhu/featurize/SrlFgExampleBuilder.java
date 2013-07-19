@@ -1,20 +1,15 @@
 package edu.jhu.featurize;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.math3.util.Pair;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.featurize.SrlFactorGraph.RoleVar;
 import edu.jhu.featurize.SrlFactorGraph.SrlFactorGraphPrm;
-import edu.jhu.featurize.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FgExample;
@@ -33,7 +28,7 @@ public class SrlFgExampleBuilder {
     
     public static class SrlFgExampleBuilderPrm {
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
-        public SrlFeatureExtractorPrm fePrm = new SrlFeatureExtractorPrm();
+        public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
     }
     
     private final SrlFgExampleBuilderPrm prm;
@@ -50,25 +45,12 @@ public class SrlFgExampleBuilder {
         // Precompute a few things.
         SrlGraph srlGraph = sent.getSrlGraph();
         
-        // Tells us whether or not we should train on this.
-        // TODO: This was never used. Should we remove it?
-        boolean hasPred = false;
-        Map<Pair<Integer,Integer>,String> knownPairs = new HashMap<Pair<Integer,Integer>,String>();
         List<SrlEdge> srlEdges = srlGraph.getEdges();
         Set<Integer> knownPreds = new HashSet<Integer>();
         // All the "Y"s
         for (SrlEdge e : srlEdges) {
             Integer a = e.getPred().getPosition();
-            hasPred = true;
             knownPreds.add(a);
-            // All the args for that Y.  Assigns one label for every arg the predicate selects for.
-            for (SrlEdge e2 : e.getPred().getEdges()) {
-                String[] splitRole = e2.getLabel().split("-");
-                String role = splitRole[0].toLowerCase();
-                Integer b = e2.getArg().getPosition();
-                Pair<Integer, Integer> key = new Pair<Integer, Integer>(a, b);
-                knownPairs.put(key, role);
-            }
         }
         
         // Construct the factor graph.
@@ -76,7 +58,8 @@ public class SrlFgExampleBuilder {
         // Get the variable assignments given in the training data.
         VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);        
         // Create a feature extractor for this example.
-        FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.fePrm, sent, sfg, alphabet, cs);
+        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+        FeatureExtractor featExtractor = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
         
         return new FgExample(sfg, trainConfig, featExtractor);
     }
@@ -85,7 +68,9 @@ public class SrlFgExampleBuilder {
         VarConfig vc = new VarConfig();
 
         // Add all the training data assignments to the link variables, if they are not latent.
-        for (int i=0; i<sent.size(); i++) {
+        //
+        // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
+        for (int i=-1; i<sent.size(); i++) {
             for (int j=0; j<sent.size(); j++) {
                 if (j != i && sfg.getLinkVar(i, j) != null) {
                     LinkVar linkVar = sfg.getLinkVar(i, j);

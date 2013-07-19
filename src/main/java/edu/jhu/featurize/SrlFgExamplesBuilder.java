@@ -14,6 +14,11 @@ import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.util.Alphabet;
 
+/**
+ * Factory for FgExamples.
+ * 
+ * @author mgormley
+ */
 public class SrlFgExamplesBuilder {
 
     private Alphabet<Feature> alphabet;
