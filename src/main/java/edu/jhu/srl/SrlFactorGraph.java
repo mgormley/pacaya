@@ -45,6 +45,8 @@ public class SrlFactorGraph extends FactorGraph {
          */
         public boolean useProjDepTreeFactor = false;
         
+        /** Whether to predict predicate sense. */
+        public boolean predictSense = true;
     }
 
     public enum RoleStructure {
@@ -80,8 +82,7 @@ public class SrlFactorGraph extends FactorGraph {
     }
     
     /**
-     * Link variable. When true it indicates that there is an edge between its
-     * parent and child.
+     * Role variable.
      * 
      * @author mgormley
      */
@@ -105,6 +106,27 @@ public class SrlFactorGraph extends FactorGraph {
         }
         
     }
+    
+
+    /**
+     * Sense variable. 
+     * 
+     * @author mgormley
+     */
+    public static class SenseVar extends Var {
+        
+        private int parent;
+        
+        public SenseVar(VarType type, int numStates, String name, List<String> stateNames, int parent) {
+            super(type, numStates, name, stateNames);
+            this.parent = parent;
+        }
+
+        public int getParent() {
+            return parent;
+        }
+
+    }
 
     // Parameters for constructing the factor graph.
     private SrlFactorGraphPrm prm;
@@ -114,6 +136,10 @@ public class SrlFactorGraph extends FactorGraph {
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
     private RoleVar[][] roleVars;
+
+    // TODO: We don't currently predict sense. The main hurdle is getting the
+    // set of possible senses for each word.
+    private SenseVar[] senseVars;
 
     // The sentence length.
     private int n;
