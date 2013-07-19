@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,9 +22,9 @@ import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FgExample;
+import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.Opt;
 

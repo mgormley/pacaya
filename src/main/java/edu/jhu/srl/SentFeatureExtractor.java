@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,7 +6,7 @@ import java.util.Set;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.CorpusStatistics.Normalize;
+import edu.jhu.srl.CorpusStatistics.Normalize;
 
 /**
  * Feature extraction from the observations on a particular sentence.

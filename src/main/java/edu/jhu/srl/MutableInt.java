@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 public class MutableInt {
     

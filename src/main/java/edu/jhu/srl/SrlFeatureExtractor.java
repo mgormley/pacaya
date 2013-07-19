@@ -1,14 +1,10 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.CorpusStatistics.Normalize;
-import edu.jhu.featurize.SrlFactorGraph.RoleVar;
-import edu.jhu.featurize.SrlFactorGraph.SrlFactor;
-import edu.jhu.featurize.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureVector;
@@ -16,6 +12,10 @@ import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
+import edu.jhu.srl.CorpusStatistics.Normalize;
+import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraph.SrlFactor;
+import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 
 /**

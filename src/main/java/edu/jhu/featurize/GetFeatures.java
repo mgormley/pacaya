@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import edu.berkeley.nlp.PCFGLA.smoothing.*;
 
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.srl.MutableInt;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 
@@ -49,7 +50,6 @@ import edu.jhu.gm.Var.VarType;
  * @author mmitchell
  * 
  */
-
 public class GetFeatures {
     
     private static final Logger log = Logger.getLogger(GetFeatures.class);

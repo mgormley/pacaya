@@ -1,4 +1,4 @@
-package edu.jhu.featurize;
+package edu.jhu.srl;
 
 import java.util.List;
 import java.util.Set;
