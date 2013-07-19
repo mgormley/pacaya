@@ -142,6 +142,25 @@ public class VarConfig {
         return true;
     }
 
+    public String getStringName() {
+        StringBuilder configSb = new StringBuilder();
+        int i=0;
+        for (Var v : vars) {
+            if (i > 0) {
+                configSb.append(",");
+            }
+            configSb.append(v.getName());
+            configSb.append("=");
+            if (v.getStateNames() != null) {
+                configSb.append(getStateName(v));
+            } else {
+                configSb.append(getState(v));
+            }
+            i++;
+        }
+        return configSb.toString();
+    }
+    
     @Override
     public String toString() {
         StringBuilder configSb = new StringBuilder();
