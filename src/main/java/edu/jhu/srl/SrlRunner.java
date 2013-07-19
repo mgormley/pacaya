@@ -1,4 +1,4 @@
-package edu.jhu.gm.data;
+package edu.jhu.srl;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,6 +11,7 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -23,10 +24,15 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
+import edu.jhu.gm.data.ErmaReader;
+import edu.jhu.gm.data.ErmaWriter;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
@@ -35,20 +41,13 @@ import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.dist.Gaussian;
 
-/**
- * Runner for the CRF library. This is meant to be used for arbitrary graphical
- * model input files (e.g. ERMA format) and shouldn't be specialized to any
- * particular model.
- * 
- * @author mgormley
- */
-public class CrfRunner {
+public class SrlRunner {
 
-    public static enum DatasetType { ERMA };
+    public static enum DatasetType { ERMA, CONLL_2009 };
 
     public static enum InitParams { UNIFORM, RANDOM };
     
-    private static final Logger log = Logger.getLogger(CrfRunner.class);
+    private static final Logger log = Logger.getLogger(SrlRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -88,7 +87,23 @@ public class CrfRunner {
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
 
-    public CrfRunner() {
+    // Options for SRL factor graph structure.
+    @Opt(hasArg = true, description = "The structure of the Role variables.")
+    public static RoleStructure roleStructure = RoleStructure.ALL_PAIRS;
+    @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
+    public static boolean makeUnknownPredRolesLatent = true;
+    @Opt(hasArg = true, description = "The type of the link variables.")
+    public static VarType linkVarType = VarType.LATENT;
+    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
+    public static boolean useProjDepTreeFactor = false;
+
+    // Options for SRL feature extraction.
+    @Opt(hasArg = true, description = "SRL language.")
+    public static String language;
+    @Opt(hasArg = true, description = "Whether to use gold POS tags.")
+    public static boolean useGoldPos;
+    
+    public SrlRunner() {
     }
 
     public void run() throws ParseException, IOException {  
@@ -167,7 +182,12 @@ public class CrfRunner {
 
     private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExamples data;
-        if (dataType != DatasetType.ERMA){
+        if (dataType != DatasetType.CONLL_2009){
+            CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
+            SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
+            data = builder.getData(reader);
+        } else if (dataType != DatasetType.ERMA){
             ErmaReader er = new ErmaReader(true);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {
@@ -201,6 +221,19 @@ public class CrfRunner {
     }
 
     /* --------- Factory Methods ---------- */
+
+    private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm() {
+        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        // Factor graph structure.
+        prm.fgPrm.linkVarType = linkVarType;
+        prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
+        prm.fgPrm.roleStructure = roleStructure;
+        prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        // Feature extraction.
+        prm.fePrm.language = language;
+        prm.fePrm.useGoldPos = useGoldPos;
+        return prm;
+    }
     
     private static CrfTrainerPrm getCrfTrainerPrm() {
         BeliefPropagationPrm bpPrm = getInfFactory();
@@ -234,7 +267,7 @@ public class CrfRunner {
         bpPrm.normalizeMessages = false;
         bpPrm.maxIterations = 1;
         return bpPrm;
-    }    
+    }
 
     private MbrDecoder getDecoder() {
         MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
@@ -245,8 +278,8 @@ public class CrfRunner {
     }
     
     public static void main(String[] args) throws IOException {
-        ArgParser parser = new ArgParser(CrfRunner.class);
-        parser.addClass(CrfRunner.class);
+        ArgParser parser = new ArgParser(SrlRunner.class);
+        parser.addClass(SrlRunner.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {
@@ -257,7 +290,7 @@ public class CrfRunner {
         
         Prng.seed(seed);
         
-        CrfRunner pipeline = new CrfRunner();
+        SrlRunner pipeline = new SrlRunner();
         try {
             pipeline.run();
         } catch (ParseException e1) {

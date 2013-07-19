@@ -6,6 +6,7 @@ import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.BeliefPropagation.Messages;
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.util.Utilities;
@@ -27,15 +28,15 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
     public static class LinkVar extends Var {
 
         // The variable states.
-        private static final int TRUE = 1;
-        private static final int FALSE = 0;
+        public static final int TRUE = 1;
+        public static final int FALSE = 0;
         
         private static final List<String> BOOLEANS = Utilities.getList("FALSE", "TRUE");
         private int parent;
         private int child;     
         
-        public LinkVar(String name, int parent, int child) {
-            super(VarType.LATENT, BOOLEANS.size(), name, BOOLEANS);
+        public LinkVar(VarType type, String name, int parent, int child) {
+            super(type, BOOLEANS.size(), name, BOOLEANS);
             this.parent = parent;
             this.child = child;
         }
@@ -46,6 +47,10 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
 
         public int getChild() {
             return child;
+        }
+
+        public static String getDefaultName(int i, int j) {
+            return String.format("Link_%d_%d", i, j);
         }
         
     }
@@ -60,10 +65,13 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ProjDepTreeFactor(int n) {
-        super(createVarSet(n));
+    public ProjDepTreeFactor(int n, VarType type) {
+        super(createVarSet(n, type));
         this.n = n;
-                
+
+        // TODO: We create the VarSet statically and then find extract the vars
+        // again from the VarSet only because we're subclassing Factor. In the
+        // future, we should drop this.
         LinkVar[] rootVars = new LinkVar[n];
         LinkVar[][] childVars = new LinkVar[n][n];
         VarSet vars = this.getVars();
@@ -92,23 +100,21 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         }
     }
 
-    private static VarSet createVarSet(int n) {
+    private static VarSet createVarSet(int n, VarType type) {
         VarSet vars = new VarSet();
         // Add a variable for each pair of tokens.
         for (int i=0; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    // TODO: the name of these variables in GetFeatures.java
-                    // uses the pred/arg strings, not I/J.
-                    String name = String.format("Link_%d_%d", i, j);
-                    vars.add(new LinkVar(name, i, j));
+                    String name = LinkVar.getDefaultName(i, j);
+                    vars.add(new LinkVar(type, name, i, j));
                 }
             }
         }
         // Add a variable for each variable being connected to the wall node.
         for (int j=0; j<n; j++) {
             String name = String.format("Link_%d_%d", WallDepTreeNode.WALL_POSITION, j);
-            vars.add(new LinkVar(name, WallDepTreeNode.WALL_POSITION, j));
+            vars.add(new LinkVar(type, name, WallDepTreeNode.WALL_POSITION, j));
         }        
         return vars;
     }
@@ -184,6 +190,14 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
             msgs[nbEdge.getId()].newMessage.setValue(LinkVar.TRUE, beliefTrue);
         }
         
+    }
+
+    public LinkVar[] getRootVars() {
+        return rootVars;
+    }
+
+    public LinkVar[][] getChildVars() {
+        return childVars;
     }
 
 }

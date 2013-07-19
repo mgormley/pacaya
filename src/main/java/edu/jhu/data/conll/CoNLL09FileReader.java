@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Reads a single file in CoNLL-2009 format.
@@ -85,6 +86,14 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
 
     public void close() throws IOException {
         reader.close();
+    }
+
+    public List<CoNLL09Sentence> readAll() {
+        ArrayList<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
+        for (CoNLL09Sentence sent : this) {
+            sents.add(sent);
+        }
+        return sents;
     }
 
 }

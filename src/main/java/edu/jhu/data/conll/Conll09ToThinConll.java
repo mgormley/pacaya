@@ -56,6 +56,7 @@ public class Conll09ToThinConll {
                 ArrayList<String> cols = new ArrayList<String>();
                 cols.add(Integer.toString(tok.getId()));
                 cols.add(tok.getForm());
+                cols.add(tok.getLemma());
                 cols.add(tok.getPos());
                 cols.add(Integer.toString(tok.getHead()));
                 

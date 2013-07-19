@@ -2,6 +2,9 @@ package edu.jhu.gm;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
+import edu.jhu.DepParserRunner;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.util.Utilities;
 
@@ -14,6 +17,8 @@ import edu.jhu.util.Utilities;
  * 
  */
 public class FgExample {
+
+    private static final Logger log = Logger.getLogger(FgExample.class);
 
     /** The original factor graph. */
     private FactorGraph fg;
@@ -67,7 +72,15 @@ public class FgExample {
             // Get the configuration of the specified variables as given in the training data.
             VarConfig obsConfig = goldConfig.getSubset(varsObs);
             VarConfig predConfig = goldConfig.getSubset(varsPred);
-                        
+            
+            if (varsObs.size() != obsConfig.size() || varsPred.size() != predConfig.size()) {
+                log.info("varsObs: " + varsObs);
+                log.info("varsPred: " + varsPred);
+                log.info("obsConfig: " + obsConfig);
+                log.info("obsPred: " + predConfig);
+                throw new IllegalStateException("Vars missing from train configuration for factor: " + a);
+            }
+            
             // Cache the features for this factor.
             cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a);
             cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a);
