@@ -110,7 +110,6 @@ public class CrfRunner {
         
         if (trainType != null && train != null) {
             String name = "train";
-            assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
             FgExamples data = getData(alphabet, trainType, train, name);
