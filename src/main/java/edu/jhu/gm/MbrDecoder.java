@@ -28,7 +28,7 @@ public class MbrDecoder {
 
     private MbrDecoderPrm prm;    
     private ArrayList<VarConfig> mbrVarConfigList;
-    private FeatureVector mbrFeats;
+    private FeatureVectorBuilder mbrFeats;
     private Map<Var,Double> varMargMap;
 
     public MbrDecoder(MbrDecoderPrm prm) {
@@ -47,7 +47,7 @@ public class MbrDecoder {
     public void decode(FgModel model, FgExamples data) {
         if (prm.loss == Loss.ACCURACY) {
             mbrVarConfigList = new ArrayList<VarConfig>();
-            mbrFeats = new FeatureVector();
+            mbrFeats = new FeatureVectorBuilder();
             varMargMap = new HashMap<Var,Double>();
             
             for (int i = 0; i < data.size(); i++) {
@@ -85,7 +85,7 @@ public class MbrDecoder {
                     // We use add here since we want the sum across all factors
                     // and all examples.
                     mbrFeats.add(fv);
-                }                
+                } 
             }
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
@@ -98,7 +98,7 @@ public class MbrDecoder {
     }
 
     /** Gets the features that fire on the MBR variable configuration. */
-    public FeatureVector getMbrFeats() {
+    public FeatureVectorBuilder getMbrFeats() {
         return mbrFeats;
     }
 
