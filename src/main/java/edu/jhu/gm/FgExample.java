@@ -36,13 +36,17 @@ public class FgExample {
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
-    /** The feature extract for the original factor graph. */
-    private FeatureExtractor featExtractor;
     
+    /**
+     * Constructs a train or test example for a Factor Graph.
+     * 
+     * @param fg The factor graph. 
+     * @param goldConfig The gold assignment to the variables.
+     * @param featExtractor The feature extractor to be used for this example.
+     */
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
         this.fg = fg;
         this.goldConfig = goldConfig;
-        this.featExtractor = featExtractor;
         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
@@ -83,8 +87,8 @@ public class FgExample {
             }
             
             // Cache the features for this factor.
-            cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a);
-            cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a);
+            cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a, featExtractor);
+            cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a, featExtractor);
         }
     }
     
@@ -97,9 +101,10 @@ public class FgExample {
      * @param clampedVarConfig The configuration of the clamped variables for this factor, whose training data
      *            values are observed.
      * @param factorId The id of the factor.
+     * @param featExtractor TODO
      */
     private void cacheFeats(FactorGraph fgClamped, FeatureCache featCache,
-            VarConfig clampedVarConfig, int factorId) {
+            VarConfig clampedVarConfig, int factorId, FeatureExtractor featExtractor) {
         if (fg.getFactor(factorId) instanceof GlobalFactor) {
             // For global factors, we do NOT cache any feature vectors.
             //
