@@ -137,7 +137,7 @@ public class ProjDepTreeFactor implements GlobalFactor {
         }
     }
     
-    public void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
+    private void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
         assert (this == parent.getFactor());        
         double[] root = new double[n];
         double[][] child = new double[n][n];
@@ -210,9 +210,7 @@ public class ProjDepTreeFactor implements GlobalFactor {
             DenseFactor inMsg = msgs[inEdge.getId()].message;
             if (logDomain) {
                 beliefTrue -= inMsg.getValue(LinkVar.TRUE);
-                log.debug(String.format("beliefTrue: %d %d = %.2f", link.getParent(), link.getChild(), Utilities.exp(beliefTrue)));
                 beliefFalse -= inMsg.getValue(LinkVar.FALSE);
-                log.debug(String.format("beliefFalse: %d %d = %.2f", link.getParent(), link.getChild(), Utilities.exp(beliefFalse)));
             } else {
                 beliefTrue /= inMsg.getValue(LinkVar.TRUE);
                 beliefFalse /= inMsg.getValue(LinkVar.FALSE);                
