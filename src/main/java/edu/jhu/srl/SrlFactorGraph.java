@@ -3,6 +3,8 @@ package edu.jhu.srl;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FactorGraph;
@@ -19,6 +21,8 @@ import edu.jhu.gm.VarSet;
  * @author mgormley
  */
 public class SrlFactorGraph extends FactorGraph {
+
+    private static final Logger log = Logger.getLogger(SrlFactorGraph.class); 
 
     /**
      * Parameters for the SrlFactorGraph.

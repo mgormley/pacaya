@@ -1,9 +1,5 @@
 package edu.jhu.srl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,17 +15,10 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.Label;
-import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FgExample;
-import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.cli.Opt;
-
-//import com.google.common.collect.Maps;
 
 /**
  * Extract corpus statistics about a CoNLL-2009 dataset.
@@ -57,6 +46,7 @@ public class CorpusStatistics {
     private Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
 
     public BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet<Label>());
+    public Normalizer normalize;
 
     private SentFeatureExtractorPrm prm;
     
@@ -64,6 +54,7 @@ public class CorpusStatistics {
 
     public CorpusStatistics(SentFeatureExtractorPrm prm) {
         this.prm = prm;
+        this.normalize = new Normalizer(prm.normalize); 
     }
 
     public void init(Iterable<CoNLL09Sentence> cr) {
@@ -92,10 +83,10 @@ public class CorpusStatistics {
                     knownRoles.add(role);
                 }
                 String wordForm = word.getForm();
-                String cleanWord = Normalize.clean(wordForm);
+                String cleanWord = normalize.clean(wordForm);
                 int position = word.getId() - 1;
                 String unkWord = sig.getSignature(wordForm, position, prm.language);
-                unkWord = Normalize.escape(unkWord);
+                unkWord = normalize.escape(unkWord);
                 words = addWord(words, cleanWord);
                 unks = addWord(unks, unkWord);
                 // Learn what Postags are in our vocabulary
@@ -110,8 +101,10 @@ public class CorpusStatistics {
                 // pairs of words seen in the same sentence.
                 for (CoNLL09Token word2 : sent) {
                     String wordForm2 = word2.getForm();
-                    String cleanWord2 = Normalize.clean(wordForm2);
+                    String cleanWord2 = normalize.clean(wordForm2);
                     String unkWord2 = sig.getSignature(wordForm2, word2.getId(), prm.language);
+                    unkWord2 = normalize.escape(unkWord2);
+
                     // TBD: Actually use the seen/unseen bigrams to shrink the
                     // feature space.
                     addBigram(bigrams, cleanWord, cleanWord2);
@@ -131,6 +124,9 @@ public class CorpusStatistics {
                     
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        
+        log.info("Num known roles: " + roleStateNames.size());
+        log.info("Known roles: " + roleStateNames);
     }
 
     // ------------------- private ------------------- //
@@ -182,20 +178,29 @@ public class CorpusStatistics {
         return knownHash;
     }
 
-    public static class Normalize {
-        private static final Pattern digits = Pattern.compile("\\d+");
-        private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]");
-        private static Map<String, String> stringMap;
+    public static class Normalizer {
 
         static {
             setChars();
         }
         
-        private Normalize() {
-            // Private constructor.
+        private static final Pattern digits = Pattern.compile("\\d+");
+        private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]");
+        private static Map<String, String> stringMap;
+
+        private boolean isOn;
+        
+        public Normalizer() {
+            this.isOn = true;
         }
 
-        public static String escape(String s) {
+        public Normalizer(boolean normalize) {
+            this.isOn = normalize;
+        }
+
+        public String escape(String s) {
+            if (!isOn) { return s; }
+
             Iterator<Entry<String, String>> it = stringMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry entry = (Map.Entry) it.next();
@@ -206,11 +211,13 @@ public class CorpusStatistics {
             return punct.matcher(s).replaceAll("_");
         }
 
-        public static String norm_digits(String s) {
+        public String norm_digits(String s) {
+            if (!isOn) { return s; }
             return digits.matcher(s).replaceAll("0");
         }
 
-        public static String clean(String s) {
+        public String clean(String s) {
+            if (!isOn) { return s; }
             s = escape(s);
             s = norm_digits(s.toLowerCase());
             return s;

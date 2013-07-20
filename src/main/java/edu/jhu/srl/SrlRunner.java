@@ -6,12 +6,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
+import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -53,6 +55,13 @@ public class SrlRunner {
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
 
+    // Options for data.
+
+    @Opt(hasArg = true, description = "Maximum sentence length for each train/test set.")
+    public static int maxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences to include in each train/test set.")
+    public static int maxNumSentences = Integer.MAX_VALUE; 
+    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
@@ -101,9 +110,9 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
     @Opt(hasArg = true, description = "SRL language.")
-    public static String language;
+    public static String language = "es";
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldPos;
+    public static boolean useGoldPos = false;
     
     public SrlRunner() {
     }
@@ -127,7 +136,6 @@ public class SrlRunner {
         
         if (trainType != null && train != null) {
             String name = "train";
-            assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
             FgExamples data = getData(alphabet, trainType, train, name);
@@ -183,13 +191,23 @@ public class SrlRunner {
     }
 
     private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+        log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
-        if (dataType != DatasetType.CONLL_2009){
+        if (dataType == DatasetType.CONLL_2009){
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
+            List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
+            for (CoNLL09Sentence sent : reader) {
+                if (sents.size() >= maxNumSentences) {
+                    break;
+                }
+                if (sent.size() <= maxSentenceLength) {
+                    sents.add(sent);
+                }
+            }
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
-            data = builder.getData(reader);
-        } else if (dataType != DatasetType.ERMA){
+            data = builder.getData(sents);
+        } else if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader(true);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {

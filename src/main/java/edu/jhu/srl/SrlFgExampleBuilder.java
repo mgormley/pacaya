@@ -35,11 +35,13 @@ public class SrlFgExampleBuilder {
     private final SrlFgExampleBuilderPrm prm;
     private final Alphabet<Feature> alphabet;
     private final CorpusStatistics cs;
+    private Alphabet<String> obsAlphabet;
 
-    public SrlFgExampleBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet, CorpusStatistics cs) {
+    public SrlFgExampleBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet, CorpusStatistics cs, Alphabet<String> obsAlphabet) {
         this.prm = prm;
         this.alphabet = alphabet;
         this.cs = cs;
+        this.obsAlphabet = obsAlphabet;
     }
     
     public FgExample getFGExample(CoNLL09Sentence sent) {
@@ -59,7 +61,7 @@ public class SrlFgExampleBuilder {
         // Get the variable assignments given in the training data.
         VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);        
         // Create a feature extractor for this example.
-        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
         FeatureExtractor featExtractor = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
         
         return new FgExample(sfg, trainConfig, featExtractor);

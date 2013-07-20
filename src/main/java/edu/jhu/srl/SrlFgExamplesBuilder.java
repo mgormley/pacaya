@@ -2,6 +2,8 @@ package edu.jhu.srl;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -20,6 +22,8 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  */
 public class SrlFgExamplesBuilder {
+    
+    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class); 
 
     private Alphabet<Feature> alphabet;
     private SrlFgExampleBuilderPrm prm;
@@ -35,15 +39,23 @@ public class SrlFgExamplesBuilder {
     
     public FgExamples getData(CoNLL09FileReader reader) {
         List<CoNLL09Sentence> sents = reader.readAll();
+        return getData(sents);
+    }
+
+    public FgExamples getData(List<CoNLL09Sentence> sents) {
         CorpusStatistics cs = new CorpusStatistics(prm.fePrm);
         cs.init(sents);
 
-        SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs);
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
 
         FgExamples data = new FgExamples(alphabet);
         for (CoNLL09Sentence sent : sents) {
             data.add(ps.getFGExample(sent));
         }
+        
+        log.info("Num observation features: " + obsAlphabet.size());
+        
         return data;
     }
 
