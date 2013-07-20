@@ -135,7 +135,7 @@ public class CrfTrainerTest {
         // Note: This doesn't test the result, just that nothing throws an exception.
     }
     
-    private FgModel train(FgModel model, FgExamples data) {
+    private static FgModel train(FgModel model, FgExamples data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;

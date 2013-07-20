@@ -99,7 +99,10 @@ public class CrfObjective implements Function {
         // TODO: We could multiply in any fully clamped factors in fgLatPred.
         infLatPred.clear();
         
-        return numerator - denominator;
+        double ll = numerator - denominator;        
+        assert ll <= 0 : "Log-likelihood should be <= 0";
+        
+        return ll;
     }
 
     /**

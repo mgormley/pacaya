@@ -204,6 +204,7 @@ public class SrlRunner {
                     sents.add(sent);
                 }
             }
+            log.info("Building factor graphs and extracting features.");
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
             data = builder.getData(sents);
