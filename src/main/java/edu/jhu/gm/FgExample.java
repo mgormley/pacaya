@@ -168,13 +168,14 @@ public class FgExample {
      * @param logDomain TODO*/
     private static FactorGraph getUpdatedFactorGraph(FactorGraph fg, FeatureCache cache, double[] params, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
-            Factor factor = fg.getFactor(a);
-            if (factor instanceof GlobalFactor) {
+            Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
                 // Currently, global factors do not support features, and
                 // therefore have no model parameters.
                 continue;
             }
             
+            DenseFactor factor = (DenseFactor) f;
             int numConfigs = factor.getVars().calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {
                 if (logDomain) {

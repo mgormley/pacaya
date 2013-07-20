@@ -13,6 +13,9 @@ public class FeatureCache {
         feats = new FeatureVector[fg.getNumFactors()][];
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
+                continue;
+            }
             int numConfigs = f.getVars().calcNumConfigs();
             if (numConfigs == 0) {
                 feats[a] = new FeatureVector[1];

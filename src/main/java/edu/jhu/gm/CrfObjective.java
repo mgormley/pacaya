@@ -160,7 +160,7 @@ public class CrfObjective implements Function {
                 continue;
             }
             
-            Factor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
+            DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
             
             int numConfigs = factorMarginal.getVars().calcNumConfigs();
             if (numConfigs == 0) {

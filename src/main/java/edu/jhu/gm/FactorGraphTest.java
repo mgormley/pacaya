@@ -34,13 +34,13 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        Factor emit0 = new Factor(new VarSet(t0)); 
-        Factor emit1 = new Factor(new VarSet(t1)); 
-        Factor emit2 = new Factor(new VarSet(t2)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
+        DenseFactor emit1 = new DenseFactor(new VarSet(t1)); 
+        DenseFactor emit2 = new DenseFactor(new VarSet(t2)); 
         
         // Transition factors.
-        Factor tran0 = new Factor(new VarSet(t0, t1)); 
-        Factor tran1 = new Factor(new VarSet(t1, t2)); 
+        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1)); 
+        DenseFactor tran1 = new DenseFactor(new VarSet(t1, t2)); 
         
         fg.addFactor(emit0);
         assertEquals(1, fg.getConnectedComponents().size());
@@ -99,9 +99,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        Factor emit0 = new Factor(new VarSet(t0)); 
-        Factor emit1 = new Factor(new VarSet(t1)); 
-        Factor emit2 = new Factor(new VarSet(t2)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
+        DenseFactor emit1 = new DenseFactor(new VarSet(t1)); 
+        DenseFactor emit2 = new DenseFactor(new VarSet(t2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -111,8 +111,8 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Transition factors.
-        Factor tran0 = new Factor(new VarSet(t0, t1)); 
-        Factor tran1 = new Factor(new VarSet(t1, t2)); 
+        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1)); 
+        DenseFactor tran1 = new DenseFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);
@@ -133,7 +133,7 @@ public class FactorGraphTest {
         
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
         
@@ -175,9 +175,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
 
         // Emission factors. 
-        Factor emit0 = new Factor(new VarSet(t0, w0)); 
-        Factor emit1 = new Factor(new VarSet(t1, w1)); 
-        Factor emit2 = new Factor(new VarSet(t2, w2)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(t0, w0)); 
+        DenseFactor emit1 = new DenseFactor(new VarSet(t1, w1)); 
+        DenseFactor emit2 = new DenseFactor(new VarSet(t2, w2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -187,8 +187,8 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Transition factors.
-        Factor tran0 = new Factor(new VarSet(t0, t1)); 
-        Factor tran1 = new Factor(new VarSet(t1, t2)); 
+        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1)); 
+        DenseFactor tran1 = new DenseFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);
@@ -209,7 +209,7 @@ public class FactorGraphTest {
         
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
 
@@ -244,9 +244,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
 
         // Emission factors. 
-        Factor emit0 = new Factor(new VarSet(z0, w0)); 
-        Factor emit1 = new Factor(new VarSet(z1, w1)); 
-        Factor emit2 = new Factor(new VarSet(z2, w2)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(z0, w0)); 
+        DenseFactor emit1 = new DenseFactor(new VarSet(z1, w1)); 
+        DenseFactor emit2 = new DenseFactor(new VarSet(z2, w2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -256,9 +256,9 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Latent emission factors. 
-        Factor emitL0 = new Factor(new VarSet(t0, z0)); 
-        Factor emitL1 = new Factor(new VarSet(t1, z1)); 
-        Factor emitL2 = new Factor(new VarSet(t2, z2)); 
+        DenseFactor emitL0 = new DenseFactor(new VarSet(t0, z0)); 
+        DenseFactor emitL1 = new DenseFactor(new VarSet(t1, z1)); 
+        DenseFactor emitL2 = new DenseFactor(new VarSet(t2, z2)); 
 
         emitL0.setValue(0, 1.1);
         emitL0.setValue(1, 1.9);
@@ -268,8 +268,8 @@ public class FactorGraphTest {
         emitL2.setValue(1, 1.5);
         
         // Transition factors.
-        Factor tran0 = new Factor(new VarSet(t0, t1)); 
-        Factor tran1 = new Factor(new VarSet(t1, t2)); 
+        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1)); 
+        DenseFactor tran1 = new DenseFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);
@@ -293,7 +293,7 @@ public class FactorGraphTest {
 
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
         

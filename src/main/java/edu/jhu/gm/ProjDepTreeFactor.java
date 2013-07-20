@@ -17,7 +17,7 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends Factor implements GlobalFactor {
+public class ProjDepTreeFactor implements GlobalFactor {
         
     /**
      * Link variable. When true it indicates that there is an edge between its
@@ -66,13 +66,11 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ProjDepTreeFactor(int n, VarType type) {
-        // This is a hack so that we can extend Factor without actually building a massive factor.
-        super(new VarSet());
+    public ProjDepTreeFactor(int n, VarType type) {        
         this.vars = createVarSet(n, type);
         this.n = n;
 
-        // TODO: We create the VarSet statically and then find extract the vars
+        // TODO: We created the VarSet statically and then find extract the vars
         // again from the VarSet only because we're subclassing Factor. In the
         // future, we should drop this.
         LinkVar[] rootVars = new LinkVar[n];
@@ -104,7 +102,12 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
     }
 
     private static VarSet createVarSet(int n, VarType type) {
-        VarSet vars = new VarSet();
+        VarSet vars = new VarSet() {
+            @Override
+            public int calcNumConfigs() {
+                throw new RuntimeException("This should never be called on a global factor.");
+            }
+        };
         // Add a variable for each pair of tokens.
         for (int i=0; i<n; i++) {
             for (int j=0; j<n; j++) {
@@ -140,7 +143,7 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         Utilities.fill(child, Double.NEGATIVE_INFINITY);
         for (FgEdge nbEdge : parent.getOutEdges()) {
             LinkVar link = (LinkVar) nbEdge.getVar();
-            Factor nbMsg = msgs[nbEdge.getId()].message;
+            DenseFactor nbMsg = msgs[nbEdge.getId()].message;
             double oddsRatio;
             if (logDomain) {
                 oddsRatio = nbMsg.getValue(LinkVar.TRUE) - nbMsg.getValue(LinkVar.FALSE);
@@ -164,7 +167,7 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         // Precompute the product of all the "false" messages.
         double pi = logDomain ? 0.0 : 1.0;
         for (FgEdge nbEdge : parent.getOutEdges()) {
-            Factor nbMsg = msgs[nbEdge.getId()].message;
+            DenseFactor nbMsg = msgs[nbEdge.getId()].message;
             if (logDomain) {
                 pi += nbMsg.getValue(LinkVar.FALSE);
             } else {

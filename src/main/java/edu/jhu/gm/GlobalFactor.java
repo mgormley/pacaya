@@ -6,11 +6,11 @@ import edu.jhu.gm.FactorGraph.FgNode;
 /**
  * A constraint global factor.
  * 
- * Unlike a full global factor, this may not have any parameters or features.
+ * Unlike a full global factor, this does not have any parameters or features.
  * 
  * @author mgormley
  */
-public interface GlobalFactor {
+public interface GlobalFactor extends Factor {
 
     /**
      * Creates all the messages from this global factor to all its variables.

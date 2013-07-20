@@ -20,7 +20,7 @@ public class BeliefPropagationTest {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
-        Factor emit0 = new Factor(new VarSet(t0)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -30,7 +30,7 @@ public class BeliefPropagationTest {
         boolean logDomain = true;
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
         
@@ -79,9 +79,9 @@ public class BeliefPropagationTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
         
         // Emission factors. 
-        Factor emit0 = new Factor(new VarSet(t0)); 
-        Factor emit1 = new Factor(new VarSet(t1)); 
-        Factor emit2 = new Factor(new VarSet(t2)); 
+        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
+        DenseFactor emit1 = new DenseFactor(new VarSet(t1)); 
+        DenseFactor emit2 = new DenseFactor(new VarSet(t2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -96,7 +96,7 @@ public class BeliefPropagationTest {
 
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
         return fg;
@@ -179,15 +179,15 @@ public class BeliefPropagationTest {
     private void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp, double tolerance) {
         for (Var var : fg.getVars()) {
-            Factor bfm = bf.getMarginals(var);
-            Factor bpm = bp.getMarginals(var);
+            DenseFactor bfm = bf.getMarginals(var);
+            DenseFactor bpm = bp.getMarginals(var);
             if (!bfm.equals(bpm, tolerance)) {
                 assertEquals(bfm, bpm);
             }
         }
         for (Factor f : fg.getFactors()) {
-            Factor bfm = bf.getMarginals(f);
-            Factor bpm = bp.getMarginals(f);
+            DenseFactor bfm = bf.getMarginals(f);
+            DenseFactor bpm = bp.getMarginals(f);
             if (!bfm.equals(bpm, tolerance)) {
                 assertEquals(bfm, bpm);
             }

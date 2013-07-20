@@ -69,7 +69,7 @@ public class MbrDecoder {
                 // variables.
                 for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                     Var var = fgLatPred.getVar(varId);
-                    Factor marg = inf.getMarginalsForVarId(varId);
+                    DenseFactor marg = inf.getMarginalsForVarId(varId);
                     int argmaxState = marg.getArgmaxConfigId();
                     mbrVarConfig.put(var, argmaxState);
                     varMargMap.put(var, marg.getValue(argmaxState));
