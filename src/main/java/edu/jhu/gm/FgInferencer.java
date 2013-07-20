@@ -21,7 +21,7 @@ public interface FgInferencer {
      * @return The marginal distribution as log-probabilities if isLogDomain()
      *         == true, and probabilities otherwise.
      */
-    Factor getMarginals(Var var);
+    DenseFactor getMarginals(Var var);
 
     /**
      * Gets the approximate (log-)probabilities for the marginal distribution of
@@ -30,7 +30,7 @@ public interface FgInferencer {
      * @return The marginal distribution as log-probabilities if isLogDomain()
      *         == true, and probabilities otherwise.
      */
-    Factor getMarginals(VarSet varSet);
+    DenseFactor getMarginals(VarSet varSet);
 
     /**
      * Gets the approximate (log-)probabilities for the marginal distribution of
@@ -39,7 +39,7 @@ public interface FgInferencer {
      * @return The marginal distribution as log-probabilities if isLogDomain()
      *         == true, and probabilities otherwise.
      */
-    Factor getMarginals(Factor factor);
+    DenseFactor getMarginals(Factor factor);
 
     /**
      * Gets the approximate (log-)probabilities for the marginal distribution of
@@ -48,7 +48,7 @@ public interface FgInferencer {
      * @return The marginal distribution as log-probabilities if isLogDomain()
      *         == true, and probabilities otherwise.
      */
-    Factor getMarginalsForVarId(int varId);
+    DenseFactor getMarginalsForVarId(int varId);
 
     /**
      * Gets the approximate (log-)probabilities for the marginal distribution of
@@ -57,7 +57,7 @@ public interface FgInferencer {
      * @return The marginal distribution as log-probabilities if isLogDomain()
      *         == true, and probabilities otherwise.
      */
-    Factor getMarginalsForFactorId(int factorId);
+    DenseFactor getMarginalsForFactorId(int factorId);
 
     /**
      * Gets the log of the (approximate) (log-)partition function, which is the

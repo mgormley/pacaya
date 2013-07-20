@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.gm.Factor;
+import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.ProjDepTreeFactor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
@@ -66,7 +66,7 @@ public class SrlFactorGraph extends FactorGraph {
      * An SRL factor, which includes its type (i.e. template).
      * @author mgormley
      */
-    public static class SrlFactor extends Factor {
+    public static class SrlFactor extends DenseFactor {
 
         private SrlFactorTemplate template;
 
@@ -197,20 +197,20 @@ public class SrlFactorGraph extends FactorGraph {
                 if (i == -1) {
                     // Add unary factors on child Links
                     if (rootVars[j] != null) {
-                        addFactor(new Factor(new VarSet(rootVars[j])));
+                        addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY));
                     }
                 } else {
                     // Add unary factors on Roles
                     if (roleVars[i][j] != null) {
-                        addFactor(new Factor(new VarSet(roleVars[i][j])));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
                     }
                     // Add unary factors on child Links
                     if (childVars[i][j] != null) {
-                        addFactor(new Factor(new VarSet(childVars[i][j])));
+                        addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY));
                     }
                     // Add binary factors between Roles and Links.
                     if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new Factor(new VarSet(roleVars[i][j], childVars[i][j])));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
                     }
                 }
             }
@@ -225,7 +225,7 @@ public class SrlFactorGraph extends FactorGraph {
         if (!prm.makeUnknownPredRolesLatent || knownPreds.contains((Integer) parent)) {
             roleVar = new RoleVar(VarType.PREDICTED, cs.roleStateNames.size(), roleVarName, cs.roleStateNames, parent, child);            
         } else {
-            roleVar = new RoleVar(VarType.LATENT, 0, roleVarName, cs.roleStateNames, parent, child);
+            roleVar = new RoleVar(VarType.LATENT, cs.roleStateNames.size(), roleVarName, cs.roleStateNames, parent, child);
         }
         return roleVar;
     }

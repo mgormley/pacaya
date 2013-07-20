@@ -77,7 +77,7 @@ public class CrfObjectiveTest {
                 for (int i=0; i<desc.getCount(); i++) {
                     FactorGraph fg = new FactorGraph();
                     final Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                    Factor f0 = new Factor(new VarSet(v0));
+                    DenseFactor f0 = new DenseFactor(new VarSet(v0));
                     fg.addFactor(f0);
                     FeatureExtractor featExtractor = new FeatureExtractor() {
                         @Override

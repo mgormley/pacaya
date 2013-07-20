@@ -22,6 +22,7 @@ import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FgExample;
 import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
@@ -41,13 +42,6 @@ public class CorpusStatistics {
 
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
 
-    @Opt(name = "language", hasArg = true, description = "Language (en or es).")
-    public static String language = "es";
-    @Opt(name = "cutoff", hasArg = true, description = "Cutoff for OOV words.")
-    public static int cutoff = 3;
-    @Opt(name = "use-PHEAD", hasArg = false, description = "Use Predicted HEAD rather than Gold HEAD.")
-    public static boolean goldHead = true;
-
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
     public Set<String> knownPostags = new HashSet<String>();
@@ -64,9 +58,15 @@ public class CorpusStatistics {
 
     public BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet<Label>());
 
+    private SentFeatureExtractorPrm prm;
+    
+    public static final Pattern dash = Pattern.compile("-");
+
+    public CorpusStatistics(SentFeatureExtractorPrm prm) {
+        this.prm = prm;
+    }
+
     public void init(Iterable<CoNLL09Sentence> cr) {
-        if (true) throw new  RuntimeException("DO SOMETHING ABOUT THE HARDCODED OPTS ABOVE");
-        
         // TODO: Currently, we build but just discard the bigrams map.
         Map<Set<String>, MutableInt> bigrams = new HashMap<Set<String>, MutableInt>();
         
@@ -85,22 +85,23 @@ public class CorpusStatistics {
             }
             for (int i = 0; i < sent.size(); i++) {
                 CoNLL09Token word = sent.get(i);
-                for (int j = 0; j < word.getApreds().size(); j++) {
-                    String[] splitRole = word.getApreds().get(j).split("-");
+                for (int j = 0; j < word.getApreds().size(); j++) {  
+                    // TODO: This is hardcoding the removal of the Theta role; make this an option.
+                    String[] splitRole = dash.split(word.getApreds().get(j));
                     String role = splitRole[0].toLowerCase();
                     knownRoles.add(role);
                 }
                 String wordForm = word.getForm();
                 String cleanWord = Normalize.clean(wordForm);
                 int position = word.getId() - 1;
-                String unkWord = sig.getSignature(wordForm, position, language);
+                String unkWord = sig.getSignature(wordForm, position, prm.language);
                 unkWord = Normalize.escape(unkWord);
                 words = addWord(words, cleanWord);
                 unks = addWord(unks, unkWord);
                 // Learn what Postags are in our vocabulary
                 // Later, can then back off to NONE if we haven't seen it
                 // before.
-                if (!goldHead) {
+                if (!prm.useGoldPos) {
                     knownPostags.add(word.getPpos());
                 } else {
                     knownPostags.add(word.getPos());
@@ -110,7 +111,7 @@ public class CorpusStatistics {
                 for (CoNLL09Token word2 : sent) {
                     String wordForm2 = word2.getForm();
                     String cleanWord2 = Normalize.clean(wordForm2);
-                    String unkWord2 = sig.getSignature(wordForm2, word2.getId(), language);
+                    String unkWord2 = sig.getSignature(wordForm2, word2.getId(), prm.language);
                     // TBD: Actually use the seen/unseen bigrams to shrink the
                     // feature space.
                     addBigram(bigrams, cleanWord, cleanWord2);
@@ -122,8 +123,8 @@ public class CorpusStatistics {
         }
         
         // For words and unknown word classes, we only keep those above some threshold.
-        knownWords = getUnigramsAboveThreshold(words, cutoff);
-        knownUnks = getUnigramsAboveThreshold(unks, cutoff);
+        knownWords = getUnigramsAboveThreshold(words, prm.cutoff);
+        knownUnks = getUnigramsAboveThreshold(unks, prm.cutoff);
         
         // TODO: Currently not actually using bigram dictionary.
         // knownBigrams = getBigramsAboveThreshold(bigrams, cutoff);
@@ -186,6 +187,10 @@ public class CorpusStatistics {
         private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]");
         private static Map<String, String> stringMap;
 
+        static {
+            setChars();
+        }
+        
         private Normalize() {
             // Private constructor.
         }

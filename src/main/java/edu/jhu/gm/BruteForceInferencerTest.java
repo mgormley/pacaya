@@ -54,7 +54,7 @@ public class BruteForceInferencerTest {
             FgInferencer bp, boolean logDomain) {        
         bp.run();
 
-        Factor marg;
+        DenseFactor marg;
         double[] goldMarg;
         
         marg = bp.getMarginals(fg.getVar(0));
@@ -79,7 +79,7 @@ public class BruteForceInferencerTest {
 
         // System.out.println(bp.getJointFactor());
 
-        Factor marg;
+        DenseFactor marg;
         double[] goldMarg;
         
         assertEquals("A", fg.getVar(0).getName());

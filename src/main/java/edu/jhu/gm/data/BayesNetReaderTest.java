@@ -1,13 +1,13 @@
 package edu.jhu.gm.data;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 import org.junit.Test;
 
+import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.Factor;
 import edu.jhu.gm.FactorGraph;
 
@@ -32,7 +32,7 @@ public class BayesNetReaderTest {
         FactorGraph fg = bnr.readBnAsFg(networkIs, cpdIs);
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
-                f.convertRealToLog();
+                ((DenseFactor)f).convertRealToLog();
             }
         }
         return fg;

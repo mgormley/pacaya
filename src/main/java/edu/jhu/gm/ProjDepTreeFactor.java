@@ -2,6 +2,8 @@ package edu.jhu.gm;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.BeliefPropagation.Messages;
 import edu.jhu.gm.FactorGraph.FgEdge;
@@ -17,7 +19,7 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends Factor implements GlobalFactor {
+public class ProjDepTreeFactor implements GlobalFactor {
         
     /**
      * Link variable. When true it indicates that there is an edge between its
@@ -55,6 +57,8 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         
     }
     
+    private static final Logger log = Logger.getLogger(ProjDepTreeFactor.class);
+    
     private final VarSet vars;
     /** The sentence length. */
     private final int n;
@@ -66,17 +70,15 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ProjDepTreeFactor(int n, VarType type) {
-        // This is a hack so that we can extend Factor without actually building a massive factor.
-        super(new VarSet());
+    public ProjDepTreeFactor(int n, VarType type) {        
         this.vars = createVarSet(n, type);
         this.n = n;
 
-        // TODO: We create the VarSet statically and then find extract the vars
+        // TODO: We created the VarSet statically and then find extract the vars
         // again from the VarSet only because we're subclassing Factor. In the
         // future, we should drop this.
-        LinkVar[] rootVars = new LinkVar[n];
-        LinkVar[][] childVars = new LinkVar[n][n];
+        rootVars = new LinkVar[n];
+        childVars = new LinkVar[n][n];
         VarSet vars = this.getVars();
         for (Var var : vars) {
             LinkVar link = (LinkVar) var;
@@ -104,7 +106,12 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
     }
 
     private static VarSet createVarSet(int n, VarType type) {
-        VarSet vars = new VarSet();
+        VarSet vars = new VarSet() {
+            @Override
+            public int calcNumConfigs() {
+                throw new RuntimeException("This should never be called on a global factor.");
+            }
+        };
         // Add a variable for each pair of tokens.
         for (int i=0; i<n; i++) {
             for (int j=0; j<n; j++) {
@@ -138,14 +145,14 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
         // Compute the odds ratios of the messages for each edge in the tree.
         Utilities.fill(root, Double.NEGATIVE_INFINITY);
         Utilities.fill(child, Double.NEGATIVE_INFINITY);
-        for (FgEdge nbEdge : parent.getOutEdges()) {
-            LinkVar link = (LinkVar) nbEdge.getVar();
-            Factor nbMsg = msgs[nbEdge.getId()].message;
+        for (FgEdge inEdge : parent.getInEdges()) {
+            LinkVar link = (LinkVar) inEdge.getVar();
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
             double oddsRatio;
             if (logDomain) {
-                oddsRatio = nbMsg.getValue(LinkVar.TRUE) - nbMsg.getValue(LinkVar.FALSE);
+                oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
             } else {
-                oddsRatio = nbMsg.getValue(LinkVar.TRUE) / nbMsg.getValue(LinkVar.FALSE);
+                oddsRatio = inMsg.getValue(LinkVar.TRUE) / inMsg.getValue(LinkVar.FALSE);
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
                 oddsRatio = Utilities.log(oddsRatio);
             }
@@ -154,7 +161,7 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
                 root[link.getChild()] = oddsRatio;
             } else {
                 child[link.getParent()][link.getChild()] = oddsRatio;
-            }       
+            }
         }
 
         // Compute the dependency tree marginals, summing over all projective
@@ -163,21 +170,25 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
 
         // Precompute the product of all the "false" messages.
         double pi = logDomain ? 0.0 : 1.0;
-        for (FgEdge nbEdge : parent.getOutEdges()) {
-            Factor nbMsg = msgs[nbEdge.getId()].message;
+        for (FgEdge inEdge : parent.getInEdges()) {
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
             if (logDomain) {
-                pi += nbMsg.getValue(LinkVar.FALSE);
+                pi += inMsg.getValue(LinkVar.FALSE);
             } else {
-                pi *= nbMsg.getValue(LinkVar.FALSE);
+                pi *= inMsg.getValue(LinkVar.FALSE);
             }
         }
-        
+
         double partition = logDomain ? pi + chart.getLogPartitionFunction() :
             pi * Utilities.exp(chart.getLogPartitionFunction());
+
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("partition: %.2f", partition));
+        }
         
         // Create the messages and stage them in the Messages containers.
-        for (FgEdge nbEdge : parent.getOutEdges()) {
-            LinkVar link = (LinkVar) nbEdge.getVar();
+        for (FgEdge outEdge : parent.getOutEdges()) {
+            LinkVar link = (LinkVar) outEdge.getVar();
             
             double beliefTrue;
             double beliefFalse;
@@ -189,10 +200,29 @@ public class ProjDepTreeFactor extends Factor implements GlobalFactor {
                 beliefFalse = partition - beliefTrue;
             }
 
-            msgs[nbEdge.getId()].newMessage.setValue(LinkVar.FALSE, beliefFalse);
-            msgs[nbEdge.getId()].newMessage.setValue(LinkVar.TRUE, beliefTrue);
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("beliefTrue: %d %d = %.2f", link.getParent(), link.getChild(), beliefTrue));
+                log.trace(String.format("beliefFalse: %d %d = %.2f", link.getParent(), link.getChild(), beliefFalse));
+            }
+            
+            // Divide out the incoming message to obtain the outgoing message from the belief. 
+            FgEdge inEdge = outEdge.getOpposing();
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            if (logDomain) {
+                beliefTrue -= inMsg.getValue(LinkVar.TRUE);
+                log.debug(String.format("beliefTrue: %d %d = %.2f", link.getParent(), link.getChild(), Utilities.exp(beliefTrue)));
+                beliefFalse -= inMsg.getValue(LinkVar.FALSE);
+                log.debug(String.format("beliefFalse: %d %d = %.2f", link.getParent(), link.getChild(), Utilities.exp(beliefFalse)));
+            } else {
+                beliefTrue /= inMsg.getValue(LinkVar.TRUE);
+                beliefFalse /= inMsg.getValue(LinkVar.FALSE);                
+            }
+            
+            // Set the outgoing messages.
+            msgs[outEdge.getId()].newMessage.setValue(LinkVar.FALSE, beliefFalse);
+            msgs[outEdge.getId()].newMessage.setValue(LinkVar.TRUE, beliefTrue);
         }
-        
+                
     }
 
     public LinkVar[] getRootVars() {

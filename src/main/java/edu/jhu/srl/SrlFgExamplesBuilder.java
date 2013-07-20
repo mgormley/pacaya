@@ -35,10 +35,9 @@ public class SrlFgExamplesBuilder {
     
     public FgExamples getData(CoNLL09FileReader reader) {
         List<CoNLL09Sentence> sents = reader.readAll();
-        CorpusStatistics cs = new CorpusStatistics();
+        CorpusStatistics cs = new CorpusStatistics(prm.fePrm);
         cs.init(sents);
 
-        // TODO: set these params.
         SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs);
 
         FgExamples data = new FgExamples(alphabet);
