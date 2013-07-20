@@ -44,8 +44,6 @@ public class FgExample {
         this.goldConfig = goldConfig;
         this.featExtractor = featExtractor;
         
-        // TODO: assert that the training config contains assignments for all the observed and predicted variables.
-        
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
         fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));        
@@ -70,6 +68,9 @@ public class FgExample {
             VarSet varsPred = VarSet.getVarsOfType(vars, VarType.PREDICTED);
             
             // Get the configuration of the specified variables as given in the training data.
+            // 
+            // This also asserts that the training config contains assignments
+            // for all the observed and predicted variables.
             VarConfig obsConfig = goldConfig.getSubset(varsObs);
             VarConfig predConfig = goldConfig.getSubset(varsPred);
             

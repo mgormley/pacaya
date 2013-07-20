@@ -98,6 +98,8 @@ public class SrlRunner {
     public static boolean useProjDepTreeFactor = false;
 
     // Options for SRL feature extraction.
+    @Opt(hasArg = true, description = "Cutoff for OOV words.")
+    public static int cutoff = 3;
     @Opt(hasArg = true, description = "SRL language.")
     public static String language;
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
@@ -230,6 +232,7 @@ public class SrlRunner {
         prm.fgPrm.roleStructure = roleStructure;
         prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
         // Feature extraction.
+        prm.fePrm.cutoff = cutoff;
         prm.fePrm.language = language;
         prm.fePrm.useGoldPos = useGoldPos;
         return prm;

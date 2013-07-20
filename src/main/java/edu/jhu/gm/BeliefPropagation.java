@@ -172,6 +172,17 @@ public class BeliefPropagation implements FgInferencer {
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
         
+        if (!edge.isVarToFactor() && factor instanceof GlobalFactor) {
+            // Since this is a global factor, we pass the incoming messages to it, 
+            // and efficiently marginalize over the variables. The current setup is
+            // create all the messages from this factor to its variables, but only 
+            // once per iteration.
+            GlobalFactor globalFac = (GlobalFactor) factor;
+            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            // The messages have been set, so just return.
+            return;
+        }
+        
         DenseFactor msg = msgs[edgeId].newMessage;
         
         // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
@@ -189,29 +200,20 @@ public class BeliefPropagation implements FgInferencer {
             // Compute the product of all messages received by f* (each
             // of which will have a different domain) with the factor f* itself.
             // Exclude the message going out to the variable, v*.
+                
+            // TODO: we could cache this prod factor in the EdgeContent for this
+            // edge if creating it is slow.
+            DenseFactor prod = new DenseFactor(factor.getVars());
+            // Set the initial values of the product to those of the sending factor.
+            prod.set((DenseFactor) factor);
+            getProductOfMessages(edge.getParent(), prod, edge.getChild());
 
-            if (factor instanceof GlobalFactor) {
-                // Since this is a global factor, we pass the incoming messages to it, 
-                // and efficiently marginalize over the variables. The current setup is
-                // create all the messages from this factor to its variables, but only 
-                // once per iteration.
-                GlobalFactor globalFac = (GlobalFactor) factor;
-                globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            // Marginalize over all the assignments to variables for f*, except
+            // for v*.
+            if (prm.logDomain) { 
+                msg = prod.getLogMarginal(new VarSet(var), false);
             } else {
-                // TODO: we could cache this prod factor in the EdgeContent for this
-                // edge if creating it is slow.
-                DenseFactor prod = new DenseFactor(factor.getVars());
-                // Set the initial values of the product to those of the sending factor.
-                prod.set((DenseFactor) factor);
-                getProductOfMessages(edge.getParent(), prod, edge.getChild());
-    
-                // Marginalize over all the assignments to variables for f*, except
-                // for v*.
-                if (prm.logDomain) { 
-                    msg = prod.getLogMarginal(new VarSet(var), false);
-                } else {
-                    msg = prod.getMarginal(new VarSet(var), false);
-                }
+                msg = prod.getMarginal(new VarSet(var), false);
             }
         }
         

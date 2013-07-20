@@ -40,14 +40,15 @@ public class BruteForceInferencer implements FgInferencer {
     private static DenseFactor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
         DenseFactor joint = new DenseFactor(new VarSet(), logDomain ? 0.0 : 1.0);
         for (int a=0; a<fg.getNumFactors(); a++) {
-            if (fg.getFactor(a) instanceof GlobalFactor) {
-                throw new RuntimeException("BruteForceInferencer only applies to DenseFactors");
-            }
-            DenseFactor factor = (DenseFactor) fg.getFactor(a);
-            if (logDomain) {
-                joint.add(factor);
+            if (fg.getFactor(a) instanceof DenseFactor) {
+                DenseFactor factor = (DenseFactor) fg.getFactor(a);
+                if (logDomain) {
+                    joint.add(factor);
+                } else {
+                    joint.prod(factor);
+                }
             } else {
-                joint.prod(factor);
+                throw new RuntimeException("BruteForceInferencer only applies to DenseFactors");
             }
         }
         return joint;

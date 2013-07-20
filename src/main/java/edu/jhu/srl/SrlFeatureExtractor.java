@@ -42,6 +42,8 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         this.sfg = sfg;
         this.alphabet = alphabet;
         this.sentFeatExt = sentFeatExt;
+        obsFeatsSolo = new Set[sentFeatExt.getSentSize()];
+        obsFeatsPair = new Set[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
     }
     
     @Override

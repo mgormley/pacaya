@@ -8,6 +8,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.Normalize;
+import edu.jhu.util.cli.Opt;
 
 /**
  * Feature extraction from the observations on a particular sentence.
@@ -15,7 +16,6 @@ import edu.jhu.srl.CorpusStatistics.Normalize;
  * @author mmitchell
  * @author mgormley
  */
-// TODO: (Eventually) move this out of the SRL package.
 public class SentFeatureExtractor {
 
     /**
@@ -25,6 +25,11 @@ public class SentFeatureExtractor {
     public static class SentFeatureExtractorPrm {
         public boolean useGoldPos = false;
         public String language = "es";
+        /**
+         * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
+         * we'll just put it here for now.)
+         */
+        public int cutoff = 3;
     }
     
     // Parameters for feature extraction.
@@ -39,6 +44,10 @@ public class SentFeatureExtractor {
         this.cs = cs;
     }
 
+    public int getSentSize() {
+        return sent.size();
+    }
+    
     // ----------------- Extracting Features on the Observations ONLY -----------------
 
     /**

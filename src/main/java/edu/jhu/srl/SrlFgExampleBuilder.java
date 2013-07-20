@@ -91,10 +91,24 @@ public class SrlFgExampleBuilder {
         }
         
         // Add all the training data assignments to the role variables, if they are not latent.
+        // First, just set all the role names to "_".
+        for (int i=0; i<sent.size(); i++) {
+            for (int j=0; j<sent.size(); j++) {
+                RoleVar roleVar = sfg.getRoleVar(i, j);
+                if (roleVar != null && roleVar.getType() != VarType.LATENT) {
+                    vc.put(roleVar, "_");
+                }
+            }
+        }
+        // Then set the ones which are observed.
         for (SrlEdge edge : srlGraph.getEdges()) {
             int i = edge.getArg().getPosition();
             int j = edge.getPred().getPosition();
             String roleName = edge.getLabel();
+            
+            // Lowercase the role name and remove anything after the first dash.
+            String[] splitRole = CorpusStatistics.dash.split(roleName);
+            roleName = splitRole[0].toLowerCase();
             
             RoleVar roleVar = sfg.getRoleVar(i, j);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {
