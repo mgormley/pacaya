@@ -34,6 +34,8 @@ public class SentFeatureExtractor {
          * Whether to normalize and clean words.
          */
         public boolean normalize = false;
+        /** For testing only: this will ensure that the only feature returned is the bias feature. */
+        public boolean biasOnly = false;
     }
     
     // Parameters for feature extraction.
@@ -73,6 +75,8 @@ public class SentFeatureExtractor {
     public BinaryStrFVBuilder createFeatureSet(int idx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
+        if (prm.biasOnly) { return feats; }
+        
         addNaradowskySoloFeatures(idx, feats);
         addZhaoSoloFeatures(idx, feats);
         return feats;
@@ -95,6 +99,9 @@ public class SentFeatureExtractor {
      */
     public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
+        feats.add("BIAS_FEATURE");
+        if (prm.biasOnly) { return feats; }
+        
         // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
         addNaradowskyPairFeatures(pidx, aidx, feats);
         addZhaoPairFeatures(pidx, aidx, feats);

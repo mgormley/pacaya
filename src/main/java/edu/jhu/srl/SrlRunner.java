@@ -43,6 +43,10 @@ import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.dist.Gaussian;
 
+/**
+ * Pipeline runner for SRL experiments.
+ * @author mgormley
+ */
 public class SrlRunner {
 
     public static enum DatasetType { ERMA, CONLL_2009 };
@@ -105,6 +109,8 @@ public class SrlRunner {
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
     public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
+    public static boolean allowPredArgSelfLoops = false;
 
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
@@ -113,6 +119,8 @@ public class SrlRunner {
     public static String language = "es";
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
     public static boolean useGoldPos = false;
+    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
+    public static boolean biasOnly = false;
     
     public SrlRunner() {
     }
@@ -250,10 +258,12 @@ public class SrlRunner {
         prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.roleStructure = roleStructure;
         prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         // Feature extraction.
         prm.fePrm.cutoff = cutoff;
         prm.fePrm.language = language;
         prm.fePrm.useGoldPos = useGoldPos;
+        prm.fePrm.biasOnly = biasOnly;
         return prm;
     }
     

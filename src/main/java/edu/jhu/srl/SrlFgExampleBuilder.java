@@ -48,16 +48,10 @@ public class SrlFgExampleBuilder {
         // Precompute a few things.
         SrlGraph srlGraph = sent.getSrlGraph();
         
-        List<SrlEdge> srlEdges = srlGraph.getEdges();
-        Set<Integer> knownPreds = new HashSet<Integer>();
-        // All the "Y"s
-        for (SrlEdge e : srlEdges) {
-            Integer a = e.getPred().getPosition();
-            knownPreds.add(a);
-        }
+        Set<Integer> knownPreds = getKnownPreds(srlGraph);
         
         // Construct the factor graph.
-        SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
+        SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
         // Get the variable assignments given in the training data.
         VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);        
         // Create a feature extractor for this example.
@@ -67,21 +61,32 @@ public class SrlFgExampleBuilder {
         return new FgExample(sfg, trainConfig, featExtractor);
     }
 
+    private static Set<Integer> getKnownPreds(SrlGraph srlGraph) {
+        List<SrlEdge> srlEdges = srlGraph.getEdges();
+        Set<Integer> knownPreds = new HashSet<Integer>();
+        // All the "Y"s
+        for (SrlEdge e : srlEdges) {
+            Integer a = e.getPred().getPosition();
+            knownPreds.add(a);
+        }
+        return knownPreds;
+    }
+
     private VarConfig getTrainAssignment(CoNLL09Sentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
         VarConfig vc = new VarConfig();
 
         // Add all the training data assignments to the link variables, if they are not latent.
         //
         // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
+        int[] parents = sent.getParents();
         for (int i=-1; i<sent.size(); i++) {
             for (int j=0; j<sent.size(); j++) {
                 if (j != i && sfg.getLinkVar(i, j) != null) {
                     LinkVar linkVar = sfg.getLinkVar(i, j);
                     if (linkVar.getType() != VarType.LATENT) {
                         // Syntactic head, from dependency parse.
-                        int head = sent.get(j).getHead();
                         int state;
-                        if (head != i) {
+                        if (parents[j] != i) {
                             state = LinkVar.FALSE;
                         } else {
                             state = LinkVar.TRUE;
@@ -104,15 +109,15 @@ public class SrlFgExampleBuilder {
         }
         // Then set the ones which are observed.
         for (SrlEdge edge : srlGraph.getEdges()) {
-            int i = edge.getArg().getPosition();
-            int j = edge.getPred().getPosition();
+            int parent = edge.getPred().getPosition();
+            int child = edge.getArg().getPosition();
             String roleName = edge.getLabel();
             
             // Lowercase the role name and remove anything after the first dash.
             String[] splitRole = CorpusStatistics.dash.split(roleName);
             roleName = splitRole[0].toLowerCase();
             
-            RoleVar roleVar = sfg.getRoleVar(i, j);
+            RoleVar roleVar = sfg.getRoleVar(parent, child);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {
                 vc.put(roleVar, roleName);
             }

@@ -19,6 +19,10 @@ import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 
+/**
+ * Unit tests for {@link SrlFgExamplesBuilderTest}.
+ * @author mgormley
+ */
 public class SrlFgExamplesBuilderTest {
 
     @Test
@@ -32,9 +36,12 @@ public class SrlFgExamplesBuilderTest {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         prm.fgPrm.useProjDepTreeFactor = true;
+        prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
         FgExamples data = builder.getData(sents);
+        
+        System.out.println("Num features: " + alphabet.size());
         FgModel model = new FgModel(alphabet);
         model = train(model, data);
     }

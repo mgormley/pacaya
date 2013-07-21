@@ -49,8 +49,9 @@ public class SrlFactorGraph extends FactorGraph {
          */
         public boolean useProjDepTreeFactor = false;
         
-        /** Whether to predict predicate sense. */
-        public boolean predictSense = true;
+        /** Whether to allow a predicate to assign a role to itself. (This should be turned on for English) */
+        public boolean allowPredArgSelfLoops = false;
+        
     }
 
     public enum RoleStructure {
@@ -61,7 +62,7 @@ public class SrlFactorGraph extends FactorGraph {
     }
     
     public enum SrlFactorTemplate {
-        LINK_ROLE,
+        LINK_ROLE_BINARY,
         ROLE_UNARY,
         LINK_UNARY,
     }
@@ -146,28 +147,33 @@ public class SrlFactorGraph extends FactorGraph {
     private SenseVar[] senseVars;
 
     // The sentence length.
-    private int n;
+    private final int n;
                 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
+    public SrlFactorGraph(SrlFactorGraphPrm prm, int n, Set<Integer> knownPreds, List<String> roleStateNames) {
         super();
-        this.prm = prm;
-        
-        n = sent.size();
-        
+        this.prm = prm;        
+        this.n = n;
+                
         // Create the Role variables.
         roleVars = new RoleVar[n][n];
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
             // CoNLL-friendly model; preds given
             for (int i : knownPreds) {
-                for (int j = 0; j < sent.size();j++) {
-                    roleVars[i][j] = createRoleVar(i, j, knownPreds, cs);
+                for (int j = 0; j < n;j++) {
+                    if (i==j && !prm.allowPredArgSelfLoops) {
+                        continue;
+                    }
+                    roleVars[i][j] = createRoleVar(i, j, knownPreds, roleStateNames);
                 }
             }
         } else if (prm.roleStructure == RoleStructure.ALL_PAIRS) {
             // n**2 model
-            for (int i = 0; i < sent.size(); i++) {
-                for (int j = 0; j < sent.size();j++) {
-                    roleVars[i][j] = createRoleVar(i, j, knownPreds, cs);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n;j++) {
+                    if (i==j && !prm.allowPredArgSelfLoops) {
+                        continue;
+                    }
+                    roleVars[i][j] = createRoleVar(i, j, knownPreds, roleStateNames);
                 }
             }
         } else {
@@ -184,20 +190,22 @@ public class SrlFactorGraph extends FactorGraph {
         } else {
             rootVars = new LinkVar[n];
             childVars = new LinkVar[n][n];
-            for (int i = -1; i < sent.size(); i++) {
-                for (int j = 0; j < sent.size();j++) {
-                    if (i == -1) {
-                        rootVars[j] = createLinkVar(i, j);
-                    } else {
-                        childVars[i][j] = createLinkVar(i, j);
+            for (int i = -1; i < n; i++) {
+                for (int j = 0; j < n;j++) {
+                    if (i != j) {
+                        if (i == -1) {
+                            rootVars[j] = createLinkVar(i, j);
+                        } else {
+                            childVars[i][j] = createLinkVar(i, j);
+                        }
                     }
                 }
             }
         }
         
         // Add the factors.
-        for (int i = -1; i < sent.size(); i++) {
-            for (int j = 0; j < sent.size(); j++) {
+        for (int i = -1; i < n; i++) {
+            for (int j = 0; j < n; j++) {
                 if (i == -1) {
                     // Add unary factors on child Links
                     if (rootVars[j] != null) {
@@ -214,7 +222,7 @@ public class SrlFactorGraph extends FactorGraph {
                     }
                     // Add binary factors between Roles and Links.
                     if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE_BINARY));
                     }
                 }
             }
@@ -223,13 +231,13 @@ public class SrlFactorGraph extends FactorGraph {
 
     // ----------------- Creating Variables -----------------
 
-    private RoleVar createRoleVar(int parent, int child, Set<Integer> knownPreds, CorpusStatistics cs) {
+    private RoleVar createRoleVar(int parent, int child, Set<Integer> knownPreds, List<String> roleStateNames) {
         RoleVar roleVar;
         String roleVarName = "Role_" + parent + "_" + child;
         if (!prm.makeUnknownPredRolesLatent || knownPreds.contains((Integer) parent)) {
-            roleVar = new RoleVar(VarType.PREDICTED, cs.roleStateNames.size(), roleVarName, cs.roleStateNames, parent, child);            
+            roleVar = new RoleVar(VarType.PREDICTED, roleStateNames.size(), roleVarName, roleStateNames, parent, child);            
         } else {
-            roleVar = new RoleVar(VarType.LATENT, cs.roleStateNames.size(), roleVarName, cs.roleStateNames, parent, child);
+            roleVar = new RoleVar(VarType.LATENT, roleStateNames.size(), roleVarName, roleStateNames, parent, child);
         }
         return roleVar;
     }

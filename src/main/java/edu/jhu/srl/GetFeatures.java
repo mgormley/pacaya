@@ -128,7 +128,8 @@ public class GetFeatures {
                     }
                     String wordForm = word.getForm();
                     String cleanWord = normalize.clean(wordForm);
-                    String unkWord = sig.getSignature(wordForm, word.getId(), language);
+                    int position = word.getId() - 1;
+                    String unkWord = sig.getSignature(wordForm, position, language);
                     unkWord = normalize.escape(unkWord);
                     words = addWord(words, cleanWord);
                     unks = addWord(unks, unkWord);

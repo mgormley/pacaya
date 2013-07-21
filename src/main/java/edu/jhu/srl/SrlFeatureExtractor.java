@@ -55,7 +55,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         
         // Get the observation features.
         BinaryStrFVBuilder obsFeats;
-        if (ft == SrlFactorTemplate.LINK_ROLE || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
+        if (ft == SrlFactorTemplate.LINK_ROLE_BINARY || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();
             int parent;
