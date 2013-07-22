@@ -187,7 +187,15 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             double beliefFalse;
             if (logDomain) {
                 beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
-                beliefFalse = Utilities.logSubtract(partition, beliefTrue);
+                if (partition < beliefTrue) {
+                    // TODO: This is a hack to get around the floating point
+                    // error. We want beliefFalse to be effectively 0.0 in this
+                    // case, but we use the floating point error to determine
+                    // how small zero should be.
+                    beliefFalse = Utilities.log(Math.abs(partition - beliefTrue));
+                } else {
+                    beliefFalse = Utilities.logSubtract(partition, beliefTrue);
+                }
             } else {
                 beliefTrue = pi * Utilities.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
                 beliefFalse = partition - beliefTrue;
