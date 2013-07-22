@@ -131,17 +131,36 @@ public class SrlGraph {
     private List<SrlPred> preds;
     private List<SrlArg> args;
     private List<SrlEdge> edges;
+
+    // Predicate array, indexed by position of predicate.
+    private SrlPred[] predArr;    
+    // Argument array, indexed by position of predicate.
+    private SrlArg[] argArr;
+    // Sentence length.
+    private int n;
     
-    public SrlGraph(CoNLL09Sentence sent) {
+    public SrlGraph(int n) {
+        this.n = n;
         this.preds = new ArrayList<SrlPred>();
         this.args = new ArrayList<SrlArg>();
         this.edges = new ArrayList<SrlEdge>();
+        this.predArr = new SrlPred[n];
+        this.argArr = new SrlArg[n];
+    }
+        
+    public SrlGraph(CoNLL09Sentence sent) {
+        this.n = sent.size();
+        this.preds = new ArrayList<SrlPred>();
+        this.args = new ArrayList<SrlArg>();
+        this.edges = new ArrayList<SrlEdge>();
+        this.predArr = new SrlPred[n];
+        this.argArr = new SrlArg[n];
         
         // Create a predicate for each row marked with fillpred = Y.
         for (int i = 0; i < sent.size(); i++) {
             CoNLL09Token tok = sent.get(i);
             if (tok.isFillpred()) {
-                preds.add(new SrlPred(i, tok.getPred()));
+                addPred(new SrlPred(i, tok.getPred()));
             }
         }
         
@@ -161,10 +180,10 @@ public class SrlGraph {
                     SrlPred pred = preds.get(i);
                     // Add the edge.
                     SrlEdge edge = new SrlEdge(pred, arg, apred);
-                    edges.add(edge);
+                    addEdge(edge);
                     if (!argAdded) {
                         // Add the argument.
-                        args.add(arg);
+                        addArg(arg);
                         argAdded = true;
                     }
                 }
@@ -172,11 +191,53 @@ public class SrlGraph {
         }
     }
 
+    /** Adds the edge. */
+    public void addEdge(SrlEdge edge) {
+        edges.add(edge);
+        addPred(edge.getPred());
+        addArg(edge.getArg());
+    }
+
+    /** Adds the pred if it hasn't already been added. */
+    public void addPred(SrlPred pred) {
+        if (predArr[pred.getPosition()] != null) {
+            if (predArr[pred.getPosition()] != pred) {
+                throw new IllegalArgumentException("Cannot add multiple preds at the same position.");
+            } else {
+                // Already added.
+                return;
+            }
+        }
+        preds.add(pred);
+        predArr[pred.getPosition()] = pred;
+    }
+    
+    /** Adds the arg if it hasn't already been added. */
+    public void addArg(SrlArg arg) {
+        if (argArr[arg.getPosition()] != null) {
+            if (argArr[arg.getPosition()] != arg) {
+                throw new IllegalArgumentException("Cannot add multiple args at the same position.");
+            } else {
+                // Already added.
+                return;
+            }
+        }
+        args.add(arg);
+        argArr[arg.getPosition()] = arg;
+    }
+
+    public SrlPred getPredAt(int position) {
+        return predArr[position];
+    }
+    
+    public SrlArg getArgAt(int position) {
+        return argArr[position];
+    }
 
     public List<SrlPred> getPreds() {
         return preds;
     }
-
+    
     public List<SrlArg> getArgs() {
         return args;
     }
@@ -200,5 +261,9 @@ public class SrlGraph {
             map.put(arg.getPosition(), arg);
         }
         return map;        
+    }
+
+    public int getNumPreds() {
+        return preds.size();
     }    
 }

@@ -14,6 +14,11 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Writer;
+import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlArg;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -26,6 +31,7 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.data.ErmaReader;
@@ -34,6 +40,7 @@ import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
@@ -70,7 +77,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
     @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.ERMA;
+    public static DatasetType trainType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "ERMA feature file.")
     public static File featureFileIn = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
@@ -80,7 +87,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File test = null;
     @Opt(hasArg = true, description = "Type of testing data.")
-    public static DatasetType testType = DatasetType.ERMA;
+    public static DatasetType testType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "Testing data predictions output file.")
     public static File testPredOut = null;
 
@@ -169,7 +176,7 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            List<VarConfig> predictions = decode(model, data, trainPredOut, name);        
+            List<VarConfig> predictions = decode(model, data, trainType, trainPredOut, name);        
             eval(data, name, predictions);
         }
         
@@ -193,7 +200,7 @@ public class SrlRunner {
             FgExamples data = getData(alphabet, testType, test, name);
 
             // Decode and evaluate the test data.
-            List<VarConfig> predictions = decode(model, data, testPredOut, name);
+            List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
             eval(data, name, predictions);
         }
     }
@@ -212,6 +219,7 @@ public class SrlRunner {
                     sents.add(sent);
                 }
             }
+            log.info("Num " + name + " sentences: " + sents.size());
             log.info("Building factor graphs and extracting features.");
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
@@ -236,15 +244,51 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
 
-    private List<VarConfig> decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
+    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
         MbrDecoder decoder = getDecoder();
         decoder.decode(model, data);
 
         List<VarConfig> predictions = decoder.getMbrVarConfigList();
         if (predOut != null) {
-            ErmaWriter ew = new ErmaWriter();
-            ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+            log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
+            if (dataType == DatasetType.CONLL_2009) {
+                @SuppressWarnings("unchecked")
+                List<CoNLL09Sentence> sents = (List<CoNLL09Sentence>)data.getSourceSentences();
+                for (int i=0; i<sents.size(); i++) {
+                    VarConfig vc = predictions.get(i);
+                    CoNLL09Sentence sent = sents.get(i);
+                    
+                    SrlGraph srlGraph = new SrlGraph(sent.size());
+                    for (Var v : vc.getVars()) {
+                        if (v instanceof RoleVar && v.getType() != VarType.LATENT) {
+                            RoleVar role = (RoleVar) v;
+                            SrlPred pred = srlGraph.getPredAt(role.getParent());
+                            if (pred == null) {
+                                // TODO: also decode the Sense of the predicate.
+                                String sense = "_";
+                                pred = new SrlPred(role.getParent(), sense);
+                            }
+                            SrlArg arg = srlGraph.getArgAt(role.getChild());
+                            if (arg == null) {
+                                arg = new SrlArg(role.getChild());
+                            }
+                            SrlEdge edge = new SrlEdge(pred, arg, vc.getStateName(role));
+                            srlGraph.addEdge(edge);
+                        }
+                    }
+                    
+                    sent.setColsFromSrlGraph(srlGraph);
+                }
+                CoNLL09Writer cw = new CoNLL09Writer(predOut);
+                for (CoNLL09Sentence sent : sents) {
+                    cw.write(sent);
+                }
+                cw.close();
+            } else {
+                ErmaWriter ew = new ErmaWriter();
+                ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+            }
         }
         return predictions;
     }

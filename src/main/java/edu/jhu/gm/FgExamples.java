@@ -16,6 +16,11 @@ public class FgExamples implements Iterable<FgExample> {
         
     private ArrayList<FgExample> examples;
     private Alphabet<Feature> alphabet;
+    /**
+     * This is a hack to carry around the source sentences. For example, the
+     * CoNLL2009 sentences from which these examples were generated.
+     */
+    private Object sourceSents;
 
     public FgExamples(Alphabet<Feature> alphabet) {
         this.examples = new ArrayList<FgExample>();
@@ -68,6 +73,14 @@ public class FgExamples implements Iterable<FgExample> {
             numVars += ex.getOriginalFactorGraph().getNumVars();
         }
         return numVars;
+    }
+
+    public void setSourceSentences(Object sents) {
+        this.sourceSents = sents;
+    }
+    
+    public Object getSourceSentences() {
+        return sourceSents;
     }
     
 }

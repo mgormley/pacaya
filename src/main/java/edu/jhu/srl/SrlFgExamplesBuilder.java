@@ -56,6 +56,7 @@ public class SrlFgExamplesBuilder {
         
         log.info("Num observation features: " + obsAlphabet.size());
         
+        data.setSourceSentences(sents);
         return data;
     }
 

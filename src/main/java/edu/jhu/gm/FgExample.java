@@ -30,8 +30,6 @@ public class FgExample {
     private FeatureCache cacheLatPred;
     /** The feature cache for {@link FgExample#fgLat}. */
     private FeatureCache cacheLat;
-    /** The feature cache for the fully clamped factor graph. */
-    private FeatureCache cacheNone;
     /** Whether the original factor graph contains latent variables. */
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */

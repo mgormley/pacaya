@@ -401,5 +401,102 @@ public class CoNLL09Token {
     public void setApreds(List<String> apreds) {
         this.apreds = apreds;
     }
-    
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((apreds == null) ? 0 : apreds.hashCode());
+        result = prime * result + ((deprel == null) ? 0 : deprel.hashCode());
+        result = prime * result + ((feat == null) ? 0 : feat.hashCode());
+        result = prime * result + (fillpred ? 1231 : 1237);
+        result = prime * result + ((form == null) ? 0 : form.hashCode());
+        result = prime * result + head;
+        result = prime * result + id;
+        result = prime * result + ((lemma == null) ? 0 : lemma.hashCode());
+        result = prime * result + ((pdeprel == null) ? 0 : pdeprel.hashCode());
+        result = prime * result + ((pfeat == null) ? 0 : pfeat.hashCode());
+        result = prime * result + phead;
+        result = prime * result + ((plemma == null) ? 0 : plemma.hashCode());
+        result = prime * result + ((pos == null) ? 0 : pos.hashCode());
+        result = prime * result + ((ppos == null) ? 0 : ppos.hashCode());
+        result = prime * result + ((pred == null) ? 0 : pred.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CoNLL09Token other = (CoNLL09Token) obj;
+        if (apreds == null) {
+            if (other.apreds != null)
+                return false;
+        } else if (!apreds.equals(other.apreds))
+            return false;
+        if (deprel == null) {
+            if (other.deprel != null)
+                return false;
+        } else if (!deprel.equals(other.deprel))
+            return false;
+        if (feat == null) {
+            if (other.feat != null)
+                return false;
+        } else if (!feat.equals(other.feat))
+            return false;
+        if (fillpred != other.fillpred)
+            return false;
+        if (form == null) {
+            if (other.form != null)
+                return false;
+        } else if (!form.equals(other.form))
+            return false;
+        if (head != other.head)
+            return false;
+        if (id != other.id)
+            return false;
+        if (lemma == null) {
+            if (other.lemma != null)
+                return false;
+        } else if (!lemma.equals(other.lemma))
+            return false;
+        if (pdeprel == null) {
+            if (other.pdeprel != null)
+                return false;
+        } else if (!pdeprel.equals(other.pdeprel))
+            return false;
+        if (pfeat == null) {
+            if (other.pfeat != null)
+                return false;
+        } else if (!pfeat.equals(other.pfeat))
+            return false;
+        if (phead != other.phead)
+            return false;
+        if (plemma == null) {
+            if (other.plemma != null)
+                return false;
+        } else if (!plemma.equals(other.plemma))
+            return false;
+        if (pos == null) {
+            if (other.pos != null)
+                return false;
+        } else if (!pos.equals(other.pos))
+            return false;
+        if (ppos == null) {
+            if (other.ppos != null)
+                return false;
+        } else if (!ppos.equals(other.ppos))
+            return false;
+        if (pred == null) {
+            if (other.pred != null)
+                return false;
+        } else if (!pred.equals(other.pred))
+            return false;
+        return true;
+    }
+        
 }
