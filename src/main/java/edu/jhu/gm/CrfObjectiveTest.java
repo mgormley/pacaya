@@ -15,6 +15,7 @@ import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
+import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
@@ -22,6 +23,7 @@ import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Utilities;
 
 public class CrfObjectiveTest {
     
@@ -196,14 +198,14 @@ public class CrfObjectiveTest {
         JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
     }
     
-    // TODO: Fix this test: @Test
+    @Test
     public void testSrlLogLikelihood() throws Exception {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
-        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
+//        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
         tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "subj", "_", false, "_", getList("arg0")));
-        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 2, 2, "v", "_", true, "ate.1", getList("_")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
         //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
@@ -213,6 +215,7 @@ public class CrfObjectiveTest {
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
+        prm.fgPrm.makeUnknownPredRolesLatent = false;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fePrm.biasOnly = true;
@@ -223,9 +226,48 @@ public class CrfObjectiveTest {
         System.out.println("Num features: " + alphabet.size());
         FgModel model = new FgModel(alphabet);
 
-        CrfObjective obj = new CrfObjective(model.getNumParams(), data, getInfFactory(true));
+        boolean logDomain = false;
+        FgInferencerFactory infFactory = getInfFactory(logDomain);        
+        FgExample ex = data.get(0);
+        
+        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
+        FactorGraph fgLat = ex.updateFgLat(model.getParams(), infLat.isLogDomain());
+        infLat.run();        
+        assertEquals(2, infLat.getPartition(), 2);
+        // Check that the partition function is computed identically for each variable.
+        for (Var v : fgLat.getVars()) {
+            double partition = ((BeliefPropagation)infLat).getPartitionFunctionAtVarNode(fgLat.getNode(v));
+            assertEquals(2, logDomain ? Utilities.exp(partition) : partition, 1e-3);
+        }
+        
+        System.out.println("-------- Running LatPred Inference-----------");
+        
+        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
+        FactorGraph fgLatPred = ex.updateFgLatPred(model.getParams(), infLatPred.isLogDomain());
+        infLatPred.run();        
+        assertEquals(4, infLatPred.getPartition(), 2);         
+
+        // Print schedule:
+        BfsBpSchedule schedule = new BfsBpSchedule(fgLatPred);        
+        System.out.println();
+        for (FgEdge edge : schedule.getOrder()) {
+            System.out.println(edge.toString());
+        }
+        System.out.println();
+        // Print factors
+        for (Factor f : fgLatPred.getFactors()) {
+            System.out.println(f);
+        }
+        // Check that the partition function is computed identically for each variable.
+        for (Var v : fgLatPred.getVars()) {
+            double partition = ((BeliefPropagation)infLatPred).getPartitionFunctionAtVarNode(fgLatPred.getNode(v));
+            System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
+            assertEquals(4, logDomain ? Utilities.exp(partition) : partition, 1e-3);
+        }
+        
+        CrfObjective obj = new CrfObjective(model.getNumParams(), data, infFactory);
         double ll = obj.getValue(model.getParams());        
-        assertEquals(0.0, ll, 1e-13);
+        assertEquals(0.5, Utilities.exp(ll), 1e-13);
     }    
     
     public FgInferencerFactory getInfFactory(boolean logDomain) {
@@ -234,6 +276,7 @@ public class CrfObjectiveTest {
         bpPrm.schedule = BpScheduleType.TREE_LIKE;
         bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
         bpPrm.normalizeMessages = false;
+        bpPrm.maxIterations = 1;        
         return bpPrm;
     }
     
