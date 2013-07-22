@@ -97,19 +97,38 @@ public class SrlFgExampleBuilderTest {
 
         assertEquals(18 + 19*18 + 19, vc.size());
         
-        int[] parents = new int[sent.size()];
-        Arrays.fill(parents,  -1);
-        for (Var v : vc.getVars()) {
-            if (v instanceof LinkVar) {
-                LinkVar link = (LinkVar) v;
-                if (vc.getState(v) == LinkVar.TRUE){
-                    parents[link.getChild()] = link.getParent();
-                }   
-            }
-        }
+        int[] parents = getParents(sent.size(), vc);
         System.out.println(Arrays.toString(parents));
         assertTrue(DepTree.checkIsProjective(parents));
         assertArrayEquals(new int[]{2, 2, -1, 4, 2, 4, 7, 5, 7, 8, 7, 14, 11, 11, 10, 14, 17, 15, 2}, parents);
+    }
+
+    /**
+     * Decodes the parents defined by a variable assignment for a single
+     * sentence.
+     * 
+     * @param n The sentence length.
+     * @param vc The variable assignement.
+     * @return The parents array.
+     */
+    // TODO: Maybe use this somewhere? Probably not... we should really decode
+    // using MBR decoding over the link marginals.
+    private static int[] getParents(int n, VarConfig vc) {
+        int[] parents = new int[n];
+        Arrays.fill(parents, -2);
+        for (Var v : vc.getVars()) {
+            if (v instanceof LinkVar) {
+                LinkVar link = (LinkVar) v;
+                if (vc.getState(v) == LinkVar.TRUE) {
+                    if (parents[link.getChild()] != -2) {
+                        throw new IllegalStateException(
+                                "Multiple link vars define the same parent/child edge. Is this VarConfig for only one example?");
+                    }
+                    parents[link.getChild()] = link.getParent();
+                }
+            }
+        }
+        return parents;
     }
 
 }
