@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -45,8 +44,7 @@ public class SrlFeatureExtractorTest {
         cs.init(sents);
         
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet());
-        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet, sig);
+        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet);
         SrlFeatureExtractor featExt = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             VarSet vars = sfg.getFactor(a).getVars();

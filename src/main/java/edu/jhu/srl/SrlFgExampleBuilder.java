@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
@@ -37,14 +36,12 @@ public class SrlFgExampleBuilder {
     private final Alphabet<Feature> alphabet;
     private final CorpusStatistics cs;
     private Alphabet<String> obsAlphabet;
-    private final BerkeleySignatureBuilder sig;
 
-    public SrlFgExampleBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet, CorpusStatistics cs, Alphabet<String> obsAlphabet, BerkeleySignatureBuilder sig) {
+    public SrlFgExampleBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet, CorpusStatistics cs, Alphabet<String> obsAlphabet) {
         this.prm = prm;
         this.alphabet = alphabet;
         this.cs = cs;
         this.obsAlphabet = obsAlphabet;
-        this.sig = sig;
     }
     
     public FgExample getFGExample(CoNLL09Sentence sent) {
@@ -56,9 +53,9 @@ public class SrlFgExampleBuilder {
         // Construct the factor graph.
         SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
         // Get the variable assignments given in the training data.
-        VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg); 
+        VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);        
         // Create a feature extractor for this example.
-        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet, sig);
+        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
         FeatureExtractor featExtractor = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
         
         return new FgExample(sfg, trainConfig, featExtractor);

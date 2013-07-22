@@ -19,7 +19,7 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
+public class ProjDepTreeFactor implements GlobalFactor {
         
     /**
      * Link variable. When true it indicates that there is an edge between its
@@ -62,6 +62,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private final VarSet vars;
     /** The sentence length. */
     private final int n;
+    private int iterAtLastCreateMessagesCall = -1;
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
     
@@ -69,8 +70,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
      * Constructor.
      * @param n The length of the sentence.
      */
-    public ProjDepTreeFactor(int n, VarType type) {    
-        super();
+    public ProjDepTreeFactor(int n, VarType type) {        
         this.vars = createVarSet(n, type);
         this.n = n;
 
@@ -130,7 +130,14 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
     
     @Override
-    protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
+    public void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, int iter) {
+        if (iterAtLastCreateMessagesCall < iter) {
+            createMessages(parent, msgs, logDomain);
+            iterAtLastCreateMessagesCall = iter;
+        }
+    }
+    
+    private void createMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
         assert (this == parent.getFactor());        
         double[] root = new double[n];
         double[][] child = new double[n][n];

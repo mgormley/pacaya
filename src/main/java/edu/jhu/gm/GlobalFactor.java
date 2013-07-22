@@ -25,9 +25,4 @@ public interface GlobalFactor extends Factor {
      */
     void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, int iter);
 
-    /**
-     * Resets this global factor for a new run of belief propagation.
-     */
-    void reset();
-
 }

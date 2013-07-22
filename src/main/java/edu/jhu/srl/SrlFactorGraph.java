@@ -159,8 +159,10 @@ public class SrlFactorGraph extends FactorGraph {
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
             // CoNLL-friendly model; preds given
             for (int i : knownPreds) {
-                // Zhang et al limit this set even further; should we do the same?
                 for (int j = 0; j < n;j++) {
+                    if (i==j && !prm.allowPredArgSelfLoops) {
+                        continue;
+                    }
                     roleVars[i][j] = createRoleVar(i, j, knownPreds, roleStateNames);
                 }
             }
