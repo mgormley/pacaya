@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import static edu.jhu.util.Utilities.getList;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -7,6 +8,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
@@ -14,6 +17,9 @@ import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 
@@ -189,6 +195,38 @@ public class CrfObjectiveTest {
         double[] gradient = obj.getGradient(params);        
         JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
     }
+    
+    // TODO: Fix this test: @Test
+    public void testSrlLogLikelihood() throws Exception {
+        List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
+        //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
+        //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
+        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "subj", "_", false, "_", getList("arg0")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 2, 2, "v", "_", true, "ate.1", getList("_")));
+        //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
+        CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
+        
+        List<CoNLL09Sentence> sents = getList(sent);
+        
+        System.out.println("Done reading.");
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        
+        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.useProjDepTreeFactor = true;
+        prm.fePrm.biasOnly = true;
+        
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
+        FgExamples data = builder.getData(sents);
+        
+        System.out.println("Num features: " + alphabet.size());
+        FgModel model = new FgModel(alphabet);
+
+        CrfObjective obj = new CrfObjective(model.getNumParams(), data, getInfFactory(true));
+        double ll = obj.getValue(model.getParams());        
+        assertEquals(0.0, ll, 1e-13);
+    }    
     
     public FgInferencerFactory getInfFactory(boolean logDomain) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();

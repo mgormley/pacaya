@@ -96,7 +96,16 @@ public class CrfObjective implements Function {
 
         double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : Utilities.log(infLatPred.getPartition());
 
-        // TODO: We could multiply in any fully clamped factors in fgLatPred.
+        // "Multiply" in all the fully clamped factors. These are the
+        // factors which do not include any latent or predicted variables.
+        // This is a bit of an edge case, but we do it anyway.
+        for (int a=0; a<fgLatPred.getNumFactors(); a++) {
+            Factor f = fgLatPred.getFactor(a);
+            if (f.getVars().size() == 0) {
+                FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
+                denominator += cacheLatPred.getFeatureVector(a, 0).dot(params);
+            }
+        }
         infLatPred.clear();
         
         double ll = numerator - denominator;        
