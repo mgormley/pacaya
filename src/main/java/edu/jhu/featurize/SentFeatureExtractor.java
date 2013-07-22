@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -15,6 +16,7 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Sentence;
 import edu.jhu.util.Pair;
 import edu.jhu.data.Label;
+import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.Alphabet;
 
@@ -49,7 +51,6 @@ public class SentFeatureExtractor {
         public boolean biasOnly = false;
         public boolean isProjective = false;
         public boolean withSupervision = true;
-        public int cutoff = 3;
     }
     
     // Parameters for feature extraction.
@@ -61,8 +62,7 @@ public class SentFeatureExtractor {
     private final BerkeleySignatureBuilder sig;
     private final int[] parents;
         
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, BerkeleySignatureBuilder sig) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet, BerkeleySignatureBuilder sig) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;
@@ -105,10 +105,8 @@ public class SentFeatureExtractor {
      * @param idx The position of a word in the sentence.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int idx) {
+    public BinaryStrFVBuilder createFeatureSet(int idx, int lastIdx, int nextIdx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
-    public Set<String> createFeatureSet(int idx, int lastIdx, int nextIdx) {
-        Set<String> feats = new HashSet<String>();
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
@@ -133,14 +131,10 @@ public class SentFeatureExtractor {
      * @param aidx The "child" position.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
+    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
-        
-        // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
-    public Set<String> createFeatureSet(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx) {
-        Set<String> feats = new HashSet<String>();
         // Are feats updated without even returning them?
         addSimplePairFeatures(pidx, aidx, feats);
         addNaradowskyPairFeatures(pidx, aidx, feats);
@@ -151,24 +145,34 @@ public class SentFeatureExtractor {
     
     public void addNaradowskySoloFeatures(int pidx, BinaryStrFVBuilder feats) {
         // TODO: 
-    public void addSimpleSoloFeatures(int idx, Collection<String> feats) {
+    }
+    
+    public void addSimpleSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         String wordForm = sent.get(idx).getForm();
         System.out.println("word is " + wordForm);
         Set <String> a = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(wordForm, idx, prm.language);
-        feats.addAll(a);
-
+        for (String c : a) {
+            feats.add(c);
+        }
     }
     
     public void addNaradowskyPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
-    public void addSimplePairFeatures(int pidx, int aidx, Collection<String> feats) {
+        
+    }
+    
+    public void addSimplePairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
         String predForm = sent.get(pidx).getForm();
         String argForm = sent.get(aidx).getForm();
         System.out.println("pred is " + predForm);
         System.out.println("arg is " + argForm);
         Set <String> a = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(predForm, pidx, prm.language);
-        feats.addAll(a);
+        for (String c : a) {
+            feats.add(c);
+        }
         Set <String> b = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(argForm, aidx, prm.language);
-        feats.addAll(b);
+        for (String c : a) {
+            feats.add(c);
+        }
 
     }
     
@@ -254,13 +258,11 @@ public class SentFeatureExtractor {
         }
     }
 
-    public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats) {
-    public void addZhaoSoloFeatures(int idx, Collection<String> feats, int lastIdx, int nextIdx) {
+    public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats, int lastIdx, int nextIdx) {
         // TODO:
     }    
     
-    public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
-    public void addZhaoPairFeatures(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx, Collection<String> feats) {
+    public void addZhaoPairFeatures(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx, BinaryStrFVBuilder feats) {
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
@@ -677,7 +679,6 @@ public class SentFeatureExtractor {
         int i;
       
         for (Pair<Integer,Dir> a : rootPath) {
-            // for Pos or Ppos; change for Ppos if !goldHead
             i = a.get1();
             if (i == -1) {
                 break;
