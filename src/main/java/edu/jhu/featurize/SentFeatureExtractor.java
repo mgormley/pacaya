@@ -303,8 +303,6 @@ public class SentFeatureExtractor {
         List<String> argFeats = arg.getFeat();
         int predHead = pred.getHeadPosition();
         int argHead = arg.getHeadPosition();
-        String predDepRel = pred.getDeprel();
-        String argDepRel = arg.getDeprel();
         String predSense = pred.getPred();
         String argSense = arg.getPred();
         
@@ -340,7 +338,7 @@ public class SentFeatureExtractor {
         Pair<Integer,Integer> argSupport = syntacticConnectionHighLowSupport("n", argRootPath);
         Pair<Integer,Integer>  predSupport = syntacticConnectionHighLowSupport("v", predRootPath);        
         
-        /* Semantic Connection. This includes semantic head (semhead), left(right) farthest(nearest) seman- tic child (semlm, semln, semrm, semrn). We say a predicate is its argument���s semantic head, and the latter is the former���s child. Features related to this type may track the current semantic parsing status.
+        /* Semantic Connection. This includes semantic head (semhead), left(right) farthest(nearest) semantic child (semlm, semln, semrm, semrn). We say a predicate is its argument���s semantic head, and the latter is the former���s child. Features related to this type may track the current semantic parsing status.
         
         /* Path. There are two basic types of path between the predicate and the argument candidates. 
          * One is the linear path (linePath) in the sequence */
@@ -396,35 +394,188 @@ public class SentFeatureExtractor {
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
         
+        // Initialize ArrayLists we will use for features.
+        int predLm = predFarNearChildren.get1().get1();
+        CoNLL09Token argLm = sent.get(argFarNearChildren.get1().get1());
+        CoNLL09Token argRm = sent.get(argFarNearChildren.get2().get1());
+        CoNLL09Token argRn = sent.get(argFarNearChildren.get2().get2());
+        ArrayList<CoNLL09Token> argChildrenTokens = new ArrayList<CoNLL09Token>();
+        for (int child : argChildren) {
+            argChildrenTokens.add(sent.get(child));
+        }
+        ArrayList<CoNLL09Token> betweenPathTokens = new ArrayList<CoNLL09Token>();
+        for (Pair<Integer,Dir> p : betweenPath) {
+            betweenPathTokens.add(sent.get(p.get1()));
+        }
+        ArrayList<CoNLL09Token> linePathCoNLL = new ArrayList<CoNLL09Token>();
+        CoNLL09Token token;
+        for (int p : linePath) {
+            token = sent.get(p);
+            linePathCoNLL.add(token);
+        }
+
         
-         // p.currentSense + p.lemma 
-         feats.add(predSense + predLemma);
-         // p.currentSense + p.pos 
-         feats.add(predSense + predPos);
-         // p.currentSense + a.pos 
-         feats.add(predSense + argPos);
-         // p_1 .FEAT1
-         feats.add(sent.get(lastPidx).getFeat().get(0));
-         // p.FEAT2
-         feats.add(predFeats.get(1));
-         // p1 .FEAT3
-         feats.add(sent.get(nextPidx).getFeat().get(2));
-         // TBD:  p.semrm.semdprel  What is this?
-         // p.lm.dprel
-         int predLm = predFarNearChildren.get1().get1();
-         feats.add(sent.get(predLm).getDeprel());
-         // p.form + p.children.dprel.bag 
-         ArrayList<String> depPredChildren = new ArrayList<String>();
-         for (Integer child : predChildren) {
-             depPredChildren.add(sent.get(child).getDeprel());
-         }
-         String bagDepPredChildren = bag(depPredChildren).toString();
-         feats.add(predForm + bagDepPredChildren);
-         // p.lemma_n (n = -1, 0) 
-         feats.add(sent.get(lastPidx).getLemma());
-         feats.add(predLemma);
-         // p.lemma + p.lemma1
-         feats.add(predLemma + sent.get(nextPidx).getLemma());
+        String feat = null;
+        // Add the supervised features
+        if (prm.withSupervision) {
+            // ------- Predicate features (supervised) ------- 
+            // p.currentSense + p.lemma 
+            feats.add(predSense + predLemma);
+            // p.currentSense + p.pos 
+            feats.add(predSense + predPos);
+            // p.currentSense + a.pos 
+            feats.add(predSense + argPos);
+            // p_1 .FEAT1
+            feats.add(sent.get(lastPidx).getFeat().get(0));
+            // p.FEAT2
+            feats.add(predFeats.get(1));
+            // p1 .FEAT3
+            feats.add(sent.get(nextPidx).getFeat().get(2));
+            // TBD:  p.semrm.semdprel  What is this?            
+            // p.lm.dprel
+            feats.add(sent.get(predLm).getDeprel());
+            // p.form + p.children.dprel.bag 
+            ArrayList<String> depPredChildren = new ArrayList<String>();
+            for (Integer child : predChildren) {
+                depPredChildren.add(sent.get(child).getDeprel());
+            }
+            String bagDepPredChildren = bag(depPredChildren).toString();
+            feats.add(predForm + bagDepPredChildren);
+            // p.lemma_n (n = -1, 0) 
+            feats.add(sent.get(lastPidx).getLemma());
+            feats.add(predLemma);
+            // p.lemma + p.lemma1
+            feats.add(predLemma + sent.get(nextPidx).getLemma());
+            // p.pos + p.children.dprel.bag 
+            feats.add(predPos + bagDepPredChildren);
+            
+            // ------- Argument features (supervised) ------- 
+            // a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6 
+            feat = argFeats.get(0) + argFeats.get(2) + argFeats.get(3) + argFeats.get(4) + argFeats.get(5);
+            feats.add(feat);
+            // a_1.FEAT2 + a.FEAT2 
+            feat = sent.get(lastAidx).getFeat().get(1) + argFeats.get(1);
+            feats.add(feat);
+            // a.FEAT3 + a1.FEAT3
+            feat = argFeats.get(2) + sent.get(nextAidx).getFeat().get(2);
+            feats.add(feat);
+            // a.FEAT3 + a.h.FEAT3 
+            feat = sent.get(argHead).getFeat().get(2);
+            feats.add(feat);
+            // a.children.FEAT1.noDup 
+            ArrayList<String> argChildrenFeat1 = new ArrayList<String>();
+            for (CoNLL09Token child : argChildrenTokens) {
+                argChildrenFeat1.add(child.getFeat().get(0));
+            }
+            List<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
+            feat = argChildrenFeat1NoDup.toString();
+            feats.add(feat);
+            // a.children.FEAT3.bag 
+            ArrayList<String> argChildrenFeat3 = new ArrayList<String>();
+            for (CoNLL09Token child : argChildrenTokens) {
+                argChildrenFeat3.add(child.getFeat().get(2));
+            }
+            List<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
+            feat = argChildrenFeat3Bag.toString();
+            feats.add(feat);
+            // a.h.lemma
+            feat = sent.get(argHead).getLemma();
+            feats.add(feat);
+            // a.lm.dprel + a.form
+            feat = argLm.getDeprel();
+            feats.add(feat);
+            // TBD: a.lm_1.lemma
+            // a.lmn.pos (n=0,1) 
+            feat = argLm.getPos();
+            feats.add(feat);
+            // TBD: a.noFarChildren.pos.bag + a.rm.form 
+            // TBD: a.pphead.lemma
+            // a.rm.dprel + a.form
+            feat = argRm.getDeprel() + argForm;
+            feats.add(feat);
+            // TBD: a.rm_1.form 
+            // a.rm.lemma
+            feat = argRm.getLemma();
+            feats.add(feat);
+            // a.rn.dprel + a.form 
+            feat = argRn.getDeprel() + argForm;
+            feats.add(feat);
+            // a.lowSupportVerb.lemma 
+            feat = sent.get(argSupport.get1()).getLemma();
+            feats.add(feat);
+            // a.lemma + a.h.form 
+            feat = argLemma + sent.get(argHead).getForm();
+            feats.add(feat);
+            // a.lemma + a.pphead.form 
+            // a1.lemma
+            feat = sent.get(nextAidx).getLemma();
+            feats.add(feat);
+            // a.pos + a.children.dprel.bag
+            ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
+            for (CoNLL09Token child : argChildrenTokens) {
+                argChildrenDeprel.add(child.getDeprel());
+            }
+            List<String> argChildrenDeprelBag = bag(argChildrenDeprel);
+            feat = argPos + argChildrenDeprelBag.toString();
+            feats.add(feat);
+            
+            // ------- Combined features (supervised) ------- 
+            // a.lemma + p.lemma 
+            feat = argLemma + predLemma;
+            feats.add(feat);
+            // (a:p|dpPath.dprel) + p.FEAT1 
+            // a:p|dpPath.lemma.seq 
+            // a:p|dpPath.lemma.bag 
+
+            ArrayList<String> depRelPath = new ArrayList<String>();
+            ArrayList<String> depRelPathLemma = new ArrayList<String>();
+            for (CoNLL09Token t : betweenPathTokens) {
+                depRelPath.add(t.getDeprel());
+                depRelPathLemma.add(t.getLemma());
+            }
+            feat = depRelPath + predFeats.get(0);
+            feats.add(feat);
+            feat = depRelPathLemma.toString();
+            feats.add(feat);
+            feat = bag(depRelPathLemma).toString();
+            feats.add(feat);
+            
+            // a:p|linePath.FEAT1.bag 
+            // a:p|linePath.lemma.seq 
+            // a:p|linePath.dprel.seq 
+            ArrayList<String> linePathFeat = new ArrayList<String>();
+            ArrayList<String> linePathLemma = new ArrayList<String>();
+            ArrayList<String> linePathDeprel = new ArrayList<String>();
+            for (CoNLL09Token t : linePathCoNLL) {
+                linePathFeat.add(t.getFeat().get(0));
+                linePathLemma.add(t.getLemma());
+                linePathDeprel.add(t.getDeprel());
+            }
+            feats.add(feat);
+            List<String> linePathFeatBag = bag(linePathFeat);
+            feat = linePathFeatBag.toString();
+            feats.add(feat);
+            feat = linePathLemma.toString();
+            feats.add(feat);
+            feat = linePathDeprel.toString();
+            feats.add(feat);
+            ArrayList<String> dpPathLemma = new ArrayList<String>();
+            for (Pair<Integer, Dir> dpP : dpPathArg) {
+                dpPathLemma.add(sent.get(dpP.get1()).getLemma());
+                
+            }
+            // a:p|dpPathArgu.lemma.seq 
+            feat = dpPathLemma.toString();
+            feats.add(feat);
+            // a:p|dpPathArgu.lemma.bag
+            feat = bag(dpPathLemma).toString();
+            feats.add(feat);
+
+            
+        }
+        
+        // Add the unsupervised features
+        // ------- Predicate features (unsupervised) ------- 
          // p.pos_1 + p.pos
          String feat12 = sent.get(lastPidx).getPpos() + predPos;
          if (prm.useGoldPos) {
@@ -437,69 +588,11 @@ public class SentFeatureExtractor {
              feat13 = sent.get(nextPidx).getPos();
          }
          feats.add(feat13);
-         // p.pos + p.children.dprel.bag 
-        feats.add(predPos + bagDepPredChildren);
         
-        
-        
-        CoNLL09Token argLm = sent.get(argFarNearChildren.get1().get1());
-        CoNLL09Token argRm = sent.get(argFarNearChildren.get2().get1());
-        ArrayList<CoNLL09Token> argChildrenTokens = new ArrayList<CoNLL09Token>();
-        for (int child : argChildren) {
-            argChildrenTokens.add(sent.get(child));
-        }
 
-        // a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6 
-        String feat = argFeats.get(0) + argFeats.get(2) + argFeats.get(3) + argFeats.get(4) + argFeats.get(5);
-        feats.add(feat);
-        // a_1.FEAT2 + a.FEAT2 
-        feat = sent.get(lastAidx).getFeat().get(1) + argFeats.get(1);
-        feats.add(feat);
-        // a.FEAT3 + a1.FEAT3
-        feat = argFeats.get(2) + sent.get(nextAidx).getFeat().get(2);
-        feats.add(feat);
-        // a.FEAT3 + a.h.FEAT3 
-        feat = sent.get(argHead).getFeat().get(2);
-        feats.add(feat);
-        // a.children.FEAT1.noDup 
-        ArrayList<String> argChildrenFeat1 = new ArrayList<String>();
-        for (CoNLL09Token child : argChildrenTokens) {
-            argChildrenFeat1.add(child.getFeat().get(0));
-        }
-        List<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
-        feat = argChildrenFeat1NoDup.toString();
-        feats.add(feat);
-        // a.children.FEAT3.bag 
-        ArrayList<String> argChildrenFeat3 = new ArrayList<String>();
-        for (CoNLL09Token child : argChildrenTokens) {
-            argChildrenFeat3.add(child.getFeat().get(2));
-        }
-        List<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
-        feat = argChildrenFeat3Bag.toString();
-        feats.add(feat);
-        // a.h.lemma
-        feat = sent.get(argHead).getLemma();
-        feats.add(feat);
-        // a.lm.dprel + a.form
-        feat = argLm.getDeprel();
-        feats.add(feat);
+        // ------- Argument features (unsupervised) ------- 
         // a.lm.form
         feat = argLm.getForm();
-        feats.add(feat);
-        // a.lm_1.lemma
-        // a.lmn.pos (n=0,1) 
-        feat = argLm.getPos();
-        feats.add(feat);
-        // a.noFarChildren.pos.bag + a.rm.form 
-        // a.pphead.lemma
-        // a.rm.dprel + a.form 
-        // a.rm_1.form 
-        // a.rm.lemma
-        feat = argRm.getLemma();
-        feats.add(feat);
-        // a.rn.dprel + a.form 
-        // a.lowSupportVerb.lemma 
-        feat = sent.get(argSupport.get1()).getLemma();
         feats.add(feat);
         // a_1.form
         feat = sent.get(lastAidx).getForm();
@@ -518,90 +611,23 @@ public class SentFeatureExtractor {
         }
         feat = argForm + argChildrenPos.toString();
         feats.add(feat);
-        // a.lemma + a.h.form 
-        feat = argLemma + sent.get(argHead).getForm();
-        feats.add(feat);
-        // a.lemma + a.pphead.form 
-        // a1.lemma
-        feat = sent.get(nextAidx).getLemma();
-        feats.add(feat);
         // a1.pos + a.pos.seq
-        feat = sent.get(nextAidx).getPos() + argPos;
-        feats.add(feat);
-        // a.pos + a.children.dprel.bag
-        ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
-        for (CoNLL09Token child : argChildrenTokens) {
-            argChildrenDeprel.add(child.getDeprel());
+        feat = sent.get(nextAidx).getPpos() + argPos;
+        if (prm.useGoldPos) {
+            feat = sent.get(nextAidx).getPos() + argPos;            
         }
-        List<String> argChildrenDeprelBag = bag(argChildrenDeprel);
-        feat = argPos + argChildrenDeprelBag.toString();
         feats.add(feat);
-        // Combined Features
-        // a.lemma + p.lemma 
-        feat = argLemma + predLemma;
-        feats.add(feat);
-        // (a:p|dpPath.dprel) + p.FEAT1 
-        // a:p|dpPath.lemma.seq 
-        // a:p|dpPath.lemma.bag 
-        ArrayList<CoNLL09Token> betweenPathTokens = new ArrayList<CoNLL09Token>();
-        for (Pair<Integer,Dir> p : betweenPath) {
-            betweenPathTokens.add(sent.get(p.get1()));
-        }
-
-        ArrayList<String> depRelPath = new ArrayList<String>();
-        ArrayList<String> depRelPathLemma = new ArrayList<String>();
-        for (CoNLL09Token t : betweenPathTokens) {
-            depRelPath.add(t.getDeprel());
-            depRelPathLemma.add(t.getLemma());
-        }
-        feat = depRelPath + predFeats.get(0);
-        feats.add(feat);
-        feat = depRelPathLemma.toString();
-        feats.add(feat);
-        feat = bag(depRelPathLemma).toString();
-        feats.add(feat);
+        
+        // ------- Combined features (unsupervised) ------- 
         // a:p|linePath.distance 
         feat = Integer.toString(linePath.size());
         feats.add(feat);
-        // a:p|linePath.FEAT1.bag 
         // a:p|linePath.form.seq 
-        // a:p|linePath.lemma.seq 
-        // a:p|linePath.dprel.seq 
-        ArrayList<CoNLL09Token> linePathCoNLL = new ArrayList<CoNLL09Token>();
-        CoNLL09Token token;
-        for (int p : linePath) {
-            token = sent.get(p);
-            linePathCoNLL.add(token);
-        }
-        ArrayList<String> linePathFeat = new ArrayList<String>();
         ArrayList<String> linePathForm = new ArrayList<String>();
-        ArrayList<String> linePathLemma = new ArrayList<String>();
-        ArrayList<String> linePathDeprel = new ArrayList<String>();
         for (CoNLL09Token t : linePathCoNLL) {
-            linePathFeat.add(t.getFeat().get(0));
             linePathForm.add(t.getForm());
-            linePathLemma.add(t.getLemma());
-            linePathDeprel.add(t.getDeprel());
         }
-        List<String> linePathFeatBag = bag(linePathFeat);
-        feat = linePathFeatBag.toString();
-        feats.add(feat);
         feat = linePathForm.toString();
-        feats.add(feat);
-        feat = linePathLemma.toString();
-        feats.add(feat);
-        feat = linePathDeprel.toString();
-        feats.add(feat);
-        ArrayList<String> dpPathLemma = new ArrayList<String>();
-        for (Pair<Integer, Dir> dpP : dpPathArg) {
-            dpPathLemma.add(sent.get(dpP.get1()).getLemma());
-            
-        }
-        // a:p|dpPathArgu.lemma.seq 
-        feat = dpPathLemma.toString();
-        feats.add(feat);
-        // a:p|dpPathArgu.lemma.bag
-        feat = bag(dpPathLemma).toString();
         feats.add(feat);
     }
     
