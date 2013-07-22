@@ -113,9 +113,8 @@ public class SrlFgExampleBuilder {
             int child = edge.getArg().getPosition();
             String roleName = edge.getLabel();
             
-            // Lowercase the role name and remove anything after the first dash.
-            String[] splitRole = CorpusStatistics.dash.split(roleName);
-            roleName = splitRole[0].toLowerCase();
+            // Optionally, lowercase the role name and remove the theme.
+            roleName = cs.normalizeRoleName(roleName);
             
             RoleVar roleVar = sfg.getRoleVar(parent, child);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {

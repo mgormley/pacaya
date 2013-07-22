@@ -77,9 +77,7 @@ public class CorpusStatistics {
             for (int i = 0; i < sent.size(); i++) {
                 CoNLL09Token word = sent.get(i);
                 for (int j = 0; j < word.getApreds().size(); j++) {  
-                    // TODO: This is hardcoding the removal of the Theta role; make this an option.
-                    String[] splitRole = dash.split(word.getApreds().get(j));
-                    String role = splitRole[0].toLowerCase();
+                    String role = normalizeRoleName(word.getApreds().get(j));
                     knownRoles.add(role);
                 }
                 String wordForm = word.getForm();
@@ -127,6 +125,13 @@ public class CorpusStatistics {
         
         log.info("Num known roles: " + roleStateNames.size());
         log.info("Known roles: " + roleStateNames);
+    }
+
+    public String normalizeRoleName(String input) {
+        // TODO: This is hardcoding the removal of the Theta role; make this an option.
+        String[] splitRole = dash.split(input);
+        String role = splitRole[0].toLowerCase();
+        return role;
     }
 
     // ------------------- private ------------------- //
