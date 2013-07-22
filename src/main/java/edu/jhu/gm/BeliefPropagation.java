@@ -4,6 +4,8 @@ package edu.jhu.gm;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.util.Timer;
@@ -15,6 +17,8 @@ import edu.jhu.util.Timer;
  *
  */
 public class BeliefPropagation implements FgInferencer {
+    
+    private static final Logger log = Logger.getLogger(BeliefPropagation.class);
 
     public interface FgInferencerFactory {
         FgInferencer getInferencer(FactorGraph fg);
@@ -133,6 +137,12 @@ public class BeliefPropagation implements FgInferencer {
             // TODO: consider alternate initializations.
             msgs[i] = new Messages(fg.getEdge(i), prm);
         }
+        // Reset the global factors.
+        for (Factor factor : fg.getFactors()) {
+            if (factor instanceof GlobalFactor) {
+                ((GlobalFactor)factor).reset();
+            }
+        }
         
         // Message passing.
         for (int iter=0; iter < prm.maxIterations; iter++) {
@@ -173,6 +183,7 @@ public class BeliefPropagation implements FgInferencer {
         Factor factor = edge.getFactor();
         
         if (!edge.isVarToFactor() && factor instanceof GlobalFactor) {
+            log.trace("Creating messages for global factor.");
             // Since this is a global factor, we pass the incoming messages to it, 
             // and efficiently marginalize over the variables. The current setup is
             // create all the messages from this factor to its variables, but only 
@@ -294,6 +305,10 @@ public class BeliefPropagation implements FgInferencer {
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
+        
+        if (log.isTraceEnabled()) {
+            log.trace("Message sent: " + ec.message);
+        }
     }
 
     /** @inheritDoc */
@@ -386,8 +401,10 @@ public class BeliefPropagation implements FgInferencer {
 
     /**
      * Gets the partition function for the connected component containing the given node.
+     * 
+     * Package private FOR TESTING ONLY.
      */
-    private double getPartitionFunctionAtVarNode(FgNode node) {
+    double getPartitionFunctionAtVarNode(FgNode node) {
         // We just return the normalizing constant for the marginals of any variable.
         if (!node.isVar()) {
             throw new IllegalArgumentException("Node must be a variable node.");
