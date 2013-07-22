@@ -1,10 +1,20 @@
 package edu.jhu.featurize;
 
-import org.apache.log4j.Logger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.gm.BinaryStrFVBuilder;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTree.Dir;
+import edu.jhu.data.Sentence;
+import edu.jhu.util.Pair;
+import edu.jhu.data.Label;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.Alphabet;
 
@@ -21,6 +31,7 @@ public class SentFeatureExtractor {
     /**
      * Parameters for the SentFeatureExtractor.
      * @author mgormley
+     * @author mmitchell
      */
     public static class SentFeatureExtractorPrm {
         public boolean useGoldPos = false;
@@ -36,6 +47,9 @@ public class SentFeatureExtractor {
         public boolean normalize = false;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
+        public boolean isProjective = false;
+        public boolean withSupervision = true;
+        public int cutoff = 3;
     }
     
     // Parameters for feature extraction.
@@ -44,12 +58,31 @@ public class SentFeatureExtractor {
     private final CoNLL09Sentence sent;
     private final CorpusStatistics cs;
     private Alphabet<String> alphabet;
+    private final BerkeleySignatureBuilder sig;
+    private final int[] parents;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, BerkeleySignatureBuilder sig) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;
         this.alphabet = alphabet;
+        this.sig = sig;
+        // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
+        this.parents = getParents(sent);
+    }
+    
+    public int[] getParents(CoNLL09Sentence sent) {
+        int[] __parents__ = new int[sent.size()+1];
+        CoNLL09Token t;
+        // All the parents.  Parents of the Root is -1.
+        //__parents__[0] = -1;
+        for (int i = 0; i < sent.size(); i++) {
+            t = sent.get(i);
+            int parent = t.getHeadPosition();
+            __parents__[i] = parent;
+        }
+        return __parents__;
     }
 
     public int getSentSize() {
@@ -74,11 +107,14 @@ public class SentFeatureExtractor {
      */
     public BinaryStrFVBuilder createFeatureSet(int idx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
+    public Set<String> createFeatureSet(int idx, int lastIdx, int nextIdx) {
+        Set<String> feats = new HashSet<String>();
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
+        addSimpleSoloFeatures(idx, feats);
         addNaradowskySoloFeatures(idx, feats);
-        addZhaoSoloFeatures(idx, feats);
+        addZhaoSoloFeatures(idx, feats, lastIdx, nextIdx);
         return feats;
     }
     
@@ -103,25 +139,67 @@ public class SentFeatureExtractor {
         if (prm.biasOnly) { return feats; }
         
         // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
+    public Set<String> createFeatureSet(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx) {
+        Set<String> feats = new HashSet<String>();
+        // Are feats updated without even returning them?
+        addSimplePairFeatures(pidx, aidx, feats);
         addNaradowskyPairFeatures(pidx, aidx, feats);
-        addZhaoPairFeatures(pidx, aidx, feats);
+        addZhaoPairFeatures(pidx, aidx, lastPidx, nextPidx, lastAidx, nextAidx, feats);
         // feats = getNuguesFeatures();
         return feats;
     }
     
     public void addNaradowskySoloFeatures(int pidx, BinaryStrFVBuilder feats) {
         // TODO: 
+    public void addSimpleSoloFeatures(int idx, Collection<String> feats) {
+        String wordForm = sent.get(idx).getForm();
+        System.out.println("word is " + wordForm);
+        Set <String> a = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(wordForm, idx, prm.language);
+        feats.addAll(a);
+
     }
     
     public void addNaradowskyPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
+    public void addSimplePairFeatures(int pidx, int aidx, Collection<String> feats) {
+        String predForm = sent.get(pidx).getForm();
+        String argForm = sent.get(aidx).getForm();
+        System.out.println("pred is " + predForm);
+        System.out.println("arg is " + argForm);
+        Set <String> a = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(predForm, pidx, prm.language);
+        feats.addAll(a);
+        Set <String> b = ((BerkeleySignatureBuilder) sig).getSimpleUnkFeatures(argForm, aidx, prm.language);
+        feats.addAll(b);
+
+    }
+    
+    public void addNaradowskySoloFeatures(int idx, Collection<String> feats) {
+        CoNLL09Token word = sent.get(idx);
+        String wordForm = decideForm(word.getForm(), idx);
+        String wordPos = word.getPos();
+
+        feats.add("head_" + wordForm + "_word");
+        feats.add("arg_" + wordPos + "_tag");
+        feats.add("slen_" + sent.size());
+        if (prm.withSupervision) {
+            List<String> wordFeats = word.getFeat();
+            if (wordFeats == null) {
+                wordFeats = new ArrayList<String>();
+                wordFeats.add("_");
+            }
+            for (String m1 : wordFeats) {
+                feats.add(m1 + "_morph");
+            }
+        }
+    }
+    
+    public void addNaradowskyPairFeatures(int pidx, int aidx, Collection<String> feats) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
         String argForm = decideForm(arg.getForm(), aidx);
         String predPos = pred.getPos();
         String argPos = arg.getPos();
-        // Add Arg-Bias:  Bias features everybody does; it's important (see Naradowsky).
-        
+
         if (!prm.useGoldPos) {
             predPos = pred.getPpos();
             argPos = arg.getPpos();
@@ -156,28 +234,479 @@ public class SentFeatureExtractor {
         feats.add("arg_" + argForm + "_word");
         feats.add("arg_" + argPos + "_tag");
         
-        // TBD:  Add morph features for comparison with supervised case.
-        /*     if (mode >= 4) {
-      val m1s = pred.morph.split("\\|")
-      val m2s = arg.morph.split("\\|")
-      for (m1 <- m1s; m2 <- m2s) {
-        feats += "P-%sxA-%s".format(m1, m2)
-      } */
+        
+        if (prm.withSupervision) {
+            List<String> predFeats = pred.getFeat();
+            List<String> argFeats = arg.getFeat();
+            if (predFeats == null) {
+                predFeats = new ArrayList<String>();
+                predFeats.add("_");
+            }
+            if (argFeats == null) {
+                argFeats = new ArrayList<String>();
+                argFeats.add("_");
+            }
+            for (String m1 : predFeats) {
+                for (String m2 : argFeats) {
+                    feats.add(m1 + "_" + m2 + "_morph");
+                }
+            }
+        }
     }
 
     public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats) {
+    public void addZhaoSoloFeatures(int idx, Collection<String> feats, int lastIdx, int nextIdx) {
         // TODO:
     }    
     
     public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
+    public void addZhaoPairFeatures(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx, Collection<String> feats) {
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
         // Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou
         // Feature template 1:  Syntactic path based on semantic dependencies
+        // Features based on CoNLL 09:
+        // "Multilingual Dependency Learning:
+        // A Huge Feature Engineering Method to Semantic Dependency Parsing"
+        // Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou
+        /*
+         * Word Property. This type of elements include:
+         * 1. word form, 
+         * 2. lemma, 
+         * 3. part-of-speech tag (PoS), 
+         * 4. FEAT (additional morphological features), 
+         * 5. syntactic dependency label (dprel), 
+         * 6. semantic dependency label (semdprel) 
+         * 7. and characters (char) in the word form (only suitable for Chinese and Japanese).
+         * 
+         * MEG:  (1), (3), (4) all in Naradowsky.
+         * What is (6)?  We don't have this in Spanish, English?
+         */
+                
+        CoNLL09Token pred = sent.get(pidx);
+        CoNLL09Token arg = sent.get(aidx);
+        // 2:  Lemmas
+        String predForm = pred.getForm();
+        String argForm = arg.getForm();
+        String predLemma = pred.getLemma();
+        String argLemma = arg.getLemma();
+        String predPos = pred.getPpos();
+        String argPos = arg.getPpos();
+        if (prm.useGoldPos) {
+            predPos = pred.getPos();
+            argPos = arg.getPos();
+        }
+        List<String> predFeats = pred.getFeat();
+        List<String> argFeats = arg.getFeat();
+        int predHead = pred.getHeadPosition();
+        int argHead = arg.getHeadPosition();
+        String predDepRel = pred.getDeprel();
+        String argDepRel = arg.getDeprel();
+        String predSense = pred.getPred();
+        String argSense = arg.getPred();
         
-        // TODO:
+        List<Pair<Integer,Dir>> betweenPath = DepTree.getDependencyPath(arg.getPosition(), pred.getPosition(), parents);
+        List<Pair<Integer,Dir>> predRootPath = DepTree.getDependencyPath(pred.getPosition(), -1, parents);
+        List<Pair<Integer,Dir>> argRootPath = DepTree.getDependencyPath(arg.getPosition(), -1, parents);
+        //System.out.println("predRootPath is ");
+        //System.out.println(predRootPath);
+        //System.out.println("argRootPath is ");
+        
+        
+        /* Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
+         * and high(low) support verb or noun.
+         *  From the predicate or the argument to the syntactic root along with the syntactic tree, 
+         *  the first verb(noun) that is met is called as the low support verb(noun), 
+         *  and the nearest one to the root is called as the high support verb(noun).*/
+        ArrayList<Integer> predChildren = new ArrayList<Integer>(); 
+        ArrayList<Integer> predNoFarChildren = new ArrayList<Integer>(); 
+        predChildren = DepTree.getChildrenOf(parents, predHead);
+        // TBD:  predNoFarChildren
+        ArrayList<Integer> argChildren = new ArrayList<Integer>(); 
+        ArrayList<Integer> argNoFarChildren = new ArrayList<Integer>(); 
+        //System.out.println("Getting children of " + argHead);
+        argChildren = DepTree.getChildrenOf(parents, argHead);
+        // TBD:  argNoFarChildren
+        
+        //System.out.println("Looking through arg children ");
+        //System.out.println(argChildren);
+        Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> argFarNearChildren = syntacticConnectionFarthestNearestChildren(argHead, argChildren);
+        Pair<Pair<Integer,Integer>,Pair<Integer,Integer>>  predFarNearChildren = syntacticConnectionFarthestNearestChildren(predHead, predChildren);
+        
+        //System.out.println(argRootPath);
+        Pair<Integer,Integer> argSupport = syntacticConnectionHighLowSupport("n", argRootPath);
+        Pair<Integer,Integer>  predSupport = syntacticConnectionHighLowSupport("v", predRootPath);        
+        
+        /* Semantic Connection. This includes semantic head (semhead), left(right) farthest(nearest) seman- tic child (semlm, semln, semrm, semrn). We say a predicate is its argument���s semantic head, and the latter is the former���s child. Features related to this type may track the current semantic parsing status.
+        
+        /* Path. There are two basic types of path between the predicate and the argument candidates. 
+         * One is the linear path (linePath) in the sequence */
+        /* the other is the path in the syntactic 
+         * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
+         * considering the syntactic root, dpPath is the full path in the syntactic tree. */
+        
+        /* Leading two paths to the root from the predicate and the argument, respectively, 
+         * the common part of these two paths will be dpPathShare. */
+        List<Pair<Integer,DepTree.Dir>> dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
+        int i = argRootPath.size() - 1;
+        int j = predRootPath.size() - 1;
+        Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
+        Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
+        while (argP.equals(predP) && i > -1 && j > -1) {
+            dpPathShare.add(argP);
+            argP = argRootPath.get(i);
+            predP = predRootPath.get(j);
+            i--;
+            j--;
+        }
+        // Reverse, so path goes towards the root.
+        Collections.reverse(dpPathShare);
+        int r = dpPathShare.get(0).get1();
+        //System.out.println("r is ");
+        //System.out.println(r);
+        /* Assume that dpPathShare starts from a node r', 
+         * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
+        List<Pair<Integer,Dir>> dpPathPred = DepTree.getDependencyPath(pred.getId(), r, parents);
+        List<Pair<Integer,Dir>> dpPathArg = DepTree.getDependencyPath(arg.getId(), r, parents);
+
+        //System.out.println("dpPathPred is ");
+        //System.out.println(dpPathPred);
+        //System.out.println("dpPathArg is ");
+        //System.out.println(dpPathArg);
+        ArrayList<Integer> linePath = new ArrayList<Integer>();
+        int startIdx;
+        int endIdx; 
+        if (pidx < aidx) {
+            startIdx = pidx;
+            endIdx = aidx;
+        } else {
+            startIdx = aidx;
+            endIdx = pidx;
+        }
+        while (startIdx < endIdx) {
+            linePath.add(startIdx);
+            startIdx++;
+        }
+
+                
+        /* TBD: Family. Two types of children sets for the predicate or argument candidate are considered, 
+         * the first includes all syntactic children (children), the second also includes all but 
+         * excludes the left most and the right most children (noFarChildren). */
+        
+        
+         // p.currentSense + p.lemma 
+         feats.add(predSense + predLemma);
+         // p.currentSense + p.pos 
+         feats.add(predSense + predPos);
+         // p.currentSense + a.pos 
+         feats.add(predSense + argPos);
+         // p_1 .FEAT1
+         feats.add(sent.get(lastPidx).getFeat().get(0));
+         // p.FEAT2
+         feats.add(predFeats.get(1));
+         // p1 .FEAT3
+         feats.add(sent.get(nextPidx).getFeat().get(2));
+         // TBD:  p.semrm.semdprel  What is this?
+         // p.lm.dprel
+         int predLm = predFarNearChildren.get1().get1();
+         feats.add(sent.get(predLm).getDeprel());
+         // p.form + p.children.dprel.bag 
+         ArrayList<String> depPredChildren = new ArrayList<String>();
+         for (Integer child : predChildren) {
+             depPredChildren.add(sent.get(child).getDeprel());
+         }
+         String bagDepPredChildren = bag(depPredChildren).toString();
+         feats.add(predForm + bagDepPredChildren);
+         // p.lemma_n (n = -1, 0) 
+         feats.add(sent.get(lastPidx).getLemma());
+         feats.add(predLemma);
+         // p.lemma + p.lemma1
+         feats.add(predLemma + sent.get(nextPidx).getLemma());
+         // p.pos_1 + p.pos
+         String feat12 = sent.get(lastPidx).getPpos() + predPos;
+         if (prm.useGoldPos) {
+             feat12 = sent.get(lastPidx).getPos() + predPos;
+         }
+         feats.add(feat12);
+         // p.pos1
+         String feat13 = sent.get(nextPidx).getPpos();
+         if (prm.useGoldPos) {
+             feat13 = sent.get(nextPidx).getPos();
+         }
+         feats.add(feat13);
+         // p.pos + p.children.dprel.bag 
+        feats.add(predPos + bagDepPredChildren);
+        
+        
+        
+        CoNLL09Token argLm = sent.get(argFarNearChildren.get1().get1());
+        CoNLL09Token argRm = sent.get(argFarNearChildren.get2().get1());
+        ArrayList<CoNLL09Token> argChildrenTokens = new ArrayList<CoNLL09Token>();
+        for (int child : argChildren) {
+            argChildrenTokens.add(sent.get(child));
+        }
+
+        // a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6 
+        String feat = argFeats.get(0) + argFeats.get(2) + argFeats.get(3) + argFeats.get(4) + argFeats.get(5);
+        feats.add(feat);
+        // a_1.FEAT2 + a.FEAT2 
+        feat = sent.get(lastAidx).getFeat().get(1) + argFeats.get(1);
+        feats.add(feat);
+        // a.FEAT3 + a1.FEAT3
+        feat = argFeats.get(2) + sent.get(nextAidx).getFeat().get(2);
+        feats.add(feat);
+        // a.FEAT3 + a.h.FEAT3 
+        feat = sent.get(argHead).getFeat().get(2);
+        feats.add(feat);
+        // a.children.FEAT1.noDup 
+        ArrayList<String> argChildrenFeat1 = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenFeat1.add(child.getFeat().get(0));
+        }
+        List<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
+        feat = argChildrenFeat1NoDup.toString();
+        feats.add(feat);
+        // a.children.FEAT3.bag 
+        ArrayList<String> argChildrenFeat3 = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenFeat3.add(child.getFeat().get(2));
+        }
+        List<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
+        feat = argChildrenFeat3Bag.toString();
+        feats.add(feat);
+        // a.h.lemma
+        feat = sent.get(argHead).getLemma();
+        feats.add(feat);
+        // a.lm.dprel + a.form
+        feat = argLm.getDeprel();
+        feats.add(feat);
+        // a.lm.form
+        feat = argLm.getForm();
+        feats.add(feat);
+        // a.lm_1.lemma
+        // a.lmn.pos (n=0,1) 
+        feat = argLm.getPos();
+        feats.add(feat);
+        // a.noFarChildren.pos.bag + a.rm.form 
+        // a.pphead.lemma
+        // a.rm.dprel + a.form 
+        // a.rm_1.form 
+        // a.rm.lemma
+        feat = argRm.getLemma();
+        feats.add(feat);
+        // a.rn.dprel + a.form 
+        // a.lowSupportVerb.lemma 
+        feat = sent.get(argSupport.get1()).getLemma();
+        feats.add(feat);
+        // a_1.form
+        feat = sent.get(lastAidx).getForm();
+        feats.add(feat);
+        // a.form + a1.form
+        feat = argForm + sent.get(nextAidx).getForm();
+        feats.add(feat);
+        // a.form + a.children.pos 
+        List<String> argChildrenPos = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            if (prm.useGoldPos) {
+                argChildrenPos.add(child.getPos());
+            } else {
+                argChildrenPos.add(child.getPpos());
+            }
+        }
+        feat = argForm + argChildrenPos.toString();
+        feats.add(feat);
+        // a.lemma + a.h.form 
+        feat = argLemma + sent.get(argHead).getForm();
+        feats.add(feat);
+        // a.lemma + a.pphead.form 
+        // a1.lemma
+        feat = sent.get(nextAidx).getLemma();
+        feats.add(feat);
+        // a1.pos + a.pos.seq
+        feat = sent.get(nextAidx).getPos() + argPos;
+        feats.add(feat);
+        // a.pos + a.children.dprel.bag
+        ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenDeprel.add(child.getDeprel());
+        }
+        List<String> argChildrenDeprelBag = bag(argChildrenDeprel);
+        feat = argPos + argChildrenDeprelBag.toString();
+        feats.add(feat);
+        // Combined Features
+        // a.lemma + p.lemma 
+        feat = argLemma + predLemma;
+        feats.add(feat);
+        // (a:p|dpPath.dprel) + p.FEAT1 
+        // a:p|dpPath.lemma.seq 
+        // a:p|dpPath.lemma.bag 
+        ArrayList<CoNLL09Token> betweenPathTokens = new ArrayList<CoNLL09Token>();
+        for (Pair<Integer,Dir> p : betweenPath) {
+            betweenPathTokens.add(sent.get(p.get1()));
+        }
+
+        ArrayList<String> depRelPath = new ArrayList<String>();
+        ArrayList<String> depRelPathLemma = new ArrayList<String>();
+        for (CoNLL09Token t : betweenPathTokens) {
+            depRelPath.add(t.getDeprel());
+            depRelPathLemma.add(t.getLemma());
+        }
+        feat = depRelPath + predFeats.get(0);
+        feats.add(feat);
+        feat = depRelPathLemma.toString();
+        feats.add(feat);
+        feat = bag(depRelPathLemma).toString();
+        feats.add(feat);
+        // a:p|linePath.distance 
+        feat = Integer.toString(linePath.size());
+        feats.add(feat);
+        // a:p|linePath.FEAT1.bag 
+        // a:p|linePath.form.seq 
+        // a:p|linePath.lemma.seq 
+        // a:p|linePath.dprel.seq 
+        ArrayList<CoNLL09Token> linePathCoNLL = new ArrayList<CoNLL09Token>();
+        CoNLL09Token token;
+        for (int p : linePath) {
+            token = sent.get(p);
+            linePathCoNLL.add(token);
+        }
+        ArrayList<String> linePathFeat = new ArrayList<String>();
+        ArrayList<String> linePathForm = new ArrayList<String>();
+        ArrayList<String> linePathLemma = new ArrayList<String>();
+        ArrayList<String> linePathDeprel = new ArrayList<String>();
+        for (CoNLL09Token t : linePathCoNLL) {
+            linePathFeat.add(t.getFeat().get(0));
+            linePathForm.add(t.getForm());
+            linePathLemma.add(t.getLemma());
+            linePathDeprel.add(t.getDeprel());
+        }
+        List<String> linePathFeatBag = bag(linePathFeat);
+        feat = linePathFeatBag.toString();
+        feats.add(feat);
+        feat = linePathForm.toString();
+        feats.add(feat);
+        feat = linePathLemma.toString();
+        feats.add(feat);
+        feat = linePathDeprel.toString();
+        feats.add(feat);
+        ArrayList<String> dpPathLemma = new ArrayList<String>();
+        for (Pair<Integer, Dir> dpP : dpPathArg) {
+            dpPathLemma.add(sent.get(dpP.get1()).getLemma());
+            
+        }
+        // a:p|dpPathArgu.lemma.seq 
+        feat = dpPathLemma.toString();
+        feats.add(feat);
+        // a:p|dpPathArgu.lemma.bag
+        feat = bag(dpPathLemma).toString();
+        feats.add(feat);
     }
+    
+    public List<String> bag(ArrayList<String> elements) {
+        Set<String> bag = new HashSet<String>();
+        for (String a : elements) {
+            bag.add(a);
+        }
+        return asSortedList(bag);
+    }
+    
+    public ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
+        ArrayList<String> noDupElements = new ArrayList<String>();
+        String lastA = null;
+        for (String a : argChildrenFeat1) {
+            if (!a.equals(lastA)) {
+                noDupElements.add(a);
+            }
+            lastA = a;
+        }
+        return noDupElements;
+    }
+    
+    public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+      List<T> list = new ArrayList<T>(c);
+      Collections.sort(list);
+      return list;
+    }
+    
+    public Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> syntacticConnectionFarthestNearestChildren(int head, ArrayList<Integer> children) {
+        // Farthest and nearest child to the left; farthest and nearest child to the right.
+        ArrayList<Integer> leftChildren = new ArrayList<Integer>();
+        ArrayList<Integer> rightChildren = new ArrayList<Integer>();
+        // Go through children in order
+        for (int child : children) {
+            if (child < head) {
+                leftChildren.add(child);
+            } else if (child > head) {
+                    rightChildren.add(child);
+                }
+              // Case where child == head skipped; neither right nor left.
+            }
+            
+        //System.out.println("leftChildren is ");
+        //System.out.println(leftChildren);
+        //System.out.println("rightChildren is ");
+        //System.out.println(rightChildren);
+        int farLeftChild = -2;
+        int farRightChild = -2;
+        int closeLeftChild = -2;
+        int closeRightChild = -2;
+        if (!leftChildren.isEmpty()) {
+            farLeftChild = leftChildren.get(0);
+            closeLeftChild = leftChildren.get(leftChildren.size() - 1);
+        }
+    
+        if (!rightChildren.isEmpty()) {
+            farRightChild = rightChildren.get(rightChildren.size() - 1);
+            closeRightChild = rightChildren.get(0);
+        }
+        Pair<Integer,Integer> distLeftChildren = new Pair<Integer,Integer>(farLeftChild, closeLeftChild);
+        Pair<Integer,Integer> distRightChildren = new Pair<Integer,Integer>(farRightChild, closeRightChild);
+    
+        return new Pair<Pair<Integer, Integer>,Pair<Integer, Integer>>(distLeftChildren, distRightChildren);
+
+    }
+    
+    
+    public Pair<Integer,Integer> syntacticConnectionHighLowSupport(String support,  List<Pair<Integer,Dir>> rootPath) {
+        // Support features
+        String parentPos;
+        boolean haveLow = false;
+        int lowSupport = -2;
+        int highSupport = -2;
+        int i;
+      
+        for (Pair<Integer,Dir> a : rootPath) {
+            // for Pos or Ppos; change for Ppos if !goldHead
+            i = a.get1();
+            if (i == -1) {
+                break;
+            }
+            
+            if (!prm.useGoldPos) {
+                parentPos = sent.get(i).getPpos();
+            } else {
+                parentPos = sent.get(i).getPos();
+            }
+            if (parentPos.equals(support)) {
+                if (!haveLow) {
+                    haveLow = true;
+                    lowSupport = i;
+                    highSupport = i;
+                } else {
+                    highSupport = i;
+                }
+            }
+            
+        }
+        return new Pair<Integer, Integer>(lowSupport, highSupport);
+
+        
+    }
+    
+    
+        
+        
     
     private String decideForm(String wordForm, int idx) {
         String cleanWord = cs.normalize.clean(wordForm);

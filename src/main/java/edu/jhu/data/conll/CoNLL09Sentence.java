@@ -48,6 +48,10 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return tokens.get(i);
     }
 
+    public CoNLL09Token getByPosition(int i) {
+        return tokens.get(i - 1);
+    }
+    
     public int size() {
         return tokens.size();
     }

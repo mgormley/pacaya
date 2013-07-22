@@ -285,6 +285,10 @@ public class CoNLL09Token {
     public int getId() {
         return id;
     }
+    
+    public int getPosition() {
+        return id - 1;
+    }
 
     public String getForm() {
         return form;
@@ -318,10 +322,19 @@ public class CoNLL09Token {
         return head;
     }
 
+    public int getHeadPosition() {
+        return head - 1;
+    }
+
     public int getPhead() {
         return phead;
     }
 
+    public int getPHeadPosition() {
+        return phead - 1;
+    }
+    
+    
     public String getDeprel() {
         return deprel;
     }
@@ -401,5 +414,6 @@ public class CoNLL09Token {
     public void setApreds(List<String> apreds) {
         this.apreds = apreds;
     }
+
     
 }

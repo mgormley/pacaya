@@ -70,7 +70,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
     @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.ERMA;
+    public static DatasetType trainType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "ERMA feature file.")
     public static File featureFileIn = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
@@ -80,7 +80,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File test = null;
     @Opt(hasArg = true, description = "Type of testing data.")
-    public static DatasetType testType = DatasetType.ERMA;
+    public static DatasetType testType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "Testing data predictions output file.")
     public static File testPredOut = null;
 
@@ -113,14 +113,16 @@ public class SrlRunner {
     public static boolean allowPredArgSelfLoops = false;
 
     // Options for SRL feature extraction.
-    @Opt(hasArg = true, description = "Cutoff for OOV words.")
-    public static int cutoff = 3;
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldPos = false;
-    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
-    public static boolean biasOnly = false;
+    public static boolean useGoldPos;
+    @Opt(hasArg = true, description = "Whether input trees are projective.")
+    public static boolean isProjective = false;
+    @Opt(hasArg = true, description = "Whether to include supervised features (lemma forms, etc).")
+    public static boolean withSupervision = true;
+    @Opt(hasArg = true, description = "Cutoff for OOV words.")
+    public static int cutoff = 3;
     
     public SrlRunner() {
     }
@@ -264,6 +266,8 @@ public class SrlRunner {
         prm.fePrm.language = language;
         prm.fePrm.useGoldPos = useGoldPos;
         prm.fePrm.biasOnly = biasOnly;
+        prm.fePrm.isProjective = isProjective;
+        prm.fePrm.withSupervision = withSupervision;
         return prm;
     }
     

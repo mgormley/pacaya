@@ -1,7 +1,11 @@
 package edu.jhu.srl;
 
 import org.apache.log4j.Logger;
+import java.util.HashSet;
+import java.util.Set;
 
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.gm.Feature;

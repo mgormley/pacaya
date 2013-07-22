@@ -159,11 +159,9 @@ public class SrlFactorGraph extends FactorGraph {
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
             // CoNLL-friendly model; preds given
             for (int i : knownPreds) {
-                for (int j = 0; j < n;j++) {
-                    if (i==j && !prm.allowPredArgSelfLoops) {
-                        continue;
-                    }
-                    roleVars[i][j] = createRoleVar(i, j, knownPreds, roleStateNames);
+                // Zhang et al limit this set even further; should we do the same?
+                for (int j = 0; j < sent.size();j++) {
+                    roleVars[i][j] = createRoleVar(i, j, knownPreds, cs);
                 }
             }
         } else if (prm.roleStructure == RoleStructure.ALL_PAIRS) {
@@ -222,7 +220,7 @@ public class SrlFactorGraph extends FactorGraph {
                     }
                     // Add binary factors between Roles and Links.
                     if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE_BINARY));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE));
                     }
                 }
             }

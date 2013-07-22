@@ -23,8 +23,10 @@ public class VarConfig {
     /** Constructs a variable configuration by adding each of the configs in order. */
     public VarConfig(VarConfig... configs) {
         this();
+        System.out.println("Have added configs: ");
         for (VarConfig other : configs) {
             put(other);
+            System.out.println(other);
         }
     }
 
@@ -91,6 +93,17 @@ public class VarConfig {
     /** Gets a new variable configuration that contains only a subset of the variables. */
     public VarConfig getSubset(VarSet subsetVars) {
         if (!vars.isSuperset(subsetVars)) {
+            System.out.println("ALL vars is ");
+            for (Var var  : vars) {
+                System.out.println(var);
+            }
+
+            System.out.println("SOME vars is ");
+            for (Var var  : subsetVars) {
+                System.out.println(var);
+            }
+
+            
             throw new IllegalStateException("This config does not contain all the given variables.");
         }
         return getIntersection(subsetVars);
