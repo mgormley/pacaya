@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
@@ -48,7 +49,8 @@ public class SrlFgExampleBuilderTest {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
+        BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet());
+        SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet, sig);
         FgExample ex = builder.getFGExample(sent);
         
         assertEquals(1, obsAlphabet.size());
@@ -89,7 +91,8 @@ public class SrlFgExampleBuilderTest {
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.linkVarType = VarType.PREDICTED;
-        SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
+        BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet());
+        SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet, sig);
         FgExample ex = builder.getFGExample(sent);
 
         VarConfig vc = ex.getGoldConfig();

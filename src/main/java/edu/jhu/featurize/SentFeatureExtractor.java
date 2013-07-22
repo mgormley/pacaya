@@ -105,14 +105,14 @@ public class SentFeatureExtractor {
      * @param idx The position of a word in the sentence.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int idx, int lastIdx, int nextIdx) {
+    public BinaryStrFVBuilder createFeatureSet(int idx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
         addSimpleSoloFeatures(idx, feats);
         addNaradowskySoloFeatures(idx, feats);
-        addZhaoSoloFeatures(idx, feats, lastIdx, nextIdx);
+        addZhaoSoloFeatures(idx, feats);
         return feats;
     }
     
@@ -131,14 +131,14 @@ public class SentFeatureExtractor {
      * @param aidx The "child" position.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx) {
+    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         // Are feats updated without even returning them?
         addSimplePairFeatures(pidx, aidx, feats);
         addNaradowskyPairFeatures(pidx, aidx, feats);
-        addZhaoPairFeatures(pidx, aidx, lastPidx, nextPidx, lastAidx, nextAidx, feats);
+        addZhaoPairFeatures(pidx, aidx, feats);
         // feats = getNuguesFeatures();
         return feats;
     }
@@ -258,11 +258,15 @@ public class SentFeatureExtractor {
         }
     }
 
-    public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats, int lastIdx, int nextIdx) {
+    public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         // TODO:
     }    
     
-    public void addZhaoPairFeatures(int pidx, int aidx, int lastPidx, int nextPidx, int lastAidx, int nextAidx, BinaryStrFVBuilder feats) {
+    public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
+        int lastPidx = pidx - 1;
+        int nextPidx = pidx + 1;
+        int lastAidx = aidx - 1;
+        int nextAidx = aidx + 1;
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"

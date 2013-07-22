@@ -58,8 +58,7 @@ public class SrlFgExampleBuilder {
         // Get the variable assignments given in the training data.
         VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg); 
         // Create a feature extractor for this example.
-        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, sig);
+        SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet, sig);
         FeatureExtractor featExtractor = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
         
         return new FgExample(sfg, trainConfig, featExtractor);

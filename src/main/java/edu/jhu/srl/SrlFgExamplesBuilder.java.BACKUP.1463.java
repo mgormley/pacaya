@@ -2,9 +2,12 @@ package edu.jhu.srl;
 
 import java.util.List;
 
+<<<<<<< Updated upstream
 import org.apache.log4j.Logger;
 
+=======
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+>>>>>>> Stashed changes
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -37,13 +40,29 @@ public class SrlFgExamplesBuilder {
         this.sig = new BerkeleySignatureBuilder(new Alphabet());
     }
         
+    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
+        throw new RuntimeException("Not implemented");
+    }
+    
+    public FgExamples getData(CoNLL09FileReader reader) {
+        List<CoNLL09Sentence> sents = reader.readAll();
+<<<<<<< Updated upstream
+        return getData(sents);
+    }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
         CorpusStatistics cs = new CorpusStatistics(prm.fePrm);
         cs.init(sents);
 
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet, sig);
+        SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
+=======
+        CorpusStatistics cs = new CorpusStatistics(prm);
+        cs.init(sents);
+
+        // TODO: set these params.
+        SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs, sig);
+>>>>>>> Stashed changes
 
         FgExamples data = new FgExamples(alphabet);
         for (CoNLL09Sentence sent : sents) {
@@ -53,15 +72,6 @@ public class SrlFgExamplesBuilder {
         log.info("Num observation features: " + obsAlphabet.size());
         
         return data;
-    }
-
-    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
-        throw new RuntimeException("Not implemented");
-    }
-    
-    public FgExamples getData(CoNLL09FileReader reader) {
-        List<CoNLL09Sentence> sents = reader.readAll();
-        return getData(sents);
     }
 
     public Alphabet<Feature> getAlphabet() {
