@@ -109,7 +109,7 @@ public class CrfObjective implements Function {
         infLatPred.clear();
         
         double ll = numerator - denominator;        
-        assert ll <= 0 : "Log-likelihood should be <= 0";
+        assert ll <= 0 : "Log-likelihood should be <= 0: " + ll;
         
         return ll;
     }
