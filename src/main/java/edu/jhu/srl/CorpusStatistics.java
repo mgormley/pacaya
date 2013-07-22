@@ -57,7 +57,7 @@ public class CorpusStatistics {
         this.normalize = new Normalizer(prm.normalize); 
     }
 
-    private SrlFgExampleBuilderPrm prm;
+    /*private SrlFgExampleBuilderPrm prm;
     private String language;
     private int cutoff;
     private boolean useGoldPos;
@@ -67,7 +67,7 @@ public class CorpusStatistics {
         this.language = prm.fePrm.language;
         this.cutoff = prm.fePrm.cutoff;
         this.useGoldPos = prm.fePrm.useGoldPos;
-    }    
+    }    */
     
     public void init(Iterable<CoNLL09Sentence> cr) {
         if (true) System.err.println("CORPUS STATISTICS PARAMS DEFINED BY SRLFGEXAMPLEBUILDER.");
@@ -81,7 +81,7 @@ public class CorpusStatistics {
         knownLinks.add("True");
         knownLinks.add("False");
         knownUnks.add("UNK");
-        Normalize normalizer = new Normalize();
+        //Normalize normalizer = new Normalize();
         for (CoNLL09Sentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in

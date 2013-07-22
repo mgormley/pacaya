@@ -47,7 +47,6 @@ public class FgExample {
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
         this.fg = fg;
         this.goldConfig = goldConfig;
-        this.featExtractor = featExtractor;
         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
