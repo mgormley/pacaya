@@ -80,6 +80,10 @@ public class MbrDecoder {
                 // Get the features that fire on the MBR variable configuration.
                 for (int a = 0; a < fgLatPred.getNumFactors(); a++) {
                     Factor factor = fgLatPred.getFactor(a);
+                    if (factor instanceof GlobalFactor) {
+                        // Global factors don't have features.
+                        continue;
+                    }
                     VarConfig factorVc = mbrVarConfig.getSubset(factor.getVars());
                     FeatureVector fv = cacheLatPred.getFeatureVector(a, factorVc.getConfigIndex());
                     // We use add here since we want the sum across all factors
