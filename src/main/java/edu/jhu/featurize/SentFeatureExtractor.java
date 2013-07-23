@@ -33,9 +33,13 @@ public class SentFeatureExtractor {
         /**
          * Whether to normalize and clean words.
          */
-        public boolean normalize = false;
+        public boolean normalizeWords = false;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
+        /**
+         * Whether to normalize the role names (i.e. lowercase and remove themes).
+         */
+        public boolean normalizeRoleNames = false;
     }
     
     // Parameters for feature extraction.

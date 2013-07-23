@@ -38,7 +38,8 @@ public class CorpusStatisticsTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(2);
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;        
+        fePrm.biasOnly = true;  
+        fePrm.normalizeRoleNames = true;
         CorpusStatistics cs = new CorpusStatistics(fePrm);
         cs.init(sents);
 

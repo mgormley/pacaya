@@ -54,7 +54,7 @@ public class CorpusStatistics {
 
     public CorpusStatistics(SentFeatureExtractorPrm prm) {
         this.prm = prm;
-        this.normalize = new Normalizer(prm.normalize); 
+        this.normalize = new Normalizer(prm.normalizeWords); 
     }
 
     public void init(Iterable<CoNLL09Sentence> cr) {
@@ -127,10 +127,12 @@ public class CorpusStatistics {
         log.info("Known roles: " + roleStateNames);
     }
 
-    public String normalizeRoleName(String input) {
-        // TODO: This is hardcoding the removal of the Theta role; make this an option.
-        String[] splitRole = dash.split(input);
-        String role = splitRole[0].toLowerCase();
+    public String normalizeRoleName(String role) {
+        if (prm.normalizeRoleNames) {
+            // TODO: This is hardcoding the removal of the Theta role; make this an option.
+            String[] splitRole = dash.split(role);
+            role = splitRole[0].toLowerCase();
+        }
         return role;
     }
 

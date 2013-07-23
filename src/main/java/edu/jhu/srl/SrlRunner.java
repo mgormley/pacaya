@@ -16,9 +16,6 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.SrlGraph.SrlArg;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -31,7 +28,6 @@ import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.data.ErmaReader;
@@ -40,7 +36,6 @@ import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
@@ -122,12 +117,18 @@ public class SrlRunner {
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
+    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
+    public static boolean biasOnly = false;
+
+    // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldPos = false;
-    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
-    public static boolean biasOnly = false;
+    public static boolean useGoldPos = false;    
+    @Opt(hasArg=true, description="Whether to normalize and clean words.")
+    public static boolean normalizeWords = false;
+    @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
+    public static boolean normalizeRoleNames = false;
     
     public SrlRunner() {
     }
@@ -259,26 +260,9 @@ public class SrlRunner {
                     VarConfig vc = predictions.get(i);
                     CoNLL09Sentence sent = sents.get(i);
                     
-                    SrlGraph srlGraph = new SrlGraph(sent.size());
-                    for (Var v : vc.getVars()) {
-                        if (v instanceof RoleVar && v.getType() != VarType.LATENT) {
-                            RoleVar role = (RoleVar) v;
-                            SrlPred pred = srlGraph.getPredAt(role.getParent());
-                            if (pred == null) {
-                                // TODO: also decode the Sense of the predicate.
-                                String sense = "_";
-                                pred = new SrlPred(role.getParent(), sense);
-                            }
-                            SrlArg arg = srlGraph.getArgAt(role.getChild());
-                            if (arg == null) {
-                                arg = new SrlArg(role.getChild());
-                            }
-                            SrlEdge edge = new SrlEdge(pred, arg, vc.getStateName(role));
-                            srlGraph.addEdge(edge);
-                        }
-                    }
+                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sent);
                     
-                    sent.setColsFromSrlGraph(srlGraph);
+                    sent.setPredApredFromSrlGraph(srlGraph, false);
                 }
                 CoNLL09Writer cw = new CoNLL09Writer(predOut);
                 for (CoNLL09Sentence sent : sents) {
@@ -293,6 +277,8 @@ public class SrlRunner {
         return predictions;
     }
 
+    
+
     /* --------- Factory Methods ---------- */
 
     private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm() {
@@ -305,9 +291,11 @@ public class SrlRunner {
         prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         // Feature extraction.
         prm.fePrm.cutoff = cutoff;
+        prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.language = language;
         prm.fePrm.useGoldPos = useGoldPos;
-        prm.fePrm.biasOnly = biasOnly;
+        prm.fePrm.normalizeWords = normalizeWords;
+        prm.fePrm.normalizeRoleNames = normalizeRoleNames;
         return prm;
     }
     

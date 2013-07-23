@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.Lemma;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
@@ -19,6 +21,8 @@ import edu.jhu.data.conll.SrlGraph.SrlPred;
  */
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
+    private static Logger log = Logger.getLogger(CoNLL09Sentence.class);
+    
     private ArrayList<CoNLL09Token> tokens;
     
     public CoNLL09Sentence(List<CoNLL09Token> tokens) {
@@ -132,7 +136,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return new SrlGraph(this);
     }
 
-    public void setColsFromSrlGraph(SrlGraph srlGraph) {
+    public void setPredApredFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds) {
         int numPreds = srlGraph.getNumPreds();
         // Set the FILLPRED and PRED column.
         for (int i=0; i<size(); i++) {
@@ -140,12 +144,19 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
             SrlPred pred = srlGraph.getPredAt(i);
             if (pred == null) {
                 tok.setPred(null);
-                tok.setFillpred(false);   
+                if (warnMismatchedPreds && tok.isFillpred()) {
+                    log.warn("Not setting predicate sense on a row where FILLPRED=Y in original data.");
+                }
+                //tok.setFillpred(false);   
             } else {
                 tok.setPred(pred.getLabel());
-                tok.setFillpred(true);
+                if (warnMismatchedPreds && !tok.isFillpred()) {
+                    log.warn("Setting predicate sense on a row where FILLPRED=_ in original data.");
+                }
+                //tok.setFillpred(true);
             }
         }
+        
         // Set the APRED columns.
         for (int i=0; i<size(); i++) {
             CoNLL09Token tok = tokens.get(i);

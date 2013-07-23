@@ -1,7 +1,7 @@
 package edu.jhu.data.conll;
 
-import static edu.jhu.util.Utilities.getList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ public class CoNLL09SentenceTest {
         assertFalse(sent1.equals(sent2));
         
         SrlGraph srlGraph = sent1.getSrlGraph();
-        sent2.setColsFromSrlGraph(srlGraph);
+        sent2.setPredApredFromSrlGraph(srlGraph, true);
         
         assertEquals(sent1, sent2);
     }
@@ -50,10 +50,10 @@ public class CoNLL09SentenceTest {
 
         tokens.add(getTok("the", "_ _"));
         tokens.add(getTok("dog", "_ _"));
-        tokens.add(getTok("ate", "_ _"));
+        tokens.add(getTok("ate", "Y _"));
         tokens.add(getTok("food", "_ _"));
         tokens.add(getTok("while", "_ _"));
-        tokens.add(getTok("watching", "_ _"));
+        tokens.add(getTok("watching", "Y _"));
         tokens.add(getTok("the", "_ _"));
         tokens.add(getTok("cat", "_ _"));
         
