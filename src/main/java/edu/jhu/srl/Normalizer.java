@@ -19,7 +19,7 @@ public class Normalizer {
     }
     
     private static final Pattern digits = Pattern.compile("\\d+");
-    private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]");
+    private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_√Å√â√ç√ì√ö√ú√ë√°√©√≠√≥√∫√º√±]");
     private static Map<String, String> stringMap;
 
     private boolean isOn;
@@ -74,31 +74,31 @@ public class Normalizer {
         stringMap.put("/", "_SL_");
         stringMap.put("`", "_QT_");
         stringMap.put("?", "_Q_");
-        stringMap.put("¿", "_QQ_");
+        stringMap.put("¬ø", "_QQ_");
         stringMap.put("=", "_EQ_");
         stringMap.put("*", "_ST_");
         stringMap.put("!", "_E_");
-        stringMap.put("¡", "_EE_");
+        stringMap.put("¬°", "_EE_");
         stringMap.put("#", "_HSH_");
         stringMap.put("@", "_AT_");
         stringMap.put("(", "_LBR_");
         stringMap.put(")", "_RBR_");
         stringMap.put("\"", "_QT1_");
-        stringMap.put("Á", "_A_ACNT_");
-        stringMap.put("É", "_E_ACNT_");
-        stringMap.put("Í", "_I_ACNT_");
-        stringMap.put("Ó", "_O_ACNT_");
-        stringMap.put("Ú", "_U_ACNT_");
-        stringMap.put("Ü", "_U_ACNT2_");
-        stringMap.put("Ñ", "_N_ACNT_");
-        stringMap.put("á", "_a_ACNT_");
-        stringMap.put("é", "_e_ACNT_");
-        stringMap.put("í", "_i_ACNT_");
-        stringMap.put("ó", "_o_ACNT_");
-        stringMap.put("ú", "_u_ACNT_");
-        stringMap.put("ü", "_u_ACNT2_");
-        stringMap.put("ñ", "_n_ACNT_");
-        stringMap.put("º", "_deg_ACNT_");
+        stringMap.put("√Å", "_A_ACNT_");
+        stringMap.put("√â", "_E_ACNT_");
+        stringMap.put("√ç", "_I_ACNT_");
+        stringMap.put("√ì", "_O_ACNT_");
+        stringMap.put("√ö", "_U_ACNT_");
+        stringMap.put("√ú", "_U_ACNT2_");
+        stringMap.put("√ë", "_N_ACNT_");
+        stringMap.put("√°", "_a_ACNT_");
+        stringMap.put("√©", "_e_ACNT_");
+        stringMap.put("√≠", "_i_ACNT_");
+        stringMap.put("√≥", "_o_ACNT_");
+        stringMap.put("√∫", "_u_ACNT_");
+        stringMap.put("√º", "_u_ACNT2_");
+        stringMap.put("√±", "_n_ACNT_");
+        stringMap.put("¬∫", "_deg_ACNT_");
 
     }
 }
