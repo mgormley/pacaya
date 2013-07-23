@@ -132,7 +132,7 @@ public class SrlRunner {
 
     // Options for training.
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
-    private static int maxLbfgsIterations = 1000;
+    public static int maxLbfgsIterations = 1000;
     
     public SrlRunner() {
     }
