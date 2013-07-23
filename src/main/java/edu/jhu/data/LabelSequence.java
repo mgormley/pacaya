@@ -38,7 +38,11 @@ public class LabelSequence<X extends Label> implements Iterable<X>, Serializable
     }
     
     protected boolean add(X label) {
-        labelIds.add(alphabet.lookupIndex(label));
+        int idx = alphabet.lookupIndex(label);
+        if (idx == -1) {
+            throw new RuntimeException("Unknown label: " + label);
+        }
+        labelIds.add(idx);
         return labels.add(label);
     }
     

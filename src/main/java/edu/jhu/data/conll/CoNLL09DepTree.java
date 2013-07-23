@@ -27,7 +27,8 @@ public class CoNLL09DepTree extends DepTree {
 
     @Override
     public Sentence getSentence(Alphabet<Label> alphabet) {
-        return new ValidParentsSentence(sent, alphabet);
+        Sentence sentence = super.getSentence(alphabet);
+        return new ValidParentsSentence(alphabet, sentence, sent.getSrlGraph());
     }
 
 }

@@ -146,7 +146,7 @@ public class DepParserRunner {
                 runRelaxOnly(goldModel, trainTreebank, trainCorpus);
                 // Return and exit this pipeline.
                 return;
-            } 
+            }
                     
             // Train the model
             log.info("Training model");

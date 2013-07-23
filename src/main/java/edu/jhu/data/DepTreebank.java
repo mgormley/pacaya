@@ -170,7 +170,10 @@ public class DepTreebank implements Iterable<DepTree> {
     private void addTreeToAlphabet(DepTree tree) {
         for (DepTreeNode node : tree) {
             if (node.getLabel() != WallDepTreeNode.WALL_LABEL) {
-                alphabet.lookupIndex(node.getLabel());
+                int idx = alphabet.lookupIndex(node.getLabel());
+                if (idx == -1) {
+                    throw new RuntimeException("Unknown label: " + node.getLabel());
+                }
             }
         }
     }

@@ -36,17 +36,15 @@ public class ValidParentsSentence extends Sentence {
         this.validRoot = validRoot;
         this.validParents = validParents;
     }
-    
-    public ValidParentsSentence(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
-        super(sent, alphabet);
+
+    public ValidParentsSentence(Alphabet<Label> alphabet, Iterable<Label> labels, SrlGraph g) {
+        super(alphabet, labels);
         
-        final int n = sent.size();
+        final int n = this.size();
         validRoot = new boolean[n];
         Utilities.fill(validRoot, true);
         validParents = new boolean[n][n];
         Utilities.fill(validParents, true);
-        
-        SrlGraph g = sent.getSrlGraph();
 
         // For each child position (c) which is an argument, invalidate all the
         // parent positions (p) except those for which there is an edge to a
@@ -62,6 +60,11 @@ public class ValidParentsSentence extends Sentence {
         }
         
         // TODO: handle case where all entries in validRoot are false;
+    }
+    
+    @Deprecated
+    public ValidParentsSentence(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
+        this(alphabet, new Sentence(sent, alphabet), sent.getSrlGraph());
     }
 
     public boolean[] getValidRoot() {

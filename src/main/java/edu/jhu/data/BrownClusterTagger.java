@@ -17,6 +17,8 @@ import edu.jhu.util.Alphabet;
  */
 public class BrownClusterTagger {
 
+    private static final String OOV_CLUSTER = "UNK";
+
     private static final Pattern tab = Pattern.compile("\t");
     
     /** Map from words to tags. */
@@ -54,7 +56,7 @@ public class BrownClusterTagger {
     public String getCluster(String word) {
         String cluster = map.get(word);
         if (cluster == null) {
-            cluster = "NONE";
+            cluster = OOV_CLUSTER;
         }
         return cluster;
     }

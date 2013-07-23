@@ -3,6 +3,8 @@ package edu.jhu.data.concrete;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
 import edu.jhu.data.Lemma;
 import edu.jhu.data.Sentence;
@@ -51,4 +53,17 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         return sents;
     }
     
+    public DepTreebank getPosTagsAndParentsAsDepTreebank(Alphabet<Label> alphabet) {
+        DepTreebank trees = new DepTreebank(alphabet);
+        for (SimpleAnnoSentence sent : this) {
+            List<Label> labels = new ArrayList<Label>();
+            for (String t : sent.getPosTags()) {
+                labels.add(new Tag(t));
+            }
+            Sentence sentence = new Sentence(alphabet, labels);
+            boolean isProjective = DepTree.checkIsProjective(sent.getParents());
+            trees.add(new DepTree(sentence, sent.getParents(), isProjective));
+        }
+        return trees; 
+    }
 }

@@ -10,6 +10,8 @@ import edu.jhu.util.cli.Opt;
 
 public class DepTreebankReader {
 
+    private static final String OOV_WORD_OR_TAG = "UNK";
+
     public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2009 };
 
     private static final Logger log = Logger.getLogger(DepTreebankReader.class);
@@ -56,7 +58,12 @@ public class DepTreebankReader {
             (new FileMapTagReducer(new File(reduceTags))).reduceTags(trainTreebank);
         }
 
-        // After reducing tags we create an entirely new treebank that uses the alphabet we care about.
+        // Always add the OOV tag to the alphabet.
+        TaggedWord unk = new TaggedWord(OOV_WORD_OR_TAG, OOV_WORD_OR_TAG);
+        alphabet.lookupIndex(unk);
+        (new OovTagReducer(alphabet, OOV_WORD_OR_TAG)).reduceTags(trainTreebank);
+        
+        // After reducing tags we create an entirely new treebank that uses the alphabet we care about.        
         DepTreebank tmpTreebank = new DepTreebank(alphabet);
         for (DepTree tree : trainTreebank) {
             tmpTreebank.add(tree);
