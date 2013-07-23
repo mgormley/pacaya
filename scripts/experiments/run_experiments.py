@@ -316,8 +316,8 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         
         #conll09_dir = "/export/common/data/corpora/LDC/LDC2012T03/data"
         #conll09_sp_dir = os.path.join(conll09_dir, "CoNLL2009-ST-Spanish")
-        conll09_sp_dir = os.path.abspath(os.path.join("data", "conll2009", "CoNLL2009-ST-Spanish"))
-        #conll09_sp_dir = os.path.join(data_dir, "conll2009", "CoNLL2009-ST-Spanish-BrownClusters")
+        #conll09_sp_dir = os.path.abspath(os.path.join("data", "conll2009", "CoNLL2009-ST-Spanish"))
+        conll09_sp_dir = os.path.join(data_dir, "conll2009", "CoNLL2009-ST-Spanish-BrownClusters")
         conll09_sp_dev = self.get_data(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt") + \
             DPExpParams(dataset="conll09-sp-dev",
                         trainType="CONLL_2009",
@@ -412,17 +412,19 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             # Full length test sentences.
             setup.update(maxNumSentences=100000000, maxSentenceLengthTest=1000)
             setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
-            setup.update(usePredictedPosTags=True)
+            setup.update(usePredictedPosTags=True, modelOut="model.binary.gz")
             setup.set("lambda", 1)
             exps = []
-            for maxSentenceLength in [10, 20, 1000]:
-                if maxSentenceLength == 1000:
+            for maxSentenceLength in [10, 20, 30]: # Dropped +inf (i.e. 1000)
+                if maxSentenceLength > 20:
                     setup.update(timeoutSeconds=48*60*60)
                 setup.update(maxSentenceLength=maxSentenceLength)
                 for dataset in [conll09_sp_dev, conll09_sp_test, conll09_sp_train]:
                     for usePredArgSupervision in [True, False]:
                         # Set the seed explicitly.
                         exp = all + setup + dataset + DPExpParams(usePredArgSupervision=usePredArgSupervision)
+                        if dataset == conll09_sp_train:
+                            setup.set("work_mem_megs", 64*1024, False, False)
                         #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
                         exps.append(exp)
             # Drop all but 3 experiments for a fast run.
@@ -924,7 +926,11 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 # Update the thread count
                 threads = stage.get("threads")
                 if threads != None: 
-                    stage.threads = threads
+                    # Add an extra thread just as a precaution.
+                    stage.threads = threads + 1
+                work_mem_megs = stage.get("work_mem_megs")
+                if work_mem_megs != None:
+                    stage.work_mem_megs = work_mem_megs
                 # Update the runtime
                 timeoutSeconds = stage.get("timeoutSeconds")
                 if timeoutSeconds != None:
