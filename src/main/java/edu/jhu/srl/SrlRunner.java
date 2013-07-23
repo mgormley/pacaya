@@ -181,6 +181,9 @@ public class SrlRunner {
             eval(data, name, predictions);
         }
         
+        // Ensure that we don't add features not seen in training.
+        alphabet.stopGrowth();
+        
         if (modelOut != null) {
             // Write the model to a file.
             log.info("Serializing model to file: " + modelOut);

@@ -88,20 +88,20 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
-        if (true) {
-            for (String obsFeat : obsFeats) {
-                String fname = vcStr + "_" + obsFeat;
-                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
-            }
-        } else {
-            // TODO: This makes unreadable features, but is faster...maybe add an option.
-            FeatureVectorBuilder fvb = obsFeats.getFvb();
-            for (IntDoubleEntry obsFeat : fvb) {
-                String fname = vcStr + "_" + obsFeat.index();
-                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
+
+        for (String obsFeat : obsFeats) {
+            String fname = vcStr + "_" + obsFeat;
+            int fidx = alphabet.lookupIndex(new Feature(fname));
+            if (fidx != -1) {
+                fv.add(fidx, 1.0);
             }
         }
-            
+        //            // TODO: This makes unreadable features, but is faster...maybe add an option.
+        //            FeatureVectorBuilder fvb = obsFeats.getFvb();
+        //            for (IntDoubleEntry obsFeat : fvb) {
+        //                String fname = vcStr + "_" + obsFeat.index();
+        //                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
+        //            }
         
         return fv;
     }
