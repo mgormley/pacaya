@@ -245,14 +245,6 @@ public class DepParserRunner {
             }
             DmvDepTreeGenerator generator = new DmvDepTreeGenerator(goldModel, syntheticSeed);
             goldTreebank = generator.getTreebank(DepTreebankReader.maxNumSentences);
-            
-            // TODO: maybe remove. we're doing this later.
-            //            if (synthetic != null) {
-            //                log.info("Printing trees...");
-            //                // Also print the synthetic trees
-            //                writer.write("Trees:\n");
-            //                writer.write(depTreebank.toString());
-            //            }
         } else {
             throw new ParseException("Either the option --train or --synthetic must be specified");
         }
