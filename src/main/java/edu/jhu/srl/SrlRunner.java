@@ -129,6 +129,10 @@ public class SrlRunner {
     public static boolean normalizeWords = false;
     @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
     public static boolean normalizeRoleNames = false;
+
+    // Options for training.
+    @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
+    private static int maxLbfgsIterations = 1000;
     
     public SrlRunner() {
     }
@@ -311,6 +315,7 @@ public class SrlRunner {
 
     private static MalletLBFGS getMaximizer() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
+        prm.maxIterations = maxLbfgsIterations;
         MalletLBFGS maximizer = new MalletLBFGS(prm);
         
         // To run with SGD, uncomment these lines.
