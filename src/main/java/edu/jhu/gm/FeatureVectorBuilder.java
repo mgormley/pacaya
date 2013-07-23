@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.map.IntDoubleHashMap;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Sort;
@@ -15,7 +16,13 @@ public class FeatureVectorBuilder extends IntDoubleHashMap {
     }
     
     public void add(int index, double value) {
-        this.put(index, this.get(index) + value);
+        super.put(index, this.get(index) + value);
+    }
+    
+    public void add(FeatureVector fv) {
+        for (IntDoubleEntry e : fv) {
+            this.add(e.index(), e.get());
+        }
     }
     
     public FeatureVector toFeatureVector() {

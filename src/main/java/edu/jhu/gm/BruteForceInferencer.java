@@ -21,7 +21,7 @@ public class BruteForceInferencer implements FgInferencer {
     }
     
     private FactorGraph fg;
-    private Factor joint;
+    private DenseFactor joint;
     private boolean logDomain;
     
     public BruteForceInferencer(FactorGraph fg, boolean logDomain) {
@@ -37,13 +37,18 @@ public class BruteForceInferencer implements FgInferencer {
      *            Whether to work in the log-domain.
      * @return The product of all the factors.
      */
-    private static Factor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
-        Factor joint = new Factor(new VarSet(), logDomain ? 0.0 : 1.0);
+    private static DenseFactor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
+        DenseFactor joint = new DenseFactor(new VarSet(), logDomain ? 0.0 : 1.0);
         for (int a=0; a<fg.getNumFactors(); a++) {
-            if (logDomain) {
-                joint.add(fg.getFactor(a));
+            if (fg.getFactor(a) instanceof DenseFactor) {
+                DenseFactor factor = (DenseFactor) fg.getFactor(a);
+                if (logDomain) {
+                    joint.add(factor);
+                } else {
+                    joint.prod(factor);
+                }
             } else {
-                joint.prod(fg.getFactor(a));
+                throw new RuntimeException("BruteForceInferencer only applies to DenseFactors");
             }
         }
         return joint;
@@ -55,12 +60,12 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     /** Gets the unnormalized joint factor over all variables. */
-    public Factor getJointFactor() {
+    public DenseFactor getJointFactor() {
         return joint;
     }
     
     @Override
-    public Factor getMarginals(Var var) {
+    public DenseFactor getMarginals(Var var) {
         if (logDomain) {
             return joint.getLogMarginal(new VarSet(var), true);
         } else {
@@ -69,13 +74,13 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     @Override
-    public Factor getMarginals(VarSet varSet) {
+    public DenseFactor getMarginals(VarSet varSet) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public Factor getMarginals(Factor factor) {
+    public DenseFactor getMarginals(Factor factor) {
         if (logDomain) {
             return joint.getLogMarginal(factor.getVars(), true);
         } else {
@@ -84,12 +89,12 @@ public class BruteForceInferencer implements FgInferencer {
     }
 
     @Override
-    public Factor getMarginalsForVarId(int varId) {
+    public DenseFactor getMarginalsForVarId(int varId) {
         return getMarginals(fg.getVar(varId));
     }
 
     @Override
-    public Factor getMarginalsForFactorId(int factorId) {
+    public DenseFactor getMarginalsForFactorId(int factorId) {
         return getMarginals(fg.getFactor(factorId));
     }
 

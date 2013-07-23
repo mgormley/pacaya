@@ -1,18 +1,28 @@
 package edu.jhu.data.conll;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.Lemma;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
+import edu.jhu.data.conll.SrlGraph.SrlArg;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
  */
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
+    private static Logger log = Logger.getLogger(CoNLL09Sentence.class);
+    
     private ArrayList<CoNLL09Token> tokens;
     
     public CoNLL09Sentence(List<CoNLL09Token> tokens) {
@@ -126,4 +136,87 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return new SrlGraph(this);
     }
 
+    public void setPredApredFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds) {
+        int numPreds = srlGraph.getNumPreds();
+        // Set the FILLPRED and PRED column.
+        for (int i=0; i<size(); i++) {
+            CoNLL09Token tok = tokens.get(i);
+            SrlPred pred = srlGraph.getPredAt(i);
+            if (pred == null) {
+                tok.setPred(null);
+                if (warnMismatchedPreds && tok.isFillpred()) {
+                    log.warn("Not setting predicate sense on a row where FILLPRED=Y in original data.");
+                }
+                //tok.setFillpred(false);   
+            } else {
+                tok.setPred(pred.getLabel());
+                if (warnMismatchedPreds && !tok.isFillpred()) {
+                    log.warn("Setting predicate sense on a row where FILLPRED=_ in original data.");
+                }
+                //tok.setFillpred(true);
+            }
+        }
+        
+        // Set the APRED columns.
+        for (int i=0; i<size(); i++) {
+            CoNLL09Token tok = tokens.get(i);
+            SrlArg arg = srlGraph.getArgAt(i);
+            ArrayList<String> apreds = new ArrayList<String>();
+            for (int curPred=0; curPred<numPreds; curPred++) {
+                apreds.add("_");
+            }
+            if (arg != null) {
+                int curPred = 0;
+                for (int j=0; j<size(); j++) {
+                    SrlPred pred = srlGraph.getPredAt(j);
+                    if (pred != null) {
+                        for (SrlEdge edge : arg.getEdges()) {
+                            if (edge.getPred() == pred) {
+                                apreds.set(curPred, edge.getLabel());
+                            }
+                        }
+                        curPred++;
+                    }
+                }
+            }
+            tok.setApreds(apreds);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((tokens == null) ? 0 : tokens.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CoNLL09Sentence other = (CoNLL09Sentence) obj;
+        if (tokens == null) {
+            if (other.tokens != null)
+                return false;
+        } else if (!tokens.equals(other.tokens))
+            return false;
+        return true;
+    }    
+ 
+    public String toString() {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            CoNLL09Writer writer = new CoNLL09Writer(new OutputStreamWriter(baos));
+            writer.write(this);
+            writer.close();
+            return baos.toString("UTF-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

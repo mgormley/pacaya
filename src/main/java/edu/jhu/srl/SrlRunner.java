@@ -6,12 +6,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Writer;
+import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -41,6 +45,10 @@ import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.dist.Gaussian;
 
+/**
+ * Pipeline runner for SRL experiments.
+ * @author mgormley
+ */
 public class SrlRunner {
 
     public static enum DatasetType { ERMA, CONLL_2009 };
@@ -53,11 +61,18 @@ public class SrlRunner {
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
 
+    // Options for data.
+
+    @Opt(hasArg = true, description = "Maximum sentence length for each train/test set.")
+    public static int maxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences to include in each train/test set.")
+    public static int maxNumSentences = Integer.MAX_VALUE; 
+    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
     @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.ERMA;
+    public static DatasetType trainType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "ERMA feature file.")
     public static File featureFileIn = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
@@ -67,7 +82,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File test = null;
     @Opt(hasArg = true, description = "Type of testing data.")
-    public static DatasetType testType = DatasetType.ERMA;
+    public static DatasetType testType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "Testing data predictions output file.")
     public static File testPredOut = null;
 
@@ -96,12 +111,24 @@ public class SrlRunner {
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
     public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
+    public static boolean allowPredArgSelfLoops = false;
 
     // Options for SRL feature extraction.
+    @Opt(hasArg = true, description = "Cutoff for OOV words.")
+    public static int cutoff = 3;
+    @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
+    public static boolean biasOnly = false;
+
+    // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
-    public static String language;
+    public static String language = "es";
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldPos;
+    public static boolean useGoldPos = false;    
+    @Opt(hasArg=true, description="Whether to normalize and clean words.")
+    public static boolean normalizeWords = false;
+    @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
+    public static boolean normalizeRoleNames = false;
     
     public SrlRunner() {
     }
@@ -125,7 +152,6 @@ public class SrlRunner {
         
         if (trainType != null && train != null) {
             String name = "train";
-            assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
             FgExamples data = getData(alphabet, trainType, train, name);
@@ -151,7 +177,7 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            List<VarConfig> predictions = decode(model, data, trainPredOut, name);        
+            List<VarConfig> predictions = decode(model, data, trainType, trainPredOut, name);        
             eval(data, name, predictions);
         }
         
@@ -175,19 +201,31 @@ public class SrlRunner {
             FgExamples data = getData(alphabet, testType, test, name);
 
             // Decode and evaluate the test data.
-            List<VarConfig> predictions = decode(model, data, testPredOut, name);
+            List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
             eval(data, name, predictions);
         }
     }
 
     private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+        log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
-        if (dataType != DatasetType.CONLL_2009){
+        if (dataType == DatasetType.CONLL_2009){
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
+            List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
+            for (CoNLL09Sentence sent : reader) {
+                if (sents.size() >= maxNumSentences) {
+                    break;
+                }
+                if (sent.size() <= maxSentenceLength) {
+                    sents.add(sent);
+                }
+            }
+            log.info("Num " + name + " sentences: " + sents.size());
+            log.info("Building factor graphs and extracting features.");
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
-            data = builder.getData(reader);
-        } else if (dataType != DatasetType.ERMA){
+            data = builder.getData(sents);
+        } else if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader(true);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {
@@ -207,18 +245,39 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
 
-    private List<VarConfig> decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
+    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
         MbrDecoder decoder = getDecoder();
         decoder.decode(model, data);
 
         List<VarConfig> predictions = decoder.getMbrVarConfigList();
         if (predOut != null) {
-            ErmaWriter ew = new ErmaWriter();
-            ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+            log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
+            if (dataType == DatasetType.CONLL_2009) {
+                @SuppressWarnings("unchecked")
+                List<CoNLL09Sentence> sents = (List<CoNLL09Sentence>)data.getSourceSentences();
+                for (int i=0; i<sents.size(); i++) {
+                    VarConfig vc = predictions.get(i);
+                    CoNLL09Sentence sent = sents.get(i);
+                    
+                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sent);
+                    
+                    sent.setPredApredFromSrlGraph(srlGraph, false);
+                }
+                CoNLL09Writer cw = new CoNLL09Writer(predOut);
+                for (CoNLL09Sentence sent : sents) {
+                    cw.write(sent);
+                }
+                cw.close();
+            } else {
+                ErmaWriter ew = new ErmaWriter();
+                ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+            }
         }
         return predictions;
     }
+
+    
 
     /* --------- Factory Methods ---------- */
 
@@ -229,9 +288,14 @@ public class SrlRunner {
         prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.roleStructure = roleStructure;
         prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         // Feature extraction.
+        prm.fePrm.cutoff = cutoff;
+        prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.language = language;
         prm.fePrm.useGoldPos = useGoldPos;
+        prm.fePrm.normalizeWords = normalizeWords;
+        prm.fePrm.normalizeRoleNames = normalizeRoleNames;
         return prm;
     }
     

@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import edu.jhu.gm.Factor;
+import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
@@ -28,7 +28,7 @@ public class BayesNetReader {
     private static final Pattern whitespaceOrComma = Pattern.compile("[,\\s]+");
     
     private HashMap<String,Var> varMap;
-    private HashMap<VarSet, Factor> factorMap;
+    private HashMap<VarSet, DenseFactor> factorMap;
 
     public BayesNetReader() {
         
@@ -67,7 +67,7 @@ public class BayesNetReader {
         // Read CPD file.
         BufferedReader cpdReader = new BufferedReader(new InputStreamReader(cpdIs));
         
-        factorMap = new LinkedHashMap<VarSet, Factor>();
+        factorMap = new LinkedHashMap<VarSet, DenseFactor>();
         String line;
         while ((line = cpdReader.readLine()) != null) {
             // Parse out the variable configuration.           
@@ -87,8 +87,8 @@ public class BayesNetReader {
                         
             // Get the factor for this configuration, creating a new one if necessary.
             VarSet vars = config.getVars();
-            Factor f = factorMap.get(vars);
-            if (f == null) { f = new Factor(vars); }
+            DenseFactor f = factorMap.get(vars);
+            if (f == null) { f = new DenseFactor(vars); }
             
             // Set the value in the factor.
             f.setValue(config.getConfigIndex(), value);
@@ -100,7 +100,7 @@ public class BayesNetReader {
         
         // Create the factor graph.
         FactorGraph fg = new FactorGraph();
-        for (Factor f : factorMap.values()) {
+        for (DenseFactor f : factorMap.values()) {
             fg.addFactor(f);
         }        
         return fg;

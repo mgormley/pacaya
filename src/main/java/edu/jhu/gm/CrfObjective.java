@@ -96,10 +96,22 @@ public class CrfObjective implements Function {
 
         double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : Utilities.log(infLatPred.getPartition());
 
-        // TODO: We could multiply in any fully clamped factors in fgLatPred.
+        // "Multiply" in all the fully clamped factors. These are the
+        // factors which do not include any latent or predicted variables.
+        // This is a bit of an edge case, but we do it anyway.
+        for (int a=0; a<fgLatPred.getNumFactors(); a++) {
+            Factor f = fgLatPred.getFactor(a);
+            if (f.getVars().size() == 0) {
+                FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
+                denominator += cacheLatPred.getFeatureVector(a, 0).dot(params);
+            }
+        }
         infLatPred.clear();
         
-        return numerator - denominator;
+        double ll = numerator - denominator;        
+        assert ll <= 0 : "Log-likelihood should be <= 0: " + ll;
+        
+        return ll;
     }
 
     /**
@@ -154,8 +166,13 @@ public class CrfObjective implements Function {
     private void addExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer, double multiplier,
             double[] gradient) {
         // For each factor...
-        for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {                  
-            Factor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
+        for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
+            if (fg.getFactor(factorId) instanceof GlobalFactor) {
+                // Special case for global factors.
+                continue;
+            }
+            
+            DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
             
             int numConfigs = factorMarginal.getVars().calcNumConfigs();
             if (numConfigs == 0) {

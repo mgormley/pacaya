@@ -1,13 +1,12 @@
 package edu.jhu.featurize;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.Normalize;
+import edu.jhu.util.Alphabet;
 
 /**
  * Feature extraction from the observations on a particular sentence.
@@ -15,8 +14,9 @@ import edu.jhu.srl.CorpusStatistics.Normalize;
  * @author mmitchell
  * @author mgormley
  */
-// TODO: (Eventually) move this out of the SRL package.
 public class SentFeatureExtractor {
+
+    private static final Logger log = Logger.getLogger(SentFeatureExtractor.class); 
 
     /**
      * Parameters for the SentFeatureExtractor.
@@ -25,6 +25,21 @@ public class SentFeatureExtractor {
     public static class SentFeatureExtractorPrm {
         public boolean useGoldPos = false;
         public String language = "es";
+        /**
+         * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
+         * we'll just put it here for now.)
+         */
+        public int cutoff = 3;
+        /**
+         * Whether to normalize and clean words.
+         */
+        public boolean normalizeWords = false;
+        /** For testing only: this will ensure that the only feature returned is the bias feature. */
+        public boolean biasOnly = false;
+        /**
+         * Whether to normalize the role names (i.e. lowercase and remove themes).
+         */
+        public boolean normalizeRoleNames = false;
     }
     
     // Parameters for feature extraction.
@@ -32,13 +47,19 @@ public class SentFeatureExtractor {
     
     private final CoNLL09Sentence sent;
     private final CorpusStatistics cs;
+    private Alphabet<String> alphabet;
         
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;
+        this.alphabet = alphabet;
     }
 
+    public int getSentSize() {
+        return sent.size();
+    }
+    
     // ----------------- Extracting Features on the Observations ONLY -----------------
 
     /**
@@ -55,9 +76,11 @@ public class SentFeatureExtractor {
      * @param idx The position of a word in the sentence.
      * @return The features.
      */
-    public Set<String> createFeatureSet(int idx) {
-        Set<String> feats = new HashSet<String>();
+    public BinaryStrFVBuilder createFeatureSet(int idx) {
+        BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
+        if (prm.biasOnly) { return feats; }
+        
         addNaradowskySoloFeatures(idx, feats);
         addZhaoSoloFeatures(idx, feats);
         return feats;
@@ -78,8 +101,11 @@ public class SentFeatureExtractor {
      * @param aidx The "child" position.
      * @return The features.
      */
-    public Set<String> createFeatureSet(int pidx, int aidx) {
-        Set<String> feats = new HashSet<String>();
+    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
+        BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
+        feats.add("BIAS_FEATURE");
+        if (prm.biasOnly) { return feats; }
+        
         // TBD:  Add basic features from BerkeleyOOV assigner (isCaps, etc).
         addNaradowskyPairFeatures(pidx, aidx, feats);
         addZhaoPairFeatures(pidx, aidx, feats);
@@ -87,11 +113,11 @@ public class SentFeatureExtractor {
         return feats;
     }
     
-    public void addNaradowskySoloFeatures(int pidx, Collection<String> feats) {
+    public void addNaradowskySoloFeatures(int pidx, BinaryStrFVBuilder feats) {
         // TODO: 
     }
     
-    public void addNaradowskyPairFeatures(int pidx, int aidx, Collection<String> feats) {
+    public void addNaradowskyPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
         CoNLL09Token pred = sent.get(pidx);
         CoNLL09Token arg = sent.get(aidx);
         String predForm = decideForm(pred.getForm(), pidx);
@@ -143,11 +169,11 @@ public class SentFeatureExtractor {
       } */
     }
 
-    public void addZhaoSoloFeatures(int idx, Collection<String> feats) {
+    public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         // TODO:
     }    
     
-    public void addZhaoPairFeatures(int pidx, int aidx, Collection<String> feats) {
+    public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
@@ -158,11 +184,11 @@ public class SentFeatureExtractor {
     }
     
     private String decideForm(String wordForm, int idx) {
-        String cleanWord = Normalize.clean(wordForm);
+        String cleanWord = cs.normalize.clean(wordForm);
 
         if (!cs.knownWords.contains(cleanWord)) {
             String unkWord = cs.sig.getSignature(cleanWord, idx, prm.language);
-            unkWord = Normalize.escape(unkWord);
+            unkWord = cs.normalize.escape(unkWord);
             if (!cs.knownUnks.contains(unkWord)) {
                 unkWord = "UNK";
                 return unkWord;

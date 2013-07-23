@@ -110,7 +110,6 @@ public class CrfRunner {
         
         if (trainType != null && train != null) {
             String name = "train";
-            assert(trainType == DatasetType.ERMA);
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
             FgExamples data = getData(alphabet, trainType, train, name);
@@ -167,7 +166,7 @@ public class CrfRunner {
 
     private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExamples data;
-        if (dataType != DatasetType.ERMA){
+        if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader(true);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {

@@ -30,21 +30,21 @@ public class FgExample {
     private FeatureCache cacheLatPred;
     /** The feature cache for {@link FgExample#fgLat}. */
     private FeatureCache cacheLat;
-    /** The feature cache for the fully clamped factor graph. */
-    private FeatureCache cacheNone;
     /** Whether the original factor graph contains latent variables. */
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
-    /** The feature extract for the original factor graph. */
-    private FeatureExtractor featExtractor;
     
+    /**
+     * Constructs a train or test example for a Factor Graph.
+     * 
+     * @param fg The factor graph. 
+     * @param goldConfig The gold assignment to the variables.
+     * @param featExtractor The feature extractor to be used for this example.
+     */
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
         this.fg = fg;
         this.goldConfig = goldConfig;
-        this.featExtractor = featExtractor;
-        
-        // TODO: assert that the training config contains assignments for all the observed and predicted variables.
         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
@@ -70,6 +70,9 @@ public class FgExample {
             VarSet varsPred = VarSet.getVarsOfType(vars, VarType.PREDICTED);
             
             // Get the configuration of the specified variables as given in the training data.
+            // 
+            // This also asserts that the training config contains assignments
+            // for all the observed and predicted variables.
             VarConfig obsConfig = goldConfig.getSubset(varsObs);
             VarConfig predConfig = goldConfig.getSubset(varsPred);
             
@@ -82,8 +85,8 @@ public class FgExample {
             }
             
             // Cache the features for this factor.
-            cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a);
-            cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a);
+            cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a, featExtractor);
+            cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a, featExtractor);
         }
     }
     
@@ -96,9 +99,19 @@ public class FgExample {
      * @param clampedVarConfig The configuration of the clamped variables for this factor, whose training data
      *            values are observed.
      * @param factorId The id of the factor.
+     * @param featExtractor TODO
      */
     private void cacheFeats(FactorGraph fgClamped, FeatureCache featCache,
-            VarConfig clampedVarConfig, int factorId) {        
+            VarConfig clampedVarConfig, int factorId, FeatureExtractor featExtractor) {
+        if (fg.getFactor(factorId) instanceof GlobalFactor) {
+            // For global factors, we do NOT cache any feature vectors.
+            //
+            // TODO: to support arbitrary global factors (not just constraints)
+            // we should extend global factors to support feature caching of
+            // some sort.
+            return;
+        }
+        
         // Get the variables that are marginalized for this factor.
         VarSet vars = fgClamped.getFactor(factorId).getVars();
         int numConfigs = vars.calcNumConfigs();
@@ -107,8 +120,6 @@ public class FgExample {
             FeatureVector fv = featExtractor.calcFeatureVector(factorId, clampedVarConfig);
             featCache.setFv(factorId, 0, fv);
         } else {
-            // TODO: For global factors, we do NOT cache any feature vectors.
-            
             // For each configuration of the marginalized variables.
             for (int configId = 0; configId < numConfigs; configId++) {
                 VarConfig varConfig = vars.getVarConfig(configId);
@@ -161,7 +172,14 @@ public class FgExample {
      * @param logDomain TODO*/
     private static FactorGraph getUpdatedFactorGraph(FactorGraph fg, FeatureCache cache, double[] params, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
-            Factor factor = fg.getFactor(a);
+            Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
+                // Currently, global factors do not support features, and
+                // therefore have no model parameters.
+                continue;
+            }
+            
+            DenseFactor factor = (DenseFactor) f;
             int numConfigs = factor.getVars().calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {
                 if (logDomain) {

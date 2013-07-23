@@ -191,6 +191,16 @@ public class DepTree implements Iterable<DepTreeNode> {
         return count;
     }
 
+    public static ArrayList<Integer> getChildrenOf(int[] parents, int parent) {
+        ArrayList<Integer> children = new ArrayList<Integer>();
+        for (int i=0; i<parents.length; i++) {
+            if (parents[i] == parent) {
+                children.add(i);
+            }
+        }
+        return children;
+    }
+
     @Override
     public String toString() {
         return nodes.toString();

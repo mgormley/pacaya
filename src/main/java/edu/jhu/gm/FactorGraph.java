@@ -201,14 +201,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
         varNodes = new ArrayList<FgNode>();
     }
     
-    /** Copy constructor. */    
-    public FactorGraph(FactorGraph fg) {
-        super();
-        for (Factor f : fg.getFactors()) {
-            this.addFactor(new Factor(f));
-        }
-    }
-
     /**
      * Gets a new factor graph, identical to this one, except that specified variables are clamped to their values.
      * 

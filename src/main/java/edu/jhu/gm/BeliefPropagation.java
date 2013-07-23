@@ -4,6 +4,8 @@ package edu.jhu.gm;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.util.Timer;
@@ -15,6 +17,8 @@ import edu.jhu.util.Timer;
  *
  */
 public class BeliefPropagation implements FgInferencer {
+    
+    private static final Logger log = Logger.getLogger(BeliefPropagation.class);
 
     public interface FgInferencerFactory {
         FgInferencer getInferencer(FactorGraph fg);
@@ -60,9 +64,9 @@ public class BeliefPropagation implements FgInferencer {
     public static class Messages {
         
         /** The current message. */
-        public Factor message;
+        public DenseFactor message;
         /** The pending messge. */
-        public Factor newMessage;
+        public DenseFactor newMessage;
         
         /** Constructs a message container, initializing the messages to the uniform distribution. */
         public Messages(FgEdge edge, BeliefPropagationPrm prm) {
@@ -72,8 +76,8 @@ public class BeliefPropagation implements FgInferencer {
             // Every message to/from a variable will be a factor whose domain is
             // that variable only.
             Var var = edge.getVar();
-            message = new Factor(new VarSet(var), initialValue);
-            newMessage = new Factor(new VarSet(var), initialValue);
+            message = new DenseFactor(new VarSet(var), initialValue);
+            newMessage = new DenseFactor(new VarSet(var), initialValue);
             
             if (prm.normalizeMessages) {
                 // Normalize the initial messages.
@@ -133,6 +137,12 @@ public class BeliefPropagation implements FgInferencer {
             // TODO: consider alternate initializations.
             msgs[i] = new Messages(fg.getEdge(i), prm);
         }
+        // Reset the global factors.
+        for (Factor factor : fg.getFactors()) {
+            if (factor instanceof GlobalFactor) {
+                ((GlobalFactor)factor).reset();
+            }
+        }
         
         // Message passing.
         for (int iter=0; iter < prm.maxIterations; iter++) {
@@ -172,7 +182,19 @@ public class BeliefPropagation implements FgInferencer {
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
         
-        Factor msg = msgs[edgeId].newMessage;
+        if (!edge.isVarToFactor() && factor instanceof GlobalFactor) {
+            log.trace("Creating messages for global factor.");
+            // Since this is a global factor, we pass the incoming messages to it, 
+            // and efficiently marginalize over the variables. The current setup is
+            // create all the messages from this factor to its variables, but only 
+            // once per iteration.
+            GlobalFactor globalFac = (GlobalFactor) factor;
+            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            // The messages have been set, so just return.
+            return;
+        }
+        
+        DenseFactor msg = msgs[edgeId].newMessage;
         
         // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
         msg.set(prm.logDomain ? 0.0 : 1.0);
@@ -189,29 +211,20 @@ public class BeliefPropagation implements FgInferencer {
             // Compute the product of all messages received by f* (each
             // of which will have a different domain) with the factor f* itself.
             // Exclude the message going out to the variable, v*.
+                
+            // TODO: we could cache this prod factor in the EdgeContent for this
+            // edge if creating it is slow.
+            DenseFactor prod = new DenseFactor(factor.getVars());
+            // Set the initial values of the product to those of the sending factor.
+            prod.set((DenseFactor) factor);
+            getProductOfMessages(edge.getParent(), prod, edge.getChild());
 
-            if (factor instanceof GlobalFactor) {
-                // Since this is a global factor, we pass the incoming messages to it, 
-                // and efficiently marginalize over the variables. The current setup is
-                // create all the messages from this factor to its variables, but only 
-                // once per iteration.
-                GlobalFactor globalFac = (GlobalFactor) factor;
-                globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            // Marginalize over all the assignments to variables for f*, except
+            // for v*.
+            if (prm.logDomain) { 
+                msg = prod.getLogMarginal(new VarSet(var), false);
             } else {
-                // TODO: we could cache this prod factor in the EdgeContent for this
-                // edge if creating it is slow.
-                Factor prod = new Factor(factor.getVars());
-                // Set the initial values of the product to those of the sending factor.
-                prod.set(factor);
-                getProductOfMessages(edge.getParent(), prod, edge.getChild());
-    
-                // Marginalize over all the assignments to variables for f*, except
-                // for v*.
-                if (prm.logDomain) { 
-                    msg = prod.getLogMarginal(new VarSet(var), false);
-                } else {
-                    msg = prod.getMarginal(new VarSet(var), false);
-                }
+                msg = prod.getMarginal(new VarSet(var), false);
             }
         }
         
@@ -247,14 +260,14 @@ public class BeliefPropagation implements FgInferencer {
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
      */
-    private void getProductOfMessages(FgNode node, Factor prod, FgNode exclNode) {
+    private void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
         for (FgEdge nbEdge : node.getInEdges()) {
             if (nbEdge.getParent() == exclNode) {
                 // Don't include the receiving variable.
                 continue;
             }
             // Get message from neighbor to factor.
-            Factor nbMsg = msgs[nbEdge.getId()].message;
+            DenseFactor nbMsg = msgs[nbEdge.getId()].message;
             
             // The neighbor messages have a different domain, but addition
             // should still be well defined.
@@ -267,7 +280,7 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
-    private void getProductOfMessagesNormalized(FgNode node, Factor prod, FgNode exclNode) {
+    private void getProductOfMessagesNormalized(FgNode node, DenseFactor prod, FgNode exclNode) {
         getProductOfMessages(node, prod, exclNode);
         if (prm.logDomain) { 
             prod.logNormalize();
@@ -289,31 +302,38 @@ public class BeliefPropagation implements FgInferencer {
         Messages ec = msgs[edgeId];
         // Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
-        Factor oldMessage = ec.message;
+        DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
+        
+        if (log.isTraceEnabled()) {
+            log.trace("Message sent: " + ec.message);
+        }
     }
 
     /** @inheritDoc */
     @Override
-    public Factor getMarginals(VarSet varSet) {
+    public DenseFactor getMarginals(VarSet varSet) {
         // We could implement this method, but it will be slow since we'll have
         // to find a factor that contains all of these variables.
         // For now we just throw an exception.
         throw new RuntimeException("not implemented");
     }
 
-    private Factor getMarginals(Var var, FgNode node) {
-        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+    private DenseFactor getMarginals(Var var, FgNode node) {
+        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
 
-    private Factor getMarginals(Factor factor, FgNode node) {
-        // TODO: need a special case for GlobalFactors.
+    private DenseFactor getMarginals(Factor factor, FgNode node) {
+        if (factor instanceof GlobalFactor) {
+            throw new IllegalArgumentException("Getting marginals of a global factor is not supported."
+                    + " This would require exponential space to store the resulting factor.");
+        }
         
-        Factor prod = new Factor(factor);
+        DenseFactor prod = new DenseFactor((DenseFactor)factor);
         // Compute the product of all messages sent to this factor.
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
@@ -323,7 +343,7 @@ public class BeliefPropagation implements FgInferencer {
      * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
      */
     @Override
-    public Factor getMarginals(Var var) {
+    public DenseFactor getMarginals(Var var) {
         FgNode node = fg.getNode(var);
         return getMarginals(var, node);
     }
@@ -332,21 +352,21 @@ public class BeliefPropagation implements FgInferencer {
      * Note this method is slow compared to querying by id, and requires an extra hashmap lookup.  
      */
     @Override
-    public Factor getMarginals(Factor factor) {
+    public DenseFactor getMarginals(Factor factor) {
         FgNode node = fg.getNode(factor);
         return getMarginals(factor, node);
     }
         
     /** @inheritDoc */
     @Override
-    public Factor getMarginalsForVarId(int varId) {
+    public DenseFactor getMarginalsForVarId(int varId) {
         FgNode node = fg.getVarNode(varId);
         return getMarginals(node.getVar(), node);
     }
 
     /** @inheritDoc */
     @Override
-    public Factor getMarginalsForFactorId(int factorId) {
+    public DenseFactor getMarginalsForFactorId(int factorId) {
         FgNode node = fg.getFactorNode(factorId);
         return getMarginals(node.getFactor(), node);
     }
@@ -358,7 +378,7 @@ public class BeliefPropagation implements FgInferencer {
         // partition functions for each connected component. 
         double partition = prm.logDomain ? 0.0 : 1.0;
         for (FgNode node : fg.getConnectedComponents()) {
-            if (node.isFactor()) {
+            if (!node.isVar()) {
                 if (node.getOutEdges().size() == 0) {
                     // This is an empty factor that makes no contribution to the partition function.
                     continue;
@@ -381,14 +401,16 @@ public class BeliefPropagation implements FgInferencer {
 
     /**
      * Gets the partition function for the connected component containing the given node.
+     * 
+     * Package private FOR TESTING ONLY.
      */
-    private double getPartitionFunctionAtVarNode(FgNode node) {
+    double getPartitionFunctionAtVarNode(FgNode node) {
         // We just return the normalizing constant for the marginals of any variable.
         if (!node.isVar()) {
             throw new IllegalArgumentException("Node must be a variable node.");
         }
         Var var = node.getVar();
-        Factor prod = new Factor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
+        DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this node.
         getProductOfMessages(node, prod, null);
         if (prm.logDomain) {

@@ -1,9 +1,5 @@
 package edu.jhu.srl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,16 +15,10 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.Label;
-import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FgExample;
-import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.cli.Opt;
-
-//import com.google.common.collect.Maps;
 
 /**
  * Extract corpus statistics about a CoNLL-2009 dataset.
@@ -40,13 +30,6 @@ import edu.jhu.util.cli.Opt;
 public class CorpusStatistics {
 
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
-
-    @Opt(name = "language", hasArg = true, description = "Language (en or es).")
-    public static String language = "es";
-    @Opt(name = "cutoff", hasArg = true, description = "Cutoff for OOV words.")
-    public static int cutoff = 3;
-    @Opt(name = "use-PHEAD", hasArg = false, description = "Use Predicted HEAD rather than Gold HEAD.")
-    public static boolean goldHead = true;
 
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
@@ -63,10 +46,18 @@ public class CorpusStatistics {
     private Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
 
     public BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet<Label>());
+    public Normalizer normalize;
+
+    private SentFeatureExtractorPrm prm;
+    
+    public static final Pattern dash = Pattern.compile("-");
+
+    public CorpusStatistics(SentFeatureExtractorPrm prm) {
+        this.prm = prm;
+        this.normalize = new Normalizer(prm.normalizeWords); 
+    }
 
     public void init(Iterable<CoNLL09Sentence> cr) {
-        if (true) throw new  RuntimeException("DO SOMETHING ABOUT THE HARDCODED OPTS ABOVE");
-        
         // TODO: Currently, we build but just discard the bigrams map.
         Map<Set<String>, MutableInt> bigrams = new HashMap<Set<String>, MutableInt>();
         
@@ -85,22 +76,21 @@ public class CorpusStatistics {
             }
             for (int i = 0; i < sent.size(); i++) {
                 CoNLL09Token word = sent.get(i);
-                for (int j = 0; j < word.getApreds().size(); j++) {
-                    String[] splitRole = word.getApreds().get(j).split("-");
-                    String role = splitRole[0].toLowerCase();
+                for (int j = 0; j < word.getApreds().size(); j++) {  
+                    String role = normalizeRoleName(word.getApreds().get(j));
                     knownRoles.add(role);
                 }
                 String wordForm = word.getForm();
-                String cleanWord = Normalize.clean(wordForm);
+                String cleanWord = normalize.clean(wordForm);
                 int position = word.getId() - 1;
-                String unkWord = sig.getSignature(wordForm, position, language);
-                unkWord = Normalize.escape(unkWord);
+                String unkWord = sig.getSignature(wordForm, position, prm.language);
+                unkWord = normalize.escape(unkWord);
                 words = addWord(words, cleanWord);
                 unks = addWord(unks, unkWord);
                 // Learn what Postags are in our vocabulary
                 // Later, can then back off to NONE if we haven't seen it
                 // before.
-                if (!goldHead) {
+                if (!prm.useGoldPos) {
                     knownPostags.add(word.getPpos());
                 } else {
                     knownPostags.add(word.getPos());
@@ -109,8 +99,10 @@ public class CorpusStatistics {
                 // pairs of words seen in the same sentence.
                 for (CoNLL09Token word2 : sent) {
                     String wordForm2 = word2.getForm();
-                    String cleanWord2 = Normalize.clean(wordForm2);
-                    String unkWord2 = sig.getSignature(wordForm2, word2.getId(), language);
+                    String cleanWord2 = normalize.clean(wordForm2);
+                    String unkWord2 = sig.getSignature(wordForm2, word2.getId(), prm.language);
+                    unkWord2 = normalize.escape(unkWord2);
+
                     // TBD: Actually use the seen/unseen bigrams to shrink the
                     // feature space.
                     addBigram(bigrams, cleanWord, cleanWord2);
@@ -122,14 +114,26 @@ public class CorpusStatistics {
         }
         
         // For words and unknown word classes, we only keep those above some threshold.
-        knownWords = getUnigramsAboveThreshold(words, cutoff);
-        knownUnks = getUnigramsAboveThreshold(unks, cutoff);
+        knownWords = getUnigramsAboveThreshold(words, prm.cutoff);
+        knownUnks = getUnigramsAboveThreshold(unks, prm.cutoff);
         
         // TODO: Currently not actually using bigram dictionary.
         // knownBigrams = getBigramsAboveThreshold(bigrams, cutoff);
                     
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        
+        log.info("Num known roles: " + roleStateNames.size());
+        log.info("Known roles: " + roleStateNames);
+    }
+
+    public String normalizeRoleName(String role) {
+        if (prm.normalizeRoleNames) {
+            // TODO: This is hardcoding the removal of the Theta role; make this an option.
+            String[] splitRole = dash.split(role);
+            role = splitRole[0].toLowerCase();
+        }
+        return role;
     }
 
     // ------------------- private ------------------- //
@@ -181,80 +185,13 @@ public class CorpusStatistics {
         return knownHash;
     }
 
-    public static class Normalize {
-        private static final Pattern digits = Pattern.compile("\\d+");
-        private static final Pattern punct = Pattern.compile("[^A-Za-z0-9_ÁÉÍÓÚÜÑáéíóúüñ]");
-        private static Map<String, String> stringMap;
-
-        private Normalize() {
-            // Private constructor.
-        }
-
-        public static String escape(String s) {
-            Iterator<Entry<String, String>> it = stringMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry entry = (Map.Entry) it.next();
-                String key = (String) entry.getKey();
-                String val = (String) entry.getValue();
-                s.replace(key, val);
-            }
-            return punct.matcher(s).replaceAll("_");
-        }
-
-        public static String norm_digits(String s) {
-            return digits.matcher(s).replaceAll("0");
-        }
-
-        public static String clean(String s) {
-            s = escape(s);
-            s = norm_digits(s.toLowerCase());
-            return s;
-        }
-
-        private static void setChars() {
-            // Really this would be nicer using guava...
-            stringMap = new HashMap<String, String>();
-            stringMap.put("1", "2");
-            stringMap.put(".", "_P_");
-            stringMap.put(",", "_C_");
-            stringMap.put("'", "_A_");
-            stringMap.put("%", "_PCT_");
-            stringMap.put("-", "_DASH_");
-            stringMap.put("$", "_DOL_");
-            stringMap.put("&", "_AMP_");
-            stringMap.put(":", "_COL_");
-            stringMap.put(";", "_SCOL_");
-            stringMap.put("\\/", "_BSL_");
-            stringMap.put("/", "_SL_");
-            stringMap.put("`", "_QT_");
-            stringMap.put("?", "_Q_");
-            stringMap.put("¿", "_QQ_");
-            stringMap.put("=", "_EQ_");
-            stringMap.put("*", "_ST_");
-            stringMap.put("!", "_E_");
-            stringMap.put("¡", "_EE_");
-            stringMap.put("#", "_HSH_");
-            stringMap.put("@", "_AT_");
-            stringMap.put("(", "_LBR_");
-            stringMap.put(")", "_RBR_");
-            stringMap.put("\"", "_QT1_");
-            stringMap.put("Á", "_A_ACNT_");
-            stringMap.put("É", "_E_ACNT_");
-            stringMap.put("Í", "_I_ACNT_");
-            stringMap.put("Ó", "_O_ACNT_");
-            stringMap.put("Ú", "_U_ACNT_");
-            stringMap.put("Ü", "_U_ACNT2_");
-            stringMap.put("Ñ", "_N_ACNT_");
-            stringMap.put("á", "_a_ACNT_");
-            stringMap.put("é", "_e_ACNT_");
-            stringMap.put("í", "_i_ACNT_");
-            stringMap.put("ó", "_o_ACNT_");
-            stringMap.put("ú", "_u_ACNT_");
-            stringMap.put("ü", "_u_ACNT2_");
-            stringMap.put("ñ", "_n_ACNT_");
-            stringMap.put("º", "_deg_ACNT_");
-
-        }
+    @Override
+    public String toString() {
+        return "CorpusStatistics [\n     knownWords=" + knownWords + ",\n     knownUnks=" + knownUnks
+                + ",\n     knownPostags=" + knownPostags + ",\n     linkStateNames=" + linkStateNames
+                + ",\n     roleStateNames=" + roleStateNames + ",\n     knownRoles=" + knownRoles
+                + ",\n     knownLinks=" + knownLinks + ",\n     maxSentLength=" + maxSentLength + ",\n     words="
+                + words + ",\n     unks=" + unks + "]";
     }
-
+    
 }

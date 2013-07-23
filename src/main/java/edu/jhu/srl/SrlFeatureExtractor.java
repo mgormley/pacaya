@@ -1,19 +1,18 @@
 package edu.jhu.srl;
 
-import java.util.HashSet;
-import java.util.Set;
+import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor;
+import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureVector;
+import edu.jhu.gm.FeatureVectorBuilder;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
-import edu.jhu.srl.CorpusStatistics.Normalize;
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
@@ -27,10 +26,12 @@ import edu.jhu.util.Alphabet;
  */
 public class SrlFeatureExtractor implements FeatureExtractor {
 
+    private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
+    
     // Cache of observation features for each single positions in the sentence.
-    private Set<String>[] obsFeatsSolo;
+    private BinaryStrFVBuilder[] obsFeatsSolo;
     // Cache of observation features for each pair of positions in the sentence.
-    private Set<String>[][] obsFeatsPair;
+    private BinaryStrFVBuilder[][] obsFeatsPair;
     
     // -- Inputs --
     private SrlFactorGraph sfg;
@@ -42,6 +43,8 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         this.sfg = sfg;
         this.alphabet = alphabet;
         this.sentFeatExt = sentFeatExt;
+        obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
+        obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
     }
     
     @Override
@@ -51,8 +54,8 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         VarSet vars = varConfig.getVars();
         
         // Get the observation features.
-        Set<String> obsFeats;
-        if (ft == SrlFactorTemplate.LINK_ROLE || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
+        BinaryStrFVBuilder obsFeats;
+        if (ft == SrlFactorTemplate.LINK_ROLE_BINARY || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();
             int parent;
@@ -80,17 +83,30 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         // Conjoin each observation feature with the string
         // representation of the given assignment to the given
         // variables.
-        FeatureVector fv = new FeatureVector();
-        String vcStr = varConfig.getStringName();
-        for (String obsFeat : obsFeats) {
-            String fname = vcStr + "_" + obsFeat;
-            fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
+        FeatureVector fv = new FeatureVector(obsFeats.size());
+        String vcStr = ft + "=" + varConfig.getConfigIndex();
+        if (log.isTraceEnabled()) {
+            log.trace("Num obs features in factor: " + obsFeats.size());
         }
+        if (true) {
+            for (String obsFeat : obsFeats) {
+                String fname = vcStr + "_" + obsFeat;
+                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
+            }
+        } else {
+            // TODO: This makes unreadable features, but is faster...maybe add an option.
+            FeatureVectorBuilder fvb = obsFeats.getFvb();
+            for (IntDoubleEntry obsFeat : fvb) {
+                String fname = vcStr + "_" + obsFeat.index();
+                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
+            }
+        }
+            
         
         return fv;
     }
 
-    private Set<String> fastGetObsFeats(int child) {
+    private BinaryStrFVBuilder fastGetObsFeats(int child) {
         if (obsFeatsSolo[child] == null) {
             // Lazily construct the observation features.
             obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child);
@@ -98,7 +114,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         return obsFeatsSolo[child];
     }
 
-    private Set<String> fastGetObsFeats(int parent, int child) {
+    private BinaryStrFVBuilder fastGetObsFeats(int parent, int child) {
         if (obsFeatsPair[parent][child] == null) {
             // Lazily construct the observation features.
             obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child);

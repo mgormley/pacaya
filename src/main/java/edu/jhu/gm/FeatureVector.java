@@ -5,11 +5,16 @@ import edu.jhu.prim.vector.IntDoubleSortedVector;
 public class FeatureVector extends IntDoubleSortedVector {
 
     /**
-     * Feature Vectors should almost always be constructed via a
-     * FeatureVectorBuilder, which has much faster support for add() and set().
+     * Large FeatureVectors (e.g. 20,000+ features) should almost always be
+     * constructed via a FeatureVectorBuilder, which has much faster support for
+     * add() and set().
      */
     public FeatureVector() {
         super();
+    }
+
+    public FeatureVector(int initialSize) {
+        super(initialSize);
     }
     
     /** Copy constructor. */

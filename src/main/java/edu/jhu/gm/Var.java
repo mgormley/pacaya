@@ -1,12 +1,11 @@
 package edu.jhu.gm;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A variable in a factor graph.
+ * A discrete variable in a factor graph.
  * 
  * @author mgormley
  *

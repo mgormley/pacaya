@@ -13,7 +13,7 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.Factor;
+import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
@@ -182,7 +182,7 @@ public class ErmaReader {
      */
     private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
         //Saves the variable set to factor HashMappings
-        HashMap<String,Factor> facs = new HashMap<String, Factor>();
+        HashMap<String,DenseFactor> facs = new HashMap<String, DenseFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
         // list of FeatureVectors represented as HashMap<Feature,Double> (one
         // for each configuration of the variables).
@@ -213,7 +213,7 @@ public class ErmaReader {
             //System.out.println("fi --> "+fi);
             //System.out.println(fi+"__");
             String key = s.makeKey(fi.getVariables());
-            Factor fac;
+            DenseFactor fac;
             // MRG: ERMA WAY: ArrayList<HashMap<Feature,Double>> featRef;
             ArrayList<FeatureVector> featRef;
             if(!facs.containsKey(key)){
@@ -222,7 +222,7 @@ public class ErmaReader {
                     Ivars.add(v);
                 }
                 // MRG: ERMA's way was: fac = new Factor(next++,Ivars, 1.0);
-                fac = new Factor(Ivars, 1.0);
+                fac = new DenseFactor(Ivars, 1.0);
                 facs.put(key,fac);
                 //ArrayList<set<feature* > > feat_r_vec;
                 
@@ -293,11 +293,11 @@ public class ErmaReader {
         }
 
         // MRG: An array list of factors, indexed by factor Id.
-        ArrayList<Factor> facs_vec=new ArrayList<Factor>();
+        ArrayList<DenseFactor> facs_vec=new ArrayList<DenseFactor>();
         // MRG: An array of feature vectors, indexed by factor id and config index.
         ArrayList<ArrayList<FeatureVector> > feature_ref_vec=new ArrayList<ArrayList<FeatureVector>>();
         for (String factKey:facs.keySet()) {
-            Factor fact = facs.get(factKey);
+            DenseFactor fact = facs.get(factKey);
             facs_vec.add(fact);
             ArrayList<FeatureVector> fr = featureRefs.get(factKey);
             feature_ref_vec.add(fr);
@@ -305,7 +305,7 @@ public class ErmaReader {
         
         // MRG: Construct a new factor graph.
         FactorGraph fg = new FactorGraph();
-        for (Factor factor : facs_vec) {
+        for (DenseFactor factor : facs_vec) {
             fg.addFactor(factor);
         }
         
