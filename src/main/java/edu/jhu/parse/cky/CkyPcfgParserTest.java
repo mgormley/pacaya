@@ -29,6 +29,9 @@ public class CkyPcfgParserTest {
         testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH);
         testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH);
         testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH);
+        testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH_BREAK_TIES);
+        testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH_BREAK_TIES);
+        testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH_BREAK_TIES);
         testSimpleSentence1Helper(LoopOrder.LEFT_CHILD, ChartCellType.DOUBLE_HASH);
         testSimpleSentence1Helper(LoopOrder.RIGHT_CHILD, ChartCellType.DOUBLE_HASH);
         testSimpleSentence1Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.DOUBLE_HASH);
@@ -65,6 +68,9 @@ public class CkyPcfgParserTest {
         testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH);
         testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH);
         testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH);
+        testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.SINGLE_HASH_BREAK_TIES);
+        testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.SINGLE_HASH_BREAK_TIES);
+        testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.SINGLE_HASH_BREAK_TIES);
         testSimpleSentence2Helper(LoopOrder.LEFT_CHILD, ChartCellType.DOUBLE_HASH);
         testSimpleSentence2Helper(LoopOrder.RIGHT_CHILD, ChartCellType.DOUBLE_HASH);
         testSimpleSentence2Helper(LoopOrder.CARTESIAN_PRODUCT, ChartCellType.DOUBLE_HASH);

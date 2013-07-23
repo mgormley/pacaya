@@ -514,10 +514,11 @@ public class TrainerFactory {
         ckyPrm.loopOrder = LoopOrder.LEFT_CHILD;
         ckyPrm.parseType = ParseType.VITERBI;
         ckyPrm.cacheChart = true;
+        // We use SINGLE_HASH chart cells for the DMV because the grammar is massive.
         if (usePredArgSupervision) {
-            ckyPrm.cellType = ChartCellType.CONSTRAINED_FULL;
+            ckyPrm.cellType = ChartCellType.CONSTRAINED_SINGLE;
         } else {
-            ckyPrm.cellType = ChartCellType.FULL_BREAK_TIES;
+            ckyPrm.cellType = ChartCellType.SINGLE_HASH_BREAK_TIES;
         }
         DmvCkyParserPrm prm = new DmvCkyParserPrm();
         prm.objPrm = getDmvObjectivePrm();

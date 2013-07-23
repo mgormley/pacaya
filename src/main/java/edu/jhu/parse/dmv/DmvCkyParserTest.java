@@ -229,10 +229,20 @@ public class DmvCkyParserTest {
      * Average seconds per sentence: 0.06728712871287129 
      * Total time: 6338.0
      * Sentences per second: 15.77784790154623
+     * 
+     * WITH ChartCellType.SINGLE_HASH_BREAK_TIES  <------ Length 30 sentences.
+     * Average seconds per sentence: 0.03812871287128713
+     * Total time: 3223.0
+     * Sentences per second: 31.02699348433137
+     * 
+     * WITH ChartCellType.SINGLE_HASH_BREAK_TIES <------ Length 50 sentences.
+     * Average seconds per sentence: 0.22203960396039604
+     * Total time: 21814.0
+     * Sentences per second: 4.584211973961676
      */
     @Test
     public void testSpeed() {
-        int trials = 100;
+        int trials = 1000;
         int n = 30;
         String sent = "";
         for (int i=0; i<n; i++) {
@@ -241,11 +251,11 @@ public class DmvCkyParserTest {
 
         SentenceCollection sentences = new SentenceCollection();
         sentences.addSentenceFromString(sent); //"NNP , CD NNS JJ , MD VB DT NN IN DT NNP , CD NNS JJ , MD VB DT NN IN DT");
-        DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
+        DmvModelFactory modelFactory = new UniformDmvModelFactory(); //new RandomDmvModelFactory(lambda);
         Model model = modelFactory.getInstance(sentences.getLabelAlphabet());
 
         DmvCkyParserPrm prm = new DmvCkyParserPrm();
-        prm.ckyPrm.cellType = ChartCellType.FULL;
+        prm.ckyPrm.cellType = ChartCellType.SINGLE_HASH_BREAK_TIES;
         DmvCkyParser parser = new DmvCkyParser(prm);
         parser.getViterbiParse(sentences, model);
 

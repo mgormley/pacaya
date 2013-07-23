@@ -69,14 +69,15 @@ public class DmvCkyParser implements DepParser {
     }
     
     public DmvCkyParser(DmvCkyParserPrm prm) {
-        if (prm.ckyPrm.cellType == ChartCellType.CONSTRAINED_FULL && prm.ckyPrm.constraint == null) {
+        if ((prm.ckyPrm.cellType == ChartCellType.CONSTRAINED_FULL || 
+                prm.ckyPrm.cellType == ChartCellType.CONSTRAINED_SINGLE)&& prm.ckyPrm.constraint == null) {
             // Set the default constraint if it was not already.
             prm.ckyPrm.constraint = new DmvChartCellConstraint();
         }
         this.prm = prm;
         this.parser = new CkyPcfgParser(prm.ckyPrm);
         this.timer = new Timer();
-    }    
+    }
 
     @Override
     public double getLastParseWeight() {

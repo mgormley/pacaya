@@ -46,7 +46,7 @@ public class Chart {
         }
     }
 
-    public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES, CONSTRAINED_FULL };
+    public enum ChartCellType { FULL, SINGLE_HASH, DOUBLE_HASH, FULL_BREAK_TIES, CONSTRAINED_FULL, SINGLE_HASH_BREAK_TIES, CONSTRAINED_SINGLE };
     public enum ParseType { VITERBI, INSIDE };
     
     private final ChartCellType cellType;
@@ -97,9 +97,17 @@ public class Chart {
                 if (parseType == ParseType.INSIDE && cellType != ChartCellType.FULL) {
                     throw new RuntimeException("Inside algorithm not implemented for cell type: " + cellType);
                 }
+                ChartCell cell;
                 switch(cellType) {
                 case SINGLE_HASH:
-                    chart[i][j] = new SingleHashChartCell(grammar);
+                    chart[i][j] = new SingleHashChartCell(grammar, false);
+                    break;
+                case SINGLE_HASH_BREAK_TIES:
+                    chart[i][j] = new SingleHashChartCell(grammar, true);
+                    break;
+                case CONSTRAINED_SINGLE:
+                    cell = new SingleHashChartCell(grammar, true);
+                    chart[i][j] = new ConstrainedChartCell(i, j, cell, constraint, sentence);
                     break;
                 case DOUBLE_HASH:
                     chart[i][j] = new DoubleHashChartCell(grammar);
@@ -111,7 +119,7 @@ public class Chart {
                     chart[i][j] = new FullTieBreakerChartCell(grammar, true);
                     break;
                 case CONSTRAINED_FULL:
-                    ChartCell cell = new FullTieBreakerChartCell(grammar, true);
+                    cell = new FullTieBreakerChartCell(grammar, true);
                     chart[i][j] = new ConstrainedChartCell(i, j, cell, constraint, sentence);
                     break;
                 default:
