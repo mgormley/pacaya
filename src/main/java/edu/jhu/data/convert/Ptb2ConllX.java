@@ -1,4 +1,4 @@
-package edu.jhu.data.conll;
+package edu.jhu.data.convert;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +10,8 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.DepTreebankReader;
 import edu.jhu.data.DepTreebankReader.DatasetType;
+import edu.jhu.data.conll.CoNLLXSentence;
+import edu.jhu.data.conll.CoNLLXWriter;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.util.Alphabet;

@@ -137,6 +137,10 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
     public void setPredApredFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds) {
+        setColsFromSrlGraph(srlGraph, warnMismatchedPreds, false);
+    }
+    
+    public void setColsFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds, boolean setFillPred) {
         int numPreds = srlGraph.getNumPreds();
         // Set the FILLPRED and PRED column.
         for (int i=0; i<size(); i++) {
@@ -147,13 +151,17 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
                 if (warnMismatchedPreds && tok.isFillpred()) {
                     log.warn("Not setting predicate sense on a row where FILLPRED=Y in original data.");
                 }
-                //tok.setFillpred(false);   
+                if (setFillPred) {                    
+                    tok.setFillpred(false);
+                }
             } else {
                 tok.setPred(pred.getLabel());
                 if (warnMismatchedPreds && !tok.isFillpred()) {
                     log.warn("Setting predicate sense on a row where FILLPRED=_ in original data.");
                 }
-                //tok.setFillpred(true);
+                if (setFillPred) {
+                    tok.setFillpred(true);
+                }
             }
         }
         
