@@ -27,6 +27,7 @@ def get_root_dir():
     print "Using root_dir: " + root_dir
     return root_dir;
 
+
 class SrlExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
@@ -44,7 +45,10 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
-    
+        
+    def get_java_args(self):
+        return self._get_java_args(0.75 * self.work_mem_megs)
+
 
 class SrlExpParamsRunner(ExpParamsRunner):
     

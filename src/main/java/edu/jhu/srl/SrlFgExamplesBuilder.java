@@ -7,12 +7,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
-import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
-import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 
