@@ -119,7 +119,9 @@ public class SrlRunner {
     public static int cutoff = 3;
     @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
     public static boolean biasOnly = false;
-
+    @Opt(hasArg = true, description = "The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled.")
+    public static int featureHashMod = 524288; // 2^19
+    
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
@@ -300,6 +302,8 @@ public class SrlRunner {
         prm.fePrm.useGoldPos = useGoldPos;
         prm.fePrm.normalizeWords = normalizeWords;
         prm.fePrm.normalizeRoleNames = normalizeRoleNames;
+        // SRL Feature Extraction.
+        prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;
     }
     

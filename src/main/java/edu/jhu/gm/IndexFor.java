@@ -3,7 +3,8 @@ package edu.jhu.gm;
 import java.util.Arrays;
 import java.util.Iterator;
 
-  /** Ported by hand from libDAI in C++ under the BSD license.
+  /** Ported by hand from libDAI in C++.
+   * Originally released under the BSD license.
    * 
    *  Tool for looping over the states of several variables.
    *  

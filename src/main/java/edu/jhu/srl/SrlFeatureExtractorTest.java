@@ -17,6 +17,7 @@ import edu.jhu.gm.Feature;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Utilities;
 
@@ -45,7 +46,9 @@ public class SrlFeatureExtractorTest {
         
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet);
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
+        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        prm.featureHashMod = -1; // Disable feature hashing.
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sfg, alphabet, sentFeatExt);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             VarSet vars = sfg.getFactor(a).getVars();
             int numConfigs = vars.calcNumConfigs();
@@ -57,6 +60,43 @@ public class SrlFeatureExtractorTest {
         
         assertEquals(1, obsAlphabet.size());
         assertEquals(3*2 + 2 + 3, alphabet.size());
+    }
+    
+    @Test
+    public void testCorrectNumFeaturesWithFeatureHashing() throws Exception {
+        SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
+        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
+        SrlFactorGraph sfg = new SrlFactorGraph(fgPrm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
+
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        
+
+        InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
+        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
+        List<CoNLL09Sentence> sents = cr.readSents(1);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        //fePrm.biasOnly = true;
+        CorpusStatistics cs = new CorpusStatistics(fePrm);
+        cs.init(sents);
+        
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet);
+        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        prm.featureHashMod = 10; // Enable feature hashing
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sfg, alphabet, sentFeatExt);
+        for (int a=0; a<sfg.getNumFactors(); a++) {
+            VarSet vars = sfg.getFactor(a).getVars();
+            int numConfigs = vars.calcNumConfigs();
+            for (int c=0; c<numConfigs; c++) {                
+                VarConfig vc =vars.getVarConfig(c);
+                featExt.calcFeatureVector(a, vc);    
+            }            
+        }
+        
+        assertEquals(62, obsAlphabet.size());
+        // assertEquals(62*(3*2* + 2 + 3), alphabet.size());
+        System.out.println(alphabet);
+        assertEquals(10, alphabet.size());
     }
 
 }

@@ -1,4 +1,4 @@
-package edu.jhu.data.conll;
+package edu.jhu.data.convert;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,6 +16,10 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.data.DepTreebankReader;
 import edu.jhu.data.DepTreebankReader.DatasetType;
 import edu.jhu.data.Sentence;
+import edu.jhu.data.conll.CoNLL09FileReader;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.util.Prng;
@@ -25,18 +29,18 @@ import edu.jhu.util.math.Vectors;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Converts Penn Treebank data to a CoNLL-X file.
+ * Converts CoNLL-2009 format to CoNLL Lite (with a few extra columns).
  *  
  * @author mgormley
  *
  */
-public class Conll09ToThinConll {
+public class Conll09ToConllLiteV2 {
 
-    private static final Logger log = Logger.getLogger(Conll09ToThinConll.class);
+    private static final Logger log = Logger.getLogger(Conll09ToConllLiteV2.class);
 
     @Opt(hasArg = true, required = true, description = "CoNLL 09 input file")
     public static File input;
-    @Opt(hasArg = true, required = true, description = "Thin CoNLL output file")
+    @Opt(hasArg = true, required = true, description = "CoNLL Lite output file")
     public static File output;
     @Opt(hasArg = true, description = "Pseudo random number generator seed")
     public static long seed = Prng.DEFAULT_SEED;
@@ -82,8 +86,8 @@ public class Conll09ToThinConll {
     }
     
     public static void main(String[] args) throws IOException {
-        ArgParser parser = new ArgParser(Conll09ToThinConll.class);
-        parser.addClass(Conll09ToThinConll.class);
+        ArgParser parser = new ArgParser(Conll09ToConllLiteV2.class);
+        parser.addClass(Conll09ToConllLiteV2.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {
@@ -94,7 +98,7 @@ public class Conll09ToThinConll {
         
         Prng.seed(seed);
         
-        Conll09ToThinConll pipeline = new Conll09ToThinConll();
+        Conll09ToConllLiteV2 pipeline = new Conll09ToConllLiteV2();
         pipeline.run();
     }
 
