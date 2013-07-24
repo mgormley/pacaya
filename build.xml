@@ -65,7 +65,9 @@
            source="${compile.source}"
            target="${compile.target}"
 	   includeantruntime="false">
-      <classpath refid="classpath" />
+      <!-- <classpath refid="classpath" /> -->
+      <compilerarg value="-classpath" />
+      <compilerarg value="${env.CLASSPATH}" />
       <compilerarg value="-Xlint:cast"/>
       <compilerarg value="-Xlint:finally"/>
       <compilerarg value="-Xlint:path"/>

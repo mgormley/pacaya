@@ -85,31 +85,31 @@ class SrlExpParamsRunner(ExpParamsRunner):
         prefix = exp_dir + "/vem-conll_001"
             
         # Gold trees: HEAD column.
-        datasets_train['pos_gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['pos_gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
+        datasets_train['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+        datasets_test['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
         
         # Supervised parser output: PHEAD column.
-        datasets_train['pos_sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/train-parses.txt"
-        datasets_test['pos_sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/test-parses.txt"
+        datasets_train['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/train-parses.txt"
+        datasets_test['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/test-parses.txt"
         
         # Semi-supervised parser output: PHEAD column.
-        datasets_train['pos_semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['pos_semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
+        datasets_train['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+        datasets_test['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
         
         # Unsupervised parser output: PHEAD column.
-        datasets_train['pos_unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
-        datasets_test['pos_unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
+        datasets_train['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
+        datasets_test['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
         
         # --- Brown cluster tagged output of grammar induction: ---
         prefix = "/home/hltcoe/mgormley/working/parsing/exp/vem-conll_002"
 
         # Semi-supervised parser output: PHEAD column.
-        datasets_train['brown_semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['brown_semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
+        datasets_train['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+        datasets_test['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
         
         # Unsupervised parser output: PHEAD column.
-        datasets_train['brown_unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
-        datasets_test['brown_unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
+        datasets_train['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
+        datasets_test['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
         
         if self.expname == "srl-dev20":
             root = RootStage()
@@ -117,7 +117,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Full length test sentences.
             setup.update(maxNumSentences=100000000, maxSentenceLength=1000)
             setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=64*1024)
+                         work_mem_megs=180*1024)
             exps = []
             for dataset in datasets_train:                        
                 train_file = datasets_train[dataset]
