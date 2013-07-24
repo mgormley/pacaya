@@ -55,7 +55,7 @@ public class SrlFgExamplesBuilder {
 	    i++;
         }
         
-        log.info("Num observation features: " + obsAlphabet.size());
+        log.info("Num observation functions: " + obsAlphabet.size());
         
         data.setSourceSentences(sents);
         return data;
