@@ -57,6 +57,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
+        self.hprof = options.hprof
         
         if self.queue and not self.queue == "mem":
             print "WARN: Are you sure you don't want the mem queue?"
@@ -123,7 +124,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=180*1024)
             if self.expname == "srl-biasonly":
-                setup.update(biasOnly=True, work_mem_megs=4*1024, maxNumSentences=300)
+                setup.update(biasOnly=True, work_mem_megs=2*1024, maxNumSentences=100)
             exps = []
             for dataset in datasets_train:
                 train_file = datasets_train[dataset]
@@ -159,7 +160,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 stage.update(maxLbfgsIterations=3,
                              maxSentenceLength=7,
                              maxNumSentences=3,
-                             work_mem_megs=1000,
+                             work_mem_megs=2000,
                              timeoutSeconds=20)
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
@@ -177,7 +178,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     # Add some extra time in case some other part of the experiment
                     # (e.g. evaluation) takes excessively long.
                     stage.minutes = (stage.minutes * 2.0) + 10
-                    
+            if self.hprof:
+                if isinstance(stage, experiment_runner.JavaExpParams):
+                    stage.hprof = self.hprof
         return root_stage
 
 if __name__ == "__main__":
@@ -188,7 +191,7 @@ if __name__ == "__main__":
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
     parser.add_option('--test', action="store_true", help="Use test data")
     parser.add_option('--expname',  help="Experiment name")
-    # DISABLED: parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
+    parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     (options, args) = parser.parse_args(sys.argv)
 
     if len(args) != 1:
