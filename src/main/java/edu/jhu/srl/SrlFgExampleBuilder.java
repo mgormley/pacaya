@@ -17,6 +17,7 @@ import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -30,6 +31,7 @@ public class SrlFgExampleBuilder {
     public static class SrlFgExampleBuilderPrm {
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
     }
     
     private final SrlFgExampleBuilderPrm prm;
@@ -56,7 +58,7 @@ public class SrlFgExampleBuilder {
         VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);        
         // Create a feature extractor for this example.
         SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-        FeatureExtractor featExtractor = new SrlFeatureExtractor(sfg, alphabet, sentFeatExt);
+        FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, alphabet, sentFeatExt);
         
         return new FgExample(sfg, trainConfig, featExtractor);
     }

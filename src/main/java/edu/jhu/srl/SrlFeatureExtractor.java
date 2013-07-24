@@ -26,7 +26,14 @@ import edu.jhu.util.Alphabet;
  */
 public class SrlFeatureExtractor implements FeatureExtractor {
 
+    public static class SrlFeatureExtractorPrm {
+        /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
+        public int featureHashMod = 524288; // 2^19
+    }
+    
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
+    
+    private SrlFeatureExtractorPrm prm;
     
     // Cache of observation features for each single positions in the sentence.
     private BinaryStrFVBuilder[] obsFeatsSolo;
@@ -38,8 +45,9 @@ public class SrlFeatureExtractor implements FeatureExtractor {
     private final Alphabet<Feature> alphabet;
     private SentFeatureExtractor sentFeatExt;
     
-    public SrlFeatureExtractor(SrlFactorGraph sfg, Alphabet<Feature> alphabet, SentFeatureExtractor sentFeatExt) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, Alphabet<Feature> alphabet, SentFeatureExtractor sentFeatExt) {
         super();
+        this.prm = prm;
         this.sfg = sfg;
         this.alphabet = alphabet;
         this.sentFeatExt = sentFeatExt;
@@ -89,21 +97,52 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
 
-        for (String obsFeat : obsFeats) {
-            String fname = vcStr + "_" + obsFeat;
-            int fidx = alphabet.lookupIndex(new Feature(fname));
-            if (fidx != -1) {
-                fv.add(fidx, 1.0);
+        if (prm.featureHashMod <= 0) {
+            // Just use the features as-is.
+            for (String obsFeat : obsFeats) {
+                String fname = vcStr + "_" + obsFeat;
+                int fidx = alphabet.lookupIndex(new Feature(fname));
+                if (fidx != -1) {
+                    fv.add(fidx, 1.0);
+                }
+            }
+        } else {
+            // Apply the feature-hashing trick.
+            FeatureVectorBuilder fvb = obsFeats.getFvb();
+            for (IntDoubleEntry obsFeat : fvb) {
+                // Using the fvb makes unreadable feature names, but is faster.
+                String fname = vcStr + "_" + obsFeat.index();
+                int hash = fname.hashCode();
+                hash = hash % prm.featureHashMod;
+                if (hash < 0) {
+                    hash += prm.featureHashMod;
+                }
+                fname = Integer.toString(hash);
+                int fidx = alphabet.lookupIndex(new Feature(fname));
+                if (fidx != -1) {
+                    int revHash = reverseHashCode(fname);
+                    if (revHash < 0) {
+                        fv.add(fidx, -1.0);
+                    } else {
+                        fv.add(fidx, 1.0);
+                    }
+                }
             }
         }
-        //            // TODO: This makes unreadable features, but is faster...maybe add an option.
-        //            FeatureVectorBuilder fvb = obsFeats.getFvb();
-        //            for (IntDoubleEntry obsFeat : fvb) {
-        //                String fname = vcStr + "_" + obsFeat.index();
-        //                fv.add(alphabet.lookupIndex(new Feature(fname)), 1.0);
-        //            }
-        
+
         return fv;
+    }
+
+    /**
+     * Returns the hash code of the reverse of this string.
+     */
+    private int reverseHashCode(String fname) {
+        int hash = 0;
+        int n = fname.length();
+        for (int i=n-1; i>=0; i--) {
+            hash += 31 * hash + fname.charAt(i);
+        }
+        return hash;
     }
 
     private BinaryStrFVBuilder fastGetObsFeats(int child) {
