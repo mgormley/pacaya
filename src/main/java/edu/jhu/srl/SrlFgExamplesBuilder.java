@@ -46,15 +46,15 @@ public class SrlFgExamplesBuilder {
         SrlFgExampleBuilder ps = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
 
         FgExamples data = new FgExamples(alphabet);
-	int i=0;
+        int i = 0;
         for (CoNLL09Sentence sent : sents) {
-	    if (i % 100 == 0 && i > 0) {
-		log.debug("Built " + i + " examples...");
-	    }
+            if (i % 100 == 0 && i > 0) {
+                log.debug("Built " + i + " examples...");
+            }
             data.add(ps.getFGExample(sent));
-	    i++;
+            i++;
         }
-        
+
         log.info("Num observation functions: " + obsAlphabet.size());
         
         data.setSourceSentences(sents);
