@@ -115,15 +115,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
         datasets_train['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
         datasets_test['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
         
-        if self.expname == "srl-dev20":
+        if self.expname == "srl-dev20" or self.expname == "srl-biasonly":
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
             setup.update(maxNumSentences=100000000, maxSentenceLength=1000)
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=180*1024)
+            if self.expname == "srl-biasonly":
+                setup.update(biasOnly=True, work_mem_megs=4*1024, maxNumSentences=300)
             exps = []
-            for dataset in datasets_train:                        
+            for dataset in datasets_train:
                 train_file = datasets_train[dataset]
                 test_file = datasets_train[dataset]
                 data = SrlExpParams(dataset=dataset, 
@@ -133,10 +135,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
 #                    setup.update(roleStructure=roleStructure)
 #                    for makeUnknownPredRolesLatent in [True, False]:
 #                        setup.update(makeUnknownPredRolesLatent=makeUnknownPredRolesLatent)
-                for useProjDepTreeFactor in [True, False]:
-                    setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
-                    exp = all + setup + data 
-                    exps.append(exp)
+                for normalizeRoleNames in [True, False]:
+                    setup.update(normalizeRoleNames=normalizeRoleNames)
+                    for useProjDepTreeFactor in [True, False]:
+                        setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
+                        exp = all + setup + data 
+                        exps.append(exp)
             # Drop all but 3 experiments for a fast run.
             if self.fast: exps = exps[:4]
             root.add_dependents(exps)
