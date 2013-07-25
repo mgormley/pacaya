@@ -185,7 +185,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             for i, dataset in enumerate(datasets_train):
                 train_file = datasets_train[dataset]
-                test_file = datasets_train[dataset]
+                test_file = datasets_test[dataset]
                 data = SrlExpParams(dataset=dataset, 
                                     train=train_file, trainType='CONLL_2009', 
                                     test=test_file, testType='CONLL_2009')
