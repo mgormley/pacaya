@@ -177,11 +177,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-            setup.update(maxNumSentences=4000, maxSentenceLength=20)
+            setup.update(trainMaxSentenceLength=20)
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=20*1024)
             if self.expname == "srl-biasonly":
-                setup.update(biasOnly=True, work_mem_megs=2*1024, maxNumSentences=4000, maxSentenceLength=20)
+                setup.update(biasOnly=True, work_mem_megs=2*1024)
             exps = []
             for i, dataset in enumerate(datasets_train):
                 train_file = datasets_train[dataset]
@@ -201,7 +201,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for normalizeRoleNames in [True, False]:
                     setup.update(normalizeRoleNames=normalizeRoleNames)
                     for useProjDepTreeFactor in [True, False]:
-                        if useProjDepTreeFactor and i!=0: #dataset != 'pos-gold':
+                        if useProjDepTreeFactor and dataset != 'pos-unsup' and dataset != 'brown-unsup':
                             # We only need to run this on one of the input datasets.
                             continue
                         setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
@@ -235,8 +235,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 stage.update(maxLbfgsIterations=3,
-                             maxSentenceLength=7,
-                             maxNumSentences=3,
+                             trainMaxSentenceLength=7,
+                             trainMaxNumSentences=3,
+                             testMaxSentenceLength=7,
+                             testMaxNumSentences=3,
                              work_mem_megs=2000,
                              timeoutSeconds=20)
             if isinstance(stage, experiment_runner.ExpParams):

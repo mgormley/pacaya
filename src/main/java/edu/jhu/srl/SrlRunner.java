@@ -62,13 +62,6 @@ public class SrlRunner {
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
 
-    // Options for data.
-
-    @Opt(hasArg = true, description = "Maximum sentence length for each train/test set.")
-    public static int maxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in each train/test set.")
-    public static int maxNumSentences = Integer.MAX_VALUE; 
-    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
@@ -80,7 +73,11 @@ public class SrlRunner {
     public static File trainPredOut = null;
     @Opt(hasArg = true, description = "Training data gold output file.")
     public static File trainGoldOut = null;
-
+    @Opt(hasArg = true, description = "Maximum sentence length for train.")
+    public static int trainMaxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
+    public static int trainMaxNumSentences = Integer.MAX_VALUE; 
+    
     // Options for test data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
     public static File test = null;
@@ -90,6 +87,10 @@ public class SrlRunner {
     public static File testPredOut = null;
     @Opt(hasArg = true, description = "Testing data gold output file.")
     public static File testGoldOut = null;
+    @Opt(hasArg = true, description = "Maximum sentence length for test.")
+    public static int testMaxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
+    public static int testMaxNumSentences = Integer.MAX_VALUE; 
 
     // Options for model IO
     @Opt(hasArg = true, description = "File from which we should read a serialized model.")
@@ -171,7 +172,8 @@ public class SrlRunner {
             String name = "train";
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(alphabet, trainType, train, trainGoldOut, name);
+            FgExamples data = getData(alphabet, trainType, train, trainGoldOut, trainMaxNumSentences,
+                    trainMaxSentenceLength, name);
             
             if (model == null) {
                 model = new FgModel(alphabet);
@@ -215,7 +217,8 @@ public class SrlRunner {
             // Test the model on test data.
             alphabet.stopGrowth();
             String name = "test";
-            FgExamples data = getData(alphabet, testType, test, testGoldOut, name);
+            FgExamples data = getData(alphabet, testType, test, testGoldOut, testMaxNumSentences,
+                    testMaxSentenceLength, name);
 
             // Decode and evaluate the test data.
             List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
@@ -223,7 +226,8 @@ public class SrlRunner {
         }
     }
 
-    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, File goldFile, String name) throws ParseException, IOException {
+    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, File goldFile,
+            int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
         if (dataType == DatasetType.CONLL_2009){
