@@ -52,6 +52,9 @@ public class SrlFactorGraph extends FactorGraph {
         /** Whether to allow a predicate to assign a role to itself. (This should be turned on for English) */
         public boolean allowPredArgSelfLoops = false;
         
+        /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
+        public boolean unaryFactors = false;
+        
     }
 
     public enum RoleStructure {
@@ -182,12 +185,14 @@ public class SrlFactorGraph extends FactorGraph {
         
         // Create the Link variables.
         if (prm.useProjDepTreeFactor && prm.linkVarType != VarType.OBSERVED) {
+            log.trace("Adding projective dependency tree global factor.");
             ProjDepTreeFactor treeFactor = new ProjDepTreeFactor(n, prm.linkVarType);
             rootVars = treeFactor.getRootVars();
             childVars = treeFactor.getChildVars();
             // Add the global factor.
             addFactor(treeFactor);
-        } else {
+        } else if (prm.linkVarType == VarType.OBSERVED) {
+            log.trace("Adding observed Link variables, without the global factor.");
             rootVars = new LinkVar[n];
             childVars = new LinkVar[n][n];
             for (int i = -1; i < n; i++) {
@@ -201,6 +206,13 @@ public class SrlFactorGraph extends FactorGraph {
                     }
                 }
             }
+        } else {
+            rootVars = new LinkVar[n];
+            childVars = new LinkVar[n][n];
+            log.trace("Not adding any Link variables.");
+            // IMPORTANT NOTE: Here we OVERRIDE prm.unaryFactors to make sure
+            // that the Role variables have /some/ factor to participate in.
+            prm.unaryFactors = true;
         }
         
         // Add the factors.
@@ -208,16 +220,16 @@ public class SrlFactorGraph extends FactorGraph {
             for (int j = 0; j < n; j++) {
                 if (i == -1) {
                     // Add unary factors on child Links
-                    if (rootVars[j] != null) {
+                    if (prm.unaryFactors && rootVars[j] != null) {
                         addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY));
                     }
                 } else {
-                    // Add unary factors on Roles
-                    if (roleVars[i][j] != null) {
+                    // Add unary factors on Roles.
+                    if (prm.unaryFactors && roleVars[i][j] != null) {
                         addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
                     }
                     // Add unary factors on child Links
-                    if (childVars[i][j] != null) {
+                    if (prm.unaryFactors && childVars[i][j] != null) {
                         addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY));
                     }
                     // Add binary factors between Roles and Links.

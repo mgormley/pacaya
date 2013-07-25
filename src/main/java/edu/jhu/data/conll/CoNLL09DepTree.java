@@ -17,7 +17,7 @@ public class CoNLL09DepTree extends DepTree {
 
     public CoNLL09DepTree(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
         // TODO: filter out punctuation.
-        super(new Sentence(sent, alphabet), sent.getParents(), false);
+        super(new Sentence(sent, alphabet), sent.getParentsFromHead(), false);
         this.sent = sent;
     }
 

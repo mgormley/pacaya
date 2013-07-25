@@ -23,7 +23,7 @@ public class SentFeatureExtractor {
      * @author mgormley
      */
     public static class SentFeatureExtractorPrm {
-        public boolean useGoldPos = false;
+        public boolean useGoldSyntax = false;
         public String language = "es";
         /**
          * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
@@ -126,7 +126,7 @@ public class SentFeatureExtractor {
         String argPos = arg.getPos();
         // Add Arg-Bias:  Bias features everybody does; it's important (see Naradowsky).
         
-        if (!prm.useGoldPos) {
+        if (!prm.useGoldSyntax) {
             predPos = pred.getPpos();
             argPos = arg.getPpos();
         } 

@@ -86,10 +86,24 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
      * 
      * @return
      */
-    public int[] getParents() {
+    public int[] getParentsFromHead() {
         int[] parents = new int[size()];
         for (int i = 0; i < parents.length; i++) {
             parents[i] = tokens.get(i).getHead() - 1;
+        }
+        return parents;
+    }
+    
+    /**
+     * Returns my internal reprensentation of the parent index for each token.
+     * The wall has index -1.
+     * 
+     * @return
+     */
+    public int[] getParentsFromPhead() {
+        int[] parents = new int[size()];
+        for (int i = 0; i < parents.length; i++) {
+            parents[i] = tokens.get(i).getPhead() - 1;
         }
         return parents;
     }

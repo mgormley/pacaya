@@ -16,6 +16,7 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -104,7 +105,7 @@ public class SrlRunner {
 
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "The structure of the Role variables.")
-    public static RoleStructure roleStructure = RoleStructure.ALL_PAIRS;
+    public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
     public static boolean makeUnknownPredRolesLatent = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
@@ -113,6 +114,8 @@ public class SrlRunner {
     public static boolean useProjDepTreeFactor = false;
     @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
     public static boolean allowPredArgSelfLoops = false;
+    @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
+    public static boolean unaryFactors = false;
 
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
@@ -125,12 +128,16 @@ public class SrlRunner {
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
+    
+    // Options for data munging.
     @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldPos = false;    
+    public static boolean useGoldSyntax = false;    
     @Opt(hasArg=true, description="Whether to normalize and clean words.")
     public static boolean normalizeWords = false;
     @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
     public static boolean normalizeRoleNames = false;
+    @Opt(hasArg = true, description = "Whether to remove the deprel and pdeprel columns from CoNLL-2009 data.")
+    public static boolean removeDeprel = false;
 
     // Options for training.
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
@@ -226,7 +233,28 @@ public class SrlRunner {
                     sents.add(sent);
                 }
             }
+
             log.info("Num " + name + " sentences: " + sents.size());
+            
+            if (useProjDepTreeFactor) {
+                log.info("Removing all dependency trees from the CoNLL data");
+                for (CoNLL09Sentence sent : reader) {
+                    for (CoNLL09Token tok : sent) {
+                        tok.setPhead(0);
+                        tok.setHead(0);
+                        tok.setDeprel("_");
+                        tok.setPdeprel("_");
+                    }
+                }
+            } else if (removeDeprel) {
+                for (CoNLL09Sentence sent : reader) {
+                    for (CoNLL09Token tok : sent) {
+                        tok.setDeprel("_");
+                        tok.setPdeprel("_");
+                    }
+                }
+            }
+            
             log.info("Building factor graphs and extracting features.");
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
@@ -295,11 +323,12 @@ public class SrlRunner {
         prm.fgPrm.roleStructure = roleStructure;
         prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
         prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
+        prm.fgPrm.unaryFactors = unaryFactors;
         // Feature extraction.
         prm.fePrm.cutoff = cutoff;
         prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.language = language;
-        prm.fePrm.useGoldPos = useGoldPos;
+        prm.fePrm.useGoldSyntax = useGoldSyntax;
         prm.fePrm.normalizeWords = normalizeWords;
         prm.fePrm.normalizeRoleNames = normalizeRoleNames;
         // SRL Feature Extraction.

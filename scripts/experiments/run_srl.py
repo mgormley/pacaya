@@ -85,37 +85,72 @@ class SrlExpParamsRunner(ExpParamsRunner):
         if not os.path.exists(exp_dir):
             exp_dir = "/Users/mgormley/research/parsing/exp"
             
-        # ------------- Sentences of length <= 20 ---------------
-        # --- Gold POS tags output of grammar induction ---
-        prefix = exp_dir + "/vem-conll_001"
+           
+        if os.uname()[1].find("Gormley"): 
+            # TODO: Remove this if statement after copying vem_conll_005 over.
+            # ------------- Sentences of length <= 20 ---------------
+            # --- Gold POS tags output of grammar induction ---
+            prefix = exp_dir + "/vem-conll_001"
+                
+            # Gold trees: HEAD column.
+            datasets_train['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+            datasets_test['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
             
-        # Gold trees: HEAD column.
-        datasets_train['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['pos-gold'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
-        
-        # Supervised parser output: PHEAD column.
-        datasets_train['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/train-parses.txt"
-        datasets_test['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/test-parses.txt"
-        
-        # Semi-supervised parser output: PHEAD column.
-        datasets_train['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
-        
-        # Unsupervised parser output: PHEAD column.
-        datasets_train['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
-        datasets_test['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
-        
-        # --- Brown cluster tagged output of grammar induction: ---
-        prefix = "/home/hltcoe/mgormley/working/parsing/exp/vem-conll_002"
+            # Supervised parser output: PHEAD column.
+            datasets_train['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/train-parses.txt"
+            datasets_test['pos-sup'] = prefix + "/dmv_conll09-sp-dev_20_28800_True_SUPERVISED/test-parses.txt"
+            
+            # Semi-supervised parser output: PHEAD column.
+            datasets_train['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+            datasets_test['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
+            
+            # Unsupervised parser output: PHEAD column.
+            datasets_train['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
+            datasets_test['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
+            
+            # --- Brown cluster tagged output of grammar induction: ---
+            prefix = "/home/hltcoe/mgormley/working/parsing/exp/vem-conll_002"
+    
+            # Semi-supervised parser output: PHEAD column.
+            datasets_train['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
+            datasets_test['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
+            
+            # Unsupervised parser output: PHEAD column.
+            datasets_train['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
+            datasets_test['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
+        else:
+            # ------------- Sentences of length <= 20 ---------------
+            conll09_sp_dir = os.path.abspath(os.path.join("data", "conll2009", "CoNLL2009-ST-Spanish"))
 
-        # Semi-supervised parser output: PHEAD column.
-        datasets_train['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/train-parses.txt"
-        datasets_test['brown-semi'] = prefix + "/dmv_conll09-sp-dev_20_28800_True/test-parses.txt"
-        
-        # Unsupervised parser output: PHEAD column.
-        datasets_train['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/train-parses.txt"
-        datasets_test['brown-unsup'] = prefix + "/dmv_conll09-sp-dev_20_28800_False/test-parses.txt"
-        
+            prefix = exp_dir + "/vem-conll_005"
+                
+            # Gold trees: HEAD column.
+            datasets_train['pos-gold'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
+            datasets_test['pos-gold'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
+            
+            # Supervised parser output: PHEAD column.
+            datasets_train['pos-sup'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
+            datasets_test['pos-sup'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
+            
+            # Semi-supervised parser output: PHEAD column.
+            datasets_train['pos-semi'] = prefix + "/dmv_conll09-sp-train_20_True/test-parses.txt"
+            datasets_test['pos-semi'] = prefix + "/dmv_conll09-sp-dev_20_True/test-parses.txt"
+            
+            # Unsupervised parser output: PHEAD column.
+            datasets_train['pos-unsup'] = prefix + "/dmv_conll09-sp-train_20_False/test-parses.txt"
+            datasets_test['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_False/test-parses.txt"
+            
+            # --- Brown cluster tagged output of grammar induction: ---
+            prefix = "/home/hltcoe/mgormley/working/parsing/exp/vem-conll_002"
+    
+            # Semi-supervised parser output: PHEAD column.
+            datasets_train['brown-semi'] = prefix + "/dmv_conll09-sp-brown-train_20_True/test-parses.txt"
+            datasets_test['brown-semi'] = prefix + "/dmv_conll09-sp-brown-dev_20_True/test-parses.txt"
+            
+            # Unsupervised parser output: PHEAD column.
+            datasets_train['brown-unsup'] = prefix + "/dmv_conll09-sp-brown-train_20_False/test-parses.txt"
+            datasets_test['brown-unsup'] = prefix + "/dmv_conll09-sp-brown-dev_20_False/test-parses.txt"
+            
         if self.expname == "srl-dev20" or self.expname == "srl-biasonly":
             root = RootStage()
             setup = SrlExpParams()
@@ -132,6 +167,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 data = SrlExpParams(dataset=dataset, 
                                     train=train_file, trainType='CONLL_2009', 
                                     test=test_file, testType='CONLL_2009')
+                # TODO: This removal of DEPREL and DEPREL should happen prior to these SRL experiments.
+                if dataset.find("-unsup") != -1 or dataset.find("-semi") != -1:
+                    setup.set("removeDeprel", True, incl_name=False)
+                else:
+                    setup.set("removeDeprel", False, incl_name=False)
+                if dataset.find("-gold") != -1:
+                    setup.set("useGoldSyntax", False, incl_name=False)
 #                for roleStructure in ['ALL_PAIRS', 'PREDS_GIVEN']:
 #                    setup.update(roleStructure=roleStructure)
 #                    for makeUnknownPredRolesLatent in [True, False]:

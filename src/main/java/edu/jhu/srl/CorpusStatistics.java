@@ -90,7 +90,7 @@ public class CorpusStatistics {
                 // Learn what Postags are in our vocabulary
                 // Later, can then back off to NONE if we haven't seen it
                 // before.
-                if (!prm.useGoldPos) {
+                if (!prm.useGoldSyntax) {
                     knownPostags.add(word.getPpos());
                 } else {
                     knownPostags.add(word.getPos());

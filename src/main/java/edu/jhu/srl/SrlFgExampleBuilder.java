@@ -80,7 +80,7 @@ public class SrlFgExampleBuilder {
         // Add all the training data assignments to the link variables, if they are not latent.
         //
         // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
-        int[] parents = sent.getParents();
+        int[] parents = prm.fePrm.useGoldSyntax ? sent.getParentsFromHead() : sent.getParentsFromPhead();
         for (int i=-1; i<sent.size(); i++) {
             for (int j=0; j<sent.size(); j++) {
                 if (j != i && sfg.getLinkVar(i, j) != null) {
