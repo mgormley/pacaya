@@ -68,6 +68,7 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
         try {
             CoNLL09Sentence curSent = sentence;
             sentence = readCoNLL09Sentence(reader);
+            if (curSent != null) { curSent.intern(); }
             return curSent;
         } catch (IOException e) {
             throw new RuntimeException(e);

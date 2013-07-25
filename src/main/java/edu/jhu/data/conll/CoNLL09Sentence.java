@@ -205,6 +205,12 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
     }
 
+    public void intern() {
+        for (CoNLL09Token tok : this) {
+            tok.intern();
+        }
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
