@@ -40,12 +40,29 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         return SrlExpParams()
     
     def create_experiment_script(self, exp_dir):
-        script = ""
-        script += "echo 'CLASSPATH=$CLASSPATH'\n"
+        script = "\n"
+        #script += 'echo "CLASSPATH=$CLASSPATH"\n'
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
-        return script
         
+        script += self.get_eval_script("train")
+        script += self.get_eval_script("test")
+        
+        return script
+    
+    def get_eval_script(self, data_name):    
+        script = "\n"
+        script += 'echo "Evaluating %s"\n' % (data_name)
+        eval_args = "" 
+        if self.get("normalizeRoles") is not None:
+            #eval_args += "--normalizeRoles %s" % (self.get("normalizeRoles"))
+            pass
+        eval_args += " -g " + self.get(data_name + "GoldOut") + " -s " + self.get(data_name + "PredOut")
+        eval_out = data_name + "-eval.out"
+        script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
+        script += 'grep --after-context 11 "SEMANTIC SCORES:" %s' % (eval_out)
+        return script
+    
     def get_java_args(self):
         return self._get_java_args(0.75 * self.work_mem_megs)
 
@@ -67,8 +84,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         all.set("expname", self.expname, False, False)
         all.update(seed=random.getrandbits(63))
         all.update(printModel="./model.txt",
-                   trainPredOut="./train-srl.txt",
-                   testPredOut="./test-srl.txt",
+                   trainPredOut="./train-pred.txt",
+                   testPredOut="./test-pred.txt",
+                   trainGoldOut="./train-gold.txt",
+                   testGoldOut="./test-gold.txt",
                    modelOut="./model.binary.gz"
                    )
         all.set("timeoutSeconds", 8*60*60, incl_arg=False, incl_name=False)
@@ -86,7 +105,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exp_dir = "/Users/mgormley/research/parsing/exp"
             
            
-        if os.uname()[1].find("Gormley"): 
+        if not os.path.exists( exp_dir + "/vem-conll_005"):
+            sys.exit(1)
+            print "WARNING: USING OLD DATA DIRECTORY FOR GRAMMAR INDUCTION."
             # TODO: Remove this if statement after copying vem_conll_005 over.
             # ------------- Sentences of length <= 20 ---------------
             # --- Gold POS tags output of grammar induction ---
@@ -128,6 +149,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             datasets_train['pos-gold'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
             datasets_test['pos-gold'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
             
+            # --- Predicted POS tags for of grammar induction ---
+
             # Supervised parser output: PHEAD column.
             datasets_train['pos-sup'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
             datasets_test['pos-sup'] = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
@@ -141,7 +164,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             datasets_test['pos-unsup'] = prefix + "/dmv_conll09-sp-dev_20_False/test-parses.txt"
             
             # --- Brown cluster tagged output of grammar induction: ---
-            prefix = "/home/hltcoe/mgormley/working/parsing/exp/vem-conll_002"
     
             # Semi-supervised parser output: PHEAD column.
             datasets_train['brown-semi'] = prefix + "/dmv_conll09-sp-brown-train_20_True/test-parses.txt"
@@ -155,13 +177,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-            setup.update(maxNumSentences=100000000, maxSentenceLength=1000)
+            setup.update(maxNumSentences=4000, maxSentenceLength=20)
             setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=180*1024)
+                         work_mem_megs=20*1024)
             if self.expname == "srl-biasonly":
-                setup.update(biasOnly=True, work_mem_megs=2*1024, maxNumSentences=100)
+                setup.update(biasOnly=True, work_mem_megs=2*1024, maxNumSentences=4000, maxSentenceLength=20)
             exps = []
-            for dataset in datasets_train:
+            for i, dataset in enumerate(datasets_train):
                 train_file = datasets_train[dataset]
                 test_file = datasets_train[dataset]
                 data = SrlExpParams(dataset=dataset, 
@@ -176,13 +198,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     setup.set("useGoldSyntax", False, incl_name=False)
 #                for roleStructure in ['ALL_PAIRS', 'PREDS_GIVEN']:
 #                    setup.update(roleStructure=roleStructure)
-#                    for makeUnknownPredRolesLatent in [True, False]:
-#                        setup.update(makeUnknownPredRolesLatent=makeUnknownPredRolesLatent)
                 for normalizeRoleNames in [True, False]:
                     setup.update(normalizeRoleNames=normalizeRoleNames)
                     for useProjDepTreeFactor in [True, False]:
+                        if useProjDepTreeFactor and i!=0: #dataset != 'pos-gold':
+                            # We only need to run this on one of the input datasets.
+                            continue
                         setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
-                        exp = all + setup + data 
+                        exp = all + setup + data
+                        if exp.get("biasOnly") != True:
+                            # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
+                            # 2700 of len <= 20 fit in 1G, with 37 roles, and global factor off.
+                            # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
+                            # So, increasing to 37 roles should require a 5x increase (though we see a 2x).
+                            # Adding the global factor should require a 5x increase.
+                            base_work_mem_megs = 3*1024
+                            if normalizeRoleNames:
+                                base_work_mem_megs *= 4 
+                            if useProjDepTreeFactor:
+                                base_work_mem_megs *= 4
+                            exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                         exps.append(exp)
             # Drop all but 3 experiments for a fast run.
             if self.fast: exps = exps[:4]
