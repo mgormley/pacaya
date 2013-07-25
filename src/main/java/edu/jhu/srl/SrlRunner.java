@@ -121,6 +121,8 @@ public class SrlRunner {
     public static boolean allowPredArgSelfLoops = false;
     @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
     public static boolean unaryFactors = false;
+    @Opt(hasArg = true, description = "Whether to always include Link variables. For testing only.")
+    public static boolean alwaysIncludeLinkVars = false;
 
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
@@ -351,6 +353,7 @@ public class SrlRunner {
         prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
         prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         prm.fgPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
         // Feature extraction.
         prm.fePrm.cutoff = cutoff;
         prm.fePrm.biasOnly = biasOnly;
