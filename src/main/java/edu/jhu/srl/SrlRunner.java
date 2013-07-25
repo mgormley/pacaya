@@ -78,6 +78,8 @@ public class SrlRunner {
     public static File featureFileIn = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
     public static File trainPredOut = null;
+    @Opt(hasArg = true, description = "Training data gold output file.")
+    public static File trainGoldOut = null;
 
     // Options for test data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
@@ -86,6 +88,8 @@ public class SrlRunner {
     public static DatasetType testType = DatasetType.CONLL_2009;
     @Opt(hasArg = true, description = "Testing data predictions output file.")
     public static File testPredOut = null;
+    @Opt(hasArg = true, description = "Testing data gold output file.")
+    public static File testGoldOut = null;
 
     // Options for model IO
     @Opt(hasArg = true, description = "File from which we should read a serialized model.")
@@ -167,7 +171,7 @@ public class SrlRunner {
             String name = "train";
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(alphabet, trainType, train, name);
+            FgExamples data = getData(alphabet, trainType, train, trainGoldOut, name);
             
             if (model == null) {
                 model = new FgModel(alphabet);
@@ -211,7 +215,7 @@ public class SrlRunner {
             // Test the model on test data.
             alphabet.stopGrowth();
             String name = "test";
-            FgExamples data = getData(alphabet, testType, test, name);
+            FgExamples data = getData(alphabet, testType, test, testGoldOut, name);
 
             // Decode and evaluate the test data.
             List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
@@ -219,26 +223,44 @@ public class SrlRunner {
         }
     }
 
-    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, File goldFile, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
         if (dataType == DatasetType.CONLL_2009){
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
             List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
+            int numTokens = 0;
             for (CoNLL09Sentence sent : reader) {
                 if (sents.size() >= maxNumSentences) {
                     break;
                 }
                 if (sent.size() <= maxSentenceLength) {
                     sents.add(sent);
+                    numTokens += sent.size();
                 }
             }
+            reader.close();
+            
+            if (normalizeRoleNames) {
+                log.info("Normalizing role names");
+                CorpusStatistics.normalizeRoleNames(sents);
+            }
+            
+            log.info("Num " + name + " sentences: " + sents.size());   
+            log.info("Num " + name + " tokens: " + numTokens);
 
-            log.info("Num " + name + " sentences: " + sents.size());
+            if (goldFile != null) {
+                log.info("Writing gold data to file: " + goldFile);
+                CoNLL09Writer cw = new CoNLL09Writer(goldFile);
+                for (CoNLL09Sentence sent : sents) {
+                    cw.write(sent);
+                }
+                cw.close();
+            }
             
             if (useProjDepTreeFactor) {
                 log.info("Removing all dependency trees from the CoNLL data");
-                for (CoNLL09Sentence sent : reader) {
+                for (CoNLL09Sentence sent : sents) {
                     for (CoNLL09Token tok : sent) {
                         tok.setPhead(0);
                         tok.setHead(0);
@@ -247,7 +269,8 @@ public class SrlRunner {
                     }
                 }
             } else if (removeDeprel) {
-                for (CoNLL09Sentence sent : reader) {
+                log.info("Removing syntactic dependency labels from the CoNLL data");                
+                for (CoNLL09Sentence sent : sents) {
                     for (CoNLL09Token tok : sent) {
                         tok.setDeprel("_");
                         tok.setPdeprel("_");
@@ -330,7 +353,6 @@ public class SrlRunner {
         prm.fePrm.language = language;
         prm.fePrm.useGoldSyntax = useGoldSyntax;
         prm.fePrm.normalizeWords = normalizeWords;
-        prm.fePrm.normalizeRoleNames = normalizeRoleNames;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;

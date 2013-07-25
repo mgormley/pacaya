@@ -30,6 +30,7 @@ public class SrlFeatureExtractorTest {
     @Test
     public void testCorrectNumFeatures() throws Exception {
         SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
+        fgPrm.alwaysIncludeLinkVars = true;
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
         SrlFactorGraph sfg = new SrlFactorGraph(fgPrm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
 

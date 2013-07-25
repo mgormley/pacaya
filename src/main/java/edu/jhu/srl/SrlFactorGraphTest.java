@@ -32,6 +32,7 @@ public class SrlFactorGraphTest {
         prm.makeUnknownPredRolesLatent = false;
         prm.allowPredArgSelfLoops = false;
         prm.useProjDepTreeFactor = false;
+        prm.alwaysIncludeLinkVars = true;
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
         SrlFactorGraph sfg = new SrlFactorGraph(prm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
         
@@ -64,6 +65,7 @@ public class SrlFactorGraphTest {
         prm.makeUnknownPredRolesLatent = false;
         prm.allowPredArgSelfLoops = false;
         prm.useProjDepTreeFactor = false;
+        prm.alwaysIncludeLinkVars = true;
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
         SrlFactorGraph sfg = new SrlFactorGraph(prm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
         
@@ -94,6 +96,7 @@ public class SrlFactorGraphTest {
         prm.makeUnknownPredRolesLatent = false;
         prm.allowPredArgSelfLoops = true;
         prm.useProjDepTreeFactor = false;
+        prm.alwaysIncludeLinkVars = true;
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
         SrlFactorGraph sfg = new SrlFactorGraph(prm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
 
@@ -115,6 +118,7 @@ public class SrlFactorGraphTest {
         prm.makeUnknownPredRolesLatent = true;
         prm.allowPredArgSelfLoops = false;
         prm.useProjDepTreeFactor = false;
+        prm.alwaysIncludeLinkVars = true;
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
         SrlFactorGraph sfg = new SrlFactorGraph(prm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
         

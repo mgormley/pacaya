@@ -53,7 +53,10 @@ public class SrlFactorGraph extends FactorGraph {
         public boolean allowPredArgSelfLoops = false;
         
         /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
-        public boolean unaryFactors = false;
+        public boolean unaryFactors = true;
+        
+        /** Whether to always include Link variables. For testing only. */
+        public boolean alwaysIncludeLinkVars = false;
         
     }
 
@@ -191,7 +194,7 @@ public class SrlFactorGraph extends FactorGraph {
             childVars = treeFactor.getChildVars();
             // Add the global factor.
             addFactor(treeFactor);
-        } else if (prm.linkVarType == VarType.OBSERVED) {
+        } else if (prm.linkVarType == VarType.OBSERVED || prm.alwaysIncludeLinkVars) {
             log.trace("Adding observed Link variables, without the global factor.");
             rootVars = new LinkVar[n];
             childVars = new LinkVar[n][n];

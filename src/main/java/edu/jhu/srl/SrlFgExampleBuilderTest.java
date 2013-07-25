@@ -37,9 +37,9 @@ public class SrlFgExampleBuilderTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
+        CorpusStatistics.normalizeRoleNames(sents);
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.biasOnly = true;    
-        fePrm.normalizeRoleNames = true;
         CorpusStatistics cs = new CorpusStatistics(fePrm);
         cs.init(sents);
         CoNLL09Sentence sent = sents.get(0);
@@ -49,6 +49,7 @@ public class SrlFgExampleBuilderTest {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
         FgExample ex = builder.getFGExample(sent);
         
@@ -79,7 +80,8 @@ public class SrlFgExampleBuilderTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;        
+        fePrm.biasOnly = true;
+        fePrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(fePrm);
         cs.init(sents);
         CoNLL09Sentence sent = sents.get(0);
@@ -90,6 +92,7 @@ public class SrlFgExampleBuilderTest {
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.linkVarType = VarType.PREDICTED;
+        prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExampleBuilder builder = new SrlFgExampleBuilder(prm, alphabet, cs, obsAlphabet);
         FgExample ex = builder.getFGExample(sent);
 

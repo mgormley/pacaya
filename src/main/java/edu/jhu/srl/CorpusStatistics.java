@@ -77,7 +77,7 @@ public class CorpusStatistics {
             for (int i = 0; i < sent.size(); i++) {
                 CoNLL09Token word = sent.get(i);
                 for (int j = 0; j < word.getApreds().size(); j++) {  
-                    String role = normalizeRoleName(word.getApreds().get(j));
+                    String role = word.getApreds().get(j);
                     knownRoles.add(role);
                 }
                 String wordForm = word.getForm();
@@ -127,13 +127,28 @@ public class CorpusStatistics {
         log.info("Known roles: " + roleStateNames);
     }
 
-    public String normalizeRoleName(String role) {
-        if (prm.normalizeRoleNames) {
-            // TODO: This is hardcoding the removal of the Theta role; make this an option.
-            String[] splitRole = dash.split(role);
-            role = splitRole[0].toLowerCase();
+    // ------------------- Data Munging ------------------- //
+
+    // TODO: These methods should move elsewhere.
+    public static void normalizeRoleNames(List<CoNLL09Sentence> sents) {
+        for (CoNLL09Sentence sent : sents) {
+            for (CoNLL09Token tok : sent) {
+                ArrayList<String> apreds = new ArrayList<String>();
+                for (String apred : tok.getApreds()) {
+                    if ("_".equals(apred)) {
+                        apreds.add(apred);
+                    } else { 
+                        apreds.add(normalizeRoleName(apred));
+                    }
+                }
+                tok.setApreds(apreds);
+            }
         }
-        return role;
+    }
+    
+    private static String normalizeRoleName(String role) {
+        String[] splitRole = dash.split(role);
+        return splitRole[0].toLowerCase();
     }
 
     // ------------------- private ------------------- //

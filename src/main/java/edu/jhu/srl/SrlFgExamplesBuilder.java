@@ -48,7 +48,7 @@ public class SrlFgExamplesBuilder {
         FgExamples data = new FgExamples(alphabet);
         int i = 0;
         for (CoNLL09Sentence sent : sents) {
-            if (i % 100 == 0 && i > 0) {
+            if (i % 500 == 0 && i > 0) {
                 log.debug("Built " + i + " examples...");
             }
             data.add(ps.getFGExample(sent));

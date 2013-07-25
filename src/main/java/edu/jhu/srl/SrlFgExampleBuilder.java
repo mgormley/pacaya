@@ -115,9 +115,6 @@ public class SrlFgExampleBuilder {
             int child = edge.getArg().getPosition();
             String roleName = edge.getLabel();
             
-            // Optionally, lowercase the role name and remove the theme.
-            roleName = cs.normalizeRoleName(roleName);
-            
             RoleVar roleVar = sfg.getRoleVar(parent, child);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {
                 vc.put(roleVar, roleName);
