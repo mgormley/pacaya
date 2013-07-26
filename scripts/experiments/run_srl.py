@@ -177,7 +177,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup = SrlExpParams()
             # Full length test sentences.
             setup.update(trainMaxSentenceLength=20,
-                         featureHashMod=-1)
+                         featureHashMod=-1,
+                         alwaysIncludeLinkVars=True,
+                         linkVarType="OBSERVED",
+                         unaryFactors=True,
+                         )
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=2*1024)
             if self.expname == "srl-biasonly":
@@ -203,22 +207,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for normalizeRoleNames in [True, False]:
                     setup.update(normalizeRoleNames=normalizeRoleNames)
                     for useProjDepTreeFactor in [True, False]:
-                        if useProjDepTreeFactor and dataset != 'pos-unsup' and dataset != 'brown-unsup':
+                        if useProjDepTreeFactor and not (dataset == 'pos-unsup' or dataset == 'brown-unsup'):
                             # We only need to run this on one of the input datasets.
                             continue
+                        if useProjDepTreeFactor: setup.update(linkVarType="LATENT")
+                        else: setup.update(linkVarType="OBSERVED")
                         setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
                         exp = all + setup + data
-                        if exp.get("biasOnly") != True and os.uname()[1].find("Gormley") != -1:
+                        if exp.get("biasOnly") != True and os.uname()[1].find("Gormley") == -1:
                             # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
                             # 2700 of len <= 20 fit in 1G, with 37 roles, and global factor off.
                             # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
                             # So, increasing to 37 roles should require a 5x increase (though we see a 2x).
                             # Adding the global factor should require a 5x increase.
-                            base_work_mem_megs = 3*1024
+                            base_work_mem_megs = 5*1024
                             if not normalizeRoleNames:
-                                base_work_mem_megs *= 4 
+                                base_work_mem_megs *= 3
                             if useProjDepTreeFactor:
-                                base_work_mem_megs *= 4
+                                base_work_mem_megs *= 3
                             exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                         exps.append(exp)
             # Drop all but 3 experiments for a fast run.
