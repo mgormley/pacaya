@@ -106,7 +106,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
            
         if not os.path.exists( exp_dir + "/vem-conll_005"):
-            sys.exit(1)
             print "WARNING: USING OLD DATA DIRECTORY FOR GRAMMAR INDUCTION."
             # TODO: Remove this if statement after copying vem_conll_005 over.
             # ------------- Sentences of length <= 20 ---------------
@@ -177,7 +176,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-            setup.update(trainMaxSentenceLength=20)
+            setup.update(trainMaxSentenceLength=20,
+                         featureHashMod=-1)
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=20*1024)
             if self.expname == "srl-biasonly":
@@ -213,7 +213,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             # So, increasing to 37 roles should require a 5x increase (though we see a 2x).
                             # Adding the global factor should require a 5x increase.
                             base_work_mem_megs = 3*1024
-                            if normalizeRoleNames:
+                            if not normalizeRoleNames:
                                 base_work_mem_megs *= 4 
                             if useProjDepTreeFactor:
                                 base_work_mem_megs *= 4
