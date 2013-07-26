@@ -179,7 +179,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             setup.update(trainMaxSentenceLength=20,
                          featureHashMod=-1)
             setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=20*1024)
+                         work_mem_megs=2*1024)
             if self.expname == "srl-biasonly":
                 setup.update(biasOnly=True, work_mem_megs=2*1024)
             exps = []
@@ -195,6 +195,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 else:
                     setup.set("removeDeprel", False, incl_name=False)
                 if dataset.find("-gold") != -1:
+                    setup.set("useGoldSyntax", True, incl_name=False)
+                else:
                     setup.set("useGoldSyntax", False, incl_name=False)
 #                for roleStructure in ['ALL_PAIRS', 'PREDS_GIVEN']:
 #                    setup.update(roleStructure=roleStructure)
@@ -206,7 +208,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             continue
                         setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
                         exp = all + setup + data
-                        if exp.get("biasOnly") != True:
+                        if exp.get("biasOnly") != True and os.uname()[1].find("Gormley") != -1:
                             # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
                             # 2700 of len <= 20 fit in 1G, with 37 roles, and global factor off.
                             # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
