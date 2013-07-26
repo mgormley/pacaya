@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -79,7 +79,7 @@ public class GetFeatures {
     private Map<Set<String>,MutableInt> bigrams = new HashMap<Set<String>,MutableInt>();
     
     private static Alphabet<Label> lexAlphabet = new Alphabet<Label>();
-    private static BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(lexAlphabet);
+    private static SrlBerkeleySignatureBuilder sig = new SrlBerkeleySignatureBuilder(lexAlphabet);
     
     private String trainingOut = new String();
     private String testingOut = new String();

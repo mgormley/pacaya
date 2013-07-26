@@ -9,7 +9,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -58,7 +58,7 @@ public class SentFeatureExtractor {
     private final CoNLL09Sentence sent;
     private final CorpusStatistics cs;
     private Alphabet<String> alphabet;
-    private final BerkeleySignatureBuilder sig;
+    private final SrlBerkeleySignatureBuilder sig;
     private final int[] parents;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {

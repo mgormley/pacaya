@@ -1,5 +1,8 @@
 package edu.berkeley.nlp.PCFGLA.smoothing;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import edu.jhu.data.Label;
 import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
@@ -8,16 +11,18 @@ import edu.jhu.util.Alphabet;
 /**
  * Constructs signatures for unknown words as in the berkeley parser.
  * 
+ * Customized for SRL and Spanish.
+ * 
  * The method getSignature() was copied from edu.berkeley.nlp.PCFGLA.smoothing.SophisticatedLexicon.
  * 
  * @author mgormley
- *
+ * @author mmitchell
  */
-public class BerkeleySignatureBuilder {
+public class SrlBerkeleySignatureBuilder {
 
     private Alphabet<Label> lexAlphabet;
 
-    public BerkeleySignatureBuilder(Alphabet<Label> lexAlphabet) {
+    public SrlBerkeleySignatureBuilder(Alphabet<Label> lexAlphabet) {
         this.lexAlphabet = new Alphabet<Label>(lexAlphabet);
         this.lexAlphabet.stopGrowth();
     }
@@ -30,7 +35,112 @@ public class BerkeleySignatureBuilder {
         String word = wordLabel.getLabel();
         return new Word(getSignature(word, loc, unknownLevel));
     }
+   
+    public Set<String> getSimpleUnkFeatures(String word, int loc, String language) {
+        int unknownLevel;
+        if (language.equals("en")) {
+            unknownLevel = 5;
+        } else {
+            unknownLevel = 6;
+        }
+        Set<String> simpleUnkFeatures = new HashSet<String>();
+        switch (unknownLevel) {
+            case 6: {
+                String[] reflexiveEndings = {"se", "me", "te", "le", "la", "lo"};
+                String[] verbEndings = {"iéramos", "áramos", "ábamas", "íamos", "isteis",
+                    "ierais", "asteis", "íais", "yendo", "uelto", "ierto", "ieron", "ieras",
+                    "ieran", "arais", "abais", "ído", "ías", "ían", "éis", "áis", "iste", 
+                    "imos", "iera", "iedo", "emos", "aste", "aron", "aras", "aran", "ando", 
+                    "amos", "abas", "aban", "ía", "ás", "án", "ió", "ido", "cho", "ara", "ado", "aba"};
+                int wlen = word.length();
+                int numCaps = 0;
+                boolean hasDigit = false;
+                boolean hasDash = false;
+                boolean hasLower = false;
+                boolean hasRefl = false;
+                boolean hasVerb = false;
+                for (int i = 0; i < wlen; i++) {
+                    char ch = word.charAt(i);
+                    if (Character.isDigit(ch)) {
+                        hasDigit = true;
+                    } else if (ch == '-') {
+                        hasDash = true;
+                    } else if (Character.isLetter(ch)) {
+                        if (Character.isLowerCase(ch)) {
+                            hasLower = true;
+                        } else if (Character.isTitleCase(ch)) {
+                            hasLower = true;
+                            numCaps++;
+                        } else {
+                            numCaps++;
+                        }
+                    }
+                }
+                char ch0 = word.charAt(0);
+                String lowered = word.toLowerCase();
+                if (Character.isUpperCase(ch0) || Character.isTitleCase(ch0)) {
+                    if (loc == 0 && numCaps == 1) {
+                        simpleUnkFeatures.add("_INITC");
+                    } else {
+                        simpleUnkFeatures.add("_CAPS");
+                    }
+                } else if (!Character.isLetter(ch0) && numCaps > 0) {
+                    simpleUnkFeatures.add("_CAPS");
+                } else if (hasLower) { // (Character.isLowerCase(ch0)) {
+                    simpleUnkFeatures.add("_LOWER");
+                }
+                if (hasDigit) {
+                    simpleUnkFeatures.add("_DIGIT");
+                }
+                if (hasDash) {
+                    simpleUnkFeatures.add("_DASH");
+                }
+                
+                // Getting into more language-specific stuff.            
+                if (lowered.endsWith("s") && wlen >= 3 && !hasVerb) {
+                    // here length 3, so you don't miss out on ones like 80s
+                } else if (word.length() >= 5 && !hasDash
+                        && !(hasDigit && numCaps > 0)) {
+                    // don't do for very short words;
+                    // Implement common discriminating suffixes
+                    // Reflexive endings
+                    String ending = lowered.length() > 2 ? lowered.substring(lowered.length() - 2) : lowered;
+                    for (String reflEnding : reflexiveEndings) {
+                        if (reflEnding.equals(ending)) {
+                            hasRefl = true;
+                            break;
+                        }
+                        
+                    }
+                    if (hasRefl) {
+                        ending = lowered.length() > 4 ? lowered.substring(lowered.length() - 4,lowered.length() - 2) : lowered;
+                    }
+                    // Verb endings
+                    for (String verbEnding : verbEndings) {
+                        if (verbEnding.equals(ending)) {
+                            hasVerb = true;
+                            simpleUnkFeatures.add("_VERB");
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            // case 5 TBD.
+        }        
+        return simpleUnkFeatures;
+    }
     
+    //Overloaded version of below, to start adding "language" as an option.
+    public String getSignature(String word, int loc, String language) {
+        int unknownLevel;
+        if (language.equals("en")) {
+            unknownLevel = 5;
+        } else {
+            unknownLevel = 6;
+        }
+        return getSignature(word, loc, unknownLevel);
+    }
     /**
      * This routine returns a String that is the "signature" of the class of a
      * word. For, example, it might represent whether it is a number of ends in
@@ -41,6 +151,7 @@ public class BerkeleySignatureBuilder {
      * features (digits, dashes, etc.) which are only vaguely English-specific;
      * 1 uses the last two characters combined with a simple classification by
      * capitalization.
+     * MM, 12.July.2013:  Added unknownLevel '6', for Spanish.
      * 
      * @param word
      *            The word to make a signature for
@@ -58,6 +169,92 @@ public class BerkeleySignatureBuilder {
 
         switch (unknownLevel) {
 
+        case 6: {
+            String[] reflexiveEndings = {"se", "me", "te", "le", "la", "lo"};
+            String[] verbEndings = {"iéramos", "áramos", "ábamas", "íamos", "isteis",
+                "ierais", "asteis", "íais", "yendo", "uelto", "ierto", "ieron", "ieras",
+                "ieran", "arais", "abais", "ído", "ías", "ían", "éis", "áis", "iste", 
+                "imos", "iera", "iedo", "emos", "aste", "aron", "aras", "aran", "ando", 
+                "amos", "abas", "aban", "ía", "ás", "án", "ió", "ido", "cho", "ara", "ado", "aba"};
+            int wlen = word.length();
+            int numCaps = 0;
+            boolean hasDigit = false;
+            boolean hasDash = false;
+            boolean hasLower = false;
+            boolean hasRefl = false;
+            boolean hasVerb = false;
+            for (int i = 0; i < wlen; i++) {
+                char ch = word.charAt(i);
+                if (Character.isDigit(ch)) {
+                    hasDigit = true;
+                } else if (ch == '-') {
+                    hasDash = true;
+                } else if (Character.isLetter(ch)) {
+                    if (Character.isLowerCase(ch)) {
+                        hasLower = true;
+                    } else if (Character.isTitleCase(ch)) {
+                        hasLower = true;
+                        numCaps++;
+                    } else {
+                        numCaps++;
+                    }
+                }
+            }
+            char ch0 = word.charAt(0);
+            String lowered = word.toLowerCase();
+            if (Character.isUpperCase(ch0) || Character.isTitleCase(ch0)) {
+                if (loc == 0 && numCaps == 1) {
+                    sb.append("-INITC");
+                    if (isKnown(lowered)) {
+                        sb.append("-KNOWNLC");
+                    }
+                } else {
+                    sb.append("-CAPS");
+                }
+            } else if (!Character.isLetter(ch0) && numCaps > 0) {
+                sb.append("-CAPS");
+            } else if (hasLower) { // (Character.isLowerCase(ch0)) {
+                sb.append("-LC");
+            }
+            if (hasDigit) {
+                sb.append("-NUM");
+            }
+            if (hasDash) {
+                sb.append("-DASH");
+            }
+            
+            // Getting into more language-specific stuff.            
+            if (lowered.endsWith("s") && wlen >= 3 && !hasVerb) {
+                // here length 3, so you don't miss out on ones like 80s
+                    sb.append("-s");
+            } else if (word.length() >= 5 && !hasDash
+                    && !(hasDigit && numCaps > 0)) {
+                // don't do for very short words;
+                // Implement common discriminating suffixes
+                // Reflexive endings
+                String ending = lowered.length() > 2 ? lowered.substring(lowered.length() - 2) : lowered;
+                for (String reflEnding : reflexiveEndings) {
+                    if (reflEnding.equals(ending)) {
+                        hasRefl = true;
+                        break;
+                    }
+                    
+                }
+                if (hasRefl) {
+                    ending = lowered.length() > 4 ? lowered.substring(lowered.length() - 4,lowered.length() - 2) : lowered;
+                }
+                // Verb endings
+                for (String verbEnding : verbEndings) {
+                    if (verbEnding.equals(ending)) {
+                        hasVerb = true;
+                        sb.append("-VERB");
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+        
         case 5: {
             // Reformed Mar 2004 (cdm); hopefully much better now.
             // { -CAPS, -INITC ap, -LC lowercase, 0 } +
