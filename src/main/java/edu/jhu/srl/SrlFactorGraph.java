@@ -200,6 +200,11 @@ public class SrlFactorGraph extends FactorGraph {
             childVars = new LinkVar[n][n];
             for (int i = -1; i < n; i++) {
                 for (int j = 0; j < n;j++) {
+                    if (prm.linkVarType == VarType.OBSERVED && roleVars[i][j] == null) {
+                        // Don't add observed Link vars when the corresponding
+                        // Role var doesn't exist.
+                        continue;
+                    }
                     if (i != j) {
                         if (i == -1) {
                             rootVars[j] = createLinkVar(i, j);
@@ -223,7 +228,7 @@ public class SrlFactorGraph extends FactorGraph {
             for (int j = 0; j < n; j++) {
                 if (i == -1) {
                     // Add unary factors on child Links
-                    if (prm.unaryFactors && rootVars[j] != null) {
+                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
                         addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY));
                     }
                 } else {
@@ -232,7 +237,7 @@ public class SrlFactorGraph extends FactorGraph {
                         addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
                     }
                     // Add unary factors on child Links
-                    if (prm.unaryFactors && childVars[i][j] != null) {
+                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
                         addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY));
                     }
                     // Add binary factors between Roles and Links.
