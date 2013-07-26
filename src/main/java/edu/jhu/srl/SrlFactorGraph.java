@@ -200,7 +200,7 @@ public class SrlFactorGraph extends FactorGraph {
             childVars = new LinkVar[n][n];
             for (int i = -1; i < n; i++) {
                 for (int j = 0; j < n;j++) {
-                    if (prm.linkVarType == VarType.OBSERVED && roleVars[i][j] == null) {
+                    if (prm.linkVarType == VarType.OBSERVED && (i == -1 || roleVars[i][j] == null)) {
                         // Don't add observed Link vars when the corresponding
                         // Role var doesn't exist.
                         continue;
