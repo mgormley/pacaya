@@ -78,10 +78,18 @@ public class SentFeatureExtractor {
         //__parents__[0] = -1;
         for (int i = 0; i < sent.size(); i++) {
             t = sent.get(i);
-            int parent = t.getHead() - 1;
+            int parent  = getParent(t);
             __parents__[i] = parent;
         }
         return __parents__;
+    }
+
+    private int getParent(CoNLL09Token t) {
+        if (prm.useGoldSyntax) {
+            return t.getHead() - 1;
+        } else {
+            return t.getPhead() - 1;
+        }
     }
 
     public int getSentSize() {
@@ -297,15 +305,8 @@ public class SentFeatureExtractor {
         }
         List<String> predFeats = pred.getFeat();
         List<String> argFeats = arg.getFeat();
-        int predHead;
-        int argHead;
-        if (prm.useGoldSyntax) {
-            predHead = pred.getHead() - 1;
-            argHead = arg.getHead() - 1;
-        } else {
-            predHead = pred.getPhead() - 1;
-            argHead = arg.getPhead() - 1;
-        }
+        int predHead = getParent(pred);
+        int argHead = getParent(arg);
         String predSense = pred.getPred();
         String argSense = arg.getPred();
         
@@ -634,7 +635,7 @@ public class SentFeatureExtractor {
         feat = linePathForm.toString();
         feats.add(feat);
     }
-    
+
     public List<String> bag(ArrayList<String> elements) {
         Set<String> bag = new HashSet<String>();
         for (String a : elements) {
