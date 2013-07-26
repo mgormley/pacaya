@@ -19,8 +19,8 @@ import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder;
+import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
@@ -53,7 +53,7 @@ public class CrfObjectiveTest {
      */
     public static class LogLinearEDs {
 
-        private Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
         private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();        
 
         public void addEx(int count, String... featNames) {

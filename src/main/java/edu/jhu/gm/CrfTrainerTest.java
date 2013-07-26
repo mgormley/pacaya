@@ -51,7 +51,6 @@ public class CrfTrainerTest {
             fv.set(featIdx, 1.0);
             return fv;
         }
-        
     }
 
     @Test

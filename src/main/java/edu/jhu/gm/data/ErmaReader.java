@@ -373,7 +373,6 @@ public class ErmaReader {
             int configId = varConfig.getConfigIndex();
             return feature_ref_vec.get(factorId).get(configId);
         }
-        
     }
     
 }

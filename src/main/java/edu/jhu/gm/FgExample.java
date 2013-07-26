@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.DepParserRunner;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.util.Utilities;
 
@@ -36,13 +35,31 @@ public class FgExample {
     private VarConfig goldConfig;
     
     /**
-     * Constructs a train or test example for a Factor Graph.
+     * Constructs a train or test example for a Factor Graph, and caches all the features.
      * 
      * @param fg The factor graph. 
      * @param goldConfig The gold assignment to the variables.
      * @param featExtractor The feature extractor to be used for this example.
      */
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
+        this(fg, goldConfig);
+        cacheLatFeats(fg, goldConfig, featExtractor);
+        cacheLatPredFeats(fg, goldConfig, featExtractor);
+    }
+    
+    /**
+     * Constructs a train or test example for a Factor Graph, but does NOT cache
+     * any features. Whenever using this constructor, {@link
+     * FgExample.cacheLatFeats()} and {@link FgExample.cacheLatPredFeats()} must
+     * be called explicitly.
+     * 
+     * @param fg The factor graph.
+     * @param goldConfig The gold assignment to the variables.
+     * @param featExtractor The feature extractor to be used for this example.
+     * @param includeUnsupportedFeatures Whether to include unsupported
+     *            features.
+     */
+    public FgExample(FactorGraph fg, VarConfig goldConfig) {        
         this.fg = fg;
         this.goldConfig = goldConfig;
         
@@ -63,30 +80,47 @@ public class FgExample {
         cacheLat = new FeatureCache(fgLat);
         cacheLatPred = new FeatureCache(fgLatPred);
         
+        // We do NOT cache any features here, and must be done manually by the caller.
+    }
+
+    public void cacheLatFeats(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
+        cacheFeats(fg, goldConfig, featExtractor, true);
+    }
+    
+    public void cacheLatPredFeats(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor) {
+        cacheFeats(fg, goldConfig, featExtractor, false);
+    }
+    
+    private void cacheFeats(FactorGraph fg, VarConfig goldConfig, FeatureExtractor featExtractor, boolean mode1) {
         for (int a=0; a<fg.getNumFactors(); a++) {
-            // Get only the predicted and latent variables for this factor.
+            // Below, the calls to goldConfig.getSubset() also assert that the training 
+            // config contains assignments for all the observed and predicted variables.
             VarSet vars = fg.getFactor(a).getVars();
-            VarSet varsObs =  VarSet.getVarsOfType(vars, VarType.OBSERVED);
-            VarSet varsPred = VarSet.getVarsOfType(vars, VarType.PREDICTED);
-            
+
+            // Get only the observed variables for this factor.
+            VarSet varsObs =  VarSet.getVarsOfType(vars, VarType.OBSERVED);            
             // Get the configuration of the specified variables as given in the training data.
-            // 
-            // This also asserts that the training config contains assignments
-            // for all the observed and predicted variables.
             VarConfig obsConfig = goldConfig.getSubset(varsObs);
-            VarConfig predConfig = goldConfig.getSubset(varsPred);
             
-            if (varsObs.size() != obsConfig.size() || varsPred.size() != predConfig.size()) {
-                log.info("varsObs: " + varsObs);
-                log.info("varsPred: " + varsPred);
-                log.info("obsConfig: " + obsConfig);
-                log.info("obsPred: " + predConfig);
-                throw new IllegalStateException("Vars missing from train configuration for factor: " + a);
+            if (mode1) {
+                // Get only the observed variables for this factor.
+                VarSet varsPred = VarSet.getVarsOfType(vars, VarType.PREDICTED);
+                // Get the configuration of the specified variables as given in the training data.
+                VarConfig predConfig = goldConfig.getSubset(varsPred);
+                
+                if (varsObs.size() != obsConfig.size() || varsPred.size() != predConfig.size()) {
+                    log.info("varsObs: " + varsObs);
+                    log.info("varsPred: " + varsPred);
+                    log.info("obsConfig: " + obsConfig);
+                    log.info("obsPred: " + predConfig);
+                    throw new IllegalStateException("Vars missing from train configuration for factor: " + a);
+                }                
+                // Cache the features supported in the training data for this factor.
+                cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a, featExtractor);
+            } else {
+                // Cache the features for all configurations of the predicted and latent variables.
+                cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a, featExtractor);
             }
-            
-            // Cache the features for this factor.
-            cacheFeats(fgLat, cacheLat, new VarConfig(obsConfig, predConfig), a, featExtractor);
-            cacheFeats(fgLatPred, cacheLatPred, new VarConfig(obsConfig), a, featExtractor);
         }
     }
     

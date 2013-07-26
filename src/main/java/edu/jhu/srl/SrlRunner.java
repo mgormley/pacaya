@@ -14,9 +14,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.AccuracyEvaluator;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
@@ -37,7 +37,7 @@ import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExampleBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
@@ -131,6 +131,8 @@ public class SrlRunner {
     public static boolean biasOnly = false;
     @Opt(hasArg = true, description = "The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled.")
     public static int featureHashMod = 524288; // 2^19
+    @Opt(hasArg = true, description = "Whether to include unsupported features.")
+    public static boolean includeUnsupportedFeatures = false;
     
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -289,7 +291,7 @@ public class SrlRunner {
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
             data = builder.getData(sents);
         } else if (dataType == DatasetType.ERMA){
-            ErmaReader er = new ErmaReader(true);
+            ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
@@ -362,6 +364,7 @@ public class SrlRunner {
         prm.fePrm.normalizeWords = normalizeWords;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
+        prm.includeUnsupportedFeatures = includeUnsupportedFeatures;
         return prm;
     }
     

@@ -83,7 +83,6 @@ public class SrlFeatureExtractor implements FeatureExtractor {
                 // Get features on the observations for a pair of words.
                 obsFeats = fastGetObsFeats(parent, child);
             }
-            // TODO: is it okay if this include the observed variables?                
         } else {
             throw new RuntimeException("Unsupported factor type: " + ft);
         }
@@ -96,7 +95,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
-
+        
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {
@@ -132,7 +131,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
 
         return fv;
     }
-
+    
     /**
      * Returns the hash code of the reverse of this string.
      */

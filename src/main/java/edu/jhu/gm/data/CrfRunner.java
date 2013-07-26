@@ -88,6 +88,10 @@ public class CrfRunner {
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
 
+    // Options for features.
+    @Opt(hasArg = true, description = "Whether to include unsupported features.")
+    public static boolean includeUnsupportedFeatures = true;
+    
     public CrfRunner() {
     }
 
@@ -167,7 +171,7 @@ public class CrfRunner {
     private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExamples data;
         if (dataType == DatasetType.ERMA){
-            ErmaReader er = new ErmaReader(true);
+            ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
             data = er.read(featureFileIn, dataFile, alphabet);        
         } else {
             throw new ParseException("Unsupported data type: " + dataType);

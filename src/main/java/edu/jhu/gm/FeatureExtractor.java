@@ -1,6 +1,5 @@
 package edu.jhu.gm;
 
-import java.util.List;
 
 
 public interface FeatureExtractor {
@@ -15,5 +14,5 @@ public interface FeatureExtractor {
      * @return The feature vector.
      */
     FeatureVector calcFeatureVector(int factorId, VarConfig varConfig);
-    
+
 }
