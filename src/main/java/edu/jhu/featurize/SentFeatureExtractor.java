@@ -71,20 +71,17 @@ public class SentFeatureExtractor {
         this.parents = getParents(sent);
     }
     
-    public int[] getParents(CoNLL09Sentence sent) {
-        int[] __parents__ = new int[sent.size()+1];
-        CoNLL09Token t;
-        // All the parents.  Parents of the Root is -1.
-        //__parents__[0] = -1;
-        for (int i = 0; i < sent.size(); i++) {
-            t = sent.get(i);
-            int parent  = getParent(t);
-            __parents__[i] = parent;
+    // Package private for testing.
+    int[] getParents(CoNLL09Sentence sent) {
+        if (prm.useGoldSyntax) {
+            return sent.getParentsFromHead();
+        } else {
+            return sent.getParentsFromPhead();
         }
-        return __parents__;
     }
 
-    private int getParent(CoNLL09Token t) {
+    // Package private for testing.
+    int getParent(CoNLL09Token t) {
         if (prm.useGoldSyntax) {
             return t.getHead() - 1;
         } else {
