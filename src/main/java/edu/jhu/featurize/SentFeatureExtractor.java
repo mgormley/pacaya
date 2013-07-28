@@ -18,6 +18,7 @@ import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Pair;
+import edu.jhu.util.Triple;
 
 /**
  * Feature extraction from the observations on a particular sentence.
@@ -80,14 +81,6 @@ public class SentFeatureExtractor {
         }
     }
 
-    // Package private for testing.
-    int getParent(CoNLL09Token t) {
-        if (prm.useGoldSyntax) {
-            return t.getHead() - 1;
-        } else {
-            return t.getPhead() - 1;
-        }
-    }
 
     public int getSentSize() {
         return sent.size();
@@ -139,7 +132,6 @@ public class SentFeatureExtractor {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
-        // Are feats updated without even returning them?
         addSimplePairFeatures(pidx, aidx, feats);
         addNaradowskyPairFeatures(pidx, aidx, feats);
         addZhaoPairFeatures(pidx, aidx, feats);
@@ -260,10 +252,37 @@ public class SentFeatureExtractor {
     }    
     
     public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
-        int lastPidx = pidx - 1;
-        int nextPidx = pidx + 1;
-        int lastAidx = aidx - 1;
-        int nextAidx = aidx + 1;
+        ZhaoObject zhaoPred = new ZhaoObject(pidx, parents, sent, prm, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(aidx, parents, sent, prm, "n");
+        ZhaoObject zhaoPredArgPair = new ZhaoObject(pidx, aidx, zhaoPred, zhaoArg, parents);
+        ZhaoObject zhaoPredLast;
+        ZhaoObject zhaoPredNext;
+        ZhaoObject zhaoArgLast;
+        ZhaoObject zhaoArgNext;
+        
+        if (pidx > 0) {
+            zhaoPredLast = new ZhaoObject(pidx - 1, parents, sent, prm, "v");
+        } else {
+            zhaoPredLast = new ZhaoObject("BEGIN");
+        }
+        
+        if (pidx < sent.size()) {
+            zhaoPredNext = new ZhaoObject(pidx + 1, parents, sent, prm, "v");
+        } else {
+            zhaoPredNext = new ZhaoObject("END");
+        }
+        
+        if (aidx > 0) {
+            zhaoArgLast = new ZhaoObject(aidx - 1, parents, sent, prm, "n");
+        } else {
+            zhaoArgLast = new ZhaoObject("BEGIN");
+        }
+        
+        if (aidx < sent.size()) {
+            zhaoArgNext = new ZhaoObject(aidx + 1, parents, sent, prm, "n");
+        } else {
+            zhaoArgNext = new ZhaoObject("END");
+        }
         // Features based on CoNLL 09:
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
@@ -273,7 +292,7 @@ public class SentFeatureExtractor {
         // "Multilingual Dependency Learning:
         // A Huge Feature Engineering Method to Semantic Dependency Parsing"
         // Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou
-        /*
+        /* 
          * Word Property. This type of elements include:
          * 1. word form, 
          * 2. lemma, 
@@ -286,95 +305,96 @@ public class SentFeatureExtractor {
          * MEG:  (1), (3), (4) all in Naradowsky.
          * What is (6)?  We don't have this in Spanish, English?
          */
+
                 
-        CoNLL09Token pred = sent.get(pidx);
-        CoNLL09Token arg = sent.get(aidx);
-        // 2:  Lemmas
-        String predForm = pred.getForm();
-        String argForm = arg.getForm();
-        String predLemma = pred.getLemma();
-        String argLemma = arg.getLemma();
-        String predPos = pred.getPpos();
-        String argPos = arg.getPpos();
-        if (prm.useGoldSyntax) {
-            predPos = pred.getPos();
-            argPos = arg.getPos();
-        }
-        List<String> predFeats = pred.getFeat();
-        List<String> argFeats = arg.getFeat();
-        int predHead = getParent(pred);
-        int argHead = getParent(arg);
-        String predSense = pred.getPred();
-        String argSense = arg.getPred();
-        
-        List<Pair<Integer,Dir>> betweenPath = DepTree.getDependencyPath(aidx, pidx, parents);
-        List<Pair<Integer,Dir>> predRootPath = DepTree.getDependencyPath(pidx, -1, parents);
-        List<Pair<Integer,Dir>> argRootPath = DepTree.getDependencyPath(aidx, -1, parents);
-        //System.out.println("predRootPath is ");
-        //System.out.println(predRootPath);
-        //System.out.println("argRootPath is ");
-        
-        
-        /* Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
-         * and high(low) support verb or noun.
+        // Initialize Syntactic Connection structures.
+        /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
+         *  and high(low) support verb or noun.
          *  From the predicate or the argument to the syntactic root along with the syntactic tree, 
          *  the first verb(noun) that is met is called as the low support verb(noun), 
          *  and the nearest one to the root is called as the high support verb(noun).*/
-        ArrayList<Integer> predChildren = new ArrayList<Integer>(); 
-        ArrayList<Integer> predNoFarChildren = new ArrayList<Integer>(); 
-        predChildren = DepTree.getChildrenOf(parents, predHead);
+        ArrayList<Integer> predChildren = zhaoPred.getChildren();
         // TBD:  predNoFarChildren
-        ArrayList<Integer> argChildren = new ArrayList<Integer>(); 
-        ArrayList<Integer> argNoFarChildren = new ArrayList<Integer>(); 
-        //System.out.println("Getting children of " + argHead);
-        argChildren = DepTree.getChildrenOf(parents, argHead);
+        ArrayList<Integer> argChildren = zhaoArg.getChildren();
         // TBD:  argNoFarChildren
-        
-        //System.out.println("Looking through arg children ");
-        //System.out.println(argChildren);
-        Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> argFarNearChildren = syntacticConnectionFarthestNearestChildren(argHead, argChildren);
-        Pair<Pair<Integer,Integer>,Pair<Integer,Integer>>  predFarNearChildren = syntacticConnectionFarthestNearestChildren(predHead, predChildren);
-        
-        //System.out.println(argRootPath);
-        Pair<Integer,Integer> argSupport = syntacticConnectionHighLowSupport("n", argRootPath);
-        Pair<Integer,Integer>  predSupport = syntacticConnectionHighLowSupport("v", predRootPath);        
-        
+        List<Pair<Integer, Dir>> betweenPath = zhaoPredArgPair.getBetweenPath();
         /* Semantic Connection. This includes semantic head (semhead), left(right) farthest(nearest) semantic child (semlm, semln, semrm, semrn). We say a predicate is its argument���s semantic head, and the latter is the former���s child. Features related to this type may track the current semantic parsing status.
         
-        /* Path. There are two basic types of path between the predicate and the argument candidates. 
-         * One is the linear path (linePath) in the sequence */
-        /* the other is the path in the syntactic 
+        // Initialize Path structures.
+        /* ZHANG:  Path. There are two basic types of path between the predicate and the argument candidates. 
+         * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
          * considering the syntactic root, dpPath is the full path in the syntactic tree. */
+        List<Pair<Integer, Dir>> dpPathPred = zhaoPredArgPair.getDpPathPred();
+        List<Pair<Integer, Dir>> dpPathArg = zhaoPredArgPair.getDpPathArg();
+        ArrayList<Integer> linePath = zhaoPredArgPair.getLinePath();
         
-        /* Leading two paths to the root from the predicate and the argument, respectively, 
-         * the common part of these two paths will be dpPathShare. */
-        List<Pair<Integer,DepTree.Dir>> dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
-        int i = argRootPath.size() - 1;
-        int j = predRootPath.size() - 1;
-        Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
-        Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
-        while (argP.equals(predP) && i > -1 && j > -1) {
-            dpPathShare.add(argP);
-            argP = argRootPath.get(i);
-            predP = predRootPath.get(j);
-            i--;
-            j--;
+        ArrayList<CoNLL09Token> argChildrenTokens = getTokens(argChildren);                
+        ArrayList<CoNLL09Token> betweenPathTokens = getTokens(betweenPath);
+        ArrayList<CoNLL09Token> linePathCoNLL = getTokens(linePath);
+        
+        
+        /* TBD: Family. Two types of children sets for the predicate or argument candidate are considered, 
+         * the first includes all syntactic children (children), the second also includes all but 
+         * excludes the left most and the right most children (noFarChildren). */
+        
+        // Add the supervised features
+        if (prm.withSupervision) {
+            addZhaoSupervisedPredFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, feats);
+            addZhaoSupervisedArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, argChildrenTokens, feats);
+            addZhaoSupervisedCombinedFeats(zhaoPred, zhaoArg, feats, betweenPathTokens, linePathCoNLL, dpPathArg); 
         }
-        // Reverse, so path goes towards the root.
-        Collections.reverse(dpPathShare);
-        int r = dpPathShare.get(0).get1();
-        //System.out.println("r is ");
-        //System.out.println(r);
-        /* Assume that dpPathShare starts from a node r', 
-         * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
-        List<Pair<Integer,Dir>> dpPathPred = DepTree.getDependencyPath(pred.getId(), r, parents);
-        List<Pair<Integer,Dir>> dpPathArg = DepTree.getDependencyPath(arg.getId(), r, parents);
+        
+        // Add the unsupervised features
+        addZhaoUnsupervisedPredFeats(zhaoPred, zhaoPredLast, zhaoPredNext, feats);
+        addZhaoUnsupervisedArgFeats(zhaoArg, zhaoArgLast, zhaoArgNext, argChildrenTokens, feats);
+        addZhaoUnsupervisedCombinedFeats(linePath, linePathCoNLL, feats);
+    }
 
-        //System.out.println("dpPathPred is ");
-        //System.out.println(dpPathPred);
-        //System.out.println("dpPathArg is ");
-        //System.out.println(dpPathArg);
+    private ArrayList<CoNLL09Token> getTokens(List<Pair<Integer, Dir>> path) {
+        ArrayList<CoNLL09Token> pathTokens = new ArrayList<CoNLL09Token>();
+        for (Pair<Integer,Dir> p : path) {
+            pathTokens.add(sent.get(p.get1()));
+        }
+        return pathTokens;
+    }
+
+    private ArrayList<CoNLL09Token> getTokens(ArrayList<Integer> children) {
+        ArrayList<CoNLL09Token> childrenTokens = new ArrayList<CoNLL09Token>();
+        for (int child : children) {
+            childrenTokens.add(sent.get(child));
+        }
+        return childrenTokens;
+    }
+
+    /*private List<Pair<Integer, Integer>> getZhaoSyntacticConnectionStructures(int predHead, int argHead, List<Pair<Integer, Dir>> predRootPath, List<Pair<Integer, Dir>> argRootPath, ArrayList<Integer> argChildren, ArrayList<Integer> predChildren) {
+        List<Pair<Integer, Integer>> returnList = new ArrayList<Pair<Integer,Integer>>();
+        //Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> argFarNearChildren = 
+        syntacticConnectionFarthestNearestChildren(argHead, argChildren, returnList);
+        // Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> predFarNearChildren = 
+        syntacticConnectionFarthestNearestChildren(predHead, predChildren, returnList);
+        // Pair<Integer,Integer> argSupport = 
+        syntacticConnectionHighLowSupport("n", argRootPath, returnList);
+        //Pair<Integer,Integer> predSupport = 
+        syntacticConnectionHighLowSupport("v", predRootPath, returnList); 
+        //returnList.add(argFarNearChildren.get1());
+        //returnList.add(argFarNearChildren.get2());
+        //returnList.add(predFarNearChildren.get1());
+        //returnList.add(predFarNearChildren.get2());
+        //returnList.add(argSupport);
+        //returnList.add(predSupport);
+        return returnList;
+        
+    }*/
+
+    /*private Pair<Pair<List<Pair<Integer, Dir>>, List<Pair<Integer, Dir>>>, ArrayList<Integer>> 
+    getPathStructures(int pidx, int aidx, CoNLL09Token pred, CoNLL09Token arg, List<Pair<Integer, Dir>> predRootPath, List<Pair<Integer, Dir>> argRootPath) {
+        // Initialize dpPath structures.
+        /* ZHANG:  Assume that dpPathShare starts from a node r', 
+         * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
+/*        Pair<List<Pair<Integer,Dir>>,List<Pair<Integer,Dir>>> dpSharePaths = getdpSharePaths(pred, arg, argRootPath, predRootPath);
+
+        // Initialize linePath structure.
         ArrayList<Integer> linePath = new ArrayList<Integer>();
         int startIdx;
         int endIdx; 
@@ -389,238 +409,39 @@ public class SentFeatureExtractor {
             linePath.add(startIdx);
             startIdx++;
         }
-
-                
-        /* TBD: Family. Two types of children sets for the predicate or argument candidate are considered, 
-         * the first includes all syntactic children (children), the second also includes all but 
-         * excludes the left most and the right most children (noFarChildren). */
+        return new Pair<Pair<List<Pair<Integer, Dir>>, List<Pair<Integer, Dir>>>, ArrayList<Integer>>(dpSharePaths, linePath);
         
-        // Initialize ArrayLists we will use for features.
-        int predLm = predFarNearChildren.get1().get1();
-        CoNLL09Token argLm = sent.get(argFarNearChildren.get1().get1());
-        CoNLL09Token argRm = sent.get(argFarNearChildren.get2().get1());
-        CoNLL09Token argRn = sent.get(argFarNearChildren.get2().get2());
-        ArrayList<CoNLL09Token> argChildrenTokens = new ArrayList<CoNLL09Token>();
-        for (int child : argChildren) {
-            argChildrenTokens.add(sent.get(child));
-        }
-        ArrayList<CoNLL09Token> betweenPathTokens = new ArrayList<CoNLL09Token>();
-        for (Pair<Integer,Dir> p : betweenPath) {
-            betweenPathTokens.add(sent.get(p.get1()));
-        }
-        ArrayList<CoNLL09Token> linePathCoNLL = new ArrayList<CoNLL09Token>();
-        CoNLL09Token token;
-        for (int p : linePath) {
-            token = sent.get(p);
-            linePathCoNLL.add(token);
-        }
+    }*/
 
-        
-        String feat = null;
-        // Add the supervised features
-        if (prm.withSupervision) {
-            // ------- Predicate features (supervised) ------- 
-            // p.currentSense + p.lemma 
-            feats.add(predSense + predLemma);
-            // p.currentSense + p.pos 
-            feats.add(predSense + predPos);
-            // p.currentSense + a.pos 
-            feats.add(predSense + argPos);
-            // p_1 .FEAT1
-            feats.add(sent.get(lastPidx).getFeat().get(0));
-            // p.FEAT2
-            feats.add(predFeats.get(1));
-            // p1 .FEAT3
-            feats.add(sent.get(nextPidx).getFeat().get(2));
-            // TBD:  p.semrm.semdprel  What is this?            
-            // p.lm.dprel
-            feats.add(sent.get(predLm).getDeprel());
-            // p.form + p.children.dprel.bag 
-            ArrayList<String> depPredChildren = new ArrayList<String>();
-            for (Integer child : predChildren) {
-                depPredChildren.add(sent.get(child).getDeprel());
-            }
-            String bagDepPredChildren = bag(depPredChildren).toString();
-            feats.add(predForm + bagDepPredChildren);
-            // p.lemma_n (n = -1, 0) 
-            feats.add(sent.get(lastPidx).getLemma());
-            feats.add(predLemma);
-            // p.lemma + p.lemma1
-            feats.add(predLemma + sent.get(nextPidx).getLemma());
-            // p.pos + p.children.dprel.bag 
-            feats.add(predPos + bagDepPredChildren);
-            
-            // ------- Argument features (supervised) ------- 
-            // a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6 
-            feat = argFeats.get(0) + argFeats.get(2) + argFeats.get(3) + argFeats.get(4) + argFeats.get(5);
-            feats.add(feat);
-            // a_1.FEAT2 + a.FEAT2 
-            feat = sent.get(lastAidx).getFeat().get(1) + argFeats.get(1);
-            feats.add(feat);
-            // a.FEAT3 + a1.FEAT3
-            feat = argFeats.get(2) + sent.get(nextAidx).getFeat().get(2);
-            feats.add(feat);
-            // a.FEAT3 + a.h.FEAT3 
-            feat = sent.get(argHead).getFeat().get(2);
-            feats.add(feat);
-            // a.children.FEAT1.noDup 
-            ArrayList<String> argChildrenFeat1 = new ArrayList<String>();
-            for (CoNLL09Token child : argChildrenTokens) {
-                argChildrenFeat1.add(child.getFeat().get(0));
-            }
-            List<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
-            feat = argChildrenFeat1NoDup.toString();
-            feats.add(feat);
-            // a.children.FEAT3.bag 
-            ArrayList<String> argChildrenFeat3 = new ArrayList<String>();
-            for (CoNLL09Token child : argChildrenTokens) {
-                argChildrenFeat3.add(child.getFeat().get(2));
-            }
-            List<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
-            feat = argChildrenFeat3Bag.toString();
-            feats.add(feat);
-            // a.h.lemma
-            feat = sent.get(argHead).getLemma();
-            feats.add(feat);
-            // a.lm.dprel + a.form
-            feat = argLm.getDeprel();
-            feats.add(feat);
-            // TBD: a.lm_1.lemma
-            // a.lmn.pos (n=0,1) 
-            feat = argLm.getPos();
-            feats.add(feat);
-            // TBD: a.noFarChildren.pos.bag + a.rm.form 
-            // TBD: a.pphead.lemma
-            // a.rm.dprel + a.form
-            feat = argRm.getDeprel() + argForm;
-            feats.add(feat);
-            // TBD: a.rm_1.form 
-            // a.rm.lemma
-            feat = argRm.getLemma();
-            feats.add(feat);
-            // a.rn.dprel + a.form 
-            feat = argRn.getDeprel() + argForm;
-            feats.add(feat);
-            // a.lowSupportVerb.lemma 
-            feat = sent.get(argSupport.get1()).getLemma();
-            feats.add(feat);
-            // a.lemma + a.h.form 
-            feat = argLemma + sent.get(argHead).getForm();
-            feats.add(feat);
-            // a.lemma + a.pphead.form 
-            // a1.lemma
-            feat = sent.get(nextAidx).getLemma();
-            feats.add(feat);
-            // a.pos + a.children.dprel.bag
-            ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
-            for (CoNLL09Token child : argChildrenTokens) {
-                argChildrenDeprel.add(child.getDeprel());
-            }
-            List<String> argChildrenDeprelBag = bag(argChildrenDeprel);
-            feat = argPos + argChildrenDeprelBag.toString();
-            feats.add(feat);
-            
-            // ------- Combined features (supervised) ------- 
-            // a.lemma + p.lemma 
-            feat = argLemma + predLemma;
-            feats.add(feat);
-            // (a:p|dpPath.dprel) + p.FEAT1 
-            // a:p|dpPath.lemma.seq 
-            // a:p|dpPath.lemma.bag 
-
-            ArrayList<String> depRelPath = new ArrayList<String>();
-            ArrayList<String> depRelPathLemma = new ArrayList<String>();
-            for (CoNLL09Token t : betweenPathTokens) {
-                depRelPath.add(t.getDeprel());
-                depRelPathLemma.add(t.getLemma());
-            }
-            feat = depRelPath + predFeats.get(0);
-            feats.add(feat);
-            feat = depRelPathLemma.toString();
-            feats.add(feat);
-            feat = bag(depRelPathLemma).toString();
-            feats.add(feat);
-            
-            // a:p|linePath.FEAT1.bag 
-            // a:p|linePath.lemma.seq 
-            // a:p|linePath.dprel.seq 
-            ArrayList<String> linePathFeat = new ArrayList<String>();
-            ArrayList<String> linePathLemma = new ArrayList<String>();
-            ArrayList<String> linePathDeprel = new ArrayList<String>();
-            for (CoNLL09Token t : linePathCoNLL) {
-                linePathFeat.add(t.getFeat().get(0));
-                linePathLemma.add(t.getLemma());
-                linePathDeprel.add(t.getDeprel());
-            }
-            feats.add(feat);
-            List<String> linePathFeatBag = bag(linePathFeat);
-            feat = linePathFeatBag.toString();
-            feats.add(feat);
-            feat = linePathLemma.toString();
-            feats.add(feat);
-            feat = linePathDeprel.toString();
-            feats.add(feat);
-            ArrayList<String> dpPathLemma = new ArrayList<String>();
-            for (Pair<Integer, Dir> dpP : dpPathArg) {
-                dpPathLemma.add(sent.get(dpP.get1()).getLemma());
-                
-            }
-            // a:p|dpPathArgu.lemma.seq 
-            feat = dpPathLemma.toString();
-            feats.add(feat);
-            // a:p|dpPathArgu.lemma.bag
-            feat = bag(dpPathLemma).toString();
-            feats.add(feat);
-
-            
+  /*  private Pair<List<Pair<Integer,Dir>>,List<Pair<Integer,Dir>>> getdpSharePaths(CoNLL09Token pred, CoNLL09Token arg, List<Pair<Integer, Dir>> argRootPath,
+            List<Pair<Integer, Dir>> predRootPath) {
+        /* Leading two paths to the root from the predicate and the argument, respectively, 
+         * the common part of these two paths will be dpPathShare. */
+     /*   List<Pair<Integer,DepTree.Dir>> dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
+        int i = argRootPath.size() - 1;
+        int j = predRootPath.size() - 1;
+        Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
+        Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
+        while (argP.equals(predP) && i > -1 && j > -1) {
+            dpPathShare.add(argP);
+            argP = argRootPath.get(i);
+            predP = predRootPath.get(j);
+            i--;
+            j--;
         }
+        // Reverse, so path goes towards the root.
+        Collections.reverse(dpPathShare);
+        int r = dpPathShare.get(0).get1();
+        List<Pair<Integer,Dir>> dpPathPred = DepTree.getDependencyPath(pred.getId(), r, parents);
+        List<Pair<Integer,Dir>> dpPathArg = DepTree.getDependencyPath(arg.getId(), r, parents);
+        Pair<List<Pair<Integer,Dir>>,List<Pair<Integer,Dir>>> returnPair = new Pair<List<Pair<Integer, Dir>>, List<Pair<Integer, Dir>>>(dpPathPred, dpPathArg);
+        return returnPair;
         
-        // Add the unsupervised features
-        // ------- Predicate features (unsupervised) ------- 
-         // p.pos_1 + p.pos
-         String feat12 = sent.get(lastPidx).getPpos() + predPos;
-         if (prm.useGoldSyntax) {
-             feat12 = sent.get(lastPidx).getPos() + predPos;
-         }
-         feats.add(feat12);
-         // p.pos1
-         String feat13 = sent.get(nextPidx).getPpos();
-         if (prm.useGoldSyntax) {
-             feat13 = sent.get(nextPidx).getPos();
-         }
-         feats.add(feat13);
-        
+    }*/
 
-        // ------- Argument features (unsupervised) ------- 
-        // a.lm.form
-        feat = argLm.getForm();
-        feats.add(feat);
-        // a_1.form
-        feat = sent.get(lastAidx).getForm();
-        feats.add(feat);
-        // a.form + a1.form
-        feat = argForm + sent.get(nextAidx).getForm();
-        feats.add(feat);
-        // a.form + a.children.pos 
-        List<String> argChildrenPos = new ArrayList<String>();
-        for (CoNLL09Token child : argChildrenTokens) {
-            if (prm.useGoldSyntax) {
-                argChildrenPos.add(child.getPos());
-            } else {
-                argChildrenPos.add(child.getPpos());
-            }
-        }
-        feat = argForm + argChildrenPos.toString();
-        feats.add(feat);
-        // a1.pos + a.pos.seq
-        if (prm.useGoldSyntax) {
-            feat = sent.get(nextAidx).getPos() + argPos;            
-        } else {
-            feat = sent.get(nextAidx).getPpos() + argPos;            
-        }
-        feats.add(feat);
-        
+    private void addZhaoUnsupervisedCombinedFeats(ArrayList<Integer> linePath, ArrayList<CoNLL09Token> linePathCoNLL, BinaryStrFVBuilder feats) {
         // ------- Combined features (unsupervised) ------- 
+        String feat;
         // a:p|linePath.distance 
         feat = Integer.toString(linePath.size());
         feats.add(feat);
@@ -631,6 +452,240 @@ public class SentFeatureExtractor {
         }
         feat = linePathForm.toString();
         feats.add(feat);
+    }
+
+    private void addZhaoUnsupervisedArgFeats(ZhaoObject zhaoArg, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgLast,
+            ArrayList<CoNLL09Token> argChildrenTokens, BinaryStrFVBuilder feats) {
+        // ------- Argument features (unsupervised) ------- 
+        String feat;
+        // a.lm.form
+        feat = sent.get(zhaoArg.getFarLeftChild()).getForm();
+        feats.add(feat);
+        // a_1.form
+        feat = zhaoArgLast.getForm();
+        feats.add(feat);
+        // a.form + a1.form
+        feat = zhaoArg.getForm() + zhaoArgNext.getForm();
+        feats.add(feat);
+        // a.form + a.children.pos 
+        List<String> argChildrenPos = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            if (prm.useGoldSyntax) {
+                argChildrenPos.add(child.getPos());
+            } else {
+                argChildrenPos.add(child.getPpos());
+            }
+        }
+        feat = zhaoArg.getForm() + argChildrenPos.toString();
+        feats.add(feat);
+        // a1.pos + a.pos.seq
+        feat = zhaoArgNext.getPos() + zhaoArg.getPos();
+        feats.add(feat);
+    }
+
+    private void addZhaoUnsupervisedPredFeats(ZhaoObject zhaoPred, ZhaoObject zhaoPredLast, ZhaoObject zhaoPredNext, BinaryStrFVBuilder feats) {
+        // ------- Predicate features (unsupervised) ------- 
+        // p.pos_1 + p.pos
+        String feat12 = zhaoPredLast.getPos() + zhaoPred.getPos();
+        feats.add(feat12);
+        // p.pos1
+        String feat13 = zhaoPredNext.getPos();
+        feats.add(feat13);
+    }
+
+    
+    private void addZhaoSupervisedCombinedFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, BinaryStrFVBuilder feats, ArrayList<CoNLL09Token> betweenPathTokens,
+            ArrayList<CoNLL09Token> linePathCoNLL, List<Pair<Integer, Dir>> dpPathArg) {
+    /*private void addZhaoSupervisedCombinedFeats(String predLemma, String argLemma, List<String> argFeats,
+            List<String> predFeats, BinaryStrFVBuilder feats, ArrayList<CoNLL09Token> betweenPathTokens, ArrayList<CoNLL09Token> linePathCoNLL, List<Pair<Integer, Dir>> dpPathArg) {*/
+        // ------- Combined features (supervised) ------- 
+        String feat;
+        // a.lemma + p.lemma 
+        feat = zhaoArg.getLemma() + zhaoPred.getLemma();
+        feats.add(feat);
+        // (a:p|dpPath.dprel) + p.FEAT1 
+        // a:p|dpPath.lemma.seq 
+        // a:p|dpPath.lemma.bag 
+        ArrayList<String> depRelPath = new ArrayList<String>();
+        ArrayList<String> depRelPathLemma = new ArrayList<String>();
+        for (CoNLL09Token t : betweenPathTokens) {
+            depRelPath.add(t.getDeprel());
+            depRelPathLemma.add(t.getLemma());
+        }
+        feat = depRelPath + zhaoPred.getFeat().get(0);
+        feats.add(feat);
+        feat = depRelPathLemma.toString();
+        feats.add(feat);
+        feat = bag(depRelPathLemma).toString();
+        feats.add(feat);
+        
+        // a:p|linePath.FEAT1.bag 
+        // a:p|linePath.lemma.seq 
+        // a:p|linePath.dprel.seq 
+        ArrayList<String> linePathFeat = new ArrayList<String>();
+        ArrayList<String> linePathLemma = new ArrayList<String>();
+        ArrayList<String> linePathDeprel = new ArrayList<String>();
+        for (CoNLL09Token t : linePathCoNLL) {
+            linePathFeat.add(t.getFeat().get(0));
+            linePathLemma.add(t.getLemma());
+            linePathDeprel.add(t.getDeprel());
+        }
+        feats.add(feat);
+        List<String> linePathFeatBag = bag(linePathFeat);
+        feat = linePathFeatBag.toString();
+        feats.add(feat);
+        feat = linePathLemma.toString();
+        feats.add(feat);
+        feat = linePathDeprel.toString();
+        feats.add(feat);
+        ArrayList<String> dpPathLemma = new ArrayList<String>();
+        for (Pair<Integer, Dir> dpP : dpPathArg) {
+            dpPathLemma.add(sent.get(dpP.get1()).getLemma());
+            
+        }
+        // a:p|dpPathArgu.lemma.seq 
+        feat = dpPathLemma.toString();
+        feats.add(feat);
+        // a:p|dpPathArgu.lemma.bag
+        feat = bag(dpPathLemma).toString();
+        feats.add(feat);
+    }
+
+    private void addZhaoSupervisedArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
+            ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ArrayList<CoNLL09Token> argChildrenTokens, BinaryStrFVBuilder feats) {
+    
+    /*private void addZhaoSupervisedArgFeats(int argHead, String argForm, String argLemma, String argPos, List<String> argFeats,
+            ArrayList<CoNLL09Token> argChildrenTokens, CoNLL09Token argLm, CoNLL09Token argRm, CoNLL09Token argRn,
+            int lastAidx, int nextAidx, BinaryStrFVBuilder feats) {*/
+        String feat;
+        // ------- Argument features (supervised) ------- 
+        String a1 = zhaoArg.getFeat().get(0);
+        String a2 = zhaoArg.getFeat().get(1);
+        String a3 = zhaoArg.getFeat().get(2);
+        String a4 = zhaoArg.getFeat().get(3);
+        String a5 = zhaoArg.getFeat().get(4);
+        String a6 = zhaoArg.getFeat().get(5);
+        String last_a1 = zhaoArgLast.getFeat().get(0);
+        String last_a2 = zhaoArgLast.getFeat().get(1);
+        String next_a1 = zhaoArgNext.getFeat().get(0);
+        String next_a2 = zhaoArgNext.getFeat().get(1);
+        String next_a3 = zhaoArgNext.getFeat().get(2);
+        CoNLL09Token argLm = sent.get(zhaoArg.getFarLeftChild());
+        CoNLL09Token argRm = sent.get(zhaoArg.getFarRightChild());
+        CoNLL09Token argRn = sent.get(zhaoArg.getNearRightChild());
+        
+        // a.FEAT1 + a.FEAT3 + a.FEAT4 + a.FEAT5 + a.FEAT6 
+        feat = a1 + a3 + a4 + a5 + a6;
+        feats.add(feat);
+        // a_1.FEAT2 + a.FEAT2 
+        feat = last_a2 + a2;
+        feats.add(feat);
+        // a.FEAT3 + a1.FEAT3
+        feat = a3 + next_a3;
+        feats.add(feat);
+        // a.FEAT3 + a.h.FEAT3 
+        feat = sent.get(zhaoArg.getParent()).getFeat().get(2);
+        feats.add(feat);
+        // a.children.FEAT1.noDup 
+        ArrayList<String> argChildrenFeat1 = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenFeat1.add(child.getFeat().get(0));
+        }
+        List<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
+        feat = argChildrenFeat1NoDup.toString();
+        feats.add(feat);
+        // a.children.FEAT3.bag 
+        ArrayList<String> argChildrenFeat3 = new ArrayList<String>();
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenFeat3.add(child.getFeat().get(2));
+        }
+        List<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
+        feat = argChildrenFeat3Bag.toString();
+        feats.add(feat);
+        // a.h.lemma
+        feat = sent.get(zhaoArg.getParent()).getLemma();
+        feats.add(feat);
+        // a.lm.dprel + a.form
+        feat = argLm.getDeprel();
+        feats.add(feat);
+        // TBD: a.lm_1.lemma
+        // a.lmn.pos (n=0,1) 
+        feat = argLm.getPos();
+        feats.add(feat);
+        // TBD: a.noFarChildren.pos.bag + a.rm.form 
+        // TBD: a.pphead.lemma
+        // a.rm.dprel + a.form
+        feat = argRm + zhaoArg.getForm();
+        feats.add(feat);
+        // TBD: a.rm_1.form 
+        // a.rm.lemma
+        feat = argRm.getLemma();
+        feats.add(feat);
+        // a.rn.dprel + a.form 
+        feat = argRn.getDeprel() + zhaoArg.getForm();
+        feats.add(feat);
+        // a.lowSupportVerb.lemma 
+        feat = sent.get(zhaoArg.getLowSupport()).getLemma();
+        feats.add(feat);
+        // a.lemma + a.h.form 
+        feat = zhaoArg.getLemma() + sent.get(zhaoArg.getParent()).getForm();
+        feats.add(feat);
+        // a.lemma + a.pphead.form 
+        // a1.lemma
+        feat = zhaoArgNext.getLemma();
+        feats.add(feat);
+        // a.pos + a.children.dprel.bag
+        ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
+        for (CoNLL09Token child : argChildrenTokens) {
+            argChildrenDeprel.add(child.getDeprel());
+        }
+        List<String> argChildrenDeprelBag = bag(argChildrenDeprel);
+        feat = zhaoArg.getPos() + argChildrenDeprelBag.toString();
+        feats.add(feat);
+        
+    }
+
+    private void addZhaoSupervisedPredFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast, ZhaoObject zhaoPredNext, BinaryStrFVBuilder feats) {
+        // ------- Predicate features (supervised) ------- 
+        // p.currentSense + p.lemma 
+        feats.add(zhaoPred.getPred() + zhaoPred.getLemma());
+        // p.currentSense + p.pos 
+        feats.add(zhaoPred.getPred() + zhaoPred.getPos());
+        // p.currentSense + a.pos 
+        feats.add(zhaoPred.getPred() + zhaoArg.getPos());
+        // p_1 .FEAT1
+        if (zhaoPredLast.getFeat() == null) {
+            feats.add(zhaoPredLast.getForm());
+        } else {
+            feats.add(zhaoPredLast.getFeat().get(0));
+        }
+        // p.FEAT2
+        System.out.println(zhaoPred.getFeat().get(0));
+        feats.add(zhaoPred.getFeat().get(1));
+        // p1.FEAT3
+        if (zhaoPredNext.getFeat() == null) {
+            feats.add(zhaoPredNext.getForm());
+        } else {
+            feats.add(zhaoPredNext.getFeat().get(2));
+        }
+        // TBD:  p.semrm.semdprel  What is this?            
+        // p.lm.dprel        
+        feats.add(sent.get(zhaoPred.getFarLeftChild()).getDeprel());
+        // p.form + p.children.dprel.bag 
+        ArrayList<String> depPredChildren = new ArrayList<String>();
+        for (Integer child : zhaoPred.getChildren()) {
+            depPredChildren.add(sent.get(child).getDeprel());
+        }
+        String bagDepPredChildren = bag(depPredChildren).toString();
+        feats.add(zhaoPred.getForm() + bagDepPredChildren);
+        // p.lemma_n (n = -1, 0) 
+        feats.add(zhaoPredLast.getLemma());
+        feats.add(zhaoPred.getLemma());
+        // p.lemma + p.lemma1
+        feats.add(zhaoPred.getLemma() + zhaoPredNext.getLemma());
+        // p.pos + p.children.dprel.bag 
+        feats.add(zhaoPred.getPos() + bagDepPredChildren);
+        
     }
 
     public List<String> bag(ArrayList<String> elements) {
@@ -658,84 +713,6 @@ public class SentFeatureExtractor {
       Collections.sort(list);
       return list;
     }
-    
-    public Pair<Pair<Integer,Integer>,Pair<Integer,Integer>> syntacticConnectionFarthestNearestChildren(int head, ArrayList<Integer> children) {
-        // Farthest and nearest child to the left; farthest and nearest child to the right.
-        ArrayList<Integer> leftChildren = new ArrayList<Integer>();
-        ArrayList<Integer> rightChildren = new ArrayList<Integer>();
-        // Go through children in order
-        for (int child : children) {
-            if (child < head) {
-                leftChildren.add(child);
-            } else if (child > head) {
-                    rightChildren.add(child);
-                }
-              // Case where child == head skipped; neither right nor left.
-            }
-            
-        //System.out.println("leftChildren is ");
-        //System.out.println(leftChildren);
-        //System.out.println("rightChildren is ");
-        //System.out.println(rightChildren);
-        int farLeftChild = -2;
-        int farRightChild = -2;
-        int closeLeftChild = -2;
-        int closeRightChild = -2;
-        if (!leftChildren.isEmpty()) {
-            farLeftChild = leftChildren.get(0);
-            closeLeftChild = leftChildren.get(leftChildren.size() - 1);
-        }
-    
-        if (!rightChildren.isEmpty()) {
-            farRightChild = rightChildren.get(rightChildren.size() - 1);
-            closeRightChild = rightChildren.get(0);
-        }
-        Pair<Integer,Integer> distLeftChildren = new Pair<Integer,Integer>(farLeftChild, closeLeftChild);
-        Pair<Integer,Integer> distRightChildren = new Pair<Integer,Integer>(farRightChild, closeRightChild);
-    
-        return new Pair<Pair<Integer, Integer>,Pair<Integer, Integer>>(distLeftChildren, distRightChildren);
-
-    }
-    
-    
-    public Pair<Integer,Integer> syntacticConnectionHighLowSupport(String support,  List<Pair<Integer,Dir>> rootPath) {
-        // Support features
-        String parentPos;
-        boolean haveLow = false;
-        int lowSupport = -2;
-        int highSupport = -2;
-        int i;
-      
-        for (Pair<Integer,Dir> a : rootPath) {
-            i = a.get1();
-            if (i == -1) {
-                break;
-            }
-            
-            if (!prm.useGoldSyntax) {
-                parentPos = sent.get(i).getPpos();
-            } else {
-                parentPos = sent.get(i).getPos();
-            }
-            if (parentPos.equals(support)) {
-                if (!haveLow) {
-                    haveLow = true;
-                    lowSupport = i;
-                    highSupport = i;
-                } else {
-                    highSupport = i;
-                }
-            }
-            
-        }
-        return new Pair<Integer, Integer>(lowSupport, highSupport);
-
-        
-    }
-    
-    
-        
-        
     
     private String decideForm(String wordForm, int idx) {
         String cleanWord = cs.normalize.clean(wordForm);
