@@ -12,11 +12,17 @@ import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.util.Pair;
 
 public class ZhaoObject extends CoNLL09Token {
+    
+    /* Feature constructor based on CoNLL 09:
+     * "Multilingual Dependency Learning:
+     * A Huge Feature Engineering Method to Semantic Dependency Parsing"
+     * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou */    
 
     private SentFeatureExtractorPrm prm;
     private CoNLL09Sentence sent;
-    private ArrayList<Integer> children;
+    private int idx;
     private int parent;
+    private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
     private Integer nearLeftChild;
@@ -31,28 +37,39 @@ public class ZhaoObject extends CoNLL09Token {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     private String pos;
+    private List<String> feat;
     
     public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, SentFeatureExtractorPrm prm, String support) {
         super(sent.get(idx));
+        /* Call CoNLL09Token so that following ZHANG we can get Word Property features.
+         * Includes:
+         * 1. word form, 
+         * 2. lemma, 
+         * 3. part-of-speech tag (PoS), 
+         * 4. FEAT (additional morphological features), 
+         * 5. syntactic dependency label (dprel), 
+         * 6. semantic dependency label (semdprel) 
+         * 7. and characters (char) in the word form (only suitable for Chinese and Japanese). */
+        this.idx = idx;
         this.prm = prm;
         this.sent = sent;
         this.parents = parents;
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         CoNLL09Token word = sent.get(idx);
-        String form = word.getForm();
-        String lemma = word.getLemma();
         if (prm.useGoldSyntax) {
             this.pos = word.getPos();
         } else {
             this.pos = word.getPpos();            
         }
-        List<String> feats = word.getFeat();
-        String sense = word.getPred();
-        System.out.println(idx);
         setRootPath(idx);
         setParent(word);
         setChildren(parents);
+        /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
+         * and high(low) support verb or noun.
+         * From the predicate or the argument to the syntactic root along with the syntactic tree, 
+         * the first verb(noun) that is met is called as the low support verb(noun), 
+         * and the nearest one to the root is called as the high support verb(noun). */
         setFarthestNearestChildren();
         setHighLowSupport(support);
     }
@@ -62,6 +79,10 @@ public class ZhaoObject extends CoNLL09Token {
         this.parents = parents;
         this.linePath = new ArrayList<Integer>();
         this.dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
+        /* ZHANG:  Path. There are two basic types of path between the predicate and the argument candidates. 
+         * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
+         * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
+         * considering the syntactic root, dpPath is the full path in the syntactic tree. */
         setBetweenPath(pidx, aidx);
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
@@ -77,20 +98,38 @@ public class ZhaoObject extends CoNLL09Token {
    
     @Override 
     public String getPos() {
-        return this.pos;
+        return pos;
+    }
+    
+    @Override
+    public List<String> getFeat() {
+        return feat;
+    }
+    
+    public void setFeat() {
+        feat = this.getFeat();
+        if (feat == null) {
+            feat = new ArrayList<String>();
+            for (int i = 0; i < 6; i++) {
+                feat.add("NO_MORPH");
+            }
+        } else if (feat.size() < 6) {
+            for (int i = feat.size() - 1 ; i < 6; i++) {
+                feat.add("NO_MORPH");
+            }
+        }
     }
     
     private List<Pair<Integer, Dir>> getRootPath() {
-        return this.rootPath;
+        return rootPath;
     }
     
     private void setRootPath(int idx) {
-        System.out.println(parents);
         this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
     }
 
     public int getParent() {
-        return this.parent;
+        return parent;
     }
     
     public void setParent(CoNLL09Token t) {
@@ -102,7 +141,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public ArrayList<Integer> getChildren() {
-        return this.children;
+        return children;
     }
 
     public void setChildren(int[] parents) {
@@ -131,31 +170,38 @@ public class ZhaoObject extends CoNLL09Token {
         ArrayList<Integer> rightChildren = new ArrayList<Integer>();
         // Go through children in order
         for (int child : children) {
-            if (child < parent) {
+            if (child < idx) {
                 leftChildren.add(child);
-            } else if (child > parent) {
-                    rightChildren.add(child);
-                }
-              // Case where child == head skipped; neither right nor left.
+            } else if (child > idx) {
+                rightChildren.add(child);
             }
+              // Case where child == head skipped; neither right nor left.
+        }
             
         if (!leftChildren.isEmpty()) {
             this.farLeftChild = leftChildren.get(0);
             this.nearLeftChild = leftChildren.get(leftChildren.size() - 1);
+        } else {
+            this.farLeftChild = idx;
+            this.nearLeftChild = idx;
         }
     
         if (!rightChildren.isEmpty()) {
             this.farRightChild = rightChildren.get(rightChildren.size() - 1);
             this.nearRightChild = rightChildren.get(0);
+        } else {
+            this.farRightChild = idx;
+            this.nearRightChild = idx;
         }
+
     }
     
     public int getHighSupport() {
-        return this.highSupport;
+        return highSupport;
     }
     
     public int getLowSupport() {
-        return this.lowSupport;
+        return lowSupport;
     }
     
     public void setHighLowSupport(String support) {
@@ -170,10 +216,10 @@ public class ZhaoObject extends CoNLL09Token {
                 break;
             }
             
-            if (!prm.useGoldSyntax) {
-                parentPos = sent.get(i).getPpos();
-            } else {
+            if (prm.useGoldSyntax) {
                 parentPos = sent.get(i).getPos();
+            } else {
+                parentPos = sent.get(i).getPpos();
             }
             if (parentPos.equals(support)) {
                 if (!haveLow) {
@@ -190,7 +236,7 @@ public class ZhaoObject extends CoNLL09Token {
     
     
     public List<Pair<Integer,Dir>> getBetweenPath() {
-        return this.betweenPath;
+        return betweenPath;
     }
     
     public void setBetweenPath(int pidx, int aidx) {
@@ -198,7 +244,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public List<Pair<Integer, Dir>> getDpPathPred() {
-        return this.dpPathPred;
+        return dpPathPred;
     }
     
     public List<Pair<Integer, Dir>> getDpPathArg() {
@@ -206,11 +252,11 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public List<Pair<Integer, Dir>> getDpPathShare() {
-        return this.dpPathShare;
+        return dpPathShare;
     }
     
     private void setDpPathShare(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg) {
-        /* Leading two paths to the root from the predicate and the argument, respectively, 
+        /* ZHANG:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
         List<Pair<Integer, Dir>> argRootPath = zhaoArg.getRootPath();
         List<Pair<Integer, Dir>> predRootPath = zhaoPred.getRootPath();
@@ -219,21 +265,23 @@ public class ZhaoObject extends CoNLL09Token {
         Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
         Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
         while (argP.equals(predP) && i > -1 && j > -1) {
-            dpPathShare.add(argP);
+            this.dpPathShare.add(argP);
             argP = argRootPath.get(i);
             predP = predRootPath.get(j);
             i--;
             j--;
         }
+        /* ZHANG:  Assume that dpPathShare starts from a node r', 
+         * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
         // Reverse, so path goes towards the root.
-        Collections.reverse(dpPathShare);
-        int r = dpPathShare.get(0).get1();
+        Collections.reverse(this.dpPathShare);
+        int r = this.dpPathShare.get(0).get1();
         this.dpPathPred = DepTree.getDependencyPath(pidx, r, parents);
         this.dpPathArg = DepTree.getDependencyPath(aidx, r, parents);
     }
     
     public ArrayList<Integer> getLinePath() {
-        return this.linePath;
+        return linePath;
     }
     
     public void setLinePath(int pidx, int aidx) {

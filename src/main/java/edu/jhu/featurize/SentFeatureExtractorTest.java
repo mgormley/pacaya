@@ -53,7 +53,17 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(prm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
-        fe.createFeatureSet(0, 1);
+        BinaryStrFVBuilder feats;
+        BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
+        for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                feats = fe.createFeatureSet(i, j);
+                for (String f : feats) {
+                    allFeats.add(f);
+                }
+            }
+        }
+        System.out.println(allFeats);
         
         //Check that POS is not gold POS
     }
