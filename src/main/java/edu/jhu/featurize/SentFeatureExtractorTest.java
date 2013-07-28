@@ -57,14 +57,34 @@ public class SentFeatureExtractorTest {
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
-                feats = fe.createFeatureSet(i, j);
-                for (String f : feats) {
-                    allFeats.add(f);
-                }
+                fe.addZhaoPairFeatures(i, j, allFeats);
             }
         }
-        System.out.println(allFeats);
-        
+        for (String f : allFeats) {
+            System.out.println(f);
+        }
+        //Check that POS is not gold POS
+    }
+    
+    @Test
+    public void testAddNaradowskyFeatures() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
+        prm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(prm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+        BinaryStrFVBuilder feats;
+        BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
+        for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                fe.addNaradowskyPairFeatures(i, j, allFeats);
+            }
+        }
+        for (String f : allFeats) {
+            System.out.println(f);
+        }
         //Check that POS is not gold POS
     }
     

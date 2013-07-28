@@ -22,6 +22,9 @@ public class ZhaoObject extends CoNLL09Token {
     private CoNLL09Sentence sent;
     private int idx;
     private int parent;
+    private String pos;
+    private List<String> feat;
+    private CoNLL09Token word;
     private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
@@ -36,8 +39,6 @@ public class ZhaoObject extends CoNLL09Token {
     private ArrayList<Pair<Integer, Dir>> dpPathShare;
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
-    private String pos;
-    private List<String> feat;
     
     public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, SentFeatureExtractorPrm prm, String support) {
         super(sent.get(idx));
@@ -56,15 +57,16 @@ public class ZhaoObject extends CoNLL09Token {
         this.parents = parents;
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
-        CoNLL09Token word = sent.get(idx);
+        this.word = sent.get(idx);
         if (prm.useGoldSyntax) {
             this.pos = word.getPos();
         } else {
             this.pos = word.getPpos();            
         }
-        setRootPath(idx);
-        setParent(word);
-        setChildren(parents);
+        setFeat();
+        setRootPath();
+        setParent();
+        setChildren();
         /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
          * and high(low) support verb or noun.
          * From the predicate or the argument to the syntactic root along with the syntactic tree, 
@@ -91,6 +93,7 @@ public class ZhaoObject extends CoNLL09Token {
         
     public ZhaoObject(String input) {
         super(-1, input, input, input, input, input, null, null, -2, -2, input, input, false, input, null);
+        setFeat();
     }
     
     
@@ -124,7 +127,7 @@ public class ZhaoObject extends CoNLL09Token {
         return rootPath;
     }
     
-    private void setRootPath(int idx) {
+    private void setRootPath() {
         this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
     }
 
@@ -132,11 +135,11 @@ public class ZhaoObject extends CoNLL09Token {
         return parent;
     }
     
-    public void setParent(CoNLL09Token t) {
+    public void setParent() {
         if (prm.useGoldSyntax) {
-            this.parent = t.getHead() - 1;
+            this.parent = word.getHead() - 1;
         } else {
-            this.parent = t.getPhead() - 1;
+            this.parent = word.getPhead() - 1;
         }
     }
     
@@ -144,7 +147,7 @@ public class ZhaoObject extends CoNLL09Token {
         return children;
     }
 
-    public void setChildren(int[] parents) {
+    public void setChildren() {
         this.children = DepTree.getChildrenOf(parents, parent);
     }    
     
