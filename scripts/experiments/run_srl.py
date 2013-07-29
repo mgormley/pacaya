@@ -147,7 +147,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         # TODO: This removal of DEPREL and DEPREL should happen prior to these SRL experiments.
         for data in datas:
             data.update(trainType='CONLL_2009', testType='CONLL_2009')
-            if data.get("dataset").find("-unsup") != -1 or data.find("-semi") != -1:
+            if data.get("dataset").find("-unsup") != -1 or data.get("dataset").find("-semi") != -1:
                 data.set("removeDeprel", True, incl_name=False)
             else:
                 data.set("removeDeprel", False, incl_name=False)
