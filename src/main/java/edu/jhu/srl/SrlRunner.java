@@ -133,6 +133,12 @@ public class SrlRunner {
     public static int featureHashMod = 524288; // 2^19
     @Opt(hasArg = true, description = "Whether to include unsupported features.")
     public static boolean includeUnsupportedFeatures = false;
+    @Opt(hasArg = true, description = "Whether to add the Simple features.")
+    public static boolean useSimpleFeats = true;
+    @Opt(hasArg = true, description = "Whether to add the Naradowsky features.")
+    public static boolean useNaradFeats = true;
+    @Opt(hasArg = true, description = "Whether to add the Zhao features.")
+    public static boolean useZhaoFeats = true;
     
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -362,6 +368,9 @@ public class SrlRunner {
         prm.fePrm.language = language;
         prm.fePrm.useGoldSyntax = useGoldSyntax;
         prm.fePrm.normalizeWords = normalizeWords;
+        prm.fePrm.useSimpleFeats = useSimpleFeats;
+        prm.fePrm.useNaradFeats = useNaradFeats;
+        prm.fePrm.useZhaoFeats = useZhaoFeats;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         prm.includeUnsupportedFeatures = includeUnsupportedFeatures;

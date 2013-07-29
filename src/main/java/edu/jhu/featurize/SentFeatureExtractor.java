@@ -54,6 +54,12 @@ public class SentFeatureExtractor {
         public boolean biasOnly = false;
         public boolean isProjective = false;
         public boolean withSupervision = true;
+        /** Whether to add the "Simple" features. */
+        public boolean useSimpleFeats = true;
+        /** Whether to add the "Naradowsky" features. */
+        public boolean useNaradFeats = true;
+        /** Whether to add the "Zhao" features. */
+        public boolean useZhaoFeats = true;
     }
     
     // Parameters for feature extraction.
@@ -110,9 +116,15 @@ public class SentFeatureExtractor {
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
-        addSimpleSoloFeatures(idx, feats);
-        addNaradowskySoloFeatures(idx, feats);
-        addZhaoSoloFeatures(idx, feats);
+        if (prm.useSimpleFeats) {
+            addSimpleSoloFeatures(idx, feats);
+        }
+        if (prm.useNaradFeats) {
+            addNaradowskySoloFeatures(idx, feats);
+        }
+        if (prm.useZhaoFeats) {
+            addZhaoSoloFeatures(idx, feats);
+        }
         return feats;
     }
     
@@ -135,9 +147,17 @@ public class SentFeatureExtractor {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
-        addSimplePairFeatures(pidx, aidx, feats);
-        addNaradowskyPairFeatures(pidx, aidx, feats);
-        addZhaoPairFeatures(pidx, aidx, feats);
+        
+        if (prm.useSimpleFeats) {
+            addSimplePairFeatures(pidx, aidx, feats);
+        }
+        if (prm.useNaradFeats) {
+            addNaradowskyPairFeatures(pidx, aidx, feats);
+            
+        }
+        if (prm.useZhaoFeats) {
+            addZhaoPairFeatures(pidx, aidx, feats);
+        }
         // feats = getNuguesFeatures();
         return feats;
     }

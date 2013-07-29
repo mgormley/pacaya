@@ -91,7 +91,10 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         // representation of the given assignment to the given
         // variables.
         FeatureVector fv = new FeatureVector(obsFeats.size());
-        String vcStr = ft + "=" + varConfig.getConfigIndex();
+        String vcStr = ft + "_";
+        for (Var v : varConfig.getVars()) {
+            vcStr += varConfig.getStateName(v);
+        }
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }

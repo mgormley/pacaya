@@ -6,6 +6,7 @@ import java.io.Writer;
 import java.util.List;
 
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Sort;
 
 /**
  * A model in the exponential family for a factor graph .
@@ -65,7 +66,7 @@ public class FgModel implements Serializable {
     public void printModel(Writer writer) throws IOException {
         for (int k=0; k<params.length; k++) {
             writer.write(alphabet.lookupObject(k).toString());
-            writer.write("=");
+            writer.write("\t");
             writer.write(String.format("%.13g", params[k]));
             writer.write("\n");
         }
