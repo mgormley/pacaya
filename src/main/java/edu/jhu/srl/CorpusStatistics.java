@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -45,7 +45,7 @@ public class CorpusStatistics {
     private Map<String, MutableInt> words = new HashMap<String, MutableInt>();
     private Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
 
-    public BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet<Label>());
+    public SrlBerkeleySignatureBuilder sig = new SrlBerkeleySignatureBuilder(new Alphabet<Label>());
     public Normalizer normalize;
 
     private SentFeatureExtractorPrm prm;
