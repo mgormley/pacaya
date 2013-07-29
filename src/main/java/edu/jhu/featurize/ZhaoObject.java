@@ -278,9 +278,16 @@ public class ZhaoObject extends CoNLL09Token {
          * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
         // Reverse, so path goes towards the root.
         Collections.reverse(this.dpPathShare);
-        int r = this.dpPathShare.get(0).get1();
-        this.dpPathPred = DepTree.getDependencyPath(pidx, r, parents);
-        this.dpPathArg = DepTree.getDependencyPath(aidx, r, parents);
+        int r;
+        if (this.dpPathShare.isEmpty()) {
+            r = -1;
+            this.dpPathPred = new ArrayList<Pair<Integer, Dir>>();
+            this.dpPathArg = new ArrayList<Pair<Integer, Dir>>();
+        } else {
+            r = this.dpPathShare.get(0).get1();
+            this.dpPathPred = DepTree.getDependencyPath(pidx, r, parents);
+            this.dpPathArg = DepTree.getDependencyPath(aidx, r, parents);
+        }
     }
     
     public ArrayList<Integer> getLinePath() {
