@@ -16,6 +16,7 @@ import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
@@ -40,12 +41,13 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;        
-        CorpusStatistics cs = new CorpusStatistics(fePrm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
         Alphabet<String> obsAlphabet = new Alphabet<String>();
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.biasOnly = true;        
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = -1; // Disable feature hashing.
@@ -75,12 +77,15 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        //fePrm.biasOnly = true;
-        CorpusStatistics cs = new CorpusStatistics(fePrm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
         Alphabet<String> obsAlphabet = new Alphabet<String>();
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.useNaradFeats = true;
+        fePrm.useSimpleFeats = false;
+        fePrm.useZhaoFeats = false;
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs, obsAlphabet);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = 10; // Enable feature hashing
@@ -94,8 +99,7 @@ public class SrlFeatureExtractorTest {
             }            
         }
         
-        assertEquals(62, obsAlphabet.size());
-        // assertEquals(62*(3*2* + 2 + 3), alphabet.size());
+        assertTrue(10 < obsAlphabet.size());
         System.out.println(alphabet);
         assertEquals(10, alphabet.size());
     }

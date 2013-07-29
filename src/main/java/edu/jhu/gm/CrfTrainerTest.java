@@ -208,7 +208,8 @@ public class CrfTrainerTest {
         prm.regularizer = null;
         
         CrfTrainer trainer = new CrfTrainer(prm);
-        return trainer.train(model, data);
+        trainer.train(model, data);
+        return model;
     }
 
 }

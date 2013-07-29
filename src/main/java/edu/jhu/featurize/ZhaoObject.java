@@ -8,7 +8,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.Pair;
 
 public class ZhaoObject extends CoNLL09Token {
@@ -18,7 +18,7 @@ public class ZhaoObject extends CoNLL09Token {
      * A Huge Feature Engineering Method to Semantic Dependency Parsing"
      * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou */    
 
-    private SentFeatureExtractorPrm prm;
+    private CorpusStatistics cs;
     private CoNLL09Sentence sent;
     private int idx;
     private int parent;
@@ -40,7 +40,7 @@ public class ZhaoObject extends CoNLL09Token {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     
-    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, SentFeatureExtractorPrm prm, String support) {
+    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs, String support) {
         super(sent.get(idx));
         /* Call CoNLL09Token so that following ZHANG we can get Word Property features.
          * Includes:
@@ -52,13 +52,13 @@ public class ZhaoObject extends CoNLL09Token {
          * 6. semantic dependency label (semdprel) 
          * 7. and characters (char) in the word form (only suitable for Chinese and Japanese). */
         this.idx = idx;
-        this.prm = prm;
+        this.cs = cs;
         this.sent = sent;
         this.parents = parents;
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         this.word = sent.get(idx);
-        if (prm.useGoldSyntax) {
+        if (cs.prm.useGoldSyntax) {
             this.pos = word.getPos();
         } else {
             this.pos = word.getPpos();            
@@ -136,7 +136,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public void setParent() {
-        if (prm.useGoldSyntax) {
+        if (cs.prm.useGoldSyntax) {
             this.parent = word.getHead() - 1;
         } else {
             this.parent = word.getPhead() - 1;
@@ -219,7 +219,7 @@ public class ZhaoObject extends CoNLL09Token {
                 break;
             }
             
-            if (prm.useGoldSyntax) {
+            if (cs.prm.useGoldSyntax) {
                 parentPos = sent.get(i).getPos();
             } else {
                 parentPos = sent.get(i).getPpos();

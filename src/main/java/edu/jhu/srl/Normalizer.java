@@ -1,5 +1,6 @@
 package edu.jhu.srl;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -12,7 +13,9 @@ import java.util.regex.Pattern;
  * @author mmitchell
  * @author mgormley
  */
-public class Normalizer {
+public class Normalizer implements Serializable {
+
+    private static final long serialVersionUID = -5340912176675070866L;
 
     static {
         setChars();

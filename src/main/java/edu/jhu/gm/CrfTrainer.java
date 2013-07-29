@@ -37,7 +37,7 @@ public class CrfTrainer {
     }
     
     // TODO: finish this method.
-    public FgModel train(FgModel model, FgExamples data) {
+    public void train(FgModel model, FgExamples data) {
         Function objective = new CrfObjective(model.getNumParams(), data, prm.infFactory);
         if (prm.regularizer != null) {
             prm.regularizer.setNumDimensions(model.getNumParams());
@@ -47,7 +47,6 @@ public class CrfTrainer {
         // TODO: how to initialize the model parameters?
         double[] params = prm.maximizer.maximize(objective, initial);
         model.setParams(params);
-        return model;
     }
     
 }

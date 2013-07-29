@@ -18,7 +18,9 @@ import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.FactorGraph.FgEdge;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
@@ -212,6 +214,10 @@ public class CrfObjectiveTest {
         List<CoNLL09Sentence> sents = getList(sent);
         
         System.out.println("Done reading.");
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(sents);
+        
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
@@ -220,7 +226,7 @@ public class CrfObjectiveTest {
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
         FgExamples data = builder.getData(sents);
         
         System.out.println("Num features: " + alphabet.size());

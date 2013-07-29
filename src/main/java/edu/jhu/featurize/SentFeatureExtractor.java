@@ -39,17 +39,6 @@ public class SentFeatureExtractor {
      * @author mmitchell
      */
     public static class SentFeatureExtractorPrm {
-        public boolean useGoldSyntax = false;
-        public String language = "es";
-        /**
-         * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
-         * we'll just put it here for now.)
-         */
-        public int cutoff = 3;
-        /**
-         * Whether to normalize and clean words.
-         */
-        public boolean normalizeWords = false;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
         public boolean isProjective = false;
@@ -83,7 +72,7 @@ public class SentFeatureExtractor {
     
     // Package private for testing.
     int[] getParents(CoNLL09Sentence sent) {
-        if (prm.useGoldSyntax) {
+        if (cs.prm.useGoldSyntax) {
             return sent.getParentsFromHead();
         } else {
             return sent.getParentsFromPhead();
@@ -166,7 +155,7 @@ public class SentFeatureExtractor {
     public void addSimpleSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         String wordForm = sent.get(idx).getForm();
         System.out.println("word is " + wordForm);
-        Set <String> a = sig.getSimpleUnkFeatures(wordForm, idx, prm.language);
+        Set <String> a = sig.getSimpleUnkFeatures(wordForm, idx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
         }
@@ -178,11 +167,11 @@ public class SentFeatureExtractor {
         String argForm = sent.get(aidx).getForm();
         System.out.println("pred is " + predForm);
         System.out.println("arg is " + argForm);
-        Set <String> a = sig.getSimpleUnkFeatures(predForm, pidx, prm.language);
+        Set <String> a = sig.getSimpleUnkFeatures(predForm, pidx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
         }
-        Set <String> b = sig.getSimpleUnkFeatures(argForm, aidx, prm.language);
+        Set <String> b = sig.getSimpleUnkFeatures(argForm, aidx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
         }
@@ -193,7 +182,7 @@ public class SentFeatureExtractor {
         CoNLL09Token word = sent.get(idx);
         String wordForm = decideForm(word.getForm(), idx);
         String wordPos;
-        if (prm.useGoldSyntax) {
+        if (cs.prm.useGoldSyntax) {
             wordPos = word.getPos();
         } else {
             wordPos = word.getPpos();
@@ -221,7 +210,7 @@ public class SentFeatureExtractor {
         String argForm = decideForm(arg.getForm(), aidx);
         String predPos = pred.getPos();
         String argPos = arg.getPos();
-        if (!prm.useGoldSyntax) {
+        if (!cs.prm.useGoldSyntax) {
             predPos = pred.getPpos();
             argPos = arg.getPpos();
         } 
@@ -280,8 +269,8 @@ public class SentFeatureExtractor {
     }    
     
     public void addZhaoPairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
-        ZhaoObject zhaoPred = new ZhaoObject(pidx, parents, sent, prm, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(aidx, parents, sent, prm, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(pidx, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(aidx, parents, sent, cs, "n");
         ZhaoObject zhaoPredArgPair = new ZhaoObject(pidx, aidx, zhaoPred, zhaoArg, parents);
         ZhaoObject zhaoPredLast;
         ZhaoObject zhaoPredNext;
@@ -291,13 +280,13 @@ public class SentFeatureExtractor {
         ZhaoObject zhaoArgParent;
         
         if (pidx - 1 > 0) {
-            zhaoPredLast = new ZhaoObject(pidx - 1, parents, sent, prm, "v");
+            zhaoPredLast = new ZhaoObject(pidx - 1, parents, sent, cs, "v");
         } else {
             zhaoPredLast = new ZhaoObject("BEGIN");
         }
         
         if (pidx + 1 < sent.size()) {
-            zhaoPredNext = new ZhaoObject(pidx + 1, parents, sent, prm, "v");
+            zhaoPredNext = new ZhaoObject(pidx + 1, parents, sent, cs, "v");
         } else {
             zhaoPredNext = new ZhaoObject("END");
         }
@@ -305,17 +294,17 @@ public class SentFeatureExtractor {
         if (zhaoPred.getParent() < 0) {
             zhaoPredParent = new ZhaoObject("BEGIN");
         } else {
-            zhaoPredParent = new ZhaoObject(zhaoPred.getParent(), parents, sent, prm, "v");
+            zhaoPredParent = new ZhaoObject(zhaoPred.getParent(), parents, sent, cs, "v");
         }
         
         if (aidx - 1 > 0) {
-            zhaoArgLast = new ZhaoObject(aidx - 1, parents, sent, prm, "n");
+            zhaoArgLast = new ZhaoObject(aidx - 1, parents, sent, cs, "n");
         } else {
             zhaoArgLast = new ZhaoObject("BEGIN");
         }
         
         if (aidx + 1 < sent.size()) {
-            zhaoArgNext = new ZhaoObject(aidx + 1, parents, sent, prm, "n");
+            zhaoArgNext = new ZhaoObject(aidx + 1, parents, sent, cs, "n");
         } else {
             zhaoArgNext = new ZhaoObject("END");
         }
@@ -323,7 +312,7 @@ public class SentFeatureExtractor {
         if (zhaoArg.getParent() < 0) {
             zhaoArgParent = new ZhaoObject("BEGIN");
         } else {
-            zhaoArgParent = new ZhaoObject(zhaoArg.getParent(), parents, sent, prm, "v");
+            zhaoArgParent = new ZhaoObject(zhaoArg.getParent(), parents, sent, cs, "v");
         }
         
         ArrayList<Integer> predChildren = zhaoPred.getChildren();
@@ -411,7 +400,7 @@ public class SentFeatureExtractor {
         // a.form + a.children.pos 
         List<String> argChildrenPos = new ArrayList<String>();
         for (CoNLL09Token child : argChildrenTokens) {
-            if (prm.useGoldSyntax) {
+            if (cs.prm.useGoldSyntax) {
                 argChildrenPos.add(child.getPos());
             } else {
                 argChildrenPos.add(child.getPpos());
@@ -710,7 +699,7 @@ public class SentFeatureExtractor {
         String cleanWord = cs.normalize.clean(wordForm);
 
         if (!cs.knownWords.contains(cleanWord)) {
-            String unkWord = cs.sig.getSignature(cleanWord, idx, prm.language);
+            String unkWord = cs.sig.getSignature(cleanWord, idx, cs.prm.language);
             unkWord = cs.normalize.escape(unkWord);
             if (!cs.knownUnks.contains(unkWord)) {
                 unkWord = "UNK";

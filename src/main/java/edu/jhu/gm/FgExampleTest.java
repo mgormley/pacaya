@@ -11,7 +11,9 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
@@ -31,6 +33,10 @@ public class FgExampleTest {
         
         List<CoNLL09Sentence> sents = getList(sent);
         
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(sents);
+        
         System.out.println("Done reading.");
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
@@ -41,7 +47,7 @@ public class FgExampleTest {
 
         prm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
         FgExamples data = builder.getData(sents);
         
         FgExample ex = data.get(0);

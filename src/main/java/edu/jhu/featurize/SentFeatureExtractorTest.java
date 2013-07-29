@@ -1,8 +1,8 @@
 package edu.jhu.featurize;
 
 import static edu.jhu.util.Utilities.getList;
-import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +15,7 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
@@ -25,23 +26,24 @@ public class SentFeatureExtractorTest {
     public void testGetParentsAndUseGoldSyntax() {
         CoNLL09Sentence sent = getDogConll09Sentence();
         Alphabet<String> alphabet = new Alphabet<String>();
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         {
             // Test with gold syntax.
-            SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
-            prm.useGoldSyntax = true;
-            CorpusStatistics cs = new CorpusStatistics(prm);
+            CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+            csPrm.useGoldSyntax = true;
+            CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
             int[] goldParents = fe.getParents(sent);
             assertArrayEquals(new int[] { 1, 2, -1, 2 }, goldParents);
         }
         {
             // Test without gold syntax.
-            SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
+            CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
             prm.useGoldSyntax = false;
             CorpusStatistics cs = new CorpusStatistics(prm);
             cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
             int[] predParents = fe.getParents(sent);
             assertArrayEquals(new int[] { 2, 0, -1, 2 }, predParents);
         }
@@ -51,11 +53,12 @@ public class SentFeatureExtractorTest {
     public void testAddZhaoFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
         Alphabet<String> alphabet = new Alphabet<String>();
-        SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
-        prm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(prm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
-        SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         BinaryStrFVBuilder feats;
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
@@ -73,14 +76,15 @@ public class SentFeatureExtractorTest {
     public void testZhaoPathFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         Alphabet<String> alphabet = new Alphabet<String>();
-        SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
-        prm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(prm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
-        SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, prm, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, prm, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs, "n");
         ZhaoObject zhaoLink = new ZhaoObject(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
@@ -94,11 +98,12 @@ public class SentFeatureExtractorTest {
     public void testAddNaradowskyFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
         Alphabet<String> alphabet = new Alphabet<String>();
-        SentFeatureExtractorPrm prm = new SentFeatureExtractorPrm();
-        prm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(prm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
-        SentFeatureExtractor fe = new SentFeatureExtractor(prm, sent, cs, alphabet);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
 
         
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);

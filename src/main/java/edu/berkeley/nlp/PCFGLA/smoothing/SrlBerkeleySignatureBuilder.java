@@ -1,5 +1,6 @@
 package edu.berkeley.nlp.PCFGLA.smoothing;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,8 +19,9 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  * @author mmitchell
  */
-public class SrlBerkeleySignatureBuilder {
+public class SrlBerkeleySignatureBuilder implements Serializable {
 
+    private static final long serialVersionUID = 7489745353488039306L;
     private Alphabet<Label> lexAlphabet;
 
     public SrlBerkeleySignatureBuilder(Alphabet<Label> lexAlphabet) {

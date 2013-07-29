@@ -36,6 +36,7 @@ import edu.jhu.gm.data.ErmaWriter;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
@@ -167,26 +168,29 @@ public class SrlRunner {
         }
         
         // Get a model.
-        FgModel model = null;
+        SrlFgModel model = null;
         Alphabet<Feature> alphabet;
+        CorpusStatistics cs;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
-            model = (FgModel) Files.deserialize(modelIn);
+            model = (SrlFgModel) Files.deserialize(modelIn);
             alphabet = model.getAlphabet();
+            cs = model.getCs();
         } else {
             alphabet = new Alphabet<Feature>();
+            cs = new CorpusStatistics(getCorpusStatisticsPrm());
         }
         
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(alphabet, trainType, train, trainGoldOut, trainMaxNumSentences,
+            FgExamples data = getData(alphabet, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name);
             
             if (model == null) {
-                model = new FgModel(alphabet);
+                model = new SrlFgModel(alphabet, cs);
                 if (initParams == InitParams.RANDOM) {
                     // Fill the model parameters will values randomly drawn from ~ Normal(0, 1).
                     Gaussian.nextDoubleArray(0.0, 1.0, model.getParams());
@@ -202,7 +206,7 @@ public class SrlRunner {
             log.info("Training model.");
             CrfTrainerPrm prm = getCrfTrainerPrm();
             CrfTrainer trainer = new CrfTrainer(prm);
-            model = trainer.train(model, data);
+            trainer.train(model, data);
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
@@ -227,7 +231,7 @@ public class SrlRunner {
             // Test the model on test data.
             alphabet.stopGrowth();
             String name = "test";
-            FgExamples data = getData(alphabet, testType, test, testGoldOut, testMaxNumSentences,
+            FgExamples data = getData(alphabet, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name);
 
             // Decode and evaluate the test data.
@@ -236,7 +240,7 @@ public class SrlRunner {
         }
     }
 
-    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, File goldFile,
+    private FgExamples getData(Alphabet<Feature> alphabet, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
@@ -292,13 +296,15 @@ public class SrlRunner {
                 }
             }
             
+            if (!cs.isInitialized()) {
+                log.info("Initializing corpus statistics.");
+                cs.init(sents);
+            }
+            
             log.info("Building factor graphs and extracting features.");
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet);
-            data = builder.getData(sents);
-        } else if (dataType == DatasetType.ERMA){
-            ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
-            data = er.read(featureFileIn, dataFile, alphabet);        
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+            data = builder.getData(sents);  
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }
@@ -363,17 +369,22 @@ public class SrlRunner {
         prm.fgPrm.unaryFactors = unaryFactors;
         prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
         // Feature extraction.
-        prm.fePrm.cutoff = cutoff;
         prm.fePrm.biasOnly = biasOnly;
-        prm.fePrm.language = language;
-        prm.fePrm.useGoldSyntax = useGoldSyntax;
-        prm.fePrm.normalizeWords = normalizeWords;
         prm.fePrm.useSimpleFeats = useSimpleFeats;
         prm.fePrm.useNaradFeats = useNaradFeats;
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         prm.includeUnsupportedFeatures = includeUnsupportedFeatures;
+        return prm;
+    }
+
+    private static CorpusStatisticsPrm getCorpusStatisticsPrm() {
+        CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
+        prm.cutoff = cutoff;
+        prm.language = language;
+        prm.useGoldSyntax = useGoldSyntax;
+        prm.normalizeWords = normalizeWords;
         return prm;
     }
     
