@@ -220,11 +220,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
                             # So, increasing to 37 roles should require a 5x increase (though we see a 2x).
                             # Adding the global factor should require a 5x increase.
-                            base_work_mem_megs = 5*1024
-                            if not normalizeRoleNames:
-                                base_work_mem_megs *= 3
-                            if useProjDepTreeFactor:
-                                base_work_mem_megs *= 3
+                            if not normalizeRoleNames and useProjDepTreeFactor:
+                                base_work_mem_megs = 5*3*3*1024
+                            elif useProjDepTreeFactor:
+                                base_work_mem_megs = 5*3*3*1024
+                            elif not normalizeRoleNames:
+                                base_work_mem_megs = 5*3*1024
+                            else:
+                                base_work_mem_megs = 5*1024
                             exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                         exps.append(exp)
             # Drop all but 3 experiments for a fast run.
