@@ -175,6 +175,7 @@ public class SrlFgExamplesBuilder {
             RoleVar roleVar = sfg.getRoleVar(parent, child);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {
                 int roleNameIdx = roleVar.getState(roleName);
+                // TODO: This isn't quite right...we should really store the actual role name here.
                 if (roleNameIdx == -1) {
                     vc.put(roleVar, CorpusStatistics.UNKNOWN_ROLE);
                 } else {
