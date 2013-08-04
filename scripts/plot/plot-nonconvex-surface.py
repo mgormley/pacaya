@@ -29,7 +29,7 @@ def generate2(X, Y, phi, beta):
     return Z
 
 # --- Parameters ---
-outfile = '/Users/mgormley/research/dep_parse/papers/coe_2013_presentation/fig/nonconvex-surface.pdf'
+outfile = '/Users/mgormley/research/parsing/papers/acl_2013_presentation/fig/nonconvex-surface.pdf'
 # Labels.
 title = ''
 xlabel = ''
