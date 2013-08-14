@@ -63,7 +63,7 @@ public class ZhaoObject extends CoNLL09Token {
         } else {
             this.pos = word.getPpos();            
         }
-        setFeat();
+        setFeat(idx);
         setRootPath();
         setParent();
         setChildren();
@@ -93,7 +93,7 @@ public class ZhaoObject extends CoNLL09Token {
         
     public ZhaoObject(String input) {
         super(-1, input, input, input, input, input, null, null, -2, -2, input, input, false, input, null);
-        setFeat();
+        setFeat(idx);
     }
     
     
@@ -109,15 +109,16 @@ public class ZhaoObject extends CoNLL09Token {
         return feat;
     }
     
-    public void setFeat() {
-        feat = this.getFeat();
-        if (feat == null) {
-            feat = new ArrayList<String>();
+    public void setFeat(Integer idx) {
+        feat = new ArrayList<String>(6);
+        List<String> coNLLFeats = sent.get(idx).getFeat();
+        if (coNLLFeats == null) {
             for (int i = 0; i < 6; i++) {
                 feat.add("NO_MORPH");
             }
-        } else if (feat.size() < 6) {
-            for (int i = feat.size() - 1 ; i < 6; i++) {
+        } else {
+            feat.addAll(coNLLFeats);
+            for (int i = feat.size() ; i < 6; i++) {
                 feat.add("NO_MORPH");
             }
         }
@@ -243,7 +244,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public void setBetweenPath(int pidx, int aidx) {
-        this.betweenPath = DepTree.getDependencyPath(aidx, pidx, parents);
+        this.betweenPath = DepTree.getDependencyPath(pidx, aidx, parents);
     }
     
     public List<Pair<Integer, Dir>> getDpPathPred() {
