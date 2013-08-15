@@ -264,6 +264,33 @@ public class SentFeatureExtractor {
         }
     }
 
+    public void addDependencyPathFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
+        ZhaoObject zhaoPred = new ZhaoObject(pidx, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(aidx, parents, sent, cs, "n");
+        ZhaoObject zhaoPredArgPair = new ZhaoObject(pidx, aidx, zhaoPred, zhaoArg, parents);
+        List<Pair<Integer, Dir>> betweenPath = zhaoPredArgPair.getBetweenPath();
+        // a:p|dpPath.lemma.seq 
+        // a:p|dpPath.lemma.bag 
+        ArrayList<String> depRelPath = new ArrayList<String>();
+        ArrayList<String> depRelPathWord = new ArrayList<String>();
+        ArrayList<CoNLL09Token> betweenPathTokens = getTokens(betweenPath);
+        for (CoNLL09Token t : betweenPathTokens) {
+            if (t == null) {
+                depRelPath.add("WALL");
+                depRelPathWord.add("WALL");
+            } else {
+                depRelPath.add(t.getDeprel());
+                depRelPathWord.add(t.getForm());
+            }
+        }
+        /*feat = StringUtils.join(depRelPath, "_")  + "_" +  zhaoPred.getFeat().get(0);
+        feats.add(feat);
+        feat = StringUtils.join(depRelPathLemma, "_");
+        feats.add(feat);
+        feat = StringUtils.join(bag(depRelPathLemma), "_");
+        feats.add(feat);*/
+        
+    }
     public void addZhaoSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         // TODO:
     }    
@@ -327,7 +354,7 @@ public class SentFeatureExtractor {
         List<Pair<Integer, Dir>> dpPathArg = zhaoPredArgPair.getDpPathArg();
         ArrayList<Integer> linePath = zhaoPredArgPair.getLinePath();
         
-        ArrayList<CoNLL09Token> argChildrenTokens = getTokens(argChildren);                
+        ArrayList<CoNLL09Token> argChildrenTokens = getTokens(argChildren);
         ArrayList<CoNLL09Token> betweenPathTokens = getTokens(betweenPath);
         ArrayList<CoNLL09Token> linePathCoNLL = getTokens(linePath);
         
