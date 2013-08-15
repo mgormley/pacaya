@@ -34,6 +34,7 @@ import edu.jhu.util.Alphabet;
 public class SrlFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
+        public final Integer min = 3;
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
@@ -41,7 +42,7 @@ public class SrlFgExamplesBuilder {
         public boolean includeUnsupportedFeatures = false;
     }
     
-    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class); 
+    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
 
     private SrlFgExampleBuilderPrm prm;
     private Alphabet<Feature> alphabet;
@@ -61,8 +62,54 @@ public class SrlFgExamplesBuilder {
         List<CoNLL09Sentence> sents = reader.readAll();
         return getData(sents);
     }
+    
+    
+    public Alphabet<Feature> preprocess(List<CoNLL09Sentence> sents) {
+       
+        // Don't actually use obsAlphabet here.
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
+        
+        for (int i=0; i<sents.size(); i++) {
+            CoNLL09Sentence sent = sents.get(i);
+            if (i % 1000 == 0 && i > 0) {
+                log.debug("Built " + i + " examples...");
+            }
+            
+            // Precompute a few things.
+            SrlGraph srlGraph = sent.getSrlGraph();
+            
+            Set<Integer> knownPreds = getKnownPreds(srlGraph);
+            
+            // Construct the factor graph.
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            // Get the variable assignments given in the training data.
+            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
+
+            FgExample ex = new FgExample(sfg, trainConfig);
+            
+            // Create a feature extractor for this example.
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
+            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, alphabet, sentFeatExt);
+            // So we don't have to compute the features again for this example.
+            featExts.add(featExtractor);
+            
+            // Cache only the features observed in training data.
+            ex.cacheLatFeats(sfg, trainConfig, featExtractor);
+        }
+        Integer count;
+        Alphabet<Feature> newAlphabet = new Alphabet<Feature>();
+        for (Feature o : alphabet.getObjects()) {
+            count = alphabet.lookupIndexIncrement(o);   
+            if (count > prm.min) {
+                newAlphabet.lookupIndexIncrement(o);
+            }
+        }
+        return newAlphabet;
+    }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
+        System.out.println(alphabet);
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         

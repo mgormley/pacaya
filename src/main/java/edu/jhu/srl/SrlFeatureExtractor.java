@@ -103,7 +103,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {
                 String fname = vcStr + "_" + obsFeat;
-                int fidx = alphabet.lookupIndex(new Feature(fname));
+                int fidx = alphabet.lookupIndexIncrement(new Feature(fname));
                 if (fidx != -1) {
                     fv.add(fidx, 1.0);
                 }
@@ -120,7 +120,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
                     hash += prm.featureHashMod;
                 }
                 fname = Integer.toString(hash);
-                int fidx = alphabet.lookupIndex(new Feature(fname));
+                int fidx = alphabet.lookupIndexIncrement(new Feature(fname));
                 if (fidx != -1) {
                     int revHash = reverseHashCode(fname);
                     if (revHash < 0) {

@@ -106,6 +106,31 @@ public class SrlFgExamplesBuilderTest {
         assertEquals(18, vc.size());
     }
 
+    @Test
+    public void testPreprocess() throws Exception {
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();        
+
+        InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
+        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
+        List<CoNLL09Sentence> sents = cr.readSents(1);
+        CorpusStatistics.normalizeRoleNames(sents);
+
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(sents);
+
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.biasOnly = true;
+        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        prm.fePrm = fePrm;
+        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.alwaysIncludeLinkVars = true;
+        SrlFgExamplesBuilder processer = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        alphabet = processer.preprocess(sents);
+        alphabet.stopGrowth();
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        builder.getData(sents);
+    }
 
     @Test
     public void testLinkTrainAssignment() throws Exception {
