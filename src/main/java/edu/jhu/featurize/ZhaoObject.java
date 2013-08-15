@@ -22,7 +22,6 @@ public class ZhaoObject extends CoNLL09Token {
     private CoNLL09Sentence sent;
     private int idx;
     private int parent;
-    private String pos;
     private List<String> feat;
     private CoNLL09Token word;
     private ArrayList<Integer> children;
@@ -39,6 +38,7 @@ public class ZhaoObject extends CoNLL09Token {
     private ArrayList<Pair<Integer, Dir>> dpPathShare;
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
+    private ArrayList<Integer> noFarChildren;
     
     public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs, String support) {
         super(sent.get(idx));
@@ -58,11 +58,6 @@ public class ZhaoObject extends CoNLL09Token {
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         this.word = sent.get(idx);
-        if (cs.prm.useGoldSyntax) {
-            this.pos = word.getPos();
-        } else {
-            this.pos = word.getPpos();            
-        }
         setFeat(idx);
         setRootPath();
         setParent();
@@ -74,6 +69,11 @@ public class ZhaoObject extends CoNLL09Token {
          * and the nearest one to the root is called as the high support verb(noun). */
         setFarthestNearestChildren();
         setHighLowSupport(support);
+        /* ZHANG: Family. Two types of children sets for the predicate or argument candidate are considered, 
+         * the first includes all syntactic children (children), the second also includes all but 
+         * excludes the left most and the right most children (noFarChildren). */
+        this.noFarChildren = new ArrayList<Integer>();
+        setNoFarChildren();
     }
 
     public ZhaoObject(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg, int[] parents) {
@@ -88,7 +88,6 @@ public class ZhaoObject extends CoNLL09Token {
         setBetweenPath(pidx, aidx);
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
-        
     }
         
     public ZhaoObject(String input) {
@@ -98,12 +97,7 @@ public class ZhaoObject extends CoNLL09Token {
     
     
     // ------------------------ Getters and Setters ------------------------ //
-   
-    @Override 
-    public String getPos() {
-        return pos;
-    }
-    
+       
     @Override
     public List<String> getFeat() {
         return feat;
@@ -174,6 +168,7 @@ public class ZhaoObject extends CoNLL09Token {
         return nearRightChild;
     }
     
+    
     public void setFarthestNearestChildren() {
         // Farthest and nearest child to the left; farthest and nearest child to the right.
         ArrayList<Integer> leftChildren = new ArrayList<Integer>();
@@ -204,6 +199,15 @@ public class ZhaoObject extends CoNLL09Token {
             this.nearRightChild = idx;
         }
 
+    }
+    
+    public ArrayList<Integer> getNoFarChildren() {
+        return noFarChildren;
+    }
+    
+    public void setNoFarChildren() {
+        this.noFarChildren.add(nearLeftChild);
+        this.noFarChildren.add(nearRightChild);
     }
     
     public int getHighSupport() {

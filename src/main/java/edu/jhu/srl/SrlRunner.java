@@ -140,7 +140,9 @@ public class SrlRunner {
     public static boolean useNaradFeats = true;
     @Opt(hasArg = true, description = "Whether to add the Zhao features.")
     public static boolean useZhaoFeats = true;
-    
+    @Opt(hasArg = true, description = "Whether to add dependency path features.")
+    public static boolean useDepPathFeats = true;
+
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
     public static String language = "es";
@@ -373,6 +375,7 @@ public class SrlRunner {
         prm.fePrm.useSimpleFeats = useSimpleFeats;
         prm.fePrm.useNaradFeats = useNaradFeats;
         prm.fePrm.useZhaoFeats = useZhaoFeats;
+        prm.fePrm.useDepPathFeats = useDepPathFeats;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         prm.includeUnsupportedFeatures = includeUnsupportedFeatures;

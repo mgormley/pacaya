@@ -122,7 +122,7 @@ public class SentFeatureExtractorTest {
         zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
         
         predPos = zhaoPred.getPos();
-        argPos = zhaoArg.getPos();
+        argPos = zhaoArg.getPpos();
         
         assertEquals(predPos,"p");
         assertEquals(argPos,"WRONG");
