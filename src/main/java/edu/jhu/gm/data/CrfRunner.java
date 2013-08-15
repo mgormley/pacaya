@@ -135,7 +135,7 @@ public class CrfRunner {
             log.info("Training model.");
             CrfTrainerPrm prm = getCrfTrainerPrm();
             CrfTrainer trainer = new CrfTrainer(prm);
-            model = trainer.train(model, data);
+            trainer.train(model, data);
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.

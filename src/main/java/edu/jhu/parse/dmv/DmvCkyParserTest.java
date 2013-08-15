@@ -242,7 +242,7 @@ public class DmvCkyParserTest {
      */
     @Test
     public void testSpeed() {
-        int trials = 1000;
+        int trials = 100;
         int n = 30;
         String sent = "";
         for (int i=0; i<n; i++) {

@@ -41,11 +41,11 @@ zlabel = ''
 xmin, xmax = -1.0, 1.0
 ymin, ymax = -1.0, 1.0
 # Contour params.
-add_contours = True
+add_contours = False
 contour_scaler = 0.2
 # Density of points (which determines smoothness) and visible grid lines.
 num_points = 100.0
-num_lines = 20.0
+num_lines = 40.0
 stride = int(num_points / num_lines)
 
 # Create data.
@@ -76,7 +76,7 @@ if fig is None:
 
 # Create surface.
 ax = fig.gca(projection='3d')
-ax.plot_surface(X, Y, Z, rstride=stride, cstride=stride, alpha=0.3)
+ax.plot_surface(X, Y, Z, rstride=stride, cstride=stride, alpha=1.0, cmap=cm.coolwarm)
 
 if add_contours:
     # Push the limits out slightly for a clear view of the contours.
@@ -109,7 +109,7 @@ info = open(infofile, 'w')
 info.write(str(size_inches[0]) + ' ' + str(size_inches[1]))
 info.close()
 
-fig.savefig(outfile, transparent=True, format='pdf', pad_inches=0.0, bbox_inches='tight')
+fig.savefig(outfile, transparent=False, format='pdf', pad_inches=0.0, bbox_inches='tight')
 
 # TODO: try saving/setting the viewing angle:
 # http://stackoverflow.com/questions/12904912/how-to-set-camera-position-for-3d-plots-using-python-matplotlib

@@ -1,5 +1,6 @@
 package edu.jhu.srl;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
+import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -27,8 +28,27 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  */
 
-public class CorpusStatistics {
+public class CorpusStatistics implements Serializable {
+    
+    /**
+     * Parameters for CorpusStatistics.
+     */
+    public static class CorpusStatisticsPrm implements Serializable {
+        private static final long serialVersionUID = 1848012037725581753L;
+        public boolean useGoldSyntax = false;
+        public String language = "es";
+        /**
+         * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
+         * we'll just put it here for now.)
+         */
+        public int cutoff = 3;
+        /**
+         * Whether to normalize and clean words.
+         */
+        public boolean normalizeWords = false;
+    }
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
 
     public Set<String> knownWords = new HashSet<String>();
@@ -37,27 +57,33 @@ public class CorpusStatistics {
 
     public List<String> linkStateNames;
     public List<String> roleStateNames;
-    public Set<String> knownRoles = new HashSet<String>();
-    public Set<String> knownLinks = new HashSet<String>();
+    private Set<String> knownRoles = new HashSet<String>();
+    private Set<String> knownLinks = new HashSet<String>();
 
-    public Integer maxSentLength = 0;
+    public int maxSentLength = 0;
 
     private Map<String, MutableInt> words = new HashMap<String, MutableInt>();
     private Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
 
-    public BerkeleySignatureBuilder sig = new BerkeleySignatureBuilder(new Alphabet<Label>());
+    public SrlBerkeleySignatureBuilder sig;
     public Normalizer normalize;
 
-    private SentFeatureExtractorPrm prm;
+    public CorpusStatisticsPrm prm;
+    private boolean initialized;
     
     public static final Pattern dash = Pattern.compile("-");
+    public static final String UNKNOWN_ROLE = "argUNK";
 
-    public CorpusStatistics(SentFeatureExtractorPrm prm) {
+    public CorpusStatistics(CorpusStatisticsPrm prm) {
         this.prm = prm;
-        this.normalize = new Normalizer(prm.normalizeWords); 
+        this.normalize = new Normalizer(prm.normalizeWords);
+        this.sig = new SrlBerkeleySignatureBuilder(new Alphabet<Label>());
+        initialized = false;
     }
 
     public void init(Iterable<CoNLL09Sentence> cr) {
+        initialized = true;
+        
         // TODO: Currently, we build but just discard the bigrams map.
         Map<Set<String>, MutableInt> bigrams = new HashMap<Set<String>, MutableInt>();
         
@@ -67,6 +93,7 @@ public class CorpusStatistics {
         knownLinks.add("True");
         knownLinks.add("False");
         knownUnks.add("UNK");
+        knownRoles.add(UNKNOWN_ROLE);
         for (CoNLL09Sentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
@@ -198,7 +225,7 @@ public class CorpusStatistics {
             }
         }
         return knownHash;
-    }
+    }    
 
     @Override
     public String toString() {
@@ -207,6 +234,10 @@ public class CorpusStatistics {
                 + ",\n     roleStateNames=" + roleStateNames + ",\n     knownRoles=" + knownRoles
                 + ",\n     knownLinks=" + knownLinks + ",\n     maxSentLength=" + maxSentLength + ",\n     words="
                 + words + ",\n     unks=" + unks + "]";
+    }
+
+    public boolean isInitialized() {
+        return initialized;
     }
     
 }

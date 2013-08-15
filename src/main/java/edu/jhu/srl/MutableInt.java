@@ -1,5 +1,7 @@
 package edu.jhu.srl;
 
+import java.io.Serializable;
+
 /**
  * A mutable integer for use in hash maps where the value is a count, to be
  * incremented.
@@ -7,7 +9,7 @@ package edu.jhu.srl;
  * @author mmitchell
  * @author mgormley
  */
-public class MutableInt {
+public class MutableInt implements Serializable {
 
     int value = 1; // Start at 1 since we're counting
 

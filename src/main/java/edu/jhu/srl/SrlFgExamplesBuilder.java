@@ -41,10 +41,12 @@ public class SrlFgExamplesBuilder {
 
     private FeatureTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
+    private CorpusStatistics cs;
     
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
         this.fts = fts;
+        this.cs = cs;
     }
 
     public FgExamples getData(SimpleAnnoSentenceCollection sents) {
@@ -56,10 +58,7 @@ public class SrlFgExamplesBuilder {
         return getData(sents);
     }
 
-    public FgExamples getData(List<CoNLL09Sentence> sents) {
-        CorpusStatistics cs = new CorpusStatistics(prm.fePrm);
-        cs.init(sents);
-        
+    public FgExamples getData(List<CoNLL09Sentence> sents) {        
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
@@ -106,7 +105,7 @@ public class SrlFgExamplesBuilder {
         // Add all the training data assignments to the link variables, if they are not latent.
         //
         // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
-        int[] parents = prm.fePrm.useGoldSyntax ? sent.getParentsFromHead() : sent.getParentsFromPhead();
+        int[] parents = cs.prm.useGoldSyntax ? sent.getParentsFromHead() : sent.getParentsFromPhead();
         for (int i=-1; i<sent.size(); i++) {
             for (int j=0; j<sent.size(); j++) {
                 if (j != i && sfg.getLinkVar(i, j) != null) {
@@ -143,7 +142,13 @@ public class SrlFgExamplesBuilder {
             
             RoleVar roleVar = sfg.getRoleVar(parent, child);
             if (roleVar != null && roleVar.getType() != VarType.LATENT) {
-                vc.put(roleVar, roleName);
+                int roleNameIdx = roleVar.getState(roleName);
+                // TODO: This isn't quite right...we should really store the actual role name here.
+                if (roleNameIdx == -1) {
+                    vc.put(roleVar, CorpusStatistics.UNKNOWN_ROLE);
+                } else {
+                    vc.put(roleVar, roleNameIdx);
+                }
             }
         }
                 

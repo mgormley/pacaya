@@ -1,6 +1,6 @@
 package edu.jhu.srl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +11,7 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * Unit tests for {@link CorpusStatisticsTest}.
@@ -38,9 +38,8 @@ public class CorpusStatisticsTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(2);
         CorpusStatistics.normalizeRoleNames(sents);
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;  
-        CorpusStatistics cs = new CorpusStatistics(fePrm);
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
 
         System.out.println(expectedCsToString);

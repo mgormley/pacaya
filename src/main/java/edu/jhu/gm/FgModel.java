@@ -12,6 +12,7 @@ import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.dist.Gaussian;
+import edu.jhu.util.Sort;
 
 /**
  * A model in the exponential family for a factor graph .
