@@ -2,7 +2,7 @@ package edu.jhu.gm;
 
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.map.IntDoubleHashMap;
-import edu.jhu.util.Pair;
+import edu.jhu.prim.util.Pair;
 import edu.jhu.util.Sort;
 
 /**
