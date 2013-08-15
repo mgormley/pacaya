@@ -12,9 +12,15 @@ public class Feature implements Serializable {
 
     private static final long serialVersionUID = -5575331602054552730L;
     private String name;
+    private boolean isBias = false;
     
     public Feature(String name) {
         this.name = name;
+    }
+
+    public Feature(String name, boolean b) {
+        this.name = name;
+        setBias(b);
     }
 
     @Override
@@ -45,6 +51,14 @@ public class Feature implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+    
+    public boolean isBiasFeature() {
+        return isBias;
+    }
+    
+    public void setBias(boolean bias) {
+        isBias = bias;
     }
             
 }

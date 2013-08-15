@@ -102,7 +102,7 @@ public class SrlFgExamplesBuilder {
         Alphabet<Feature> newAlphabet = new Alphabet<Feature>();
         for (Feature o : alphabet.getObjects()) {
             count = alphabet.lookupIndexIncrement(o);
-            if (count > prm.fePrm.min || o.toString().endsWith("BIAS_FEATURE")) {
+            if (count > prm.fePrm.min || o.isBiasFeature()) {
                 newAlphabet.lookupIndexIncrement(o);
             }
         }

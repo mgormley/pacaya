@@ -28,7 +28,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
-        public int featureHashMod = -1; //524288; // 2^19
+        public int featureHashMod = 524288; // 2^19
     }
     
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
@@ -97,6 +97,35 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         }
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
+        }
+        
+        /* Add Bias features */
+        if (prm.featureHashMod <= 0) {
+            // Just use the features as-is.
+            int fidx = alphabet.lookupIndexIncrement(new Feature(vcStr + "_BIAS_FEATURE", true));
+            if (fidx != -1) {
+                fv.add(fidx, 1.0);
+            }
+        } else {
+            // Apply the feature-hashing trick.
+            // Using the fvb makes unreadable feature names, but is faster.
+            int bfidx = alphabet.lookupIndexIncrement(new Feature(vcStr + "_BIAS_FEATURE", true));
+            String fname = vcStr + "_" + bfidx;
+            int hash = fname.hashCode();
+            hash = hash % prm.featureHashMod;
+            if (hash < 0) {
+                hash += prm.featureHashMod;
+            }
+            fname = Integer.toString(hash);
+            int fidx = alphabet.lookupIndexIncrement(new Feature(fname, true));
+            if (fidx != -1) {
+                int revHash = reverseHashCode(fname);
+                if (revHash < 0) {
+                    fv.add(fidx, -1.0);
+                } else {
+                    fv.add(fidx, 1.0);
+                }
+            }
         }
         
         if (prm.featureHashMod <= 0) {
