@@ -43,13 +43,11 @@ public class SentFeatureExtractor {
     
     private final CoNLL09Sentence sent;
     private final CorpusStatistics cs;
-    private Alphabet<String> alphabet;
         
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;
-        this.alphabet = alphabet;
     }
 
     public int getSentSize() {
@@ -72,7 +70,7 @@ public class SentFeatureExtractor {
      * @param idx The position of a word in the sentence.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int idx) {
+    public BinaryStrFVBuilder createFeatureSet(int idx, Alphabet<String> alphabet) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
@@ -97,7 +95,7 @@ public class SentFeatureExtractor {
      * @param aidx The "child" position.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
+    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx, Alphabet<String> alphabet) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }

@@ -31,6 +31,11 @@ public class Lambda {
     }
         
     /* -------------------- Doubles ---------------------- */
+
+    /** A unary operator on doubles. */
+    public interface LambdaUnaryOpDouble {
+        public double call(double v);
+    }
     
     /** A binary operator on doubles. */
     public interface LambdaBinOpDouble {

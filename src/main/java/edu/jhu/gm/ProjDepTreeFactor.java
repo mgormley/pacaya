@@ -245,4 +245,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return this;
     }
 
+    @Override
+    public Object getTemplateKey() {
+        return ProjDepTreeFactor.class;
+    }
+
 }

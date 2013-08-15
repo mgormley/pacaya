@@ -1,6 +1,5 @@
 package edu.jhu.srl;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,8 +13,8 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.CrfFeatureExtractor;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
@@ -24,7 +23,6 @@ import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.Alphabet;
 
 /**
  * Factory for FgExamples.
@@ -37,18 +35,16 @@ public class SrlFgExamplesBuilder {
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
-        /** Whether to include unsupported features. */
-        public boolean includeUnsupportedFeatures = false;
     }
     
     private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class); 
 
-    private Alphabet<Feature> alphabet;
+    private FeatureTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
     
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts) {
         this.prm = prm;
-        this.alphabet = alphabet;
+        this.fts = fts;
     }
 
     public FgExamples getData(SimpleAnnoSentenceCollection sents) {
@@ -63,11 +59,8 @@ public class SrlFgExamplesBuilder {
     public FgExamples getData(List<CoNLL09Sentence> sents) {
         CorpusStatistics cs = new CorpusStatistics(prm.fePrm);
         cs.init(sents);
-
-        Alphabet<String> obsAlphabet = new Alphabet<String>();
-        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         
-        FgExamples data = new FgExamples(alphabet);
+        FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -84,38 +77,13 @@ public class SrlFgExamplesBuilder {
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
 
-            FgExample ex = new FgExample(sfg, trainConfig);
-            
             // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, alphabet, sentFeatExt);
-            // So we don't have to compute the features again for this example.
-            featExts.add(featExtractor);
-            
-            // Cache only the features observed in training data.
-            ex.cacheLatFeats(sfg, trainConfig, featExtractor);
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+            CrfFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt);
+                        
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor);
             data.add(ex);
         }
-        
-        if (!prm.includeUnsupportedFeatures) {
-            alphabet.stopGrowth();
-        }
-
-        // Cache features for all the other variable assignments.
-        for (int i=0; i<data.size(); i++) {
-            if (i % 1000 == 0 && i > 0) {
-                log.debug("Cached features for " + i + " examples...");
-            }
-            FgExample ex = data.get(i);
-            CoNLL09Sentence sent = sents.get(i);
-            SrlGraph srlGraph = sent.getSrlGraph();
-            SrlFactorGraph sfg = (SrlFactorGraph) ex.getOriginalFactorGraph();
-            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-            FeatureExtractor featExtractor = featExts.get(i);
-            ex.cacheLatPredFeats(sfg, trainConfig, featExtractor);
-        }
-
-        log.info("Num observation functions: " + obsAlphabet.size());
         
         data.setSourceSentences(sents);
         return data;
