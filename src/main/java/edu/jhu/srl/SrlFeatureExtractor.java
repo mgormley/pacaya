@@ -28,7 +28,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
-        public int featureHashMod = 524288; // 2^19
+        public int featureHashMod = -1; //524288; // 2^19
     }
     
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 

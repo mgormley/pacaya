@@ -118,18 +118,18 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
-
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;
+        //fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder processer = new SrlFgExamplesBuilder(prm, alphabet, cs);
-        alphabet = processer.preprocess(sents);
-        alphabet.stopGrowth();
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        Alphabet<Feature> processedAlphabet = processer.preprocess(sents);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, processedAlphabet, cs);
         builder.getData(sents);
+        assertTrue(processedAlphabet.size() < alphabet.size());
+        assertEquals(4, prm.fePrm.min);
     }
 
     @Test

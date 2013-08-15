@@ -49,6 +49,8 @@ public class SentFeatureExtractor {
         public boolean useNaradFeats = true;
         /** Whether to add the "Zhao" features. */
         public boolean useZhaoFeats = true;
+        /* Minimum cutoff for cached features. */
+        public int min = 4;
     }
     
     // Parameters for feature extraction.
@@ -154,7 +156,7 @@ public class SentFeatureExtractor {
     
     public void addSimpleSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         String wordForm = sent.get(idx).getForm();
-        System.out.println("word is " + wordForm);
+        //System.out.println("word is " + wordForm);
         Set <String> a = sig.getSimpleUnkFeatures(wordForm, idx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
@@ -165,8 +167,8 @@ public class SentFeatureExtractor {
     public void addSimplePairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
         String predForm = sent.get(pidx).getForm();
         String argForm = sent.get(aidx).getForm();
-        System.out.println("pred is " + predForm);
-        System.out.println("arg is " + argForm);
+        //System.out.println("pred is " + predForm);
+        //System.out.println("arg is " + argForm);
         Set <String> a = sig.getSimpleUnkFeatures(predForm, pidx, cs.prm.language);
         for (String c : a) {
             feats.add(c);

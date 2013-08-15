@@ -93,7 +93,7 @@ public class ZhaoObject extends CoNLL09Token {
         
     public ZhaoObject(String input) {
         super(-1, input, input, input, input, input, null, null, -2, -2, input, input, false, input, null);
-        setFeat(idx);
+        setFeat(-1);
     }
     
     
@@ -111,15 +111,21 @@ public class ZhaoObject extends CoNLL09Token {
     
     public void setFeat(Integer idx) {
         feat = new ArrayList<String>(6);
-        List<String> coNLLFeats = sent.get(idx).getFeat();
-        if (coNLLFeats == null) {
+        if (idx == -1) {
             for (int i = 0; i < 6; i++) {
                 feat.add("NO_MORPH");
-            }
+            }            
         } else {
-            feat.addAll(coNLLFeats);
-            for (int i = feat.size() ; i < 6; i++) {
-                feat.add("NO_MORPH");
+            List<String> coNLLFeats = sent.get(idx).getFeat();
+            if (coNLLFeats == null) {
+                for (int i = 0; i < 6; i++) {
+                    feat.add("NO_MORPH");
+                }
+            } else {
+                feat.addAll(coNLLFeats);
+                for (int i = feat.size() ; i < 6; i++) {
+                    feat.add("NO_MORPH");
+                }
             }
         }
     }

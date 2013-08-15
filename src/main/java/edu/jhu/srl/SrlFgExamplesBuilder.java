@@ -30,11 +30,13 @@ import edu.jhu.util.Alphabet;
  * Factory for FgExamples.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SrlFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
-        public final Integer min = 3;
+        /* These provide default values during testing; otherwise, 
+         * values should be defined by SrlRunner. */
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
@@ -69,7 +71,6 @@ public class SrlFgExamplesBuilder {
         // Don't actually use obsAlphabet here.
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
-        
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -100,16 +101,16 @@ public class SrlFgExamplesBuilder {
         Integer count;
         Alphabet<Feature> newAlphabet = new Alphabet<Feature>();
         for (Feature o : alphabet.getObjects()) {
-            count = alphabet.lookupIndexIncrement(o);   
-            if (count > prm.min) {
+            count = alphabet.lookupIndexIncrement(o);
+            if (count > prm.fePrm.min || o.toString().endsWith("BIAS_FEATURE")) {
                 newAlphabet.lookupIndexIncrement(o);
             }
         }
+        newAlphabet.stopGrowth();
         return newAlphabet;
     }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
-        System.out.println(alphabet);
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         
@@ -162,7 +163,6 @@ public class SrlFgExamplesBuilder {
         }
 
         log.info("Num observation functions: " + obsAlphabet.size());
-        
         data.setSourceSentences(sents);
         return data;
     }
