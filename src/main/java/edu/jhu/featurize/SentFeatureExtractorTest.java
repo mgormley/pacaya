@@ -1,6 +1,7 @@
 package edu.jhu.featurize;
 
 import static edu.jhu.util.Utilities.getList;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -93,6 +94,116 @@ public class SentFeatureExtractorTest {
         assertEquals(desiredDpPathShare,observedDpPathShare);
     }
     
+    @Test
+    public void testZhaoObjectPos() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+
+        String predPos = zhaoPred.getPos();
+        String argPos = zhaoArg.getPos();
+        assertEquals(predPos,argPos,"p");
+        
+        csPrm.useGoldSyntax = false;
+        cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        fePrm = new SentFeatureExtractorPrm();
+        fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        parents = fe.getParents(sent);
+        zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
+        zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        
+        predPos = zhaoPred.getPos();
+        argPos = zhaoArg.getPos();
+        
+        assertEquals(predPos,"p");
+        assertEquals(argPos,"WRONG");
+    }
+    
+    @Test
+    public void testZhaoObjectFeat() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        List<String> predFeat = zhaoPred.getFeat();
+        List<String> argFeat = zhaoArg.getFeat();
+        ArrayList<String> intendedPredFeats = new ArrayList<String>();
+        intendedPredFeats.add("postype=relative");
+        intendedPredFeats.add("gen=c");
+        intendedPredFeats.add("num=c");
+        intendedPredFeats.add("NO_MORPH");
+        intendedPredFeats.add("NO_MORPH");
+        intendedPredFeats.add("NO_MORPH");
+        assertEquals(predFeat,intendedPredFeats);
+        ArrayList<String> intendedArgFeats = new ArrayList<String>();
+        intendedArgFeats.add("NO_MORPH");
+        intendedArgFeats.add("NO_MORPH");
+        intendedArgFeats.add("NO_MORPH");
+        intendedArgFeats.add("NO_MORPH");
+        intendedArgFeats.add("NO_MORPH");
+        intendedArgFeats.add("NO_MORPH");
+        System.out.println(argFeat);
+        assertEquals(argFeat,intendedArgFeats);
+    }
+        
+
+    @Test
+    public void testZhaoObjectPath() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+
+        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
+        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);
+        List<Pair<Integer, Dir>> seenPredDpPath = zhaoArg.getDpPathPred();
+        List<Pair<Integer, Dir>> seenArgDpPath = zhaoArg.getDpPathArg();
+        assertTrue(seenPredDpPath == null);
+        assertTrue(seenArgDpPath == null);
+        //System.out.println(zhaoLink.getDpPathShare());
+        
+        /*
+        getDpPathShare();
+        getLinePath();*/
+    
+    }
+
+        /* TBD:
+        zhaoPred.getParent();
+        zhaoPred.getChildren();
+        zhaoPred.getFarLeftChild();
+        zhaoPred.getFarRightChild();
+        zhaoPred.getNearLeftChild();
+        zhaoPred.getNearRightChild();
+        zhaoPred.getHighSupport();
+        zhaoPred.getLowSupport();*/
     
     @Test
     public void testAddNaradowskyFeatures() {
@@ -140,13 +251,13 @@ public class SentFeatureExtractorTest {
         tokens.add(new CoNLL09Token("2       es      ser     ser     v       v       postype=semiauxiliary|gen=c|num=s|person=3|mood=indicative|tense=present        postype=semiauxiliary|gen=c|num=s|person=3|mood=indicative|tense=present        0       3       sentence        sentence        Y       ser.c2  _       _"));
         tokens.add(new CoNLL09Token("3       lo      el      el      d       d       postype=article|gen=c|num=s     postype=article|gen=c|num=s     6       4       spec    spec    _       _       _       _"));
         tokens.add(new CoNLL09Token("4       que     que     que     p       p       postype=relative|gen=c|num=c    postype=relative|gen=c|num=c    6       5       cd      cd      _       _       _       arg1-pat"));
-        tokens.add(new CoNLL09Token("5       _       _       _       p       p       _       _       6       6       suj     suj     _       _       _       arg0-agt"));
+        tokens.add(new CoNLL09Token("5       _       _       _       p       WRONG       _       _       6       6       suj     suj     _       _       _       arg0-agt"));
         tokens.add(new CoNLL09Token("6       hicieron        hacer   hacer   v       v       postype=main|gen=c|num=p|person=3|mood=indicative|tense=past    postype=main|gen=c|num=p|person=3|mood=indicative|tense=past    2       7       atr     atr     Y       hacer.a2        arg2-atr        _"));
         tokens.add(new CoNLL09Token("7       .       .       .       f       f       punct=period    punct=period    2       1       f       f       _       _       _       _"));
-            CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
+        CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
             
-            return sent;
-        }
+        return sent;
+    }
     
     public static CoNLL09Sentence getDogConll09Sentence() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
