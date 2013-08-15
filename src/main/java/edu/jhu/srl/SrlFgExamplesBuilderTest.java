@@ -108,7 +108,6 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testPreprocess() throws Exception {
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();        
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -121,15 +120,32 @@ public class SrlFgExamplesBuilderTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         //fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        prm.fePrm.useZhaoFeats = false;
+        prm.fePrm.useSimpleFeats = false;
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-        SrlFgExamplesBuilder processer = new SrlFgExamplesBuilder(prm, alphabet, cs);
-        Alphabet<Feature> processedAlphabet = processer.preprocess(sents);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, processedAlphabet, cs);
-        builder.getData(sents);
-        assertTrue(processedAlphabet.size() < alphabet.size());
-        assertEquals(4, prm.fePrm.min);
+        {
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            prm.featCountCutoff = 0;
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+            builder.getData(sents);
+            assertEquals(24223, alphabet.size());
+        }
+        {
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            prm.featCountCutoff = 4;
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+            builder.getData(sents);
+            assertEquals(5883, alphabet.size());
+        }
+        {
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            prm.featCountCutoff = 5;
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+            builder.getData(sents);
+            assertEquals(4929, alphabet.size());
+        }
     }
 
     @Test

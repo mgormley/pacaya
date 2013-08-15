@@ -2,73 +2,42 @@ package edu.jhu.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jhu.srl.MutableInt;
-
 /**
  * Bidirectional mapping of Objects to ints.
  * 
  * @author mgormley
- * @author mmitchell
  *
  */
 public class Alphabet<T> implements Serializable {
 
     private static final long serialVersionUID = -3703345017300334421L;
-    private static final int MISSING_OBJECT_INDEX = -1;
-	private ArrayList<T> idxObjMap;
+    public static final int MISSING_OBJECT_INDEX = -1;
+    private ArrayList<T> idxObjMap;
 	private Map<T, Integer> objIdxMap;
 	private boolean isGrowing;
-    private HashMap<T, MutableInt> objIdxCountMap;
 	
 	public Alphabet() {
 		isGrowing = true;
 		idxObjMap = new ArrayList<T>();
 		objIdxMap = new HashMap<T, Integer>();
-		objIdxCountMap = new HashMap<T, MutableInt>();
 	}
 	
 	public Alphabet(Alphabet<T> other) {
 		isGrowing = true;
 		idxObjMap = new ArrayList<T>(other.idxObjMap);
 		objIdxMap = new HashMap<T, Integer>(other.objIdxMap);
-		objIdxCountMap = new HashMap<T, MutableInt>(other.objIdxCountMap);
 	}
 
 	public int lookupIndex(T object) {
 		return lookupIndex(object, true);
 	}
 
-	public int lookupIndexIncrement(T object) {
-	    return lookupIndexIncrement(object, true);
-	    
-	}
-	
-	public int lookupIndexIncrement(T object, boolean addIfMissing) {
-        Integer index = objIdxMap.get(object);
-        if (index == null) {
-            // A new object we haven't seen before.
-            if (isGrowing && addIfMissing) {
-                // Add this new object to the alphabet.
-                index = idxObjMap.size();
-                idxObjMap.add(object);
-                objIdxMap.put(object, index);
-                objIdxCountMap.put(object, new MutableInt());
-            } else {
-                return MISSING_OBJECT_INDEX;
-            }
-        } else {
-            objIdxCountMap.get(object).increment();
-        }
-        return index;
-    }
-
-    public int lookupIndex(T object, boolean addIfMissing) {
+	public int lookupIndex(T object, boolean addIfMissing) {
 		Integer index = objIdxMap.get(object);
 		if (index == null) {
 			// A new object we haven't seen before.
@@ -87,11 +56,7 @@ public class Alphabet<T> implements Serializable {
 	public T lookupObject(int index) {
 		return idxObjMap.get(index);
 	}
-	
-	public Integer lookupObjectCount(int index) {
-	    return objIdxCountMap.get(index).get();
-	}
-	
+
 	@Override
 	public Object clone() {
 		return new Alphabet<T>(this);
@@ -108,7 +73,7 @@ public class Alphabet<T> implements Serializable {
 	public void stopGrowth() {
 		isGrowing = false;
 	}
-	
+
 	public List<T> getObjects() {
 		return Collections.unmodifiableList(idxObjMap);
 	}
@@ -131,6 +96,10 @@ public class Alphabet<T> implements Serializable {
         Alphabet<T> alphabet = new Alphabet<T>();
         alphabet.stopGrowth();
         return alphabet;
+    }
+
+    public boolean isGrowing() {
+        return isGrowing;
     }
 	
 }

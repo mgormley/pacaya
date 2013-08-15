@@ -11,8 +11,17 @@ import java.io.Serializable;
  */
 public class MutableInt implements Serializable {
 
-    int value = 1; // Start at 1 since we're counting
+    private static final long serialVersionUID = 1L;
+    int value;
 
+    public MutableInt() {
+        this.value = 1;  // Start at 1 since we're counting
+    }
+    
+    public MutableInt(int value) {
+        this.value = value;
+    }
+    
     public void increment() {
         ++value;
     }

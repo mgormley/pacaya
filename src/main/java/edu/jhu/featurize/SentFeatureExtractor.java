@@ -49,8 +49,6 @@ public class SentFeatureExtractor {
         public boolean useNaradFeats = true;
         /** Whether to add the "Zhao" features. */
         public boolean useZhaoFeats = true;
-        /* Minimum cutoff for cached features. */
-        public int min = 4;
     }
     
     // Parameters for feature extraction.
