@@ -325,10 +325,10 @@ public class ZhaoObject extends CoNLL09Token {
         Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
         while (argP.equals(predP) && i > -1 && j > -1) {
             this.dpPathShare.add(argP);
-            argP = argRootPath.get(i);
-            predP = predRootPath.get(j);
             i--;
             j--;
+            argP = argRootPath.get(i);
+            predP = predRootPath.get(j);
         }
         /* ZHANG:  Assume that dpPathShare starts from a node r', 
          * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
