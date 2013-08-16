@@ -85,7 +85,7 @@ public class SrlFgExamplesBuilder {
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
-                log.debug("Built " + i + " examples...");
+                log.debug("Preprocessed " + i + " examples...");
             }
             
             // Precompute a few things.
