@@ -18,6 +18,8 @@ public class ZhaoObject extends CoNLL09Token {
      * A Huge Feature Engineering Method to Semantic Dependency Parsing"
      * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou */    
 
+    private static final String NO_MORPH = "NO_MORPH"; 
+
     private CorpusStatistics cs;
     private CoNLL09Sentence sent;
     private int idx;
@@ -30,8 +32,10 @@ public class ZhaoObject extends CoNLL09Token {
     private Integer nearLeftChild;
     private Integer nearRightChild;
     private List<Pair<Integer, Dir>> rootPath;
-    private int lowSupport;
-    private int highSupport;
+    private int argLowSupport;
+    private int argHighSupport;
+    private int predLowSupport;
+    private int predHighSupport;
     private List<Pair<Integer, Dir>> betweenPath;
     private int[] parents;
     private ArrayList<Integer> linePath;
@@ -40,7 +44,8 @@ public class ZhaoObject extends CoNLL09Token {
     private List<Pair<Integer, Dir>> dpPathArg;
     private ArrayList<Integer> noFarChildren;
     
-    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs, String support) {
+    
+    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs) {
         super(sent.get(idx));
         /* Call CoNLL09Token so that following ZHANG we can get Word Property features.
          * Includes:
@@ -68,7 +73,7 @@ public class ZhaoObject extends CoNLL09Token {
          * the first verb(noun) that is met is called as the low support verb(noun), 
          * and the nearest one to the root is called as the high support verb(noun). */
         setFarthestNearestChildren();
-        setHighLowSupport(support);
+        setHighLowSupport();
         /* ZHANG: Family. Two types of children sets for the predicate or argument candidate are considered, 
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
@@ -91,7 +96,11 @@ public class ZhaoObject extends CoNLL09Token {
     }
         
     public ZhaoObject(String input) {
-        super(-1, input, input, input, input, input, null, null, -2, -2, input, input, false, input, null);
+        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
+        String pos, String ppos, List<String> feat, List<String> pfeat,
+        int head, int phead, String deprel, String pdeprel,
+        boolean fillpred, String pred, List<String> apreds) */
+        super(-1, "FORM_" + input, "LEMMA_" + input, "PLEMMA_" + input, "POS_" + input, "PPOS_" + input, null, null, -2, -2, "DEPREL_" + input, "PDEPREL_" + input, false, "PRED_" + input, null);
         setFeat(-1);
         this.rootPath = new ArrayList<Pair<Integer, Dir>>();
         this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
@@ -102,11 +111,12 @@ public class ZhaoObject extends CoNLL09Token {
         this.farRightChild = -1;
         this.nearLeftChild = -1;
         this.nearRightChild = -1;
-        this.lowSupport = -1;
-        this.highSupport = -1;
+        this.argLowSupport = -1;
+        this.argHighSupport = -1;
+        this.predLowSupport = -1;
+        this.predHighSupport = -1;
         this.noFarChildren = new ArrayList<Integer>();
         setNoFarChildren();
-
     }
     
     
@@ -121,18 +131,18 @@ public class ZhaoObject extends CoNLL09Token {
         feat = new ArrayList<String>(6);
         if (idx == -1) {
             for (int i = 0; i < 6; i++) {
-                feat.add("NO_MORPH");
+                feat.add(NO_MORPH);
             }            
         } else {
             List<String> coNLLFeats = sent.get(idx).getFeat();
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
-                    feat.add("NO_MORPH");
+                    feat.add(NO_MORPH);
                 }
             } else {
                 feat.addAll(coNLLFeats);
                 for (int i = feat.size() ; i < 6; i++) {
-                    feat.add("NO_MORPH");
+                    feat.add(NO_MORPH);
                 }
             }
         }
@@ -224,20 +234,33 @@ public class ZhaoObject extends CoNLL09Token {
         this.noFarChildren.add(nearRightChild);
     }
     
-    public int getHighSupport() {
-        return highSupport;
+    public int getArgHighSupport() {
+        return argHighSupport;
     }
     
-    public int getLowSupport() {
-        return lowSupport;
+    public int getArgLowSupport() {
+        return argLowSupport;
     }
     
-    public void setHighLowSupport(String support) {
+
+    public int getPredHighSupport() {
+        return predHighSupport;
+    }
+    
+    public int getPredLowSupport() {
+        return predLowSupport;
+    }
+
+    
+    public void setHighLowSupport() {
         // Support features
         String parentPos;
-        boolean haveLow = false;
+        boolean haveArgLow = false;
+        boolean havePredLow = false;
         int i;
-      
+        String argSupport = "n";
+        String predSupport = "v";
+        
         for (Pair<Integer,Dir> a : rootPath) {
             i = a.get1();
             if (i == -1) {
@@ -249,13 +272,21 @@ public class ZhaoObject extends CoNLL09Token {
             } else {
                 parentPos = sent.get(i).getPpos();
             }
-            if (parentPos.equals(support)) {
-                if (!haveLow) {
-                    haveLow = true;
-                    this.lowSupport = i;
-                    this.highSupport = i;
+            if (parentPos.equals(argSupport)) {
+                if (!haveArgLow) {
+                    haveArgLow = true;
+                    this.argLowSupport = i;
+                    this.argHighSupport = i;
                 } else {
-                    this.highSupport = i;
+                    this.argHighSupport = i;
+                }
+            } else if (parentPos.equals(predSupport)) {
+                if (!havePredLow) {
+                    havePredLow = true;
+                    this.predLowSupport = i;
+                    this.predHighSupport = i;
+                } else {
+                    this.predHighSupport = i;
                 }
             }
             

@@ -52,15 +52,15 @@ public class SentFeatureExtractorTest {
     
     @Test
     public void testAddZhaoFeatures() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence1();
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
         Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.withSupervision = false;
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
-        BinaryStrFVBuilder feats;
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
@@ -71,6 +71,14 @@ public class SentFeatureExtractorTest {
             System.out.println(f);
         }
         //Check that POS is not gold POS
+        fePrm.withSupervision = true;
+        fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        allFeats = new BinaryStrFVBuilder(alphabet);
+        for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                fe.addZhaoPairFeatures(i, j, allFeats);
+            }
+        }
     }
     
     @Test
@@ -84,8 +92,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs);
         ZhaoObject zhaoLink = new ZhaoObject(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
@@ -105,8 +113,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
 
         String predPos = zhaoPred.getPos();
         String argPos = zhaoArg.getPos();
@@ -118,8 +126,8 @@ public class SentFeatureExtractorTest {
         fePrm = new SentFeatureExtractorPrm();
         fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         parents = fe.getParents(sent);
-        zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        zhaoArg = new ZhaoObject(4, parents, sent, cs);
         
         predPos = zhaoPred.getPos();
         argPos = zhaoArg.getPpos();
@@ -139,8 +147,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
         List<String> predFeat = zhaoPred.getFeat();
         List<String> argFeat = zhaoArg.getFeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
@@ -174,8 +182,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
