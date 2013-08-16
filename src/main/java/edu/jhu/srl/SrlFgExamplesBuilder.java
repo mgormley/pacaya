@@ -25,23 +25,33 @@ import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.CountingAlphabet;
 
 /**
  * Factory for FgExamples.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SrlFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
+        /* These provide default values during testing; otherwise, 
+         * values should be defined by SrlRunner. */
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
         /** Whether to include unsupported features. */
         public boolean includeUnsupportedFeatures = false;
+        /**
+         * Minimum number of times (inclusive) a feature must occur in training
+         * to be included in the model. Ignored if non-positive. (Using this
+         * cutoff implies that unsupported features will not be included.)
+         */
+        public int featCountCutoff = -1;
     }
     
-    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class); 
+    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
 
     private SrlFgExampleBuilderPrm prm;
     private Alphabet<Feature> alphabet;
@@ -61,8 +71,58 @@ public class SrlFgExamplesBuilder {
         List<CoNLL09Sentence> sents = reader.readAll();
         return getData(sents);
     }
+    
+    
+    public void preprocess(List<CoNLL09Sentence> sents) {
+        if (!(alphabet.isGrowing() && prm.featCountCutoff > 0)) {
+            // Skip this preprocessing step since it will have no effect.
+            return;
+        }
+        
+        CountingAlphabet<Feature> counter = new CountingAlphabet<Feature>();
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
+        for (int i=0; i<sents.size(); i++) {
+            CoNLL09Sentence sent = sents.get(i);
+            if (i % 1000 == 0 && i > 0) {
+                log.debug("Built " + i + " examples...");
+            }
+            
+            // Precompute a few things.
+            SrlGraph srlGraph = sent.getSrlGraph();
+            
+            Set<Integer> knownPreds = getKnownPreds(srlGraph);
+            
+            // Construct the factor graph.
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            // Get the variable assignments given in the training data.
+            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
+
+            FgExample ex = new FgExample(sfg, trainConfig);
+            
+            // Create a feature extractor for this example.
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
+            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, counter, sentFeatExt);
+            // So we don't have to compute the features again for this example.
+            featExts.add(featExtractor);
+            
+            // Cache only the features observed in training data.
+            ex.cacheLatFeats(sfg, trainConfig, featExtractor);
+        }
+        
+        for (int i=0; i<counter.size(); i++) {
+            int count = counter.lookupObjectCount(i);
+            Feature feat = counter.lookupObject(i);
+            if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
+                alphabet.lookupIndex(feat);
+            }
+        }
+        alphabet.stopGrowth();
+    }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
+        preprocess(sents);
+        
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         
@@ -115,7 +175,6 @@ public class SrlFgExamplesBuilder {
         }
 
         log.info("Num observation functions: " + obsAlphabet.size());
-        
         data.setSourceSentences(sents);
         return data;
     }

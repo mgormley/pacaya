@@ -103,7 +103,6 @@ public class SentFeatureExtractor {
      */
     public BinaryStrFVBuilder createFeatureSet(int idx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
-        feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
         if (prm.useSimpleFeats) {
@@ -158,7 +157,7 @@ public class SentFeatureExtractor {
     
     public void addSimpleSoloFeatures(int idx, BinaryStrFVBuilder feats) {
         String wordForm = sent.get(idx).getForm();
-        // System.out.println("word is " + wordForm);
+        //System.out.println("word is " + wordForm);
         Set <String> a = sig.getSimpleUnkFeatures(wordForm, idx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
@@ -169,8 +168,8 @@ public class SentFeatureExtractor {
     public void addSimplePairFeatures(int pidx, int aidx, BinaryStrFVBuilder feats) {
         String predForm = sent.get(pidx).getForm();
         String argForm = sent.get(aidx).getForm();
-        // System.out.println("pred is " + predForm);
-        // System.out.println("arg is " + argForm);
+        //System.out.println("pred is " + predForm);
+        //System.out.println("arg is " + argForm);
         Set <String> a = sig.getSimpleUnkFeatures(predForm, pidx, cs.prm.language);
         for (String c : a) {
             feats.add(c);

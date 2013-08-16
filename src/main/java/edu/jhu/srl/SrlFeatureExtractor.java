@@ -99,6 +99,35 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
         
+        /* Add Bias features */
+        if (prm.featureHashMod <= 0) {
+            // Just use the features as-is.
+            int fidx = alphabet.lookupIndex(new Feature(vcStr + "_BIAS_FEATURE", true));
+            if (fidx != -1) {
+                fv.add(fidx, 1.0);
+            }
+        } else {
+            // Apply the feature-hashing trick.
+            // Using the fvb makes unreadable feature names, but is faster.
+            int bfidx = alphabet.lookupIndex(new Feature(vcStr + "_BIAS_FEATURE", true));
+            String fname = vcStr + "_" + bfidx;
+            int hash = fname.hashCode();
+            hash = hash % prm.featureHashMod;
+            if (hash < 0) {
+                hash += prm.featureHashMod;
+            }
+            fname = Integer.toString(hash);
+            int fidx = alphabet.lookupIndex(new Feature(fname, true));
+            if (fidx != -1) {
+                int revHash = reverseHashCode(fname);
+                if (revHash < 0) {
+                    fv.add(fidx, -1.0);
+                } else {
+                    fv.add(fidx, 1.0);
+                }
+            }
+        }
+        
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {

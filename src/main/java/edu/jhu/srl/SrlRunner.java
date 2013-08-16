@@ -128,6 +128,8 @@ public class SrlRunner {
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
+    @Opt(hasArg = true, description = "For preprocessing: Minimum feature count for caching.")
+    public static int featCountCutoff = 4;
     @Opt(hasArg = true, description = "For testing only: whether to use only the bias feature.")
     public static boolean biasOnly = false;
     @Opt(hasArg = true, description = "The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled.")
@@ -376,6 +378,7 @@ public class SrlRunner {
         prm.fePrm.useNaradFeats = useNaradFeats;
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
+        prm.featCountCutoff = featCountCutoff;
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         prm.includeUnsupportedFeatures = includeUnsupportedFeatures;

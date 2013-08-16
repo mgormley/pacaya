@@ -16,8 +16,8 @@ import java.util.Map;
 public class Alphabet<T> implements Serializable {
 
     private static final long serialVersionUID = -3703345017300334421L;
-    private static final int MISSING_OBJECT_INDEX = -1;
-	private ArrayList<T> idxObjMap;
+    public static final int MISSING_OBJECT_INDEX = -1;
+    private ArrayList<T> idxObjMap;
 	private Map<T, Integer> objIdxMap;
 	private boolean isGrowing;
 	
@@ -96,6 +96,10 @@ public class Alphabet<T> implements Serializable {
         Alphabet<T> alphabet = new Alphabet<T>();
         alphabet.stopGrowth();
         return alphabet;
+    }
+
+    public boolean isGrowing() {
+        return isGrowing;
     }
 	
 }
