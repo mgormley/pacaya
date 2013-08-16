@@ -141,8 +141,7 @@ public class SentFeatureExtractor {
             addSimplePairFeatures(pidx, aidx, feats);
         }
         if (prm.useNaradFeats) {
-            addNaradowskyPairFeatures(pidx, aidx, feats);
-            
+            addNaradowskyPairFeatures(pidx, aidx, feats);            
         }
         if (prm.useZhaoFeats) {
             addZhaoPairFeatures(pidx, aidx, feats);
