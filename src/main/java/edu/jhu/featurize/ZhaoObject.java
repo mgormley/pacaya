@@ -93,6 +93,20 @@ public class ZhaoObject extends CoNLL09Token {
     public ZhaoObject(String input) {
         super(-1, input, input, input, input, input, null, null, -2, -2, input, input, false, input, null);
         setFeat(-1);
+        this.rootPath = new ArrayList<Pair<Integer, Dir>>();
+        this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
+        this.parent = -1;
+        this.children = new ArrayList<Integer>();
+        this.children.add(-1);
+        this.farLeftChild = -1;
+        this.farRightChild = -1;
+        this.nearLeftChild = -1;
+        this.nearRightChild = -1;
+        this.lowSupport = -1;
+        this.highSupport = -1;
+        this.noFarChildren = new ArrayList<Integer>();
+        setNoFarChildren();
+
     }
     
     

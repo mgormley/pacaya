@@ -604,31 +604,55 @@ public class SentFeatureExtractor {
         // a.lm.dprel + a.form
         feats.add(argLm.getDeprel() + "_" + zhaoArg.getForm());
         // a.lm_1.lemma
-        feats.add(sent.get(zhaoArgLast.getFarLeftChild()).getLemma());
+        if (zhaoArgLast.getFarLeftChild() < 0) {
+            feats.add("NO_LM_CHILD_LEMMA");
+        } else {
+            feats.add(sent.get(zhaoArgLast.getFarLeftChild()).getLemma());
+        }
         // a.lmn.pos (n=0,1) 
         feats.add(argLm.getPos());
-        feats.add(sent.get(zhaoArgNext.getFarLeftChild()).getPos());
+        if (zhaoArgNext.getFarLeftChild() < 0) {
+            feats.add("NO_LM_CHILD_POS");
+        } else {
+            feats.add(sent.get(zhaoArgNext.getFarLeftChild()).getPos());
+        }
         // a.noFarChildren.pos.bag + a.rm.form 
         ArrayList<Integer> noFarChildren = zhaoArg.getNoFarChildren();
         ArrayList<String> noFarChildrenPos = new ArrayList<String>();
         if (cs.prm.useGoldSyntax) {
             for (Integer i : noFarChildren) {
-                noFarChildrenPos.add(sent.get(i).getPos()); 
+                if (i < 0) {
+                    feats.add("NO_FARCHILD_POS");
+                } else {
+                    noFarChildrenPos.add(sent.get(i).getPos()); 
+                }
             }
         } else {
             for (Integer j : noFarChildren) {
-                noFarChildrenPos.add(sent.get(j).getPpos()); 
+                if (j < 0) {
+                    feats.add("NO_FARCHILD_POS");
+                } else {
+                    noFarChildrenPos.add(sent.get(j).getPpos()); 
+                }
             }
         }
         List<String> argNoFarChildrenBag = bag(noFarChildrenPos);
         feat = StringUtils.join(argNoFarChildrenBag, "_") + argRm.getForm();
         feats.add(feat);
         // a.pphead.lemma
-        feats.add(sent.get(zhaoArg.getPhead()).getLemma());
+        if (zhaoArg.getPhead() < 0) {
+            feats.add("NO_PHEAD_LEMMA"); 
+        } else {
+            feats.add(sent.get(zhaoArg.getPhead()).getLemma());
+        }
         // a.rm.dprel + a.form
         feats.add(argRm + "_" + zhaoArg.getForm());
         // a.rm_1.form 
-        feats.add(sent.get(zhaoArgLast.getFarRightChild()).getForm());
+        if (zhaoArgLast.getFarRightChild() < 0) {
+            feats.add("NO_FARRIGHTCHILD_FORM");
+        } else {
+            feats.add(sent.get(zhaoArgLast.getFarRightChild()).getForm());
+        }
         // a.rm.lemma
         feats.add(argRm.getLemma());
         // a.rn.dprel + a.form 
@@ -640,7 +664,11 @@ public class SentFeatureExtractor {
             ArrayList<CoNLL09Token> argChildrenTokens, BinaryStrFVBuilder feats) {
         String feat;
         // a.lowSupportVerb.lemma 
-        feats.add(sent.get(zhaoArg.getLowSupport()).getLemma());
+        if (zhaoArg.getLowSupport() < 0) {
+            feats.add("NO_LOWSUPPORT_LEMMA");
+        } else {
+            feats.add(sent.get(zhaoArg.getLowSupport()).getLemma());
+        }
         // a.lemma + a.h.form 
         feats.add(zhaoArg.getLemma() + "_" + zhaoArgParent.getForm());
         // a.lemma + a.pphead.form 
@@ -683,9 +711,17 @@ public class SentFeatureExtractor {
         }
         // NOTE:  This is supposed to be p.semrm.semdprel  What is this?  
         // I'm not sure.  Here's just a guess.
-        feats.add(sent.get(zhaoPred.getFarRightChild()).getDeprel());
+        if (zhaoPred.getFarRightChild() < 0) {
+            feats.add("NO_FARRIGHT_DEPREL");
+        } else {
+            feats.add(sent.get(zhaoPred.getFarRightChild()).getDeprel());
+        }
         // p.lm.dprel        
-        feats.add(sent.get(zhaoPred.getFarLeftChild()).getDeprel());
+        if (zhaoPred.getFarLeftChild() < 0) {
+            feats.add("NO_FARLEFT_DEPREL");
+        } else {
+            feats.add(sent.get(zhaoPred.getFarLeftChild()).getDeprel());
+        }
         // p.form + p.children.dprel.bag 
         ArrayList<String> depPredChildren = new ArrayList<String>();
         for (Integer child : zhaoPred.getChildren()) {
