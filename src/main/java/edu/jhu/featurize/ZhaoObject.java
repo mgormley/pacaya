@@ -327,8 +327,11 @@ public class ZhaoObject extends CoNLL09Token {
         int j = predRootPath.size() - 1;
         Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
         Pair<Integer,DepTree.Dir> predP = predRootPath.get(j);
-        while (argP.equals(predP) && i > -1 && j > -1) {
+        while (argP.equals(predP)) {
             this.dpPathShare.add(argP);
+            if (i == 0 || j == 0) {
+                break;
+            }
             i--;
             j--;
             argP = argRootPath.get(i);
