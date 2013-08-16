@@ -77,6 +77,16 @@ public class VarConfig {
         }
         return state;
     }
+    
+    /** Gets the state (in this config) for a given variable if it exists, or the default otherwise. */
+    public int getState(Var var, int defaultState) {
+        Integer state = config.get(var);
+        if (state == null) {
+            return defaultState;
+        } else {
+            return state;
+        }
+    }
 
     /** Gets the variable set. */
     public VarSet getVars() {
@@ -142,6 +152,7 @@ public class VarConfig {
         return true;
     }
 
+    @Deprecated
     public String getStringName() {
         StringBuilder configSb = new StringBuilder();
         int i=0;
@@ -180,8 +191,6 @@ public class VarConfig {
             i++;
         }
         return "VarConfig [config=[" + configSb.toString() + "], vars=" + vars + "]";
-    }
-    
-    
+    }    
         
 }

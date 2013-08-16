@@ -59,7 +59,7 @@ public class MbrDecoder {
                 // Run inference.
                 FactorGraph fgLatPred = ex.getFgLatPred();
                 FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
-                fgLatPred = ex.updateFgLatPred(model, inf.isLogDomain());
+                fgLatPred = ex.updateFgLatPred(model.getParams(), inf.isLogDomain());
                 inf.run();
 
                 // Get the MBR configuration of all the latent and predicted

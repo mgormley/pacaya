@@ -1,5 +1,7 @@
 package edu.jhu.gm;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
@@ -27,11 +29,12 @@ public class CrfTrainerTest {
      * 
      * @author mgormley
      */
-    public static class SimpleVCFeatureExtractor implements FeatureExtractor {
+    public static class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
 
         private Alphabet<Feature> alphabet;
         
-        public SimpleVCFeatureExtractor(Alphabet<Feature> alphabet) {
+        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, Alphabet<Feature> alphabet) {
+            super(fg, goldConfig);
             this.alphabet = alphabet;
         }
         
@@ -83,7 +86,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, alphabet);
         
         FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -91,10 +94,24 @@ public class CrfTrainerTest {
 
         model = train(model, data);
         
+        System.out.println(alphabet.getObjects());
         System.out.println(Utilities.toString(model.getParams(), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{4.79, -4.79, 2.47, -2.47, 3.82, -3.82, 0.65, -2.31, 1.66}, model.getParams(), 1e-2);
+        assertEquals(4.79, getParam(model, "N:man"), 1e-2);
+        assertEquals(-4.79, getParam(model, "V:man"), 1e-2);
+        assertEquals(-2.47, getParam(model, "N:jump"), 1e-2);
+        assertEquals(2.47, getParam(model, "V:jump"), 1e-2);
+        assertEquals(-3.82, getParam(model, "N:fence"), 1e-2);
+        assertEquals(3.82, getParam(model, "V:fence"), 1e-2);
+        
+        assertEquals(-2.31, getParam(model, "N:N"), 1e-2);
+        assertEquals(0.65, getParam(model, "N:V"), 1e-2);
+        assertEquals(1.66, getParam(model, "V:V"), 1e-2);
     }
     
+    private double getParam(FgModel model, String name) {
+        return model.getParams()[model.getAlphabet().lookupIndex(new Feature(name))];
+    }
+
     @Test
     public void testTrainWithLatentVars() {
         FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVarsLatent(true);
@@ -108,7 +125,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, alphabet);
         
         FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -118,7 +135,8 @@ public class CrfTrainerTest {
         
         System.out.println(alphabet.getObjects());
         System.out.println(Utilities.toString(model.getParams(), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, 1.64, -10.18, 8.54}, model.getParams(), 1e-2);
+        //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
+        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, model.getParams(), 1e-2);
     }
 
     @Test
@@ -162,7 +180,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[1][0], "A2");
 
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(alphabet);
+        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, alphabet);
         
         FgExamples data = new FgExamples(alphabet);
         data.add(new FgExample(fg, trainConfig, featExtractor));
@@ -172,7 +190,8 @@ public class CrfTrainerTest {
         
         System.out.println(alphabet.getObjects());
         System.out.println(Utilities.toString(model.getParams(), "%.2f"));
-        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 1.90, 2.60, -4.51}, model.getParams(), 1e-2);
+        // [FALSE, TRUE, A1, A2, A3]
+        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, model.getParams(), 1e-2);
     }
     
     @Test

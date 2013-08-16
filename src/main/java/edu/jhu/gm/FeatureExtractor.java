@@ -9,10 +9,9 @@ public interface FeatureExtractor {
      * configurations for all the variables.
      * 
      * @param factorId The id of the factor.
-     * @param varConfig The configuration of the variables for the factor in the
-     *            original factor graph.
+     * @param configId The configuration id of the latent and predicted variables ONLY.
      * @return The feature vector.
      */
-    FeatureVector calcFeatureVector(int factorId, VarConfig varConfig);
+    FeatureVector calcFeatureVector(int factorId, int configId);
 
 }

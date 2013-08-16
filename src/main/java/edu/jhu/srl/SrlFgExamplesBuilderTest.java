@@ -82,14 +82,15 @@ public class SrlFgExamplesBuilderTest {
         fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
+        //prm.includeUnsupportedFeatures = 
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
         FgExamples data = builder.getData(sents);
         FgExample ex = data.get(0);
         
-        //assertEquals(1, obsAlphabet.size());
-        assertEquals(5*2 + 2 + 5, alphabet.size());
+        System.out.println(alphabet);
+        assertEquals(6*2 + 2 + 6, alphabet.size());
         
         VarConfig vc = ex.getGoldConfig();
         System.out.println(vc.toString().replace(",", "\n"));
@@ -122,6 +123,7 @@ public class SrlFgExamplesBuilderTest {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm.useZhaoFeats = false;
         prm.fePrm.useSimpleFeats = false;
+        prm.fePrm.useDepPathFeats = false;
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
@@ -130,21 +132,14 @@ public class SrlFgExamplesBuilderTest {
             prm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
             builder.getData(sents);
-            assertEquals(24223, alphabet.size());
-        }
-        {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            prm.featCountCutoff = 4;
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
-            builder.getData(sents);
-            assertEquals(5883, alphabet.size());
+            assertEquals(51882, alphabet.size());
         }
         {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             prm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
             builder.getData(sents);
-            assertEquals(4929, alphabet.size());
+            assertEquals(5166, alphabet.size());
         }
     }
 

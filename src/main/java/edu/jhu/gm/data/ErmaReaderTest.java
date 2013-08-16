@@ -79,21 +79,6 @@ public class ErmaReaderTest {
                     assertEquals(ermaVar.getName(), ourVar.getName());
                 }                                
             }
-
-            {
-                System.out.println("\n\nFeatures for fgLat: ");
-                FeatureCache cacheLat = ex.getFeatCacheLat();
-                FactorGraph fgLat = ex.updateFgLat(new double[] { data
-                        .getAlphabet().size() }, true);
-                System.out.println(cacheLat.toString(data.getAlphabet()));
-            }
-            {
-                System.out.println("\n\nFeatures for fgLatPred: ");
-                FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
-                FactorGraph fgLatPred = ex.updateFgLatPred(new double[] { data
-                        .getAlphabet().size() }, true);
-                System.out.println(cacheLatPred.toString(data.getAlphabet()));
-            }
             
             // TODO: test that the features are what we'd expect them to be.
         }

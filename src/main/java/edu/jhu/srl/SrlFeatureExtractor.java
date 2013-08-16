@@ -9,6 +9,7 @@ import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FeatureVectorBuilder;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.SlowFeatureExtractor;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
@@ -28,7 +29,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
-        public int featureHashMod = 524288; // 2^19
+        public int featureHashMod = -1;
     }
     
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
@@ -46,7 +47,6 @@ public class SrlFeatureExtractor implements FeatureExtractor {
     private SentFeatureExtractor sentFeatExt;
     
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, Alphabet<Feature> alphabet, SentFeatureExtractor sentFeatExt) {
-        super();
         this.prm = prm;
         this.sfg = sfg;
         this.alphabet = alphabet;
@@ -56,10 +56,10 @@ public class SrlFeatureExtractor implements FeatureExtractor {
     }
     
     @Override
-    public FeatureVector calcFeatureVector(int factorId, VarConfig varConfig) {
+    public FeatureVector calcFeatureVector(int factorId, int configId) {
         SrlFactor f = (SrlFactor) sfg.getFactor(factorId);
         SrlFactorTemplate ft = f.getFactorType();
-        VarSet vars = varConfig.getVars();
+        VarSet vars = f.getVars();
         
         // Get the observation features.
         BinaryStrFVBuilder obsFeats;
@@ -91,10 +91,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         // representation of the given assignment to the given
         // variables.
         FeatureVector fv = new FeatureVector(obsFeats.size());
-        String vcStr = ft + "_";
-        for (Var v : varConfig.getVars()) {
-            vcStr += varConfig.getStateName(v);
-        }
+        String vcStr = ft + "_" + configId;
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
@@ -109,8 +106,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         } else {
             // Apply the feature-hashing trick.
             // Using the fvb makes unreadable feature names, but is faster.
-            int bfidx = alphabet.lookupIndex(new Feature(vcStr + "_BIAS_FEATURE", true));
-            String fname = vcStr + "_" + bfidx;
+            String fname = vcStr + "_BIAS_FEATURE";
             int hash = fname.hashCode();
             hash = hash % prm.featureHashMod;
             if (hash < 0) {

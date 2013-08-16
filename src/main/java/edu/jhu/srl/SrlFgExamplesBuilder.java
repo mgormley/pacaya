@@ -42,7 +42,7 @@ public class SrlFgExamplesBuilder {
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
         /** Whether to include unsupported features. */
-        public boolean includeUnsupportedFeatures = false;
+        public boolean includeUnsupportedFeatures = true;
         /**
          * Minimum number of times (inclusive) a feature must occur in training
          * to be included in the model. Ignored if non-positive. (Using this
@@ -97,8 +97,6 @@ public class SrlFgExamplesBuilder {
             SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-
-            FgExample ex = new FgExample(sfg, trainConfig);
             
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
@@ -106,8 +104,10 @@ public class SrlFgExamplesBuilder {
             // So we don't have to compute the features again for this example.
             featExts.add(featExtractor);
             
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, false);
+
             // Cache only the features observed in training data.
-            ex.cacheLatFeats(sfg, trainConfig, featExtractor);
+            ex.cacheLatFeats();
         }
         
         for (int i=0; i<counter.size(); i++) {
@@ -142,17 +142,17 @@ public class SrlFgExamplesBuilder {
             SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-
-            FgExample ex = new FgExample(sfg, trainConfig);
             
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
             FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, alphabet, sentFeatExt);
             // So we don't have to compute the features again for this example.
             featExts.add(featExtractor);
-            
+
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, false);
+
             // Cache only the features observed in training data.
-            ex.cacheLatFeats(sfg, trainConfig, featExtractor);
+            ex.cacheLatFeats();
             data.add(ex);
         }
         
@@ -166,12 +166,7 @@ public class SrlFgExamplesBuilder {
                 log.debug("Cached features for " + i + " examples...");
             }
             FgExample ex = data.get(i);
-            CoNLL09Sentence sent = sents.get(i);
-            SrlGraph srlGraph = sent.getSrlGraph();
-            SrlFactorGraph sfg = (SrlFactorGraph) ex.getOriginalFactorGraph();
-            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-            FeatureExtractor featExtractor = featExts.get(i);
-            ex.cacheLatPredFeats(sfg, trainConfig, featExtractor);
+            ex.cacheLatPredFeats();
         }
 
         log.info("Num observation functions: " + obsAlphabet.size());

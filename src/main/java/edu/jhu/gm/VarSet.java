@@ -12,12 +12,11 @@ import edu.jhu.prim.set.SmallSet;
  * A subset of the variables.
  * 
  * Implementation Note: Internally, we use a simple ArrayList to store the
- * variables. This was inspired by libDAI which makes an analygous design
+ * variables. This was inspired by libDAI which makes an analogous design
  * choice for the representation of a variable set which we expect to be
  * quite small.
  * 
  * @author mgormley
- * 
  */
 // TODO: Move all the VarConfig related methods to VarConfig.
 public class VarSet extends SmallSet<Var> {

@@ -369,8 +369,7 @@ public class ErmaReader {
         }
 
         @Override
-        public FeatureVector calcFeatureVector(int factorId, VarConfig varConfig) {
-            int configId = varConfig.getConfigIndex();
+        public FeatureVector calcFeatureVector(int factorId, int configId) {
             return feature_ref_vec.get(factorId).get(configId);
         }
     }

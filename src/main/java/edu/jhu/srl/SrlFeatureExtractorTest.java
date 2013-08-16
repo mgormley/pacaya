@@ -56,12 +56,11 @@ public class SrlFeatureExtractorTest {
             VarSet vars = sfg.getFactor(a).getVars();
             int numConfigs = vars.calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {                
-                VarConfig vc =vars.getVarConfig(c);
-                featExt.calcFeatureVector(a, vc);    
+                featExt.calcFeatureVector(a, c);    
             }            
         }
         
-        assertEquals(1, obsAlphabet.size());
+        assertEquals(0, obsAlphabet.size());
         assertEquals(3*2 + 2 + 3, alphabet.size());
     }
     
@@ -94,8 +93,7 @@ public class SrlFeatureExtractorTest {
             VarSet vars = sfg.getFactor(a).getVars();
             int numConfigs = vars.calcNumConfigs();
             for (int c=0; c<numConfigs; c++) {                
-                VarConfig vc =vars.getVarConfig(c);
-                featExt.calcFeatureVector(a, vc);    
+                featExt.calcFeatureVector(a, c);    
             }            
         }
         

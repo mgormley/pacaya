@@ -24,7 +24,7 @@ public class MbrDecoderTest {
         
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
         FgExamples data = new FgExamples(alphabet);
-        data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(alphabet)));
+        data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(fg, trainConfig, alphabet)));
         FgModel model = new FgModel(alphabet);
 
         // Set the param for "N" to 0.5.

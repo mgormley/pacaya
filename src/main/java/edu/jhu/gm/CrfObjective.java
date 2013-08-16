@@ -83,8 +83,12 @@ public class CrfObjective implements Function {
         for (int a=0; a<fgLat.getNumFactors(); a++) {
             Factor f = fgLat.getFactor(a);
             if (f.getVars().size() == 0) {
-                FeatureCache cacheLat = ex.getFeatCacheLat();
-                numerator += cacheLat.getFeatureVector(a, 0).dot(params);
+                if (f instanceof DenseFactor) {
+                    int goldConfig = ex.getGoldConfigIdxLatPred(a);
+                    numerator += ex.getFeatureVector(a, goldConfig).dot(params);
+                } else {
+                    throw new UnsupportedFactorTypeException(f);
+                }
             }
         }
         infLat.clear();
@@ -102,13 +106,17 @@ public class CrfObjective implements Function {
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
             if (f.getVars().size() == 0) {
-                FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
-                denominator += cacheLatPred.getFeatureVector(a, 0).dot(params);
+                if (f instanceof DenseFactor) {
+                    int goldConfig = ex.getGoldConfigIdxLatPred(a);
+                    denominator += ex.getFeatureVector(a, goldConfig).dot(params);
+                } else {
+                    throw new UnsupportedFactorTypeException(f);
+                }
             }
         }
         infLatPred.clear();
         
-        double ll = numerator - denominator;        
+        double ll = numerator - denominator;
         assert ll <= 0 : "Log-likelihood should be <= 0: " + ll;
         
         return ll;
@@ -133,7 +141,8 @@ public class CrfObjective implements Function {
      * 
      * @param params The model parameters.
      * @param i The index of the data example.
-     * @param gradient The gradient vector to which this example's contribution is added.
+     * @param gradient The gradient vector to which this example's contribution
+     *            is added.
      */
     private void addGradientForExample(double[] params, int i,
             double[] gradient) {
@@ -143,14 +152,14 @@ public class CrfObjective implements Function {
         FgInferencer infLat = infLatList.get(i);
         FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
         infLat.run();
-        addExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat, 1.0, gradient);
+        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, gradient);
         infLat.clear();
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
         FgInferencer infLatPred = infLatPredList.get(i);
         FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
         infLatPred.run();
-        addExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred, -1.0, gradient);
+        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0, gradient);
         infLatPred.clear();
     }
 
@@ -163,38 +172,57 @@ public class CrfObjective implements Function {
      * @param multiplier The value which the expected features will be multiplied by.
      * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FeatureCache featCache, FgInferencer inferencer, double multiplier,
+    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, double multiplier,
             double[] gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
-            if (fg.getFactor(factorId) instanceof GlobalFactor) {
+            Factor f = fg.getFactor(factorId);
+            if (f instanceof GlobalFactor) {
                 // Special case for global factors.
                 continue;
-            }
-            
-            DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
-            
-            int numConfigs = factorMarginal.getVars().calcNumConfigs();
-            if (numConfigs == 0) {
-                // If there are no variables in this factor, we still need to get the cached features.
-                // Update the gradient for each feature.
-                for (IntDoubleEntry entry : featCache.getFeatureVector(factorId, 0)) {
-                    gradient[entry.index()] += multiplier * entry.get();
+            } else if (f instanceof DenseFactor) {            
+                DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
+                
+                int numConfigs = factorMarginal.getVars().calcNumConfigs();
+                if (numConfigs == 0) {
+                    // If there are no variables in this factor, we still need to get the cached features.
+                    // Update the gradient for each feature.
+                    int config = ex.getGoldConfigIdxLatPred(factorId);
+                    for (IntDoubleEntry entry : ex.getFeatureVector(factorId, config)) {
+                        gradient[entry.index()] += multiplier * entry.get();
+                    }
+                } else {
+                    IntIter iter = null;
+                    if (fg == ex.getFgLat()) {
+                        // If this is the numerator then we must clamp the predicted
+                        // variables to determine the correct set of model
+                        // parameters.
+                        VarConfig predVc = ex.getGoldConfigPred(factorId);
+                        iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(factorId).getVars(), predVc);
+                    }
+                    
+                    for (int c=0; c<numConfigs; c++) {       
+                        // Get the probability of the c'th configuration for this factor.
+                        double prob = factorMarginal.getValue(c);
+                        if (inferencer.isLogDomain()) {
+                            prob = Utilities.exp(prob);
+                        }
+
+                        // The configuration of all the latent/predicted variables,
+                        // where the predicted variables (might) have been clamped.
+                        int config = (iter != null) ? iter.next() : c;
+
+                        // Get the feature counts when they are clamped to the c'th configuration for this factor.                        
+                        for (IntDoubleEntry entry : ex.getFeatureVector(factorId, config)) {
+                            // Scale the feature counts by the marginal probability of the c'th configuration.
+                            // Update the gradient for each feature.
+                            gradient[entry.index()] += multiplier * prob * entry.get();
+                        }
+                    }
+                    assert(iter == null || !iter.hasNext());
                 }
             } else {
-                for (int c=0; c<numConfigs; c++) {       
-                    // Get the probability of the c'th configuration for this factor.
-                    double prob = factorMarginal.getValue(c);
-                    if (inferencer.isLogDomain()) {
-                        prob = Utilities.exp(prob);
-                    }
-                    // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                    for (IntDoubleEntry entry : featCache.getFeatureVector(factorId, c)) {
-                        // Scale the feature counts by the marginal probability of the c'th configuration.
-                        // Update the gradient for each feature.
-                        gradient[entry.index()] += multiplier * prob * entry.get();
-                    }
-                }
+                throw new UnsupportedFactorTypeException(f);
             }
         }
     }
@@ -207,7 +235,7 @@ public class CrfObjective implements Function {
             FgInferencer infLat = infLatList.get(i);
             FactorGraph fgLat = ex.updateFgLat(params, infLat.isLogDomain());
             infLat.run();
-            addExpectedFeatureCounts(fgLat, ex.getFeatCacheLat(), infLat, 1.0, feats);
+            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, feats);
         }
         return new FeatureVector(feats);
     }
@@ -220,7 +248,7 @@ public class CrfObjective implements Function {
             FgInferencer infLatPred = infLatPredList.get(i);
             FactorGraph fgLatPred = ex.updateFgLatPred(params, infLatPred.isLogDomain());
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, ex.getFeatCacheLatPred(), infLatPred, 1.0, feats);
+            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0, feats);
         }
         return new FeatureVector(feats);
     }
