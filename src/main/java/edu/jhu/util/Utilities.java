@@ -310,8 +310,33 @@ public class Utilities {
         return newArray;
     }
 
-    public static int[][] copyOf(int[][] array) {
-        int[][] newArray = new int[array.length][];
+    public static double[] copyOf(double[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static double[] copyOf(double[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+
+
+    public static boolean[][][][] copyOf(boolean[][][][] array) {
+        boolean[][][][] clone = new boolean[array.length][][][];
+        for (int i = 0; i < clone.length; i++) {
+            clone[i] = copyOf(array[i]);
+        }
+        return clone;
+    }
+
+    public static boolean[][][] copyOf(boolean[][][] array) {
+        boolean[][][] clone = new boolean[array.length][][];
+        for (int i = 0; i < clone.length; i++) {
+            clone[i] = copyOf(array[i]);
+        }
+        return clone;
+    }
+
+    public static boolean[][] copyOf(boolean[][] array) {
+        boolean[][] newArray = new boolean[array.length][];
         for (int i = 0; i < array.length; i++) {
             newArray[i] = Utilities.copyOf(array[i], array[i].length);
         }
@@ -322,19 +347,23 @@ public class Utilities {
         return Arrays.copyOf(original, newLength);
     }
 
+    public static boolean[] copyOf(boolean[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+
+    public static int[][] copyOf(int[][] array) {
+        int[][] newArray = new int[array.length][];
+        for (int i = 0; i < array.length; i++) {
+            newArray[i] = Utilities.copyOf(array[i], array[i].length);
+        }
+        return newArray;
+    }
+
     public static int[] copyOf(int[] original, int newLength) {
         return Arrays.copyOf(original, newLength);
     }
 
     public static int[] copyOf(int[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-    public static double[] copyOf(double[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static double[] copyOf(double[] original) {
         return Arrays.copyOf(original, original.length);
     }
 

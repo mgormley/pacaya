@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,10 +33,11 @@ public class SortTest {
     
     @Test
     public void testQuicksortOnRandomInput() {
+        Random random = new Random();
         double[] values = new double[]{ 1.0f, 3.0f, 2.0f, -1.0, 5.0};
         for (int i=0; i<10; i++) {            
             for (int j=0; j<values.length; j++) {
-                values[j] = Prng.nextDouble();
+                values[j] = random.nextDouble();
             }
             Sort.sortAsc(values);
             System.out.println(Arrays.toString(values));
@@ -44,7 +46,7 @@ public class SortTest {
         
         for (int i=0; i<10; i++) {            
             for (int j=0; j<values.length; j++) {
-                values[j] = Prng.nextDouble();
+                values[j] = random.nextDouble();
             }
             Sort.sortDesc(values);
             System.out.println(Arrays.toString(values));
@@ -221,7 +223,6 @@ public class SortTest {
         Assert.assertArrayEquals(new Integer[]{ 1, 2, 3, 5, 7, 8, 9, 11 }, l3.toArray(new Integer[]{}));
     }
     
-
     @Test
     public void testMergeSortedArrays() {
         IntArrayList l1 = new IntArrayList();
@@ -242,5 +243,66 @@ public class SortTest {
         int[] l3 = Sort.getMergedSortedArray(l1.toNativeArray(), l2.toNativeArray());
         Assert.assertArrayEquals(new int[]{ 1, 2, 3, 5, 7, 8, 9, 11 }, l3);
     }
+
+    @Test
+    public void testDiffSortedLists1() {
+        ArrayList<Integer> l1 = new ArrayList<Integer>();
+        ArrayList<Integer> l2 = new ArrayList<Integer>();
+        // Add some fib nums
+        l1.add(1);
+        l1.add(2);
+        l1.add(3);
+        l1.add(5);
+        l1.add(8);
+        // Add odd numbers
+        l2.add(3);
+        l2.add(5);
+        l2.add(7);
+        l2.add(9);
+        l2.add(11);
+        
+        ArrayList<Integer> l3 = Sort.getDiffOfSortedLists(l1, l2);
+        System.out.println(l3);
+        Assert.assertArrayEquals(new Integer[]{ 1, 2, 8 }, l3.toArray(new Integer[]{}));
+    }
+
+    @Test
+    public void testDiffSortedLists2() {
+        ArrayList<Integer> l1 = new ArrayList<Integer>();
+        ArrayList<Integer> l2 = new ArrayList<Integer>();
+        // Add some fib nums
+        l1.add(1);
+        l1.add(2);
+        l1.add(3);
+        l1.add(5);
+        l1.add(8);
+        // Add odd numbers
+        l2.add(1);
+        l2.add(3);
+        l2.add(7);
+        l2.add(8);
+        
+        ArrayList<Integer> l3 = Sort.getDiffOfSortedLists(l1, l2);
+        System.out.println(l3);
+        Assert.assertArrayEquals(new Integer[]{ 2, 5 }, l3.toArray(new Integer[]{}));
+    }
     
+    @Test
+    public void testDiffSortedLists3() {
+        ArrayList<Integer> l1 = new ArrayList<Integer>();
+        ArrayList<Integer> l2 = new ArrayList<Integer>();
+        // Add some fib nums
+        l1.add(1);
+        l1.add(2);
+        l1.add(3);
+        // Add odd numbers
+        l2.add(1);
+        l2.add(2);
+        l2.add(3);
+        
+        ArrayList<Integer> l3 = Sort.getDiffOfSortedLists(l1, l2);
+        System.out.println(l3);
+        Assert.assertArrayEquals(new Integer[]{ }, l3.toArray(new Integer[]{}));
+    }
+        
 }
