@@ -244,7 +244,7 @@ public class SentFeatureExtractorTest {
         ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
-
+        
         // Path between two indices.
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
@@ -320,15 +320,36 @@ public class SentFeatureExtractorTest {
         assertEquals(expectedPath,seenPath);        
     }
 
-        /* TBD:
-        zhaoPred.getParent();
-        zhaoPred.getChildren();
-        zhaoPred.getFarLeftChild();
-        zhaoPred.getFarRightChild();
-        zhaoPred.getNearLeftChild();
-        zhaoPred.getNearRightChild();
-        zhaoPred.getHighSupport();
-        zhaoPred.getLowSupport();*/
+    
+    @Test
+    public void testZhaoObjectParentsChildrenSentence2() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoObj = new ZhaoObject(3, parents, sent, cs);
+        assertEquals(zhaoObj.getParent(), 5);
+        assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
+        assertEquals(zhaoObj.getFarLeftChild(), -2);
+        assertEquals(zhaoObj.getFarLeftChild(), -2);
+        assertEquals(zhaoObj.getFarRightChild(), -2);
+        assertEquals(zhaoObj.getNearLeftChild(), -2);
+        assertEquals(zhaoObj.getNearRightChild(), -2);
+        assertEquals(zhaoObj.getArgHighSupport(), -1);
+        assertEquals(zhaoObj.getArgLowSupport(), -1);
+        assertEquals(zhaoObj.getPredHighSupport(), 1);
+        assertEquals(zhaoObj.getPredLowSupport(), 5);
+        ArrayList<Integer> expectedNoFarChildren = new ArrayList<Integer>();
+        expectedNoFarChildren.add(-2);
+        expectedNoFarChildren.add(-2);
+        assertEquals(zhaoObj.getNoFarChildren(), expectedNoFarChildren);
+    }
     
     @Test
     public void testAddNaradowskyFeatures() {

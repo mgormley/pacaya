@@ -148,7 +148,7 @@ public class ZhaoObject extends CoNLL09Token {
         }
     }
     
-    private List<Pair<Integer, Dir>> getRootPath() {
+    public List<Pair<Integer, Dir>> getRootPath() {
         return rootPath;
     }
     
@@ -173,7 +173,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
 
     public void setChildren() {
-        this.children = DepTree.getChildrenOf(parents, parent);
+        this.children = DepTree.getChildrenOf(parents, idx);
     }    
     
     public int getFarLeftChild() {
@@ -211,16 +211,16 @@ public class ZhaoObject extends CoNLL09Token {
             this.farLeftChild = leftChildren.get(0);
             this.nearLeftChild = leftChildren.get(leftChildren.size() - 1);
         } else {
-            this.farLeftChild = idx;
-            this.nearLeftChild = idx;
+            this.farLeftChild = -2;
+            this.nearLeftChild = -2;
         }
     
         if (!rightChildren.isEmpty()) {
             this.farRightChild = rightChildren.get(rightChildren.size() - 1);
             this.nearRightChild = rightChildren.get(0);
         } else {
-            this.farRightChild = idx;
-            this.nearRightChild = idx;
+            this.farRightChild = -2;
+            this.nearRightChild = -2;
         }
 
     }
@@ -260,7 +260,11 @@ public class ZhaoObject extends CoNLL09Token {
         int i;
         String argSupport = "n";
         String predSupport = "v";
-        
+
+        this.argLowSupport = -1;
+        this.argHighSupport = -1;
+        this.predLowSupport = -1;
+        this.predHighSupport = -1;
         for (Pair<Integer,Dir> a : rootPath) {
             i = a.get1();
             if (i == -1) {

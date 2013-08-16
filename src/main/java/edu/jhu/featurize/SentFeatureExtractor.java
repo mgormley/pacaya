@@ -447,7 +447,6 @@ public class SentFeatureExtractor {
         feats.add(feat);
         feat = StringUtils.join(bag(depRelPathLemma), "_");
         feats.add(feat);
-        
         // a:p|linePath.FEAT1.bag 
         // a:p|linePath.lemma.seq 
         // a:p|linePath.dprel.seq 
