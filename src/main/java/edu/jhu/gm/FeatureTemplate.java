@@ -9,33 +9,33 @@ public class FeatureTemplate implements Serializable {
 
     private static final long serialVersionUID = -6605264098531200020L;
     
-    // The predicted and latent variables in this feature template.
-    private VarSet vars;
+    // The number of possible assignments for the variables in this feature template.
+    private int numConfigs;
     // The alphabet of observation function features.
     private Alphabet<Feature> alphabet;
-    // The unique name for this template.
-    private String name;
+    // The unique identifier for this template.
+    private Object key;
     
-    public FeatureTemplate(VarSet vars, Alphabet<Feature> alphabet, String name) {
+    public FeatureTemplate(VarSet vars, Alphabet<Feature> alphabet, Object key) {
         super();
         if (VarSet.getVarsOfType(vars, VarType.OBSERVED).size() != 0) {
             throw new IllegalStateException("Only predicted and latent variables may participate in a feature template.");
         }
-        this.vars = vars;
+        this.numConfigs = vars.calcNumConfigs();
         this.alphabet = alphabet;
-        this.name = name;
+        this.key = key;
     }
     
-    public VarSet getVars() {
-        return vars;
+    public int getNumConfigs() {
+        return numConfigs;
     }
     
     public Alphabet<Feature> getAlphabet() {
         return alphabet;
     }
 
-    public String getName() {
-        return name;
-    }    
-    
+    public Object getKey() {
+        return key;
+    }
+
 }

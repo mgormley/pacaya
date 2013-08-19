@@ -1,38 +1,25 @@
 package edu.jhu.gm;
 
 /**
- * Exponential family factor represented as a dense conditional probability table.
+ * Exponential family factor represented as a dense conditional probability
+ * table.
  * 
  * @author mgormley
  */
-public class ExpFamFactor extends DenseFactor implements Factor {
-
-    private Object templateKey;
+// TODO: At the moment, this is just an IDENTIFIER for exponential family
+// factors...the actual behavior of this class is identical to ExplicitFactor.
+public class ExpFamFactor extends ExplicitFactor implements Factor {
 
     public ExpFamFactor(VarSet vars, Object templateKey) {
-        super(vars);
-        this.templateKey = templateKey;
+        super(vars, templateKey);
     }
     
     public ExpFamFactor(ExpFamFactor other) {
         super(other);
-        this.templateKey = other.templateKey;               
     }
     
     public ExpFamFactor(DenseFactor other, Object templateId) {
-        super(other);
-        this.templateKey = templateId;               
+        super(other, templateId);
     }
-
-    public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
-        return new ExpFamFactor(df, templateKey);
-    }
-
-    @Override
-    public Object getTemplateKey() {
-        return templateKey;
-    }
-    
 
 }

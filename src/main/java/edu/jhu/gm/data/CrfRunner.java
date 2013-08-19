@@ -121,8 +121,7 @@ public class CrfRunner {
             if (model == null) {
                 model = new FgModel(alphabet);
                 if (initParams == InitParams.RANDOM) {
-                    // Fill the model parameters will values randomly drawn from ~ Normal(0, 1).
-                    Gaussian.nextDoubleArray(0.0, 1.0, model.getParams());
+                    model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
                     // Do nothing.
                 } else {

@@ -22,15 +22,17 @@ public class MbrDecoderTest {
             trainConfig.put(var, 0);
         }
         
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExamples data = new FgExamples(alphabet);
-        data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(alphabet)));
-        FgModel model = new FgModel(alphabet);
+        FeatureTemplateList fts = new FeatureTemplateList();
+        FgExamples data = new FgExamples(fts);
+        data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(fts)));
+        FgModel model = new FgModel(fts);
 
         // Set the param for "N" to 0.5.
-        model.getParams()[0] = 0.5;
+        model.add(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("N")), 0.5);
+        //model.getParams()[0] = 0.5;
         // Set the param for "V" to 1.0.
-        model.getParams()[1] = 1.0;
+        model.add(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("V")), 1.0);
+        //model.getParams()[1] = 1.0;
         System.out.println(model);
         
         decoder.decode(model, data);

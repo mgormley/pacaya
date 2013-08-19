@@ -93,7 +93,7 @@ public class CrfObjective implements Function {
         for (int a=0; a<fgLat.getNumFactors(); a++) {
             Factor f = fgLat.getFactor(a);
             if (f.getVars().size() == 0) {
-                if (f instanceof DenseFactor) {
+                if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxLatPred(a);
                     double[] params = model.getParams(fts.lookupTemplateId(f), goldConfig);
                     numerator += ex.getObservationFeatures(a).dot(params);
@@ -117,7 +117,7 @@ public class CrfObjective implements Function {
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
             if (f.getVars().size() == 0) {
-                if (f instanceof DenseFactor) {
+                if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxLatPred(a);
                     double[] params = model.getParams(fts.lookupTemplateId(f), goldConfig);
                     denominator += ex.getObservationFeatures(a).dot(params);
@@ -197,7 +197,7 @@ public class CrfObjective implements Function {
             if (f instanceof GlobalFactor) {
                 // Special case for global factors.
                 continue;
-            } else if (f instanceof DenseFactor) {            
+            } else if (f instanceof ExpFamFactor) {            
                 DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
                 
                 int numConfigs = factorMarginal.getVars().calcNumConfigs();

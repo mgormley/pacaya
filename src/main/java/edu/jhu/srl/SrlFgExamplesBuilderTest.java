@@ -21,6 +21,7 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.Feature;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
@@ -51,13 +52,13 @@ public class SrlFgExamplesBuilderTest {
         cs.init(sents);
         
         System.out.println("Done reading.");
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureTemplateList fts = new FeatureTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         
 //        System.out.println("Num features: " + alphabet.size());
@@ -67,7 +68,7 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testRoleTrainAssignment() throws Exception {
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();        
+        FeatureTemplateList fts = new FeatureTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -84,12 +85,12 @@ public class SrlFgExamplesBuilderTest {
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         FgExample ex = data.get(0);
         
         //assertEquals(1, obsAlphabet.size());
-        assertEquals(5*2 + 2 + 5, alphabet.size());
+        //assertEquals(5*2 + 2 + 5, fts.size());
         
         VarConfig vc = ex.getGoldConfig();
         System.out.println(vc.toString().replace(",", "\n"));
@@ -109,7 +110,7 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testLinkTrainAssignment() throws Exception {
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();        
+        FeatureTemplateList fts = new FeatureTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -126,7 +127,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         FgExample ex = data.get(0);
         

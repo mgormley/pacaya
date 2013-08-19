@@ -16,10 +16,34 @@ public class FeatureTemplateList implements Serializable {
     public FeatureTemplateList() {
         fts = new ArrayList<FeatureTemplate>();
         isGrowing = true;
+        templateKeyAlphabet = new Alphabet<Object>();
+    }
+
+    public void update(FactorGraph fg) {
+        for (Factor f : fg.getFactors()) {
+            int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
+            if (index >= fts.size()) {
+                // Add the template.
+                fts.add(new FeatureTemplate(f.getVars(), new Alphabet<Feature>(), f.getTemplateKey()));
+            } else if (index == -1) {
+                throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
+            } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
+                // TODO: This is a bare-minimum check that the user defined the
+                // template keys properly. Eventually we should probably define
+                // some notion of variable type and check that a template has
+                // the correct variable types.
+                throw new IllegalStateException("Mismatch between number of variable configurations and the feature template.");
+            }
+        }
     }
     
     public void add(FeatureTemplate ft) {
-        fts.add(ft);
+        int index = templateKeyAlphabet.lookupIndex(ft.getKey());
+        if (index >= fts.size()) {
+            fts.add(ft);
+        } else if (index == -1) {
+            throw new RuntimeException("Unable to update feature template list for factor: " + ft.getKey());
+        }
     }
     
     public FeatureTemplate get(int i) {
@@ -54,4 +78,5 @@ public class FeatureTemplateList implements Serializable {
         // TODO: This might be too slow.
         return templateKeyAlphabet.lookupIndex(f.getTemplateKey());
     }
+    
 }

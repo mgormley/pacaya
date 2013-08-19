@@ -11,10 +11,22 @@ import java.io.Serializable;
  */
 public class MutableInt implements Serializable {
 
-    int value = 1; // Start at 1 since we're counting
+    int value;
+
+    public MutableInt() {
+        this.value = 1; // Start at 1 since we're counting
+    }
+    
+    public MutableInt(int value) {
+        this.value = value;
+    }
 
     public void increment() {
         ++value;
+    }
+    
+    public void decrement() {
+        --value;
     }
 
     public int get() {

@@ -23,6 +23,7 @@ import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureCache;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.FgModel;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarSet;
 import edu.jhu.util.Alphabet;
@@ -79,21 +80,6 @@ public class ErmaReaderTest {
                     assertEquals(ermaVar.getName(), ourVar.getName());
                 }                                
             }
-
-            {
-                System.out.println("\n\nFeatures for fgLat: ");
-                FeatureCache cacheLat = ex.getFeatCacheLat();
-                FactorGraph fgLat = ex.updateFgLat(new double[] { data
-                        .getAlphabet().size() }, true);
-                System.out.println(cacheLat.toString(data.getAlphabet()));
-            }
-            {
-                System.out.println("\n\nFeatures for fgLatPred: ");
-                FeatureCache cacheLatPred = ex.getFeatCacheLatPred();
-                FactorGraph fgLatPred = ex.updateFgLatPred(new double[] { data
-                        .getAlphabet().size() }, true);
-                System.out.println(cacheLatPred.toString(data.getAlphabet()));
-            }
             
             // TODO: test that the features are what we'd expect them to be.
         }
@@ -119,10 +105,11 @@ public class ErmaReaderTest {
             }
         }
         
+        FgModel model = new FgModel(data, includeUnsupportedFeatures);
         if (includeUnsupportedFeatures) {
-            assertEquals(ermaAllFeatNames.size(), data.getAlphabet().size());
+            assertEquals(ermaAllFeatNames.size(), model.getNumParams());
         } else {
-            assertEquals(ermaObsFeatNames.size(), data.getAlphabet().size());
+            assertEquals(ermaObsFeatNames.size(), model.getNumParams());
         }
     }
     

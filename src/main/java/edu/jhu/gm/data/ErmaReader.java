@@ -13,10 +13,11 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
+import edu.jhu.gm.CrfFeatureExtractor;
 import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
@@ -53,8 +54,8 @@ public class ErmaReader {
         this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
-    public FgExamples read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
-        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
+    public FgExamples read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
+        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), fts);
     }
     
     /**
@@ -67,7 +68,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExamples read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+    public FgExamples read(String featureTemplate, String dataFile, FeatureTemplateList fts) {
         FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
@@ -78,7 +79,7 @@ public class ErmaReader {
         }
 
         log.info("Reading and converting data from " + dataFile);  
-        FgExamples data = new FgExamples(alphabet);
+        FgExamples data = new FgExamples(fts);
         try {
             // This will convert each DataSample to an FgExample and add it to data.
             ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
@@ -317,7 +318,7 @@ public class ErmaReader {
         }
         
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
-        FeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
+        CrfFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
         
         FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
         return fgEx;
@@ -359,7 +360,7 @@ public class ErmaReader {
         }
     }
     
-    private static class SimpleLookupFeatureExtractor implements FeatureExtractor {
+    private static class SimpleLookupFeatureExtractor implements CrfFeatureExtractor {
 
         private ArrayList<ArrayList<FeatureVector>> feature_ref_vec;
 
@@ -369,7 +370,7 @@ public class ErmaReader {
         }
 
         @Override
-        public FeatureVector calcFeatureVector(int factorId, VarConfig varConfig) {
+        public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
             int configId = varConfig.getConfigIndex();
             return feature_ref_vec.get(factorId).get(configId);
         }

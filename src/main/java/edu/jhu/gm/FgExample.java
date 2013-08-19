@@ -31,8 +31,8 @@ public class FgExample {
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
-    /** Cache of the features on the observation variables only (i.e. the values of the observation functions). */
-    private List<FeatureVector> fvs;
+    /** Feature extractor on the observation variables only (i.e. the values of the observation functions). */
+    private CrfFeatureExtractor featExtractor;
 
     /**
      * Constructs a train or test example for a Factor Graph.
@@ -43,37 +43,10 @@ public class FgExample {
      *            observation function).
      */
     public FgExample(FactorGraph fg, VarConfig goldConfig, CrfFeatureExtractor featExtractor) {
-        this(fg, goldConfig, getFvs(fg, featExtractor));
-    }
-    
-    /** Gets the observation feature vector for each factor. */
-    private static List<FeatureVector> getFvs(FactorGraph fg, CrfFeatureExtractor featExtractor) {
-        List<FeatureVector> fvs = new ArrayList<FeatureVector>(fg.getNumFactors());        
-        for (int a=0; a<fg.getNumFactors(); a++) {
-            Factor f = fg.getFactor(a);
-            if (f instanceof GlobalFactor) {
-                fvs.add(null);                
-            } else if (f instanceof DenseFactor) {
-                fvs.add(featExtractor.calcObsFeatureVector(a));
-            } else {
-                throw new UnsupportedFactorTypeException(f);
-            }
-        }
-        return fvs;
-    }
-
-    /**
-     * Constructs a train or test example for a Factor Graph.
-     * 
-     * @param fg The factor graph.
-     * @param goldConfig The gold assignment to the variables.
-     * @param fvs The feature vector on the observations only (i.e. the value
-     *            of the observation function), indexed by factor id.
-     */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, List<FeatureVector> fvs) {
         this.fg = fg;
         this.goldConfig = goldConfig;
-        this.fvs = fvs;
+        // TODO: Cache these features.
+        this.featExtractor = featExtractor;
         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
@@ -88,6 +61,22 @@ public class FgExample {
 
         assert (fg.getNumFactors() == fgLatPred.getNumFactors());
         assert (fg.getNumFactors() == fgLat.getNumFactors());
+    }
+    
+    /** Gets the observation feature vector for each factor. */
+    private static List<FeatureVector> getFvs(FactorGraph fg, CrfFeatureExtractor featExtractor) {
+        List<FeatureVector> fvs = new ArrayList<FeatureVector>(fg.getNumFactors());        
+        for (int a=0; a<fg.getNumFactors(); a++) {
+            Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
+                fvs.add(null);                
+            } else if (f instanceof ExpFamFactor) {
+                fvs.add(featExtractor.calcObsFeatureVector(a));
+            } else {
+                throw new UnsupportedFactorTypeException(f);
+            }
+        }
+        return fvs;
     }
 
     /**
@@ -135,7 +124,7 @@ public class FgExample {
                 // Currently, global factors do not support features, and
                 // therefore have no model parameters.
                 continue;
-            } else if (f instanceof DenseFactor) {
+            } else if (f instanceof ExpFamFactor) {
                 
                 IntIter iter = null;
                 if (fg == this.getFgLat()) {
@@ -173,7 +162,7 @@ public class FgExample {
 
     /** Gets the observation features for the given factor. */
     public FeatureVector getObservationFeatures(int factorId) {
-        return fvs.get(factorId);
+        return featExtractor.calcObsFeatureVector(factorId);
     }
 
     public boolean hasLatentVars() {

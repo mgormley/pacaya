@@ -8,6 +8,7 @@ import java.io.Writer;
 
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.Utilities;
@@ -26,6 +27,23 @@ import edu.jhu.util.Sort;
 // (particularly when serialized) is smaller.
 public class FgModel implements Serializable {
 
+    public interface TemplateModel {
+
+        void add(int config, int feat, double addend);
+        
+        double[] getParams(int config);
+        
+        void printModel(Writer writer) throws IOException; 
+        
+        int getNumParams();
+
+        int getNumConfigs();
+
+        int getNumFeats(int c);
+        
+        void apply(LambdaBinOpDouble lambda);
+    }
+    
     private static final long serialVersionUID = 4477788767217412525L;
     /**
      * The model parameters. Indexed by feature template index, variable
@@ -48,17 +66,22 @@ public class FgModel implements Serializable {
         this(data.getTemplates(), includeUnsupportedFeatures);
     }
     
+    public FgModel(FeatureTemplateList templates) {
+        this(templates, true);
+    }
+    
     public FgModel(FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
         this.templates = templates;
         numTemplates = templates.size();
         
         this.params = new double[numTemplates][][];
+        this.included = new boolean[numTemplates][][];
         for (int t=0; t<numTemplates; t++) {
             FeatureTemplate template = templates.get(t);
-            VarSet vars = template.getVars();
-            int numConfigs = vars.calcNumConfigs();
+            int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
             params[t] = new double[numConfigs][alphabet.size()];
+            included[t] = new boolean[numConfigs][alphabet.size()];
             numParams += numConfigs * alphabet.size();
         }
         
@@ -84,7 +107,7 @@ public class FgModel implements Serializable {
         assert (numParams == inParams.length);
         int t = 0; 
         int c = 0;
-        int k = 0;
+        int k = -1;
         for (int i=0; i<inParams.length; i++) {
             // Increment t,c,k indices.
             do {
@@ -167,13 +190,12 @@ public class FgModel implements Serializable {
     public void printModel(Writer writer) throws IOException {
         for (int t=0; t<numTemplates; t++) {
             FeatureTemplate template = templates.get(t);
-            VarSet vars = template.getVars();
-            int numConfigs = vars.calcNumConfigs();
+            int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
                 //VarConfig vc = vars.getVarConfig(c);
                 for (int k = 0; k < params[t][c].length; k++) {
-                    writer.write(template.getName());
+                    writer.write(template.getKey().toString());
                     writer.write("=");
                     writer.write(Integer.toString(c));
                     writer.write("_");
@@ -203,15 +225,26 @@ public class FgModel implements Serializable {
         };
         apply(lambda);
     }
+
+    public void fill(final double value) {
+        apply(new LambdaUnaryOpDouble() {
+            @Override
+            public double call(double obj) {
+                return value;
+            }
+        });
+    }
     
     public void apply(LambdaUnaryOpDouble lambda) {
         for (int t=0; t<params.length; t++) {
             for (int c = 0; c < params[t].length; c++) {
                 for (int k = 0; k < params[t][c].length; k++) {
-                    params[t][c][k] = lambda.call(params[t][c][k]);
+                    if (included[t][c][k]) {
+                        params[t][c][k] = lambda.call(params[t][c][k]);
+                    }
                 }
             }
         }
-    }       
+    }     
         
 }
