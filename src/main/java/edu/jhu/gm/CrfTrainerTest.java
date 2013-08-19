@@ -15,6 +15,7 @@ import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.data.ErmaReader;
 import edu.jhu.gm.data.ErmaReaderTest;
+import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
@@ -136,18 +137,18 @@ public class CrfTrainerTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    DenseFactor f;
+                    ExpFamFactor f;
                     if (i == -1) {
-                        f = new DenseFactor(new VarSet(rootVars[j]));
+                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
                         fg.addFactor(f);
 
                         //trainConfig.put(rootVars[j], 0);
                     } else {
-                        f = new DenseFactor(new VarSet(childVars[i][j]));
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         fg.addFactor(f);
 
                         childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Utilities.getList("A1", "A2", "A3"));
-                        fg.addFactor(new DenseFactor(new VarSet(childRoles[i][j])));
+                        fg.addFactor(new ExpFamFactor(new VarSet(childRoles[i][j]), SrlFactorTemplate.ROLE_UNARY));
                         
                         //trainConfig.put(childVars[i][j], 0);
                         trainConfig.put(childRoles[i][j], "A1");

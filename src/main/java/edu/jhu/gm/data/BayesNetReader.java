@@ -12,7 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import edu.jhu.gm.DenseFactor;
+import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
@@ -28,7 +28,7 @@ public class BayesNetReader {
     private static final Pattern whitespaceOrComma = Pattern.compile("[,\\s]+");
     
     private HashMap<String,Var> varMap;
-    private HashMap<VarSet, DenseFactor> factorMap;
+    private HashMap<VarSet, ExpFamFactor> factorMap;
 
     public BayesNetReader() {
         
@@ -67,7 +67,7 @@ public class BayesNetReader {
         // Read CPD file.
         BufferedReader cpdReader = new BufferedReader(new InputStreamReader(cpdIs));
         
-        factorMap = new LinkedHashMap<VarSet, DenseFactor>();
+        factorMap = new LinkedHashMap<VarSet, ExpFamFactor>();
         String line;
         while ((line = cpdReader.readLine()) != null) {
             // Parse out the variable configuration.           
@@ -87,8 +87,12 @@ public class BayesNetReader {
                         
             // Get the factor for this configuration, creating a new one if necessary.
             VarSet vars = config.getVars();
-            DenseFactor f = factorMap.get(vars);
-            if (f == null) { f = new DenseFactor(vars); }
+            ExpFamFactor f = factorMap.get(vars);
+            // TODO: Creating these as "ExpFamFactors" is a misnomer. In reality
+            // these are just DenseFactors and don't need to specify a feature
+            // template. For now, we just happen to call them
+            // ExpFamFactors.
+            if (f == null) { f = new ExpFamFactor(vars, "bayes_net_factor"); }
             
             // Set the value in the factor.
             f.setValue(config.getConfigIndex(), value);
@@ -100,7 +104,7 @@ public class BayesNetReader {
         
         // Create the factor graph.
         FactorGraph fg = new FactorGraph();
-        for (DenseFactor f : factorMap.values()) {
+        for (ExpFamFactor f : factorMap.values()) {
             fg.addFactor(f);
         }        
         return fg;
