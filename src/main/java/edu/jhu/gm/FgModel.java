@@ -171,17 +171,18 @@ public class FgModel implements Serializable {
             }
         }
     }
-
     public void add(int ft, int config, int feat, double addend) {
-        if (!included[ft][config][feat]) {
-            throw new IllegalArgumentException("The specified parameter is not included in this model");
-        }
-        params[ft][config][feat] += addend;
+      if (!included[ft][config][feat]) {
+          throw new IllegalArgumentException("The specified parameter is not included in this model");
+      }
+      params[ft][config][feat] += addend;
     }
-    
-    //    public double getParam(int ft, int config, int feat) {
-    //        return params[ft][config][feat];
-    //    }
+
+    public void addIfParamExists(int ft, int config, int feat, double addend) {
+        if (included[ft][config][feat]) {
+            params[ft][config][feat] += addend;
+        }
+    }
     
     public double[] getParams(int ft, int config) {
         return params[ft][config];

@@ -207,7 +207,7 @@ public class CrfObjective implements Function {
                     FeatureVector fv = ex.getObservationFeatures(factorId);
                     int config = ex.getGoldConfigIdxLatPred(factorId);
                     for (IntDoubleEntry entry : fv) {
-                        gradient.add(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
+                        gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
                     }
                 } else {
                     IntIter iter = null;
@@ -235,7 +235,7 @@ public class CrfObjective implements Function {
                         for (IntDoubleEntry entry : fv) {
                             // Scale the feature counts by the marginal probability of the c'th configuration.
                             // Update the gradient for each feature.
-                            gradient.add(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
+                            gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
                         }
                     }
                     assert(iter == null || !iter.hasNext());
