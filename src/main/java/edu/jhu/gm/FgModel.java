@@ -90,11 +90,13 @@ public class FgModel implements Serializable {
                 FgExample ex = data.get(i);
                 for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                     Factor f = ex.getFgLatPred().getFactor(a);
-                    int c = ex.getGoldConfigIdxLatPred(a);
                     int t = templates.getTemplateId(f);
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    for (IntDoubleEntry entry : fv) {
-                        included[t][c][entry.index()] = true;
+                    if (t != -1) {
+                        int c = ex.getGoldConfigIdxLatPred(a);
+                        FeatureVector fv = ex.getObservationFeatures(a);
+                        for (IntDoubleEntry entry : fv) {
+                            included[t][c][entry.index()] = true;
+                        }
                     }
                 }
             }
