@@ -223,7 +223,7 @@ public class CrfTrainerTest {
     
     @Test
     public void testTrainErmaInput() {
-        ErmaReader er = new ErmaReader(true);
+        ErmaReader er = new ErmaReader();
         FeatureTemplateList fts = new FeatureTemplateList();        
         FgExamples data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
         
