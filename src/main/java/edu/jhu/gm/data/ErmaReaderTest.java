@@ -45,8 +45,7 @@ public class ErmaReaderTest {
         System.out.println(ff);
         
         // Read the ERMA files to get our objects.
-        boolean includeUnsupportedFeatures = true;
-        ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
+        ErmaReader er = new ErmaReader();
         FeatureTemplateList fts = new FeatureTemplateList();
         FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, fts);
 
@@ -103,6 +102,7 @@ public class ErmaReaderTest {
             }
         }
         
+        boolean includeUnsupportedFeatures = true;
         FgModel model = new FgModel(data, includeUnsupportedFeatures);
         if (includeUnsupportedFeatures) {
             assertEquals(ermaAllFeatNames.size(), model.getNumParams());

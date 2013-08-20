@@ -37,21 +37,11 @@ import featParser.FeatureFileParser;
 public class ErmaReader {
 
     private static final Logger log = Logger.getLogger(ErmaReader.class);
-    private boolean includeUnsupportedFeatures;
-
-    /**
-     * Constructs an ERMA reader, including all the unsupported features (ERMA's default).
-     */
-    public ErmaReader() {
-        this(true);
-    }
     
     /**
      * Constructs an ERMA reader.
-     * @param includeUnsupportedFeatures Whether to include the "unsupported" features in the model.
      */
-    public ErmaReader(boolean includeUnsupportedFeatures) {
-        this.includeUnsupportedFeatures = includeUnsupportedFeatures;
+    public ErmaReader() {
     }
     
     public FgExamples read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
@@ -88,15 +78,6 @@ public class ErmaReader {
             throw new RuntimeException(e);
         }
         
-        if (includeUnsupportedFeatures) {
-            log.info("Including unsupported features in the model.");
-            for (data.Feature feat : ff.getFeatures()) {
-                alphabet.lookupIndex(new Feature(feat.getName()));
-            }
-        } else {
-            log.info("Excluding unsupported features from the model.");
-        }
-        
         return data;
     }
 
@@ -118,7 +99,7 @@ public class ErmaReader {
         
         @Override
         protected void addDataSample(DataSample s) {
-            data.add(toFgExample(s, this.features, data.getAlphabet()));
+            data.add(toFgExample(s, this.features, data.getTemplates()));
         }
         
     }
@@ -181,7 +162,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
+    private static FgExample toFgExample(DataSample s, FeatureFile ff, FeatureTemplateList fts){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
@@ -223,7 +204,10 @@ public class ErmaReader {
                     Ivars.add(v);
                 }
                 // MRG: ERMA's way was: fac = new Factor(next++,Ivars, 1.0);
-                fac = new ExpFamFactor(Ivars, TODO_ADD_FEATURE_TEMPLATE);
+                
+                // TODO: Get a feature template here.
+                Object templateKey = "INCORRECT_TEMPLATE_KEY";
+                fac = new ExpFamFactor(Ivars, templateKey);
                 facs.put(key,fac);
                 //ArrayList<set<feature* > > feat_r_vec;
                 
@@ -285,6 +269,13 @@ public class ErmaReader {
                 // MRG: ERMA WAY: featRef.get(state).put(feat,featRef.get(state).containsKey(feat)?featRef.get(state).get(feat)+fi.getWeight():fi.getWeight());
                 
                 // MRG: Convert the ERMA feature to our feature and lookup its index.
+                
+                
+                // TODO: Get the correct alphabet.
+                Object templateKey = "INCORRECT_TEMPLATE_KEY";
+                Alphabet<Feature> alphabet = fts.getTemplateByKey(templateKey).getAlphabet();                
+                
+                
                 int featIdx = alphabet.lookupIndex(new Feature(feat.getName()));           
                 FeatureVector featureVector = featRef.get(state);
                 // Add the feature weight for this feature to the feature vector.
@@ -371,7 +362,8 @@ public class ErmaReader {
 
         @Override
         public FeatureVector calcObsFeatureVector(int factorId) {
-            return feature_ref_vec.get(factorId);
+            throw new RuntimeException("not implemented");
+            //return feature_ref_vec.get(factorId);
         }
     }
     
