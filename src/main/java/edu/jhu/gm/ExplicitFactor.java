@@ -7,7 +7,7 @@ package edu.jhu.gm;
  */
 public class ExplicitFactor extends DenseFactor implements Factor {
 
-    private Object templateKey;
+    protected Object templateKey;
 
     public ExplicitFactor(VarSet vars, Object templateKey) {
         super(vars);

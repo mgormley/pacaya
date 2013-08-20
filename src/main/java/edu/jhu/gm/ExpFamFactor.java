@@ -22,4 +22,9 @@ public class ExpFamFactor extends ExplicitFactor implements Factor {
         super(other, templateId);
     }
 
+    public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
+        DenseFactor df = super.getClamped(clmpVarConfig);
+        return new ExpFamFactor(df, templateKey);
+    }
+    
 }
