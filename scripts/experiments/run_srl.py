@@ -162,6 +162,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Full length test sentences.
             setup.update(trainMaxSentenceLength=20,
                          featureHashMod=-1,
+                         featCountCutoff=0,
                          alwaysIncludeLinkVars=True,
                          linkVarType="OBSERVED",
                          unaryFactors=True,
