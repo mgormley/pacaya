@@ -6,9 +6,12 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
+import edu.jhu.gm.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.util.Sort;
 import edu.jhu.prim.util.math.Vectors;
@@ -136,7 +139,58 @@ public class FgModelTest {
     
     @Test
     public void testExcludeUnsupportedFeatures() {
-        fail("not yet implemented");
+        FeatureTemplateList fts = getFtl();
+        
+        FgExamples data = new FgExamples(fts);
+        data.add(getExForFts("1a", "2a", fts));
+        data.add(getExForFts("1a", "2c", fts));
+        data.add(getExForFts("1b", "2b", fts));
+        data.add(getExForFts("1b", "2c", fts));
+        
+        FgModel model1 = new FgModel(data, true);        
+        System.out.println("\n"+model1);
+        assertEquals(20, model1.getNumParams());
+        
+        FgModel model2 = new FgModel(data, false);        
+        System.out.println("\n"+model2);
+        // 6 bias features, and 4 other features.
+        assertEquals(6+4, model2.getNumParams());
+    }
+
+    public static class MockFeatureExtractor extends SlowObsFeatureExtractor {
+
+        private FeatureTemplateList fts;
+
+        public MockFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FeatureTemplateList fts) {
+            super(fg, goldConfig);
+            this.fts = fts;
+        }
+        
+        @Override
+        public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
+            FeatureVector fv = new FeatureVector();
+            Alphabet<Feature> alphabet = fts.getTemplate(fg.getFactor(factorId)).getAlphabet();
+
+            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            fv.set(featIdx, 1.0);
+            featIdx = alphabet.lookupIndex(new Feature("feat2a"));
+            fv.set(featIdx, 1.0);
+            
+            return fv;
+        }
+    }
+    
+    private FgExample getExForFts(String state1, String state2, FeatureTemplateList fts) {
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
+        Var v2 = new Var(VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        FactorGraph fg = new FactorGraph();
+        fg.addFactor(new ExpFamFactor(new VarSet(v1, v2), "key2"));
+        
+        VarConfig vc = new VarConfig();
+        vc.put(v1, state1);
+        vc.put(v2, state2);
+        
+        return new FgExample(fg, vc, new MockFeatureExtractor(fg, vc, fts), fts);
     }
 
     public static FeatureTemplateList getFtl() {

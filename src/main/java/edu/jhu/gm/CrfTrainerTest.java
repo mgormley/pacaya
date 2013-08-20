@@ -60,7 +60,7 @@ public class CrfTrainerTest {
                 fv.set(featIdx, 1.0);
             }
             
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE"));
+            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
             fv.set(featIdx, 1.0);
             
             return fv;

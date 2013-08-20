@@ -24,7 +24,7 @@ public class SrlFgModelTest {
             // TODO: cs.init(sents);
             
             // Just test that no exception is thrown.
-            SrlFgModel model = new SrlFgModel(FgModelTest.getFtl(), true, cs);
+            SrlFgModel model = new SrlFgModel(FgModelTest.getFtl(), cs);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);

@@ -193,7 +193,7 @@ public class SrlRunner {
                     trainMaxSentenceLength, name);
             
             if (model == null) {
-                model = new SrlFgModel(fts, includeUnsupportedFeatures, cs);
+                model = new SrlFgModel(data, includeUnsupportedFeatures, cs);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {

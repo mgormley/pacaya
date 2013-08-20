@@ -238,13 +238,12 @@ public class CrfObjectiveTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fePrm.biasOnly = true;
-        boolean includeUnsupportedFeatures = true;        
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         
         System.out.println("Num features: " + fts.getNumObsFeats());
-        FgModel model = new FgModel(fts, includeUnsupportedFeatures);
+        FgModel model = new FgModel(fts);
 
         boolean logDomain = false;
         FgInferencerFactory infFactory = getInfFactory(logDomain);        

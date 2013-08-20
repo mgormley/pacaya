@@ -6,14 +6,13 @@ import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
 
+import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Prng;
 import edu.jhu.util.Lambda.LambdaBinOpDouble;
-import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.dist.Gaussian;
-import edu.jhu.util.Sort;
 
 /**
  * A model in the exponential family for a factor graph .
@@ -63,14 +62,14 @@ public class FgModel implements Serializable {
     private FeatureTemplateList templates;
     
     public FgModel(FgExamples data, boolean includeUnsupportedFeatures) {
-        this(data.getTemplates(), includeUnsupportedFeatures);
+        this(data, data.getTemplates(), includeUnsupportedFeatures);
     }
     
     public FgModel(FeatureTemplateList templates) {
-        this(templates, true);
+        this(null, templates, true);
     }
     
-    public FgModel(FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
+    private FgModel(FgExamples data, FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
         this.templates = templates;
         numTemplates = templates.size();
         
@@ -82,15 +81,46 @@ public class FgModel implements Serializable {
             Alphabet<Feature> alphabet = template.getAlphabet();
             params[t] = new double[numConfigs][alphabet.size()];
             included[t] = new boolean[numConfigs][alphabet.size()];
-            numParams += numConfigs * alphabet.size();
         }
         
         if (!includeUnsupportedFeatures) {
-            // TODO: update the numParams count to use included.
-            throw new RuntimeException("not yet implemented");
+            // For each factor in the data, lookup its configId. Set all the
+            // observed features for that configuration to true.
+            for (int i=0; i<data.size(); i++) {
+                FgExample ex = data.get(i);
+                for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
+                    Factor f = ex.getFgLatPred().getFactor(a);
+                    int c = ex.getGoldConfigIdxLatPred(a);
+                    int t = templates.getTemplateId(f);
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    for (IntDoubleEntry entry : fv) {
+                        included[t][c][entry.index()] = true;
+                    }
+                }
+            }
         } else {
             Utilities.fill(included, true);
         }
+      
+        // Always include the bias features.
+        for (int t=0; t<params.length; t++) {
+            FeatureTemplate template = templates.get(t);
+            Alphabet<Feature> alphabet = template.getAlphabet();            
+            for (int k = 0; k < alphabet.size(); k++) {
+                if (alphabet.lookupObject(k).isBiasFeature()) {
+                    for (int c = 0; c < params[t].length; c++) {
+                        included[t][c][k] = true;
+                    }        
+                }
+            }
+        }
+        
+        // Count the number of parameters, accounting for excluded params.
+        final MutableInt count = new MutableInt(0);
+        apply(new LambdaUnaryOpDouble() {
+            public double call(double v) { count.increment(); return v; }
+        });
+        numParams = count.get();
     }
     
     /** Copy constructor. */
@@ -195,14 +225,16 @@ public class FgModel implements Serializable {
             for (int c = 0; c < numConfigs; c++) {
                 //VarConfig vc = vars.getVarConfig(c);
                 for (int k = 0; k < params[t][c].length; k++) {
-                    writer.write(template.getKey().toString());
-                    writer.write("=");
-                    writer.write(Integer.toString(c));
-                    writer.write("_");
-                    writer.write(alphabet.lookupObject(k).toString());
-                    writer.write("=");
-                    writer.write(String.format("%.13g", params[t][c][k]));
-                    writer.write("\n");
+                    if (included[t][c][k]) {
+                        writer.write(template.getKey().toString());
+                        writer.write("=");
+                        writer.write(Integer.toString(c));
+                        writer.write("_");
+                        writer.write(alphabet.lookupObject(k).toString());
+                        writer.write("=");
+                        writer.write(String.format("%.13g", params[t][c][k]));
+                        writer.write("\n");
+                    }
                 }
             }
         }
