@@ -121,8 +121,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      featCountCutoff=4,
                      trainMaxSentenceLength=20,
                      )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
         elif self.expname == "srl-all":
             setup.update(
                      featureHashMod=-1,
@@ -136,8 +134,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      featCountCutoff=4,
                      trainMaxSentenceLength=20,
                      )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
         elif self.expname == "srl-simple+narad":
             setup.update(
                      featureHashMod=-1,
@@ -151,8 +147,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      featCountCutoff=4,
                      trainMaxSentenceLength=20,
                      )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
         elif self.expname == "srl-simple+narad+dep":
             setup.update(
                      featureHashMod=-1,
@@ -166,8 +160,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      featCountCutoff=4,
                      trainMaxSentenceLength=20,
                      )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
         elif self.expanme == "srl-simple+narad+zhao":
             setup.update(
                      featureHashMod=-1,
@@ -181,10 +173,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                      featCountCutoff=4,
                      trainMaxSentenceLength=20,
                      )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
         elif self.expname == "srl-biasonly":
-            setup.update(biasOnly=True, work_mem_megs=2*1024)
+            setup.update(biasOnly=True)
+        setup.update(timeoutSeconds=48*60*60,
+                     work_mem_megs=200*1024)
         return setup
 
 
