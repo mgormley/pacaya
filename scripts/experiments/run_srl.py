@@ -160,10 +160,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-                #trainMaxNumSentences=3000,
+            setup.update(trainMaxSentenceLength=20)
+            #setup.update(trainMaxNumSentences=2000)
             setup.update(
                          featureHashMod=-1,
-                         featCountCutoff=0,
                          alwaysIncludeLinkVars=True,
                          linkVarType="OBSERVED",
                          unaryFactors=True,
@@ -171,7 +171,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                          useNaradFeats=True,
                          useZhaoFeats=False,
                          useDepPathFeats=False,
-                         featCountCutoff=4,
+                         featCountCutoff=0,
                          )
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=2*1024)
