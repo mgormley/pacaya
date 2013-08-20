@@ -70,7 +70,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
 class SrlExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        self.known_exps = ("srl-dev20", "srl-biasonly", "srl-all")
+        self.known_exps = ("srl-dev20", "srl-biasonly", "srl-all", "srl-simple+narad+zhao", "srl-simple+narad+dep", "srl-simple+narad")
         if options.expname not in self.known_exps:
             sys.stderr.write("Unkown experiment setting: " + options.expname)
             sys.exit()
