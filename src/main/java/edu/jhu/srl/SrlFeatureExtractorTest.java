@@ -41,6 +41,8 @@ public class SrlFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
+        fts.update(sfg);
+        
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.biasOnly = true;        
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs);
@@ -69,6 +71,8 @@ public class SrlFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
+
+        fts.update(sfg);
         
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.useNaradFeats = true;
