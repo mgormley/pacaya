@@ -38,4 +38,9 @@ public class FeatureTemplate implements Serializable {
         return key;
     }
 
+    @Override
+    public String toString() {
+        return "FeatureTemplate [key=" + key + ", numConfigs=" + numConfigs + ", alphabet=" + alphabet + "]";
+    }    
+
 }

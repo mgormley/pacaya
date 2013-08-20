@@ -29,7 +29,6 @@ public class FgExamples implements Iterable<FgExample> {
     
     /** Adds an example. */
     public void add(FgExample example) {
-        fts.update(example.getOriginalFactorGraph());
         examples.add(example);
     }
     

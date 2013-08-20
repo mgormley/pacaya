@@ -87,7 +87,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
                 // Get features on the observations for a pair of words.
                 obsFeats = fastGetObsFeats(parent, child, obsAlphabet);
             }
-            alphabet = fts.lookupTemplate(f).getAlphabet();
+            alphabet = fts.getTemplate(f).getAlphabet();
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

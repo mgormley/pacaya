@@ -18,33 +18,6 @@ public class FeatureTemplateList implements Serializable {
         isGrowing = true;
         templateKeyAlphabet = new Alphabet<Object>();
     }
-
-    public void update(FactorGraph fg) {
-        for (Factor f : fg.getFactors()) {
-            int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
-            if (index >= fts.size()) {
-                // Add the template.
-                fts.add(new FeatureTemplate(f.getVars(), new Alphabet<Feature>(), f.getTemplateKey()));
-            } else if (index == -1) {
-                throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
-            } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
-                // TODO: This is a bare-minimum check that the user defined the
-                // template keys properly. Eventually we should probably define
-                // some notion of variable type and check that a template has
-                // the correct variable types.
-                throw new IllegalStateException("Mismatch between number of variable configurations and the feature template.");
-            }
-        }
-    }
-    
-    public void add(FeatureTemplate ft) {
-        int index = templateKeyAlphabet.lookupIndex(ft.getKey());
-        if (index >= fts.size()) {
-            fts.add(ft);
-        } else if (index == -1) {
-            throw new RuntimeException("Unable to update feature template list for factor: " + ft.getKey());
-        }
-    }
     
     public FeatureTemplate get(int i) {
         return fts.get(i);
@@ -69,22 +42,72 @@ public class FeatureTemplateList implements Serializable {
         }
         isGrowing = false;
     }
+    
+    public void add(FeatureTemplate ft) {
+        int index = templateKeyAlphabet.lookupIndex(ft.getKey());
+        if (index >= fts.size()) {
+            fts.add(ft);
+        } else if (index == -1) {
+            throw new RuntimeException("Unable to update feature template list for factor: " + ft.getKey());
+        }
+    }
 
-    public FeatureTemplate lookupTemplate(Factor f) {
-        return lookupTemplateByKey(f.getTemplateKey());
+    public void update(FactorGraph fg) {
+        for (Factor f : fg.getFactors()) {
+            if (f instanceof GlobalFactor) {
+                continue;
+            } else if (f instanceof ExpFamFactor) {
+                lookupTemplateId(f);
+            } else {
+                throw new UnsupportedFactorTypeException(f);
+            }            
+        }
+    }
+
+    private FeatureTemplate lookupTemplate(Factor f) {
+        return fts.get(getTemplateId(f));
     }
     
-    public int lookupTemplateId(Factor f) {
-        return lookupTemplateIdByKey(f.getTemplateKey());
+    private int lookupTemplateId(Factor f) {
+        int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
+        if (index >= fts.size()) {
+            // Add the template.
+            fts.add(new FeatureTemplate(f.getVars(), new Alphabet<Feature>(), f.getTemplateKey()));
+        } else if (index == -1) {
+            throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
+        } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
+            // TODO: This is a bare-minimum check that the user defined the
+            // template keys properly. Eventually we should probably define
+            // some notion of variable type and check that a template has
+            // the correct variable types.
+            throw new IllegalStateException(String.format(
+                    "Expected %d variable assignments, but factor has %d. key = %s.", fts.get(index).getNumConfigs(), f
+                            .getVars().calcNumConfigs(), f.getTemplateKey()));
+        }
+        return index;
     }
 
-    public FeatureTemplate lookupTemplateByKey(Object templateKey) {
-        return fts.get(lookupTemplateIdByKey(templateKey));
+    public FeatureTemplate getTemplate(Factor f) {
+        return getTemplateByKey(f.getTemplateKey());
+    }
+    
+    public int getTemplateId(Factor f) {
+        return getTemplateIdByKey(f.getTemplateKey());
     }
 
-    public int lookupTemplateIdByKey(Object templateKey) {
+    public FeatureTemplate getTemplateByKey(Object templateKey) {
+        return fts.get(getTemplateIdByKey(templateKey));
+    }
+
+    public int getTemplateIdByKey(Object templateKey) {
         // TODO: This might be too slow.
         return templateKeyAlphabet.lookupIndex(templateKey);
     }
+
+    @Override
+    public String toString() {
+        return "FeatureTemplateList [isGrowing=" + isGrowing + ", fts=" + fts + "]";
+    }
+    
     
 }

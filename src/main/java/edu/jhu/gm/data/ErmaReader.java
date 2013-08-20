@@ -320,7 +320,7 @@ public class ErmaReader {
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
         ObsFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
         
-        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
+        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor, fts);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;

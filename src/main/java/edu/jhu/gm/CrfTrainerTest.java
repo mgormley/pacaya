@@ -45,17 +45,24 @@ public class CrfTrainerTest {
         @Override
         public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            String[] strs = new String[varConfig.getVars().size()];
-            int i=0;
-            for (Var v : varConfig.getVars()) {
-                strs[i] = varConfig.getStateName(v);
-                i++;
+            Alphabet<Feature> alphabet = fts.getTemplate(fg.getFactor(factorId)).getAlphabet();
+
+            if (varConfig.size() > 0) {
+                String[] strs = new String[varConfig.getVars().size()];
+                int i=0;
+                for (Var v : varConfig.getVars()) {
+                    strs[i] = varConfig.getStateName(v);
+                    i++;
+                }
+                Arrays.sort(strs);
+                Feature feat = new Feature(StringUtils.join(strs, ":"));
+                int featIdx = alphabet.lookupIndex(feat);
+                fv.set(featIdx, 1.0);
             }
-            Arrays.sort(strs);
-            Feature feat = new Feature(StringUtils.join(strs, ":"));
-            Alphabet<Feature> alphabet = fts.lookupTemplate(fg.getFactor(factorId)).getAlphabet();
-            int featIdx = alphabet.lookupIndex(feat);
+            
+            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE"));
             fv.set(featIdx, 1.0);
+            
             return fv;
         }
     }
@@ -94,7 +101,7 @@ public class CrfTrainerTest {
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
+        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
 
         model = train(model, data);
@@ -114,7 +121,7 @@ public class CrfTrainerTest {
     }
     
     private double getParam(FgModel model, Object templateKey, String name) {
-        FeatureTemplate ft = model.getTemplates().lookupTemplateByKey(templateKey);
+        FeatureTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
         int feat = ft.getAlphabet().lookupIndex(new Feature(name));
         throw new RuntimeException("Somehow we need access to the configId if we want to use this method.");
         //return model.get
@@ -137,7 +144,7 @@ public class CrfTrainerTest {
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
+        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);
@@ -192,7 +199,7 @@ public class CrfTrainerTest {
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
-        data.add(new FgExample(fg, trainConfig, featExtractor));
+        data.add(new FgExample(fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);

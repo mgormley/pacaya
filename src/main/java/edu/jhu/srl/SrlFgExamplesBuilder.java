@@ -143,7 +143,7 @@ public class SrlFgExamplesBuilder {
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
             ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt);
                         
-            FgExample ex = new FgExample(sfg, trainConfig, featExtractor);
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
         }
         

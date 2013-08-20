@@ -108,7 +108,7 @@ public class CrfObjectiveTest {
                             return desc.getFeatures();
                         }
                     };
-                    data.add(new FgExample(fg, trainConfig, featExtractor));
+                    data.add(new FgExample(fg, trainConfig, featExtractor, fts));
                 }
                 state++;
             }

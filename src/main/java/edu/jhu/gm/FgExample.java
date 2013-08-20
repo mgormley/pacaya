@@ -40,10 +40,11 @@ public class FgExample {
      * 
      * @param fg The factor graph.
      * @param goldConfig The gold assignment to the variables.
+     * @param fts TODO
      * @param featExtractor Feature extractor on the observations only (i.e. the
      *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FeatureTemplateList fts) {
         this.fg = fg;
         this.goldConfig = goldConfig;
         
@@ -61,6 +62,10 @@ public class FgExample {
         assert (fg.getNumFactors() == fgLatPred.getNumFactors());
         assert (fg.getNumFactors() == fgLat.getNumFactors());
         checkGoldConfig(fg, goldConfig);
+
+        // Add any new feature templates ensuring that they have the right
+        // number number of variable configurations.
+        fts.update(fgLatPred);
         
         this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
         cacheObsFeats();
@@ -176,7 +181,7 @@ public class FgExample {
                     // where the predicted variables (might) have been clamped.
                     int config = (iter != null) ? iter.next() : c;
                     
-                    double[] params = model.getParams(model.getTemplates().lookupTemplateId(f), config);
+                    double[] params = model.getParams(model.getTemplates().getTemplateId(f), config);
                     FeatureVector fv = getObservationFeatures(a);
                     if (logDomain) {
                         // Set to log of the factor's value.

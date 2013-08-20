@@ -17,12 +17,15 @@ public class FgExamplesTest {
         }
         
         FeatureTemplateList fts = new FeatureTemplateList();
-        FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts));
+        FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts), fts);
         FgExamples data = new FgExamples(fts);
         data.add(ex);
         
+        System.out.println(fts);
+        
         assertEquals(2, fts.size());
-        assertEquals(1, fts.getNumObsFeats());
+        // One for each template.
+        assertEquals(2, fts.getNumObsFeats());
     }
 
 }
