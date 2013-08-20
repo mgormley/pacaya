@@ -234,7 +234,7 @@ public class FgModel implements Serializable {
                         writer.write(Integer.toString(c));
                         writer.write("_");
                         writer.write(alphabet.lookupObject(k).toString());
-                        writer.write("=");
+                        writer.write("\t");
                         writer.write(String.format("%.13g", params[t][c][k]));
                         writer.write("\n");
                     }
