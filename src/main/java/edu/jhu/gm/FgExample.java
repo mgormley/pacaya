@@ -158,30 +158,39 @@ public class FgExample {
                 // therefore have no model parameters.
                 continue;
             } else if (f instanceof DenseFactor) {
-                
-                IntIter iter = null;
-                if (fg == this.getFgLat()) {
-                    // If this is the numerator then we must clamp the predicted
-                    // variables to determine the correct set of model
-                    // parameters.
-                    VarConfig predVc = this.getGoldConfigPred(a);
-                    iter = IndexForVc.getConfigIter(this.getFgLatPred().getFactor(a).getVars(), predVc);
-                }
-                
                 DenseFactor factor = (DenseFactor) f;
                 int numConfigs = factor.getVars().calcNumConfigs();
-                for (int c=0; c<numConfigs; c++) {
-    
-                    // The configuration of all the latent/predicted variables,
-                    // where the predicted variables (might) have been clamped.
-                    int config = (iter != null) ? iter.next() : c;
+
+                if (numConfigs == 0) {
+                    // HACK: This ensures that if there are no variables in this
+                    // factor, we might still create features. This is only
+                    // necessary because we also (now) use this method to cache
+                    // features.
+                    int config = this.getGoldConfigLatPred(a).getConfigIndex();
+                    this.getFeatureVector(a, config);
+                } else {
+                    IntIter iter = null;
+                    if (fg == this.getFgLat()) {
+                        // If this is the numerator then we must clamp the predicted
+                        // variables to determine the correct set of model
+                        // parameters.
+                        VarConfig predVc = this.getGoldConfigPred(a);
+                        iter = IndexForVc.getConfigIter(this.getFgLatPred().getFactor(a).getVars(), predVc);
+                    }
                     
-                    FeatureVector fv = this.getFeatureVector(a, config);
-                    if (logDomain) {
-                        // Set to log of the factor's value.
-                        factor.setValue(c, fv.dot(params));
-                    } else {
-                        factor.setValue(c, Utilities.exp(fv.dot(params)));
+                    for (int c=0; c<numConfigs; c++) {
+        
+                        // The configuration of all the latent/predicted variables,
+                        // where the predicted variables (might) have been clamped.
+                        int config = (iter != null) ? iter.next() : c;
+                        
+                        FeatureVector fv = this.getFeatureVector(a, config);
+                        if (logDomain) {
+                            // Set to log of the factor's value.
+                            factor.setValue(c, fv.dot(params));
+                        } else {
+                            factor.setValue(c, Utilities.exp(fv.dot(params)));
+                        }
                     }
                 }
                 

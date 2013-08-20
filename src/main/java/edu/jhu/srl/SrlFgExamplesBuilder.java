@@ -76,6 +76,7 @@ public class SrlFgExamplesBuilder {
     public void preprocess(List<CoNLL09Sentence> sents) {
         if (!(alphabet.isGrowing() && prm.featCountCutoff > 0)) {
             // Skip this preprocessing step since it will have no effect.
+            log.info("Skipping preprocessing step");
             return;
         }
         
