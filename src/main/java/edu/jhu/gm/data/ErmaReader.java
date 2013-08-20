@@ -13,7 +13,7 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.CrfFeatureExtractor;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
@@ -318,7 +318,7 @@ public class ErmaReader {
         }
         
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
-        CrfFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
+        ObsFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
         
         FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
         return fgEx;
@@ -360,7 +360,7 @@ public class ErmaReader {
         }
     }
     
-    private static class SimpleLookupFeatureExtractor implements CrfFeatureExtractor {
+    private static class SimpleLookupFeatureExtractor implements ObsFeatureExtractor {
 
         private ArrayList<ArrayList<FeatureVector>> feature_ref_vec;
 

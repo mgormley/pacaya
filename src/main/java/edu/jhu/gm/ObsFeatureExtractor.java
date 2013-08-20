@@ -1,6 +1,6 @@
 package edu.jhu.gm;
 
-public interface CrfFeatureExtractor {
+public interface ObsFeatureExtractor {
 
     /**
      * Creates the observation function feature vector for the specified factor.

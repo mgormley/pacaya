@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.gm.BinaryStrFVBuilder;
-import edu.jhu.gm.CrfFeatureExtractor;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
@@ -24,7 +24,7 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class SrlFeatureExtractor implements CrfFeatureExtractor {
+public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */

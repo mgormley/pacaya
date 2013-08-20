@@ -97,7 +97,7 @@ public class CrfObjectiveTest {
                     v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
                     ExpFamFactor f0 = new ExpFamFactor(new VarSet(v0), TEMPLATE_KEY);
                     fg.addFactor(f0);
-                    CrfFeatureExtractor featExtractor = new CrfFeatureExtractor() {
+                    ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
                         @Override
                         public FeatureVector calcObsFeatureVector(int factorId) {
                             // TODO: This doesn't do the right thing...we

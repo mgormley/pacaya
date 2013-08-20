@@ -4,14 +4,14 @@ import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 
 /** Cache of feature vectors for a factor graph. */
-public class ObsFeatureCache implements CrfFeatureExtractor {
+public class ObsFeatureCache implements ObsFeatureExtractor {
     
     /** Indexed by factor ID. */
     private FeatureVector[] feats;
     /** The feature extractor to cache. */
-    private CrfFeatureExtractor featExtractor;
+    private ObsFeatureExtractor featExtractor;
     
-    public ObsFeatureCache(FactorGraph fg, CrfFeatureExtractor featExtractor) {
+    public ObsFeatureCache(FactorGraph fg, ObsFeatureExtractor featExtractor) {
         this.feats = new FeatureVector[fg.getNumFactors()];
         this.featExtractor = featExtractor;
         for (int a=0; a<fg.getNumFactors(); a++) {

@@ -32,7 +32,7 @@ public class FgExample {
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
     /** Feature extractor on the observation variables only (i.e. the values of the observation functions). */
-    private CrfFeatureExtractor featExtractor;
+    private ObsFeatureExtractor featExtractor;
 
 
     /**
@@ -43,7 +43,7 @@ public class FgExample {
      * @param featExtractor Feature extractor on the observations only (i.e. the
      *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, CrfFeatureExtractor fe) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe) {
         this.fg = fg;
         this.goldConfig = goldConfig;
         
@@ -97,7 +97,7 @@ public class FgExample {
     }
     
     /** Gets the observation feature vector for each factor. */
-    private static List<FeatureVector> getFvs(FactorGraph fg, CrfFeatureExtractor featExtractor) {
+    private static List<FeatureVector> getFvs(FactorGraph fg, ObsFeatureExtractor featExtractor) {
         List<FeatureVector> fvs = new ArrayList<FeatureVector>(fg.getNumFactors());        
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);

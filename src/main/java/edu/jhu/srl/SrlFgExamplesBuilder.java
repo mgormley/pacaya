@@ -13,7 +13,7 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.CrfFeatureExtractor;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
@@ -141,7 +141,7 @@ public class SrlFgExamplesBuilder {
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            CrfFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt);
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor);
             data.add(ex);

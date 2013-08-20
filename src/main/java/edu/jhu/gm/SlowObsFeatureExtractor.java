@@ -9,7 +9,7 @@ import edu.jhu.gm.Var.VarType;
  * 
  * @author mgormley
  */
-public abstract class SlowObsFeatureExtractor implements CrfFeatureExtractor {
+public abstract class SlowObsFeatureExtractor implements ObsFeatureExtractor {
 
     protected FactorGraph fg;
     protected VarConfig goldConfig;

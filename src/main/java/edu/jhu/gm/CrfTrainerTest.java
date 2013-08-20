@@ -91,7 +91,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         FeatureTemplateList fts = new FeatureTemplateList();        
-        CrfFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -134,7 +134,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         FeatureTemplateList fts = new FeatureTemplateList();        
-        CrfFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
@@ -189,7 +189,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[1][0], "A2");
 
         FeatureTemplateList fts = new FeatureTemplateList();        
-        CrfFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
         FgExamples data = new FgExamples(fts);
         data.add(new FgExample(fg, trainConfig, featExtractor));
