@@ -49,13 +49,17 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private Alphabet<String> obsAlphabet;
     
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, FeatureTemplateList fts, SentFeatureExtractor sentFeatExt) {
+        this(prm, sfg, fts, sentFeatExt, new Alphabet<String>());
+    }
+    
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, FeatureTemplateList fts, SentFeatureExtractor sentFeatExt, Alphabet<String> obsAlphabet) {
         this.prm = prm;
         this.sfg = sfg;
         this.fts = fts;
         this.sentFeatExt = sentFeatExt;
         obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
         obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
-        this.obsAlphabet = new Alphabet<String>();
+        this.obsAlphabet = obsAlphabet;
     }
     
     @Override
@@ -189,5 +193,5 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         }
         return obsFeatsPair[parent][child];
     }
-
+    
 }

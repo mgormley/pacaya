@@ -230,7 +230,7 @@ public class FgModel implements Serializable {
                 for (int k = 0; k < params[t][c].length; k++) {
                     if (included[t][c][k]) {
                         writer.write(template.getKey().toString());
-                        writer.write("=");
+                        writer.write("_");
                         writer.write(Integer.toString(c));
                         writer.write("_");
                         writer.write(alphabet.lookupObject(k).toString());

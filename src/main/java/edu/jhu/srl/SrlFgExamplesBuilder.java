@@ -122,6 +122,8 @@ public class SrlFgExamplesBuilder {
         //TODO: preprocess(sents);
         if (prm.featCountCutoff > 0) { throw new RuntimeException("not yet implemented"); }
 
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
@@ -141,11 +143,13 @@ public class SrlFgExamplesBuilder {
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, fts, sentFeatExt, obsAlphabet);
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
         }
+        
+        log.info("Number of observation function features: " + obsAlphabet.size());
         
         data.setSourceSentences(sents);
         return data;
