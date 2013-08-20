@@ -18,7 +18,6 @@ import edu.jhu.optimize.Regularizer;
  * @author mgormley
  *
  */
-// TODO: This currently does NOT support VarType.LATENT variables. Assert this. Then implement a version that does.
 public class CrfTrainer {
 
     private static final Logger log = Logger.getLogger(CrfTrainer.class);
@@ -27,7 +26,6 @@ public class CrfTrainer {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
         public Maximizer maximizer = new MalletLBFGS(new MalletLBFGSPrm());
         public Regularizer regularizer = new L2(1.0);
-        //TODO: public InitParams initParams = InitParams.UNIFORM;
     }
         
     private CrfTrainerPrm prm; 
@@ -36,17 +34,17 @@ public class CrfTrainer {
         this.prm = prm;
     }
     
-    // TODO: finish this method.
-    public void train(FgModel model, FgExamples data) {
-        Function objective = new CrfObjective(model.getNumParams(), data, prm.infFactory);
+    public FgModel train(FgModel model, FgExamples data) {
+        Function objective = new CrfObjective(model, data, prm.infFactory);
         if (prm.regularizer != null) {
             prm.regularizer.setNumDimensions(model.getNumParams());
             objective = new AddFunctions(objective, prm.regularizer);
         }
-        double[] initial = model.getParams();
-        // TODO: how to initialize the model parameters?
-        double[] params = prm.maximizer.maximize(objective, initial);
-        model.setParams(params);
+        double[] params = new double[model.getNumParams()];
+        model.updateDoublesFromModel(params);
+        params = prm.maximizer.maximize(objective, params);
+        model.updateModelFromDoubles(params);
+        return model;
     }
     
 }

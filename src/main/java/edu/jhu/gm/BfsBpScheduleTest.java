@@ -20,13 +20,13 @@ public class BfsBpScheduleTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
-        DenseFactor emit1 = new DenseFactor(new VarSet(t1)); 
-        DenseFactor emit2 = new DenseFactor(new VarSet(t2)); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2), "emit"); 
         
         // Transition factors.
-        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1)); 
-        DenseFactor tran1 = new DenseFactor(new VarSet(t1, t2)); 
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
+        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
         
         fg.addFactor(emit0);
         fg.addFactor(emit1);
@@ -58,11 +58,11 @@ public class BfsBpScheduleTest {
         Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
 
         // Emission factors. 
-        DenseFactor emit0 = new DenseFactor(new VarSet(t0)); 
-        DenseFactor emit1 = new DenseFactor(new VarSet(t1)); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
         
         // Transition factors.
-        DenseFactor tran0 = new DenseFactor(new VarSet(t0, t1));
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran");
         
         // For this test, we add the transition factor first since we want the root to have multiple children.
         fg.addFactor(emit0);

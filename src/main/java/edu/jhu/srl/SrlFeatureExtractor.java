@@ -4,14 +4,13 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.gm.BinaryStrFVBuilder;
+import edu.jhu.gm.CrfFeatureExtractor;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FeatureVectorBuilder;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.SlowFeatureExtractor;
 import edu.jhu.gm.Var;
-import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
@@ -25,7 +24,7 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class SrlFeatureExtractor implements FeatureExtractor {
+public class SrlFeatureExtractor implements CrfFeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
@@ -43,26 +42,31 @@ public class SrlFeatureExtractor implements FeatureExtractor {
     
     // -- Inputs --
     private SrlFactorGraph sfg;
-    private final Alphabet<Feature> alphabet;
+    private final FeatureTemplateList fts;
     private SentFeatureExtractor sentFeatExt;
+
+    // A single alphabet for all the observed features.
+    private Alphabet<String> obsAlphabet;
     
-    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, Alphabet<Feature> alphabet, SentFeatureExtractor sentFeatExt) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, FeatureTemplateList fts, SentFeatureExtractor sentFeatExt) {
         this.prm = prm;
         this.sfg = sfg;
-        this.alphabet = alphabet;
+        this.fts = fts;
         this.sentFeatExt = sentFeatExt;
         obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
         obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
+        this.obsAlphabet = new Alphabet<String>();
     }
     
     @Override
-    public FeatureVector calcFeatureVector(int factorId, int configId) {
+    public FeatureVector calcObsFeatureVector(int factorId) {
         SrlFactor f = (SrlFactor) sfg.getFactor(factorId);
         SrlFactorTemplate ft = f.getFactorType();
         VarSet vars = f.getVars();
         
         // Get the observation features.
         BinaryStrFVBuilder obsFeats;
+        Alphabet<Feature> alphabet;
         if (ft == SrlFactorTemplate.LINK_ROLE_BINARY || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();
@@ -78,35 +82,34 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             
             // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
             if (parent == -1) {
-                obsFeats = fastGetObsFeats(child);
+                obsFeats = fastGetObsFeats(child, obsAlphabet);
             } else {
                 // Get features on the observations for a pair of words.
-                obsFeats = fastGetObsFeats(parent, child);
+                obsFeats = fastGetObsFeats(parent, child, obsAlphabet);
             }
+            alphabet = fts.lookupTemplate(f).getAlphabet();
         } else {
-            throw new RuntimeException("Unsupported factor type: " + ft);
+            throw new RuntimeException("Unsupported template: " + ft);
         }
         
-        // Conjoin each observation feature with the string
-        // representation of the given assignment to the given
-        // variables.
-        FeatureVector fv = new FeatureVector(obsFeats.size());
-        String vcStr = ft + "_" + configId;
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
         
+        FeatureVector fv = new FeatureVector(obsFeats.size());
+        
+        // Ensure that at least one feature (i.e. the bias feature) fire for each variable configuration.
         /* Add Bias features */
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
-            int fidx = alphabet.lookupIndex(new Feature(vcStr + "_BIAS_FEATURE", true));
+            int fidx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
             if (fidx != -1) {
                 fv.add(fidx, 1.0);
             }
         } else {
             // Apply the feature-hashing trick.
             // Using the fvb makes unreadable feature names, but is faster.
-            String fname = vcStr + "_BIAS_FEATURE";
+            String fname = "BIAS_FEATURE";
             int hash = fname.hashCode();
             hash = hash % prm.featureHashMod;
             if (hash < 0) {
@@ -123,12 +126,11 @@ public class SrlFeatureExtractor implements FeatureExtractor {
                 }
             }
         }
-        
+
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {
-                String fname = vcStr + "_" + obsFeat;
-                int fidx = alphabet.lookupIndex(new Feature(fname));
+                int fidx = alphabet.lookupIndex(new Feature(obsFeat));
                 if (fidx != -1) {
                     fv.add(fidx, 1.0);
                 }
@@ -138,7 +140,7 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             FeatureVectorBuilder fvb = obsFeats.getFvb();
             for (IntDoubleEntry obsFeat : fvb) {
                 // Using the fvb makes unreadable feature names, but is faster.
-                String fname = vcStr + "_" + obsFeat.index();
+                String fname = Integer.toString(obsFeat.index());
                 int hash = fname.hashCode();
                 hash = hash % prm.featureHashMod;
                 if (hash < 0) {
@@ -172,18 +174,18 @@ public class SrlFeatureExtractor implements FeatureExtractor {
         return hash;
     }
 
-    private BinaryStrFVBuilder fastGetObsFeats(int child) {
+    private BinaryStrFVBuilder fastGetObsFeats(int child, Alphabet<String> obsAlphabet) {
         if (obsFeatsSolo[child] == null) {
             // Lazily construct the observation features.
-            obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child);
+            obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child, obsAlphabet);
         }
         return obsFeatsSolo[child];
     }
 
-    private BinaryStrFVBuilder fastGetObsFeats(int parent, int child) {
+    private BinaryStrFVBuilder fastGetObsFeats(int parent, int child, Alphabet<String> obsAlphabet) {
         if (obsFeatsPair[parent][child] == null) {
             // Lazily construct the observation features.
-            obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child);
+            obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child, obsAlphabet);
         }
         return obsFeatsPair[parent][child];
     }

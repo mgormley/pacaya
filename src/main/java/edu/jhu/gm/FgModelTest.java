@@ -1,16 +1,22 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.junit.Test;
 
-import edu.jhu.util.Files;
+import edu.jhu.gm.Var.VarType;
+import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.util.math.Vectors;
+import edu.jhu.srl.MutableInt;
+import edu.jhu.util.Alphabet;
+import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
+import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 
 public class FgModelTest {
@@ -18,8 +24,9 @@ public class FgModelTest {
     @Test
     public void testIsSerializable() throws IOException {
         try {
+            FeatureTemplateList fts = getFtl();
             // Just test that no exception is thrown.
-            FgModel model = new FgModel(Utilities.getList(new Feature("asdf")));
+            FgModel model = new FgModel(fts);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);
@@ -30,4 +37,130 @@ public class FgModelTest {
         }
     }
 
+    @Test
+    public void testNumParams() {
+        FeatureTemplateList fts = getFtl();
+        FgModel model = new FgModel(fts);
+        assertEquals((3*2)*2 + 2*1, model.getNumParams());
+    }
+    
+    @Test
+    public void testApply() {
+        FeatureTemplateList fts = getFtl();
+        FgModel model = new FgModel(fts);
+        final MutableInt x = new MutableInt(0);
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                assertEquals(0.0, v, 1e-13);
+                x.increment();
+                return 1.0;
+            }
+        });
+        
+        assertEquals(3*2*2+2*1, x.get());
+        
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                assertEquals(1.0, v, 1e-13);
+                return 1.0;
+            }
+        });
+    }
+
+    @Test
+    public void testFillAndZero() {
+        FeatureTemplateList fts = getFtl();
+        FgModel model = new FgModel(fts);
+        model.fill(1.0);
+
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                assertEquals(1.0, v, 1e-13);
+                return v;
+            }
+        });
+        
+        model.zero();
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                assertEquals(0.0, v, 1e-13);
+                return 1.0;
+            }
+        });
+    }
+
+    @Test
+    public void testSetRandomStandardNormal() {
+        Prng.seed(1l);
+        
+        FeatureTemplateList fts = getFtl();
+        FgModel model = new FgModel(fts);
+        model.setRandomStandardNormal();
+
+        double[] params = new double[model.getNumParams()];
+        model.updateDoublesFromModel(params);
+        System.out.println("sum: " + Vectors.sum(params));
+        assertEquals(-2.0817045546109862, Vectors.sum(params), 1e-3);
+    }
+
+    @Test
+    public void testUpdateDoublesAndModel() {
+        FeatureTemplateList fts = getFtl();
+        FgModel model = new FgModel(fts);
+        final MutableInt x = new MutableInt(0);
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                x.increment();
+                return x.get();
+            }
+        });
+        
+        double[] params = new double[model.getNumParams()];
+        model.updateDoublesFromModel(params);
+        JUnitUtils.assertArrayEquals(new double[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14}, params, 1e-13);
+        
+        Sort.sortDesc(params);
+        
+        model.updateModelFromDoubles(params);
+        
+        final MutableInt y = new MutableInt(14);
+        model.apply(new LambdaUnaryOpDouble() {
+            public double call(double v) {
+                assertEquals(y.get(), v, 1e-13);
+                y.decrement();
+                return v;
+            }
+        });
+
+    }
+    
+    @Test
+    public void testExcludeUnsupportedFeatures() {
+        fail("not yet implemented");
+    }
+
+    public static FeatureTemplateList getFtl() {
+        FeatureTemplateList fts = new FeatureTemplateList();
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
+        Var v2 = new Var(VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        {
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            alphabet.lookupIndex(new Feature("feat1"));
+            fts.add(new FeatureTemplate(new VarSet(v1), alphabet, "key1"));
+        }
+        {
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            alphabet.lookupIndex(new Feature("feat2a"));
+            alphabet.lookupIndex(new Feature("feat2b"));
+            fts.add(new FeatureTemplate(new VarSet(v1, v2), alphabet, "key2"));
+        }
+        return fts;
+    }
+        
+    public static double[] getParams(FgModel model) {
+        double[] params = new double[model.getNumParams()];
+        model.updateDoublesFromModel(params);
+        return params;
+    }
+    
 }

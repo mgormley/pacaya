@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
+import edu.jhu.gm.FgModelTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.Utilities;
 
@@ -23,7 +24,7 @@ public class SrlFgModelTest {
             // TODO: cs.init(sents);
             
             // Just test that no exception is thrown.
-            SrlFgModel model = new SrlFgModel(Utilities.getList(new Feature("asdf")), cs);
+            SrlFgModel model = new SrlFgModel(FgModelTest.getFtl(), true, cs);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);

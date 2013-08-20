@@ -55,8 +55,9 @@ public class CrfObjectiveTest {
      */
     public static class LogLinearEDs {
 
+        private static final Object TEMPLATE_KEY = "loglin";
         private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();        
+        private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
 
         public void addEx(int count, String... featNames) {
             FeatureVector features = new FeatureVector();
@@ -81,19 +82,30 @@ public class CrfObjectiveTest {
         }
         
         public FgExamples getData() {
-            FgExamples data = new FgExamples(alphabet);
+            FeatureTemplateList fts = new FeatureTemplateList();
+            Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
+            fts.add(new FeatureTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
+            
+            FgExamples data = new FgExamples(fts);
             int state=0;
-            for (LogLinearExDesc desc : descList) {
+            for (final LogLinearExDesc desc : descList) {
                 for (int i=0; i<desc.getCount(); i++) {
-                    final FactorGraph fg = new FactorGraph();
-                    final Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                    DenseFactor f0 = new DenseFactor(new VarSet(v0));
-                    fg.addFactor(f0);
                     final VarConfig trainConfig = new VarConfig();
                     trainConfig.put(v0, state);
-                    FeatureExtractor featExtractor = new SlowFeatureExtractor(fg, trainConfig) {
-                        public FeatureVector calcFeatureVector(int factorId, VarConfig varConfig) {
-                            return descList.get(varConfig.getState(v0)).getFeatures();
+                    
+                    FactorGraph fg = new FactorGraph();
+                    v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
+                    ExpFamFactor f0 = new ExpFamFactor(new VarSet(v0), TEMPLATE_KEY);
+                    fg.addFactor(f0);
+                    CrfFeatureExtractor featExtractor = new CrfFeatureExtractor() {
+                        @Override
+                        public FeatureVector calcObsFeatureVector(int factorId) {
+                            // TODO: This doesn't do the right thing...we
+                            // actually want features of the predicted state,
+                            // which isn't possible to set when only looking at
+                            // the observations.
+                            // Instead we need to be aware of the VarConfig of the predicted vars.
+                            return desc.getFeatures();
                         }
                     };
                     data.add(new FgExample(fg, trainConfig, featExtractor));
@@ -130,9 +142,11 @@ public class CrfObjectiveTest {
         exs.addEx(5);
 
         double[] params = new double[]{3.0, 2.0};
-
+        FgModel model = new FgModel(exs.getData().getTemplates());
+        model.updateModelFromDoubles(params);
+        
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(2, exs.getData(), getInfFactory(logDomain));
+        CrfObjective obj = new CrfObjective(model, exs.getData(), getInfFactory(logDomain));
         
         // Test log-likelihood.
         double ll = obj.getValue(params);
@@ -171,10 +185,12 @@ public class CrfObjectiveTest {
         exs.addEx(1, "circle");
         exs.addEx(0, "solid");
         double[] params = new double[]{3.0, 2.0};
+        FgModel model = new FgModel(exs.getData().getTemplates());
+        model.updateModelFromDoubles(params);
         
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         infFactory = getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(2, exs.getData(), infFactory);
+        CrfObjective obj = new CrfObjective(model, exs.getData(), infFactory);
                 
         assertEquals(2, exs.getAlphabet().size());
 
@@ -216,26 +232,26 @@ public class CrfObjectiveTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureTemplateList fts = new FeatureTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fgPrm.makeUnknownPredRolesLatent = false;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fePrm.biasOnly = true;
-        prm.includeUnsupportedFeatures = true;        
+        boolean includeUnsupportedFeatures = true;        
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         
-        System.out.println("Num features: " + alphabet.size());
-        FgModel model = new FgModel(alphabet);
+        System.out.println("Num features: " + fts.getNumObsFeats());
+        FgModel model = new FgModel(fts, includeUnsupportedFeatures);
 
         boolean logDomain = false;
         FgInferencerFactory infFactory = getInfFactory(logDomain);        
         FgExample ex = data.get(0);
         
         FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
-        FactorGraph fgLat = ex.updateFgLat(model.getParams(), infLat.isLogDomain());
+        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();        
         assertEquals(2, infLat.getPartition(), 2);
         // Check that the partition function is computed identically for each variable.
@@ -247,8 +263,8 @@ public class CrfObjectiveTest {
         System.out.println("-------- Running LatPred Inference-----------");
         
         FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
-        FactorGraph fgLatPred = ex.updateFgLatPred(model.getParams(), infLatPred.isLogDomain());
-        infLatPred.run(); 
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+        infLatPred.run();        
         // 2 trees, and 3 different roles (including argUNK)
         assertEquals(2*3, infLatPred.getPartition(), 2);         
 
@@ -270,11 +286,11 @@ public class CrfObjectiveTest {
             assertEquals(2*3, logDomain ? Utilities.exp(partition) : partition, 1e-3);
         }
         
-        CrfObjective obj = new CrfObjective(model.getNumParams(), data, infFactory);
-        double ll = obj.getValue(model.getParams());        
+        CrfObjective obj = new CrfObjective(model, data, infFactory);
+        double ll = obj.getValue(FgModelTest.getParams(model));        
         assertEquals(2./6., Utilities.exp(ll), 1e-13);
-    }    
-    
+    }
+
     public FgInferencerFactory getInfFactory(boolean logDomain) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = logDomain;
