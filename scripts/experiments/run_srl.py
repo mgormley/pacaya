@@ -160,15 +160,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-            setup.update(trainMaxSentenceLength=20,
+                #trainMaxNumSentences=3000,
+            setup.update(
                          featureHashMod=-1,
                          featCountCutoff=0,
                          alwaysIncludeLinkVars=True,
                          linkVarType="OBSERVED",
                          unaryFactors=True,
-                         useSimpleFeats=True,
+                         useSimpleFeats=False,
                          useNaradFeats=True,
-                         useZhaoFeats=True,
+                         useZhaoFeats=False,
+                         useDepPathFeats=False,
+                         featCountCutoff=4,
                          )
             setup.update(timeoutSeconds=48*60*60,
                          work_mem_megs=2*1024)
@@ -203,6 +206,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 base_work_mem_megs = 5*3*1024
                             else:
                                 base_work_mem_megs = 5*1024
+                            base_work_mem_megs = 200*1024
                             exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                         exps.append(exp)
             # Drop all but 3 experiments for a fast run.

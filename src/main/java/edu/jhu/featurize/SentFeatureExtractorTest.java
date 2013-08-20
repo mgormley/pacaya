@@ -52,15 +52,16 @@ public class SentFeatureExtractorTest {
     
     @Test
     public void testAddZhaoFeatures() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence1();
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
         Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.withSupervision = false;
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        BinaryStrFVBuilder feats;
+
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
@@ -71,6 +72,14 @@ public class SentFeatureExtractorTest {
             System.out.println(f);
         }
         //Check that POS is not gold POS
+        fePrm.withSupervision = true;
+        fe = new SentFeatureExtractor(fePrm, sent, cs);
+        allFeats = new BinaryStrFVBuilder(alphabet);
+        for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                fe.addZhaoPairFeatures(i, j, allFeats);
+            }
+        }
     }
     
     @Test
@@ -84,8 +93,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs);
         ZhaoObject zhaoLink = new ZhaoObject(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
@@ -105,8 +114,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
 
         String predPos = zhaoPred.getPos();
         String argPos = zhaoArg.getPos();
@@ -118,8 +127,8 @@ public class SentFeatureExtractorTest {
         fePrm = new SentFeatureExtractorPrm();
         fe = new SentFeatureExtractor(fePrm, sent, cs);
         parents = fe.getParents(sent);
-        zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        zhaoArg = new ZhaoObject(4, parents, sent, cs);
         
         predPos = zhaoPred.getPos();
         argPos = zhaoArg.getPpos();
@@ -139,8 +148,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
         List<String> predFeat = zhaoPred.getFeat();
         List<String> argFeat = zhaoArg.getFeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
@@ -161,10 +170,67 @@ public class SentFeatureExtractorTest {
         System.out.println(argFeat);
         assertEquals(argFeat,intendedArgFeats);
     }
-        
-
+    
     @Test
-    public void testZhaoObjectPath() {
+    public void testZhaoObjectPathSentence1() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence1();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        int[] parents = fe.getParents(sent);
+        
+        // Example indices.
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+
+        // Path between two indices.
+        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
+        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);
+
+        // Shared path to root for two indices.
+        List<Pair<Integer, Dir>> dpPathShare = zhaoLink.getDpPathShare();
+        ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
+        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        assertEquals(dpPathShare,expectedDpPathShare);
+
+        // New example indices.
+        zhaoPred = new ZhaoObject(0, parents, sent, cs);
+        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+
+        // Path between two indices.
+        expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
+        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
+        seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);        
+
+        // Shared path to root for two indices.
+        dpPathShare = zhaoLink.getDpPathShare();
+        expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
+        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        assertEquals(dpPathShare,expectedDpPathShare);
+        
+        // Line path (consecutive indices between two).
+        ArrayList<Integer> linePath = zhaoLink.getLinePath();
+        ArrayList<Integer> expectedLinePath = new ArrayList<Integer>();
+        expectedLinePath.add(0);
+        expectedLinePath.add(1);
+        expectedLinePath.add(2);
+        expectedLinePath.add(3);
+        assertEquals(linePath,expectedLinePath);
+    }
+        
+    @Test
+    public void testZhaoObjectPathSentence2() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
@@ -174,36 +240,117 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs, "v");
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs, "n");
+        
+        // Example indices.
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
-
+        
+        // Path between two indices.
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
         assertEquals(expectedPath,seenPath);
-        List<Pair<Integer, Dir>> seenPredDpPath = zhaoArg.getDpPathPred();
-        List<Pair<Integer, Dir>> seenArgDpPath = zhaoArg.getDpPathArg();
-        assertTrue(seenPredDpPath == null);
-        assertTrue(seenArgDpPath == null);
-        //System.out.println(zhaoLink.getDpPathShare());
+
+        // Shared path to root for two indices.
+        List<Pair<Integer, Dir>> dpPathShare = zhaoLink.getDpPathShare();
+        ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
+        expectedDpPathShare.add(new Pair<Integer, Dir>(5, Dir.UP));
+        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        assertEquals(dpPathShare,expectedDpPathShare);
         
-        /*
-        getDpPathShare();
-        getLinePath();*/
+        // New example indices.
+        zhaoPred = new ZhaoObject(0, parents, sent, cs);
+        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+
+        // Path between two indices.
+        expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
+        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);        
+
+        // Shared path to root for two indices.
+        dpPathShare = zhaoLink.getDpPathShare();
+        expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
+        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        assertEquals(dpPathShare,expectedDpPathShare);
+
+        // Line path (consecutive indices between two).
+        ArrayList<Integer> linePath = zhaoLink.getLinePath();
+        ArrayList<Integer> expectedLinePath = new ArrayList<Integer>();
+        expectedLinePath.add(0);
+        expectedLinePath.add(1);
+        expectedLinePath.add(2);
+        expectedLinePath.add(3);
+        assertEquals(linePath,expectedLinePath);
+    }
     
+    @Test
+    public void testZhaoObjectPathSentence2PredictedSyntax() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = false;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+
+        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);
+        
+        zhaoPred = new ZhaoObject(0, parents, sent, cs);
+        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+
+        expectedPath = new ArrayList<Pair<Integer, Dir>>();
+        expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(6, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        seenPath = zhaoLink.getBetweenPath();
+        assertEquals(expectedPath,seenPath);        
     }
 
-        /* TBD:
-        zhaoPred.getParent();
-        zhaoPred.getChildren();
-        zhaoPred.getFarLeftChild();
-        zhaoPred.getFarRightChild();
-        zhaoPred.getNearLeftChild();
-        zhaoPred.getNearRightChild();
-        zhaoPred.getHighSupport();
-        zhaoPred.getLowSupport();*/
+    
+    @Test
+    public void testZhaoObjectParentsChildrenSentence2() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        Alphabet<String> alphabet = new Alphabet<String>();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Utilities.getList(sent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
+        int[] parents = fe.getParents(sent);
+        ZhaoObject zhaoObj = new ZhaoObject(3, parents, sent, cs);
+        assertEquals(zhaoObj.getParent(), 5);
+        assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
+        assertEquals(zhaoObj.getFarLeftChild(), -2);
+        assertEquals(zhaoObj.getFarLeftChild(), -2);
+        assertEquals(zhaoObj.getFarRightChild(), -2);
+        assertEquals(zhaoObj.getNearLeftChild(), -2);
+        assertEquals(zhaoObj.getNearRightChild(), -2);
+        assertEquals(zhaoObj.getArgHighSupport(), -1);
+        assertEquals(zhaoObj.getArgLowSupport(), -1);
+        assertEquals(zhaoObj.getPredHighSupport(), 1);
+        assertEquals(zhaoObj.getPredLowSupport(), 5);
+        ArrayList<Integer> expectedNoFarChildren = new ArrayList<Integer>();
+        expectedNoFarChildren.add(-2);
+        expectedNoFarChildren.add(-2);
+        assertEquals(zhaoObj.getNoFarChildren(), expectedNoFarChildren);
+    }
     
     @Test
     public void testAddNaradowskyFeatures() {
