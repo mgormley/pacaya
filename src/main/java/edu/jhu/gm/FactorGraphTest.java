@@ -256,9 +256,9 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Latent emission factors. 
-        ExpFamFactor emitL0 = new ExpFamFactor(new VarSet(t0, z0), "emit"); 
-        ExpFamFactor emitL1 = new ExpFamFactor(new VarSet(t1, z1), "emit"); 
-        ExpFamFactor emitL2 = new ExpFamFactor(new VarSet(t2, z2), "emit"); 
+        ExpFamFactor emitL0 = new ExpFamFactor(new VarSet(t0, z0), "latent-emit"); 
+        ExpFamFactor emitL1 = new ExpFamFactor(new VarSet(t1, z1), "latent-emit"); 
+        ExpFamFactor emitL2 = new ExpFamFactor(new VarSet(t2, z2), "latent-emit"); 
 
         emitL0.setValue(0, 1.1);
         emitL0.setValue(1, 1.9);

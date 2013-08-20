@@ -255,7 +255,8 @@ public class ProjDepTreeFactorTest {
             roleLinkFac.convertRealToLog();
         }
         fg.addFactor(roleLinkFac);
-        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar), 1.0);
+        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar), SrlFactorTemplate.ROLE_UNARY);
+        roleFac.set(1.0);
         if (logDomain) {
             roleFac.convertRealToLog();
         }

@@ -1,6 +1,6 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -107,23 +107,29 @@ public class CrfTrainerTest {
         model = train(model, data);
         
         System.out.println(model);
-
-        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
-        assertEquals(-4.79, getParam(model, "emit", "V:man"), 1e-2);
-        assertEquals(-2.47, getParam(model, "emit", "N:jump"), 1e-2);
-        assertEquals(2.47, getParam(model, "emit", "V:jump"), 1e-2);
-        assertEquals(-3.82, getParam(model, "emit", "N:fence"), 1e-2);
-        assertEquals(3.82, getParam(model, "emit", "V:fence"), 1e-2);
+        System.out.println(fts);
+        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
+        JUnitUtils.assertArrayEquals(new double[]{3.58, -0.75, -2.16, -2.17, -3.58, 0.75, 2.16, 2.17, -2.17, -2.17, 3.59, 0.75}, FgModelTest.getParams(model), 1e-2);
         
-        assertEquals(-2.31, getParam(model, "tran", "N:N"), 1e-2);
-        assertEquals(0.65, getParam(model, "tran", "N:V"), 1e-2);
-        assertEquals(1.66, getParam(model, "tran", "V:V"), 1e-2);
+        // OLD WAY:
+        //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
+        //        assertEquals(-4.79, getParam(model, "emit", "V:man"), 1e-2);
+        //        assertEquals(-2.47, getParam(model, "emit", "N:jump"), 1e-2);
+        //        assertEquals(2.47, getParam(model, "emit", "V:jump"), 1e-2);
+        //        assertEquals(-3.82, getParam(model, "emit", "N:fence"), 1e-2);
+        //        assertEquals(3.82, getParam(model, "emit", "V:fence"), 1e-2);
+        //        
+        //        assertEquals(-2.31, getParam(model, "tran", "N:N"), 1e-2);
+        //        assertEquals(0.65, getParam(model, "tran", "N:V"), 1e-2);
+        //        assertEquals(1.66, getParam(model, "tran", "V:V"), 1e-2);
     }
     
     private double getParam(FgModel model, Object templateKey, String name) {
         FeatureTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
         int feat = ft.getAlphabet().lookupIndex(new Feature(name));
-        throw new RuntimeException("Somehow we need access to the configId if we want to use this method.");
+        fail("Somehow we need access to the configId if we want to use this method.");
+        return 0.0;
         //return model.get
         //return model.getParams()[model.getAlphabet().lookupIndex(new Feature(name))];
     }
@@ -151,8 +157,12 @@ public class CrfTrainerTest {
         
         System.out.println(fts);
         System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
+        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.31, 0.31, -0.31, -0.31, -6.42, -6.52, 10.24, 2.69}, FgModelTest.getParams(model), 1e-2);
+          
+        // OLD PARAMS:
         //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
-        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
+        //JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
     }
 
     @Test
