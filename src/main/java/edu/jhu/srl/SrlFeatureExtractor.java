@@ -3,16 +3,17 @@ package edu.jhu.srl;
 import org.apache.log4j.Logger;
 
 import edu.jhu.featurize.SentFeatureExtractor;
+import edu.jhu.featurize.SentFeatureExtractorCache;
 import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.gm.FactorGraph;
-import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FeatureVectorBuilder;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.Var;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
@@ -39,21 +40,10 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
     
     private SrlFeatureExtractorPrm prm;
-    
-    // TODO: Move these caches to a separate wrapper class for SentFeatureExtractor.
-    // Cache of observation features for each single positions in the sentence.
-    private BinaryStrFVBuilder[] obsFeatsSolo;
-    // Cache of observation features for each pair of positions in the sentence.
-    private BinaryStrFVBuilder[][] obsFeatsPair;
-    
-    // -- Inputs --
     private SrlFactorGraph sfg;
     private FeatureTemplateList fts;
-    private SentFeatureExtractor sentFeatExt;
     private VarConfig goldConfig;
-    
-    // A single alphabet for all the observed features.
-    private Alphabet<String> obsAlphabet;
+    private SentFeatureExtractorCache sentFeatExt;
     
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SentFeatureExtractor sentFeatExt) {
         this(prm, sentFeatExt, new Alphabet<String>());
@@ -61,10 +51,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SentFeatureExtractor sentFeatExt, Alphabet<String> obsAlphabet) {
         this.prm = prm;
-        this.sentFeatExt = sentFeatExt;
-        obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
-        obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
-        this.obsAlphabet = obsAlphabet;
+        this.sentFeatExt = new SentFeatureExtractorCache(sentFeatExt, obsAlphabet);
     }
 
     @Override
@@ -99,10 +86,10 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             
             // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
             if (parent == -1) {
-                obsFeats = fastGetObsFeats(child, obsAlphabet);
+                obsFeats = sentFeatExt.fastGetObsFeats(child);
             } else {
                 // Get features on the observations for a pair of words.
-                obsFeats = fastGetObsFeats(parent, child, obsAlphabet);
+                obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
             }
             alphabet = fts.getTemplate(f).getAlphabet();
         } else {
@@ -204,22 +191,6 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             hash += 31 * hash + fname.charAt(i);
         }
         return hash;
-    }
-
-    private BinaryStrFVBuilder fastGetObsFeats(int child, Alphabet<String> obsAlphabet) {
-        if (obsFeatsSolo[child] == null) {
-            // Lazily construct the observation features.
-            obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child, obsAlphabet);
-        }
-        return obsFeatsSolo[child];
-    }
-
-    private BinaryStrFVBuilder fastGetObsFeats(int parent, int child, Alphabet<String> obsAlphabet) {
-        if (obsFeatsPair[parent][child] == null) {
-            // Lazily construct the observation features.
-            obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child, obsAlphabet);
-        }
-        return obsFeatsPair[parent][child];
     }
     
 }
