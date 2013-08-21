@@ -118,40 +118,29 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         
         FeatureVector fv = new FeatureVector(obsFeats.size());
         
-        // Ensure that at least one feature (i.e. the bias feature) fire for each variable configuration.
-        /* Add Bias features */
-        if (prm.featureHashMod <= 0) {
-            // Just use the features as-is.
-            int fidx = alphabet.lookupIndex(new Feature(prefix + "BIAS_FEATURE", true));
-            if (fidx != -1) {
-                fv.add(fidx, 1.0);
-            }
-        } else {
-            // Apply the feature-hashing trick.
-            // Using the fvb makes unreadable feature names, but is faster.
-            String fname = prefix + "BIAS_FEATURE";
-            int hash = fname.hashCode();
-            hash = hash % prm.featureHashMod;
-            if (hash < 0) {
-                hash += prm.featureHashMod;
-            }
-            fname = Integer.toString(hash);
-            int fidx = alphabet.lookupIndex(new Feature(fname, true));
-            if (fidx != -1) {
-                int revHash = reverseHashCode(fname);
-                if (revHash < 0) {
-                    fv.add(fidx, -1.0);
-                } else {
-                    fv.add(fidx, 1.0);
-                }
-            }
-        }
+        // Add the bias features.
+        // The bias features are used to ensure that at least one feature fires for each variable configuration.
+        BinaryStrFVBuilder biasFeats = new BinaryStrFVBuilder(new Alphabet<String>());
+        biasFeats.add("BIAS_FEATURE");
+        biasFeats.add(prefix + "BIAS_FEATURE");
+        addFeatures(biasFeats, alphabet, "", fv, true);
+        
+        // Add the other features.
+        prefix += "_";
+        addFeatures(obsFeats, alphabet, prefix, fv, false);
+        
+        return fv;
+    }
 
+    /**
+     * Prepends the string prefix to each feature in obsFeats, and adds each one to fv using the given alphabet.
+     */
+    private void addFeatures(BinaryStrFVBuilder obsFeats, Alphabet<Feature> alphabet, String prefix, FeatureVector fv, boolean isBiasFeat) {
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {
-                String fname = prefix + "_" + obsFeat;
-                int fidx = alphabet.lookupIndex(new Feature(fname));
+                String fname = prefix + obsFeat;
+                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
                 if (fidx != -1) {
                     fv.add(fidx, 1.0);
                 }
@@ -161,14 +150,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             FeatureVectorBuilder fvb = obsFeats.getFvb();
             for (IntDoubleEntry obsFeat : fvb) {
                 // Using the fvb makes unreadable feature names, but is faster.
-                String fname = prefix + "_" + Integer.toString(obsFeat.index());
+                String fname = prefix + Integer.toString(obsFeat.index());
                 int hash = fname.hashCode();
                 hash = hash % prm.featureHashMod;
                 if (hash < 0) {
                     hash += prm.featureHashMod;
                 }
                 fname = Integer.toString(hash);
-                int fidx = alphabet.lookupIndex(new Feature(fname));
+                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
                 if (fidx != -1) {
                     int revHash = reverseHashCode(fname);
                     if (revHash < 0) {
@@ -179,8 +168,6 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
                 }
             }
         }
-
-        return fv;
     }
 
     /**
