@@ -111,7 +111,7 @@ public class FgModel implements Serializable {
             for (int k = 0; k < alphabet.size(); k++) {
                 if (alphabet.lookupObject(k).isBiasFeature()) {
                     for (int c = 0; c < params[t].length; c++) {
-                        //included[t][c][k] = true;
+                        included[t][c][k] = true;
                     }        
                 }
             }

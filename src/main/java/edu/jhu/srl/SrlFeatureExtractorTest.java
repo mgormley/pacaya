@@ -107,7 +107,7 @@ public class SrlFeatureExtractorTest {
         // For useNaradFeats=true: 
         // Correct number of obs feats 358, and seeing 358 after bad commit.
         // Correct number is 972, but seeing 932 after bad commit.
-        assertEquals(972, model.getNumParams());
+        assertEquals(978, model.getNumParams());
     }
     
     @Test
@@ -155,7 +155,7 @@ public class SrlFeatureExtractorTest {
         
         // For useNaradFeats=true: 
         // Correct number is 72, and seeing 72 after bad commit.
-        assertEquals(72, model.getNumParams());
+        assertEquals(80, model.getNumParams());
     }
     
     @Test
