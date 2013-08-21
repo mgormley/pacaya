@@ -10,4 +10,15 @@ public interface ObsFeatureExtractor {
      */
     FeatureVector calcObsFeatureVector(int factorId);
 
+    /**
+     * Initializes the feature extractor. This method will be called only once.
+     * 
+     * @param fg The original factor graph.
+     * @param fgLat The factor graph with the predicted/observed variables clamped.
+     * @param fgLatPred The factor graph with the observed variables clamped.
+     * @param goldConfig The gold configuration of all variables in the factor graph.
+     * @param fts The templates.
+     */
+    void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FeatureTemplateList fts);
+
 }

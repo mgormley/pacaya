@@ -365,6 +365,12 @@ public class ErmaReader {
             throw new RuntimeException("not implemented");
             //return feature_ref_vec.get(factorId);
         }
+
+        @Override
+        public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
+                FeatureTemplateList fts) {
+            // Do nothing.
+        }
     }
     
 }

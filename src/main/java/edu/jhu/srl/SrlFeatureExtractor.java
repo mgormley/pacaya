@@ -4,13 +4,16 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.gm.BinaryStrFVBuilder;
+import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FeatureVectorBuilder;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.Var;
+import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
@@ -37,6 +40,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     private SrlFeatureExtractorPrm prm;
     
+    // TODO: Move these caches to a separate wrapper class for SentFeatureExtractor.
     // Cache of observation features for each single positions in the sentence.
     private BinaryStrFVBuilder[] obsFeatsSolo;
     // Cache of observation features for each pair of positions in the sentence.
@@ -44,24 +48,31 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     // -- Inputs --
     private SrlFactorGraph sfg;
-    private final FeatureTemplateList fts;
+    private FeatureTemplateList fts;
     private SentFeatureExtractor sentFeatExt;
-
+    private VarConfig goldConfig;
+    
     // A single alphabet for all the observed features.
     private Alphabet<String> obsAlphabet;
     
-    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, FeatureTemplateList fts, SentFeatureExtractor sentFeatExt) {
-        this(prm, sfg, fts, sentFeatExt, new Alphabet<String>());
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SentFeatureExtractor sentFeatExt) {
+        this(prm, sentFeatExt, new Alphabet<String>());
     }
     
-    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SrlFactorGraph sfg, FeatureTemplateList fts, SentFeatureExtractor sentFeatExt, Alphabet<String> obsAlphabet) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SentFeatureExtractor sentFeatExt, Alphabet<String> obsAlphabet) {
         this.prm = prm;
-        this.sfg = sfg;
-        this.fts = fts;
         this.sentFeatExt = sentFeatExt;
         obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
         obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
         this.obsAlphabet = obsAlphabet;
+    }
+
+    @Override
+    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
+            FeatureTemplateList fts) {
+        this.sfg = (SrlFactorGraph) fg;
+        this.goldConfig = goldConfig;
+        this.fts = fts;
     }
     
     @Override
@@ -98,7 +109,8 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             throw new RuntimeException("Unsupported template: " + ft);
         }
         
-        // TODO: include observed variables.
+        // Create prefix containing the states of the observed variables.
+        String prefix = getObsVarsStates(f);
         
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
@@ -110,14 +122,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         /* Add Bias features */
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
-            int fidx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            int fidx = alphabet.lookupIndex(new Feature(prefix + "BIAS_FEATURE", true));
             if (fidx != -1) {
                 fv.add(fidx, 1.0);
             }
         } else {
             // Apply the feature-hashing trick.
             // Using the fvb makes unreadable feature names, but is faster.
-            String fname = "BIAS_FEATURE";
+            String fname = prefix + "BIAS_FEATURE";
             int hash = fname.hashCode();
             hash = hash % prm.featureHashMod;
             if (hash < 0) {
@@ -138,7 +150,8 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         if (prm.featureHashMod <= 0) {
             // Just use the features as-is.
             for (String obsFeat : obsFeats) {
-                int fidx = alphabet.lookupIndex(new Feature(obsFeat));
+                String fname = prefix + "_" + obsFeat;
+                int fidx = alphabet.lookupIndex(new Feature(fname));
                 if (fidx != -1) {
                     fv.add(fidx, 1.0);
                 }
@@ -148,7 +161,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             FeatureVectorBuilder fvb = obsFeats.getFvb();
             for (IntDoubleEntry obsFeat : fvb) {
                 // Using the fvb makes unreadable feature names, but is faster.
-                String fname = Integer.toString(obsFeat.index());
+                String fname = prefix + "_" + Integer.toString(obsFeat.index());
                 int hash = fname.hashCode();
                 hash = hash % prm.featureHashMod;
                 if (hash < 0) {
@@ -169,7 +182,26 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
         return fv;
     }
-    
+
+    /**
+     * Gets a string representation of the states of the observed variables for
+     * this factor.
+     */
+    private String getObsVarsStates(SrlFactor f) {
+        StringBuilder sb = new StringBuilder();
+        int i=0;
+        for (Var v : f.getVars()) {
+            if (i > 0) {
+                sb.append("_");
+            }
+            if (v.getType() == VarType.OBSERVED) {
+                sb.append(goldConfig.getStateName(v));
+                i++;
+            }
+        }
+        return sb.toString();
+    }
+
     /**
      * Returns the hash code of the reverse of this string.
      */

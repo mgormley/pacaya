@@ -37,7 +37,7 @@ public class CrfTrainerTest {
         private FeatureTemplateList fts;
 
         public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FeatureTemplateList fts) {
-            super(fg, goldConfig);
+            super();
             this.fts = fts;
         }
         

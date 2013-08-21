@@ -107,6 +107,10 @@ public class CrfObjectiveTest {
                             // Instead we need to be aware of the VarConfig of the predicted vars.
                             return desc.getFeatures();
                         }
+                        public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
+                                VarConfig goldConfig, FeatureTemplateList fts) {             
+                            // Do nothing.               
+                        }
                     };
                     data.add(new FgExample(fg, trainConfig, featExtractor, fts));
                 }

@@ -231,7 +231,7 @@ public class FgModel implements Serializable {
                     if (included[t][c][k]) {
                         writer.write(template.getKey().toString());
                         writer.write("_");
-                        writer.write(Integer.toString(c));
+                        writer.write(template.getStateNamesStr(c));
                         writer.write("_");
                         writer.write(alphabet.lookupObject(k).toString());
                         writer.write("\t");

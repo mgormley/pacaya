@@ -20,6 +20,7 @@ import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
@@ -56,7 +57,8 @@ public class SrlFeatureExtractorTest {
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = -1; // Disable feature hashing.
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sfg, fts, sentFeatExt);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sentFeatExt);
+        featExt.init(sfg, null, null, new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector(a);
         }
@@ -177,10 +179,12 @@ public class SrlFeatureExtractorTest {
         fePrm.useNaradFeats = true;
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = false;
+        fePrm.useDepPathFeats = true;
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = 10; // Enable feature hashing
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sfg, fts, sentFeatExt);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sentFeatExt);
+        featExt.init(sfg, null, null, new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector(a);    
         }

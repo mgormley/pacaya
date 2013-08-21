@@ -159,11 +159,8 @@ public class FgModelTest {
 
     public static class MockFeatureExtractor extends SlowObsFeatureExtractor {
 
-        private FeatureTemplateList fts;
-
-        public MockFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FeatureTemplateList fts) {
-            super(fg, goldConfig);
-            this.fts = fts;
+        public MockFeatureExtractor() {
+            super();
         }
         
         @Override
@@ -190,7 +187,7 @@ public class FgModelTest {
         vc.put(v1, state1);
         vc.put(v2, state2);
         
-        return new FgExample(fg, vc, new MockFeatureExtractor(fg, vc, fts), fts);
+        return new FgExample(fg, vc, new MockFeatureExtractor(), fts);
     }
 
     public static FeatureTemplateList getFtl() {

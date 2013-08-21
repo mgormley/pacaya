@@ -12,8 +12,8 @@ public class ObsFeatureCache implements ObsFeatureExtractor {
     private ObsFeatureExtractor featExtractor;
     
     public ObsFeatureCache(FactorGraph fg, ObsFeatureExtractor featExtractor) {
-        this.feats = new FeatureVector[fg.getNumFactors()];
         this.featExtractor = featExtractor;
+        this.feats = new FeatureVector[fg.getNumFactors()];
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
             if (f instanceof GlobalFactor) {
@@ -24,6 +24,12 @@ public class ObsFeatureCache implements ObsFeatureExtractor {
                 throw new UnsupportedFactorTypeException(f);
             }
         }
+    }
+
+    @Override
+    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
+            FeatureTemplateList fts) {
+        this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
     }
 
     /** Gets the feature vector for the specified factor and config. */

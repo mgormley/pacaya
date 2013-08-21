@@ -68,6 +68,7 @@ public class FgExample {
         fts.update(fgLatPred);
         
         this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
+        this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
         cacheObsFeats();
     }
 
@@ -224,6 +225,7 @@ public class FgExample {
 
     /** Gets the gold configuration index of the latent/predicted variables for the given factor. */
     public int getGoldConfigIdxLatPred(int factorId) {
+        // TODO: return goldConfig.getConfigIndexOfSubset(fgLatPred.getFactor(factorId).getVars());
         return goldConfig.getIntersection(fgLatPred.getFactor(factorId).getVars()).getConfigIndex();
     }
 
