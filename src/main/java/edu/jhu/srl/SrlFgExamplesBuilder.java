@@ -13,10 +13,10 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
@@ -24,7 +24,6 @@ import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.CountingAlphabet;
 
 /**
  * Factory for FgExamples.

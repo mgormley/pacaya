@@ -144,77 +144,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             
         datas = [pos_gold, pos_sup, pos_semi, pos_unsup, brown_semi, brown_unsup]
         
-        # TODO: This removal of DEPREL and DEPREL should happen prior to these SRL experiments.
-        for data in datas:
-            data.update(trainType='CONLL_2009', testType='CONLL_2009')
-            if data.get("dataset").find("-unsup") != -1 or data.get("dataset").find("-semi") != -1:
-                data.set("removeDeprel", True, incl_name=False)
-            else:
-                data.set("removeDeprel", False, incl_name=False)
-            if data.get("dataset").find("-gold") != -1:
-                data.set("useGoldSyntax", True, incl_name=False)
-            else:
-                data.set("useGoldSyntax", False, incl_name=False)
-                    
-        if self.expname == "srl-dev20" or self.expname == "srl-biasonly":
-            root = RootStage()
-            setup = SrlExpParams()
-            # Full length test sentences.
-            setup.update(trainMaxSentenceLength=20)
-            #setup.update(trainMaxNumSentences=2000)
-            setup.update(
-                         featureHashMod=-1,
-                         alwaysIncludeLinkVars=True,
-                         linkVarType="OBSERVED",
-                         unaryFactors=True,
-                         useSimpleFeats=False,
-                         useNaradFeats=True,
-                         useZhaoFeats=False,
-                         useDepPathFeats=False,
-                         featCountCutoff=0,
-                         )
-            setup.update(timeoutSeconds=48*60*60,
-                         work_mem_megs=2*1024)
-            if self.expname == "srl-biasonly":
-                setup.update(biasOnly=True, work_mem_megs=2*1024)
-            exps = []
-            for data in datas:
-                dataset = data.get("dataset")
-#                for roleStructure in ['ALL_PAIRS', 'PREDS_GIVEN']:
-#                    setup.update(roleStructure=roleStructure)
-                for normalizeRoleNames in [True, False]:
-                    setup.update(normalizeRoleNames=normalizeRoleNames)
-                    for useProjDepTreeFactor in [True, False]:
-                        if useProjDepTreeFactor and not (dataset == 'pos-unsup' or dataset == 'brown-unsup'):
-                            # We only need to run this on one of the input datasets.
-                            continue
-                        if useProjDepTreeFactor: setup.update(linkVarType="LATENT")
-                        else: setup.update(linkVarType="OBSERVED")
-                        setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
-                        exp = all + setup + data
-                        if exp.get("biasOnly") != True and os.uname()[1].find("Gormley") == -1:
-                            # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
-                            # 2700 of len <= 20 fit in 1G, with 37 roles, and global factor off.
-                            # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
-                            # So, increasing to 37 roles should require a 5x increase (though we see a 2x).
-                            # Adding the global factor should require a 5x increase.
-                            if not normalizeRoleNames and useProjDepTreeFactor:
-                                base_work_mem_megs = 5*3*3*1024
-                            elif useProjDepTreeFactor:
-                                base_work_mem_megs = 5*3*3*1024
-                            elif not normalizeRoleNames:
-                                base_work_mem_megs = 5*3*1024
-                            else:
-                                base_work_mem_megs = 5*1024
-                            base_work_mem_megs = 200*1024
-                            exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
-                        exps.append(exp)
-            # Drop all but 3 experiments for a fast run.
-            if self.fast: exps = exps[:4]
-            root.add_dependents(exps)
-            return root
-        else:
-            raise Exception("Unknown expname: " + str(self.expname))
+        root = RootStage()
+        exps = self.initialize_setup(datas, all)
+        root.add_dependents(exps)
+        return root
                 
 
     def updateStagesForQsub(self, root_stage):

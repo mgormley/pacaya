@@ -29,6 +29,8 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
         public int featureHashMod = -1;
+        /** Whether to create human interpretable feature names when possible. */
+        public boolean humanReadable = true;
     }
     
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
@@ -95,6 +97,8 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
+        
+        // TODO: include observed variables.
         
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
