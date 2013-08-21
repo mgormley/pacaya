@@ -67,7 +67,7 @@ public class SentFeatureExtractor {
         this.sig = cs.sig;
         // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
         this.parents = getParents(sent);
-        if (prm.useZhaoFeats) {
+        if (prm.useZhaoFeats || prm.useDepPathFeats) {
             this.zhaoSentence = createZhaoSentence();
             this.zhaoHeadDefault = new ZhaoObject("BEGIN");
             this.zhaoTailDefault = new ZhaoObject("END");
