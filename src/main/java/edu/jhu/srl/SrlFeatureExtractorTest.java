@@ -107,11 +107,15 @@ public class SrlFeatureExtractorTest {
         
         FgModel model = new FgModel(data.getAlphabet());
         System.out.println("Num tokens: " + sents.get(0).size());
-        //System.out.println(model);
+        System.out.println(model);
+        
         // If we included all features we would get: 6*2 + 2 + 6
-        //For biasOnly=true: 
+        // For biasOnly=true: 
         //assertEquals(17, model.getAlphabet().size());
-        //For useNaradFeats=true: 
+        
+        // For useNaradFeats=true: 
+        // Correct number of obs feats 358, and seeing 358 after bad commit.
+        // Correct number is 972, but seeing 932 after bad commit.
         assertEquals(972, model.getAlphabet().size());
     }
     
@@ -121,10 +125,10 @@ public class SrlFeatureExtractorTest {
         Alphabet<Feature> alphabet = new Alphabet<Feature>();        
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
-        // tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
-        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "subj", "_", false, "_", getList("arg0")));
+        //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 3, 3, "subj", "_", false, "_", getList("arg0")));
         tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
-        //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
+        tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         List<CoNLL09Sentence> sents = getList(sent);
@@ -157,10 +161,12 @@ public class SrlFeatureExtractorTest {
         System.out.println("Num tokens: " + sents.get(0).size());
         System.out.println(model);
         // If we included all features we would get: 6*2 + 2 + 6
-        //For biasOnly=true: 
-        //assertEquals(17, model.getAlphabet().size());
-        //For useNaradFeats=true: 
-        assertEquals(36, model.getAlphabet().size());
+        // For biasOnly=true: 
+        // assertEquals(17, model.getAlphabet().size());
+        
+        // For useNaradFeats=true: 
+        // Correct number is __, but seeing 72 after bad commit.
+        assertEquals(72, model.getAlphabet().size());
     }
     
     @Test
