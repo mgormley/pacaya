@@ -31,6 +31,8 @@ public class SrlFeatureExtractor implements FeatureExtractor {
     public static class SrlFeatureExtractorPrm {
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
         public int featureHashMod = -1;
+        /** Whether to create human interpretable feature names when possible. */
+        public boolean humanReadable = true;
     }
     
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
@@ -88,19 +90,22 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             throw new RuntimeException("Unsupported factor type: " + ft);
         }
         
-        String vcStr = ft + "_";
-        VarSet latPredVars = new VarSet(VarSet.getVarsOfType(f.getVars(), VarType.LATENT), VarSet.getVarsOfType(f.getVars(), VarType.PREDICTED));
-        VarConfig vc = latPredVars.getVarConfig(configId);
-        for (Var v : latPredVars) {
-            System.out.println(v);
-            vcStr += vc.getStateName(v);
+        String vcStr;
+        if (prm.humanReadable) {
+            vcStr = ft + "_";
+            VarSet latPredVars = new VarSet(VarSet.getVarsOfType(f.getVars(), VarType.LATENT), VarSet.getVarsOfType(f.getVars(), VarType.PREDICTED));
+            VarConfig vc = latPredVars.getVarConfig(configId);
+            for (Var v : latPredVars) {
+                vcStr += vc.getStateName(v);
+            }
+        } else {
+            vcStr = ft + "_" + configId;   
         }
         
         // Conjoin each observation feature with the string
         // representation of the given assignment to the given
         // variables.
         FeatureVector fv = new FeatureVector(obsFeats.size());
-        //String vcStr = ft + "_" + configId;
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
