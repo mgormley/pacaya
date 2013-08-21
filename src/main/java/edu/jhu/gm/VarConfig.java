@@ -35,6 +35,16 @@ public class VarConfig {
      * variables in a VarSet.
      */
     public int getConfigIndex() {
+        return getConfigIndexOfSubset(vars);
+    }
+
+    /**
+     * Gets the index of this configuration for the given variable set.
+     * 
+     * This is used to provide a unique index for each setting of the the
+     * variables in a VarSet.
+     */
+    public int getConfigIndexOfSubset(VarSet vars) {
         int configIndex = 0;
         int numStatesProd = 1;
         for (Var var : vars) {
@@ -44,7 +54,6 @@ public class VarConfig {
         }
         return configIndex;
     }
-
 
     /** Sets all variable assignments in other. */
     public void put(VarConfig other) { 
@@ -191,6 +200,6 @@ public class VarConfig {
             i++;
         }
         return "VarConfig [config=[" + configSb.toString() + "], vars=" + vars + "]";
-    }    
+    }
         
 }

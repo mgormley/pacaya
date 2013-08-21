@@ -63,6 +63,8 @@ public class SrlFeatureExtractorTest {
             featExt.calcObsFeatureVector(a);
         }
         
+        System.out.println(fts);
+        
         //assertEquals(3*2 + 2 + 3, fts.getNumObsFeats());
         assertEquals(3, fts.getNumObsFeats());
     }

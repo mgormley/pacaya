@@ -110,7 +110,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         }
         
         // Create prefix containing the states of the observed variables.
-        String prefix = getObsVarsStates(f);
+        String prefix = getObsVarsStates(f) + "_";
         
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
@@ -122,11 +122,12 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         // The bias features are used to ensure that at least one feature fires for each variable configuration.
         BinaryStrFVBuilder biasFeats = new BinaryStrFVBuilder(new Alphabet<String>());
         biasFeats.add("BIAS_FEATURE");
-        biasFeats.add(prefix + "BIAS_FEATURE");
+        if (!"_".equals(prefix)) {
+            biasFeats.add(prefix + "BIAS_FEATURE");
+        }
         addFeatures(biasFeats, alphabet, "", fv, true);
         
         // Add the other features.
-        prefix += "_";
         addFeatures(obsFeats, alphabet, prefix, fv, false);
         
         return fv;
@@ -175,18 +176,22 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
      * this factor.
      */
     private String getObsVarsStates(SrlFactor f) {
-        StringBuilder sb = new StringBuilder();
-        int i=0;
-        for (Var v : f.getVars()) {
-            if (i > 0) {
-                sb.append("_");
+        if (prm.humanReadable) {
+            StringBuilder sb = new StringBuilder();
+            int i=0;
+            for (Var v : f.getVars()) {
+                if (i > 0) {
+                    sb.append("_");
+                }
+                if (v.getType() == VarType.OBSERVED) {
+                    sb.append(goldConfig.getStateName(v));
+                    i++;
+                }
             }
-            if (v.getType() == VarType.OBSERVED) {
-                sb.append(goldConfig.getStateName(v));
-                i++;
-            }
+            return sb.toString();
+        } else {
+            return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
         }
-        return sb.toString();
     }
 
     /**

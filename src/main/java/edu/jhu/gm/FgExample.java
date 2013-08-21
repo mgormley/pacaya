@@ -218,15 +218,9 @@ public class FgExample {
         return goldConfig;
     }
 
-    /** Gets the gold configuration of the latent/predicted variables for the given factor. */
-    public VarConfig getGoldConfigLatPred(int factorId) {
-        return goldConfig.getIntersection(fgLatPred.getFactor(factorId).getVars());
-    }
-
     /** Gets the gold configuration index of the latent/predicted variables for the given factor. */
     public int getGoldConfigIdxLatPred(int factorId) {
-        // TODO: return goldConfig.getConfigIndexOfSubset(fgLatPred.getFactor(factorId).getVars());
-        return goldConfig.getIntersection(fgLatPred.getFactor(factorId).getVars()).getConfigIndex();
+        return goldConfig.getConfigIndexOfSubset(fgLatPred.getFactor(factorId).getVars());
     }
 
     /** Gets the gold configuration of the predicted variables ONLY for the given factor. */ 
