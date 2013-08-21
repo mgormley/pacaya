@@ -9,6 +9,7 @@ import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FeatureVectorBuilder;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.SlowFeatureExtractor;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarConfig;
@@ -87,11 +88,19 @@ public class SrlFeatureExtractor implements FeatureExtractor {
             throw new RuntimeException("Unsupported factor type: " + ft);
         }
         
+        String vcStr = ft + "_";
+        VarSet latPredVars = new VarSet(VarSet.getVarsOfType(f.getVars(), VarType.LATENT), VarSet.getVarsOfType(f.getVars(), VarType.PREDICTED));
+        VarConfig vc = latPredVars.getVarConfig(configId);
+        for (Var v : latPredVars) {
+            System.out.println(v);
+            vcStr += vc.getStateName(v);
+        }
+        
         // Conjoin each observation feature with the string
         // representation of the given assignment to the given
         // variables.
         FeatureVector fv = new FeatureVector(obsFeats.size());
-        String vcStr = ft + "_" + configId;
+        //String vcStr = ft + "_" + configId;
         if (log.isTraceEnabled()) {
             log.trace("Num obs features in factor: " + obsFeats.size());
         }
