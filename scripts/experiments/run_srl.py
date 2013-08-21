@@ -64,7 +64,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         return script
     
     def get_java_args(self):
-        return self._get_java_args(self.work_mem_megs)
+        return self._get_java_args(0.75 * self.work_mem_megs)
 
 
 class SrlExpParamsRunner(ExpParamsRunner):
