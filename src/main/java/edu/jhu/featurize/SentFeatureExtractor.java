@@ -134,7 +134,6 @@ public class SentFeatureExtractor {
      */
     public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
-        feats.add("BIAS_FEATURE");
         if (prm.biasOnly) { return feats; }
         
         if (prm.useSimpleFeats) {
