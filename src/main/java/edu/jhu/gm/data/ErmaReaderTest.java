@@ -19,13 +19,12 @@ import data.VariableSet;
 import dataParser.DataParser;
 import edu.jhu.gm.Factor;
 import edu.jhu.gm.FactorGraph;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureCache;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.FgModel;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.VarSet;
-import edu.jhu.util.Alphabet;
 import featParser.FeatureFileParser;
 
 public class ErmaReaderTest {
@@ -46,10 +45,9 @@ public class ErmaReaderTest {
         System.out.println(ff);
         
         // Read the ERMA files to get our objects.
-        boolean includeUnsupportedFeatures = true;
-        ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
+        ErmaReader er = new ErmaReader();
+        FeatureTemplateList fts = new FeatureTemplateList();
+        FgExamples data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, fts);
 
         // Just test that we can construct these without error.
         assertEquals(samples.size(), data.size());
@@ -104,10 +102,12 @@ public class ErmaReaderTest {
             }
         }
         
+        boolean includeUnsupportedFeatures = true;
+        FgModel model = new FgModel(data, includeUnsupportedFeatures);
         if (includeUnsupportedFeatures) {
-            assertEquals(ermaAllFeatNames.size(), data.getAlphabet().size());
+            assertEquals(ermaAllFeatNames.size(), model.getNumParams());
         } else {
-            assertEquals(ermaObsFeatNames.size(), data.getAlphabet().size());
+            assertEquals(ermaObsFeatNames.size(), model.getNumParams());
         }
     }
     

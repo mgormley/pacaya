@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.DenseFactor;
+import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.ProjDepTreeFactor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
@@ -77,17 +78,14 @@ public class SrlFactorGraph extends FactorGraph {
      * An SRL factor, which includes its type (i.e. template).
      * @author mgormley
      */
-    public static class SrlFactor extends DenseFactor {
-
-        private SrlFactorTemplate template;
+    public static class SrlFactor extends ExpFamFactor {
 
         public SrlFactor(VarSet vars, SrlFactorTemplate template) {
-            super(vars);
-            this.template = template;
+            super(vars, template);
         }
         
         public SrlFactorTemplate getFactorType() {
-            return this.template;
+            return (SrlFactorTemplate) getTemplateKey();
         }
         
     }

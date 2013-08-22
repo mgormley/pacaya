@@ -18,6 +18,7 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.Feature;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
@@ -33,7 +34,6 @@ import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.dist.Gaussian;
 
 /**
  * Runner for the CRF library. This is meant to be used for arbitrary graphical
@@ -102,27 +102,25 @@ public class CrfRunner {
         
         // Get a model.
         FgModel model = null;
-        Alphabet<Feature> alphabet;
+        FeatureTemplateList templates;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
             model = (FgModel) Files.deserialize(modelIn);
-            alphabet = model.getAlphabet();
+            templates = model.getTemplates();
         } else {
-            alphabet = new Alphabet<Feature>();
+            templates = new FeatureTemplateList();
         }
         
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(alphabet, trainType, train, name);
+            FgExamples data = getData(templates, trainType, train, name);
             
             if (model == null) {
-                model = new FgModel(alphabet);
+                model = new FgModel(data, includeUnsupportedFeatures);
                 if (initParams == InitParams.RANDOM) {
-                    // Fill the model parameters will values randomly drawn from ~ Normal(0, 1).
-                    Gaussian.nextDoubleArray(0.0, 1.0, model.getParams());
+                    model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
                     // Do nothing.
                 } else {
@@ -158,9 +156,9 @@ public class CrfRunner {
 
         if (test != null && testType != null) {
             // Test the model on test data.
-            alphabet.stopGrowth();
+            templates.stopGrowth();
             String name = "test";
-            FgExamples data = getData(alphabet, testType, test, name);
+            FgExamples data = getData(templates, testType, test, name);
 
             // Decode and evaluate the test data.
             List<VarConfig> predictions = decode(model, data, testPredOut, name);
@@ -168,11 +166,11 @@ public class CrfRunner {
         }
     }
 
-    private FgExamples getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+    private FgExamples getData(FeatureTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExamples data;
         if (dataType == DatasetType.ERMA){
-            ErmaReader er = new ErmaReader(includeUnsupportedFeatures);
-            data = er.read(featureFileIn, dataFile, alphabet);        
+            ErmaReader er = new ErmaReader();
+            data = er.read(featureFileIn, dataFile, templates);        
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }
@@ -180,7 +178,7 @@ public class CrfRunner {
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
         log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num features: %d", data.getAlphabet().size()));
+        log.info(String.format("Num observation features: %d", templates.getNumObsFeats()));
         return data;
     }
 

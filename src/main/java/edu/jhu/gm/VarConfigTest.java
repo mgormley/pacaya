@@ -60,6 +60,27 @@ public class VarConfigTest {
         
         assertEquals(1+4*2+0*5, config.getConfigIndex());
     }
+    
+    @Test
+    public void testGetConfigIndexOfSubset() {
+
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
+        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
+        Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w3 = new Var(VarType.OBSERVED, 3, "w3", null);
+        Var w4 = new Var(VarType.OBSERVED, 6, "w4", null);
+        
+        VarConfig config = new VarConfig();
+        config.put(w0, 1);
+        config.put(w1, 4);
+        config.put(w2, 1);
+        config.put(w3, 2);
+        config.put(w4, 2);
+        
+        VarSet vars = new VarSet(w0, w1, w3);
+        
+        assertEquals(1+4*2+2*10, config.getConfigIndexOfSubset(vars));
+    }
 
     @Test
     public void testGetConfigIndex2() {

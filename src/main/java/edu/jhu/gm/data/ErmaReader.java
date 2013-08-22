@@ -13,10 +13,11 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.DenseFactor;
+import edu.jhu.gm.ObsFeatureExtractor;
+import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
@@ -36,25 +37,15 @@ import featParser.FeatureFileParser;
 public class ErmaReader {
 
     private static final Logger log = Logger.getLogger(ErmaReader.class);
-    private boolean includeUnsupportedFeatures;
-
-    /**
-     * Constructs an ERMA reader, including all the unsupported features (ERMA's default).
-     */
-    public ErmaReader() {
-        this(true);
-    }
     
     /**
      * Constructs an ERMA reader.
-     * @param includeUnsupportedFeatures Whether to include the "unsupported" features in the model.
      */
-    public ErmaReader(boolean includeUnsupportedFeatures) {
-        this.includeUnsupportedFeatures = includeUnsupportedFeatures;
+    public ErmaReader() {
     }
     
-    public FgExamples read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
-        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
+    public FgExamples read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
+        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), fts);
     }
     
     /**
@@ -67,7 +58,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExamples read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+    public FgExamples read(String featureTemplate, String dataFile, FeatureTemplateList fts) {
         FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
@@ -78,22 +69,13 @@ public class ErmaReader {
         }
 
         log.info("Reading and converting data from " + dataFile);  
-        FgExamples data = new FgExamples(alphabet);
+        FgExamples data = new FgExamples(fts);
         try {
             // This will convert each DataSample to an FgExample and add it to data.
             ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
             dp.parseFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-        
-        if (includeUnsupportedFeatures) {
-            log.info("Including unsupported features in the model.");
-            for (data.Feature feat : ff.getFeatures()) {
-                alphabet.lookupIndex(new Feature(feat.getName()));
-            }
-        } else {
-            log.info("Excluding unsupported features from the model.");
         }
         
         return data;
@@ -117,7 +99,7 @@ public class ErmaReader {
         
         @Override
         protected void addDataSample(DataSample s) {
-            data.add(toFgExample(s, this.features, data.getAlphabet()));
+            data.add(toFgExample(s, this.features, data.getTemplates()));
         }
         
     }
@@ -180,9 +162,9 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
+    private static FgExample toFgExample(DataSample s, FeatureFile ff, FeatureTemplateList fts){
         //Saves the variable set to factor HashMappings
-        HashMap<String,DenseFactor> facs = new HashMap<String, DenseFactor>();
+        HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
         // list of FeatureVectors represented as HashMap<Feature,Double> (one
         // for each configuration of the variables).
@@ -213,7 +195,7 @@ public class ErmaReader {
             //System.out.println("fi --> "+fi);
             //System.out.println(fi+"__");
             String key = s.makeKey(fi.getVariables());
-            DenseFactor fac;
+            ExpFamFactor fac;
             // MRG: ERMA WAY: ArrayList<HashMap<Feature,Double>> featRef;
             ArrayList<FeatureVector> featRef;
             if(!facs.containsKey(key)){
@@ -222,7 +204,10 @@ public class ErmaReader {
                     Ivars.add(v);
                 }
                 // MRG: ERMA's way was: fac = new Factor(next++,Ivars, 1.0);
-                fac = new DenseFactor(Ivars, 1.0);
+                
+                // TODO: Get a feature template here.
+                Object templateKey = "INCORRECT_TEMPLATE_KEY";
+                fac = new ExpFamFactor(Ivars, templateKey);
                 facs.put(key,fac);
                 //ArrayList<set<feature* > > feat_r_vec;
                 
@@ -284,6 +269,13 @@ public class ErmaReader {
                 // MRG: ERMA WAY: featRef.get(state).put(feat,featRef.get(state).containsKey(feat)?featRef.get(state).get(feat)+fi.getWeight():fi.getWeight());
                 
                 // MRG: Convert the ERMA feature to our feature and lookup its index.
+                
+                
+                // TODO: Get the correct alphabet.
+                Object templateKey = "INCORRECT_TEMPLATE_KEY";
+                Alphabet<Feature> alphabet = fts.getTemplateByKey(templateKey).getAlphabet();                
+                
+                
                 int featIdx = alphabet.lookupIndex(new Feature(feat.getName()));           
                 FeatureVector featureVector = featRef.get(state);
                 // Add the feature weight for this feature to the feature vector.
@@ -293,11 +285,11 @@ public class ErmaReader {
         }
 
         // MRG: An array list of factors, indexed by factor Id.
-        ArrayList<DenseFactor> facs_vec=new ArrayList<DenseFactor>();
+        ArrayList<ExpFamFactor> facs_vec=new ArrayList<ExpFamFactor>();
         // MRG: An array of feature vectors, indexed by factor id and config index.
         ArrayList<ArrayList<FeatureVector> > feature_ref_vec=new ArrayList<ArrayList<FeatureVector>>();
         for (String factKey:facs.keySet()) {
-            DenseFactor fact = facs.get(factKey);
+            ExpFamFactor fact = facs.get(factKey);
             facs_vec.add(fact);
             ArrayList<FeatureVector> fr = featureRefs.get(factKey);
             feature_ref_vec.add(fr);
@@ -305,7 +297,7 @@ public class ErmaReader {
         
         // MRG: Construct a new factor graph.
         FactorGraph fg = new FactorGraph();
-        for (DenseFactor factor : facs_vec) {
+        for (ExpFamFactor factor : facs_vec) {
             fg.addFactor(factor);
         }
         
@@ -317,9 +309,9 @@ public class ErmaReader {
         }
         
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
-        FeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
+        ObsFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
         
-        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
+        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor, fts);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;
@@ -359,7 +351,7 @@ public class ErmaReader {
         }
     }
     
-    private static class SimpleLookupFeatureExtractor implements FeatureExtractor {
+    private static class SimpleLookupFeatureExtractor implements ObsFeatureExtractor {
 
         private ArrayList<ArrayList<FeatureVector>> feature_ref_vec;
 
@@ -369,8 +361,15 @@ public class ErmaReader {
         }
 
         @Override
-        public FeatureVector calcFeatureVector(int factorId, int configId) {
-            return feature_ref_vec.get(factorId).get(configId);
+        public FeatureVector calcObsFeatureVector(int factorId) {
+            throw new RuntimeException("not implemented");
+            //return feature_ref_vec.get(factorId);
+        }
+
+        @Override
+        public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
+                FeatureTemplateList fts) {
+            // Do nothing.
         }
     }
     

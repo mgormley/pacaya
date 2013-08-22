@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,8 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author mgormley
  *
  */
-public class Var implements Comparable<Var> {
+public class Var implements Comparable<Var>, Serializable {
     
+    private static final long serialVersionUID = 1L;
     /** All variables without an id are given this value. */
     public static final int UNINITIALIZED_NODE_ID = -1;
     

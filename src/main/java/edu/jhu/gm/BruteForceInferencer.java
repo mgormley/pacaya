@@ -40,7 +40,7 @@ public class BruteForceInferencer implements FgInferencer {
     private static DenseFactor getProductOfAllFactors(FactorGraph fg, boolean logDomain) {
         DenseFactor joint = new DenseFactor(new VarSet(), logDomain ? 0.0 : 1.0);
         for (int a=0; a<fg.getNumFactors(); a++) {
-            if (fg.getFactor(a) instanceof DenseFactor) {
+            if (fg.getFactor(a) instanceof ExplicitFactor) {
                 DenseFactor factor = (DenseFactor) fg.getFactor(a);
                 if (logDomain) {
                     joint.add(factor);

@@ -52,25 +52,27 @@ public class SentFeatureExtractor {
     
     private final CoNLL09Sentence sent;
     private final CorpusStatistics cs;
-    private Alphabet<String> alphabet;
     private final SrlBerkeleySignatureBuilder sig;
     private final int[] parents;
     private ArrayList<ZhaoObject> zhaoSentence;
     private ZhaoObject zhaoHeadDefault;
     private ZhaoObject zhaoTailDefault;
         
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs, Alphabet<String> alphabet) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, CoNLL09Sentence sent, CorpusStatistics cs) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;
-        this.alphabet = alphabet;
         this.sig = cs.sig;
-        // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
-        this.parents = getParents(sent);
-        if (prm.useZhaoFeats || prm.useDepPathFeats) {
-            this.zhaoSentence = createZhaoSentence();
-            this.zhaoHeadDefault = new ZhaoObject("BEGIN");
-            this.zhaoTailDefault = new ZhaoObject("END");
+        if (!prm.biasOnly) {
+            // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
+            this.parents = getParents(sent);
+            if (prm.useZhaoFeats || prm.useDepPathFeats) {
+                this.zhaoSentence = createZhaoSentence();
+                this.zhaoHeadDefault = new ZhaoObject("BEGIN");
+                this.zhaoTailDefault = new ZhaoObject("END");
+            }
+        } else {
+            this.parents = null;
         }
     }
     
@@ -112,7 +114,7 @@ public class SentFeatureExtractor {
      * @param idx The position of a word in the sentence.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int idx) {
+    public BinaryStrFVBuilder createFeatureSet(int idx, Alphabet<String> alphabet) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         if (prm.biasOnly) { return feats; }
         
@@ -143,7 +145,7 @@ public class SentFeatureExtractor {
      * @param aidx The "child" position.
      * @return The features.
      */
-    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx) {
+    public BinaryStrFVBuilder createFeatureSet(int pidx, int aidx, Alphabet<String> alphabet) {
         BinaryStrFVBuilder feats = new BinaryStrFVBuilder(alphabet);
         if (prm.biasOnly) { return feats; }
         

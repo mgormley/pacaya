@@ -1,26 +1,24 @@
 package edu.jhu.srl;
 
-import java.util.List;
-
-import edu.jhu.gm.Feature;
+import edu.jhu.gm.FeatureTemplateList;
+import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
-import edu.jhu.util.Alphabet;
 
 public class SrlFgModel extends FgModel {
 
     private static final long serialVersionUID = 5827437917567173421L;
     private CorpusStatistics cs;
-
-    public SrlFgModel(Alphabet<Feature> alphabet, CorpusStatistics cs) {
-        super(alphabet);
-        this.cs = cs;
-    }
-
-    public SrlFgModel(List<Feature> feats, CorpusStatistics cs) {
-        super(feats);
+    
+    public SrlFgModel(FgExamples data, boolean includeUnsupportedFeatures, CorpusStatistics cs) {
+        super(data, includeUnsupportedFeatures);
         this.cs = cs;
     }
     
+    public SrlFgModel(FeatureTemplateList fts, CorpusStatistics cs) {
+        super(fts);
+        this.cs = cs;
+    }
+
     public CorpusStatistics getCs() {
         return cs;
     }
