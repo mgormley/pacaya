@@ -63,14 +63,14 @@ public class SrlBerkeleySignatureBuilder implements Serializable {
                 boolean hasVerb = false;
                 for (int i = 0; i < wlen; i++) {
                     char ch = word.charAt(i);
-                    if (Character.isDigit(ch)) {
+                    if (!hasDigit && Character.isDigit(ch)) {
                         hasDigit = true;
-                    } else if (ch == '-') {
+                    } else if (!hasDash && ch == '-') {
                         hasDash = true;
                     } else if (Character.isLetter(ch)) {
-                        if (Character.isLowerCase(ch)) {
+                        if (!hasLower && Character.isLowerCase(ch)) {
                             hasLower = true;
-                        } else if (Character.isTitleCase(ch)) {
+                        } else if (!hasLower && Character.isTitleCase(ch)) {
                             hasLower = true;
                             numCaps++;
                         } else {
@@ -187,14 +187,14 @@ public class SrlBerkeleySignatureBuilder implements Serializable {
             boolean hasVerb = false;
             for (int i = 0; i < wlen; i++) {
                 char ch = word.charAt(i);
-                if (Character.isDigit(ch)) {
+                if (!hasDigit && Character.isDigit(ch)) {
                     hasDigit = true;
-                } else if (ch == '-') {
+                } else if (!hasDash && ch == '-') {
                     hasDash = true;
                 } else if (Character.isLetter(ch)) {
-                    if (Character.isLowerCase(ch)) {
+                    if (!hasLower && Character.isLowerCase(ch)) {
                         hasLower = true;
-                    } else if (Character.isTitleCase(ch)) {
+                    } else if (!hasLower && Character.isTitleCase(ch)) {
                         hasLower = true;
                         numCaps++;
                     } else {
@@ -271,14 +271,14 @@ public class SrlBerkeleySignatureBuilder implements Serializable {
             boolean hasLower = false;
             for (int i = 0; i < wlen; i++) {
                 char ch = word.charAt(i);
-                if (Character.isDigit(ch)) {
+                if (!hasDigit && Character.isDigit(ch)) {
                     hasDigit = true;
-                } else if (ch == '-') {
+                } else if (!hasDash && ch == '-') {
                     hasDash = true;
                 } else if (Character.isLetter(ch)) {
-                    if (Character.isLowerCase(ch)) {
+                    if (!hasLower && Character.isLowerCase(ch)) {
                         hasLower = true;
-                    } else if (Character.isTitleCase(ch)) {
+                    } else if (!hasLower && Character.isTitleCase(ch)) {
                         hasLower = true;
                         numCaps++;
                     } else {
