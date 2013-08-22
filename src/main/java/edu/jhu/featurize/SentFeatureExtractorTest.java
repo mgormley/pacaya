@@ -34,7 +34,7 @@ public class SentFeatureExtractorTest {
             csPrm.useGoldSyntax = true;
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
             int[] goldParents = fe.getParents(sent);
             assertArrayEquals(new int[] { 1, 2, -1, 2 }, goldParents);
         }
@@ -44,7 +44,7 @@ public class SentFeatureExtractorTest {
             prm.useGoldSyntax = false;
             CorpusStatistics cs = new CorpusStatistics(prm);
             cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
             int[] predParents = fe.getParents(sent);
             assertArrayEquals(new int[] { 2, 0, -1, 2 }, predParents);
         }
@@ -60,7 +60,8 @@ public class SentFeatureExtractorTest {
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
@@ -72,7 +73,7 @@ public class SentFeatureExtractorTest {
         }
         //Check that POS is not gold POS
         fePrm.withSupervision = true;
-        fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        fe = new SentFeatureExtractor(fePrm, sent, cs);
         allFeats = new BinaryStrFVBuilder(alphabet);
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
@@ -90,7 +91,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs);
@@ -111,7 +112,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
@@ -124,7 +125,7 @@ public class SentFeatureExtractorTest {
         cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         fePrm = new SentFeatureExtractorPrm();
-        fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        fe = new SentFeatureExtractor(fePrm, sent, cs);
         parents = fe.getParents(sent);
         zhaoPred = new ZhaoObject(3, parents, sent, cs);
         zhaoArg = new ZhaoObject(4, parents, sent, cs);
@@ -145,7 +146,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
@@ -179,7 +180,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         
         // Example indices.
@@ -237,7 +238,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         
         // Example indices.
@@ -297,7 +298,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
@@ -330,7 +331,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
         //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoObj = new ZhaoObject(3, parents, sent, cs);
@@ -360,7 +361,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Utilities.getList(sent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs, alphabet);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
 
         
         BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);

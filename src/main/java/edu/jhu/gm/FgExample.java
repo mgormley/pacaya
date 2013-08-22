@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -30,29 +31,20 @@ public class FgExample {
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
-    /** The feature extractor. */
-    private FeatureExtractor featExtractor;
-    
-    /**
-     * Constructs a train or test example for a Factor Graph, and caches all the features.
-     * 
-     * @param fg The factor graph.
-     * @param goldConfig The gold assignment to the variables.
-     * @param featExtractor The feature extractor to be used for this example.
-     */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
-        this(fg, goldConfig, fe, true);
-    }
+    /** Feature extractor on the observation variables only (i.e. the values of the observation functions). */
+    private ObsFeatureExtractor featExtractor;
+
 
     /**
-     * Constructs a train or test example for a Factor Graph, and caches all the features.
+     * Constructs a train or test example for a Factor Graph.
      * 
      * @param fg The factor graph.
      * @param goldConfig The gold assignment to the variables.
-     * @param featExtractor The feature extractor to be used for this example.
-     * @param cacheFeats Whether to cache the features, thereby populating the alphabet.
+     * @param fts TODO
+     * @param featExtractor Feature extractor on the observations only (i.e. the
+     *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe, boolean cacheFeats) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FeatureTemplateList fts) {
         this.fg = fg;
         this.goldConfig = goldConfig;
         
@@ -70,12 +62,14 @@ public class FgExample {
         assert (fg.getNumFactors() == fgLatPred.getNumFactors());
         assert (fg.getNumFactors() == fgLat.getNumFactors());
         checkGoldConfig(fg, goldConfig);
+
+        // Add any new feature templates ensuring that they have the right
+        // number number of variable configurations.
+        fts.update(fgLatPred);
         
-        this.featExtractor = new FeatureCache(fgLatPred, fe);     
-        if (cacheFeats) {
-            cacheLatFeats();
-            cacheLatPredFeats();
-        }
+        this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
+        this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
+        cacheObsFeats();
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {
@@ -104,12 +98,24 @@ public class FgExample {
         }
     }
 
-    public void cacheLatFeats() {
-        getUpdatedFactorGraph(fgLat, new double[]{ }, true);
+    private void cacheObsFeats() {
+        getFvs(fg, featExtractor);
     }
     
-    public void cacheLatPredFeats() {
-        getUpdatedFactorGraph(fgLatPred, new double[]{ }, true);
+    /** Gets the observation feature vector for each factor. */
+    private static List<FeatureVector> getFvs(FactorGraph fg, ObsFeatureExtractor featExtractor) {
+        List<FeatureVector> fvs = new ArrayList<FeatureVector>(fg.getNumFactors());        
+        for (int a=0; a<fg.getNumFactors(); a++) {
+            Factor f = fg.getFactor(a);
+            if (f instanceof GlobalFactor) {
+                fvs.add(null);                
+            } else if (f instanceof ExpFamFactor) {
+                fvs.add(featExtractor.calcObsFeatureVector(a));
+            } else {
+                throw new UnsupportedFactorTypeException(f);
+            }
+        }
+        return fvs;
     }
     
     /**
@@ -134,8 +140,8 @@ public class FgExample {
      * @param params The parameters with which to update.
      * @param logDomain TODO
      */
-    public FactorGraph updateFgLatPred(double[] params, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLatPred, params, logDomain);
+    public FactorGraph updateFgLatPred(FgModel model, boolean logDomain) {
+        return getUpdatedFactorGraph(fgLatPred, model, logDomain);
     }
 
     /**
@@ -144,61 +150,58 @@ public class FgExample {
      * @param params The parameters with which to update.
      * @param logDomain TODO
      */
-    public FactorGraph updateFgLat(double[] params, boolean logDomain) {
-        return getUpdatedFactorGraph(fgLat, params, logDomain);
+    public FactorGraph updateFgLat(FgModel model, boolean logDomain) {
+        return getUpdatedFactorGraph(fgLat, model, logDomain);
     }
 
     /** Updates the factor graph with the latest parameter vector. 
      * @param logDomain TODO*/
-    private FactorGraph getUpdatedFactorGraph(FactorGraph fg, double[] params, boolean logDomain) {
+    private FactorGraph getUpdatedFactorGraph(FactorGraph fg, FgModel model, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
             if (f instanceof GlobalFactor) {
                 // Currently, global factors do not support features, and
                 // therefore have no model parameters.
                 continue;
-            } else if (f instanceof DenseFactor) {
-                DenseFactor factor = (DenseFactor) f;
-                int numConfigs = factor.getVars().calcNumConfigs();
-
-                if (numConfigs == 0) {
-                    // HACK: This ensures that if there are no variables in this
-                    // factor, we might still create features. This is only
-                    // necessary because we also (now) use this method to cache
-                    // features.
-                    int config = this.getGoldConfigLatPred(a).getConfigIndex();
-                    this.getFeatureVector(a, config);
-                } else {
-                    IntIter iter = null;
-                    if (fg == this.getFgLat()) {
-                        // If this is the numerator then we must clamp the predicted
-                        // variables to determine the correct set of model
-                        // parameters.
-                        VarConfig predVc = this.getGoldConfigPred(a);
-                        iter = IndexForVc.getConfigIter(this.getFgLatPred().getFactor(a).getVars(), predVc);
-                    }
-                    
-                    for (int c=0; c<numConfigs; c++) {
-        
-                        // The configuration of all the latent/predicted variables,
-                        // where the predicted variables (might) have been clamped.
-                        int config = (iter != null) ? iter.next() : c;
-                        
-                        FeatureVector fv = this.getFeatureVector(a, config);
-                        if (logDomain) {
-                            // Set to log of the factor's value.
-                            factor.setValue(c, fv.dot(params));
-                        } else {
-                            factor.setValue(c, Utilities.exp(fv.dot(params)));
-                        }
-                    }
+            } else if (f instanceof ExpFamFactor) {
+                
+                IntIter iter = null;
+                if (fg == this.getFgLat()) {
+                    // If this is the numerator then we must clamp the predicted
+                    // variables to determine the correct set of model
+                    // parameters.
+                    VarConfig predVc = this.getGoldConfigPred(a);
+                    iter = IndexForVc.getConfigIter(this.getFgLatPred().getFactor(a).getVars(), predVc);
                 }
                 
+                DenseFactor factor = (DenseFactor) f;
+                int numConfigs = factor.getVars().calcNumConfigs();
+                for (int c=0; c<numConfigs; c++) {
+    
+                    // The configuration of all the latent/predicted variables,
+                    // where the predicted variables (might) have been clamped.
+                    int config = (iter != null) ? iter.next() : c;
+                    
+                    double[] params = model.getParams(model.getTemplates().getTemplateId(f), config);
+                    FeatureVector fv = getObservationFeatures(a);
+                    if (logDomain) {
+                        // Set to log of the factor's value.
+                        factor.setValue(c, fv.dot(params));
+                    } else {
+                        factor.setValue(c, Utilities.exp(fv.dot(params)));
+                    }
+                }
+
             } else {
-                throw new UnsupportedFactorTypeException(f);
-            }
+                throw new UnsupportedFactorTypeException(f);        
+            }        
         }
         return fg;
+    }
+
+    /** Gets the observation features for the given factor. */
+    public FeatureVector getObservationFeatures(int factorId) {
+        return featExtractor.calcObsFeatureVector(factorId);
     }
 
     public boolean hasLatentVars() {
@@ -215,30 +218,40 @@ public class FgExample {
         return goldConfig;
     }
 
-    /** Gets the gold configuration of the latent/predicted variables for the given factor. */
-    public VarConfig getGoldConfigLatPred(int factorId) {
-        return goldConfig.getIntersection(fgLatPred.getFactor(factorId).getVars());
-    }
-
-    /** Gets the gold configuration index of the latent/predicted variables for the given factor. */
-    public int getGoldConfigIdxLatPred(int factorId) {
-        return goldConfig.getIntersection(fgLatPred.getFactor(factorId).getVars()).getConfigIndex();
-    }
-
     /** Gets the gold configuration of the predicted variables ONLY for the given factor. */ 
     public VarConfig getGoldConfigPred(int factorId) {
         VarSet vars = fgLatPred.getFactor(factorId).getVars();
         return goldConfig.getIntersection(VarSet.getVarsOfType(vars, VarType.PREDICTED));
     }
-
-    /**
-     * Gets the specified feature vector.
-     * @param factorId The factor id.
-     * @param configId The configuration id of the latent and predicted variables for that factor.
-     * @return The feature vector.
-     */
-    public FeatureVector getFeatureVector(int factorId, int configId) {
-        return featExtractor.calcFeatureVector(factorId, configId);
+    
+    /** Gets the gold configuration index of the predicted variables for the given factor. */
+    public int getGoldConfigIdxPred(int factorId) {
+        VarSet vars = VarSet.getVarsOfType(fgLatPred.getFactor(factorId).getVars(), VarType.PREDICTED);
+        return goldConfig.getConfigIndexOfSubset(vars);
     }
+
+    // COMMMENTED OUT OLD CODE:
+
+//  * @param cacheFeats Whether to cache the features, thereby populating the alphabet.
+//  */
+// public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe, boolean cacheFeats) {
+    
+//    public void cacheLatFeats() {
+//        getUpdatedFactorGraph(fgLat, new double[]{ }, true);
+//    }
+//    
+//    public void cacheLatPredFeats() {
+//        getUpdatedFactorGraph(fgLatPred, new double[]{ }, true);
+//    }
+    
+//    /**
+//     * Gets the specified feature vector.
+//     * @param factorId The factor id.
+//     * @param configId The configuration id of the latent and predicted variables for that factor.
+//     * @return The feature vector.
+//     */
+//    public FeatureVector getFeatureVector(int factorId, int configId) {
+//        return featExtractor.calcFeatureVector(factorId, configId);
+//    }
     
 }

@@ -16,8 +16,11 @@ import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.FeatureTemplate;
+import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
@@ -41,8 +44,6 @@ public class SrlFgExamplesBuilder {
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
-        /** Whether to include unsupported features. */
-        public boolean includeUnsupportedFeatures = true;
         /**
          * Minimum number of times (inclusive) a feature must occur in training
          * to be included in the model. Ignored if non-positive. (Using this
@@ -53,13 +54,13 @@ public class SrlFgExamplesBuilder {
     
     private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
 
+    private FeatureTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
-    private Alphabet<Feature> alphabet;
     private CorpusStatistics cs;
     
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, Alphabet<Feature> alphabet, CorpusStatistics cs) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
-        this.alphabet = alphabet;
+        this.fts = fts;
         this.cs = cs;
     }
 
@@ -72,17 +73,15 @@ public class SrlFgExamplesBuilder {
         return getData(sents);
     }
     
-    
     public void preprocess(List<CoNLL09Sentence> sents) {
-        if (!(alphabet.isGrowing() && prm.featCountCutoff > 0)) {
+        if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {
             // Skip this preprocessing step since it will have no effect.
-            log.info("Skipping preprocessing step");
             return;
         }
         
-        CountingAlphabet<Feature> counter = new CountingAlphabet<Feature>();
+        // Use counting alphabets in this ftl.
+        FeatureTemplateList counter = new FeatureTemplateList(true);
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -98,36 +97,41 @@ public class SrlFgExamplesBuilder {
             SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-            
-            // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, counter, sentFeatExt);
-            // So we don't have to compute the features again for this example.
-            featExts.add(featExtractor);
-            
-            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, false);
 
-            // Cache only the features observed in training data.
-            ex.cacheLatFeats();
+            // Create a feature extractor for this example.
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+                        
+            // Create the example solely to count the features.
+            new FgExample(sfg, trainConfig, featExtractor, counter);
         }
         
-        for (int i=0; i<counter.size(); i++) {
-            int count = counter.lookupObjectCount(i);
-            Feature feat = counter.lookupObject(i);
-            if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
-                alphabet.lookupIndex(feat);
+        for (int t=0; t<counter.size(); t++) {            
+            FeatureTemplate template = counter.get(t);
+            CountingAlphabet<Feature> countAlphabet = (CountingAlphabet<Feature>) template.getAlphabet();
+            
+            // Create a copy of this template, with a new alphabet.
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            fts.add(new FeatureTemplate(template.getVars(), alphabet, template.getKey()));
+
+            // Discard the features which occurred fewer times than the cutoff.
+            for (int i=0; i<countAlphabet.size(); i++) {
+                int count = countAlphabet.lookupObjectCount(i);
+                Feature feat = countAlphabet.lookupObject(i);
+                if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
+                    alphabet.lookupIndex(feat);
+                }
             }
+            alphabet.stopGrowth();
         }
-        alphabet.stopGrowth();
     }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
         preprocess(sents);
-        
+
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
         
-        FgExamples data = new FgExamples(alphabet);
+        FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -143,34 +147,17 @@ public class SrlFgExamplesBuilder {
             SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-            
+
             // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, alphabet, sentFeatExt);
-            // So we don't have to compute the features again for this example.
-            featExts.add(featExtractor);
-
-            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, false);
-
-            // Cache only the features observed in training data.
-            ex.cacheLatFeats();
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+                        
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
         }
         
-        if (!prm.includeUnsupportedFeatures) {
-            alphabet.stopGrowth();
-        }
-
-        // Cache features for all the other variable assignments.
-        for (int i=0; i<data.size(); i++) {
-            if (i % 1000 == 0 && i > 0) {
-                log.debug("Cached features for " + i + " examples...");
-            }
-            FgExample ex = data.get(i);
-            ex.cacheLatPredFeats();
-        }
-
-        log.info("Num observation functions: " + obsAlphabet.size());
+        log.info("Number of observation function features: " + obsAlphabet.size());
+        
         data.setSourceSentences(sents);
         return data;
     }

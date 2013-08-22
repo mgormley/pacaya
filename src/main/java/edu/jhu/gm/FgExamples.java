@@ -15,16 +15,16 @@ import edu.jhu.util.Alphabet;
 public class FgExamples implements Iterable<FgExample> {
         
     private ArrayList<FgExample> examples;
-    private Alphabet<Feature> alphabet;
     /**
      * This is a hack to carry around the source sentences. For example, the
      * CoNLL2009 sentences from which these examples were generated.
      */
     private Object sourceSents;
+    private FeatureTemplateList fts;
 
-    public FgExamples(Alphabet<Feature> alphabet) {
+    public FgExamples(FeatureTemplateList fts) {
+        this.fts = fts;
         this.examples = new ArrayList<FgExample>();
-        this.alphabet = alphabet;  
     }
     
     /** Adds an example. */
@@ -45,10 +45,6 @@ public class FgExamples implements Iterable<FgExample> {
     @Override
     public Iterator<FgExample> iterator() {
         return examples.iterator();
-    }
-    
-    public Alphabet<Feature> getAlphabet() {
-        return alphabet;
     }
 
     public List<VarConfig> getGoldConfigs() {
@@ -81,6 +77,10 @@ public class FgExamples implements Iterable<FgExample> {
     
     public Object getSourceSentences() {
         return sourceSents;
+    }
+
+    public FeatureTemplateList getTemplates() {
+        return fts;
     }
     
 }

@@ -38,7 +38,7 @@ public class FgExampleTest {
         cs.init(sents);
         
         System.out.println("Done reading.");
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FeatureTemplateList fts = new FeatureTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
@@ -47,7 +47,7 @@ public class FgExampleTest {
 
         prm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExamples data = builder.getData(sents);
         
         FgExample ex = data.get(0);

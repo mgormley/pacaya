@@ -12,6 +12,8 @@ import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.srl.SrlFactorGraph;
+import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
 
@@ -45,13 +47,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    DenseFactor f;
+                    ExpFamFactor f;
                     if (i == -1) {
-                        f = new DenseFactor(new VarSet(rootVars[j]));
+                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new DenseFactor(new VarSet(childVars[i][j]));
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -128,13 +130,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    DenseFactor f;
+                    ExpFamFactor f;
                     if (i == -1) {
-                        f = new DenseFactor(new VarSet(rootVars[j]));
+                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new DenseFactor(new VarSet(childVars[i][j]));
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -151,7 +153,7 @@ public class ProjDepTreeFactorTest {
                 
         // Add an extra variable over which we will marginalize.        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Utilities.getList("arg0", "_"));
-        DenseFactor roleFac = new DenseFactor(new VarSet(roleVar, childVars[0][1]));
+        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar, childVars[0][1]), SrlFactorTemplate.LINK_ROLE_BINARY);
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 3);
         roleFac.setValue(2, 5);
@@ -221,13 +223,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    DenseFactor f;
+                    ExpFamFactor f;
                     if (i == -1) {
-                        f = new DenseFactor(new VarSet(rootVars[j]));
+                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new DenseFactor(new VarSet(childVars[i][j]));
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -243,7 +245,7 @@ public class ProjDepTreeFactorTest {
         fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
-        DenseFactor roleLinkFac = new DenseFactor(new VarSet(childVars[1][0], roleVar));
+        ExpFamFactor roleLinkFac = new ExpFamFactor(new VarSet(childVars[1][0], roleVar), SrlFactorTemplate.LINK_ROLE_BINARY);
         roleLinkFac.setValue(0, 1);
         roleLinkFac.setValue(1, 1);
         roleLinkFac.setValue(2, 1);
@@ -253,7 +255,8 @@ public class ProjDepTreeFactorTest {
             roleLinkFac.convertRealToLog();
         }
         fg.addFactor(roleLinkFac);
-        DenseFactor roleFac = new DenseFactor(new VarSet(roleVar), 1.0);
+        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar), SrlFactorTemplate.ROLE_UNARY);
+        roleFac.set(1.0);
         if (logDomain) {
             roleFac.convertRealToLog();
         }

@@ -192,7 +192,7 @@ public class BeliefPropagation implements FgInferencer {
             globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
             // The messages have been set, so just return.
             return;
-        } else if (!edge.isVarToFactor() && !(factor instanceof DenseFactor)) {
+        } else if (!edge.isVarToFactor() && !(factor instanceof ExplicitFactor)) {
             throw new UnsupportedFactorTypeException(factor);
         }
 
@@ -331,7 +331,7 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     private DenseFactor getMarginals(Factor factor, FgNode node) {
-        if (!(factor instanceof DenseFactor)) {
+        if (!(factor instanceof ExplicitFactor)) {
             throw new UnsupportedFactorTypeException(factor, "Getting marginals of a global factor is not supported."
                     + " This would require exponential space to store the resulting factor.");
         }

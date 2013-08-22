@@ -11,12 +11,12 @@ import edu.jhu.util.math.Multinomials;
 import edu.jhu.util.math.Vectors;
 
 /**
- * A dense factor in a factor graph.
+ * A multivariate Multinomial distribution. 
  * 
  * @author mgormley
  *
  */
-public class DenseFactor implements Factor {
+public class DenseFactor {
 
     /** All variables without an id are given this value. */
     public static final int UNINITIALIZED_NODE_ID = -1;

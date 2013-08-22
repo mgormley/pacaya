@@ -1,6 +1,6 @@
 package edu.jhu.gm;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -17,6 +17,7 @@ import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.data.ErmaReader;
 import edu.jhu.gm.data.ErmaReaderTest;
+import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
@@ -27,31 +28,41 @@ public class CrfTrainerTest {
      * Constructs features for each factor graph configuration by creating a
      * sorted list of all the variable states and concatenating them together.
      * 
+     * For testing only.
+     * 
      * @author mgormley
      */
-    public static class SimpleVCFeatureExtractor extends SlowFeatureExtractor {
+    public static class SimpleVCFeatureExtractor extends SlowObsFeatureExtractor {
 
-        private Alphabet<Feature> alphabet;
-        
-        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, Alphabet<Feature> alphabet) {
-            super(fg, goldConfig);
-            this.alphabet = alphabet;
+        private FeatureTemplateList fts;
+
+        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FeatureTemplateList fts) {
+            super();
+            this.fts = fts;
         }
         
         // Just concatenates all the state names together (in-order).
         @Override
-        public FeatureVector calcFeatureVector(int factorId, VarConfig varConfig) {
+        public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            String[] strs = new String[varConfig.getVars().size()];
-            int i=0;
-            for (Var v : varConfig.getVars()) {
-                strs[i] = varConfig.getStateName(v);
-                i++;
+            Alphabet<Feature> alphabet = fts.getTemplate(fg.getFactor(factorId)).getAlphabet();
+
+            if (varConfig.size() > 0) {
+                String[] strs = new String[varConfig.getVars().size()];
+                int i=0;
+                for (Var v : varConfig.getVars()) {
+                    strs[i] = varConfig.getStateName(v);
+                    i++;
+                }
+                Arrays.sort(strs);
+                Feature feat = new Feature(StringUtils.join(strs, ":"));
+                int featIdx = alphabet.lookupIndex(feat);
+                fv.set(featIdx, 1.0);
             }
-            Arrays.sort(strs);
-            Feature feat = new Feature(StringUtils.join(strs, ":"));
-            int featIdx = alphabet.lookupIndex(feat);
+            
+            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
             fv.set(featIdx, 1.0);
+            
             return fv;
         }
     }
@@ -64,13 +75,14 @@ public class CrfTrainerTest {
         exs.addEx(10, "solid");
         exs.addEx(5);
 
+        FgExamples data = exs.getData();
         double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getAlphabet());
-        model.setParams(params);
+        FgModel model = new FgModel(data.getTemplates());
+        model.updateModelFromDoubles(params);
         
         model = train(model, exs.getData());
         
-        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, model.getParams(), 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, FgModelTest.getParams(model), 1e-3);
     }
     
     @Test
@@ -85,31 +97,41 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, alphabet);
+        FeatureTemplateList fts = new FeatureTemplateList();        
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(alphabet);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
-        FgModel model = new FgModel(alphabet);
+        FgExamples data = new FgExamples(fts);
+        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
+        FgModel model = new FgModel(fts);
 
         model = train(model, data);
         
-        System.out.println(alphabet.getObjects());
-        System.out.println(Utilities.toString(model.getParams(), "%.2f"));
-        assertEquals(4.79, getParam(model, "N:man"), 1e-2);
-        assertEquals(-4.79, getParam(model, "V:man"), 1e-2);
-        assertEquals(-2.47, getParam(model, "N:jump"), 1e-2);
-        assertEquals(2.47, getParam(model, "V:jump"), 1e-2);
-        assertEquals(-3.82, getParam(model, "N:fence"), 1e-2);
-        assertEquals(3.82, getParam(model, "V:fence"), 1e-2);
+        System.out.println(model);
+        System.out.println(fts);
+        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
+        JUnitUtils.assertArrayEquals(new double[]{3.58, -0.75, -2.16, -2.17, -3.58, 0.75, 2.16, 2.17, -2.17, -2.17, 3.59, 0.75}, FgModelTest.getParams(model), 1e-2);
         
-        assertEquals(-2.31, getParam(model, "N:N"), 1e-2);
-        assertEquals(0.65, getParam(model, "N:V"), 1e-2);
-        assertEquals(1.66, getParam(model, "V:V"), 1e-2);
+        // OLD WAY:
+        //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
+        //        assertEquals(-4.79, getParam(model, "emit", "V:man"), 1e-2);
+        //        assertEquals(-2.47, getParam(model, "emit", "N:jump"), 1e-2);
+        //        assertEquals(2.47, getParam(model, "emit", "V:jump"), 1e-2);
+        //        assertEquals(-3.82, getParam(model, "emit", "N:fence"), 1e-2);
+        //        assertEquals(3.82, getParam(model, "emit", "V:fence"), 1e-2);
+        //        
+        //        assertEquals(-2.31, getParam(model, "tran", "N:N"), 1e-2);
+        //        assertEquals(0.65, getParam(model, "tran", "N:V"), 1e-2);
+        //        assertEquals(1.66, getParam(model, "tran", "V:V"), 1e-2);
     }
     
-    private double getParam(FgModel model, String name) {
-        return model.getParams()[model.getAlphabet().lookupIndex(new Feature(name))];
+    private double getParam(FgModel model, Object templateKey, String name) {
+        FeatureTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
+        int feat = ft.getAlphabet().lookupIndex(new Feature(name));
+        fail("Somehow we need access to the configId if we want to use this method.");
+        return 0.0;
+        //return model.get
+        //return model.getParams()[model.getAlphabet().lookupIndex(new Feature(name))];
     }
 
     @Test
@@ -124,19 +146,23 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, alphabet);
+        FeatureTemplateList fts = new FeatureTemplateList();        
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(alphabet);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor));
-        FgModel model = new FgModel(alphabet);
+        FgExamples data = new FgExamples(fts);
+        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
+        FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);
         
-        System.out.println(alphabet.getObjects());
-        System.out.println(Utilities.toString(model.getParams(), "%.2f"));
+        System.out.println(fts);
+        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
+        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.31, 0.31, -0.31, -0.31, -6.42, -6.52, 10.24, 2.69}, FgModelTest.getParams(model), 1e-2);
+          
+        // OLD PARAMS:
         //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
-        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, model.getParams(), 1e-2);
+        //JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.00, 0.00, 3.45, 3.45, -3.45, -3.45, -10.18, 1.64, 8.54}, FgModelTest.getParams(model), 1e-2);
     }
 
     @Test
@@ -154,18 +180,18 @@ public class CrfTrainerTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    DenseFactor f;
+                    ExpFamFactor f;
                     if (i == -1) {
-                        f = new DenseFactor(new VarSet(rootVars[j]));
+                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
                         fg.addFactor(f);
 
                         //trainConfig.put(rootVars[j], 0);
                     } else {
-                        f = new DenseFactor(new VarSet(childVars[i][j]));
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         fg.addFactor(f);
 
                         childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Utilities.getList("A1", "A2", "A3"));
-                        fg.addFactor(new DenseFactor(new VarSet(childRoles[i][j])));
+                        fg.addFactor(new ExpFamFactor(new VarSet(childRoles[i][j]), SrlFactorTemplate.ROLE_UNARY));
                         
                         //trainConfig.put(childVars[i][j], 0);
                         trainConfig.put(childRoles[i][j], "A1");
@@ -179,28 +205,29 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[0][1], "A2");
         trainConfig.put(childRoles[1][0], "A2");
 
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, alphabet);
+        FeatureTemplateList fts = new FeatureTemplateList();        
+        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(alphabet);
-        data.add(new FgExample(fg, trainConfig, featExtractor));
-        FgModel model = new FgModel(alphabet);
+        FgExamples data = new FgExamples(fts);
+        data.add(new FgExample(fg, trainConfig, featExtractor, fts));
+        FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);
         
-        System.out.println(alphabet.getObjects());
-        System.out.println(Utilities.toString(model.getParams(), "%.2f"));
+        System.out.println(fts);
+        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
         // [FALSE, TRUE, A1, A2, A3]
-        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, model.getParams(), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, FgModelTest.getParams(model), 1e-2);
+
     }
     
     @Test
     public void testTrainErmaInput() {
-        ErmaReader er = new ErmaReader(true);
-        Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExamples data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, alphabet);
+        ErmaReader er = new ErmaReader();
+        FeatureTemplateList fts = new FeatureTemplateList();        
+        FgExamples data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
         
-        FgModel model = new FgModel(alphabet);
+        FgModel model = new FgModel(fts);
         model = train(model, data);
         
         // ERMA achieves the following log-likelihood: 0.5802548014360731.
