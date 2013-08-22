@@ -59,10 +59,14 @@ public class FeatureTemplate implements Serializable {
     public String getStateNamesStr(int configId) {
         return StringUtils.join(getStateNames(configId), "_");
     }
+
+    public VarSet getVars() {
+        return vars;
+    }
     
     @Override
     public String toString() {
         return "FeatureTemplate [key=" + key + ", numConfigs=" + numConfigs + ", alphabet=" + alphabet + "]";
-    }    
+    }
 
 }

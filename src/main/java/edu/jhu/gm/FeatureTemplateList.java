@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.CountingAlphabet;
 
 public class FeatureTemplateList implements Serializable {
 
@@ -12,13 +13,19 @@ public class FeatureTemplateList implements Serializable {
     private List<FeatureTemplate> fts;
     private boolean isGrowing;  
     private Alphabet<Object> templateKeyAlphabet;
+    private boolean useCountingAlphabets;
 
     public FeatureTemplateList() {
+        this(false);
+    }
+    
+    public FeatureTemplateList(boolean useCountingAlphabets) {
         fts = new ArrayList<FeatureTemplate>();
         isGrowing = true;
         templateKeyAlphabet = new Alphabet<Object>();
+        this.useCountingAlphabets = useCountingAlphabets;
     }
-    
+
     public FeatureTemplate get(int i) {
         return fts.get(i);
     }
@@ -72,7 +79,8 @@ public class FeatureTemplateList implements Serializable {
         int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
         if (index >= fts.size()) {
             // Add the template.
-            fts.add(new FeatureTemplate(f.getVars(), new Alphabet<Feature>(), f.getTemplateKey()));
+            Alphabet<Feature> alphabet = useCountingAlphabets ? new CountingAlphabet<Feature>() : new Alphabet<Feature>();
+            fts.add(new FeatureTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
             throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
         } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
@@ -108,6 +116,9 @@ public class FeatureTemplateList implements Serializable {
     public String toString() {
         return "FeatureTemplateList [isGrowing=" + isGrowing + ", fts=" + fts + "]";
     }
-    
+
+    public boolean isGrowing() {
+        return isGrowing;
+    }    
     
 }

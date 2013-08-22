@@ -1,5 +1,6 @@
 package edu.jhu.srl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,6 +14,9 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.gm.Feature;
+import edu.jhu.gm.FeatureExtractor;
+import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
@@ -24,6 +28,7 @@ import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.CountingAlphabet;
 
 /**
  * Factory for FgExamples.
@@ -68,58 +73,61 @@ public class SrlFgExamplesBuilder {
         return getData(sents);
     }
     
-    // TODO: This needs to be reimplemented so that counting is done across each of the templates. 
-    // The right design here isn't obvious. We'll need to create the templates with CountingAlphabets somehow.
-//    public void preprocess(List<CoNLL09Sentence> sents) {
-//        if (!(alphabet.isGrowing() && prm.featCountCutoff > 0)) {
-//            // Skip this preprocessing step since it will have no effect.
-//            return;
-//        }
-//        
-//        CountingAlphabet<Feature> counter = new CountingAlphabet<Feature>();
-//        Alphabet<String> obsAlphabet = new Alphabet<String>();
-//        List<FeatureExtractor> featExts = new ArrayList<FeatureExtractor>();
-//        for (int i=0; i<sents.size(); i++) {
-//            CoNLL09Sentence sent = sents.get(i);
-//            if (i % 1000 == 0 && i > 0) {
-//                log.debug("Preprocessed " + i + " examples...");
-//            }
-//            
-//            // Precompute a few things.
-//            SrlGraph srlGraph = sent.getSrlGraph();
-//            
-//            Set<Integer> knownPreds = getKnownPreds(srlGraph);
-//            
-//            // Construct the factor graph.
-//            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
-//            // Get the variable assignments given in the training data.
-//            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-//            
-//            // Create a feature extractor for this example.
-//            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs, obsAlphabet);
-//            FeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sfg, counter, sentFeatExt);
-//            // So we don't have to compute the features again for this example.
-//            featExts.add(featExtractor);
-//            
-//            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, false);
-//
-//            // Cache only the features observed in training data.
-//            ex.cacheLatFeats();
-//        }
-//        
-//        for (int i=0; i<counter.size(); i++) {
-//            int count = counter.lookupObjectCount(i);
-//            Feature feat = counter.lookupObject(i);
-//            if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
-//                alphabet.lookupIndex(feat);
-//            }
-//        }
-//        alphabet.stopGrowth();
-//    }
+    public void preprocess(List<CoNLL09Sentence> sents) {
+        if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {
+            // Skip this preprocessing step since it will have no effect.
+            return;
+        }
+        
+        // Use counting alphabets in this ftl.
+        FeatureTemplateList counter = new FeatureTemplateList(true);
+        Alphabet<String> obsAlphabet = new Alphabet<String>();
+        for (int i=0; i<sents.size(); i++) {
+            CoNLL09Sentence sent = sents.get(i);
+            if (i % 1000 == 0 && i > 0) {
+                log.debug("Preprocessed " + i + " examples...");
+            }
+            
+            // Precompute a few things.
+            SrlGraph srlGraph = sent.getSrlGraph();
+            
+            Set<Integer> knownPreds = getKnownPreds(srlGraph);
+            
+            // Construct the factor graph.
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            // Get the variable assignments given in the training data.
+            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
+
+            // Create a feature extractor for this example.
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+                        
+            // Create the example solely to count the features.
+            new FgExample(sfg, trainConfig, featExtractor, counter);
+        }
+        
+        for (int t=0; t<counter.size(); t++) {            
+            FeatureTemplate template = counter.get(t);
+            CountingAlphabet<Feature> countAlphabet = (CountingAlphabet<Feature>) template.getAlphabet();
+            
+            // Create a copy of this template, with a new alphabet.
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            fts.add(new FeatureTemplate(template.getVars(), alphabet, template.getKey()));
+
+            // Discard the features which occurred fewer times than the cutoff.
+            for (int i=0; i<countAlphabet.size(); i++) {
+                int count = countAlphabet.lookupObjectCount(i);
+                Feature feat = countAlphabet.lookupObject(i);
+                if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
+                    alphabet.lookupIndex(feat);
+                }
+            }
+            alphabet.stopGrowth();
+        }
+    }
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
-        //TODO: preprocess(sents);
-        if (prm.featCountCutoff > 0) { throw new RuntimeException("not yet implemented"); }
+        preprocess(sents);
 
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         

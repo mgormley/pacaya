@@ -108,42 +108,44 @@ public class SrlFgExamplesBuilderTest {
         assertEquals(18, vc.size());
     }
 
-    // TODO: Add this test back in after fixing featureCountCutoff.
-//    @Test
-//    public void testPreprocess() throws Exception {
-//
-//        InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
-//        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
-//        List<CoNLL09Sentence> sents = cr.readSents(1);
-//        CorpusStatistics.normalizeRoleNames(sents);
-//
-//        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-//        CorpusStatistics cs = new CorpusStatistics(csPrm);
-//        cs.init(sents);
-//        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-//        //fePrm.biasOnly = true;
-//        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-//        prm.fePrm.useZhaoFeats = false;
-//        prm.fePrm.useSimpleFeats = false;
-//        prm.fePrm.useDepPathFeats = false;
-//        prm.fePrm = fePrm;
-//        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-//        prm.fgPrm.alwaysIncludeLinkVars = true;
-//        {
-//            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-//            prm.featCountCutoff = 0;
-//            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
-//            builder.getData(sents);
-//            assertEquals(51882, alphabet.size());
-//        }
-//        {
-//            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-//            prm.featCountCutoff = 5;
-//            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, alphabet, cs);
-//            builder.getData(sents);
-//            assertEquals(5166, alphabet.size());
-//        }
-//    }
+    @Test
+    public void testPreprocess() throws Exception {
+        InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
+        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
+        List<CoNLL09Sentence> sents = cr.readSents(1);
+        CorpusStatistics.normalizeRoleNames(sents);
+
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(sents);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        //fePrm.biasOnly = true;
+        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        prm.fePrm.useZhaoFeats = false;
+        prm.fePrm.useSimpleFeats = false;
+        prm.fePrm.useDepPathFeats = false;
+        prm.fePrm = fePrm;
+        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.alwaysIncludeLinkVars = true;
+        {
+            FeatureTemplateList fts = new FeatureTemplateList();
+            prm.featCountCutoff = 0;
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+            FgExamples data = builder.getData(sents);            
+            assertEquals(13388, fts.getNumObsFeats());
+            //FgModel model = new FgModel(data, false);
+            //assertEquals(51882, model.getNumParams());
+        }
+        {
+            FeatureTemplateList fts = new FeatureTemplateList();
+            prm.featCountCutoff = 5;
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+            FgExamples data = builder.getData(sents);            
+            assertEquals(2729, fts.getNumObsFeats());
+            //FgModel model = new FgModel(data, false);
+            //assertEquals(5166, model.getNumParams());
+        }
+    }
 
     @Test
     public void testLinkTrainAssignment() throws Exception {
