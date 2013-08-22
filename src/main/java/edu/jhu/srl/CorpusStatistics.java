@@ -83,10 +83,7 @@ public class CorpusStatistics implements Serializable {
 
     public void init(Iterable<CoNLL09Sentence> cr) {
         initialized = true;
-        
-        // TODO: Currently, we build but just discard the bigrams map.
-        Map<Set<String>, MutableInt> bigrams = new HashMap<Set<String>, MutableInt>();
-        
+                
         // Store the variable states we have seen before so
         // we know what our vocabulary of possible states are for
         // the Link variable. Applies to knownLinks, knownRoles.
@@ -110,6 +107,8 @@ public class CorpusStatistics implements Serializable {
                 String wordForm = word.getForm();
                 String cleanWord = normalize.clean(wordForm);
                 int position = word.getId() - 1;
+                // Actually only need to do this for those words that are below
+                // threshold for knownWords.  
                 String unkWord = sig.getSignature(wordForm, position, prm.language);
                 unkWord = normalize.escape(unkWord);
                 words = addWord(words, cleanWord);
@@ -122,30 +121,12 @@ public class CorpusStatistics implements Serializable {
                 } else {
                     knownPostags.add(word.getPos());
                 }
-                // Note: These are not actually bigrams, but rather refer to
-                // pairs of words seen in the same sentence.
-                for (CoNLL09Token word2 : sent) {
-                    String wordForm2 = word2.getForm();
-                    String cleanWord2 = normalize.clean(wordForm2);
-                    String unkWord2 = sig.getSignature(wordForm2, word2.getId(), prm.language);
-                    unkWord2 = normalize.escape(unkWord2);
-
-                    // TBD: Actually use the seen/unseen bigrams to shrink the
-                    // feature space.
-                    addBigram(bigrams, cleanWord, cleanWord2);
-                    addBigram(bigrams, unkWord, unkWord2);
-                    addBigram(bigrams, cleanWord, unkWord2);
-                    addBigram(bigrams, unkWord, cleanWord2);
-                }
             }
         }
         
         // For words and unknown word classes, we only keep those above some threshold.
         knownWords = getUnigramsAboveThreshold(words, prm.cutoff);
         knownUnks = getUnigramsAboveThreshold(unks, prm.cutoff);
-        
-        // TODO: Currently not actually using bigram dictionary.
-        // knownBigrams = getBigramsAboveThreshold(bigrams, cutoff);
                     
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
@@ -190,21 +171,12 @@ public class CorpusStatistics implements Serializable {
         return inputHash;
     }
 
-    private static void addBigram(Map<Set<String>, MutableInt> bigrams, String w1, String w2) {
-        HashSet<String> pair = new HashSet<String>(Arrays.asList(w1, w2));
-        MutableInt count = bigrams.get(pair);
-        if (count == null) {
-            bigrams.put(pair, new MutableInt());
-        } else {
-            count.increment();
-        }
-    }
 
     private static Set<String> getUnigramsAboveThreshold(Map<String, MutableInt> inputHash, int cutoff) {
         Set<String> knownHash = new HashSet<String>();
         Iterator<Entry<String, MutableInt>> it = inputHash.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry) it.next();
+            Map.Entry pairs = it.next();
             int count = ((MutableInt) pairs.getValue()).get();
             if (count > cutoff) {
                 knownHash.add((String) pairs.getKey());
@@ -212,20 +184,6 @@ public class CorpusStatistics implements Serializable {
         }
         return knownHash;
     }
-
-    private static Set<Set<String>> getBigramsAboveThreshold(Map<Set<String>, MutableInt> inputHash, int cutoff) {
-        // Version of below, for bigrams.
-        Set<Set<String>> knownHash = new HashSet<Set<String>>();
-        Iterator<Entry<Set<String>, MutableInt>> it = inputHash.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pairs = (Map.Entry) it.next();
-            int count = ((MutableInt) pairs.getValue()).get();
-            if (count > cutoff) {
-                knownHash.add((Set<String>) pairs.getKey());
-            }
-        }
-        return knownHash;
-    }    
 
     @Override
     public String toString() {
