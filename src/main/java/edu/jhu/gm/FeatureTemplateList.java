@@ -43,10 +43,19 @@ public class FeatureTemplateList implements Serializable {
         return count;
     }
 
+    public void startGrowth() {
+        for (FeatureTemplate ft : fts) {
+            ft.getAlphabet().startGrowth();
+        }
+        templateKeyAlphabet.startGrowth();
+        isGrowing = true;
+    }
+
     public void stopGrowth() {
         for (FeatureTemplate ft : fts) {
             ft.getAlphabet().stopGrowth();
         }
+        templateKeyAlphabet.stopGrowth();
         isGrowing = false;
     }
     

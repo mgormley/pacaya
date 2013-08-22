@@ -129,30 +129,35 @@ public class FgModel implements Serializable {
             FgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
-                int t = templates.getTemplateId(f);
-                if (t != -1) {
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    if (f.getVars().size() == 0) {
-                        int predConfig = ex.getGoldConfigIdxPred(a);
-                        for (IntDoubleEntry entry : fv) {
-                            included[t][predConfig][entry.index()] = true;
-                        }
-                    } else {
-                        // We must clamp the predicted variables and loop over the latent ones.
-                        VarConfig predVc = ex.getGoldConfigPred(a);
-                        IntIter iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(a).getVars(), predVc);
-                        
-                        int numConfigs = f.getVars().calcNumConfigs();
-                        for (int c=0; c<numConfigs; c++) {            
-                            // The configuration of all the latent/predicted variables,
-                            // where the predicted variables have been clamped.
-                            int config = iter.next();
+                if (f instanceof GlobalFactor) {
+                    continue;
+                } else if (f instanceof ExpFamFactor) {
+                    int t = templates.getTemplateId(f);
+                    if (t != -1) {
+                        FeatureVector fv = ex.getObservationFeatures(a);
+                        if (f.getVars().size() == 0) {
+                            int predConfig = ex.getGoldConfigIdxPred(a);
                             for (IntDoubleEntry entry : fv) {
-                                included[t][config][entry.index()] = true;
+                                included[t][predConfig][entry.index()] = true;
+                            }
+                        } else {
+                            // We must clamp the predicted variables and loop over the latent ones.
+                            VarConfig predVc = ex.getGoldConfigPred(a);
+                            IntIter iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(a).getVars(), predVc);
+                            
+                            int numConfigs = f.getVars().calcNumConfigs();
+                            for (int c=0; c<numConfigs; c++) {            
+                                // The configuration of all the latent/predicted variables,
+                                // where the predicted variables have been clamped.
+                                int config = iter.next();
+                                for (IntDoubleEntry entry : fv) {
+                                    included[t][config][entry.index()] = true;
+                                }
                             }
                         }
                     }
-                    
+                } else {
+                    throw new UnsupportedFactorTypeException(f);
                 }
             }
         }
