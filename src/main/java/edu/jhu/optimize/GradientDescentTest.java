@@ -8,7 +8,7 @@ import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
 
-public class SGDTest {
+public class GradientDescentTest {
     
     public static class XSquared implements Function {
         
@@ -72,21 +72,21 @@ public class SGDTest {
     
     @Test
     public void testNegXSquared() {
-        SGD opt = new SGD(0.1, 100);
+        GradientDescent opt = new GradientDescent(0.1, 100);
         double[] max = opt.maximize(new FunctionOpts.NegateFunction(new XSquared()), new double[]{ 9.0 });
         assertEquals(0.0, max[0], 1e-10);      
     }
     
     @Test
     public void testXSquared() {
-        SGD opt = new SGD(0.1, 100);
+        GradientDescent opt = new GradientDescent(0.1, 100);
         double[] max = opt.minimize(new XSquared(), new double[]{ 9.0 });
         assertEquals(0.0, max[0], 1e-10);        
     }
     
     @Test
     public void testNegSumSquares() {
-        SGD opt = new SGD(0.1, 100);
+        GradientDescent opt = new GradientDescent(0.1, 100);
         double[] initial = new double[3];
         initial[0] = 9;
         initial[1] = 2;
@@ -97,7 +97,7 @@ public class SGDTest {
     
     @Test
     public void testOffsetNegSumSquares() {
-        SGD opt = new SGD(0.1, 100);
+        GradientDescent opt = new GradientDescent(0.1, 100);
         double[] initial = new double[] { 9, 2, -7};
         double[] offsets = new double[] { 3, -5, 11};
         double[] max = opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);

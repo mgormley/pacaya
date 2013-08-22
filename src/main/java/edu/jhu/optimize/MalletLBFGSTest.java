@@ -4,10 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.optimize.FunctionOpts.NegateFunction;
+import edu.jhu.optimize.GradientDescentTest.SumSquares;
+import edu.jhu.optimize.GradientDescentTest.XSquared;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.SGDTest.SumSquares;
-import edu.jhu.optimize.SGDTest.XSquared;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.math.Vectors;
 

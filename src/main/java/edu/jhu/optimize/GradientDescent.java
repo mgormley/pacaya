@@ -13,7 +13,7 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class SGD implements Maximizer, Minimizer {
+public class GradientDescent implements Maximizer, Minimizer {
 
     /** Options for this optimizer. */
     public static class SGDPrm {
@@ -28,7 +28,7 @@ public class SGD implements Maximizer, Minimizer {
         }
     }
     
-    private static final Logger log = Logger.getLogger(SGD.class);
+    private static final Logger log = Logger.getLogger(GradientDescent.class);
 
     /** The number of iterations performed thus far. */
     private int iterCount;
@@ -46,11 +46,11 @@ public class SGD implements Maximizer, Minimizer {
      * @param lrAtMidpoint The desired learning rate after (maxIterations / 2) iterations.
      * @param iterations The number of iterations to perform.
      */
-    public SGD(double lrAtMidpoint, int iterations) {
+    public GradientDescent(double lrAtMidpoint, int iterations) {
         this(new SGDPrm(lrAtMidpoint, iterations));
     }
     
-    public SGD(SGDPrm prm) {
+    public GradientDescent(SGDPrm prm) {
         this.prm = prm;
         iterCount = 0;
 
@@ -117,7 +117,7 @@ public class SGD implements Maximizer, Minimizer {
                 } else {
                     point[i] -= lr * gradient[i];
                 }
-            }            
+            }
         }
         // Get the final value of the function.
         double value = function.getValue(point);
