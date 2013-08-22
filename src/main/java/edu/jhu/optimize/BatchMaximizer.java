@@ -1,15 +1,16 @@
 package edu.jhu.optimize;
 
 /**
- * A first order optimization technique for maximization.
+ * A first order optimization technique for maximization of a function which can
+ * be computed over batches of examples.
  * 
  * @author mgormley
- *
+ * 
  */
-public interface Maximizer {
+public interface BatchMaximizer {
 
     /**
-     * Maximizes a function starting from some initial point.
+     * Maximizes a "batchable" function starting from some initial point.
      * 
      * @param function The function to optimize.
      * @param point The input/output point. The initial point for maximization
@@ -18,6 +19,6 @@ public interface Maximizer {
      *            possibly the maximum.
      * @return True if the optimizer terminated at a local or global optima. False otherwise.
      */
-    boolean maximize(Function function, double[] point);
+    boolean maximize(BatchFunction function, double[] point);
     
 }

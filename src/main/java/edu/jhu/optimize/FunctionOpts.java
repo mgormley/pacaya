@@ -14,15 +14,19 @@ public class FunctionOpts {
         }
         
         @Override
-        public double getValue(double[] point) {
-            return - function.getValue(point);
+        public void setPoint(double[] point) {
+            function.setPoint(point);
+        }
+        
+        @Override
+        public double getValue() {
+            return - function.getValue();
         }
     
         @Override
-        public double[] getGradient(double[] point) {
-            double[] gradient = function.getGradient(point);
+        public void getGradient(double[] gradient) {
+            function.getGradient(gradient);
             Vectors.scale(gradient, -1.0);
-            return gradient;
         }
     
         @Override
@@ -48,21 +52,28 @@ public class FunctionOpts {
         }
         
         @Override
-        public double getValue(double[] point) {
+        public void setPoint(double[] point) {
+            for (Function function : functions) {
+                function.setPoint(point);
+            }
+        }
+        
+        @Override
+        public double getValue() {
             double sum = 0.0;
             for (Function f : functions) {
-                sum += f.getValue(point);                
+                sum += f.getValue();                
             }
             return sum;
         }
     
         @Override
-        public double[] getGradient(double[] point) {
-            double[] gradient = new double[getNumDimensions()];
+        public void getGradient(double[] gradient) {
+            double[] g = new double[getNumDimensions()];
             for (Function f : functions) {
-                Vectors.add(gradient, f.getGradient(point));
+                f.getGradient(g);
+                Vectors.add(gradient, g);
             }
-            return gradient;
         }
     
         @Override

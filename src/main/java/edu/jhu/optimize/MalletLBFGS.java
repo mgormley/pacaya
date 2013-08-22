@@ -3,6 +3,7 @@ package edu.jhu.optimize;
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
+import edu.jhu.prim.util.Utilities;
 
 public class MalletLBFGS implements Maximizer {
 
@@ -93,10 +94,11 @@ public class MalletLBFGS implements Maximizer {
 
         private void maybeUpdateGradientAndValue() {
             if (!areGradientAndValueCached) {
+                function.setPoint(params);
                 // Recompute the value:
-                value = function.getValue(params);
+                value = function.getValue();
                 // Recompute the gradient.
-                gradient = function.getGradient(params);
+                function.getGradient(gradient);
                 areGradientAndValueCached = true;
             }
         }
@@ -111,9 +113,9 @@ public class MalletLBFGS implements Maximizer {
     }
     
     @Override
-    public double[] maximize(Function function, double[] initial) {
+    public boolean maximize(Function function, double[] point) {
         MalletFunction mf = new MalletFunction(function);
-        mf.setParameters(initial);
+        mf.setParameters(point);
         
         BetterLimitedMemoryBFGS lbfgs = new BetterLimitedMemoryBFGS(mf);
         lbfgs.setTolerance(prm.tolerance);
@@ -126,11 +128,8 @@ public class MalletLBFGS implements Maximizer {
         
         converged = lbfgs.optimize(prm.maxIterations);
         
-        return mf.params;
-    }
-
-    @Override
-    public boolean wasMaxima() {
+        Utilities.copy(mf.params, point);
+        
         return converged;
     }
 

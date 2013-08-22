@@ -10,7 +10,7 @@ import edu.jhu.util.math.Vectors;
 
 public class GradientDescentTest {
     
-    public static class XSquared implements Function {
+    public static class XSquared extends AbstractSlowFunction {
         
         @Override
         public double getValue(double[] point) {
@@ -18,7 +18,7 @@ public class GradientDescentTest {
         }
 
         @Override
-        public double[] getGradient(double[] point) {
+        public double[] getGradientAtPoint(double[] point) {
             return new double[] { 2*point[0] };
         }
 
@@ -30,7 +30,7 @@ public class GradientDescentTest {
     }
     
     /** The function \sum_i x_i^2. */
-    public static class SumSquares implements Function {
+    public static class SumSquares extends AbstractSlowFunction {
         
         private int dim;
         private double[] offsets;
@@ -55,7 +55,7 @@ public class GradientDescentTest {
         }
 
         @Override
-        public double[] getGradient(double[] point) {
+        public double[] getGradientAtPoint(double[] point) {
             double[] gradient = new double[point.length];
             for (int i=0; i<gradient.length; i++) {
                 gradient[i] = 2*(point[i] + offsets[i]);
@@ -73,14 +73,16 @@ public class GradientDescentTest {
     @Test
     public void testNegXSquared() {
         GradientDescent opt = new GradientDescent(0.1, 100);
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new XSquared()), new double[]{ 9.0 });
+        double[] max = new double[]{ 9.0 };
+        opt.maximize(new FunctionOpts.NegateFunction(new XSquared()), max);
         assertEquals(0.0, max[0], 1e-10);      
     }
     
     @Test
     public void testXSquared() {
         GradientDescent opt = new GradientDescent(0.1, 100);
-        double[] max = opt.minimize(new XSquared(), new double[]{ 9.0 });
+        double[] max = new double[]{ 9.0 };
+        opt.minimize(new XSquared(), max);
         assertEquals(0.0, max[0], 1e-10);        
     }
     
@@ -91,7 +93,8 @@ public class GradientDescentTest {
         initial[0] = 9;
         initial[1] = 2;
         initial[2] = -7;
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(initial.length)), initial);
+        opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(initial.length)), initial);
+        double[] max = initial;
         JUnitUtils.assertArrayEquals(new double[] {0.0, 0.0, 0.0} , max, 1e-10);
     }
     
@@ -100,7 +103,8 @@ public class GradientDescentTest {
         GradientDescent opt = new GradientDescent(0.1, 100);
         double[] initial = new double[] { 9, 2, -7};
         double[] offsets = new double[] { 3, -5, 11};
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);
+        opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);
+        double[] max = initial;
         Vectors.scale(offsets, -1.0);
         JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
     }

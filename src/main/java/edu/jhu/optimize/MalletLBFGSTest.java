@@ -16,7 +16,8 @@ public class MalletLBFGSTest {
     public void testNegXSquared() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         MalletLBFGS opt = new MalletLBFGS(prm);
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new XSquared()), new double[]{ 9.0 });
+        double[] max =  new double[]{ 9.0 };
+        opt.maximize(new FunctionOpts.NegateFunction(new XSquared()), max);
         assertEquals(0.0, max[0], 1e-10);      
     }
     
@@ -37,7 +38,8 @@ public class MalletLBFGSTest {
         initial[0] = 9;
         initial[1] = 2;
         initial[2] = -7;
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(initial.length)), initial);
+        opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(initial.length)), initial);
+        double[] max = initial;
         JUnitUtils.assertArrayEquals(new double[] {0.0, 0.0, 0.0} , max, 1e-10);
     }
     
@@ -47,7 +49,8 @@ public class MalletLBFGSTest {
         MalletLBFGS opt = new MalletLBFGS(prm);
         double[] initial = new double[] { 9, 2, -7};
         double[] offsets = new double[] { 3, -5, 11};
-        double[] max = opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);
+        opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);
+        double[] max = initial;
         Vectors.scale(offsets, -1.0);
         JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
     }

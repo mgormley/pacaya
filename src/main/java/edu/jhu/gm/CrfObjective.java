@@ -5,13 +5,14 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Utilities;
 
 // TODO: Add an option which computes the gradient on only a subset of the
 // variables for use by SGD.
-public class CrfObjective implements Function {
+public class CrfObjective implements Function, BatchFunction {
     
     private static final Logger log = Logger.getLogger(CrfObjective.class);
     
@@ -43,7 +44,11 @@ public class CrfObjective implements Function {
             infLatPredList.add(infFactory.getInferencer(ex.getFgLatPred()));
         }
     }
-    
+        
+    public void setPoint(double[] params) {
+        log.debug("Updating model with new parameters");
+        model.updateModelFromDoubles(params);
+    }
     
     /**
      * Gets the marginal conditional log-likelihood of the model for the given model parameters.
@@ -57,12 +62,9 @@ public class CrfObjective implements Function {
      * @inheritDoc
      */
     @Override
-    public double getValue(double[] params) {        
+    public double getValue() {        
         // TODO: we shouldn't run inference again just to compute this!!
         log.warn("Running inference an extra time to compute marginal likelihood.");
-
-        log.debug("Updating model with new parameters");
-        model.updateModelFromDoubles(params);
         
         double ll = 0.0;
         for (int i=0; i<data.size(); i++) {
@@ -76,7 +78,20 @@ public class CrfObjective implements Function {
         }
         return ll;
     }
-    
+
+    /**
+     * Gets the conditional log-likelihood computed on a batch.
+     * @inheritDoc
+     */
+    @Override
+    public double getValue(int[] batch) {
+        double value = 0.0;
+        for (int i=0; i<batch.length; i++) {
+            value += getMarginalLogLikelihoodForExample(batch[i]);
+        }
+        return value;
+    }
+        
     private double getMarginalLogLikelihoodForExample(int i) {
         FgExample ex = data.get(i);
         FeatureTemplateList fts = data.getTemplates();
@@ -139,18 +154,27 @@ public class CrfObjective implements Function {
      * @inheritDoc
      */
     @Override
-    public double[] getGradient(double[] params) {
-        log.debug("Updating model with new parameters");
-        model.updateModelFromDoubles(params);
-        
+    public void getGradient(double[] g) {
         this.gradient.zero();
         for (int i=0; i<data.size(); i++) {
             log.trace("Computing gradient for example " + i);
             addGradientForExample(i, gradient);
         }        
-        double[] g = new double[params.length];
         gradient.updateDoublesFromModel(g);
-        return g;
+    }
+
+    /**
+     * Gets the gradient of the conditional log-likelihood on a batch of examples.
+     * @inheritDoc
+     */
+    @Override
+    public void getGradient(int[] batch, double[] g) {
+        this.gradient.zero();
+        for (int i=0; i<batch.length; i++) {
+            log.trace("Computing gradient for example " + batch[i]);
+            addGradientForExample(batch[i], gradient);
+        }        
+        gradient.updateDoublesFromModel(g);
     }
     
     /**
@@ -245,6 +269,29 @@ public class CrfObjective implements Function {
             }
         }
     }
+    
+    private void runInferenceForExample(int i) {
+        FgExample ex = data.get(i);
+        
+        // Run inference on the factor graph with predicted and observed variables clamped.
+        FgInferencer infLat = infLatList.get(i);
+        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
+        infLat.run();
+        
+        // Run inference on the factor graph with observed variables clamped.
+        FgInferencer infLatPred = infLatPredList.get(i);
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+        infLatPred.run();
+    }
+    
+    private void clearInferenceForExample(int i) {
+        FgExample ex = data.get(i);
+        FgInferencer infLat = infLatList.get(i);
+        infLat.clear();        
+        FgInferencer infLatPred = infLatPredList.get(i);
+        infLatPred.clear();
+    }
+
 
     /** Gets the "observed" feature counts. */
     public FeatureVector getObservedFeatureCounts(double[] params) {
@@ -286,6 +333,12 @@ public class CrfObjective implements Function {
     @Override
     public int getNumDimensions() {
         return numParams;
+    }
+
+    /** Gets the number of examples in the training dataset. */
+    @Override
+    public int getNumExamples() {
+        return data.size();
     }
     
 }

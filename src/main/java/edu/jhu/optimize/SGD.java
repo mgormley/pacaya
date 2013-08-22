@@ -4,10 +4,11 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 
 /**
- * Stochastic gradient descent.
+ * Stochastic gradient descent with minibatches.
  * 
  * We use the learning rate from "Introduction to Stochastic Search and
  * Optimization (James Spall). See eq. (4.14) pg. 113 and the constants
@@ -15,51 +16,59 @@ import edu.jhu.util.Utilities;
  * 
  * @author mgormley
  */
-public class GradientDescent implements Maximizer, Minimizer {
+public class SGD implements BatchMaximizer, BatchMinimizer {
 
     /** Options for this optimizer. */
-    public static class GradientDescentPrm {
+    public static class SGDPrm {
         /** The desired learning rate after (maxIterations / 2) iterations. */
         public double lrAtMidpoint = 0.1;
-        /** The number of iterations to perform. */
-        public int iterations = 10;
-        public GradientDescentPrm() { } 
-        public GradientDescentPrm(double lrAtMidpoint, int iterations) {
+        /** The number of passes over the dataset to perform. */
+        public int numPasses = 10;
+        /** The batch size to use at each step. */
+        public int batchSize = 15;
+        public SGDPrm() { } 
+        public SGDPrm(double lrAtMidpoint, int numPasses, int batchSize) {
             this.lrAtMidpoint = lrAtMidpoint;
-            this.iterations = iterations;
+            this.numPasses = numPasses;
+            this.batchSize = batchSize;
         }
     }
     
-    private static final Logger log = Logger.getLogger(GradientDescent.class);
+    private static final Logger log = Logger.getLogger(SGD.class);
 
+    /** The number of gradient steps to run. */   
+    private int iterations;
     /** The number of iterations performed thus far. */
     private int iterCount;
 
     /** The parameters used to determine the next learning rate, given the current one. */
-    private final double stepSize;
-    private final double alpha;
-    private final double A;
+    private double stepSize;
+    private double alpha;
+    private double A;
 
-    private GradientDescentPrm prm;
+    private SGDPrm prm;
     
     /**
-     * Constructs an SGD optimizer. 
-     * 
-     * @param lrAtMidpoint The desired learning rate after (maxIterations / 2) iterations.
-     * @param iterations The number of iterations to perform.
+     * Constructs an SGD optimizer.
      */
-    public GradientDescent(double lrAtMidpoint, int iterations) {
-        this(new GradientDescentPrm(lrAtMidpoint, iterations));
+    public SGD(SGDPrm prm) {
+        this.prm = prm;
     }
     
-    public GradientDescent(GradientDescentPrm prm) {
-        this.prm = prm;
+    /**
+     * Initializes all the parameters for optimization.
+     */
+    private void init(BatchFunction function) {
+        // Counters
         iterCount = 0;
-
+                        
         // Constants
-        this.A = 0.10 * prm.iterations;
+        int numExamples = function.getNumExamples();
+        iterations = (int) Math.ceil((double) prm.numPasses * numExamples / prm.batchSize);
+        log.info("Setting number of batch gradient steps: " + iterations);
+        this.A = 0.10 * iterations;
         this.alpha = 0.602;
-        this.stepSize = prm.lrAtMidpoint * Math.pow(prm.iterations / 2 + 1 + A, alpha);
+        this.stepSize = prm.lrAtMidpoint * Math.pow(iterations / 2 + 1 + A, alpha);
         log.info("Initial step size parameter: " + this.stepSize);
     }
 
@@ -89,33 +98,37 @@ public class GradientDescent implements Maximizer, Minimizer {
      * Maximize the function starting at the given initial point.
      */
     @Override
-    public boolean maximize(Function function, double[] point) {
+    public boolean maximize(BatchFunction function, double[] point) {
         return optimize(function, point, true);
     }
 
     /**
      * Minimize the function starting at the given initial point.
      */
-    public boolean minimize(Function function, double[] point) {
+    public boolean minimize(BatchFunction function, double[] point) {
         return optimize(function, point, false);
     }
 
-    private boolean optimize(Function function, double[] point, final boolean maximize) {        
+    private boolean optimize(BatchFunction function, double[] point, final boolean maximize) {
+        init(function);
+        
         assert (function.getNumDimensions() == point.length);
         double[] gradient = new double[point.length];
         
         int passCount = 0;
         double passCountFrac = 0;
-        for (iterCount=0; iterCount < prm.iterations; iterCount++) {
+        for (iterCount=0; iterCount < iterations; iterCount++) {
             function.setPoint(point);
             
+            int[] batch = getBatch(function.getNumExamples());
+            
             // Get the current value of the function.
-            double value = function.getValue();
+            double value = function.getValue(batch);
             log.info(String.format("Function value on batch = %g at iteration = %d", value, iterCount));
             
             // Get the gradient of the function.
             Arrays.fill(gradient, 0.0);
-            function.getGradient(gradient);
+            function.getGradient(batch, gradient);
             assert (gradient.length == point.length);
             
             // Take a step in the direction of the gradient.
@@ -127,14 +140,34 @@ public class GradientDescent implements Maximizer, Minimizer {
                     point[i] -= lr * gradient[i];
                 }
             }
+            
+            // If a full pass through the data has been completed...
+            passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
+            if ((int) Math.floor(passCountFrac) > passCount) {
+                // Another full pass through the data has been completed.
+                passCount++;
+                // Get the value of the function on all the examples.
+                value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
+                log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
+            }
         }
         
         // Get the final value of the function on all the examples.
-        double value = function.getValue();
+        double value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
         log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
         
         // We don't test for convergence.
         return false;
+    }
+
+    /** Gets a batch of indices in the range [0, numExamples). */
+    protected int[] getBatch(int numExamples) {
+        // Sample the indices with replacement.
+        int[] batch = new int[prm.batchSize];
+        for (int i=0; i<batch.length; i++) {
+            batch[i] = Prng.nextInt(numExamples);
+        }
+        return batch;
     }
     
 }

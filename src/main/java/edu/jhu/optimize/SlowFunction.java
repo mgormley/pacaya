@@ -6,25 +6,21 @@ package edu.jhu.optimize;
  * @author mgormley
  *
  */
-public interface FunctionWithCaching {
+public interface SlowFunction {
 
     /**
-     * Sets the current point for this function.
+     * The value of this function at the given point.
      * @param point The point.
+     * @return The value of the function at the point.
      */
-    void setPoint(double[] point);
+    double getValue(double[] point);
     
     /**
-     * The value of this function at the current point.
-     * @return The value of the function.
-     */
-    double getValue();
-    
-    /**
-     * Gets the gradient at the current point.
+     * Gets the gradient at the given point.
+     * @param point The point.
      * @return The gradient, a vector of partial derivatives.
      */
-    double[] getGradient();
+    double[] getGradientAtPoint(double[] point);
     
     /**
      * Gets the number of dimensions of the domain of this function.
