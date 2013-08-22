@@ -133,8 +133,8 @@ public class SrlFgExamplesBuilderTest {
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExamples data = builder.getData(sents);            
             assertEquals(13388, fts.getNumObsFeats());
-            //FgModel model = new FgModel(data, false);
-            //assertEquals(51882, model.getNumParams());
+            FgModel model = new FgModel(data, false);
+            assertEquals(26308, model.getNumParams());
         }
         {
             FeatureTemplateList fts = new FeatureTemplateList();
@@ -142,8 +142,8 @@ public class SrlFgExamplesBuilderTest {
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExamples data = builder.getData(sents);            
             assertEquals(2729, fts.getNumObsFeats());
-            //FgModel model = new FgModel(data, false);
-            //assertEquals(5166, model.getNumParams());
+            FgModel model = new FgModel(data, false);
+            assertEquals(6108, model.getNumParams());
         }
     }
 

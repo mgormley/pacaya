@@ -84,22 +84,7 @@ public class FgModel implements Serializable {
         }
         
         if (!includeUnsupportedFeatures) {
-            // For each factor in the data, lookup its configId. Set all the
-            // observed features for that configuration to true.
-            for (int i=0; i<data.size(); i++) {
-                FgExample ex = data.get(i);
-                for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
-                    Factor f = ex.getFgLatPred().getFactor(a);
-                    int t = templates.getTemplateId(f);
-                    if (t != -1) {
-                        int c = ex.getGoldConfigIdxLatPred(a);
-                        FeatureVector fv = ex.getObservationFeatures(a);
-                        for (IntDoubleEntry entry : fv) {
-                            included[t][c][entry.index()] = true;
-                        }
-                    }
-                }
-            }
+            includeSupportedFeatures(data, templates);
         } else {
             Utilities.fill(included, true);
         }
@@ -133,6 +118,44 @@ public class FgModel implements Serializable {
         this.numTemplates = other.numTemplates;
         // We only do a shallow copy of the templates.
         this.templates = other.templates;
+    }
+
+    /**
+     * For each factor in the data, lookup its configId. Set all the
+     * observed features for that configuration to true.
+     */
+    private void includeSupportedFeatures(FgExamples data, FeatureTemplateList templates) {
+        for (int i=0; i<data.size(); i++) {
+            FgExample ex = data.get(i);
+            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
+                Factor f = ex.getFgLat().getFactor(a);
+                int t = templates.getTemplateId(f);
+                if (t != -1) {
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    if (f.getVars().size() == 0) {
+                        int predConfig = ex.getGoldConfigIdxPred(a);
+                        for (IntDoubleEntry entry : fv) {
+                            included[t][predConfig][entry.index()] = true;
+                        }
+                    } else {
+                        // We must clamp the predicted variables and loop over the latent ones.
+                        VarConfig predVc = ex.getGoldConfigPred(a);
+                        IntIter iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(a).getVars(), predVc);
+                        
+                        int numConfigs = f.getVars().calcNumConfigs();
+                        for (int c=0; c<numConfigs; c++) {            
+                            // The configuration of all the latent/predicted variables,
+                            // where the predicted variables have been clamped.
+                            int config = iter.next();
+                            for (IntDoubleEntry entry : fv) {
+                                included[t][config][entry.index()] = true;
+                            }
+                        }
+                    }
+                    
+                }
+            }
+        }
     }
     
     public void updateModelFromDoubles(double[] inParams) {

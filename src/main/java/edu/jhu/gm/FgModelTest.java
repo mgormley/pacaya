@@ -136,16 +136,38 @@ public class FgModelTest {
         });
 
     }
+
+    @Test
+    public void testExcludeUnsupportedFeaturesWithLatentVars() {
+        boolean useLat = true;
+        FeatureTemplateList fts = getFtl(useLat);
+        
+        FgExamples data = new FgExamples(fts);
+        data.add(getExForFts("1a", "2a", fts, useLat));
+        data.add(getExForFts("1a", "2c", fts, useLat));
+        data.add(getExForFts("1b", "2b", fts, useLat));
+        data.add(getExForFts("1b", "2c", fts, useLat));
+        
+        FgModel model1 = new FgModel(data, true);        
+        System.out.println("\n"+model1);
+        assertEquals(20, model1.getNumParams());
+        
+        FgModel model2 = new FgModel(data, false);        
+        System.out.println("\n"+model2);
+        // 6 bias features, and 6 other features.
+        assertEquals(6+6, model2.getNumParams());
+    }
     
     @Test
     public void testExcludeUnsupportedFeatures() {
-        FeatureTemplateList fts = getFtl();
+        boolean useLat = false;
+        FeatureTemplateList fts = getFtl(useLat);
         
         FgExamples data = new FgExamples(fts);
-        data.add(getExForFts("1a", "2a", fts));
-        data.add(getExForFts("1a", "2c", fts));
-        data.add(getExForFts("1b", "2b", fts));
-        data.add(getExForFts("1b", "2c", fts));
+        data.add(getExForFts("1a", "2a", fts, useLat));
+        data.add(getExForFts("1a", "2c", fts, useLat));
+        data.add(getExForFts("1b", "2b", fts, useLat));
+        data.add(getExForFts("1b", "2c", fts, useLat));
         
         FgModel model1 = new FgModel(data, true);        
         System.out.println("\n"+model1);
@@ -177,9 +199,9 @@ public class FgModelTest {
         }
     }
     
-    private FgExample getExForFts(String state1, String state2, FeatureTemplateList fts) {
+    private FgExample getExForFts(String state1, String state2, FeatureTemplateList fts, boolean useLat) {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
-        Var v2 = new Var(VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
         fg.addFactor(new ExpFamFactor(new VarSet(v1, v2), "key2"));
         
@@ -191,9 +213,13 @@ public class FgModelTest {
     }
 
     public static FeatureTemplateList getFtl() {
+        return getFtl(false);
+    }
+    
+    public static FeatureTemplateList getFtl(boolean useLat) {
         FeatureTemplateList fts = new FeatureTemplateList();
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
-        Var v2 = new Var(VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
         {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             alphabet.lookupIndex(new Feature("feat1"));

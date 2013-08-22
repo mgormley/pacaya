@@ -94,7 +94,7 @@ public class CrfObjective implements Function {
             Factor f = fgLat.getFactor(a);
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxLatPred(a);
+                    int goldConfig = ex.getGoldConfigIdxPred(a);
                     double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
                     numerator += ex.getObservationFeatures(a).dot(params);
                 } else {
@@ -118,7 +118,7 @@ public class CrfObjective implements Function {
             Factor f = fgLatPred.getFactor(a);
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxLatPred(a);
+                    int goldConfig = ex.getGoldConfigIdxPred(a);
                     double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
                     denominator += ex.getObservationFeatures(a).dot(params);
                 } else {
@@ -205,7 +205,7 @@ public class CrfObjective implements Function {
                     // If there are no variables in this factor, we still need to get the cached features.
                     // Update the gradient for each feature.
                     FeatureVector fv = ex.getObservationFeatures(factorId);
-                    int config = ex.getGoldConfigIdxLatPred(factorId);
+                    int config = ex.getGoldConfigIdxPred(factorId);
                     for (IntDoubleEntry entry : fv) {
                         gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
                     }
