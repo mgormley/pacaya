@@ -426,9 +426,9 @@ public class SrlRunner {
     
     private static BatchMaximizer getBatchMaximizer() {
         SGDPrm optPrm = new SGDPrm();
-        optPrm.numPasses = 10;
+        optPrm.numPasses = 30;
         optPrm.batchSize = 15;
-        optPrm.lrAtMidpoint = 0.1;
+        optPrm.lrAtMidpoint = 0.05;
         return new SGD(optPrm);
     }
 
