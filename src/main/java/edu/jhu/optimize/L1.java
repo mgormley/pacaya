@@ -18,9 +18,14 @@ public class L1 implements Regularizer {
 
     private double lambda;
     private int numParams;
-
+    private double[] params;
+    
     public L1(double lambda) {
         this.lambda = lambda;
+    }
+    
+    public void setPoint(double[] params) {
+        this.params = params;
     }
     
     /**
@@ -38,7 +43,7 @@ public class L1 implements Regularizer {
      * Gets - \lambda * |\theta|_1.
      */
     @Override
-    public double getValue(double[] params) {
+    public double getValue() {
         double sum = 0.0;
         for (int i=0; i<params.length; i++) {
             sum += Math.abs(params[i]);
@@ -47,8 +52,7 @@ public class L1 implements Regularizer {
     }
 
     @Override
-    public double[] getGradient(double[] params) {
-        double[] gradient = new double[params.length];
+    public void getGradient(double[] gradient) {
         for (int j=0; j<gradient.length; j++) {
             if (params[j] < 0) {
                 gradient[j] = - lambda;
@@ -63,7 +67,6 @@ public class L1 implements Regularizer {
         }
         // Since we're subtracting this norm.
         Vectors.scale(gradient, -1);
-        return gradient;
     }
 
     @Override

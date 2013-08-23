@@ -151,9 +151,10 @@ public class CrfObjectiveTest {
         
         // Test log-likelihood.
         CrfObjective obj = new CrfObjective(model, exs.getData(), getInfFactory(logDomain));
+        obj.setPoint(params);
         
         // Test log-likelihood.
-        double ll = obj.getValue(params);
+        double ll = obj.getValue();
         System.out.println(ll);
         assertEquals(-95.531, ll, 1e-3);
         
@@ -168,7 +169,8 @@ public class CrfObjectiveTest {
         assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
         // Test gradient.        
-        double[] gradient = obj.getGradient(params);        
+        double[] gradient = new double[params.length]; 
+        obj.getGradient(gradient);        
         JUnitUtils.assertArrayEquals(new double[]{-12.154447609345993, -12.847824678672943}, gradient, 1e-3);
     }
     
@@ -195,11 +197,12 @@ public class CrfObjectiveTest {
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         infFactory = getInfFactory(logDomain);
         CrfObjective obj = new CrfObjective(model, exs.getData(), infFactory);
-                
+        obj.setPoint(params);        
+        
         assertEquals(2, exs.getAlphabet().size());
 
         // Test log-likelihood.
-        double ll = obj.getValue(params);
+        double ll = obj.getValue();
         System.out.println(ll);
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
@@ -213,8 +216,9 @@ public class CrfObjectiveTest {
         assertEquals(0.7310, expFeats.get(0), 1e-3);
         assertEquals(0.2689, expFeats.get(1), 1e-3);
         
-        // Test gradient.        
-        double[] gradient = obj.getGradient(params);        
+        // Test gradient.         
+        double[] gradient = new double[params.length]; 
+        obj.getGradient(gradient);        
         JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
     }
     
@@ -290,7 +294,8 @@ public class CrfObjectiveTest {
         }
         
         CrfObjective obj = new CrfObjective(model, data, infFactory);
-        double ll = obj.getValue(FgModelTest.getParams(model));        
+        obj.setPoint(FgModelTest.getParams(model));
+        double ll = obj.getValue();        
         assertEquals(2./6., Utilities.exp(ll), 1e-13);
     }
 
