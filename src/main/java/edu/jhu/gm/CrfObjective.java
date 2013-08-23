@@ -15,6 +15,8 @@ import edu.jhu.util.Utilities;
 public class CrfObjective implements Function, BatchFunction {
     
     private static final Logger log = Logger.getLogger(CrfObjective.class);
+
+    private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
     private int numParams;
     private FgExamples data;
@@ -46,7 +48,7 @@ public class CrfObjective implements Function, BatchFunction {
     }
         
     public void setPoint(double[] params) {
-        log.debug("Updating model with new parameters");
+        log.trace("Updating model with new parameters");
         model.updateModelFromDoubles(params);
     }
     
@@ -72,10 +74,7 @@ public class CrfObjective implements Function, BatchFunction {
             ll += getMarginalLogLikelihoodForExample(i);
         }
         log.info("Marginal log-likelihood: " + ll);
-        assert ll <= 0 : "Log-likelihood should be <= 0";
-        if (ll > 0) {
-            throw new IllegalStateException();
-        }
+        assert ll <= MAX_LOG_LIKELIHOOD : "Log-likelihood should be <= 0";
         return ll;
     }
 
@@ -144,7 +143,7 @@ public class CrfObjective implements Function, BatchFunction {
         infLatPred.clear();
         
         double ll = numerator - denominator;
-        assert ll <= 0 : "Log-likelihood should be <= 0: " + ll;
+        assert ll <= MAX_LOG_LIKELIHOOD : "Log-likelihood should be <= 0: " + ll;
         
         return ll;
     }
@@ -269,29 +268,6 @@ public class CrfObjective implements Function, BatchFunction {
             }
         }
     }
-    
-    private void runInferenceForExample(int i) {
-        FgExample ex = data.get(i);
-        
-        // Run inference on the factor graph with predicted and observed variables clamped.
-        FgInferencer infLat = infLatList.get(i);
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
-        
-        // Run inference on the factor graph with observed variables clamped.
-        FgInferencer infLatPred = infLatPredList.get(i);
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
-    }
-    
-    private void clearInferenceForExample(int i) {
-        FgExample ex = data.get(i);
-        FgInferencer infLat = infLatList.get(i);
-        infLat.clear();        
-        FgInferencer infLatPred = infLatPredList.get(i);
-        infLatPred.clear();
-    }
-
 
     /** Gets the "observed" feature counts. */
     public FeatureVector getObservedFeatureCounts(double[] params) {
