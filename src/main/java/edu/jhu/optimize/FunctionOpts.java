@@ -5,12 +5,23 @@ import edu.jhu.util.math.Vectors;
 public class FunctionOpts {
 
     /** Wrapper which negates the input function. */
-    public static class NegateFunction implements Function {
+    public static class NegateFunction extends ScaleFunction implements Function {
+    
+        public NegateFunction(Function function) {
+            super(function, -1.0);
+        }
+        
+    }
+    
+    /** Wrapper which scales the input function. */
+    public static class ScaleFunction implements Function {
     
         private Function function;
+        private double multiplier;
         
-        public NegateFunction(Function function) {
+        public ScaleFunction(Function function, double multiplier) {
             this.function = function;
+            this.multiplier = multiplier;
         }
         
         @Override
@@ -20,13 +31,13 @@ public class FunctionOpts {
         
         @Override
         public double getValue() {
-            return - function.getValue();
+            return multiplier * function.getValue();
         }
     
         @Override
         public void getGradient(double[] gradient) {
             function.getGradient(gradient);
-            Vectors.scale(gradient, -1.0);
+            Vectors.scale(gradient, multiplier);
         }
     
         @Override

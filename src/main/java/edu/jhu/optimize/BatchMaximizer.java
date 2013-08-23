@@ -20,5 +20,8 @@ public interface BatchMaximizer {
      * @return True if the optimizer terminated at a local or global optima. False otherwise.
      */
     boolean maximize(BatchFunction function, double[] point);
+
+    /** Gets the number of examples that will be included in each batch. */
+    int getBatchSize();
     
 }

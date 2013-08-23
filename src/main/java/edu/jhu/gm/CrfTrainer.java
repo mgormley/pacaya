@@ -59,7 +59,8 @@ public class CrfTrainer {
             BatchFunction fn = objective;
             if (prm.regularizer != null) {
                 prm.regularizer.setNumDimensions(model.getNumParams());
-                FunctionAsBatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
+                BatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
+                br = new BatchFunctionOpts.ScaleFunction(br, (double) prm.batchMaximizer.getBatchSize() / objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
             prm.batchMaximizer.maximize(fn, params);            

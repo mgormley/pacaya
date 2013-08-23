@@ -5,12 +5,23 @@ import edu.jhu.util.math.Vectors;
 public class BatchFunctionOpts {
 
     /** Wrapper which negates the input function. */
-    public static class NegateFunction implements BatchFunction {
-    
-        private BatchFunction function;
+    public static class NegateFunction extends ScaleFunction implements BatchFunction {
         
         public NegateFunction(BatchFunction function) {
+            super(function, -1.0);
+        }
+    
+    }
+
+    /** Wrapper which scales the input function. */
+    public static class ScaleFunction implements BatchFunction {
+    
+        private BatchFunction function;
+        private double multiplier;
+        
+        public ScaleFunction(BatchFunction function, double multiplier) {
             this.function = function;
+            this.multiplier = multiplier;
         }
         
         @Override
@@ -20,13 +31,13 @@ public class BatchFunctionOpts {
         
         @Override
         public double getValue(int[] batch) {
-            return - function.getValue(batch);
+            return multiplier * function.getValue(batch);
         }
     
         @Override
         public void getGradient(int[] batch, double[] gradient) {
             function.getGradient(batch, gradient);
-            Vectors.scale(gradient, -1.0);
+            Vectors.scale(gradient, multiplier);
         }
     
         @Override

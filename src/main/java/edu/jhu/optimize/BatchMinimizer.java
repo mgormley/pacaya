@@ -21,4 +21,7 @@ public interface BatchMinimizer {
      */
     boolean minimize(BatchFunction function, double[] point);
     
+    /** Gets the number of examples that will be included in each batch. */
+    int getBatchSize();
+
 }

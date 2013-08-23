@@ -150,6 +150,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 // Get the value of the function on all the examples.
                 value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
+                log.debug("Learning rate: " + lr);
             }
         }
         
@@ -171,4 +172,8 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         return batch;
     }
     
+    @Override
+    public int getBatchSize() {
+        return prm.batchSize;
+    }
 }
