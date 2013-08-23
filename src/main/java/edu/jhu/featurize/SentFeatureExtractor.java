@@ -651,14 +651,12 @@ public class SentFeatureExtractor {
     }
 
     public List<String> bag(ArrayList<String> elements) {
-        Set<String> bag = new HashSet<String>();
-        for (String a : elements) {
-            bag.add(a);
-        }
-        return asSortedList(bag);
+        // bag, which removes all duplicated strings and sort the rest
+        return asSortedList(new HashSet<String>(elements));
     }
     
     public ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
+        // noDup, which removes all duplicated neighbored strings.
         ArrayList<String> noDupElements = new ArrayList<String>();
         String lastA = null;
         for (String a : argChildrenFeat1) {
