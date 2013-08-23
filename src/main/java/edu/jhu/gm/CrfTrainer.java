@@ -11,10 +11,10 @@ import edu.jhu.optimize.Function;
 import edu.jhu.optimize.FunctionAsBatchFunction;
 import edu.jhu.optimize.FunctionOpts;
 import edu.jhu.optimize.L2;
+import edu.jhu.optimize.MalletLBFGS;
+import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.Regularizer;
-import edu.jhu.optimize.SGD;
-import edu.jhu.optimize.SGD.SGDPrm;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -28,8 +28,8 @@ public class CrfTrainer {
 
     public static class CrfTrainerPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
-        public Maximizer maximizer = null; //new MalletLBFGS(new MalletLBFGSPrm());
-        public BatchMaximizer batchMaximizer = new SGD(new SGDPrm());
+        public Maximizer maximizer = new MalletLBFGS(new MalletLBFGSPrm());
+        public BatchMaximizer batchMaximizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
     }
         
