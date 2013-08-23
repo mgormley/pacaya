@@ -133,6 +133,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Take a step in the direction of the gradient.
             double lr = getLearningRate(iterCount);
+            log.info("Learning rate: " + lr);
             for (int i=0; i<point.length; i++) {
                 if (maximize) {
                     point[i] += lr * gradient[i];
