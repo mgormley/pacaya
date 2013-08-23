@@ -209,8 +209,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             base_work_mem_megs = 200*1024
                             exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                         exps.append(exp)
-            # Drop all but 3 experiments for a fast run.
-            if self.fast: exps = exps[:4]
             root.add_dependents(exps)
             return root
         else:
