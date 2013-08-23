@@ -1,5 +1,7 @@
 package edu.jhu.optimize;
 
+import java.util.Arrays;
+
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
@@ -98,6 +100,7 @@ public class MalletLBFGS implements Maximizer {
                 // Recompute the value:
                 value = function.getValue();
                 // Recompute the gradient.
+                Arrays.fill(gradient, 0.0);
                 function.getGradient(gradient);
                 areGradientAndValueCached = true;
             }
