@@ -130,7 +130,7 @@ public class SrlFgExamplesBuilder {
         preprocess(sents);
 
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        
+        log.info("Not starting threading stuff.");
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
