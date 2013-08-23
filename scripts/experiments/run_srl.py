@@ -160,7 +160,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             root = RootStage()
             setup = SrlExpParams()
             # Full length test sentences.
-                #trainMaxNumSentences=3000,
+            #setup.update(trainMaxSentenceLength=20)
+            #setup.update(trainMaxNumSentences=3000)
             setup.update(
                          featureHashMod=-1,
                          alwaysIncludeLinkVars=True,
