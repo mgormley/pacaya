@@ -31,11 +31,14 @@ import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
-import edu.jhu.gm.data.ErmaReader;
 import edu.jhu.gm.data.ErmaWriter;
+import edu.jhu.optimize.BatchMaximizer;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.optimize.Maximizer;
+import edu.jhu.optimize.SGD;
+import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
@@ -44,7 +47,6 @@ import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.dist.Gaussian;
 
 /**
  * Pipeline runner for SRL experiments.
@@ -55,6 +57,8 @@ public class SrlRunner {
     public static enum DatasetType { ERMA, CONLL_2009 };
 
     public static enum InitParams { UNIFORM, RANDOM };
+    
+    public static enum Optimizer { LBFGS, SGD };
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
 
@@ -161,7 +165,11 @@ public class SrlRunner {
     // Options for training.
     @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
     public static int maxLbfgsIterations = 1000;
-    
+    @Opt(hasArg=true, description="The optimization method to use for training.")
+    public static Optimizer optimizer = Optimizer.LBFGS;
+    @Opt(hasArg=true, description="The variance for the L2 regularizer.")
+    public static double l2variance = 1.0;
+
     public SrlRunner() {
     }
 
@@ -397,23 +405,31 @@ public class SrlRunner {
                 
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
-        prm.maximizer = getMaximizer();
-        prm.regularizer = new L2(1.0);
+        if (optimizer == Optimizer.LBFGS) {
+            prm.maximizer = getMaximizer();
+            prm.batchMaximizer = null;
+        } else if (optimizer == Optimizer.SGD){
+            prm.maximizer = null;
+            prm.batchMaximizer = getBatchMaximizer();
+        } else {
+            throw new RuntimeException("Optimizer not supported: " + optimizer);
+        }
+        prm.regularizer = new L2(l2variance);
         return prm;
     }
 
-    private static MalletLBFGS getMaximizer() {
+    private static Maximizer getMaximizer() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
-        MalletLBFGS maximizer = new MalletLBFGS(prm);
-        
-        // To run with SGD, uncomment these lines.
-        //        SGDPrm optPrm = new SGDPrm();
-        //        optPrm.iterations = 100;
-        //        optPrm.lrAtMidpoint = 0.1;
-        //        prm.maximizer = new SGD(optPrm);
-        
-        return maximizer;
+        return new MalletLBFGS(prm);
+    }
+    
+    private static BatchMaximizer getBatchMaximizer() {
+        SGDPrm optPrm = new SGDPrm();
+        optPrm.numPasses = 10;
+        optPrm.batchSize = 15;
+        optPrm.lrAtMidpoint = 0.1;
+        return new SGD(optPrm);
     }
 
     private static BeliefPropagationPrm getInfFactory() {

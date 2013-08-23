@@ -124,7 +124,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Get the current value of the function.
             double value = function.getValue(batch);
-            log.info(String.format("Function value on batch = %g at iteration = %d", value, iterCount));
+            log.trace(String.format("Function value on batch = %g at iteration = %d", value, iterCount));
             
             // Get the gradient of the function.
             Arrays.fill(gradient, 0.0);
@@ -133,7 +133,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Take a step in the direction of the gradient.
             double lr = getLearningRate(iterCount);
-            log.info("Learning rate: " + lr);
+            log.trace("Learning rate: " + lr);
             for (int i=0; i<point.length; i++) {
                 if (maximize) {
                     point[i] += lr * gradient[i];
