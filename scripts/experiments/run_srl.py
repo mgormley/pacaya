@@ -58,7 +58,10 @@ class SrlExpParams(experiment_runner.JavaExpParams):
             pass
         eval_args += " -g " + self.get(data_name + "GoldOut") + " -s " + self.get(data_name + "PredOut")
         eval_out = data_name + "-eval.out"
-        script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
+        if self.get("predictSense") == True:
+            script += "perl %s/scripts/eval/eval09.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
+        else:
+            script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
         script += 'grep --after-context 11 "SEMANTIC SCORES:" %s' % (eval_out)
         return script
     
@@ -142,7 +145,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             trainMaxSentenceLength=3000,
             timeoutSeconds=48*60*60,
             work_mem_megs=200*1024,
-            hyperthreading=True
+            predictSense=True,
             )
         if self.expname == "srl-biasonly":
             setup.update(biasOnly=True)

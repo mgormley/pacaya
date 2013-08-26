@@ -2,7 +2,6 @@ package edu.jhu.srl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -18,7 +18,7 @@ import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.prim.util.Utilities;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -50,6 +50,11 @@ public class CorpusStatistics implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
+    
+    public static final Pattern dash = Pattern.compile("-");
+    public static final String UNKNOWN_ROLE = "argUNK";
+    public static final String UNKNOWN_SENSE = "senseUNK";
+    public static List<String> SENSES_FOR_UNK_PRED = Utilities.getList(UNKNOWN_SENSE); 
 
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
@@ -59,6 +64,9 @@ public class CorpusStatistics implements Serializable {
     public List<String> roleStateNames;
     private Set<String> knownRoles = new HashSet<String>();
     private Set<String> knownLinks = new HashSet<String>();
+    // Mapping from predicate form to the set of predicate senses.
+    public Map<String,List<String>> predSenseListMap = new HashMap<String,List<String>>();
+    private Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
 
     public int maxSentLength = 0;
 
@@ -71,9 +79,6 @@ public class CorpusStatistics implements Serializable {
     public CorpusStatisticsPrm prm;
     private boolean initialized;
     
-    public static final Pattern dash = Pattern.compile("-");
-    public static final String UNKNOWN_ROLE = "argUNK";
-
     public CorpusStatistics(CorpusStatisticsPrm prm) {
         this.prm = prm;
         this.normalize = new Normalizer(prm.normalizeWords);
@@ -121,6 +126,16 @@ public class CorpusStatistics implements Serializable {
                 } else {
                     knownPostags.add(word.getPos());
                 }
+                if (word.isFillpred()) {
+                    // Keep track of the predicate senses for each predicate.
+                    String plemma = word.getPlemma();
+                    Set<String> senses = predSenseSetMap.get(plemma);
+                    if (senses == null) {
+                        senses = new TreeSet<String>();
+                        predSenseSetMap.put(plemma, senses);
+                    }
+                    senses.add(word.getPred());
+                }
             }
         }
         
@@ -130,9 +145,13 @@ public class CorpusStatistics implements Serializable {
                     
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        for (Entry<String,Set<String>> entry : predSenseSetMap.entrySet()) {
+            predSenseListMap.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+        }
         
         log.info("Num known roles: " + roleStateNames.size());
         log.info("Known roles: " + roleStateNames);
+        log.info("Num known predicates: " + predSenseListMap.size());
     }
 
     // ------------------- Data Munging ------------------- //
@@ -196,6 +215,18 @@ public class CorpusStatistics implements Serializable {
 
     public boolean isInitialized() {
         return initialized;
+    }
+
+    /**
+     * Gets the set of senses for the given predicate.
+     */
+    public List<String> getSenseStateNames(String predicate) {
+        Set<String> senses = predSenseSetMap.get(predicate);
+        if (senses == null) {
+            return SENSES_FOR_UNK_PRED;
+        } else {
+            return new ArrayList<String>(senses);
+        }
     }
     
 }

@@ -108,34 +108,34 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return parents;
     }
 
-    public List<Word> getWords() {
-        ArrayList<Word> words = new ArrayList<Word>(size());
+    public List<String> getWords() {
+        ArrayList<String> words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            words.add(new Word(tokens.get(i).getForm()));            
+            words.add(tokens.get(i).getForm());            
         }
         return words;
     }
     
-    public List<Lemma> getLemmas() {
-        ArrayList<Lemma> words = new ArrayList<Lemma>(size());
+    public List<String> getLemmas() {
+        ArrayList<String> words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            words.add(new Lemma(tokens.get(i).getLemma()));            
+            words.add(tokens.get(i).getLemma());            
         }
         return words;
     }
     
-    public List<Tag> getPosTags() {
-        ArrayList<Tag> words = new ArrayList<Tag>(size());
+    public List<String> getPosTags() {
+        ArrayList<String> words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            words.add(new Tag(tokens.get(i).getPos()));            
+            words.add(tokens.get(i).getPos());            
         }
         return words;
     }
     
-    public List<Tag> getPredictedPosTags() {
-        ArrayList<Tag> words = new ArrayList<Tag>(size());
+    public List<String> getPredictedPosTags() {
+        ArrayList<String> words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            words.add(new Tag(tokens.get(i).getPpos()));            
+            words.add(tokens.get(i).getPpos());            
         }
         return words;
     }

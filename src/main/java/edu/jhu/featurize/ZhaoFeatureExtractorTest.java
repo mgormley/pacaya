@@ -30,6 +30,7 @@ import edu.jhu.srl.SrlRunner;
 import edu.jhu.srl.SrlRunner.DatasetType;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Pair;
+import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
 
 public class ZhaoFeatureExtractorTest {
@@ -60,19 +61,24 @@ public class ZhaoFeatureExtractorTest {
         fePrm.useZhaoFeats = true;
         File train = new File("data/conll/CoNLL2009-ST-Spanish-trial.csv");
         CoNLL09FileReader reader = new CoNLL09FileReader(train);
-        Alphabet<String> alphabet = new Alphabet<String>();
-        for (CoNLL09Sentence sent : reader) {
+        Timer timer = new Timer();
+        timer.start();
+        for (int n = 0; n < 49; n++) {
+            CoNLL09Sentence sent = reader.next();
             log.info("Initializing sentence...");
             SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
             log.info("Processing sentence...");
             for (int i = 0; i < sent.size(); i++) {
                 for (int j = 0; j < sent.size(); j++) {
-                    fe.createFeatureSet(i, j, alphabet);
+                    fe.createFeatureSet(i, j);
                 }
             }
+            timer.split();
             log.info("Done.");
         }
+        timer.stop();
                 
+        log.info("Average ms per sent: " + timer.avgMs());
     }
     
 }

@@ -32,6 +32,10 @@ public class SrlGraph {
         public String getLabel() {
             return label;
         }
+        
+        public void setLabel(String label) {
+            this.label = label;
+        }
 
         @Override
         public String toString() {

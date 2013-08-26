@@ -1,6 +1,5 @@
 package edu.jhu.srl;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,16 +14,17 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
@@ -81,7 +81,6 @@ public class SrlFgExamplesBuilder {
         
         // Use counting alphabets in this ftl.
         FeatureTemplateList counter = new FeatureTemplateList(true);
-        Alphabet<String> obsAlphabet = new Alphabet<String>();
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -94,13 +93,13 @@ public class SrlFgExamplesBuilder {
             Set<Integer> knownPreds = getKnownPreds(srlGraph);
             
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
                         
             // Create the example solely to count the features.
             new FgExample(sfg, trainConfig, featExtractor, counter);
@@ -144,13 +143,13 @@ public class SrlFgExamplesBuilder {
             Set<Integer> knownPreds = getKnownPreds(srlGraph);
             
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
@@ -225,8 +224,40 @@ public class SrlFgExamplesBuilder {
                 }
             }
         }
-                
+        
+        // Add the training data assignments to the predicate senses.
+        for (int i=0; i<sent.size(); i++) {
+            SenseVar senseVar = sfg.getSenseVar(i);
+            if (senseVar != null) {
+                if (!tryPut(vc, senseVar, sent.get(i).getPred())) {
+                    if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
+                        // This is a hack to ensure that something is added at test time.
+                        vc.put(senseVar, 0);
+                    }
+                }
+//                int senseNameIdx = senseVar.getState(sent.get(i).getPred());
+//                if (senseNameIdx == -1) {
+//                    vc.put(senseVar, senseNameIdx);
+//                } else {
+//                    vc.put(senseVar, senseNameIdx);
+//                }
+            }
+        }
+        
         return vc;
     }
     
+    /**
+     * Trys to put the entry (var, stateName) in vc.
+     * @return True iff the entry (var, stateName) was added to vc.
+     */
+    private boolean tryPut(VarConfig vc, Var var, String stateName) {
+        int stateNameIdx = var.getState(stateName);
+        if (stateNameIdx == -1) {
+            return false;
+        } else {
+            vc.put(var, stateName);
+            return true;
+        }
+    }
 }

@@ -38,8 +38,7 @@ public class SrlFeatureExtractorTest {
     public void testCorrectNumFeatures() throws Exception {
         SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         fgPrm.alwaysIncludeLinkVars = true;
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        SrlFactorGraph sfg = new SrlFactorGraph(fgPrm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
+        SrlFactorGraph sfg = getSrlFg(fgPrm);
 
         FeatureTemplateList fts = new FeatureTemplateList();
         
@@ -163,8 +162,7 @@ public class SrlFeatureExtractorTest {
     @Test
     public void testCorrectNumFeaturesWithFeatureHashing() throws Exception {
         SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        SrlFactorGraph sfg = new SrlFactorGraph(fgPrm, 3, knownPreds, Utilities.getList("A1", "A2", "A3"));
+        SrlFactorGraph sfg = getSrlFg(fgPrm);
 
         FeatureTemplateList fts = new FeatureTemplateList();        
 
@@ -193,6 +191,12 @@ public class SrlFeatureExtractorTest {
         
         System.out.println(fts);
         assertEquals(10, fts.getNumObsFeats());
+    }
+
+    private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
+        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
+        List<String> words = Utilities.getList("w1", "w2", "w3");
+        return new SrlFactorGraph(prm, words, words, knownPreds, Utilities.getList("A1", "A2", "A3"), null);
     }
 
 }
