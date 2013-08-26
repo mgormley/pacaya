@@ -18,6 +18,7 @@ import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
@@ -91,10 +92,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
                 // Get features on the observations for a pair of words.
                 obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
             }
-            alphabet = fts.getTemplate(f).getAlphabet();
+        } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
+            SenseVar var = (SenseVar) vars.iterator().next();
+            int parent = var.getParent();
+            obsFeats = sentFeatExt.fastGetObsFeats(parent);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
+        alphabet = fts.getTemplate(f).getAlphabet();
         
         // Create prefix containing the states of the observed variables.
         String prefix = getObsVarsStates(f) + "_";

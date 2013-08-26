@@ -2,7 +2,6 @@ package edu.jhu.srl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
@@ -18,7 +18,7 @@ import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.prim.util.Utilities;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -28,7 +28,7 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  */
 
-public class CorpusStatistics implements Serializable {
+public class CorpusStatistics implements Serializable, PredSenseMap {
     
     /**
      * Parameters for CorpusStatistics.
@@ -59,7 +59,10 @@ public class CorpusStatistics implements Serializable {
     public List<String> roleStateNames;
     private Set<String> knownRoles = new HashSet<String>();
     private Set<String> knownLinks = new HashSet<String>();
-
+    // Mapping from predicate form to the set of predicate senses.
+    private Map<String,Set<String>> knownSenses = new HashMap<String,Set<String>>();
+    private static List<String> SENSES_FOR_UNK_PRED = Utilities.getList("PRED.UNK"); 
+    
     public int maxSentLength = 0;
 
     private Map<String, MutableInt> words = new HashMap<String, MutableInt>();
@@ -120,6 +123,15 @@ public class CorpusStatistics implements Serializable {
                     knownPostags.add(word.getPpos());
                 } else {
                     knownPostags.add(word.getPos());
+                }
+                if (word.isFillpred()) {
+                    // Keep track of the predicate senses for each predicate.
+                    Set<String> senses = knownSenses.get(wordForm);
+                    if (senses == null) {
+                        senses = new TreeSet<String>();
+                        knownSenses.put(wordForm, senses);
+                    }
+                    senses.add(word.getPred());
                 }
             }
         }
@@ -196,6 +208,18 @@ public class CorpusStatistics implements Serializable {
 
     public boolean isInitialized() {
         return initialized;
+    }
+
+    /**
+     * Gets the set of senses for the given predicate.
+     */
+    public List<String> getSenseStateNames(String predicate) {
+        Set<String> senses = knownSenses.get(predicate);
+        if (senses == null) {
+            return SENSES_FOR_UNK_PRED;
+        } else {
+            return new ArrayList<String>(senses);
+        }
     }
     
 }

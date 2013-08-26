@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -14,13 +15,13 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
@@ -33,7 +34,6 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.util.Alphabet;
 
 /**
  * Unit tests for {@link SrlFgExamplesBuilderTest}.
@@ -181,6 +181,43 @@ public class SrlFgExamplesBuilderTest {
         assertArrayEquals(new int[]{2, 2, -1, 4, 2, 4, 7, 5, 7, 8, 7, 14, 11, 11, 10, 14, 17, 15, 2}, parents);
     }
 
+    @Test
+    public void testSenseTrainAssignment() throws Exception {
+        FeatureTemplateList fts = new FeatureTemplateList();
+
+        InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
+        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
+        List<CoNLL09Sentence> sents = cr.readSents(1);
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.biasOnly = true;
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(sents);        
+        
+        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        prm.fePrm = fePrm;
+        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.predictSense = true;
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        FgExamples data = builder.getData(sents);
+        FgExample ex = data.get(0);
+        
+        VarConfig vc = ex.getGoldConfig();
+        System.out.println(vc.toString().replace(",", "\n"));
+
+        // 18 role vars and 1 sense.
+        assertEquals(18+1, vc.size());
+        
+        Map<Integer,String> senseMap = SrlDecoder.getPredSenses(vc);
+        System.out.println(senseMap);
+        assertEquals("{2=fer.a2}", senseMap.toString());
+        
+        SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sents.get(0));
+        assertEquals(2, srlGraph.getPredAt(2).getPosition());
+        assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
+    }
+    
     /**
      * Decodes the parents defined by a variable assignment for a single
      * sentence.

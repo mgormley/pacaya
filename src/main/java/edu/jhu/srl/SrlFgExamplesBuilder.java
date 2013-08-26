@@ -1,6 +1,5 @@
 package edu.jhu.srl;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +14,6 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureExtractor;
 import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExample;
@@ -25,6 +23,7 @@ import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
+import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
@@ -94,7 +93,7 @@ public class SrlFgExamplesBuilder {
             Set<Integer> knownPreds = getKnownPreds(srlGraph);
             
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
 
@@ -144,7 +143,7 @@ public class SrlFgExamplesBuilder {
             Set<Integer> knownPreds = getKnownPreds(srlGraph);
             
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent.size(), knownPreds, cs.roleStateNames);        
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
 
@@ -225,7 +224,15 @@ public class SrlFgExamplesBuilder {
                 }
             }
         }
-                
+        
+        // Add the training data assignments to the predicate senses.
+        for (int i=0; i<sent.size(); i++) {
+            SenseVar senseVar = sfg.getSenseVar(i);
+            if (senseVar != null) {
+                vc.put(senseVar, sent.get(i).getPred());
+            }
+        }
+        
         return vc;
     }
     

@@ -127,6 +127,8 @@ public class SrlRunner {
     public static boolean unaryFactors = false;
     @Opt(hasArg = true, description = "Whether to always include Link variables. For testing only.")
     public static boolean alwaysIncludeLinkVars = false;
+    @Opt(hasArg = true, description = "Whether to predict predicate sense.")
+    public static boolean predictSense = false;
 
     // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
@@ -348,8 +350,7 @@ public class SrlRunner {
                     VarConfig vc = predictions.get(i);
                     CoNLL09Sentence sent = sents.get(i);
                     
-                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sent);
-                    
+                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sent);                    
                     sent.setPredApredFromSrlGraph(srlGraph, false);
                 }
                 CoNLL09Writer cw = new CoNLL09Writer(predOut);
@@ -379,6 +380,7 @@ public class SrlRunner {
         prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         prm.fgPrm.unaryFactors = unaryFactors;
         prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
+        prm.fgPrm.predictSense = predictSense;
         // Feature extraction.
         prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.useSimpleFeats = useSimpleFeats;

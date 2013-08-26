@@ -59,6 +59,8 @@ public class SrlFactorGraph extends FactorGraph {
         /** Whether to always include Link variables. For testing only. */
         public boolean alwaysIncludeLinkVars = false;
         
+        /** Whether to predict the predicate sense. */
+        public boolean predictSense = false;
     }
 
     public enum RoleStructure {
@@ -72,6 +74,7 @@ public class SrlFactorGraph extends FactorGraph {
         LINK_ROLE_BINARY,
         ROLE_UNARY,
         LINK_UNARY,
+        SENSE_UNARY,
     }
     
     /**
@@ -145,19 +148,21 @@ public class SrlFactorGraph extends FactorGraph {
     private LinkVar[] rootVars;
     private LinkVar[][] childVars;
     private RoleVar[][] roleVars;
-
-    // TODO: We don't currently predict sense. The main hurdle is getting the
-    // set of possible senses for each word.
     private SenseVar[] senseVars;
 
     // The sentence length.
     private final int n;
                 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, int n, Set<Integer> knownPreds, List<String> roleStateNames) {
-        super();
-        this.prm = prm;        
-        this.n = n;
-                
+
+    public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
+        this(prm, sent.getWords(), knownPreds, cs.roleStateNames, cs);
+    }
+
+    public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, Set<Integer> knownPreds,
+            List<String> roleStateNames, PredSenseMap psMap) {
+        this.prm = prm;
+        this.n = words.size();
+
         // Create the Role variables.
         roleVars = new RoleVar[n][n];
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
@@ -182,6 +187,17 @@ public class SrlFactorGraph extends FactorGraph {
             }
         } else {
             throw new IllegalArgumentException("Unsupported model structure: " + prm.roleStructure);
+        }
+        
+        // Create the Sense variables.
+        senseVars = new SenseVar[n];
+        if (prm.predictSense) {
+            for (int i = 0; i < n; i++) {
+                if (knownPreds.contains(i)) {
+                    String word = words.get(i);
+                    senseVars[i] = createSenseVar(i, word, psMap.getSenseStateNames(word));
+                }
+            }
         }
         
         // Create the Link variables.
@@ -223,6 +239,11 @@ public class SrlFactorGraph extends FactorGraph {
         
         // Add the factors.
         for (int i = -1; i < n; i++) {
+            // Add the unary factors for the sense variables.
+            if (prm.predictSense && i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED){
+                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY));
+            }
+            // Add the role/link factors.
             for (int j = 0; j < n; j++) {
                 if (i == -1) {
                     // Add unary factors on child Links
@@ -265,6 +286,11 @@ public class SrlFactorGraph extends FactorGraph {
         return new LinkVar(prm.linkVarType, linkVarName, parent, child);
     }
     
+    private SenseVar createSenseVar(int parent, String word, List<String> senseStateNames) {
+        String senseVarName = "Sense_" + parent;
+        return new SenseVar(VarType.PREDICTED, senseStateNames.size(), senseVarName, senseStateNames, parent);            
+    }
+    
     // ----------------- Public Getters -----------------
     
     /**
@@ -295,6 +321,19 @@ public class SrlFactorGraph extends FactorGraph {
     public RoleVar getRoleVar(int i, int j) {
         if (0 <= i && i < roleVars.length && 0 <= j && j < roleVars[i].length) {
             return roleVars[i][j];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+     * Gets a predicate Sense variable.
+     * @param i The position of the predicate.
+     * @return The sense variable or null if it doesn't exist.
+     */
+    public SenseVar getSenseVar(int i) {
+        if (0 <= i && i < senseVars.length) {
+            return senseVars[i];
         } else {
             return null;
         }
