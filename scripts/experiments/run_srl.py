@@ -134,19 +134,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
         return setup
 
     def defineBasicParams(self, setup):
-        # Full length test sentences.
-        #setup.update(trainMaxSentenceLength=20)
-        #setup.update(trainMaxNumSentences=3000)
-        setup.update(
-            featureHashMod=-1,
-            alwaysIncludeLinkVars=True,
-            unaryFactors=True,
-            linkVarType="OBSERVED",
-            featCountCutoff=4,
-            timeoutSeconds=48*60*60,
-            work_mem_megs=200*1024,
-            predictSense=True,
-            )
         if self.expname == "srl-biasonly":
             setup.update(biasOnly=True)
         # Below defines T/F values for features in 
@@ -210,8 +197,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         setup.update(linkVarType="OBSERVED")
                     setup.update(useProjDepTreeFactor=useProjDepTreeFactor)
                     exp = all + setup + data
-                    if exp.get("biasOnly") != True and not re.search("test[^.]+\.local", os.uname()[1]):
-                        if exp.get("testMaxSentenceLength") <= 20 and exp.get("trainMaxSentenceLength") <= 20:
+                    if exp.get("biasOnly") != True and re.search("test[^.]+\.local", os.uname()[1]):
+                        if exp.get("testMaxSentenceLength") is not None and exp.get("testMaxSentenceLength") <= 20 and \
+                                exp.get("trainMaxSentenceLength") is not None and exp.get("trainMaxSentenceLength") <= 20:
                             # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
                             # 2700 of len <= 20 fit in 1G, with 37 roles, and global factor off.
                             # 1500 of len <= 20 fit in 1G, with 37 roles, and global factor on.
@@ -226,7 +214,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             else:
                                 base_work_mem_megs = 5*1024
                         else:
-                            base_work_mem_megs = 200 * 1024
+                            base_work_mem_megs = 50 * 1024
                         exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                     exps.append(exp)
         ## Drop all but 3 experiments for a fast run.
@@ -251,6 +239,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
         all.set("dataset", "", incl_arg=False)
         all.set("train", "", incl_name=False)
         all.set("test", "", incl_name=False)
+        # Full length test sentences.
+        #setup.update(trainMaxSentenceLength=20)
+        #setup.update(trainMaxNumSentences=3000)
+        all.update(
+            featureHashMod=-1,
+            alwaysIncludeLinkVars=True,
+            unaryFactors=True,
+            linkVarType="OBSERVED",
+            featCountCutoff=4,
+            timeoutSeconds=48*60*60,
+            predictSense=True,
+            )
         return all
 
     def get_experiments(self):
