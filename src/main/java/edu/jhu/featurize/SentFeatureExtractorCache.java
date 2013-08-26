@@ -1,66 +1,61 @@
 package edu.jhu.featurize;
 
+import java.util.ArrayList;
+
 import org.apache.log4j.Logger;
 
 import edu.jhu.featurize.SentFeatureExtractor;
-import edu.jhu.gm.BinaryStrFVBuilder;
-import edu.jhu.gm.FactorGraph;
-import edu.jhu.gm.ObsFeatureExtractor;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureTemplateList;
-import edu.jhu.gm.FeatureVector;
-import edu.jhu.gm.FeatureVectorBuilder;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.VarConfig;
-import edu.jhu.gm.VarSet;
-import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactor;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
-import edu.jhu.util.Alphabet;
 
 /**
  * Cache for SentFeatureExtractor.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SentFeatureExtractorCache {
 
     private static final Logger log = Logger.getLogger(SentFeatureExtractorCache.class); 
 
     // Cache of observation features for each single positions in the sentence.
-    private BinaryStrFVBuilder[] obsFeatsSolo;
+    private ArrayList[] obsFeatsSolo;
     // Cache of observation features for each pair of positions in the sentence.
-    private BinaryStrFVBuilder[][] obsFeatsPair;
+    private ArrayList[][] obsFeatsPair;
+    // Cache of observation features for sense features (separate model).
+    private ArrayList[] obsSenseSolo;
 
     private SentFeatureExtractor sentFeatExt;
     
-    // A single alphabet for all the observed features.
-    private Alphabet<String> obsAlphabet;
     
-    public SentFeatureExtractorCache(SentFeatureExtractor sentFeatExt, Alphabet<String> obsAlphabet) {
+    public SentFeatureExtractorCache(SentFeatureExtractor sentFeatExt) {
         this.sentFeatExt = sentFeatExt;
-        this.obsAlphabet = obsAlphabet;
-        obsFeatsSolo = new BinaryStrFVBuilder[sentFeatExt.getSentSize()];
-        obsFeatsPair = new BinaryStrFVBuilder[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
+        obsFeatsSolo = new ArrayList[sentFeatExt.getSentSize()];
+        obsFeatsPair = new ArrayList[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
+        obsSenseSolo = new ArrayList[sentFeatExt.getSentSize()];
     }
     
-    public BinaryStrFVBuilder fastGetObsFeats(int child) {
+    public ArrayList<String> fastGetObsFeats(int child) {
         if (obsFeatsSolo[child] == null) {
             // Lazily construct the observation features.
-            obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child, obsAlphabet);
+            obsFeatsSolo[child] = sentFeatExt.createFeatureSet(child);
         }
         return obsFeatsSolo[child];
     }
-
-    public BinaryStrFVBuilder fastGetObsFeats(int parent, int child) {
+    
+    public ArrayList<String> fastGetObsFeats(int parent, int child) {
         if (obsFeatsPair[parent][child] == null) {
             // Lazily construct the observation features.
-            obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child, obsAlphabet);
+            obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child);
         }
         return obsFeatsPair[parent][child];
     }
+    
+    public ArrayList<String> fastGetObsSenseFeats(int child) {
+        if (obsSenseSolo[child] == null) {
+            // Lazily construct the observation features.
+            obsSenseSolo[child] = sentFeatExt.createSenseFeatureSet(child);
+        }
+        return obsSenseSolo[child];
+    }
+
     
 }

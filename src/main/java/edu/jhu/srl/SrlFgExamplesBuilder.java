@@ -80,7 +80,6 @@ public class SrlFgExamplesBuilder {
         
         // Use counting alphabets in this ftl.
         FeatureTemplateList counter = new FeatureTemplateList(true);
-        Alphabet<String> obsAlphabet = new Alphabet<String>();
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
@@ -99,7 +98,7 @@ public class SrlFgExamplesBuilder {
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
                         
             // Create the example solely to count the features.
             new FgExample(sfg, trainConfig, featExtractor, counter);
@@ -149,7 +148,7 @@ public class SrlFgExamplesBuilder {
 
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt, obsAlphabet);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);

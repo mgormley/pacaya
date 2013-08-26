@@ -2,8 +2,6 @@ package edu.jhu.featurize;
 
 import static edu.jhu.util.Utilities.getList;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +12,8 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.BinaryStrFVBuilder;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
 
@@ -26,7 +22,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testGetParentsAndUseGoldSyntax() {
         CoNLL09Sentence sent = getDogConll09Sentence();
-        Alphabet<String> alphabet = new Alphabet<String>();
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         {
             // Test with gold syntax.
@@ -53,7 +48,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testAddZhaoFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -62,7 +56,7 @@ public class SentFeatureExtractorTest {
         fePrm.withSupervision = false;
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
 
-        BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
+        ArrayList<String> allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 fe.addZhaoPairFeatures(i, j, allFeats);
@@ -74,7 +68,7 @@ public class SentFeatureExtractorTest {
         //Check that POS is not gold POS
         fePrm.withSupervision = true;
         fe = new SentFeatureExtractor(fePrm, sent, cs);
-        allFeats = new BinaryStrFVBuilder(alphabet);
+        allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 fe.addZhaoPairFeatures(i, j, allFeats);
@@ -85,7 +79,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoPathFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -106,7 +99,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectPos() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -140,7 +132,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectFeat() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -174,7 +165,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectPathSentence1() {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -232,7 +222,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectPathSentence2() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -292,7 +281,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectPathSentence2PredictedSyntax() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = false;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -325,7 +313,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testZhaoObjectParentsChildrenSentence2() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -355,7 +342,6 @@ public class SentFeatureExtractorTest {
     @Test
     public void testAddNaradowskyFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
-        Alphabet<String> alphabet = new Alphabet<String>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -363,8 +349,7 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
 
-        
-        BinaryStrFVBuilder allFeats = new BinaryStrFVBuilder(alphabet);
+        ArrayList<String> allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 fe.addNaradowskyPairFeatures(i, j, allFeats);
