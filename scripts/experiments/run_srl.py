@@ -135,14 +135,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
 
     def defineBasicParams(self, setup):
         # Full length test sentences.
-        # trainMaxNumSentences=3000,
+        #setup.update(trainMaxSentenceLength=20)
+        #setup.update(trainMaxNumSentences=3000)
         setup.update(
             featureHashMod=-1,
             alwaysIncludeLinkVars=True,
             unaryFactors=True,
             linkVarType="OBSERVED",
             featCountCutoff=4,
-            trainMaxSentenceLength=3000,
             timeoutSeconds=48*60*60,
             work_mem_megs=200*1024,
             predictSense=True,
