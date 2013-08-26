@@ -1,12 +1,12 @@
 package edu.jhu.srl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.ProjDepTreeFactor;
@@ -83,12 +83,34 @@ public class SrlFactorGraph extends FactorGraph {
      */
     public static class SrlFactor extends ExpFamFactor {
 
-        public SrlFactor(VarSet vars, SrlFactorTemplate template) {
-            super(vars, template);
+        SrlFactorTemplate type;
+        
+        public SrlFactor(VarSet vars, SrlFactorTemplate type) {
+            super(vars, type);
+            this.type = type;
         }
         
+        /**
+         * Constructs an SrlFactor.
+         * 
+         * This constructor allows us to differentiate between the "type" of
+         * factor (e.g. SENSE_UNARY) and its "templateKey" (e.g.
+         * SENSE_UNARY_satisfacer.a1). Using Sense factors as an example, this
+         * way we can use the type to determine which type of features should be
+         * extracted, and the templateKey to determine which independent
+         * classifier should be used.
+         * 
+         * @param vars The variables.
+         * @param type The type.
+         * @param templateKey The template key.
+         */
+        public SrlFactor(VarSet vars, SrlFactorTemplate type, Object templateKey) {
+            super(vars, templateKey);
+            this.type = type;
+        }        
+        
         public SrlFactorTemplate getFactorType() {
-            return (SrlFactorTemplate) getTemplateKey();
+            return type;
         }
         
     }
@@ -155,11 +177,11 @@ public class SrlFactorGraph extends FactorGraph {
                 
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
-        this(prm, sent.getWords(), knownPreds, cs.roleStateNames, cs);
+        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
     }
 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, Set<Integer> knownPreds,
-            List<String> roleStateNames, PredSenseMap psMap) {
+    public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
+            List<String> roleStateNames, Map<String,List<String>> psMap) {
         this.prm = prm;
         this.n = words.size();
 
@@ -194,8 +216,11 @@ public class SrlFactorGraph extends FactorGraph {
         if (prm.predictSense) {
             for (int i = 0; i < n; i++) {
                 if (knownPreds.contains(i)) {
-                    String word = words.get(i);
-                    senseVars[i] = createSenseVar(i, word, psMap.getSenseStateNames(word));
+                    List<String> senseStateNames = psMap.get(lemmas.get(i));
+                    if (senseStateNames == null) {
+                        senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
+                    }
+                    senseVars[i] = createSenseVar(i, senseStateNames);
                 }
             }
         }
@@ -240,8 +265,15 @@ public class SrlFactorGraph extends FactorGraph {
         // Add the factors.
         for (int i = -1; i < n; i++) {
             // Add the unary factors for the sense variables.
-            if (prm.predictSense && i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED){
-                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY));
+            if (prm.predictSense && i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {
+                // The template key must include the lemma appended, so that
+                // there is a unique set of model parameters for each predicate.
+                String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmas.get(i);
+                // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
+                if (psMap.get(lemmas.get(i)) == null) {
+                    templateKey = CorpusStatistics.UNKNOWN_SENSE;
+                }
+                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey));
             }
             // Add the role/link factors.
             for (int j = 0; j < n; j++) {
@@ -286,7 +318,7 @@ public class SrlFactorGraph extends FactorGraph {
         return new LinkVar(prm.linkVarType, linkVarName, parent, child);
     }
     
-    private SenseVar createSenseVar(int parent, String word, List<String> senseStateNames) {
+    private SenseVar createSenseVar(int parent, List<String> senseStateNames) {
         String senseVarName = "Sense_" + parent;
         return new SenseVar(VarType.PREDICTED, senseStateNames.size(), senseVarName, senseStateNames, parent);            
     }

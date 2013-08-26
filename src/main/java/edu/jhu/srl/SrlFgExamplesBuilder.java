@@ -20,6 +20,7 @@ import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
@@ -229,11 +230,35 @@ public class SrlFgExamplesBuilder {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                vc.put(senseVar, sent.get(i).getPred());
+                if (!tryPut(vc, senseVar, sent.get(i).getPred())) {
+                    if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
+                        // This is a hack to ensure that something is added at test time.
+                        vc.put(senseVar, 0);
+                    }
+                }
+//                int senseNameIdx = senseVar.getState(sent.get(i).getPred());
+//                if (senseNameIdx == -1) {
+//                    vc.put(senseVar, senseNameIdx);
+//                } else {
+//                    vc.put(senseVar, senseNameIdx);
+//                }
             }
         }
         
         return vc;
     }
     
+    /**
+     * Trys to put the entry (var, stateName) in vc.
+     * @return True iff the entry (var, stateName) was added to vc.
+     */
+    private boolean tryPut(VarConfig vc, Var var, String stateName) {
+        int stateNameIdx = var.getState(stateName);
+        if (stateNameIdx == -1) {
+            return false;
+        } else {
+            vc.put(var, stateName);
+            return true;
+        }
+    }
 }

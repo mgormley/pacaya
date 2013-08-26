@@ -79,7 +79,7 @@ public class Var implements Comparable<Var>, Serializable {
      * Note: Current implementation takes O(n) time, where n is the number of states.
      * 
      * @param stateName The state name.
-     * @return The index of the variable state.
+     * @return The index of the variable state, or -1 if it doesn't contain the state name.
      */
     public int getState(String stateName) {
         return stateNames.indexOf(stateName);

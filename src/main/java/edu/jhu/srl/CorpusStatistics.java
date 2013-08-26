@@ -28,7 +28,7 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  */
 
-public class CorpusStatistics implements Serializable, PredSenseMap {
+public class CorpusStatistics implements Serializable {
     
     /**
      * Parameters for CorpusStatistics.
@@ -50,6 +50,11 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
+    
+    public static final Pattern dash = Pattern.compile("-");
+    public static final String UNKNOWN_ROLE = "argUNK";
+    public static final String UNKNOWN_SENSE = "senseUNK";
+    public static List<String> SENSES_FOR_UNK_PRED = Utilities.getList(UNKNOWN_SENSE); 
 
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();
@@ -60,9 +65,9 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
     private Set<String> knownRoles = new HashSet<String>();
     private Set<String> knownLinks = new HashSet<String>();
     // Mapping from predicate form to the set of predicate senses.
-    private Map<String,Set<String>> knownSenses = new HashMap<String,Set<String>>();
-    private static List<String> SENSES_FOR_UNK_PRED = Utilities.getList("PRED.UNK"); 
-    
+    public Map<String,List<String>> predSenseListMap = new HashMap<String,List<String>>();
+    private Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
+
     public int maxSentLength = 0;
 
     private Map<String, MutableInt> words = new HashMap<String, MutableInt>();
@@ -74,9 +79,6 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
     public CorpusStatisticsPrm prm;
     private boolean initialized;
     
-    public static final Pattern dash = Pattern.compile("-");
-    public static final String UNKNOWN_ROLE = "argUNK";
-
     public CorpusStatistics(CorpusStatisticsPrm prm) {
         this.prm = prm;
         this.normalize = new Normalizer(prm.normalizeWords);
@@ -126,10 +128,11 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
                 }
                 if (word.isFillpred()) {
                     // Keep track of the predicate senses for each predicate.
-                    Set<String> senses = knownSenses.get(wordForm);
+                    String plemma = word.getPlemma();
+                    Set<String> senses = predSenseSetMap.get(plemma);
                     if (senses == null) {
                         senses = new TreeSet<String>();
-                        knownSenses.put(wordForm, senses);
+                        predSenseSetMap.put(plemma, senses);
                     }
                     senses.add(word.getPred());
                 }
@@ -142,9 +145,13 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
                     
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
+        for (Entry<String,Set<String>> entry : predSenseSetMap.entrySet()) {
+            predSenseListMap.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+        }
         
         log.info("Num known roles: " + roleStateNames.size());
         log.info("Known roles: " + roleStateNames);
+        log.info("Num known predicates: " + predSenseListMap.size());
     }
 
     // ------------------- Data Munging ------------------- //
@@ -214,7 +221,7 @@ public class CorpusStatistics implements Serializable, PredSenseMap {
      * Gets the set of senses for the given predicate.
      */
     public List<String> getSenseStateNames(String predicate) {
-        Set<String> senses = knownSenses.get(predicate);
+        Set<String> senses = predSenseSetMap.get(predicate);
         if (senses == null) {
             return SENSES_FOR_UNK_PRED;
         } else {
