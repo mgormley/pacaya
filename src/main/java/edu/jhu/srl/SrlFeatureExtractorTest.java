@@ -195,7 +195,8 @@ public class SrlFeatureExtractorTest {
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        return new SrlFactorGraph(prm, Utilities.getList("w1", "w2", "w3"), knownPreds, Utilities.getList("A1", "A2", "A3"), null);
+        List<String> words = Utilities.getList("w1", "w2", "w3");
+        return new SrlFactorGraph(prm, words, words, knownPreds, Utilities.getList("A1", "A2", "A3"), null);
     }
 
 }

@@ -23,14 +23,18 @@ import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.gm.Feature;
+import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
+import edu.jhu.gm.VarSet;
 import edu.jhu.gm.data.ErmaWriter;
 import edu.jhu.optimize.BatchMaximizer;
 import edu.jhu.optimize.L2;
@@ -42,6 +46,7 @@ import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
@@ -317,6 +322,13 @@ public class SrlRunner {
             SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             data = builder.getData(sents);     
+
+            // Special case: we somehow need to be able to create test examples
+            // where we've never seen the predicate.
+            if (prm.fgPrm.predictSense) {
+                Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
+                fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), CorpusStatistics.UNKNOWN_SENSE));
+            }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }

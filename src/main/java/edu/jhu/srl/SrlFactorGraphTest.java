@@ -5,8 +5,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -196,16 +198,17 @@ public class SrlFactorGraphTest {
     }
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
-        PredSenseMap psMap = new PredSenseMap() {
+        Map<String,List<String>> psMap = new HashMap<String,List<String>>() {
 
             @Override
-            public List<String> getSenseStateNames(String predicate) {
+            public List<String> get(Object predicate) {
                 return Utilities.getList(predicate + ".01", predicate + ".02");
             }
             
         };
         HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        return new SrlFactorGraph(prm, Utilities.getList("w1", "w2", "w3"), knownPreds, Utilities.getList("A1", "A2", "A3"), psMap);
+        List<String> words = Utilities.getList("w1", "w2", "w3");
+        return new SrlFactorGraph(prm, words, words, knownPreds, Utilities.getList("A1", "A2", "A3"), psMap);
     }
     
 }
