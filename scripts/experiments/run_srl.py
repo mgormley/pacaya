@@ -225,9 +225,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 base_work_mem_megs = 5*3*1024
                             else:
                                 base_work_mem_megs = 5*1024
-                            #base_work_mem_megs = 200*1024
                         else:
-                            base_word_mem_megs = 200 * 1024
+                            base_work_mem_megs = 200 * 1024
                         exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                     exps.append(exp)
         ## Drop all but 3 experiments for a fast run.
