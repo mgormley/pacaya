@@ -115,6 +115,14 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
         return words;
     }
+
+    public List<String> getPlemmas() {
+        ArrayList<String> words = new ArrayList<String>(size());
+        for (int i=0; i<size(); i++) {
+            words.add(tokens.get(i).getPlemma());            
+        }
+        return words;
+    }
     
     public List<String> getLemmas() {
         ArrayList<String> words = new ArrayList<String>(size());

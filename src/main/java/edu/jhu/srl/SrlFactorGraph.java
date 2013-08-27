@@ -177,7 +177,7 @@ public class SrlFactorGraph extends FactorGraph {
                 
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
-        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
+        this(prm, sent.getWords(), sent.getPlemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
     }
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
