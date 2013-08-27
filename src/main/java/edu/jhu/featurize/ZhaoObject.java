@@ -63,7 +63,6 @@ public class ZhaoObject extends CoNLL09Token {
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         this.word = sent.get(idx);
-        fixPlemmaNull();
         setPfeat(idx);
         setRootPath();
         setParent();
@@ -123,13 +122,6 @@ public class ZhaoObject extends CoNLL09Token {
     
     // ------------------------ Getters and Setters ------------------------ //
     
-    public void fixPlemmaNull() {
-        String origPlemma = word.getPlemma();
-        if (origPlemma == null) {
-            word.setPlemma("_");
-        } 
-    }
-
     @Override
     public List<String> getPfeat() {
         return feat;
@@ -142,7 +134,8 @@ public class ZhaoObject extends CoNLL09Token {
                 feat.add(NO_MORPH);
             }            
         } else {
-            // A little wonky calling this, since it's overridden right above.
+            // NOTE:  We're calling the original CoNLL09 word token, 
+            // since it's overridden right above.
             List<String> coNLLFeats = word.getPfeat();
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
@@ -328,7 +321,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     private void setDpPathShare(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg) {
-        /* ZHANG:  Leading two paths to the root from the predicate and the argument, respectively, 
+        /* ZHAO:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
         List<Pair<Integer, Dir>> argRootPath = zhaoArg.getRootPath();
         List<Pair<Integer, Dir>> predRootPath = zhaoPred.getRootPath();
