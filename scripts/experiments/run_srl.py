@@ -103,7 +103,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             print "WARN: Are you sure you don't want the mem queue?"
         prefix = "/home/hltcoe/mgormley/working/parsing"
         if not os.path.exists(prefix):
-            prefix = "."
+            prefix = os.path.abspath(".")
         parser_prefix = prefix + "/exp/vem-conll_005"
         # Gold trees: HEAD column.
         self.pos_gold_train = prefix + "/data/conll2009/CoNLL2009-ST-Spanish/CoNLL2009-ST-Spanish-train.txt"
