@@ -63,7 +63,7 @@ public class ZhaoObject extends CoNLL09Token {
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         this.word = sent.get(idx);
-        setFeat(idx);
+        setPfeat(idx);
         setRootPath();
         setParent();
         setChildren();
@@ -101,7 +101,7 @@ public class ZhaoObject extends CoNLL09Token {
         int head, int phead, String deprel, String pdeprel,
         boolean fillpred, String pred, List<String> apreds) */
         super(-1, "FORM_" + input, "LEMMA_" + input, "PLEMMA_" + input, "POS_" + input, "PPOS_" + input, null, null, -2, -2, "DEPREL_" + input, "PDEPREL_" + input, false, "PRED_" + input, null);
-        setFeat(-1);
+        setPfeat(-1);
         this.rootPath = new ArrayList<Pair<Integer, Dir>>();
         this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
         this.parent = -1;
@@ -121,20 +121,22 @@ public class ZhaoObject extends CoNLL09Token {
     
     
     // ------------------------ Getters and Setters ------------------------ //
-       
+    
     @Override
-    public List<String> getFeat() {
+    public List<String> getPfeat() {
         return feat;
     }
-    
-    public void setFeat(Integer idx) {
+        
+    public void setPfeat(Integer idx) {
         feat = new ArrayList<String>(6);
         if (idx == -1) {
             for (int i = 0; i < 6; i++) {
                 feat.add(NO_MORPH);
             }            
         } else {
-            List<String> coNLLFeats = sent.get(idx).getFeat();
+            // NOTE:  We're calling the original CoNLL09 word token, 
+            // since it's overridden right above.
+            List<String> coNLLFeats = word.getPfeat();
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
                     feat.add(NO_MORPH);
@@ -319,7 +321,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     private void setDpPathShare(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg) {
-        /* ZHANG:  Leading two paths to the root from the predicate and the argument, respectively, 
+        /* ZHAO:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
         List<Pair<Integer, Dir>> argRootPath = zhaoArg.getRootPath();
         List<Pair<Integer, Dir>> predRootPath = zhaoPred.getRootPath();

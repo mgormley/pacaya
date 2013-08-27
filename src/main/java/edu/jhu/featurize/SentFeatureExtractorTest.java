@@ -141,8 +141,8 @@ public class SentFeatureExtractorTest {
         int[] parents = fe.getParents(sent);
         ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
         ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
-        List<String> predFeat = zhaoPred.getFeat();
-        List<String> argFeat = zhaoArg.getFeat();
+        List<String> predFeat = zhaoPred.getPfeat();
+        List<String> argFeat = zhaoArg.getPfeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
         intendedPredFeats.add("postype=relative");
         intendedPredFeats.add("gen=c");

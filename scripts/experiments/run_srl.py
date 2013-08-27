@@ -103,7 +103,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             print "WARN: Are you sure you don't want the mem queue?"
         prefix = "/home/hltcoe/mgormley/working/parsing"
         if not os.path.exists(prefix):
-            prefix = "/Users/mgormley/research/parsing"
+            prefix = os.path.abspath(".")
         parser_prefix = prefix + "/exp/vem-conll_005"
         # Gold trees: HEAD column.
         self.pos_gold_train = prefix + "/data/conll2009/CoNLL2009-ST-Spanish/CoNLL2009-ST-Spanish-train.txt"
@@ -240,8 +240,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         all.set("train", "", incl_name=False)
         all.set("test", "", incl_name=False)
         # Full length test sentences.
-        #setup.update(trainMaxSentenceLength=20)
-        #setup.update(trainMaxNumSentences=3000)
+        #all.update(trainMaxSentenceLength=20)
+        #all.update(trainMaxNumSentences=3000)
         all.update(
             featureHashMod=-1,
             alwaysIncludeLinkVars=True,
@@ -251,6 +251,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             timeoutSeconds=48*60*60,
             predictSense=True,
             )
+        # Use SGD instead of LBFGS.
+        all.update(optimizer="SGD", l2variance="1e100")
         return all
 
     def get_experiments(self):
@@ -336,6 +338,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if self.hprof:
                 if isinstance(stage, experiment_runner.JavaExpParams):
                     stage.hprof = self.hprof
+            # Put the output of a fast run in a directory with "fast_"
+            # prepended.
+            # TODO: This doesn't work quite right...find a better solution.
+            #if self.fast:
+            #    self.expname = "fast_" + self.expname
         return root_stage
 
 if __name__ == "__main__":
@@ -344,8 +351,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
-    parser.add_option('--test', action="store_true", help="Use test data")
-    parser.add_option('--expname',  help="Experiment name.  \n\t\
+    parser.add_option('-e', '--expname',  help="Experiment name.  \n\t\
                                                             Options:\n\
                                                             \t\tsrl-biasonly\n\
                                                             \t\tsrl-dev20\n\
