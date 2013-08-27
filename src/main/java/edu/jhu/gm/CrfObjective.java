@@ -74,7 +74,9 @@ public class CrfObjective implements Function, BatchFunction {
             ll += getMarginalLogLikelihoodForExample(i);
         }
         log.info("Marginal log-likelihood: " + ll);
-        assert ll <= MAX_LOG_LIKELIHOOD : "Log-likelihood should be <= 0";
+        if ( ll > MAX_LOG_LIKELIHOOD ) {
+            log.warn("Log-likelihood should be <= 0: " + ll);
+        }
         return ll;
     }
 
@@ -84,11 +86,14 @@ public class CrfObjective implements Function, BatchFunction {
      */
     @Override
     public double getValue(int[] batch) {
-        double value = 0.0;
+        double ll = 0.0;
         for (int i=0; i<batch.length; i++) {
-            value += getMarginalLogLikelihoodForExample(batch[i]);
+            ll += getMarginalLogLikelihoodForExample(batch[i]);
         }
-        return value;
+        if ( ll > MAX_LOG_LIKELIHOOD ) {
+            log.warn("Log-likelihood should be <= 0: " + ll);
+        }
+        return ll;
     }
         
     private double getMarginalLogLikelihoodForExample(int i) {
@@ -143,8 +148,10 @@ public class CrfObjective implements Function, BatchFunction {
         infLatPred.clear();
         
         double ll = numerator - denominator;
-        assert ll <= MAX_LOG_LIKELIHOOD : "Log-likelihood should be <= 0: " + ll;
-        
+
+        if ( ll > MAX_LOG_LIKELIHOOD ) {
+            log.warn("Log-likelihood should be <= 0: " + ll);
+        }
         return ll;
     }
 
