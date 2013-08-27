@@ -223,10 +223,8 @@ public class SentFeatureExtractor {
         feats.add("head_" + wordPos + "_tag");
         feats.add("head_" + wordForm + "_" + wordPos + "_wordtag");
         feats.add("slen_" + sent.size());
-        if (prm.withSupervision) {
-            String wordLemma = word.getLemma();
-            feats.add("head_" + wordLemma + "_lemma");
-        }
+        String wordLemma = word.getPlemma();
+        feats.add("head_" + wordLemma + "_lemma");
         String cap;
         if (capitalized(wordForm)) {
             cap = "UC";
@@ -281,22 +279,19 @@ public class SentFeatureExtractor {
         feats.add("arg_" + argForm + "_word");
         feats.add("arg_" + argPos + "_tag");
         
-        
-        if (prm.withSupervision) {
-            List<String> predFeats = pred.getFeat();
-            List<String> argFeats = arg.getFeat();
-            if (predFeats == null) {
-                predFeats = new ArrayList<String>();
-                predFeats.add("_");
-            }
-            if (argFeats == null) {
-                argFeats = new ArrayList<String>();
-                argFeats.add("_");
-            }
-            for (String m1 : predFeats) {
-                for (String m2 : argFeats) {
-                    feats.add(m1 + "_" + m2 + "_morph");
-                }
+        List<String> predFeats = pred.getPfeat();
+        List<String> argFeats = arg.getPfeat();
+        if (predFeats == null) {
+            predFeats = new ArrayList<String>();
+            predFeats.add("_");
+        }
+        if (argFeats == null) {
+            argFeats = new ArrayList<String>();
+            argFeats.add("_");
+        }
+        for (String m1 : predFeats) {
+            for (String m2 : argFeats) {
+                feats.add(m1 + "_" + m2 + "_morph");
             }
         }
     }
@@ -349,22 +344,22 @@ public class SentFeatureExtractor {
     public void addZhaoSupervisedSoloFeats(ZhaoObject p, ZhaoObject p1, ArrayList<String> feats) {
         String feat;
         // p.lm.pos
-        feat = getZhaoObject(p.getFarLeftChild()).getPos();
+        feat = getZhaoObject(p.getFarLeftChild()).getPpos();
         feats.add(feat);
         // p.rm.pos
-        feat = getZhaoObject(p.getFarRightChild()).getPos();
+        feat = getZhaoObject(p.getFarRightChild()).getPpos();
         feats.add(feat);
         // p.lemma
-        feat = p.getLemma();
+        feat = p.getPlemma();
         feats.add(feat);
         // p.lemma + p.lemma1
-        feat = p.getLemma() + p1.getLemma();
+        feat = p.getPlemma() + p1.getPlemma();
         feats.add(feat);
         // p.lemma + p.children.dprel.noDup 
         ArrayList<String> depRelChildren = new ArrayList<String>();
         ArrayList<ZhaoObject> pChildren = getTokens(p.getChildren());
         for (ZhaoObject child : pChildren) {
-            depRelChildren.add(child.getDeprel());
+            depRelChildren.add(child.getPdeprel());
         }
         feat = buildString(noDup(depRelChildren));
         feats.add(feat);
@@ -516,7 +511,7 @@ public class SentFeatureExtractor {
         // ------- Combined features (supervised) -------
         String feat;
         // a.lemma + p.lemma 
-        feat = zhaoArg.getLemma() + "_" + zhaoPred.getLemma();
+        feat = zhaoArg.getPlemma() + "_" + zhaoPred.getPlemma();
         feats.add(feat);
         // (a:p|dpPath.dprel) + p.FEAT1 
         // a:p|dpPath.lemma.seq 
@@ -524,11 +519,11 @@ public class SentFeatureExtractor {
         ArrayList<String> depRelPath = new ArrayList<String>();
         ArrayList<String> depRelPathLemma = new ArrayList<String>();
         for (ZhaoObject t : betweenPathTokens) {
-            depRelPath.add(t.getDeprel());
-            depRelPathLemma.add(t.getLemma());
+            depRelPath.add(t.getPdeprel());
+            depRelPathLemma.add(t.getPlemma());
         }
 
-        feat = buildString(depRelPath) + zhaoPred.getFeat().get(0);        
+        feat = buildString(depRelPath) + zhaoPred.getPfeat().get(0);        
         feats.add(feat);
         feat = buildString(depRelPathLemma);
         feats.add(feat);
@@ -542,9 +537,9 @@ public class SentFeatureExtractor {
         ArrayList<String> linePathLemma = new ArrayList<String>();
         ArrayList<String> linePathDeprel = new ArrayList<String>();
         for (ZhaoObject t : linePathCoNLL) {
-            linePathFeat.add(t.getFeat().get(0));
-            linePathLemma.add(t.getLemma());
-            linePathDeprel.add(t.getDeprel());
+            linePathFeat.add(t.getPfeat().get(0));
+            linePathLemma.add(t.getPlemma());
+            linePathDeprel.add(t.getPdeprel());
         }
         ArrayList<String> linePathFeatBag = bag(linePathFeat);
         feat = buildString(linePathFeatBag);
@@ -555,7 +550,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
         ArrayList<String> dpPathLemma = new ArrayList<String>();
         for (Pair<Integer, Dir> dpP : dpPathArg) {
-            dpPathLemma.add(getZhaoObject(dpP.get1()).getLemma());            
+            dpPathLemma.add(getZhaoObject(dpP.get1()).getPlemma());            
         }
         // a:p|dpPathArgu.lemma.seq 
         feat = buildString(dpPathLemma);
@@ -590,7 +585,7 @@ public class SentFeatureExtractor {
             ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgParent, 
             ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
         String feat;
-        List<String> zhaoArgFeats = zhaoArg.getFeat();
+        List<String> zhaoArgFeats = zhaoArg.getPfeat();
         String a1; String a2; String a3; String a4; String a5; String a6;
         a1 = zhaoArgFeats.get(0);
         a2 = zhaoArgFeats.get(1);
@@ -598,10 +593,10 @@ public class SentFeatureExtractor {
         a4 = zhaoArgFeats.get(3);
         a5 = zhaoArgFeats.get(4);
         a6 = zhaoArgFeats.get(5);
-        List<String> zhaoArgLastFeats = zhaoArgLast.getFeat();
+        List<String> zhaoArgLastFeats = zhaoArgLast.getPfeat();
         //String last_a1 = zhaoArgLastFeats.get(0);
         String last_a2 = zhaoArgLastFeats.get(1);
-        List<String> zhaoArgNextFeats = zhaoArgNext.getFeat();
+        List<String> zhaoArgNextFeats = zhaoArgNext.getPfeat();
         //String next_a1 = zhaoArgNextFeats.get(0);
         //String next_a2 = zhaoArgNextFeats.get(1);
         String next_a3 = zhaoArgNextFeats.get(2);
@@ -615,7 +610,7 @@ public class SentFeatureExtractor {
         feat = a3 + "_" + next_a3;
         feats.add(feat);
         // a.FEAT3 + a.h.FEAT3 
-        feat = zhaoArgParent.getFeat().get(2);
+        feat = zhaoArgParent.getPfeat().get(2);
         feats.add(feat);
         // a.children.FEAT1.noDup 
         ArrayList<String> argChildrenFeat1 = getChildrenFeat1(argChildrenTokens);
@@ -632,7 +627,7 @@ public class SentFeatureExtractor {
     private ArrayList<String> getChildrenFeat3(ArrayList<ZhaoObject> childrenTokens) {
         ArrayList<String> childrenFeat3 = new ArrayList<String>();
         for (ZhaoObject child : childrenTokens) {
-            childrenFeat3.add(child.getFeat().get(2));
+            childrenFeat3.add(child.getPfeat().get(2));
         }
         return childrenFeat3;
     }
@@ -640,7 +635,7 @@ public class SentFeatureExtractor {
     private ArrayList<String> getChildrenFeat1(ArrayList<ZhaoObject> childrenTokens) {
         ArrayList<String> childrenFeat1 = new ArrayList<String>();
         for (ZhaoObject child : childrenTokens) {
-            childrenFeat1.add(child.getFeat().get(0));
+            childrenFeat1.add(child.getPfeat().get(0));
         }
         return childrenFeat1;
     }
@@ -654,33 +649,33 @@ public class SentFeatureExtractor {
         //ZhaoObject argLn = getZhaoObject(zhaoArg.getNearLeftChild());
         String feat;
         // a.h.lemma
-        feats.add(zhaoArgParent.getLemma());
+        feats.add(zhaoArgParent.getPlemma());
         // a.lm.dprel + a.form
-        feats.add(argLm.getDeprel() + "_" + zhaoArg.getForm());
+        feats.add(argLm.getPdeprel() + "_" + zhaoArg.getForm());
         // a.lm_1.lemma
-        feats.add(getZhaoObject(zhaoArgLast.getFarLeftChild()).getLemma());
+        feats.add(getZhaoObject(zhaoArgLast.getFarLeftChild()).getPlemma());
         // a.lmn.pos (n=0,1) 
-        feats.add(argLm.getPos());
-        feats.add(getZhaoObject(zhaoArgNext.getFarLeftChild()).getPos());
+        feats.add(argLm.getPpos());
+        feats.add(getZhaoObject(zhaoArgNext.getFarLeftChild()).getPpos());
         // a.noFarChildren.pos.bag + a.rm.form 
         ArrayList<Integer> noFarChildren = zhaoArg.getNoFarChildren();
         ArrayList<String> noFarChildrenPos = new ArrayList<String>();
         for (Integer i : noFarChildren) {
-            noFarChildrenPos.add(getZhaoObject(i).getPos()); 
+            noFarChildrenPos.add(getZhaoObject(i).getPpos()); 
         }
         ArrayList<String> argNoFarChildrenBag = bag(noFarChildrenPos);
         feat = buildString(argNoFarChildrenBag) + argRm.getForm();
         feats.add(feat);
         // a.pphead.lemma
-        feats.add(getZhaoObject(zhaoArg.getPhead()).getLemma());
+        feats.add(getZhaoObject(zhaoArg.getPhead()).getPlemma());
         // a.rm.dprel + a.form
-        feats.add(argRm.getDeprel() + "_" + zhaoArg.getForm());
+        feats.add(argRm.getPdeprel() + "_" + zhaoArg.getForm());
         // a.rm_1.form 
         feats.add(getZhaoObject(zhaoArgLast.getFarRightChild()).getForm());
         // a.rm.lemma
-        feats.add(argRm.getLemma());
+        feats.add(argRm.getPlemma());
         // a.rn.dprel + a.form 
-        feats.add(argRn.getDeprel() + "_" + zhaoArg.getForm());        
+        feats.add(argRn.getPdeprel() + "_" + zhaoArg.getForm());        
     }
     
     private void getThirdThirdSupArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
@@ -688,20 +683,20 @@ public class SentFeatureExtractor {
             ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
         String feat;
         // a.lowSupportVerb.lemma 
-        feats.add(getZhaoObject(zhaoArg.getArgLowSupport()).getLemma());
+        feats.add(getZhaoObject(zhaoArg.getArgLowSupport()).getPlemma());
         // a.lemma + a.h.form 
-        feats.add(zhaoArg.getLemma() + "_" + zhaoArgParent.getForm());
+        feats.add(zhaoArg.getPlemma() + "_" + zhaoArgParent.getForm());
         // a.lemma + a.pphead.form 
-        feats.add(zhaoArg.getLemma() + "_" + getZhaoObject(zhaoArg.getPhead()).getForm());
+        feats.add(zhaoArg.getPlemma() + "_" + getZhaoObject(zhaoArg.getPhead()).getForm());
         // a1.lemma
-        feats.add(zhaoArgNext.getLemma());
+        feats.add(zhaoArgNext.getPlemma());
         // a.pos + a.children.dprel.bag
         ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
         for (ZhaoObject child : argChildrenTokens) {
-            argChildrenDeprel.add(child.getDeprel());
+            argChildrenDeprel.add(child.getPdeprel());
         }
         ArrayList<String> argChildrenDeprelBag = bag(argChildrenDeprel);
-        feat = zhaoArg.getPos() + buildString(argChildrenDeprelBag);
+        feat = zhaoArg.getPpos() + buildString(argChildrenDeprelBag);
         feats.add(feat);
     }
 
@@ -710,36 +705,36 @@ public class SentFeatureExtractor {
     private void addZhaoSupervisedPredFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast, ZhaoObject zhaoPredNext, ArrayList<ZhaoObject> predChildrenTokens, ArrayList<String> feats) {
         // ------- Predicate features (supervised) ------- 
         // p.currentSense + p.lemma 
-        feats.add(zhaoPred.getPred() + "_" + zhaoPred.getLemma());
+        feats.add(zhaoPred.getPred() + "_" + zhaoPred.getPlemma());
         // p.currentSense + p.pos 
-        feats.add(zhaoPred.getPred() + "_" + zhaoPred.getPos());
+        feats.add(zhaoPred.getPred() + "_" + zhaoPred.getPpos());
         // p.currentSense + a.pos 
-        feats.add(zhaoPred.getPred() + "_" + zhaoArg.getPos());
+        feats.add(zhaoPred.getPred() + "_" + zhaoArg.getPpos());
         // p_1.FEAT1
-        feats.add(zhaoPredLast.getFeat().get(0));
+        feats.add(zhaoPredLast.getPfeat().get(0));
         // p.FEAT2
-        feats.add(zhaoPred.getFeat().get(1));
+        feats.add(zhaoPred.getPfeat().get(1));
         // p1.FEAT3
-        feats.add(zhaoPredNext.getFeat().get(2));
+        feats.add(zhaoPredNext.getPfeat().get(2));
         // NOTE:  This is supposed to be p.semrm.semdprel  What is this?  
         // I'm not sure.  Here's just a guess.
-        feats.add(getZhaoObject(zhaoPred.getFarRightChild()).getDeprel());
+        feats.add(getZhaoObject(zhaoPred.getFarRightChild()).getPdeprel());
         // p.lm.dprel        
-        feats.add(getZhaoObject(zhaoPred.getFarLeftChild()).getDeprel());
+        feats.add(getZhaoObject(zhaoPred.getFarLeftChild()).getPdeprel());
         // p.form + p.children.dprel.bag 
         ArrayList<String> predChildrenDeprel = new ArrayList<String>();
         for (ZhaoObject child : predChildrenTokens) {
-            predChildrenDeprel.add(child.getDeprel());
+            predChildrenDeprel.add(child.getPdeprel());
         }
         String bagDepPredChildren = buildString(bag(predChildrenDeprel));
         feats.add(zhaoPred.getForm() + "_" + bagDepPredChildren);
         // p.lemma_n (n = -1, 0) 
-        feats.add(zhaoPredLast.getLemma());
-        feats.add(zhaoPred.getLemma());
+        feats.add(zhaoPredLast.getPlemma());
+        feats.add(zhaoPred.getPlemma());
         // p.lemma + p.lemma1
-        feats.add(zhaoPred.getLemma() + "_" + zhaoPredNext.getLemma());
+        feats.add(zhaoPred.getPlemma() + "_" + zhaoPredNext.getPlemma());
         // p.pos + p.children.dprel.bag 
-        feats.add(zhaoPred.getPos() + "_" + bagDepPredChildren);
+        feats.add(zhaoPred.getPpos() + "_" + bagDepPredChildren);
     }
 
     public ArrayList<String> bag(ArrayList<String> elements) {
