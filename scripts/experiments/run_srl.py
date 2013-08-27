@@ -240,8 +240,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         all.set("train", "", incl_name=False)
         all.set("test", "", incl_name=False)
         # Full length test sentences.
-        #setup.update(trainMaxSentenceLength=20)
-        #setup.update(trainMaxNumSentences=3000)
+        #all.update(trainMaxSentenceLength=20)
+        #all.update(trainMaxNumSentences=3000)
         all.update(
             featureHashMod=-1,
             alwaysIncludeLinkVars=True,
