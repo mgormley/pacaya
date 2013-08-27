@@ -63,6 +63,7 @@ public class ZhaoObject extends CoNLL09Token {
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         this.word = sent.get(idx);
+        fixPlemmaNull();
         setPfeat(idx);
         setRootPath();
         setParent();
@@ -121,12 +122,19 @@ public class ZhaoObject extends CoNLL09Token {
     
     
     // ------------------------ Getters and Setters ------------------------ //
-       
+    
+    public void fixPlemmaNull() {
+        String origPlemma = word.getPlemma();
+        if (origPlemma == null) {
+            word.setPlemma("_");
+        } 
+    }
+
     @Override
     public List<String> getPfeat() {
         return feat;
     }
-    
+        
     public void setPfeat(Integer idx) {
         feat = new ArrayList<String>(6);
         if (idx == -1) {
@@ -134,7 +142,8 @@ public class ZhaoObject extends CoNLL09Token {
                 feat.add(NO_MORPH);
             }            
         } else {
-            List<String> coNLLFeats = sent.get(idx).getPfeat();
+            // A little wonky calling this, since it's overridden right above.
+            List<String> coNLLFeats = word.getPfeat();
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
                     feat.add(NO_MORPH);
