@@ -214,7 +214,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             else:
                                 base_work_mem_megs = 5*1024
                         else:
-                            base_work_mem_megs = 50 * 1024
+                            if useProjDepTreeFactor:
+                                base_work_mem_megs = 200 * 1024
+                            else:
+                                base_work_mem_megs = 50 * 1024
                         exp += SrlExpParams(work_mem_megs=base_work_mem_megs)
                     exps.append(exp)
         ## Drop all but 3 experiments for a fast run.
