@@ -271,7 +271,7 @@ public class SrlFactorGraph extends FactorGraph {
                 String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmas.get(i);
                 // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
                 if (psMap.get(lemmas.get(i)) == null) {
-                    templateKey = CorpusStatistics.UNKNOWN_SENSE;
+                    templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
                 }
                 addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey));
             }
