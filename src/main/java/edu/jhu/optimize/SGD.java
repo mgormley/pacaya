@@ -23,7 +23,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         /** The desired learning rate after (maxIterations / 2) iterations. */
         public double lrAtMidpoint = 0.1;
         /** The number of passes over the dataset to perform. */
-        public int numPasses = 10;
+        public double numPasses = 10;
         /** The batch size to use at each step. */
         public int batchSize = 15;
         public SGDPrm() { } 

@@ -170,12 +170,16 @@ public class SrlRunner {
     public static boolean removeDeprel = false;
 
     // Options for training.
-    @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
-    public static int maxLbfgsIterations = 1000;
     @Opt(hasArg=true, description="The optimization method to use for training.")
     public static Optimizer optimizer = Optimizer.LBFGS;
     @Opt(hasArg=true, description="The variance for the L2 regularizer.")
     public static double l2variance = 1.0;
+    @Opt(hasArg=true, description="Max iterations for L-BFGS training.")
+    public static int maxLbfgsIterations = 1000;
+    @Opt(hasArg=true, description="Number of effective passes over the dataset for SGD.")
+    public static double sgdNumPasses = 30;
+    @Opt(hasArg=true, description="The batch size to use at each step of SGD.")
+    public static int sgdBatchSize = 15;
 
     public SrlRunner() {
     }
@@ -440,8 +444,8 @@ public class SrlRunner {
     
     private static BatchMaximizer getBatchMaximizer() {
         SGDPrm optPrm = new SGDPrm();
-        optPrm.numPasses = 30;
-        optPrm.batchSize = 15;
+        optPrm.numPasses = sgdNumPasses;
+        optPrm.batchSize = sgdBatchSize;
         optPrm.lrAtMidpoint = 0.05;
         return new SGD(optPrm);
     }
