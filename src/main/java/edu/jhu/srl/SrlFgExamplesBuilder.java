@@ -11,6 +11,7 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.Feature;
@@ -29,6 +30,7 @@ import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
+import edu.jhu.util.Timer;
 
 /**
  * Factory for FgExamples.
@@ -57,6 +59,8 @@ public class SrlFgExamplesBuilder {
     private FeatureTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
+    private Timer fgTimer = new Timer();
+
     
     public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
@@ -87,6 +91,7 @@ public class SrlFgExamplesBuilder {
                 log.debug("Preprocessed " + i + " examples...");
             }
             
+            fgTimer.start();
             // Precompute a few things.
             SrlGraph srlGraph = sent.getSrlGraph();
             
@@ -100,7 +105,8 @@ public class SrlFgExamplesBuilder {
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
             ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
-                        
+            fgTimer.stop();            
+            
             // Create the example solely to count the features.
             new FgExample(sfg, trainConfig, featExtractor, counter);
         }
@@ -127,9 +133,8 @@ public class SrlFgExamplesBuilder {
 
     public FgExamples getData(List<CoNLL09Sentence> sents) {
         preprocess(sents);
-
+        
         Alphabet<String> obsAlphabet = new Alphabet<String>();
-        log.info("Not starting threading stuff.");
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
             CoNLL09Sentence sent = sents.get(i);
@@ -137,6 +142,7 @@ public class SrlFgExamplesBuilder {
                 log.debug("Built " + i + " examples...");
             }
             
+            fgTimer.start();
             // Precompute a few things.
             SrlGraph srlGraph = sent.getSrlGraph();
             
@@ -150,10 +156,15 @@ public class SrlFgExamplesBuilder {
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
             ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
-                        
+            fgTimer.stop();            
+            
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
         }
+        
+        log.info("Time (ms) to construct factor graph: " + fgTimer.totMs());
+        log.info("Time (ms) to clamp factor graphs: " + data.getTotMsFgClampTimer());
+        log.info("Time (ms) to cache features: " + data.getTotMsFeatCacheTimer());
         
         log.info("Number of observation function features: " + obsAlphabet.size());
         
@@ -162,12 +173,10 @@ public class SrlFgExamplesBuilder {
     }
     
     private static Set<Integer> getKnownPreds(SrlGraph srlGraph) {
-        List<SrlEdge> srlEdges = srlGraph.getEdges();
         Set<Integer> knownPreds = new HashSet<Integer>();
         // All the "Y"s
-        for (SrlEdge e : srlEdges) {
-            Integer a = e.getPred().getPosition();
-            knownPreds.add(a);
+        for (SrlPred pred : srlGraph.getPreds()) {
+            knownPreds.add(pred.getPosition());
         }
         return knownPreds;
     }

@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
 
 /**
@@ -34,7 +35,9 @@ public class FgExample {
     /** Feature extractor on the observation variables only (i.e. the values of the observation functions). */
     private ObsFeatureExtractor featExtractor;
 
-
+    public Timer fgClampTimer = new Timer(); 
+    public Timer featCacheTimer = new Timer(); 
+    
     /**
      * Constructs a train or test example for a Factor Graph.
      * 
@@ -47,7 +50,9 @@ public class FgExample {
     public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FeatureTemplateList fts) {
         this.fg = fg;
         this.goldConfig = goldConfig;
-        
+
+        fgClampTimer.start();
+                        
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
         fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));        
@@ -67,9 +72,16 @@ public class FgExample {
         // number number of variable configurations.
         fts.update(fgLatPred);
         
+        fgClampTimer.stop();
+
+        featCacheTimer.start();
+
         this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
         this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
         cacheObsFeats();
+        
+        featCacheTimer.stop();
+
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {

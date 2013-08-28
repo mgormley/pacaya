@@ -82,5 +82,21 @@ public class FgExamples implements Iterable<FgExample> {
     public FeatureTemplateList getTemplates() {
         return fts;
     }
-    
+
+    public double getTotMsFgClampTimer() {
+        double tot = 0;
+        for (int i=0; i<this.size(); i++) {
+            tot += this.get(i).fgClampTimer.totMs();
+        }
+        return tot;
+    }
+
+    public double getTotMsFeatCacheTimer() {
+        double tot = 0;
+        for (int i=0; i<this.size(); i++) {
+            tot += this.get(i).featCacheTimer.totMs();
+        }
+        return tot;
+    }
+
 }
