@@ -6,12 +6,11 @@ import java.util.List;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.util.Pair;
 
-public class ZhaoObject extends CoNLL09Token {
+public class ZhaoObject {
     
     /* Feature constructor based on CoNLL 09:
      * "Multilingual Dependency Learning:
@@ -21,11 +20,10 @@ public class ZhaoObject extends CoNLL09Token {
     private static final String NO_MORPH = "NO_MORPH"; 
 
     private CorpusStatistics cs;
-    private CoNLL09Sentence sent;
-    private int idx;
+    private SimpleAnnoSentence sent;
+    private int idx = -1;
     private int parent;
     private List<String> feat;
-    private CoNLL09Token word;
     private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
@@ -45,9 +43,8 @@ public class ZhaoObject extends CoNLL09Token {
     private ArrayList<Integer> noFarChildren;
     
     
-    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs) {
-        super(sent.get(idx));
-        /* Call CoNLL09Token so that following ZHANG we can get Word Property features.
+    public ZhaoObject(int idx, int[] parents, SimpleAnnoSentence sent, CorpusStatistics cs) {
+        /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
          * 2. lemma, 
@@ -62,10 +59,8 @@ public class ZhaoObject extends CoNLL09Token {
         this.parents = parents;
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
-        this.word = sent.get(idx);
-        setFeat(idx);
+        setFeat();
         setRootPath();
-        setParent();
         setChildren();
         /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
          * and high(low) support verb or noun.
@@ -82,7 +77,6 @@ public class ZhaoObject extends CoNLL09Token {
     }
 
     public ZhaoObject(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg, int[] parents) {
-        super(zhaoPred);
         this.parents = parents;
         this.linePath = new ArrayList<Integer>();
         this.dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
@@ -96,12 +90,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
         
     public ZhaoObject(String input) {
-        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
-        String pos, String ppos, List<String> feat, List<String> pfeat,
-        int head, int phead, String deprel, String pdeprel,
-        boolean fillpred, String pred, List<String> apreds) */
-        super(-1, "FORM_" + input, "LEMMA_" + input, "PLEMMA_" + input, "POS_" + input, "PPOS_" + input, null, null, -2, -2, "DEPREL_" + input, "PDEPREL_" + input, false, "PRED_" + input, null);
-        setFeat(-1);
+        setFeat();
         this.rootPath = new ArrayList<Pair<Integer, Dir>>();
         this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
         this.parent = -1;
@@ -122,19 +111,18 @@ public class ZhaoObject extends CoNLL09Token {
     
     // ------------------------ Getters and Setters ------------------------ //
        
-    @Override
     public List<String> getFeat() {
         return feat;
     }
     
-    public void setFeat(Integer idx) {
+    public void setFeat() {
         feat = new ArrayList<String>(6);
         if (idx == -1) {
             for (int i = 0; i < 6; i++) {
                 feat.add(NO_MORPH);
             }            
         } else {
-            List<String> coNLLFeats = sent.get(idx).getFeat();
+            List<String> coNLLFeats = sent.getFeats(idx);
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
                     feat.add(NO_MORPH);
@@ -148,24 +136,24 @@ public class ZhaoObject extends CoNLL09Token {
         }
     }
     
+    public String getForm() {
+        return sent.getWord(idx);
+    }
+    
+    public String getLemma() {
+        return sent.getLemma(idx);
+    }
+    
+    public String getPos() {
+        return sent.getPosTag(idx);
+    }
+    
     public List<Pair<Integer, Dir>> getRootPath() {
         return rootPath;
     }
     
     private void setRootPath() {
         this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
-    }
-
-    public int getParent() {
-        return parent;
-    }
-    
-    public void setParent() {
-        if (cs.prm.useGoldSyntax) {
-            this.parent = word.getHead() - 1;
-        } else {
-            this.parent = word.getPhead() - 1;
-        }
     }
     
     public ArrayList<Integer> getChildren() {
@@ -270,12 +258,7 @@ public class ZhaoObject extends CoNLL09Token {
             if (i == -1) {
                 break;
             }
-            
-            if (cs.prm.useGoldSyntax) {
-                parentPos = sent.get(i).getPos();
-            } else {
-                parentPos = sent.get(i).getPpos();
-            }
+            parentPos = sent.getPosTag(i);
             if (parentPos.equals(argSupport)) {
                 if (!haveArgLow) {
                     haveArgLow = true;
@@ -372,6 +355,18 @@ public class ZhaoObject extends CoNLL09Token {
             startIdx++;
         }
         
+    }
+
+    public String getDeprel() {
+        return sent.getDeprel(idx);
+    }
+
+    public int getParent() {
+        return sent.getParent(idx);
+    }
+
+    public String getSense() {
+        return sent.getSrlGraph().getPredAt(idx).getLabel();
     }
 
 }

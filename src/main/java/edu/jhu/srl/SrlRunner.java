@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -261,76 +262,56 @@ public class SrlRunner {
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
-        if (dataType == DatasetType.CONLL_2009){
+        List<SimpleAnnoSentence> sents;
+        int numTokens = 0;
+        List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
+        if (dataType == DatasetType.CONLL_2009) {
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
-            List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
-            int numTokens = 0;
+            sents = new ArrayList<SimpleAnnoSentence>();
             for (CoNLL09Sentence sent : reader) {
                 if (sents.size() >= maxNumSentences) {
                     break;
                 }
                 if (sent.size() <= maxSentenceLength) {
-                    sents.add(sent);
+                    sent = mungeData(sent);
+                    conllSents.add(sent);
+                    sents.add(sent.toSimpleAnnoSentence(cs));
                     numTokens += sent.size();
                 }
             }
             reader.close();
-            
-            if (normalizeRoleNames) {
-                log.info("Normalizing role names");
-                CorpusStatistics.normalizeRoleNames(sents);
-            }
-            
-            log.info("Num " + name + " sentences: " + sents.size());   
-            log.info("Num " + name + " tokens: " + numTokens);
-
-            if (goldFile != null) {
-                log.info("Writing gold data to file: " + goldFile);
-                CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-                for (CoNLL09Sentence sent : sents) {
-                    cw.write(sent);
-                }
-                cw.close();
-            }
-            
-            if (useProjDepTreeFactor) {
-                log.info("Removing all dependency trees from the CoNLL data");
-                for (CoNLL09Sentence sent : sents) {
-                    for (CoNLL09Token tok : sent) {
-                        tok.setPhead(0);
-                        tok.setHead(0);
-                        tok.setDeprel("_");
-                        tok.setPdeprel("_");
-                    }
-                }
-            } else if (removeDeprel) {
-                log.info("Removing syntactic dependency labels from the CoNLL data");                
-                for (CoNLL09Sentence sent : sents) {
-                    for (CoNLL09Token tok : sent) {
-                        tok.setDeprel("_");
-                        tok.setPdeprel("_");
-                    }
-                }
-            }
-            
-            if (!cs.isInitialized()) {
-                log.info("Initializing corpus statistics.");
-                cs.init(sents);
-            }
-            
-            log.info("Building factor graphs and extracting features.");
-            SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            data = builder.getData(sents);     
-
-            // Special case: we somehow need to be able to create test examples
-            // where we've never seen the predicate.
-            if (prm.fgPrm.predictSense) {
-                Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-                fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), CorpusStatistics.UNKNOWN_SENSE));
-            }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
+        }
+        
+        log.info("Num " + name + " sentences: " + sents.size());   
+        log.info("Num " + name + " tokens: " + numTokens);
+
+        if (goldFile != null) {
+            log.info("Writing gold data to file: " + goldFile);
+            CoNLL09Writer cw = new CoNLL09Writer(goldFile);
+            for (CoNLL09Sentence sent : conllSents) {
+                cw.write(sent);
+            }
+            cw.close();
+        }
+
+
+        if (!cs.isInitialized()) {
+            log.info("Initializing corpus statistics.");
+            cs.init(conllSents);
+        }
+
+        log.info("Building factor graphs and extracting features.");
+        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        data = builder.getData(sents);     
+
+        // Special case: we somehow need to be able to create test examples
+        // where we've never seen the predicate.
+        if (prm.fgPrm.predictSense) {
+            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
+            fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), CorpusStatistics.UNKNOWN_SENSE));
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
@@ -339,6 +320,21 @@ public class SrlRunner {
         log.info(String.format("Num feature templates: %d", data.getTemplates().size()));
         log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
         return data;
+    }
+
+    private CoNLL09Sentence mungeData(CoNLL09Sentence sent) {
+        if (normalizeRoleNames) {
+            log.info("Normalizing role names");
+            sent.normalizeRoleNames();
+        }
+        if (useProjDepTreeFactor) {
+            log.info("Removing all dependency trees from the CoNLL data");
+            sent.removeDepTrees();
+        } else if (removeDeprel) {
+            log.info("Removing syntactic dependency labels from the CoNLL data");  
+            sent.removeDepLabels();
+        }
+        return sent;
     }
 
     private void eval(FgExamples data, String name, List<VarConfig> predictions) {

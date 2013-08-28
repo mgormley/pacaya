@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -64,16 +65,13 @@ public class SrlFgExamplesBuilder {
         this.cs = cs;
     }
 
-    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
-        throw new RuntimeException("Not implemented");
-    }
     
     public FgExamples getData(CoNLL09FileReader reader) {
-        List<CoNLL09Sentence> sents = reader.readAll();
+        List<SimpleAnnoSentence> sents = reader.readAll(cs);
         return getData(sents);
     }
     
-    public void preprocess(List<CoNLL09Sentence> sents) {
+    public void preprocess(List<SimpleAnnoSentence> sents) {
         if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {
             // Skip this preprocessing step since it will have no effect.
             return;
@@ -82,7 +80,7 @@ public class SrlFgExamplesBuilder {
         // Use counting alphabets in this ftl.
         FeatureTemplateList counter = new FeatureTemplateList(true);
         for (int i=0; i<sents.size(); i++) {
-            CoNLL09Sentence sent = sents.get(i);
+            SimpleAnnoSentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
                 log.debug("Preprocessed " + i + " examples...");
             }
@@ -125,14 +123,14 @@ public class SrlFgExamplesBuilder {
         }
     }
 
-    public FgExamples getData(List<CoNLL09Sentence> sents) {
+    public FgExamples getData(List<SimpleAnnoSentence> sents) {
         preprocess(sents);
 
         Alphabet<String> obsAlphabet = new Alphabet<String>();
         log.info("Not starting threading stuff.");
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
-            CoNLL09Sentence sent = sents.get(i);
+            SimpleAnnoSentence sent = sents.get(i);
             if (i % 1000 == 0 && i > 0) {
                 log.debug("Built " + i + " examples...");
             }
@@ -172,13 +170,13 @@ public class SrlFgExamplesBuilder {
         return knownPreds;
     }
 
-    private VarConfig getTrainAssignment(CoNLL09Sentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
+    private VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
         VarConfig vc = new VarConfig();
 
         // Add all the training data assignments to the link variables, if they are not latent.
         //
         // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
-        int[] parents = cs.prm.useGoldSyntax ? sent.getParentsFromHead() : sent.getParentsFromPhead();
+        int[] parents = sent.getParents();
         for (int i=-1; i<sent.size(); i++) {
             for (int j=0; j<sent.size(); j++) {
                 if (j != i && sfg.getLinkVar(i, j) != null) {
@@ -229,7 +227,9 @@ public class SrlFgExamplesBuilder {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                if (!tryPut(vc, senseVar, sent.get(i).getPred())) {
+                // NOTE:  IS THIS RIGHT ?
+                BLAH BLAH
+                if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
                     if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
                         // This is a hack to ensure that something is added at test time.
                         vc.put(senseVar, 0);

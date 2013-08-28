@@ -51,7 +51,6 @@ public class CorpusStatistics implements Serializable {
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(CorpusStatistics.class);
     
-    public static final Pattern dash = Pattern.compile("-");
     public static final String UNKNOWN_ROLE = "argUNK";
     public static final String UNKNOWN_SENSE = "senseUNK";
     public static List<String> SENSES_FOR_UNK_PRED = Utilities.getList(UNKNOWN_SENSE); 
@@ -154,29 +153,6 @@ public class CorpusStatistics implements Serializable {
         log.info("Num known predicates: " + predSenseListMap.size());
     }
 
-    // ------------------- Data Munging ------------------- //
-
-    // TODO: These methods should move elsewhere.
-    public static void normalizeRoleNames(List<CoNLL09Sentence> sents) {
-        for (CoNLL09Sentence sent : sents) {
-            for (CoNLL09Token tok : sent) {
-                ArrayList<String> apreds = new ArrayList<String>();
-                for (String apred : tok.getApreds()) {
-                    if ("_".equals(apred)) {
-                        apreds.add(apred);
-                    } else { 
-                        apreds.add(normalizeRoleName(apred));
-                    }
-                }
-                tok.setApreds(apreds);
-            }
-        }
-    }
-    
-    private static String normalizeRoleName(String role) {
-        String[] splitRole = dash.split(role);
-        return splitRole[0].toLowerCase();
-    }
 
     // ------------------- private ------------------- //
 

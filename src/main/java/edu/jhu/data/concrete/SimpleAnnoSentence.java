@@ -6,6 +6,7 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
+import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.util.Pair;
 
 /**
@@ -23,6 +24,9 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
+    private ArrayList<List<String>> feats;
+    private List<String> deprels;
+
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
      * of the parent of the word at index i. The Wall node has index -1. If a
@@ -30,6 +34,9 @@ public class SimpleAnnoSentence {
      * with a head).
      */
     private int[] parents;
+    private SrlGraph srlGraph;
+
+
     
     // TODO: add constituency parse as NaryTree<String>
     
@@ -53,12 +60,30 @@ public class SimpleAnnoSentence {
         return lemmas.get(i);
     }
     
+    public int getParent(int i) {
+        return parents[i];
+    }
+
+    public List<String> getFeats(int i) {
+        return feats.get(i);
+    }
+
+    public String getDeprel(int i) {
+        return deprels.get(i);
+    }
+    
     /**
      * Gets a list of words corresponding to a token span.
      */
     public List<String> getWords(Span span) {
         return getSpan(words, span);
     }
+
+    
+    public List<Integer> getParents(Span span) {
+        return getSpan(parents, span);
+    }
+       
 
     /**
      * Gets a list of POS tags corresponding to a token span.
@@ -142,6 +167,16 @@ public class SimpleAnnoSentence {
         return list;
     }
 
+    private static List<Integer> getSpan(int[] parents, Span span) {
+        assert (span != null);
+        List<Integer> list = new ArrayList<Integer>();
+        for (int i = span.start(); i < span.end(); i++) {
+            list.add(i);
+        }
+        return list;
+    }
+
+    
     // TODO: Consider moving this to LabelSequence.
     private static String getSpanStr(List<String> seq, Span span) {
         assert (span != null);
@@ -202,13 +237,36 @@ public class SimpleAnnoSentence {
     public void setPosTags(List<String> posTags) {
         this.posTags = posTags;
     }
-
+    
     public int[] getParents() {
         return parents;
     }
 
     public void setParents(int[] parents) {
         this.parents = parents;
+    }
+
+    public Integer size() {
+        return words.size();
+    }
+
+
+    public SrlGraph getSrlGraph() {
+        return srlGraph;
+    }
+    
+    public void setSrlGraph(SrlGraph srlGraph) {
+        this.srlGraph = srlGraph;
+    }
+
+    
+    public void setFeats(ArrayList<List<String>> feats) {
+        this.feats = feats;
+    }
+    
+    
+    public void setDeprels(ArrayList<String> deprels) {
+        this.deprels = deprels;
     }
     
 }

@@ -20,7 +20,7 @@ import org.apache.commons.lang.StringUtils;
  * Columns: ID FORM LEMMA PLEMMA POS PPOS FEAT PFEAT HEAD PHEAD DEPREL PDEPREL
  * FILLPRED PRED APREDs
  * 
- * The P-columns (PLEMMA, PPOS, PFEAT, PHEAD and PDEPREL) are the autoamtically
+ * The P-columns (PLEMMA, PPOS, PFEAT, PHEAD and PDEPREL) are the automatically
  * predicted variants of the gold-standard LEMMA, POS, FEAT, HEAD and DEPREL
  * columns. They are produced by independently (or cross-)trained taggers and
  * parsers.
@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
  * ARGs. FILLPRED contains Y for lines where PRED is/should be filled.
  * 
  * @author mgormley
+ * @author mmitchell
  * 
  */
 public class CoNLL09Token {
