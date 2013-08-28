@@ -331,7 +331,7 @@ public class SrlRunner {
             // where we've never seen the predicate.
             if (prm.fgPrm.predictSense) {
                 Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-                fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), CorpusStatistics.UNKNOWN_SENSE));
+                fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
             }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);

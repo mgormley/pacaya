@@ -23,6 +23,8 @@ import edu.jhu.gm.VarSet;
  */
 public class SrlFactorGraph extends FactorGraph {
 
+    public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
+
     private static final Logger log = Logger.getLogger(SrlFactorGraph.class); 
 
     /**
@@ -271,7 +273,7 @@ public class SrlFactorGraph extends FactorGraph {
                 String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmas.get(i);
                 // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
                 if (psMap.get(lemmas.get(i)) == null) {
-                    templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
+                    templateKey = TEMPLATE_KEY_FOR_UNKNOWN_SENSE;
                 }
                 addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey));
             }
