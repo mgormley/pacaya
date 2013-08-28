@@ -235,7 +235,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                    modelOut="./model.binary.gz"
                    )
         all.set("timeoutSeconds", 8*60*60, incl_arg=False, incl_name=False)
-        all.set("work_mem_megs", 1*1024, incl_arg=False, incl_name=False)
+        all.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         all.set("dataset", "", incl_arg=False)
         all.set("train", "", incl_name=False)
         all.set("test", "", incl_name=False)
