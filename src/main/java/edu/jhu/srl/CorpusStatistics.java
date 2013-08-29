@@ -62,16 +62,10 @@ public class CorpusStatistics implements Serializable {
 
     public List<String> linkStateNames;
     public List<String> roleStateNames;
-    private Set<String> knownRoles = new HashSet<String>();
-    private Set<String> knownLinks = new HashSet<String>();
     // Mapping from predicate form to the set of predicate senses.
     public Map<String,List<String>> predSenseListMap = new HashMap<String,List<String>>();
-    private Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
 
     public int maxSentLength = 0;
-
-    private Map<String, MutableInt> words = new HashMap<String, MutableInt>();
-    private Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
 
     public SrlBerkeleySignatureBuilder sig;
     public Normalizer normalize;
@@ -87,6 +81,12 @@ public class CorpusStatistics implements Serializable {
     }
 
     public void init(Iterable<CoNLL09Sentence> cr) {
+        Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
+        Set<String> knownRoles = new HashSet<String>();
+        Set<String> knownLinks = new HashSet<String>();
+        Map<String, MutableInt> words = new HashMap<String, MutableInt>();
+        Map<String, MutableInt> unks = new HashMap<String, MutableInt>();
+        
         initialized = true;
                 
         // Store the variable states we have seen before so
@@ -208,25 +208,12 @@ public class CorpusStatistics implements Serializable {
     public String toString() {
         return "CorpusStatistics [\n     knownWords=" + knownWords + ",\n     knownUnks=" + knownUnks
                 + ",\n     knownPostags=" + knownPostags + ",\n     linkStateNames=" + linkStateNames
-                + ",\n     roleStateNames=" + roleStateNames + ",\n     knownRoles=" + knownRoles
-                + ",\n     knownLinks=" + knownLinks + ",\n     maxSentLength=" + maxSentLength + ",\n     words="
-                + words + ",\n     unks=" + unks + "]";
+                + ",\n     roleStateNames=" + roleStateNames 
+                + ",\n     maxSentLength=" + maxSentLength + "]";
     }
 
     public boolean isInitialized() {
         return initialized;
     }
 
-    /**
-     * Gets the set of senses for the given predicate.
-     */
-    public List<String> getSenseStateNames(String predicate) {
-        Set<String> senses = predSenseSetMap.get(predicate);
-        if (senses == null) {
-            return SENSES_FOR_UNK_PRED;
-        } else {
-            return new ArrayList<String>(senses);
-        }
-    }
-    
 }
