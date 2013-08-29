@@ -14,7 +14,10 @@ public interface Factor {
     /** Gets an object which uniquely identifies the feature template for this factor. */
     Object getTemplateKey();
     
-    // TODO:
-    // void updateFactor(FgModel model);
+    /** Gets the template ID or -1 if not set. */
+    int getTemplateId();
+    
+    /** Sets the template ID. */
+    void setTemplateId(int templateId);
     
 }

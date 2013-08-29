@@ -105,11 +105,18 @@ public class FeatureTemplateList implements Serializable {
     }
 
     public FeatureTemplate getTemplate(Factor f) {
-        return getTemplateByKey(f.getTemplateKey());
+        return fts.get(getTemplateId(f));
     }
     
     public int getTemplateId(Factor f) {
-        return getTemplateIdByKey(f.getTemplateKey());
+        // Try to get the cached id, and only lookup the id in the hash map if it's not there.
+        if (f.getTemplateId() != -1) {
+            return f.getTemplateId();
+        } else {
+            int id = getTemplateIdByKey(f.getTemplateKey());
+            f.setTemplateId(id);
+            return id;
+        }
     }
 
     public FeatureTemplate getTemplateByKey(Object templateKey) {
