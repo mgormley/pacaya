@@ -15,6 +15,9 @@ public class Feature implements Serializable {
     private boolean isBias = false;
     
     public Feature(String name) {
+        if (name == null) {
+            throw new IllegalStateException("Feature names must be non-null.");
+        }
         this.name = name;
     }
 
@@ -25,10 +28,7 @@ public class Feature implements Serializable {
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+        return name.hashCode();
     }
 
     @Override
