@@ -21,4 +21,7 @@ public interface ObsFeatureExtractor {
      */
     void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FeatureTemplateList fts);
 
+    /** Signals the feature extractor that it can clear any cached features. */
+    void clear();
+    
 }

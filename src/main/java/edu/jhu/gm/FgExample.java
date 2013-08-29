@@ -48,6 +48,7 @@ public class FgExample {
      *            observation function).
      */
     public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FeatureTemplateList fts) {
+        checkGoldConfig(fg, goldConfig);
         this.fg = fg;
         this.goldConfig = goldConfig;
 
@@ -66,7 +67,6 @@ public class FgExample {
 
         assert (fg.getNumFactors() == fgLatPred.getNumFactors());
         assert (fg.getNumFactors() == fgLat.getNumFactors());
-        checkGoldConfig(fg, goldConfig);
 
         // Add any new feature templates ensuring that they have the right
         // number number of variable configurations.
@@ -79,9 +79,9 @@ public class FgExample {
         this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
         this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
         cacheObsFeats();
+        this.featExtractor.clear();
         
         featCacheTimer.stop();
-
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {

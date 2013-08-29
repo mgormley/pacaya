@@ -18,7 +18,8 @@ public class ObsFeatureCache implements ObsFeatureExtractor {
             Factor f = fg.getFactor(a);
             if (f instanceof GlobalFactor) {
                 continue;
-            } else if (f instanceof DenseFactor) {
+            } else if (f instanceof ExpFamFactor) {
+                // TODO: maybe call calcObsFeatureVector(a); and don't store featExtractor.
                 continue;
             } else {
                 throw new UnsupportedFactorTypeException(f);
@@ -56,6 +57,11 @@ public class ObsFeatureCache implements ObsFeatureExtractor {
             sb.append("\n");
         }
         return sb.toString();
+    }
+
+    @Override
+    public void clear() {
+        featExtractor = null;
     }
     
 }

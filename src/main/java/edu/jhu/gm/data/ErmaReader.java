@@ -371,6 +371,11 @@ public class ErmaReader {
                 FeatureTemplateList fts) {
             // Do nothing.
         }
+
+        @Override
+        public void clear() {
+            // Do nothing.
+        }
     }
     
 }

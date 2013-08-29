@@ -111,6 +111,9 @@ public class CrfObjectiveTest {
                                 VarConfig goldConfig, FeatureTemplateList fts) {             
                             // Do nothing.               
                         }
+                        public void clear() {
+                            // Do nothing.
+                        }
                     };
                     data.add(new FgExample(fg, trainConfig, featExtractor, fts));
                 }

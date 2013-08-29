@@ -29,5 +29,10 @@ public abstract class SlowObsFeatureExtractor implements ObsFeatureExtractor {
         return calcObsFeatureVector(factorId, goldConfig.getSubset(VarSet.getVarsOfType(vars, VarType.OBSERVED)));
     }
     
+    @Override
+    public void clear() {
+        // Do nothing.
+    }
+    
     public abstract FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig);
 }

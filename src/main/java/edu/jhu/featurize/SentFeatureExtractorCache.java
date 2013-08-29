@@ -28,9 +28,7 @@ public class SentFeatureExtractorCache {
     
     public SentFeatureExtractorCache(SentFeatureExtractor sentFeatExt) {
         this.sentFeatExt = sentFeatExt;
-        obsFeatsSolo = new ArrayList[sentFeatExt.getSentSize()];
-        obsFeatsPair = new ArrayList[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
-        obsSenseSolo = new ArrayList[sentFeatExt.getSentSize()];
+        clear();
     }
     
     public ArrayList<String> fastGetObsFeats(int child) {
@@ -55,6 +53,12 @@ public class SentFeatureExtractorCache {
             obsSenseSolo[child] = sentFeatExt.createSenseFeatureSet(child);
         }
         return obsSenseSolo[child];
+    }
+
+    public void clear() {
+        obsFeatsSolo = new ArrayList[sentFeatExt.getSentSize()];
+        obsFeatsPair = new ArrayList[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
+        obsSenseSolo = new ArrayList[sentFeatExt.getSentSize()];
     }
 
     

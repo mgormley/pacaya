@@ -190,5 +190,10 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
         }
         return hash;
     }
+
+    @Override
+    public void clear() {
+        sentFeatExt.clear();
+    }
     
 }
