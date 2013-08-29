@@ -21,9 +21,10 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
         boolean added;
         boolean marked;
         public Node() {
+            // TODO: These two array lists consume a lot of memory.
+            inEdges = new ArrayList<E>(0);
+            outEdges = new ArrayList<E>(0);
             added = false;
-            inEdges = new ArrayList<E>();
-            outEdges = new ArrayList<E>();
             marked = false;
         }
         /** Gets the edges from another node to this one. */
