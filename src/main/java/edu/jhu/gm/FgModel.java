@@ -165,25 +165,16 @@ public class FgModel implements Serializable {
     
     public void updateModelFromDoubles(double[] inParams) {
         assert (numParams == inParams.length);
-        int t = 0; 
-        int c = 0;
-        int k = -1;
-        for (int i=0; i<inParams.length; i++) {
-            // Increment t,c,k indices.
-            do {
-                k++;
-                if (k >= params[t][c].length) {
-                    k = 0;
-                    c++;
+        int i=0;
+        for (int t=0; t<params.length; t++) {
+            for (int c = 0; c < params[t].length; c++) {
+                for (int k = 0; k < params[t][c].length; k++) {
+                    if (included[t][c][k]) {
+                        // Update the model.
+                        params[t][c][k] = inParams[i++];
+                    }
                 }
-                if (c >= params[t].length) {
-                    c = 0;
-                    t++;
-                }
-            } while(!included[t][c][k]);
-            
-            // Update the model.
-            params[t][c][k] = inParams[i];
+            }
         }
     }
     
@@ -211,6 +202,19 @@ public class FgModel implements Serializable {
     public void addIfParamExists(int ft, int config, int feat, double addend) {
         if (included[ft][config][feat]) {
             params[ft][config][feat] += addend;
+        }
+    }
+
+    public void addIfParamExists(int t, int c, FeatureVector fv, double multiplier) {
+        boolean[] incl = included[t][c];
+        double[] theta = params[t][c];
+        int[] fvInd = fv.getInternalIndices();
+        double[] fvVal = fv.getInternalValues();
+        for (int i=0; i<fvInd.length; i++) {
+            int f = fvInd[i];
+            if (incl[f]) {
+                theta[f] += multiplier * fvVal[i];
+            }
         }
     }
     
@@ -308,6 +312,6 @@ public class FgModel implements Serializable {
                 }
             }
         }
-    }     
+    }
         
 }

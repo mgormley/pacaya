@@ -261,12 +261,14 @@ public class CrfObjective implements Function, BatchFunction {
                         // The configuration of all the latent/predicted variables,
                         // where the predicted variables (might) have been clamped.
                         int config = (iter != null) ? iter.next() : c;
-                        
-                        for (IntDoubleEntry entry : fv) {
-                            // Scale the feature counts by the marginal probability of the c'th configuration.
-                            // Update the gradient for each feature.
-                            gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
-                        }
+
+                        // Scale the feature counts by the marginal probability of the c'th configuration.
+                        // Update the gradient for each feature.
+                        gradient.addIfParamExists(fts.getTemplateId(f), config, fv, multiplier * prob);
+                        // OLD WAY: This was too slow.
+                        // for (IntDoubleEntry entry : fv) {
+                        //     gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
+                        // }
                     }
                     assert(iter == null || !iter.hasNext());
                 }
