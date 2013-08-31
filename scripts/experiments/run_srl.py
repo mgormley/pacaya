@@ -289,7 +289,6 @@ class ParamDefinitions():
                     # datasets.
                     continue
                 exp = parser_output + model
-                exp += SrlExpParams(work_mem_megs=self.get_srl_work_mem_megs(exp))
                 l.parse_and_srl.append(exp)
     
     def get_srl_work_mem_megs(self, exp):
@@ -317,8 +316,7 @@ class ParamDefinitions():
                     base_work_mem_megs = 50 * 1024
         else:
             base_work_mem_megs = 1.5 * 1024
-        return base_work_mem_megs
-    
+        return base_work_mem_megs    
     
 # ---------------------------- Experiment/Stage Classes ----------------------------------
 
@@ -405,6 +403,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for optimizer in l.optimizers:
                     # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                     exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_root_from_exps(exps)
         else:
@@ -417,6 +416,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             data_settings.update(normalizeRoleNames=normalizeRoleNames)
             for parser_srl in l.parse_and_srl:
                 exp = g.defaults + data_settings + parser_srl
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
         return self._get_root_from_exps(exps)
     
