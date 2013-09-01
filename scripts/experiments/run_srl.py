@@ -368,12 +368,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.known_exps = ( "srl-narad-dev20",
                             "srl-narad",
                             "srl-all",
-                            "srl-opt")
+                            "srl-opt",
+                            "srl-feats",
+                            )
         if options.expname not in self.known_exps:
             sys.stderr.write("Unknown experiment setting.\n")
             parser.print_help()
             sys.exit()
-        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True)
+        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True, dry_run=options.dry_run)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
@@ -387,13 +389,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
         if self.expname == "srl-narad-dev20":
             g.defaults += g.feat_narad            
             g.defaults.update(trainMaxSentenceLength=20)
-            return self._get_default_experiments(g, l)
+            return self._get_default_pipeline(g, l)
         elif self.expname == "srl-narad":
             g.defaults += g.feat_narad
-            return self._get_default_experiments(g, l)
+            return self._get_default_pipeline(g, l)
         elif self.expname == "srl-all":
             g.defaults += g.feat_all
-            return self._get_default_experiments(g, l)
+            return self._get_default_pipeline(g, l)
         elif self.expname == "srl-opt":
             exps = []
             data_settings = SrlExpParams()                    
@@ -405,7 +407,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
-            return self._get_root_from_exps(exps)
+            return self._get_pipeline_from_exps(exps)
+        elif self.expname == "srl-feats":
+            exps = []
+            g.defaults.update(trainMaxSentenceLength=10)
+            for feature_set in l.feature_sets:
+                g.defaults += feature_set
+                for parser_srl in l.parse_and_srl:
+                    exp = g.defaults + parser_srl
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
         else:
             raise Exception("Unknown expname: " + str(self.expname))
     
@@ -418,9 +430,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp = g.defaults + data_settings + parser_srl
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
-        return self._get_root_from_exps(exps)
+        return exps
     
-    def _get_root_from_exps(self, exps):
+    def _get_default_pipeline(self, g, l):
+        exps = self._get_default_experiments(g, l)
+        return self._get_pipeline_from_exps(exps)
+    
+    def _get_pipeline_from_exps(self, exps):
         root = RootStage()            
         root.add_dependents(exps)
         return root
@@ -476,27 +492,12 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
-    parser.add_option('-e', '--expname',  help="Experiment name.  \n\t\
-                                                            Options:\n\
-                                                            \t\tsrl-biasonly\n\
-                                                            \t\tsrl-dev20\n\
-                                                            \t\tsrl-all\n\
-                                                            \t\tsrl-simple+narad+zhao\n\
-                                                            \t\tsrl-simple+narad+dep\n\
-                                                            \t\tsrl-simple+narad\n\
-                                                            \t\tsrl-simple+zhao+dep\n\
-                                                            \t\tsrl-simple+zhao\n\
-                                                            \t\tsrl-simple+dep\n\
-                                                            \t\tsrl-simple\n\
-                                                            \t\tsrl-narad+zhao+dep\n\
-                                                            \t\tsrl-narad+zhao\n\
-                                                            \t\tsrl-narad+dep\n\
-                                                            \t\tsrl-narad\n\
-                                                            \t\tsrl-zhao+dep\n\
-                                                            \t\tsrl-zhao\n\
-                                                            \t\tsrl-dep")
+    parser.add_option('-e', '--expname',  help="Experiment name.")
     parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
+    parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
     (options, args) = parser.parse_args(sys.argv)
+    # TODO: Above, we still want to list the experiment names in the usage printout, but we should
+    # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.
 
     if len(args) != 1:
         parser.print_help()
