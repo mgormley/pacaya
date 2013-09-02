@@ -51,6 +51,7 @@ public class AdaGrad extends SGD {
         super.takeNoteOfGradient(gradient);
         for (int i=0; i<gradient.length; i++) {
             gradSumSquares[i] += gradient[i] * gradient[i];
+            assert !Double.isNaN(gradSumSquares[i]);
         }
     }
     
@@ -60,6 +61,18 @@ public class AdaGrad extends SGD {
      * @param i The index of the current model parameter. 
      */
     protected double getLearningRate(int iterCount, int i) {
-        return prm.eta / Math.sqrt(gradSumSquares[i]);
+        if (gradSumSquares[i] < 0) {
+            throw new RuntimeException("Gradient sum of squares entry is < 0: " + gradSumSquares[i]);
+        }
+        double learningRate = prm.eta / Math.sqrt(gradSumSquares[i]);
+        assert !Double.isNaN(learningRate);
+        if (learningRate == Double.POSITIVE_INFINITY) {
+            if (gradSumSquares[i] != 0.0) {
+                log.warn("Gradient was non-zero but learningRate hit positive infinity: " + gradSumSquares[i]);
+            }
+            // Just return a large value. The gradient is probably just 0.0;
+            return 2e200;
+        }
+        return learningRate;
     }
 }

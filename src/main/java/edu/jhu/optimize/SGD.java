@@ -145,6 +145,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 } else {
                     point[i] -= lr * gradient[i];
                 }
+                assert !Double.isNaN(point[i]);
                 avgLr += lr;
             }
             avgLr /= point.length;
