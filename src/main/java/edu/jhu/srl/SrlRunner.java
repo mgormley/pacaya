@@ -183,6 +183,9 @@ public class SrlRunner {
     public static int sgdBatchSize = 15;
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
+    @Opt(hasArg=true, description="Whether to sample with replacement for SGD.")
+    public static boolean sgdWithRepl = false;
+    
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
 
@@ -458,6 +461,7 @@ public class SrlRunner {
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
         prm.initialLr = sgdInitialLr;
+        prm.withReplacement = sgdWithRepl;
         prm.lambda = 1.0 / l2variance;
         return prm;
     }

@@ -40,6 +40,8 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         public double numPasses = 10;
         /** The batch size to use at each step. */
         public int batchSize = 15;
+        /** Whether batches should be sampled with replacement. */
+        public boolean withReplacement = false;
         public SGDPrm() { } 
         public SGDPrm(double initialLr, int numPasses, int batchSize) {
             this.initialLr = initialLr;
@@ -54,6 +56,9 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
     private int iterations;
     /** The number of iterations performed thus far. */
     private int iterCount;
+    /** The sampler of the indices for each batch. */
+    private BatchSampler batchSampler;
+   
 
     private SGDPrm prm;
     
@@ -69,11 +74,13 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
      * Initializes all the parameters for optimization.
      */
     protected void init(BatchFunction function) {
-        // Counters
-        iterCount = 0;
-                        
-        // Constants
         int numExamples = function.getNumExamples();
+
+        // Variables
+        iterCount = 0;
+        batchSampler = new BatchSampler(prm.withReplacement, numExamples, prm.batchSize);
+                    
+        // Constants
         iterations = (int) Math.ceil((double) prm.numPasses * numExamples / prm.batchSize);
         log.info("Setting number of batch gradient steps: " + iterations);
     }
@@ -117,7 +124,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         for (iterCount=0; iterCount < iterations; iterCount++) {
             function.setPoint(point);
             
-            int[] batch = getBatch(function.getNumExamples());
+            int[] batch = batchSampler.sampleBatch();
             
             // Get the current value of the function.
             double value = function.getValue(batch);
@@ -165,16 +172,6 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
     /** A tie-in for subclasses such as AdaGrad. */
     protected void takeNoteOfGradient(double[] gradient) {
         // Do nothing. This is just for subclasses.
-    }
-
-    /** Gets a batch of indices in the range [0, numExamples). */
-    protected int[] getBatch(int numExamples) {
-        // Sample the indices with replacement.
-        int[] batch = new int[prm.batchSize];
-        for (int i=0; i<batch.length; i++) {
-            batch[i] = Prng.nextInt(numExamples);
-        }
-        return batch;
     }
     
     @Override
