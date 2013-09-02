@@ -122,7 +122,7 @@ class DpSingleScraper(Scraper):
     def get_exp_params_instance(self):
         return DPExpParams()
     
-    def get_column_order(self):
+    def get_column_order(self, exp_list):
         hs = "dataset maxNumSentences maxSentenceLength parser model formulation"
         hs += " deltaGenerator factor interval numPerSide"
         hs += " accuracy elapsed error iterations timeRemaining"

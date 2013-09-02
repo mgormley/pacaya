@@ -34,7 +34,7 @@ class DPScraper(Scraper):
     def get_exp_params_instance(self):
         return DPExpParams()
     
-    def get_column_order(self):
+    def get_column_order(self, exp_list):
         hs = "dataset maxNumSentences maxSentenceLength propSupervised parser model formulation"
         hs += " algorithm varSelection relaxation envelopeOnly rltInitProp rltCutProp"
         hs += " accuracy elapsed error iterations timeRemaining"
