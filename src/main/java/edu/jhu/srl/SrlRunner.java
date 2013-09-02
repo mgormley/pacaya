@@ -36,7 +36,8 @@ import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.gm.data.ErmaWriter;
-import edu.jhu.optimize.BatchMaximizer;
+import edu.jhu.optimize.AdaGrad;
+import edu.jhu.optimize.AdaGrad.AdaGradPrm;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
@@ -63,7 +64,7 @@ public class SrlRunner {
 
     public static enum InitParams { UNIFORM, RANDOM };
     
-    public static enum Optimizer { LBFGS, SGD };
+    public static enum Optimizer { LBFGS, SGD, ADAGRAD };
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
 
@@ -182,6 +183,8 @@ public class SrlRunner {
     public static int sgdBatchSize = 15;
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
+    @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
+    public static double adaGradEta = 0.1;
 
     public SrlRunner() {
     }
@@ -426,11 +429,17 @@ public class SrlRunner {
         CrfTrainerPrm prm = new CrfTrainerPrm();
         prm.infFactory = bpPrm;
         if (optimizer == Optimizer.LBFGS) {
-            prm.maximizer = getMaximizer();
+            prm.maximizer = getLbfgs();
             prm.batchMaximizer = null;
         } else if (optimizer == Optimizer.SGD){
             prm.maximizer = null;
-            prm.batchMaximizer = getBatchMaximizer();
+            prm.batchMaximizer = new SGD(getSgdPrm());
+        } else if (optimizer == Optimizer.ADAGRAD){
+            prm.maximizer = null;
+            AdaGradPrm adaGradPrm = new AdaGradPrm();
+            adaGradPrm.sgdPrm = getSgdPrm();
+            adaGradPrm.eta = adaGradEta;
+            prm.batchMaximizer = new AdaGrad(adaGradPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
@@ -438,19 +447,19 @@ public class SrlRunner {
         return prm;
     }
 
-    private static Maximizer getMaximizer() {
+    private static Maximizer getLbfgs() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
         return new MalletLBFGS(prm);
     }
     
-    private static BatchMaximizer getBatchMaximizer() {
-        SGDPrm optPrm = new SGDPrm();
-        optPrm.numPasses = sgdNumPasses;
-        optPrm.batchSize = sgdBatchSize;
-        optPrm.initialLr = sgdInitialLr;
-        optPrm.lambda = 1.0 / l2variance;
-        return new SGD(optPrm);
+    private static SGDPrm getSgdPrm() {
+        SGDPrm prm = new SGDPrm();
+        prm.numPasses = sgdNumPasses;
+        prm.batchSize = sgdBatchSize;
+        prm.initialLr = sgdInitialLr;
+        prm.lambda = 1.0 / l2variance;
+        return prm;
     }
 
     private static BeliefPropagationPrm getInfFactory() {

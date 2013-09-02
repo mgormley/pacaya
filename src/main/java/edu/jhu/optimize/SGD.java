@@ -68,7 +68,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
     /**
      * Initializes all the parameters for optimization.
      */
-    private void init(BatchFunction function) {
+    protected void init(BatchFunction function) {
         // Counters
         iterCount = 0;
                         
@@ -80,8 +80,10 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
 
     /**
      * Updates the learning rate for the next iteration.
+     * @param iterCount The current iteration.
+     * @param i The index of the current model parameter. 
      */
-    protected double getLearningRate(int iterCount) {
+    protected double getLearningRate(int iterCount, int i) {
         // We use the learning rate suggested in Leon Bottou's (2012) SGD Tricks paper.
         // 
         // \gamma_t = \frac{\gamma_0}{1 + \gamma_0 \lambda t})
@@ -124,18 +126,21 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             // Get the gradient of the function.
             Arrays.fill(gradient, 0.0);
             function.getGradient(batch, gradient);
-            assert (gradient.length == point.length);
+            assert (gradient.length == point.length);                             
+            takeNoteOfGradient(gradient);
             
             // Take a step in the direction of the gradient.
-            double lr = getLearningRate(iterCount);
-            log.trace("Learning rate: " + lr);
+            double avgLr = 0.0;
             for (int i=0; i<point.length; i++) {
+                double lr = getLearningRate(iterCount, i);
                 if (maximize) {
                     point[i] += lr * gradient[i];
                 } else {
                     point[i] -= lr * gradient[i];
                 }
+                avgLr += lr;
             }
+            avgLr /= point.length;
             
             // If a full pass through the data has been completed...
             passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
@@ -145,7 +150,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 // Get the value of the function on all the examples.
                 value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
-                log.debug("Learning rate: " + lr);
+                log.debug("Average learning rate: " + avgLr);
             }
         }
         
@@ -155,6 +160,11 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         
         // We don't test for convergence.
         return false;
+    }
+
+    /** A tie-in for subclasses such as AdaGrad. */
+    protected void takeNoteOfGradient(double[] gradient) {
+        // Do nothing. This is just for subclasses.
     }
 
     /** Gets a batch of indices in the range [0, numExamples). */
