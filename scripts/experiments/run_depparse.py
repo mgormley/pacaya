@@ -58,13 +58,13 @@ class ScrapeExpout(experiment_runner.PythonExpParams):
         return ScrapeExpout()
     
     def get_name(self):
-        return "scrape_expout"
+        return "scrape_depparse"
     
     def create_experiment_script(self, exp_dir):
         self.add_arg(os.path.dirname(exp_dir))
         script = ""
         script += "export PYTHONPATH=%s/scripts:$PYTHONPATH\n" % (self.root_dir)
-        cmd = "python %s/scripts/experiments/scrape_expout.py %s\n" % (self.root_dir, self.get_args())
+        cmd = "python %s/scripts/experiments/scrape_depparse.py %s\n" % (self.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
 
