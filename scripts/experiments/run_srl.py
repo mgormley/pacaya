@@ -253,8 +253,8 @@ class ParamDefinitions():
         return feats
     
     def _define_groups_optimizer(self, g):
-        g.sgd = SrlExpParams(optimizer="SGD", l2variance="1e100")
-        g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="1e100")
+        g.sgd = SrlExpParams(optimizer="SGD", l2variance="1.0")
+        g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="1.0")
         
     def _define_lists_optimizer(self, g, l):
         l.optimizers = [g.sgd, g.lbfgs]    
@@ -400,6 +400,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_default_pipeline(g, l)
         elif self.expname == "srl-opt":
             exps = []
+            data_settings = SrlExpParams(trainMaxNumSentences=1002,
+                                         testMaxNumSentences=500)    
+            for initialLr in [0.001, 0.01, 0.1, 1.0]:
+                # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
+                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(initialLr=initialLr)
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
             data_settings = SrlExpParams(trainMaxNumSentences=1001,
                                          testMaxNumSentences=500)    
             for l2variance in [0.01, 0.1, 1.0, 10.0, 100.0]:
