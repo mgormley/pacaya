@@ -313,5 +313,14 @@ public class FgModel implements Serializable {
             }
         }
     }
+
+    public void scale(final double multiplier) {
+        apply(new LambdaUnaryOpDouble() {
+            @Override
+            public double call(double value) {
+                return multiplier * value;
+            }
+        });
+    }
         
 }

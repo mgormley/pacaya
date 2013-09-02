@@ -53,8 +53,13 @@ public class CrfObjective implements Function, BatchFunction {
     }
     
     /**
-     * Gets the marginal conditional log-likelihood of the model for the given model parameters.
+     * Gets the average marginal conditional log-likelihood of the model for the given model parameters.
      * 
+     * We return:
+     * <p>
+     * \frac{1}{n} \sum_{i=1}^n \log p(y_i | x_i)
+     * </p>
+     * where:
      * <p>
      * \log p(y|x) = \log \sum_z p(y, z | x)
      * </p>
@@ -73,7 +78,8 @@ public class CrfObjective implements Function, BatchFunction {
             log.trace("Computing marginal log-likelihood for example " + i);
             ll += getMarginalLogLikelihoodForExample(i);
         }
-        log.info("Marginal log-likelihood: " + ll);
+        ll /= data.size();
+        log.info("Average marginal log-likelihood: " + ll);
         if ( ll > MAX_LOG_LIKELIHOOD ) {
             log.warn("Log-likelihood should be <= 0: " + ll);
         }
@@ -81,7 +87,7 @@ public class CrfObjective implements Function, BatchFunction {
     }
 
     /**
-     * Gets the conditional log-likelihood computed on a batch.
+     * Gets the average marginal conditional log-likelihood computed on a batch.
      * @inheritDoc
      */
     @Override
@@ -90,9 +96,10 @@ public class CrfObjective implements Function, BatchFunction {
         for (int i=0; i<batch.length; i++) {
             ll += getMarginalLogLikelihoodForExample(batch[i]);
         }
+        ll /= batch.length;
         if (batch.length == data.size()) {
             // Print out the likelihood if we're computing it on the entire dataset.
-            log.info("Marginal log-likelihood: " + ll);
+            log.info("Average marginal log-likelihood: " + ll);
         }
         if ( ll > MAX_LOG_LIKELIHOOD ) {
             log.warn("Log-likelihood should be <= 0: " + ll);
@@ -170,6 +177,7 @@ public class CrfObjective implements Function, BatchFunction {
             log.trace("Computing gradient for example " + i);
             addGradientForExample(i, gradient);
         }        
+        this.gradient.scale(1.0 / data.size());
         gradient.updateDoublesFromModel(g);
     }
 
@@ -184,6 +192,7 @@ public class CrfObjective implements Function, BatchFunction {
             log.trace("Computing gradient for example " + batch[i]);
             addGradientForExample(batch[i], gradient);
         }        
+        this.gradient.scale(1.0 / batch.length);
         gradient.updateDoublesFromModel(g);
     }
     

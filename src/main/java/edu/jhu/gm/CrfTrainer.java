@@ -55,15 +55,15 @@ public class CrfTrainer {
             }
             prm.maximizer.maximize(fn, params);
         } else {
-            // TODO: Update weight on regularizer.
             BatchFunction fn = objective;
             if (prm.regularizer != null) {
+                // We don't need to rescale the regularizer because the CRF
+                // objective is the average log-likelihood.
                 prm.regularizer.setNumDimensions(model.getNumParams());
                 BatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
-                br = new BatchFunctionOpts.ScaleFunction(br, (double) prm.batchMaximizer.getBatchSize() / objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
-            prm.batchMaximizer.maximize(fn, params);            
+            prm.batchMaximizer.maximize(fn, params);         
         }
         model.updateModelFromDoubles(params);
         return model;
