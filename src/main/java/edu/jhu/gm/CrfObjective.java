@@ -90,6 +90,10 @@ public class CrfObjective implements Function, BatchFunction {
         for (int i=0; i<batch.length; i++) {
             ll += getMarginalLogLikelihoodForExample(batch[i]);
         }
+        if (batch.length == data.size()) {
+            // Print out the likelihood if we're computing it on the entire dataset.
+            log.info("Marginal log-likelihood: " + ll);
+        }
         if ( ll > MAX_LOG_LIKELIHOOD ) {
             log.warn("Log-likelihood should be <= 0: " + ll);
         }
