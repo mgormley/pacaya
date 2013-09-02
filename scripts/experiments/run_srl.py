@@ -364,14 +364,16 @@ class SrlExpParams(experiment_runner.JavaExpParams):
 
 class SrlExpParamsRunner(ExpParamsRunner):
     
+    # Class variables
+    known_exps = ( "srl-narad-dev20",
+                    "srl-narad",
+                    "srl-all",
+                    "srl-opt",
+                    "srl-feats",
+                    )
+    
     def __init__(self, options):
-        self.known_exps = ( "srl-narad-dev20",
-                            "srl-narad",
-                            "srl-all",
-                            "srl-opt",
-                            "srl-feats",
-                            )
-        if options.expname not in self.known_exps:
+        if options.expname not in SrlExpParamsRunner.known_exps:
             sys.stderr.write("Unknown experiment setting.\n")
             parser.print_help()
             sys.exit()
@@ -400,7 +402,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             data_settings = SrlExpParams(trainMaxNumSentences=1001,
                                          testMaxNumSentences=500)    
-            for l2variance in [0.01, 0.1, 1.0, 10.0]:
+            for l2variance in [0.01, 0.1, 1.0, 10.0, 100.0]:
                 # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.lbfgs + SrlExpParams(l2variance=l2variance)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -497,7 +499,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
-    parser.add_option('-e', '--expname',  help="Experiment name.")
+    parser.add_option('-e', '--expname',  help="Experiment name. [" + ", ".join(SrlExpParamsRunner.known_exps) + "]")
     parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
     (options, args) = parser.parse_args(sys.argv)
