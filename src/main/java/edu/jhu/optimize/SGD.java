@@ -20,15 +20,29 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
 
     /** Options for this optimizer. */
     public static class SGDPrm {
-        /** The desired learning rate after (maxIterations / 2) iterations. */
-        public double lrAtMidpoint = 0.1;
+        /**
+         * The initial learning rate. (i.e. \gamma_0 in where \gamma_t =
+         * \frac{\gamma_0}{1 + \gamma_0 \lambda t})
+         */
+        public double initialLr = 0.1;
+        /**
+         * Learning rate scaler. (i.e. \lambda in where \gamma_t =
+         * \frac{\gamma_0}{1 + \gamma_0 \lambda t})
+         * 
+         * According to Leon Bottou's (2012) SGD tricks paper, when using an L2
+         * regularizer of the form \frac{\lambda}{2} ||w||^2, where w is the
+         * weight vector, this should be set to the value \lambda. If the L2
+         * regularizer is instead parameterized by the variance of the L2 (i.e.
+         * Guassian) prior, then we should set \lambda = 1 / \sigma^2.
+         */
+        public double lambda = 1.0;
         /** The number of passes over the dataset to perform. */
         public double numPasses = 10;
         /** The batch size to use at each step. */
         public int batchSize = 15;
         public SGDPrm() { } 
-        public SGDPrm(double lrAtMidpoint, int numPasses, int batchSize) {
-            this.lrAtMidpoint = lrAtMidpoint;
+        public SGDPrm(double initialLr, int numPasses, int batchSize) {
+            this.initialLr = initialLr;
             this.numPasses = numPasses;
             this.batchSize = batchSize;
         }
@@ -41,11 +55,6 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
     /** The number of iterations performed thus far. */
     private int iterCount;
 
-    /** The parameters used to determine the next learning rate, given the current one. */
-    private double stepSize;
-    private double alpha;
-    private double A;
-
     private SGDPrm prm;
     
     /**
@@ -53,6 +62,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
      */
     public SGD(SGDPrm prm) {
         this.prm = prm;
+        log.info("Initial learning rate: " + prm.initialLr);
     }
     
     /**
@@ -66,32 +76,17 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         int numExamples = function.getNumExamples();
         iterations = (int) Math.ceil((double) prm.numPasses * numExamples / prm.batchSize);
         log.info("Setting number of batch gradient steps: " + iterations);
-        this.A = 0.10 * iterations;
-        this.alpha = 0.602;
-        this.stepSize = prm.lrAtMidpoint * Math.pow(iterations / 2 + 1 + A, alpha);
-        log.info("Initial step size parameter: " + this.stepSize);
     }
 
     /**
      * Updates the learning rate for the next iteration.
      */
     protected double getLearningRate(int iterCount) {
-        //       >> a_k = a / (k + 1 + A)^\alpha
-        //       >>
-        //       >> where a is the step size, k is the iteration, A is a "stability
-        //       >> constant", and \alpha is there so that in later iterations you get
-        //       >> larger step sizes.  \alpha should be in (0.5,1].  \alpha=0.602 is
-        //       >> suggested in the book, with some heuristic motivation. The step size
-        //       >> is the most important parameter, which is tuned based on the "desired"
-        //       >> change in magnitude in the early iterations.
-        //       >>
-        //       >> The only weird thing is the stability constant.  Sometimes you want
-        //       >> larger step sizes "a" so that you have non-negligible step sizes after
-        //       >> the algorithm has been running for a while.  But if they are too big
-        //       >> you may get instability in the early iterations of the algorithm.  A
-        //       >> is there to counter-balance that.   The heuristic guideline for
-        //       >> setting A is 10% of the total number of allowed / expected iterations.
-        return stepSize / Math.pow(iterCount + 1 + A, alpha);
+        // We use the learning rate suggested in Leon Bottou's (2012) SGD Tricks paper.
+        // 
+        // \gamma_t = \frac{\gamma_0}{1 + \gamma_0 \lambda t})
+        //
+        return prm.initialLr / (1 + prm.initialLr * prm.lambda * iterCount);
     }
 
     /**
@@ -133,7 +128,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Take a step in the direction of the gradient.
             double lr = getLearningRate(iterCount);
-            log.trace("Learning rate: " + lr);
+            log.debug("Learning rate: " + lr);
             for (int i=0; i<point.length; i++) {
                 if (maximize) {
                     point[i] += lr * gradient[i];

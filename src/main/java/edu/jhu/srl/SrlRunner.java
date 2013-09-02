@@ -180,6 +180,8 @@ public class SrlRunner {
     public static double sgdNumPasses = 30;
     @Opt(hasArg=true, description="The batch size to use at each step of SGD.")
     public static int sgdBatchSize = 15;
+    @Opt(hasArg=true, description="The initial learning rate for SGD.")
+    public static double sgdInitialLr = 0.1;
 
     public SrlRunner() {
     }
@@ -446,7 +448,8 @@ public class SrlRunner {
         SGDPrm optPrm = new SGDPrm();
         optPrm.numPasses = sgdNumPasses;
         optPrm.batchSize = sgdBatchSize;
-        optPrm.lrAtMidpoint = 0.05;
+        optPrm.initialLr = sgdInitialLr;
+        optPrm.lambda = 1.0 / l2variance;
         return new SGD(optPrm);
     }
 

@@ -57,9 +57,9 @@ public class SGDTest {
         JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
     }
     
-    public static SGD getNewSgd(double lrAtMidpoint, int numPasses) {
+    public static SGD getNewSgd(double initialLr, int numPasses) {
         SGDPrm prm = new SGDPrm();
-        prm.lrAtMidpoint = lrAtMidpoint;
+        prm.initialLr = initialLr * 10;
         prm.numPasses = numPasses;        
         prm.batchSize = 1;
         return new SGD(prm);
