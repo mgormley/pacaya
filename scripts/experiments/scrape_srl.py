@@ -65,6 +65,7 @@ class SrlScraper(Scraper):
         exp.update(trainLogLikelihood = get_following_literal(stdout_lines, "Marginal log-likelihood: ", -1))
         exp.update(testAccuracy = get_following_literal(stdout_lines, "Accuracy on test: ", -1))
         # TODO: exp.update(testLogLikelihood = get_following_literal(stdout_lines, "LogLikelihood on test: ", -1))
+        exp.update(finalObjValue = get_following_literal(stdout_lines, "Final objective value: ", -1))
             
         self.get_eval(exp, exp_dir, "train")
         self.get_eval(exp, exp_dir, "test")

@@ -253,8 +253,8 @@ class ParamDefinitions():
         return feats
     
     def _define_groups_optimizer(self, g):
-        g.sgd = SrlExpParams(optimizer="SGD", l2variance="1.0")
-        g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="1.0")
+        g.sgd = SrlExpParams(optimizer="SGD", l2variance="100.0", sgdInitialLr=0.5)
+        g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="100.0")
         
     def _define_lists_optimizer(self, g, l):
         l.optimizers = [g.sgd, g.lbfgs]    
@@ -424,15 +424,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-opt":
             exps = []
             data_settings = SrlExpParams(trainMaxNumSentences=1002,
-                                         testMaxNumSentences=500)    
-            for sgdInitialLr in [0.001, 0.01, 0.1, 1.0]:
+                                         testMaxNumSentences=500)
+            # Best so far is 0.1/1.0     
+            for sgdInitialLr in [0.001, 0.01, 0.1, 0.5, 1.0, 10.0, 100.0]:
                 # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(sgdInitialLr=sgdInitialLr)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             data_settings = SrlExpParams(trainMaxNumSentences=1001,
-                                         testMaxNumSentences=500)    
-            for l2variance in [0.01, 0.1, 1.0, 10.0, 100.0]:
+                                         testMaxNumSentences=500)   
+            # Best so far is 100 
+            for l2variance in [0.01, 0.1, 1., 10., 100., 500., 1000., 10000.]:
                 # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.lbfgs + SrlExpParams(l2variance=l2variance)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))

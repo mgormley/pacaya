@@ -15,6 +15,7 @@ import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.Regularizer;
+import edu.jhu.prim.util.Utilities;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.
@@ -54,6 +55,7 @@ public class CrfTrainer {
                 fn = new FunctionOpts.AddFunctions(objective, prm.regularizer);
             }
             prm.maximizer.maximize(fn, params);
+            log.info("Final objective value: " + fn.getValue());
         } else {
             BatchFunction fn = objective;
             if (prm.regularizer != null) {
@@ -63,7 +65,8 @@ public class CrfTrainer {
                 BatchFunction br = new FunctionAsBatchFunction(prm.regularizer, objective.getNumExamples());
                 fn = new BatchFunctionOpts.AddFunctions(objective, br);
             }
-            prm.batchMaximizer.maximize(fn, params);         
+            prm.batchMaximizer.maximize(fn, params);   
+            log.info("Final objective value: " + fn.getValue(Utilities.getIndexArray(fn.getNumExamples())));
         }
         model.updateModelFromDoubles(params);
         return model;
