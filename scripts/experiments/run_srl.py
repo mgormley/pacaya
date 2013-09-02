@@ -360,6 +360,29 @@ class SrlExpParams(experiment_runner.JavaExpParams):
     def get_java_args(self):
         return self._get_java_args(self.work_mem_megs)
 
+
+class ScrapeSrl(experiment_runner.PythonExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.PythonExpParams.__init__(self,keywords)
+        self.always_relaunch()
+
+    def get_initial_keys(self):
+        return "dataSet model k s".split()
+    
+    def get_instance(self):
+        return ScrapeSrl()
+    
+    def get_name(self):
+        return "scrape_srl"
+    
+    def create_experiment_script(self, exp_dir):
+        self.add_arg(os.path.dirname(exp_dir))
+        script = ""
+        cmd = "python %s/scripts/experiments/scrape_srl.py %s\n" % (self.root_dir, self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+
 # ---------------------------- Experiments Creator Class ----------------------------------
 
 class SrlExpParamsRunner(ExpParamsRunner):
@@ -402,9 +425,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             data_settings = SrlExpParams(trainMaxNumSentences=1002,
                                          testMaxNumSentences=500)    
-            for initialLr in [0.001, 0.01, 0.1, 1.0]:
+            for sgdInitialLr in [0.001, 0.01, 0.1, 1.0]:
                 # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
-                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(initialLr=initialLr)
+                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(sgdInitialLr=sgdInitialLr)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             data_settings = SrlExpParams(trainMaxNumSentences=1001,
@@ -451,8 +474,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
         return self._get_pipeline_from_exps(exps)
     
     def _get_pipeline_from_exps(self, exps):
+        if self.fast and len(exps) > 4: exps = exps[:4]
         root = RootStage()            
-        root.add_dependents(exps)
+        root.add_dependents(exps)    
+        scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+        scrape.add_prereqs(root.dependents)
         return root
     
     def update_stages_for_qsub(self, root_stage):
