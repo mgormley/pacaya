@@ -138,6 +138,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Take a step in the direction of the gradient.
             double avgLr = 0.0;
+            int numNonZeros = 0;
             for (int i=0; i<point.length; i++) {
                 double lr = getLearningRate(iterCount, i);
                 if (maximize) {
@@ -146,9 +147,12 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                     point[i] -= lr * gradient[i];
                 }
                 assert !Double.isNaN(point[i]);
-                avgLr += lr;
+                if (gradient[i] != 0.0) {
+                    avgLr += lr;
+                    numNonZeros++;
+                }
             }
-            avgLr /= point.length;
+            avgLr /= (double) numNonZeros;
             
             // If a full pass through the data has been completed...
             passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
