@@ -156,7 +156,7 @@ class ParamDefinitions():
             normalizeRoleNames=False,
             )
         
-        g.defaults += g.sgd
+        g.defaults += g.adagrad
         g.defaults += g.feat_narad
                 
         # Exclude parameters from the command line arguments.
@@ -258,7 +258,7 @@ class ParamDefinitions():
         g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="500.0")
         
     def _define_lists_optimizer(self, g, l):
-        l.optimizers = [g.sgd, g.lbfgs]    
+        l.optimizers = [g.sgd, g.adagrad, g.lbfgs]    
     
     def _define_groups_model(self, g):
         g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT")
@@ -426,6 +426,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             data_settings = SrlExpParams(trainMaxNumSentences=1003,
                                          testMaxNumSentences=500)
+            # Best so far is 0.1
             for adaGradEta in [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]:
                 # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.adagrad + SrlExpParams(adaGradEta=adaGradEta)
