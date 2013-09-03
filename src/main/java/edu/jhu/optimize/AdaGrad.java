@@ -8,11 +8,8 @@ import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 
 /**
- * Stochastic gradient descent with minibatches.
- * 
- * We use the learning rate from "Introduction to Stochastic Search and
- * Optimization (James Spall). See eq. (4.14) pg. 113 and the constants
- * suggested on page pg. 164.
+ * AdaGrad (Duchi et al., 2010) -- a first order stochastic gradient method with
+ * parameter-specific learning rates.
  * 
  * @author mgormley
  */
