@@ -36,6 +36,8 @@ import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
 import edu.jhu.gm.data.ErmaWriter;
+import edu.jhu.optimize.AdaDelta;
+import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.optimize.AdaGrad;
 import edu.jhu.optimize.AdaGrad.AdaGradPrm;
 import edu.jhu.optimize.L2;
@@ -64,7 +66,7 @@ public class SrlRunner {
 
     public static enum InitParams { UNIFORM, RANDOM };
     
-    public static enum Optimizer { LBFGS, SGD, ADAGRAD };
+    public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
 
@@ -184,10 +186,13 @@ public class SrlRunner {
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
     @Opt(hasArg=true, description="Whether to sample with replacement for SGD.")
-    public static boolean sgdWithRepl = false;
-    
+    public static boolean sgdWithRepl = false;    
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
+    @Opt(hasArg=true, description="The decay rate for AdaDelta.")
+    public static double adaDeltaDecayRate = 0.95;
+    @Opt(hasArg=true, description="The constant addend for AdaDelta.")
+    public static double adaDeltaConstantAddend = Math.pow(Math.E, -6.);
 
     public SrlRunner() {
     }
@@ -443,6 +448,13 @@ public class SrlRunner {
             adaGradPrm.sgdPrm = getSgdPrm();
             adaGradPrm.eta = adaGradEta;
             prm.batchMaximizer = new AdaGrad(adaGradPrm);
+        } else if (optimizer == Optimizer.ADADELTA){
+            prm.maximizer = null;
+            AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
+            adaDeltaPrm.sgdPrm = getSgdPrm();
+            adaDeltaPrm.decayRate = adaDeltaDecayRate;
+            adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
+            prm.batchMaximizer = new AdaDelta(adaDeltaPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }

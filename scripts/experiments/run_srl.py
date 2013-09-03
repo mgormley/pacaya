@@ -154,6 +154,7 @@ class ParamDefinitions():
             featCountCutoff=4,
             predictSense=True,
             normalizeRoleNames=False,
+            l2variance="500.0",
             )
         
         g.defaults += g.adagrad
@@ -253,12 +254,13 @@ class ParamDefinitions():
         return feats
     
     def _define_groups_optimizer(self, g):
-        g.sgd = SrlExpParams(optimizer="SGD", l2variance="500.0", sgdInitialLr=0.5)
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", l2variance="500.0", adaGradEta=0.1)
-        g.lbfgs = SrlExpParams(optimizer="LBFGS", l2variance="500.0")
+        g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.5)
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1)
+        g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0))
+        g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
     def _define_lists_optimizer(self, g, l):
-        l.optimizers = [g.sgd, g.adagrad, g.lbfgs]    
+        l.optimizers = [g.sgd, g.adagrad, g.adadelta, g.lbfgs]    
     
     def _define_groups_model(self, g):
         g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT")
@@ -416,46 +418,63 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_narad            
             g.defaults.update(trainMaxSentenceLength=20)
             return self._get_default_pipeline(g, l)
+        
         elif self.expname == "srl-narad":
             g.defaults += g.feat_narad
             return self._get_default_pipeline(g, l)
+        
         elif self.expname == "srl-all":
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l)
+        
         elif self.expname == "srl-opt":
+            # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
             exps = []
-            data_settings = SrlExpParams(trainMaxNumSentences=1003,
+            g.defaults.set("group", "", incl_name=True, incl_arg=False)
+            data_settings = SrlExpParams(trainMaxNumSentences=1000,
                                          testMaxNumSentences=500)
-            # Best so far is 0.1
-            for adaGradEta in [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]:
-                # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
+            
+            # Best so far...
+            g.defaults.update(group="tuneAdaDelta")            
+            for adaDeltaDecayRate in [0.90, 0.95, 0.99]:
+                for adaDeltaConstantAddend in [-2., -4., -6., -8.]:
+                    adaDeltaConstantAddend = math.exp(adaDeltaConstantAddend)
+                    exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings \
+                            + g.adadelta + SrlExpParams(adaDeltaDecayRate=adaDeltaDecayRate, 
+                                                        adaDeltaConstantAddend=adaDeltaConstantAddend)
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+                    
+            # Best so far is adaGradEta = 0.1
+            g.defaults.update(group="tuneAdaGrad")            
+            for adaGradEta in [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 10.0, 100.0]:
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.adagrad + SrlExpParams(adaGradEta=adaGradEta)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
-            data_settings = SrlExpParams(trainMaxNumSentences=1002,
-                                         testMaxNumSentences=500)
-            # Best so far is 0.1     
-            for sgdInitialLr in [0.001, 0.01, 0.1, 0.5, 1.0, 10.0, 100.0]:
-                # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
+                
+            # Best so far is sgdInitialLr = 0.1     
+            g.defaults.update(group="tuneSGD")
+            for sgdInitialLr in [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 10.0, 100.0]:
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(sgdInitialLr=sgdInitialLr)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                exps.append(exp)
-            data_settings = SrlExpParams(trainMaxNumSentences=1001,
-                                         testMaxNumSentences=500)   
-            # Best so far is 500 
-            for l2variance in [0.01, 0.1, 1., 10., 100., 500., 1000., 10000.]:
-                # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
+                exps.append(exp) 
+                
+            # Best so far is l2variance = 500 
+            g.defaults.update(group="tuneL2")
+            for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
                 exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.lbfgs + SrlExpParams(l2variance=l2variance)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
+                
+            g.defaults.update(group="compare")
             for trainMaxNumSentences in [250, 500, 1000, 2000]:
                 data_settings.update(trainMaxNumSentences=trainMaxNumSentences)
                 for optimizer in l.optimizers:
-                    # Use the PREDS_GIVEN, observed tree model, on supervised parser output.
                     exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "srl-feats":
             exps = []
             g.defaults.update(trainMaxSentenceLength=10)
@@ -466,6 +485,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
+        
         else:
             raise Exception("Unknown expname: " + str(self.expname))
     
