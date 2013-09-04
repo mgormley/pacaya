@@ -18,6 +18,7 @@ import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
@@ -31,17 +32,17 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     public static final Pattern dash = Pattern.compile("-");
 
     private ArrayList<CoNLL09Token> tokens;
-    private ArrayList<String> words = new ArrayList<String>();
-    private ArrayList<String> lemmas = new ArrayList<String>();
-    private ArrayList<String> posTags = new ArrayList<String>();
+    private ArrayList<String> words;
+    private ArrayList<String> lemmas;
+    private ArrayList<String> posTags;
     private ArrayList<String> plemmas;
     private ArrayList<String> pposTags;
-    private int[] parents = new int[size()];
-    private int[] pparents = new int[size()];
+    private int[] parents;
+    private int[] pparents;
     private ArrayList<List<String>> feats;
     private ArrayList<List<String>> pfeats;
-    private ArrayList<String> deprels;    
-    private ArrayList<String> pdeprels;    
+    private ArrayList<String> deprels;
+    private ArrayList<String> pdeprels;
 
     
     public CoNLL09Sentence(List<CoNLL09Token> tokens) {
@@ -59,9 +60,9 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
     /** Deep copy constructor. */
     public CoNLL09Sentence(CoNLL09Sentence sent) {
-        tokens = new ArrayList<CoNLL09Token>(sent.tokens.size());
+        this.tokens = new ArrayList<CoNLL09Token>(sent.tokens.size());
         for (CoNLL09Token tok : sent) {
-            tokens.add(new CoNLL09Token(tok));
+            this.tokens.add(new CoNLL09Token(tok));
         }
     }
 
@@ -91,6 +92,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
      * The wall has index -1.
      */
     public void setParentsFromHead() {
+        this.parents = new int[size()];
         for (int i = 0; i < parents.length; i++) {
             this.parents[i] = tokens.get(i).getHead() - 1;
         }
@@ -105,8 +107,8 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
      * The wall has index -1.
      */
     public void setParentsFromPhead() {
-        int[] parents = new int[size()];
-        for (int i = 0; i < parents.length; i++) {
+        this.pparents = new int[size()];
+        for (int i = 0; i < pparents.length; i++) {
             this.pparents[i] = tokens.get(i).getPhead() - 1;
         }
     }
@@ -127,6 +129,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
 
     public void setWords() {
+        this.words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
             this.words.add(tokens.get(i).getForm());            
         }
@@ -137,6 +140,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
     
     public void setLemmas() {
+        this.lemmas = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
             this.lemmas.add(tokens.get(i).getLemma());            
         }
@@ -148,8 +152,9 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
 
     public void setPlemmas() {
+        this.plemmas = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            this.lemmas.add(tokens.get(i).getPlemma());            
+            this.plemmas.add(tokens.get(i).getPlemma());            
         }
     }
 
@@ -159,6 +164,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
         
     public void setPosTags() {
+        this.posTags = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
             this.posTags.add(tokens.get(i).getPos());            
         }
@@ -169,6 +175,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
     
     public void setPposTags() {
+        this.pposTags = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
             this.pposTags.add(tokens.get(i).getPpos());            
         }
@@ -178,25 +185,29 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return pposTags;
     }
     
-    public void setPfeats() {
-        for (int i=0; i<size(); i++) {
-            this.pfeats.add(tokens.get(i).getPfeat());            
-        }
-    }
-    
     public void setFeats() {
+        this.feats = new ArrayList<List<String>>(size());
         for (int i=0; i<size(); i++) {
             this.feats.add(tokens.get(i).getFeat());            
         }
     }
-    
+        
+    public void setPfeats() {
+        this.pfeats = new ArrayList<List<String>>(size());
+        for (int i=0; i<size(); i++) {
+            this.pfeats.add(tokens.get(i).getPfeat());            
+        }
+    }
+        
     public void setDeprels() {
+        this.deprels = new ArrayList<String>();
         for (int i=0; i<size(); i++) {
             this.deprels.add(tokens.get(i).getDeprel());            
         }
     }
 
     public void setPdeprels() {
+        this.pdeprels =  new ArrayList<String>();
         for (int i=0; i<size(); i++) {
             this.pdeprels.add(tokens.get(i).getPdeprel());            
         }
@@ -343,12 +354,12 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
     }
 
-    public SimpleAnnoSentence toSimpleAnnoSentence(CorpusStatistics cs) {
+    public SimpleAnnoSentence toSimpleAnnoSentence(CorpusStatisticsPrm prm) {
         SimpleAnnoSentence s = new SimpleAnnoSentence();
         setWords();
         s.setWords(words);
         s.setSrlGraph(getSrlGraph());
-        if (cs.prm.useGoldSyntax) {
+        if (prm.useGoldSyntax) {
             setParentsFromHead();
             setLemmas();
             setPosTags();

@@ -7,7 +7,7 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.util.Pair;
 
 public class ZhaoObject {
@@ -19,10 +19,8 @@ public class ZhaoObject {
 
     private static final String NO_MORPH = "NO_MORPH"; 
 
-    private CorpusStatistics cs;
     private SimpleAnnoSentence sent;
     private int idx = -1;
-    private int parent;
     private List<String> feat;
     private ArrayList<Integer> children;
     private Integer farRightChild;
@@ -43,7 +41,7 @@ public class ZhaoObject {
     private ArrayList<Integer> noFarChildren;
     
     
-    public ZhaoObject(int idx, int[] parents, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public ZhaoObject(int idx, int[] parents, SimpleAnnoSentence sent) {
         /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
@@ -54,7 +52,6 @@ public class ZhaoObject {
          * 6. semantic dependency label (semdprel) 
          * 7. and characters (char) in the word form (only suitable for Chinese and Japanese). */
         this.idx = idx;
-        this.cs = cs;
         this.sent = sent;
         this.parents = parents;
         // Basic strings available from input.
@@ -72,7 +69,6 @@ public class ZhaoObject {
         /* ZHANG: Family. Two types of children sets for the predicate or argument candidate are considered, 
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
-        this.noFarChildren = new ArrayList<Integer>();
         setNoFarChildren();
     }
 
@@ -88,36 +84,17 @@ public class ZhaoObject {
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
     }
-        
-    public ZhaoObject(String input) {
-        setFeat();
-        this.rootPath = new ArrayList<Pair<Integer, Dir>>();
-        this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
-        this.parent = -1;
-        this.children = new ArrayList<Integer>();
-        this.children.add(-1);
-        this.farLeftChild = -1;
-        this.farRightChild = -1;
-        this.nearLeftChild = -1;
-        this.nearRightChild = -1;
-        this.argLowSupport = -1;
-        this.argHighSupport = -1;
-        this.predLowSupport = -1;
-        this.predHighSupport = -1;
-        this.noFarChildren = new ArrayList<Integer>();
-        setNoFarChildren();
-    }
     
     
     // ------------------------ Getters and Setters ------------------------ //
-       
+
     public List<String> getFeat() {
         return feat;
     }
     
     public void setFeat() {
         feat = new ArrayList<String>(6);
-        if (idx == -1) {
+        if (idx == -1 || idx >= sent.size()) {
             for (int i = 0; i < 6; i++) {
                 feat.add(NO_MORPH);
             }            
@@ -137,15 +114,56 @@ public class ZhaoObject {
     }
     
     public String getForm() {
+        if (idx < 0) {
+            return "BEGIN_NO_FORM";
+        } else if (idx >= sent.size()) {
+            return "END_NO_FORM";
+        }
         return sent.getWord(idx);
     }
     
     public String getLemma() {
+        if (idx < 0) {
+            return "BEGIN_NO_LEMMA";
+        } else if (idx >= sent.size()) {
+            return "END_NO_LEMMA";
+        }
         return sent.getLemma(idx);
     }
     
     public String getPos() {
+        if (idx < 0) {
+            return "BEGIN_NO_POS";
+        } else if (idx >= sent.size()) {
+            return "END_NO_POS";
+        }
         return sent.getPosTag(idx);
+    }
+    
+    public String getDeprel() {
+        if (idx < 0) {
+            return "BEGIN_NO_DEPREL";
+        } else if (idx >= sent.size()) {
+            return "END_NO_DEPREL";
+        }
+        return sent.getDeprel(idx);
+    }
+
+    public int getParent() {
+        if (idx < 0) {
+            return -2;
+        } else if (idx >= sent.size()) {
+            return -1;
+        }
+        return sent.getParent(idx);
+    }
+
+    public String getSense() {
+        SrlPred pred = sent.getSrlGraph().getPredAt(idx);
+        if (pred == null) {
+            return "NO_SENSE";
+        }
+        return sent.getSrlGraph().getPredAt(idx).getLabel();
     }
     
     public List<Pair<Integer, Dir>> getRootPath() {
@@ -153,7 +171,12 @@ public class ZhaoObject {
     }
     
     private void setRootPath() {
-        this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
+        if (idx < 0 || idx >= sent.size()) {
+            this.rootPath =  new ArrayList<Pair<Integer,Dir>>();
+            this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
+        } else {
+            this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
+        }
     }
     
     public ArrayList<Integer> getChildren() {
@@ -161,7 +184,12 @@ public class ZhaoObject {
     }
 
     public void setChildren() {
-        this.children = DepTree.getChildrenOf(parents, idx);
+        if (idx < 0 || idx >= sent.size()) {
+            this.children = new ArrayList<Integer>();
+            this.children.add(-1);
+        } else {
+            this.children = DepTree.getChildrenOf(parents, idx);
+        }
     }    
     
     public int getFarLeftChild() {
@@ -218,6 +246,7 @@ public class ZhaoObject {
     }
     
     public void setNoFarChildren() {
+        this.noFarChildren = new ArrayList<Integer>();
         this.noFarChildren.add(nearLeftChild);
         this.noFarChildren.add(nearRightChild);
     }
@@ -355,18 +384,6 @@ public class ZhaoObject {
             startIdx++;
         }
         
-    }
-
-    public String getDeprel() {
-        return sent.getDeprel(idx);
-    }
-
-    public int getParent() {
-        return sent.getParent(idx);
-    }
-
-    public String getSense() {
-        return sent.getSrlGraph().getPredAt(idx).getLabel();
     }
 
 }

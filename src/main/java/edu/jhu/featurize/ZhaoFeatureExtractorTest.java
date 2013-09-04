@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 
 import edu.jhu.data.DepTree.Dir;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -65,8 +66,9 @@ public class ZhaoFeatureExtractorTest {
         timer.start();
         for (int n = 0; n < 49; n++) {
             CoNLL09Sentence sent = reader.next();
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(cs);
             log.info("Initializing sentence...");
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
             log.info("Processing sentence...");
             for (int i = 0; i < sent.size(); i++) {
                 for (int j = 0; j < sent.size(); j++) {

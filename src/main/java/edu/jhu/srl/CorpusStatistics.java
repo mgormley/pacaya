@@ -10,14 +10,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.prim.util.Utilities;
 import edu.jhu.util.Alphabet;
 
@@ -85,7 +84,7 @@ public class CorpusStatistics implements Serializable {
         initialized = false;
     }
 
-    public void init(Iterable<CoNLL09Sentence> cr) {
+    public void init(Iterable<SimpleAnnoSentence> cr) {
         initialized = true;
                 
         // Store the variable states we have seen before so
@@ -95,46 +94,35 @@ public class CorpusStatistics implements Serializable {
         knownLinks.add("False");
         knownUnks.add("UNK");
         knownRoles.add(UNKNOWN_ROLE);
-        for (CoNLL09Sentence sent : cr) {
+        for (SimpleAnnoSentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
             // test data will result in an unknown feature.
             if (sent.size() > maxSentLength) {
                 maxSentLength = sent.size();
             }
-            for (int i = 0; i < sent.size(); i++) {
-                CoNLL09Token word = sent.get(i);
-                for (int j = 0; j < word.getApreds().size(); j++) {  
-                    String role = word.getApreds().get(j);
-                    knownRoles.add(role);
+            for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
+                String role = edge.getLabel();
+                knownRoles.add(role);
+                int position = edge.getPred().getPosition();
+                String lemma = sent.getLemma(position);
+                Set<String> senses = predSenseSetMap.get(lemma);
+                if (senses == null) {
+                    senses = new TreeSet<String>();
+                    predSenseSetMap.put(lemma, senses);
                 }
-                String wordForm = word.getForm();
+                senses.add(edge.getPred().getLabel());
+                
+            }
+            for (int position = 0; position < sent.size(); position++) {
+                String wordForm = sent.getWord(position);
                 String cleanWord = normalize.clean(wordForm);
-                int position = word.getId() - 1;
                 // Actually only need to do this for those words that are below
                 // threshold for knownWords.  
                 String unkWord = sig.getSignature(wordForm, position, prm.language);
                 unkWord = normalize.escape(unkWord);
                 words = addWord(words, cleanWord);
                 unks = addWord(unks, unkWord);
-                // Learn what Postags are in our vocabulary
-                // Later, can then back off to NONE if we haven't seen it
-                // before.
-                if (!prm.useGoldSyntax) {
-                    knownPostags.add(word.getPpos());
-                } else {
-                    knownPostags.add(word.getPos());
-                }
-                if (word.isFillpred()) {
-                    // Keep track of the predicate senses for each predicate.
-                    String plemma = word.getPlemma();
-                    Set<String> senses = predSenseSetMap.get(plemma);
-                    if (senses == null) {
-                        senses = new TreeSet<String>();
-                        predSenseSetMap.put(plemma, senses);
-                    }
-                    senses.add(word.getPred());
-                }
             }
         }
         

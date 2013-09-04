@@ -14,6 +14,7 @@ import java.util.List;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * Reads a single file in CoNLL-2009 format.
@@ -92,10 +93,10 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
         reader.close();
     }
 
-    public List<SimpleAnnoSentence> readAll(CorpusStatistics cs) {
+    public List<SimpleAnnoSentence> readAllToSimple(CorpusStatisticsPrm prm) {
         ArrayList<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence sent : this) {
-            sents.add(sent.toSimpleAnnoSentence(cs));
+            sents.add(sent.toSimpleAnnoSentence(prm));
         }
         return sents;
     }
@@ -125,5 +126,24 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
         }
         return sents;
     }
+
+    public List<SimpleAnnoSentence> readSentsToSimple(int maxSents, CorpusStatisticsPrm prm) {
+        return readSentsToSimple(maxSents, Integer.MAX_VALUE, prm);
+    }
+    
+    public List<SimpleAnnoSentence> readSentsToSimple(int maxSents, int maxSentLen, CorpusStatisticsPrm prm) {
+        ArrayList<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence sent : this) {
+            if (sents.size() > maxSents) {
+                break;
+            }
+            if (sent.size() > maxSentLen) {
+                continue;
+            }
+            sents.add(sent.toSimpleAnnoSentence(prm));
+        }
+        return sents;
+    }
+
 
 }

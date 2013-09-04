@@ -59,8 +59,8 @@ public class SentFeatureExtractor {
             this.parents = getParents(sent);
             if (prm.useZhaoFeats || prm.useDepPathFeats) {
                 this.zhaoSentence = createZhaoSentence();
-                this.zhaoHeadDefault = new ZhaoObject("BEGIN");
-                this.zhaoTailDefault = new ZhaoObject("END");
+                this.zhaoHeadDefault = new ZhaoObject(-1, parents, sent);
+                this.zhaoTailDefault = new ZhaoObject(sent.size(), parents, sent);
             }
         } else {
             this.parents = null;
@@ -70,7 +70,7 @@ public class SentFeatureExtractor {
     private ArrayList<ZhaoObject> createZhaoSentence() {
         ArrayList<ZhaoObject> _zhaoSentence = new ArrayList<ZhaoObject>();
         for (Integer i = 0; i < sent.size(); i++) {
-            _zhaoSentence.add(new ZhaoObject(i, parents, sent, cs));
+            _zhaoSentence.add(new ZhaoObject(i, parents, sent));
         }
         return _zhaoSentence;
     }

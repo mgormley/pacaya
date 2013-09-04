@@ -275,7 +275,7 @@ public class SrlRunner {
                 if (sent.size() <= maxSentenceLength) {
                     sent = mungeData(sent);
                     conllSents.add(sent);
-                    sents.add(sent.toSimpleAnnoSentence(cs));
+                    sents.add(sent.toSimpleAnnoSentence(cs.prm));
                     numTokens += sent.size();
                 }
             }
@@ -299,7 +299,7 @@ public class SrlRunner {
 
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
-            cs.init(conllSents);
+            cs.init(sents);
         }
 
         log.info("Building factor graphs and extracting features.");

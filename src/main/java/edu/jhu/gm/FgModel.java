@@ -138,6 +138,7 @@ public class FgModel implements Serializable {
                         if (f.getVars().size() == 0) {
                             int predConfig = ex.getGoldConfigIdxPred(a);
                             for (IntDoubleEntry entry : fv) {
+                                System.out.println(predConfig);
                                 included[t][predConfig][entry.index()] = true;
                             }
                         } else {

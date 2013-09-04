@@ -67,7 +67,7 @@ public class SrlFgExamplesBuilder {
 
     
     public FgExamples getData(CoNLL09FileReader reader) {
-        List<SimpleAnnoSentence> sents = reader.readAll(cs);
+        List<SimpleAnnoSentence> sents = reader.readAllToSimple(cs.prm);
         return getData(sents);
     }
     
@@ -126,7 +126,6 @@ public class SrlFgExamplesBuilder {
     public FgExamples getData(List<SimpleAnnoSentence> sents) {
         preprocess(sents);
 
-        Alphabet<String> obsAlphabet = new Alphabet<String>();
         log.info("Not starting threading stuff.");
         FgExamples data = new FgExamples(fts);
         for (int i=0; i<sents.size(); i++) {
@@ -151,10 +150,9 @@ public class SrlFgExamplesBuilder {
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
+            System.out.println(ex.toString());
         }
-        
-        log.info("Number of observation function features: " + obsAlphabet.size());
-        
+                
         data.setSourceSentences(sents);
         return data;
     }
@@ -228,7 +226,6 @@ public class SrlFgExamplesBuilder {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
                 // NOTE:  IS THIS RIGHT ?
-                BLAH BLAH
                 if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
                     if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
                         // This is a hack to ensure that something is added at test time.

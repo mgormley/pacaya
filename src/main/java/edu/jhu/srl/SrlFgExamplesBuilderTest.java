@@ -59,7 +59,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExamples data = builder.getData(cr);
         
 //        System.out.println("Num features: " + alphabet.size());
 //        FgModel model = new FgModel(alphabet);
@@ -72,13 +72,12 @@ public class SrlFgExamplesBuilderTest {
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
-        List<CoNLL09Sentence> sents = cr.readSents(1);
-        CorpusStatistics.normalizeRoleNames(sents);
-
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.normalizeRoleNames = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
+        List<CoNLL09Sentence> sents = cr.readSents(1);
         cs.init(sents);
-
+        
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
@@ -87,7 +86,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExamples data = builder.getData(cr);
         FgExample ex = data.get(0);
         
         //assertEquals(1, obsAlphabet.size());

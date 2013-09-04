@@ -26,6 +26,7 @@ public class SimpleAnnoSentence {
     private List<String> posTags;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
+    private ArrayList<List<String>> apreds;
 
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
@@ -71,7 +72,7 @@ public class SimpleAnnoSentence {
     public String getDeprel(int i) {
         return deprels.get(i);
     }
-    
+        
     /**
      * Gets a list of words corresponding to a token span.
      */
@@ -99,6 +100,8 @@ public class SimpleAnnoSentence {
         return getSpan(lemmas, span);
     }
 
+    
+    
     /**
      * Gets a list of word/POS tags corresponding to a token span.
      */
