@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import edu.jhu.data.DepTree;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -46,10 +48,15 @@ public class SrlFgExamplesBuilderTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-
+        
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        cs.init(simpleSents);
         
         System.out.println("Done reading.");
         FeatureTemplateList fts = new FeatureTemplateList();
@@ -73,11 +80,14 @@ public class SrlFgExamplesBuilderTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.normalizeRoleNames = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        cs.init(sents);
-        
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        cs.init(simpleSents);        
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();

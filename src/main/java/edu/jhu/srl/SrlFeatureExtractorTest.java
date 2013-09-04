@@ -129,12 +129,14 @@ public class SrlFeatureExtractorTest {
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         List<CoNLL09Sentence> sents = getList(sent);
-        
-        CorpusStatistics.normalizeRoleNames(sents);
-
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        cs.init(simpleSents);
 
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm.biasOnly = false;
@@ -151,7 +153,7 @@ public class SrlFeatureExtractorTest {
         
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExamples data = builder.getData(simpleSents);
         
         FgModel model = new FgModel(data, false);
         System.out.println("Num tokens: " + sents.get(0).size());
@@ -175,10 +177,17 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
+
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);
-
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        cs.init(simpleSents);
+        
+        
         fts.update(sfg);
         
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
@@ -186,7 +195,7 @@ public class SrlFeatureExtractorTest {
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = false;
         fePrm.useDepPathFeats = false;
-        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs);
+        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, simpleSents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = 10; // Enable feature hashing
         SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sentFeatExt);
