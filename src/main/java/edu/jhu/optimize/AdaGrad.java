@@ -67,8 +67,8 @@ public class AdaGrad extends SGD {
             if (gradSumSquares[i] != 0.0) {
                 log.warn("Gradient was non-zero but learningRate hit positive infinity: " + gradSumSquares[i]);
             }
-            // Just return a large value. The gradient is probably just 0.0;
-            return 2e200;
+            // Just return zero. The gradient is probably 0.0.
+            return 0.0;
         }
         return learningRate;
     }
