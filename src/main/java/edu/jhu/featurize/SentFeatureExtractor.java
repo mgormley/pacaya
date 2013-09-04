@@ -736,7 +736,7 @@ public class SentFeatureExtractor {
         String cleanWord = cs.normalize.clean(wordForm);
 
         if (!cs.knownWords.contains(cleanWord)) {
-            String unkWord = cs.sig.getSignature(cleanWord, idx, cs.prm.language);
+            String unkWord = cs.sig.getSignature(wordForm, idx, cs.prm.language);
             unkWord = cs.normalize.escape(unkWord);
             if (!cs.knownUnks.contains(unkWord)) {
                 unkWord = "UNK";

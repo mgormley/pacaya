@@ -21,8 +21,6 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
  */
 public class CorpusStatisticsTest {
     
-    broken
-
     String expectedCsToString = "CorpusStatistics [\n"
             + "     knownWords=[de],\n"
             + "     knownUnks=[UNK-LC-s, UNK, UNK-LC],\n"
