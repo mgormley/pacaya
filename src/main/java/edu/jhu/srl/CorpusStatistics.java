@@ -123,6 +123,8 @@ public class CorpusStatistics implements Serializable {
                 // threshold for knownWords.  
                 String unkWord = sig.getSignature(wordForm, position, prm.language);
                 unkWord = normalize.escape(unkWord);
+                System.out.println(wordForm);
+                System.out.println(unkWord);
                 words = addWord(words, cleanWord);
                 unks = addWord(unks, unkWord);
                 knownPostags.add(sent.getPosTag(position));
