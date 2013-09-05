@@ -150,7 +150,6 @@ public class SrlFgExamplesBuilder {
                         
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
             data.add(ex);
-            System.out.println(ex.toString());
         }
                 
         data.setSourceSentences(sents);
@@ -240,7 +239,7 @@ public class SrlFgExamplesBuilder {
 //                }
             }
         }
-        
+        System.out.println(vc);
         return vc;
     }
     

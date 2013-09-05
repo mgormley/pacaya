@@ -75,6 +75,7 @@ public class VarConfig {
 
     /** Gets the state name (in this config) for a given variable. */
     public String getStateName(Var var) {
+        System.out.println(config.get(var));
         return var.getStateNames().get(config.get(var));
     }
     
@@ -192,6 +193,8 @@ public class VarConfig {
             configSb.append(v.getName());
             configSb.append("=");
             if (v.getStateNames() != null) {
+                System.out.println("Getting state name for...");
+                System.out.println(v);
                 configSb.append(getStateName(v));
             } else {
                 configSb.append("id:");
