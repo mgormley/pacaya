@@ -81,7 +81,7 @@ public class CrfObjective implements Function, BatchFunction {
         ll /= data.size();
         log.info("Average marginal log-likelihood: " + ll);
         if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood should be <= 0: " + ll);
+            log.warn("Log-likelihood of data should be <= 0: " + ll);
         }
         return ll;
     }
@@ -102,7 +102,7 @@ public class CrfObjective implements Function, BatchFunction {
             log.info("Average marginal log-likelihood: " + ll);
         }
         if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood should be <= 0: " + ll);
+            log.warn("Log-likelihood for batch should be <= 0: " + ll);
         }
         return ll;
     }
@@ -161,7 +161,7 @@ public class CrfObjective implements Function, BatchFunction {
         double ll = numerator - denominator;
 
         if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood should be <= 0: " + ll);
+            log.warn("Log-likelihood for example should be <= 0: " + ll);
         }
         return ll;
     }

@@ -189,6 +189,8 @@ public class SrlRunner {
     public static boolean sgdWithRepl = false;    
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
+    @Opt(hasArg=true, description="The constant addend for AdaGrad.")
+    public static double adaGradConstantAddend = 1e-9;
     @Opt(hasArg=true, description="The decay rate for AdaDelta.")
     public static double adaDeltaDecayRate = 0.95;
     @Opt(hasArg=true, description="The constant addend for AdaDelta.")

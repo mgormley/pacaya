@@ -19,6 +19,12 @@ public class AdaGrad extends SGD {
     public static class AdaGradPrm {
         /** The scaling parameter for the learning rate. */
         public double eta = 0.1;
+        /**
+         * The amount added (epsilon) to the sum of squares inside the square
+         * root. This is to combat the issue of tiny gradients throwing the hole
+         * optimization off early on.
+         */
+        public double constantAddend = 1e-9;
         public SGDPrm sgdPrm = new SGDPrm();
     }
     
@@ -61,7 +67,7 @@ public class AdaGrad extends SGD {
         if (gradSumSquares[i] < 0) {
             throw new RuntimeException("Gradient sum of squares entry is < 0: " + gradSumSquares[i]);
         }
-        double learningRate = prm.eta / Math.sqrt(gradSumSquares[i]);
+        double learningRate = prm.eta / Math.sqrt(prm.constantAddend + gradSumSquares[i]);
         assert !Double.isNaN(learningRate);
         if (learningRate == Double.POSITIVE_INFINITY) {
             if (gradSumSquares[i] != 0.0) {

@@ -67,7 +67,6 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
      */
     public SGD(SGDPrm prm) {
         this.prm = prm;
-        log.info("Initial learning rate: " + prm.initialLr);
     }
     
     /**

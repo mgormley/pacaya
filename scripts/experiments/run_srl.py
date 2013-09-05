@@ -255,7 +255,7 @@ class ParamDefinitions():
     
     def _define_groups_optimizer(self, g):
         g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.5)
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1)
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9)
         g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0))
         g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
@@ -394,6 +394,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     known_exps = ( "srl-narad-dev20",
                     "srl-narad",
                     "srl-all",
+                    "srl-lat",
                     "srl-opt",
                     "srl-feats",
                     )
@@ -426,6 +427,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-all":
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l)
+        
+        elif self.expname == "srl-lat":            
+            g.defaults += g.feat_all         
+            g.defaults += SrlExpParams(sgdNumPasses=10)
+            g.defaults += SrlExpParams(trainMaxNumSentences=1000, trainMaxSentenceLength=20,
+                                       testMaxNumSentences=100, testMaxSentenceLength=15)
+            exps = self._get_default_experiments(g, l)
+            exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
+            return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-opt":
             # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
