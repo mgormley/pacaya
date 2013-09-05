@@ -94,6 +94,9 @@ public class CorpusStatistics implements Serializable {
         knownLinks.add("False");
         knownUnks.add("UNK");
         knownRoles.add(UNKNOWN_ROLE);
+        // This is a hack:  '_' won't actually be in any of the defined edges.
+        // However, removing this messes up what we assume as default.
+        knownRoles.add("_");
         for (SimpleAnnoSentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
@@ -103,7 +106,6 @@ public class CorpusStatistics implements Serializable {
             }
             for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
                 String role = edge.getLabel();
-                System.out.println(edge);
                 knownRoles.add(role);
                 int position = edge.getPred().getPosition();
                 String lemma = sent.getLemma(position);

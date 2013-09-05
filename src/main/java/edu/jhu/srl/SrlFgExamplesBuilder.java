@@ -68,6 +68,8 @@ public class SrlFgExamplesBuilder {
     
     public FgExamples getData(CoNLL09FileReader reader) {
         List<SimpleAnnoSentence> sents = reader.readAllToSimple(cs.prm);
+        // We won't normalize role names if that's desired, reading the data this way.
+        System.err.println("Warning:  processing sents directly from CoNLL09FileReader, without data munging.\n");
         return getData(sents);
     }
     
@@ -170,8 +172,8 @@ public class SrlFgExamplesBuilder {
     private VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
         VarConfig vc = new VarConfig();
 
+        // LINK VARS
         // Add all the training data assignments to the link variables, if they are not latent.
-        //
         // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
         int[] parents = sent.getParents();
         for (int i=-1; i<sent.size(); i++) {
@@ -192,6 +194,7 @@ public class SrlFgExamplesBuilder {
             }
         }
         
+        // ROLE VARS
         // Add all the training data assignments to the role variables, if they are not latent.
         // First, just set all the role names to "_".
         for (int i=0; i<sent.size(); i++) {
@@ -239,7 +242,6 @@ public class SrlFgExamplesBuilder {
 //                }
             }
         }
-        System.out.println(vc);
         return vc;
     }
     

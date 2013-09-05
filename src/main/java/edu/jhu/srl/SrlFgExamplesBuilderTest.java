@@ -40,6 +40,7 @@ import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 /**
  * Unit tests for {@link SrlFgExamplesBuilderTest}.
  * @author mgormley
+ * @author mmitchell
  */
 public class SrlFgExamplesBuilderTest {
 
@@ -66,7 +67,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(cr);
+        FgExamples data = builder.getData(simpleSents);
         
 //        System.out.println("Num features: " + alphabet.size());
 //        FgModel model = new FgModel(alphabet);
@@ -96,7 +97,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(cr);
+        FgExamples data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         //assertEquals(1, obsAlphabet.size());
         //assertEquals(6*2 + 2 + 6, fts.size());
@@ -116,16 +117,21 @@ public class SrlFgExamplesBuilderTest {
         assertEquals(18, vc.size());
     }
 
-   /* @Test
+    @Test
     public void testPreprocess() throws Exception {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        CorpusStatistics.normalizeRoleNames(sents);
-
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);
+
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+
+        cs.init(simpleSents);
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         //fePrm.biasOnly = true;
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
@@ -139,19 +145,23 @@ public class SrlFgExamplesBuilderTest {
             FeatureTemplateList fts = new FeatureTemplateList();
             prm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            FgExamples data = builder.getData(sents);            
-            assertEquals(13388, fts.getNumObsFeats());
+            FgExamples data = builder.getData(simpleSents);            
+            // Used to be:  assertEquals(13388, fts.getNumObsFeats());
+            assertEquals(13313, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
-            assertEquals(26308, model.getNumParams());
+            // Used to be:  assertEquals(26308, model.getNumParams());
+            assertEquals(26168, model.getNumParams());
         }
         {
             FeatureTemplateList fts = new FeatureTemplateList();
             prm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            FgExamples data = builder.getData(sents);            
-            assertEquals(2729, fts.getNumObsFeats());
+            FgExamples data = builder.getData(simpleSents);
+            // Used to be:  assertEquals(2729, fts.getNumObsFeats());
+            assertEquals(2749, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
-            assertEquals(6108, model.getNumParams());
+            // Used to be:  assertEquals(6108, model.getNumParams());
+            assertEquals(6113, model.getNumParams());
         }
     }
 
@@ -166,8 +176,15 @@ public class SrlFgExamplesBuilderTest {
         fePrm.biasOnly = true;
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
+        
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);        
+        cs.init(simpleSents);        
         
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
@@ -175,7 +192,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExamples data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -200,15 +217,22 @@ public class SrlFgExamplesBuilderTest {
         fePrm.biasOnly = true;
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
+        
+        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence s : sents) {
+            s.normalizeRoleNames();
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+        }
+        
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(sents);        
+        cs.init(simpleSents);        
         
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.predictSense = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExamples data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -221,18 +245,18 @@ public class SrlFgExamplesBuilderTest {
         System.out.println(senseMap);
         assertEquals("{2=fer.a2}", senseMap.toString());
         
-        SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sents.get(0));
+        SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSents.get(0));
         assertEquals(2, srlGraph.getPredAt(2).getPosition());
         assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
     }
-    */
+   
     
     /**
      * Decodes the parents defined by a variable assignment for a single
      * sentence.
      * 
      * @param n The sentence length.
-     * @param vc The variable assignement.
+     * @param vc The variable assignment.
      * @return The parents array.
      */
     // TODO: Maybe use this somewhere? Probably not... we should really decode

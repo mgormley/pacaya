@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
@@ -16,6 +17,7 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.FactorGraph.FgEdge;
+import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -33,6 +35,7 @@ public class CrfObjectiveTest {
      * A description of a collection of identical log-linear model examples.
      * 
      * @author mgormley
+     * @author mmitchell
      */
     public static class LogLinearExDesc {
         private int count;
@@ -232,12 +235,11 @@ public class CrfObjectiveTest {
         tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
         //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
-        
-        List<CoNLL09Sentence> sents = getList(sent);
-        
+                
         System.out.println("Done reading.");
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
+        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm));
         cs.init(sents);
         
         FeatureTemplateList fts = new FeatureTemplateList();

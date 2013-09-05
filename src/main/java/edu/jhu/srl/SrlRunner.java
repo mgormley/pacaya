@@ -57,6 +57,7 @@ import edu.jhu.util.cli.Opt;
 /**
  * Pipeline runner for SRL experiments.
  * @author mgormley
+ * @author mmitchell
  */
 public class SrlRunner {
 
@@ -353,13 +354,15 @@ public class SrlRunner {
             log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
             if (dataType == DatasetType.CONLL_2009) {
                 @SuppressWarnings("unchecked")
-                List<CoNLL09Sentence> sents = (List<CoNLL09Sentence>)data.getSourceSentences();
-                for (int i=0; i<sents.size(); i++) {
+                List<SimpleAnnoSentence> simpleSents = (List<SimpleAnnoSentence>)data.getSourceSentences();
+                List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
+                for (int i=0; i< simpleSents.size(); i++) {
                     VarConfig vc = predictions.get(i);
-                    CoNLL09Sentence sent = sents.get(i);
-                    
-                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sent);                    
+                    SimpleAnnoSentence simpleSent = simpleSents.get(i);
+                    CoNLL09Sentence sent = new CoNLL09Sentence(simpleSent);
+                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSent);                    
                     sent.setPredApredFromSrlGraph(srlGraph, false);
+                    sents.add(sent);
                 }
                 CoNLL09Writer cw = new CoNLL09Writer(predOut);
                 for (CoNLL09Sentence sent : sents) {

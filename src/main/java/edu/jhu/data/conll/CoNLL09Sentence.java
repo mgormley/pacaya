@@ -22,6 +22,7 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
+ * @author mmitchell
  */
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
@@ -49,21 +50,33 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         this.tokens = new ArrayList<CoNLL09Token>(tokens);
     }
 
-//    public CoNLL09Sentence(Sentence sent, int[] heads) {
-//        tokens = new ArrayList<CoNLL09Token>();
-//        for (int i=0; i<sent.size(); i++) {
-//            Label label = sent.get(i);
-//            TaggedWord tw = (TaggedWord) label;
-//            tokens.add(new CoNLL09Token(i+1, tw.getWord(), tw.getWord(), tw.getTag(), tw.getTag(), null, heads[i], "NO_LABEL", null, null));
-//        }
-//    }
-
     /** Deep copy constructor. */
     public CoNLL09Sentence(CoNLL09Sentence sent) {
         this.tokens = new ArrayList<CoNLL09Token>(sent.tokens.size());
         for (CoNLL09Token tok : sent) {
             this.tokens.add(new CoNLL09Token(tok));
         }
+    }
+
+
+    public CoNLL09Sentence(SimpleAnnoSentence simpleSent) {
+        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
+        String pos, String ppos, List<String> feat, List<String> pfeat,
+        int head, int phead, String deprel, String pdeprel,
+        boolean fillpred, String pred, List<String> apreds) */
+      tokens = new ArrayList<CoNLL09Token>();
+      for (int i = 0; i< simpleSent.size(); i++) {
+          String form = simpleSent.getWord(i);
+          String lemma = simpleSent.getLemma(i);
+          String posTag = simpleSent.getPosTag(i);
+          List<String> feat = simpleSent.getFeats(i);
+          int head = simpleSent.getParent(i) + 1;
+          String deprel = simpleSent.getDeprel(i);  
+          boolean fillpred = false;
+          String pred = null;
+          List<String> apreds = null;
+          tokens.add(new CoNLL09Token(i+1, form, lemma, lemma, posTag, posTag, feat, feat, head, head, deprel, deprel, fillpred, pred, apreds));
+      }
     }
 
     public static CoNLL09Sentence getInstanceFromTokenStrings(ArrayList<String> sentLines) {

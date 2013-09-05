@@ -15,6 +15,7 @@ import edu.jhu.util.Pair;
  * This representation only uses strings, without Label objects or Alphabet objects.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SimpleAnnoSentence {
 
@@ -26,7 +27,6 @@ public class SimpleAnnoSentence {
     private List<String> posTags;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
-    private ArrayList<List<String>> apreds;
 
     /**
      * Internal representation of a dependency parse: parents[i] gives the index

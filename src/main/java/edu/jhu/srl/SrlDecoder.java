@@ -3,6 +3,7 @@ package edu.jhu.srl;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
@@ -16,7 +17,7 @@ import edu.jhu.srl.SrlFactorGraph.SenseVar;
 
 public class SrlDecoder {
 
-    public static SrlGraph getSrlGraphFromVarConfig(VarConfig vc, CoNLL09Sentence sent) {
+    public static SrlGraph getSrlGraphFromVarConfig(VarConfig vc, SimpleAnnoSentence sent) {
         SrlGraph srlGraph = new SrlGraph(sent.size());
         for (Var v : vc.getVars()) {
             if (v instanceof RoleVar && v.getType() != VarType.LATENT) {
