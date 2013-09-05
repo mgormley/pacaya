@@ -431,8 +431,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-lat":            
             g.defaults += g.feat_all         
             g.defaults += SrlExpParams(sgdNumPasses=10)
-            g.defaults += SrlExpParams(trainMaxNumSentences=1000, trainMaxSentenceLength=20,
-                                       testMaxNumSentences=100, testMaxSentenceLength=15)
+            #g.defaults += SrlExpParams(trainMaxNumSentences=1000, trainMaxSentenceLength=20,
+            #                           testMaxNumSentences=100, testMaxSentenceLength=15)
             exps = self._get_default_experiments(g, l)
             exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
             return self._get_pipeline_from_exps(exps)
