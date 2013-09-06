@@ -15,7 +15,6 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.AccuracyEvaluator;
@@ -359,7 +358,7 @@ public class SrlRunner {
                 for (int i=0; i< simpleSents.size(); i++) {
                     VarConfig vc = predictions.get(i);
                     SimpleAnnoSentence simpleSent = simpleSents.get(i);
-                    CoNLL09Sentence sent = new CoNLL09Sentence(simpleSent);
+                    CoNLL09Sentence sent = simpleSent.toCoNLL();
                     SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSent);                    
                     sent.setPredApredFromSrlGraph(srlGraph, false);
                     sents.add(sent);

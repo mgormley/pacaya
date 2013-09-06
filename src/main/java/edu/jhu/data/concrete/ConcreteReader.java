@@ -26,6 +26,7 @@ import edu.jhu.hlt.concrete.io.ProtocolBufferReader;
  * Reader of Concrete protocol buffer files.
  *  
  * @author mgormley
+ * @author mmitchell
  */
 public class ConcreteReader {
 

@@ -13,12 +13,8 @@ import org.junit.Test;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.Feature;
 import edu.jhu.gm.FgModelTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.util.Utilities;
 
 public class SrlFgModelTest {
 

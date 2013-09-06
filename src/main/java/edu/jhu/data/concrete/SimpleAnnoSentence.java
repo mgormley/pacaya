@@ -6,6 +6,8 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.util.Pair;
 
@@ -27,6 +29,7 @@ public class SimpleAnnoSentence {
     private List<String> posTags;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
+    private Object origSentence;
 
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
@@ -41,8 +44,13 @@ public class SimpleAnnoSentence {
     
     // TODO: add constituency parse as NaryTree<String>
     
+    public SimpleAnnoSentence(Object sentence) {
+        this.origSentence = sentence;
+    }
+
+
     public SimpleAnnoSentence() {
-        
+
     }
 
 
@@ -270,6 +278,25 @@ public class SimpleAnnoSentence {
     
     public void setDeprels(ArrayList<String> deprels) {
         this.deprels = deprels;
+    }
+
+
+    public CoNLL09Sentence toCoNLL() {
+        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
+        String pos, String ppos, List<String> feat, List<String> pfeat,
+        int head, int phead, String deprel, String pdeprel,
+        boolean fillpred, String pred, List<String> apreds) */
+        assert(origSentence != null);
+        CoNLL09Sentence updatedSentence = (CoNLL09Sentence) origSentence;
+        for (int i = 0; i < updatedSentence.size(); i++) {
+            CoNLL09Token tok = updatedSentence.get(i);
+            tok.setPlemma(getLemma(i));
+            tok.setPpos(getPosTag(i));
+            tok.setPfeat(getFeats(i));
+            tok.setPhead(getParent(i) + 1);
+            tok.setPdeprel(getDeprel(i));
+        }
+        return updatedSentence;
     }
     
 }

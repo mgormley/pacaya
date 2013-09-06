@@ -59,13 +59,13 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
 
-    public CoNLL09Sentence(SimpleAnnoSentence simpleSent) {
-        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
-        String pos, String ppos, List<String> feat, List<String> pfeat,
-        int head, int phead, String deprel, String pdeprel,
-        boolean fillpred, String pred, List<String> apreds) */
-      tokens = new ArrayList<CoNLL09Token>();
-      for (int i = 0; i< simpleSent.size(); i++) {
+    /*public CoNLL09Sentence(SimpleAnnoSentence simpleSent) {
+        // public CoNLL09Token(int id, String form, String lemma, String plemma,
+        // String pos, String ppos, List<String> feat, List<String> pfeat,
+        // int head, int phead, String deprel, String pdeprel,
+        // boolean fillpred, String pred, List<String> apreds) 
+        // tokens = new ArrayList<CoNLL09Token>();
+        for (int i = 0; i< simpleSent.size(); i++) {
           String form = simpleSent.getWord(i);
           String lemma = simpleSent.getLemma(i);
           String posTag = simpleSent.getPosTag(i);
@@ -78,6 +78,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
           tokens.add(new CoNLL09Token(i+1, form, lemma, lemma, posTag, posTag, feat, feat, head, head, deprel, deprel, fillpred, pred, apreds));
       }
     }
+    */
 
     public static CoNLL09Sentence getInstanceFromTokenStrings(ArrayList<String> sentLines) {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
@@ -368,7 +369,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
     public SimpleAnnoSentence toSimpleAnnoSentence(CorpusStatisticsPrm prm) {
-        SimpleAnnoSentence s = new SimpleAnnoSentence();
+        SimpleAnnoSentence s = new SimpleAnnoSentence(this);
         setWords();
         s.setWords(words);
         s.setSrlGraph(getSrlGraph());
