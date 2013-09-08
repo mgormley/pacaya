@@ -119,7 +119,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.pos_unsup_test = parser_prefix + "/dmv_conll09-sp-dev_20_False/test-parses.txt"
         # Semi-supervised parser output: PHEAD column.
         self.brown_semi_train = parser_prefix + "/dmv_conll09-sp-brown-train_20_True/test-parses.txt"
-        self.brown_semi_test = parser_prefix + "/dmv_conll09-sp-brown-dev_10_True/test-parses.txt"
+        self.brown_semi_test = parser_prefix + "/dmv_conll09-sp-brown-dev_20_True/test-parses.txt"
         # Unsupervised parser output: PHEAD column.
         self.brown_unsup_train = parser_prefix + "/dmv_conll09-sp-brown-train_20_False/test-parses.txt"
         self.brown_unsup_test = parser_prefix + "/dmv_conll09-sp-brown-dev_20_False/test-parses.txt"
