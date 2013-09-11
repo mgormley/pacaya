@@ -49,17 +49,5 @@ public class SrlDecoder {
         }
         return srlGraph;
     }
-        
-    // TODO: Maybe remove this.
-    public static Map<Integer,String> getPredSenses(VarConfig vc) {
-        Map<Integer,String> senseMap = new HashMap<Integer,String>();
-        for (Var v : vc.getVars()) {
-            if (v instanceof SenseVar) {
-                SenseVar sense = (SenseVar) v;
-                senseMap.put(sense.getParent(), vc.getStateName(sense));
-            }                
-        }
-        return senseMap;
-    }
 
 }

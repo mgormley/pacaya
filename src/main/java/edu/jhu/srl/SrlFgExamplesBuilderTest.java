@@ -208,11 +208,7 @@ public class SrlFgExamplesBuilderTest {
 
         // 18 role vars and 1 sense.
         assertEquals(18+1, vc.size());
-        
-        Map<Integer,String> senseMap = SrlDecoder.getPredSenses(vc);
-        System.out.println(senseMap);
-        assertEquals("{2=fer.a2}", senseMap.toString());
-        
+                
         SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, sents.get(0));
         assertEquals(2, srlGraph.getPredAt(2).getPosition());
         assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
