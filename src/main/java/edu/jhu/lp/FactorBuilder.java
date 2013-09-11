@@ -3,15 +3,15 @@ package edu.jhu.lp;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
-import edu.jhu.prim.map.LongDoubleEntry;
-import edu.jhu.prim.vector.LongDoubleSortedVector;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
-import edu.jhu.util.Sort;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class FactorBuilder {

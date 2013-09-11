@@ -3,10 +3,7 @@ package edu.jhu.gm;
 import java.util.Iterator;
 
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.map.IntDoubleHashMap;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Pair;
-import edu.jhu.util.Sort;
 
 /**
  * For building large (e.g. 20000+) sparse feature vectors consisting of 

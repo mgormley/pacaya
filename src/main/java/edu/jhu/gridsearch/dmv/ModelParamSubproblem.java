@@ -19,8 +19,8 @@ import com.joptimizer.optimizers.PrimalDualMethod;
 
 import edu.jhu.gridsearch.cpt.CptBounds;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.prim.util.Sort;
 import edu.jhu.util.Pair;
-import edu.jhu.util.Sort;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
 
