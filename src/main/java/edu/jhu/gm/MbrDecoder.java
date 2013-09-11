@@ -35,8 +35,7 @@ public class MbrDecoder {
     }
 
     /**
-     * Runs inference and computes the MBR variable configuration and the
-     * corresponding features that fire.
+     * Runs inference and computes the MBR variable configuration.
      * 
      * @param model The input model.
      * @param data The input data.

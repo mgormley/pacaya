@@ -366,7 +366,7 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
 
-    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException {
+    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
         MbrDecoder decoder = getDecoder();
         decoder.decode(model, data);
@@ -390,8 +390,7 @@ public class SrlRunner {
                 }
                 cw.close();
             } else {
-                ErmaWriter ew = new ErmaWriter();
-                ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+                throw new ParseException("Unsupported data type: " + dataType);
             }
         }
         return predictions;
