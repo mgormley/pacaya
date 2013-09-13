@@ -293,5 +293,17 @@ public class DepTree implements Iterable<DepTreeNode> {
         
         return path;
     }
+
+    public static ArrayList<Integer> getSiblingsOf(int idx, int[] parents) {
+        int parent = parents[idx];
+        ArrayList<Integer> siblings = new ArrayList<Integer>();
+        for (int i=0; i<parents.length; i++) {
+            if (parents[i] == parent) {
+                siblings.add(i);
+            }
+        }
+        return siblings;
+    }
+    
     
 }

@@ -153,6 +153,8 @@ public class SrlRunner {
     public static boolean useNaradFeats = true;
     @Opt(hasArg = true, description = "Whether to add the Zhao features.")
     public static boolean useZhaoFeats = true;
+    @Opt(hasArg = true, description = "Whether to add the Bjorkelund features.")
+    public static boolean useBjorkelundFeats = true;
     @Opt(hasArg = true, description = "Whether to add dependency path features.")
     public static boolean useDepPathFeats = true;
 
@@ -396,6 +398,7 @@ public class SrlRunner {
         prm.fePrm.useSimpleFeats = useSimpleFeats;
         prm.fePrm.useNaradFeats = useNaradFeats;
         prm.fePrm.useZhaoFeats = useZhaoFeats;
+        prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
         prm.featCountCutoff = featCountCutoff;
         // SRL Feature Extraction.

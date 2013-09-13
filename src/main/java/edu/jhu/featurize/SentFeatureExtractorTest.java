@@ -91,9 +91,9 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        ZhaoObject zhaoPred = new ZhaoObject(1, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(0, parents, simpleSent);
-        ZhaoObject zhaoLink = new ZhaoObject(1, 0, zhaoPred, zhaoArg, parents);
+        FeatureObject zhaoPred = new FeatureObject(1, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(0, parents, simpleSent);
+        FeatureObject zhaoLink = new FeatureObject(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
         List<Pair<Integer, Dir>> observedDpPathShare = zhaoLink.getDpPathShare();
@@ -112,8 +112,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
+        FeatureObject zhaoPred = new FeatureObject(3, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(4, parents, simpleSent);
 
         String predPos = zhaoPred.getPos();
         String argPos = zhaoArg.getPos();
@@ -126,8 +126,8 @@ public class SentFeatureExtractorTest {
         fePrm = new SentFeatureExtractorPrm();
         fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         parents = fe.getParents(simpleSent);
-        zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        zhaoArg = new ZhaoObject(4, parents, simpleSent);
+        zhaoPred = new FeatureObject(3, parents, simpleSent);
+        zhaoArg = new FeatureObject(4, parents, simpleSent);
         
         predPos = zhaoPred.getPos();
         argPos = zhaoArg.getPos();
@@ -147,8 +147,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
+        FeatureObject zhaoPred = new FeatureObject(3, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(4, parents, simpleSent);
         List<String> predFeat = zhaoPred.getFeat();
         List<String> argFeat = zhaoArg.getFeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
@@ -183,9 +183,9 @@ public class SentFeatureExtractorTest {
         int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+        FeatureObject zhaoPred = new FeatureObject(3, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(4, parents, simpleSent);
+        FeatureObject zhaoLink = new FeatureObject(3, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -201,9 +201,9 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
 
         // New example indices.
-        zhaoPred = new ZhaoObject(0, parents, simpleSent);
-        zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+        zhaoPred = new FeatureObject(0, parents, simpleSent);
+        zhaoArg = new FeatureObject(4, parents, simpleSent);
+        zhaoLink = new FeatureObject(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -241,9 +241,9 @@ public class SentFeatureExtractorTest {
         int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+        FeatureObject zhaoPred = new FeatureObject(3, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(4, parents, simpleSent);
+        FeatureObject zhaoLink = new FeatureObject(3, 4, zhaoPred, zhaoArg, parents);
         
         // Path between two indices.
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -260,9 +260,9 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
         
         // New example indices.
-        zhaoPred = new ZhaoObject(0, parents, simpleSent);
-        zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+        zhaoPred = new FeatureObject(0, parents, simpleSent);
+        zhaoArg = new FeatureObject(4, parents, simpleSent);
+        zhaoLink = new FeatureObject(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -299,18 +299,18 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
+        FeatureObject zhaoPred = new FeatureObject(3, parents, simpleSent);
+        FeatureObject zhaoArg = new FeatureObject(4, parents, simpleSent);
+        FeatureObject zhaoLink = new FeatureObject(3, 4, zhaoPred, zhaoArg, parents);
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
         assertEquals(expectedPath,seenPath);
 
-        zhaoPred = new ZhaoObject(0, parents, simpleSent);
-        zhaoArg = new ZhaoObject(4, parents, simpleSent);
-        zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
+        zhaoPred = new FeatureObject(0, parents, simpleSent);
+        zhaoArg = new FeatureObject(4, parents, simpleSent);
+        zhaoLink = new FeatureObject(0, 4, zhaoPred, zhaoArg, parents);
 
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
@@ -333,7 +333,7 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
         int[] parents = fe.getParents(simpleSent);
-        ZhaoObject zhaoObj = new ZhaoObject(3, parents, simpleSent);
+        FeatureObject zhaoObj = new FeatureObject(3, parents, simpleSent);
         assertEquals(zhaoObj.getParent(), 5);
         assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
         assertEquals(zhaoObj.getFarLeftChild(), -2);
@@ -364,6 +364,7 @@ public class SentFeatureExtractorTest {
 
         ArrayList<String> allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
+            fe.addNaradowskySoloFeatures(i, allFeats);
             for (int j = 0; j < sent.size(); j++) {
                 fe.addNaradowskyPairFeatures(i, j, allFeats);
             }
@@ -371,12 +372,60 @@ public class SentFeatureExtractorTest {
         for (String f : allFeats) {
             System.out.println(f);
         }
-        //Check that POS is not gold POS
+    }
+    
+    @Test
+    public void testAddBjorkelundPairFeatures() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence1();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+
+        ArrayList<String> allFeats = new ArrayList<String>();
+        fe.addBjorkelundPairFeatures(0, 1, allFeats);
+        for (String f : allFeats) {
+            System.out.println(f);
+        }        
+    }
+    
+    @Test
+    public void testBjorkelundObjectSiblings() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence1();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = false;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        FeatureObject b = new FeatureObject(3, parents, simpleSent);
+        assertEquals(b.getRightSibling(), 4);
+        assertEquals(b.getLeftSibling(), 0);
+        b = new FeatureObject(0, parents, simpleSent);
+        assertEquals(b.getLeftSibling(), -1);
+        assertEquals(b.getRightSibling(), 3);
+        sent = getSpanishConll09Sentence2();
+        simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        parents = fe.getParents(simpleSent);
+        b = new FeatureObject(3, parents, simpleSent);
+        // Only true when we're using predicted siblings.
+        assertEquals(b.getLeftSibling(), -1);
+        assertEquals(b.getRightSibling(), 7);
+        csPrm.useGoldSyntax = true;
+        simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        parents = fe.getParents(simpleSent);
+        b = new FeatureObject(3, parents, simpleSent);
+        assertEquals(b.getLeftSibling(), 2);
+        assertEquals(b.getRightSibling(), 4);
     }
     
     public static CoNLL09Sentence getSpanishConll09Sentence1() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();  
-        System.out.println("here");
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
         tokens.add(new CoNLL09Token("1       _       _       _       p       p       _       _       2       2       suj     suj     _       _       arg1-tem        _"));
         tokens.add(new CoNLL09Token("2       Resultaban      resultar        resultar        v       v       postype=main|gen=c|num=p|person=3|mood=indicative|tense=imperfect       postype=main|gen=c|num=p|person=3|mood=indicative|tense=imperfect       0       0       sentence        sentence        Y       resultar.c2     _       _"));
@@ -386,7 +435,6 @@ public class SentFeatureExtractorTest {
         tokens.add(new CoNLL09Token("6       ser     ser     ser     v       v       postype=semiauxiliary|gen=c|num=c|mood=infinitive       postype=semiauxiliary|gen=c|num=c|mood=infinitive       5       5       S       S       Y       ser.c2  _       _"));
         tokens.add(new CoNLL09Token("7       buenos  buen    bueno   a       a       postype=qualificative|gen=m|num=p       postype=qualificative|gen=m|num=p       6       6       atr     atr     _       _       _       arg2-atr"));
         tokens.add(new CoNLL09Token("8       .       .       .       f       f       punct=period    punct=period    2       2       f       f       _       _       _       _"));
-        System.out.println("here2");
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         return sent;
