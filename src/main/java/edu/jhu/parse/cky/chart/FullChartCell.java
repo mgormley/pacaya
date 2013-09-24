@@ -53,7 +53,12 @@ public class FullChartCell implements ChartCell {
      */
     private boolean isClosed;
 
-    public FullChartCell(CnfGrammar grammar, ParseType parseType) {
+    private int i;
+    private int j;
+    
+    public FullChartCell(int i, int j, CnfGrammar grammar, ParseType parseType) {
+        this.i = i;
+        this.j = j;
         scores = new double[grammar.getNumNonTerminals()];
         bps = new BackPointer[grammar.getNumNonTerminals()];
         nts = new IntArrayList();
@@ -122,6 +127,7 @@ public class FullChartCell implements ChartCell {
     public void close() {
         isClosed = true;
         ntsArray = nts.toNativeArray();
+        //log.trace("FullChartCell: i, j, nts.size(): %d %d %d\n", i, j, nts.size());
     }
     
 }

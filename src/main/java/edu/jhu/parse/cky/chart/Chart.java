@@ -113,7 +113,7 @@ public class Chart {
                     chart[i][j] = new DoubleHashChartCell(grammar);
                     break;
                 case FULL:
-                    chart[i][j] = new FullChartCell(grammar, parseType);
+                    chart[i][j] = new FullChartCell(i, j, grammar, parseType);
                     break;
                 case FULL_BREAK_TIES:
                     chart[i][j] = new FullTieBreakerChartCell(grammar, true);

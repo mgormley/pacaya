@@ -102,7 +102,6 @@ public class CkyPcfgParserTest {
         LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
         ChartCellType cellType = ChartCellType.FULL;
         
-        // time flies like an arrow.
         CnfGrammarReader builder = new CnfGrammarReader();
         builder.loadFromFile(r0GrammarFile);
         
@@ -120,6 +119,27 @@ public class CkyPcfgParserTest {
         System.out.println(treeStr);
         Assert.assertEquals(goldTree, treeStr);
         Assert.assertEquals(-46.24, logProb, 1e-2);
+    }
+
+    public void testPetrovGrammar() throws IOException {
+        LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        ChartCellType cellType = ChartCellType.FULL;
+        
+        // time flies like an arrow.
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromFile("/Users/mgormley/research/parsing/data/grammars/eng.sm6.gr.gz");
+        
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
+                
+        Pair<BinaryTree, Double> pair = parseSentence("Papa ate the beans with a knife .", grammar, loopOrder, cellType);
+        BinaryTree tree = pair.get1();
+        double logProb = pair.get2();
+        
+        System.out.println(logProb);
+        System.out.println(tree);
+        System.out.println(tree.getAsPennTreebankString());
+        String treeStr = tree.getAsPennTreebankString().replaceAll("\\s+", " ");
+        System.out.println(treeStr);
     }
     
     // TODO: we should parse with each method and check that we get the same solution.
