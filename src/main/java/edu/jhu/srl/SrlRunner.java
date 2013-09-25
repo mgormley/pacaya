@@ -324,7 +324,7 @@ public class SrlRunner {
         }
 
         log.info("Building factor graphs and extracting features.");
-        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();
+        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();        
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         data = builder.getData(sents);     
 
@@ -332,7 +332,7 @@ public class SrlRunner {
         // where we've never seen the predicate.
         if (prm.fgPrm.predictSense) {
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), CorpusStatistics.UNKNOWN_SENSE));
+            fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
