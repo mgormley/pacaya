@@ -6,12 +6,11 @@ import java.util.List;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.util.Pair;
 
-public class ZhaoObject extends CoNLL09Token {
+public class ZhaoObject {
     
     /* Feature constructor based on CoNLL 09:
      * "Multilingual Dependency Learning:
@@ -20,12 +19,9 @@ public class ZhaoObject extends CoNLL09Token {
 
     private static final String NO_MORPH = "NO_MORPH"; 
 
-    private CorpusStatistics cs;
-    private CoNLL09Sentence sent;
-    private int idx;
-    private int parent;
+    private SimpleAnnoSentence sent;
+    private int idx = -1;
     private List<String> feat;
-    private CoNLL09Token word;
     private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
@@ -45,9 +41,8 @@ public class ZhaoObject extends CoNLL09Token {
     private ArrayList<Integer> noFarChildren;
     
     
-    public ZhaoObject(int idx, int[] parents, CoNLL09Sentence sent, CorpusStatistics cs) {
-        super(sent.get(idx));
-        /* Call CoNLL09Token so that following ZHANG we can get Word Property features.
+    public ZhaoObject(int idx, int[] parents, SimpleAnnoSentence sent) {
+        /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
          * 2. lemma, 
@@ -57,15 +52,12 @@ public class ZhaoObject extends CoNLL09Token {
          * 6. semantic dependency label (semdprel) 
          * 7. and characters (char) in the word form (only suitable for Chinese and Japanese). */
         this.idx = idx;
-        this.cs = cs;
         this.sent = sent;
         this.parents = parents;
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
-        this.word = sent.get(idx);
-        setPfeat(idx);
+        setFeat();
         setRootPath();
-        setParent();
         setChildren();
         /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
          * and high(low) support verb or noun.
@@ -77,12 +69,10 @@ public class ZhaoObject extends CoNLL09Token {
         /* ZHANG: Family. Two types of children sets for the predicate or argument candidate are considered, 
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
-        this.noFarChildren = new ArrayList<Integer>();
         setNoFarChildren();
     }
 
     public ZhaoObject(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg, int[] parents) {
-        super(zhaoPred);
         this.parents = parents;
         this.linePath = new ArrayList<Integer>();
         this.dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
@@ -94,49 +84,22 @@ public class ZhaoObject extends CoNLL09Token {
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
     }
-        
-    public ZhaoObject(String input) {
-        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
-        String pos, String ppos, List<String> feat, List<String> pfeat,
-        int head, int phead, String deprel, String pdeprel,
-        boolean fillpred, String pred, List<String> apreds) */
-        super(-1, "FORM_" + input, "LEMMA_" + input, "PLEMMA_" + input, "POS_" + input, "PPOS_" + input, null, null, -2, -2, "DEPREL_" + input, "PDEPREL_" + input, false, "PRED_" + input, null);
-        setPfeat(-1);
-        this.rootPath = new ArrayList<Pair<Integer, Dir>>();
-        this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
-        this.parent = -1;
-        this.children = new ArrayList<Integer>();
-        this.children.add(-1);
-        this.farLeftChild = -1;
-        this.farRightChild = -1;
-        this.nearLeftChild = -1;
-        this.nearRightChild = -1;
-        this.argLowSupport = -1;
-        this.argHighSupport = -1;
-        this.predLowSupport = -1;
-        this.predHighSupport = -1;
-        this.noFarChildren = new ArrayList<Integer>();
-        setNoFarChildren();
-    }
     
     
     // ------------------------ Getters and Setters ------------------------ //
-    
-    @Override
-    public List<String> getPfeat() {
+
+    public List<String> getFeat() {
         return feat;
     }
-        
-    public void setPfeat(Integer idx) {
+    
+    public void setFeat() {
         feat = new ArrayList<String>(6);
-        if (idx == -1) {
+        if (idx == -1 || idx >= sent.size()) {
             for (int i = 0; i < 6; i++) {
                 feat.add(NO_MORPH);
             }            
         } else {
-            // NOTE:  We're calling the original CoNLL09 word token, 
-            // since it's overridden right above.
-            List<String> coNLLFeats = word.getPfeat();
+            List<String> coNLLFeats = sent.getFeats(idx);
             if (coNLLFeats == null) {
                 for (int i = 0; i < 6; i++) {
                     feat.add(NO_MORPH);
@@ -150,23 +113,69 @@ public class ZhaoObject extends CoNLL09Token {
         }
     }
     
+    public String getForm() {
+        if (idx < 0) {
+            return "BEGIN_NO_FORM";
+        } else if (idx >= sent.size()) {
+            return "END_NO_FORM";
+        }
+        return sent.getWord(idx);
+    }
+    
+    public String getLemma() {
+        if (idx < 0) {
+            return "BEGIN_NO_LEMMA";
+        } else if (idx >= sent.size()) {
+            return "END_NO_LEMMA";
+        }
+        return sent.getLemma(idx);
+    }
+    
+    public String getPos() {
+        if (idx < 0) {
+            return "BEGIN_NO_POS";
+        } else if (idx >= sent.size()) {
+            return "END_NO_POS";
+        }
+        return sent.getPosTag(idx);
+    }
+    
+    public String getDeprel() {
+        if (idx < 0) {
+            return "BEGIN_NO_DEPREL";
+        } else if (idx >= sent.size()) {
+            return "END_NO_DEPREL";
+        }
+        return sent.getDeprel(idx);
+    }
+
+    public int getParent() {
+        if (idx < 0) {
+            return -2;
+        } else if (idx >= sent.size()) {
+            return -1;
+        }
+        return sent.getParent(idx);
+    }
+
+    public String getSense() {
+        SrlPred pred = sent.getSrlGraph().getPredAt(idx);
+        if (pred == null) {
+            return "NO_SENSE";
+        }
+        return sent.getSrlGraph().getPredAt(idx).getLabel();
+    }
+    
     public List<Pair<Integer, Dir>> getRootPath() {
         return rootPath;
     }
     
     private void setRootPath() {
-        this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
-    }
-
-    public int getParent() {
-        return parent;
-    }
-    
-    public void setParent() {
-        if (cs.prm.useGoldSyntax) {
-            this.parent = word.getHead() - 1;
+        if (idx < 0 || idx >= sent.size()) {
+            this.rootPath =  new ArrayList<Pair<Integer,Dir>>();
+            this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
         } else {
-            this.parent = word.getPhead() - 1;
+            this.rootPath = DepTree.getDependencyPath(idx, -1, parents);
         }
     }
     
@@ -175,7 +184,12 @@ public class ZhaoObject extends CoNLL09Token {
     }
 
     public void setChildren() {
-        this.children = DepTree.getChildrenOf(parents, idx);
+        if (idx < 0 || idx >= sent.size()) {
+            this.children = new ArrayList<Integer>();
+            this.children.add(-1);
+        } else {
+            this.children = DepTree.getChildrenOf(parents, idx);
+        }
     }    
     
     public int getFarLeftChild() {
@@ -232,6 +246,7 @@ public class ZhaoObject extends CoNLL09Token {
     }
     
     public void setNoFarChildren() {
+        this.noFarChildren = new ArrayList<Integer>();
         this.noFarChildren.add(nearLeftChild);
         this.noFarChildren.add(nearRightChild);
     }
@@ -272,12 +287,7 @@ public class ZhaoObject extends CoNLL09Token {
             if (i == -1) {
                 break;
             }
-            
-            if (cs.prm.useGoldSyntax) {
-                parentPos = sent.get(i).getPos();
-            } else {
-                parentPos = sent.get(i).getPpos();
-            }
+            parentPos = sent.getPosTag(i);
             if (parentPos.equals(argSupport)) {
                 if (!haveArgLow) {
                     haveArgLow = true;

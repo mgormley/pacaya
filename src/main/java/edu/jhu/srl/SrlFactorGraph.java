@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
@@ -178,8 +179,8 @@ public class SrlFactorGraph extends FactorGraph {
     private final int n;
                 
 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, CoNLL09Sentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
-        this(prm, sent.getWords(), sent.getPlemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
+    public SrlFactorGraph(SrlFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
+        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
     }
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,

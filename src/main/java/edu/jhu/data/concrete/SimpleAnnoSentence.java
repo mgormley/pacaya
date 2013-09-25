@@ -6,6 +6,9 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
+import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.util.Pair;
 
 /**
@@ -14,6 +17,7 @@ import edu.jhu.util.Pair;
  * This representation only uses strings, without Label objects or Alphabet objects.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SimpleAnnoSentence {
 
@@ -23,6 +27,10 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
+    private ArrayList<List<String>> feats;
+    private List<String> deprels;
+    private Object origSentence;
+
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
      * of the parent of the word at index i. The Wall node has index -1. If a
@@ -30,11 +38,19 @@ public class SimpleAnnoSentence {
      * with a head).
      */
     private int[] parents;
+    private SrlGraph srlGraph;
+
+
     
     // TODO: add constituency parse as NaryTree<String>
     
+    public SimpleAnnoSentence(Object sentence) {
+        this.origSentence = sentence;
+    }
+
+
     public SimpleAnnoSentence() {
-        
+
     }
 
 
@@ -53,12 +69,30 @@ public class SimpleAnnoSentence {
         return lemmas.get(i);
     }
     
+    public int getParent(int i) {
+        return parents[i];
+    }
+
+    public List<String> getFeats(int i) {
+        return feats.get(i);
+    }
+
+    public String getDeprel(int i) {
+        return deprels.get(i);
+    }
+        
     /**
      * Gets a list of words corresponding to a token span.
      */
     public List<String> getWords(Span span) {
         return getSpan(words, span);
     }
+
+    
+    public List<Integer> getParents(Span span) {
+        return getSpan(parents, span);
+    }
+       
 
     /**
      * Gets a list of POS tags corresponding to a token span.
@@ -74,6 +108,8 @@ public class SimpleAnnoSentence {
         return getSpan(lemmas, span);
     }
 
+    
+    
     /**
      * Gets a list of word/POS tags corresponding to a token span.
      */
@@ -142,6 +178,16 @@ public class SimpleAnnoSentence {
         return list;
     }
 
+    private static List<Integer> getSpan(int[] parents, Span span) {
+        assert (span != null);
+        List<Integer> list = new ArrayList<Integer>();
+        for (int i = span.start(); i < span.end(); i++) {
+            list.add(i);
+        }
+        return list;
+    }
+
+    
     // TODO: Consider moving this to LabelSequence.
     private static String getSpanStr(List<String> seq, Span span) {
         assert (span != null);
@@ -202,13 +248,55 @@ public class SimpleAnnoSentence {
     public void setPosTags(List<String> posTags) {
         this.posTags = posTags;
     }
-
+    
     public int[] getParents() {
         return parents;
     }
 
     public void setParents(int[] parents) {
         this.parents = parents;
+    }
+
+    public Integer size() {
+        return words.size();
+    }
+
+
+    public SrlGraph getSrlGraph() {
+        return srlGraph;
+    }
+    
+    public void setSrlGraph(SrlGraph srlGraph) {
+        this.srlGraph = srlGraph;
+    }
+
+    
+    public void setFeats(ArrayList<List<String>> feats) {
+        this.feats = feats;
+    }
+    
+    
+    public void setDeprels(ArrayList<String> deprels) {
+        this.deprels = deprels;
+    }
+
+
+    public CoNLL09Sentence toCoNLL() {
+        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
+        String pos, String ppos, List<String> feat, List<String> pfeat,
+        int head, int phead, String deprel, String pdeprel,
+        boolean fillpred, String pred, List<String> apreds) */
+        assert(origSentence != null);
+        CoNLL09Sentence updatedSentence = (CoNLL09Sentence) origSentence;
+        for (int i = 0; i < updatedSentence.size(); i++) {
+            CoNLL09Token tok = updatedSentence.get(i);
+            tok.setPlemma(getLemma(i));
+            tok.setPpos(getPosTag(i));
+            tok.setPfeat(getFeats(i));
+            tok.setPhead(getParent(i) + 1);
+            tok.setPdeprel(getDeprel(i));
+        }
+        return updatedSentence;
     }
     
 }

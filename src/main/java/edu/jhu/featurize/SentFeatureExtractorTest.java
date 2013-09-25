@@ -9,6 +9,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.DepTree.Dir;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
@@ -28,19 +29,21 @@ public class SentFeatureExtractorTest {
             CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
             csPrm.useGoldSyntax = true;
             CorpusStatistics cs = new CorpusStatistics(csPrm);
-            cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-            int[] goldParents = fe.getParents(sent);
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+            cs.init(Utilities.getList(simpleSent));
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+            int[] goldParents = fe.getParents(simpleSent);
             assertArrayEquals(new int[] { 1, 2, -1, 2 }, goldParents);
         }
         {
             // Test without gold syntax.
-            CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
-            prm.useGoldSyntax = false;
-            CorpusStatistics cs = new CorpusStatistics(prm);
-            cs.init(Utilities.getList(sent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-            int[] predParents = fe.getParents(sent);
+            CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+            csPrm.useGoldSyntax = false;
+            CorpusStatistics cs = new CorpusStatistics(csPrm);
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+            cs.init(Utilities.getList(simpleSent));
+            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+            int[] predParents = fe.getParents(simpleSent);
             assertArrayEquals(new int[] { 2, 0, -1, 2 }, predParents);
         }
     }
@@ -51,10 +54,11 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
 
         ArrayList<String> allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
@@ -67,7 +71,7 @@ public class SentFeatureExtractorTest {
         }
         //Check that POS is not gold POS
         fePrm.withSupervision = true;
-        fe = new SentFeatureExtractor(fePrm, sent, cs);
+        fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
@@ -82,12 +86,13 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(1, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(0, parents, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        ZhaoObject zhaoPred = new ZhaoObject(1, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(0, parents, simpleSent);
         ZhaoObject zhaoLink = new ZhaoObject(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
@@ -102,12 +107,13 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
 
         String predPos = zhaoPred.getPos();
         String argPos = zhaoArg.getPos();
@@ -115,15 +121,16 @@ public class SentFeatureExtractorTest {
         
         csPrm.useGoldSyntax = false;
         cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         fePrm = new SentFeatureExtractorPrm();
-        fe = new SentFeatureExtractor(fePrm, sent, cs);
-        parents = fe.getParents(sent);
-        zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        parents = fe.getParents(simpleSent);
+        zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        zhaoArg = new ZhaoObject(4, parents, simpleSent);
         
         predPos = zhaoPred.getPos();
-        argPos = zhaoArg.getPpos();
+        argPos = zhaoArg.getPos();
         
         assertEquals(predPos,"p");
         assertEquals(argPos,"WRONG");
@@ -135,14 +142,15 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
-        List<String> predFeat = zhaoPred.getPfeat();
-        List<String> argFeat = zhaoArg.getPfeat();
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
+        List<String> predFeat = zhaoPred.getFeat();
+        List<String> argFeat = zhaoArg.getFeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
         intendedPredFeats.add("postype=relative");
         intendedPredFeats.add("gen=c");
@@ -168,14 +176,15 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -192,8 +201,8 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
 
         // New example indices.
-        zhaoPred = new ZhaoObject(0, parents, sent, cs);
-        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        zhaoPred = new ZhaoObject(0, parents, simpleSent);
+        zhaoArg = new ZhaoObject(4, parents, simpleSent);
         zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -225,14 +234,15 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
         
         // Path between two indices.
@@ -250,8 +260,8 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
         
         // New example indices.
-        zhaoPred = new ZhaoObject(0, parents, sent, cs);
-        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        zhaoPred = new ZhaoObject(0, parents, simpleSent);
+        zhaoArg = new ZhaoObject(4, parents, simpleSent);
         zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -284,21 +294,22 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = false;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
-        int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoPred = new ZhaoObject(3, parents, sent, cs);
-        ZhaoObject zhaoArg = new ZhaoObject(4, parents, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        ZhaoObject zhaoPred = new ZhaoObject(3, parents, simpleSent);
+        ZhaoObject zhaoArg = new ZhaoObject(4, parents, simpleSent);
         ZhaoObject zhaoLink = new ZhaoObject(3, 4, zhaoPred, zhaoArg, parents);
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
         assertEquals(expectedPath,seenPath);
-        
-        zhaoPred = new ZhaoObject(0, parents, sent, cs);
-        zhaoArg = new ZhaoObject(4, parents, sent, cs);
+
+        zhaoPred = new ZhaoObject(0, parents, simpleSent);
+        zhaoArg = new ZhaoObject(4, parents, simpleSent);
         zhaoLink = new ZhaoObject(0, 4, zhaoPred, zhaoArg, parents);
 
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -316,12 +327,13 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
-        int[] parents = fe.getParents(sent);
-        ZhaoObject zhaoObj = new ZhaoObject(3, parents, sent, cs);
+        int[] parents = fe.getParents(simpleSent);
+        ZhaoObject zhaoObj = new ZhaoObject(3, parents, simpleSent);
         assertEquals(zhaoObj.getParent(), 5);
         assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
         assertEquals(zhaoObj.getFarLeftChild(), -2);
@@ -345,9 +357,10 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        cs.init(Utilities.getList(sent));
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+        cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, sent, cs);
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
 
         ArrayList<String> allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
@@ -362,7 +375,8 @@ public class SentFeatureExtractorTest {
     }
     
     public static CoNLL09Sentence getSpanishConll09Sentence1() {
-        List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();        
+        List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();  
+        System.out.println("here");
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
         tokens.add(new CoNLL09Token("1       _       _       _       p       p       _       _       2       2       suj     suj     _       _       arg1-tem        _"));
         tokens.add(new CoNLL09Token("2       Resultaban      resultar        resultar        v       v       postype=main|gen=c|num=p|person=3|mood=indicative|tense=imperfect       postype=main|gen=c|num=p|person=3|mood=indicative|tense=imperfect       0       0       sentence        sentence        Y       resultar.c2     _       _"));
@@ -372,6 +386,7 @@ public class SentFeatureExtractorTest {
         tokens.add(new CoNLL09Token("6       ser     ser     ser     v       v       postype=semiauxiliary|gen=c|num=c|mood=infinitive       postype=semiauxiliary|gen=c|num=c|mood=infinitive       5       5       S       S       Y       ser.c2  _       _"));
         tokens.add(new CoNLL09Token("7       buenos  buen    bueno   a       a       postype=qualificative|gen=m|num=p       postype=qualificative|gen=m|num=p       6       6       atr     atr     _       _       _       arg2-atr"));
         tokens.add(new CoNLL09Token("8       .       .       .       f       f       punct=period    punct=period    2       2       f       f       _       _       _       _"));
+        System.out.println("here2");
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         return sent;

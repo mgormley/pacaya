@@ -192,9 +192,9 @@ public class SrlBerkeleySignatureBuilder implements Serializable {
                 } else if (!hasDash && ch == '-') {
                     hasDash = true;
                 } else if (Character.isLetter(ch)) {
-                    if (!hasLower && Character.isLowerCase(ch)) {
+                    if (Character.isLowerCase(ch)) {
                         hasLower = true;
-                    } else if (!hasLower && Character.isTitleCase(ch)) {
+                    } else if (Character.isTitleCase(ch)) {
                         hasLower = true;
                         numCaps++;
                     } else {
@@ -276,9 +276,9 @@ public class SrlBerkeleySignatureBuilder implements Serializable {
                 } else if (!hasDash && ch == '-') {
                     hasDash = true;
                 } else if (Character.isLetter(ch)) {
-                    if (!hasLower && Character.isLowerCase(ch)) {
+                    if (Character.isLowerCase(ch)) {
                         hasLower = true;
-                    } else if (!hasLower && Character.isTitleCase(ch)) {
+                    } else if (Character.isTitleCase(ch)) {
                         hasLower = true;
                         numCaps++;
                     } else {

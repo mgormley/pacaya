@@ -27,6 +27,7 @@ import edu.jhu.util.Alphabet;
  * SentFeatureExtraction which considers only the observations.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class SrlFeatureExtractor implements ObsFeatureExtractor {
 

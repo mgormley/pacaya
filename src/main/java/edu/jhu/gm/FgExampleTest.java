@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.Var.VarType;
@@ -31,10 +32,10 @@ public class FgExampleTest {
         //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
-        List<CoNLL09Sentence> sents = getList(sent);
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
+        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm));
         cs.init(sents);
         
         System.out.println("Done reading.");
