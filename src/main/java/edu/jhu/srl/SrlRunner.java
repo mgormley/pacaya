@@ -283,38 +283,40 @@ public class SrlRunner {
         FgExamples data;
         List<SimpleAnnoSentence> sents;
         int numTokens = 0;
-        List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
+        
+        // Read the data and (optionally) write it to the gold file.
         if (dataType == DatasetType.CONLL_2009) {
-            CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
+            List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
             sents = new ArrayList<SimpleAnnoSentence>();
+            CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
             for (CoNLL09Sentence sent : reader) {
                 if (sents.size() >= maxNumSentences) {
                     break;
                 }
                 if (sent.size() <= maxSentenceLength) {
+                    sent.intern();
                     sent = mungeData(sent);
                     conllSents.add(sent);
                     sents.add(sent.toSimpleAnnoSentence(cs.prm));
                     numTokens += sent.size();
                 }
             }
-            reader.close();            
+            reader.close();     
+
+            if (goldFile != null) {
+                log.info("Writing gold data to file: " + goldFile);
+                CoNLL09Writer cw = new CoNLL09Writer(goldFile);
+                for (CoNLL09Sentence sent : conllSents) {
+                    cw.write(sent);
+                }
+                cw.close();
+            }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }
         
         log.info("Num " + name + " sentences: " + sents.size());   
         log.info("Num " + name + " tokens: " + numTokens);
-
-        if (goldFile != null) {
-            log.info("Writing gold data to file: " + goldFile);
-            CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-            for (CoNLL09Sentence sent : conllSents) {
-                cw.write(sent);
-            }
-            cw.close();
-        }
-
 
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
