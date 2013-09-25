@@ -24,7 +24,7 @@ public class CorpusStatisticsTest {
     
     String expectedCsToString = "CorpusStatistics [\n"
             + "     knownWords=[de],\n"
-            + "     knownUnks=[UNK-LC-s, UNK-CAPS, UNK, UNK-LC],\n"
+            + "     knownUnks=[UNK-LC-s, UNK, UNK-LC],\n"
             + "     knownPostags=[f, v, d, s, r, p, a, n, z],\n"
             + "     linkStateNames=[True, False],\n"
             + "     roleStateNames=[argUNK, arg2, arg1, arg0, _, argm],\n"
