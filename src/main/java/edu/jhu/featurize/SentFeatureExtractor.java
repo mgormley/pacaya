@@ -58,7 +58,7 @@ public class SentFeatureExtractor {
         if (!prm.biasOnly) {
             // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
             this.parents = getParents(sent);
-            if (prm.useZhaoFeats || prm.useDepPathFeats) {
+            if (prm.useZhaoFeats || prm.useDepPathFeats || prm.useBjorkelundFeats) {
                 this.featuredSentence = createZhaoSentence();
                 this.featuredHeadDefault = new FeatureObject(-1, parents, sent);
                 this.featuredTailDefault = new FeatureObject(sent.size(), parents, sent);
