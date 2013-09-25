@@ -17,6 +17,12 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
 
     private static final long serialVersionUID = -6867088670574667680L;
 
+    public static SimpleAnnoSentenceCollection getSingleton(SimpleAnnoSentence sent) {
+        SimpleAnnoSentenceCollection col = new  SimpleAnnoSentenceCollection();
+        col.add(sent);
+        return col;
+    }
+
     public SentenceCollection getWordsAsSentenceCollection(Alphabet<Label> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
         for (SimpleAnnoSentence sent : this) {

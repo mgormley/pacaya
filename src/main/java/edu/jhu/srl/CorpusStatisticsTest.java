@@ -4,12 +4,12 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -37,7 +37,7 @@ public class CorpusStatisticsTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         List<CoNLL09Sentence> sents = cr.readSents(2);
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence sent : sents) {
             sent.normalizeRoleNames();
             SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);

@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
@@ -17,17 +17,17 @@ import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.FactorGraph.FgEdge;
-import edu.jhu.gm.FactorGraph.FgNode;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
+import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
 
 public class CrfObjectiveTest {
     
@@ -242,7 +242,7 @@ public class CrfObjectiveTest {
         System.out.println("Done reading.");
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+        SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         FeatureTemplateList fts = new FeatureTemplateList();

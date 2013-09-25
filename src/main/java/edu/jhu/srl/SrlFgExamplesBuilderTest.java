@@ -5,15 +5,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 
 import edu.jhu.data.DepTree;
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -50,7 +48,7 @@ public class SrlFgExamplesBuilderTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
         
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
@@ -83,7 +81,7 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
@@ -125,7 +123,7 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
 
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
@@ -177,7 +175,7 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
@@ -218,7 +216,7 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));

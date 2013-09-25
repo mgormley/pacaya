@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -46,7 +47,7 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        List<SimpleAnnoSentence> sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
+        SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
@@ -78,7 +79,7 @@ public class SrlFeatureExtractorTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         List<CoNLL09Sentence> conllSents = cr.readSents(1, 20);
-        List<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence sent : conllSents) {
             sent.normalizeRoleNames();
             SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
@@ -129,7 +130,7 @@ public class SrlFeatureExtractorTest {
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         List<CoNLL09Sentence> sents = getList(sent);
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
@@ -178,7 +179,7 @@ public class SrlFeatureExtractorTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
 
-        List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
+        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {

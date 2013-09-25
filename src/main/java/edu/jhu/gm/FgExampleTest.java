@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
 import static edu.jhu.util.Utilities.getList;
 import static org.junit.Assert.assertEquals;
 
@@ -8,16 +9,15 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.Var.VarType;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.util.Alphabet;
 
 public class FgExampleTest {
 
@@ -35,7 +35,7 @@ public class FgExampleTest {
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+        SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         System.out.println("Done reading.");

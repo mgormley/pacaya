@@ -69,7 +69,7 @@ public class SrlFgExamplesBuilder {
         this.cs = cs;
     }
     
-    public void preprocess(List<SimpleAnnoSentence> sents) {
+    public void preprocess(SimpleAnnoSentenceCollection sents) {
         if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {
             // Skip this preprocessing step since it will have no effect.
             return;
@@ -123,7 +123,7 @@ public class SrlFgExamplesBuilder {
         }
     }
 
-    public FgExamples getData(List<SimpleAnnoSentence> sents) {
+    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
         preprocess(sents);
         
         FgExamples data = new FgExamples(fts);

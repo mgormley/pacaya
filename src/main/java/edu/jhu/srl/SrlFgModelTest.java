@@ -6,11 +6,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
-import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -25,7 +24,7 @@ public class SrlFgModelTest {
             InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
             CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
             CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-            List<SimpleAnnoSentence> sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
+            SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(sents);
             

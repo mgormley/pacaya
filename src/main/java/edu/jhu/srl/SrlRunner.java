@@ -13,6 +13,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
@@ -35,7 +36,6 @@ import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.gm.VarSet;
-import edu.jhu.gm.data.ErmaWriter;
 import edu.jhu.optimize.AdaDelta;
 import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.optimize.AdaGrad;
@@ -281,13 +281,13 @@ public class SrlRunner {
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExamples data;
-        List<SimpleAnnoSentence> sents;
+        SimpleAnnoSentenceCollection sents;
         int numTokens = 0;
         
         // Read the data and (optionally) write it to the gold file.
         if (dataType == DatasetType.CONLL_2009) {
             List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
-            sents = new ArrayList<SimpleAnnoSentence>();
+            sents = new SimpleAnnoSentenceCollection();
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
             for (CoNLL09Sentence sent : reader) {
                 if (sents.size() >= maxNumSentences) {
@@ -374,7 +374,7 @@ public class SrlRunner {
             log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
             if (dataType == DatasetType.CONLL_2009) {
                 @SuppressWarnings("unchecked")
-                List<SimpleAnnoSentence> simpleSents = (List<SimpleAnnoSentence>)data.getSourceSentences();
+                SimpleAnnoSentenceCollection simpleSents = (SimpleAnnoSentenceCollection)data.getSourceSentences();
                 List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
                 for (int i=0; i< simpleSents.size(); i++) {
                     VarConfig vc = predictions.get(i);

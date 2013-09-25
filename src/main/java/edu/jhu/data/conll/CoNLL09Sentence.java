@@ -10,14 +10,11 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.Lemma;
-import edu.jhu.data.Tag;
-import edu.jhu.data.Word;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.srl.CorpusStatistics;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
@@ -384,8 +381,8 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return updatedSentence;
     }
     
-    public static List<SimpleAnnoSentence> toSimpleAnno(Iterable<CoNLL09Sentence> conllSents, boolean useGoldSyntax) {
-        ArrayList<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
+    public static SimpleAnnoSentenceCollection toSimpleAnno(Iterable<CoNLL09Sentence> conllSents, boolean useGoldSyntax) {
+        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence sent : conllSents) {
             sents.add(sent.toSimpleAnnoSentence(useGoldSyntax));
         }
