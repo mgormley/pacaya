@@ -6,8 +6,6 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.util.Pair;
 
@@ -29,8 +27,6 @@ public class SimpleAnnoSentence {
     private List<String> posTags;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
-    private Object origSentence;
-
     /**
      * Internal representation of a dependency parse: parents[i] gives the index
      * of the parent of the word at index i. The Wall node has index -1. If a
@@ -39,20 +35,14 @@ public class SimpleAnnoSentence {
      */
     private int[] parents;
     private SrlGraph srlGraph;
-
-
-    
     // TODO: add constituency parse as NaryTree<String>
     
-    public SimpleAnnoSentence(Object sentence) {
-        this.origSentence = sentence;
-    }
-
-
+    /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
+    private Object sourceSent;
+    
     public SimpleAnnoSentence() {
 
     }
-
 
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
@@ -69,14 +59,17 @@ public class SimpleAnnoSentence {
         return lemmas.get(i);
     }
     
+    /** Gets the index of the parent of the i'th word. */
     public int getParent(int i) {
         return parents[i];
     }
 
+    /** Gets the features (e.g. morphological features) of the i'th word. */
     public List<String> getFeats(int i) {
         return feats.get(i);
     }
 
+    /** Gets the dependency relation label for the arc from the i'th word to its parent. */
     public String getDeprel(int i) {
         return deprels.get(i);
     }
@@ -222,6 +215,10 @@ public class SimpleAnnoSentence {
     public List<Pair<Integer, Dir>> getDependencyPath(int start, int end) {
         return DepTree.getDependencyPath(start, end, parents);
     }
+
+    public Integer size() {
+        return words.size();
+    }
     
     /* ----------- Getters/Setters for internal storage ------------ */
         
@@ -257,11 +254,6 @@ public class SimpleAnnoSentence {
         this.parents = parents;
     }
 
-    public Integer size() {
-        return words.size();
-    }
-
-
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
@@ -269,34 +261,31 @@ public class SimpleAnnoSentence {
     public void setSrlGraph(SrlGraph srlGraph) {
         this.srlGraph = srlGraph;
     }
-
     
+    public List<String> getDeprels() {
+        return deprels;
+    }
+
+    public void setDeprels(List<String> deprels) {
+        this.deprels = deprels;
+    }
+
+    public ArrayList<List<String>> getFeats() {
+        return feats;
+    }
+
     public void setFeats(ArrayList<List<String>> feats) {
         this.feats = feats;
     }
     
-    
-    public void setDeprels(ArrayList<String> deprels) {
-        this.deprels = deprels;
+    /** Gets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
+    public Object getSourceSent() {
+        return sourceSent;
     }
-
-
-    public CoNLL09Sentence toCoNLL() {
-        /* public CoNLL09Token(int id, String form, String lemma, String plemma,
-        String pos, String ppos, List<String> feat, List<String> pfeat,
-        int head, int phead, String deprel, String pdeprel,
-        boolean fillpred, String pred, List<String> apreds) */
-        assert(origSentence != null);
-        CoNLL09Sentence updatedSentence = (CoNLL09Sentence) origSentence;
-        for (int i = 0; i < updatedSentence.size(); i++) {
-            CoNLL09Token tok = updatedSentence.get(i);
-            tok.setPlemma(getLemma(i));
-            tok.setPpos(getPosTag(i));
-            tok.setPfeat(getFeats(i));
-            tok.setPhead(getParent(i) + 1);
-            tok.setPdeprel(getDeprel(i));
-        }
-        return updatedSentence;
+    
+    /** Sets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
+    public void setSourceSent(Object sourceSent) {
+        this.sourceSent = sourceSent;
     }
     
 }

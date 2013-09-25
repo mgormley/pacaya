@@ -40,7 +40,7 @@ public class CorpusStatisticsTest {
         List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence sent : sents) {
             sent.normalizeRoleNames();
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
             simpleSents.add(simpleSent);
         }
         CorpusStatistics cs = new CorpusStatistics(csPrm);

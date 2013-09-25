@@ -18,7 +18,6 @@ import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
@@ -26,25 +25,11 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
  */
 public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
 
-
-    
-    private static Logger log = Logger.getLogger(CoNLL09Sentence.class);
-    
     public static final Pattern dash = Pattern.compile("-");
 
+    private static final Logger log = Logger.getLogger(CoNLL09Sentence.class);
+    
     private ArrayList<CoNLL09Token> tokens;
-    private ArrayList<String> words;
-    private ArrayList<String> lemmas;
-    private ArrayList<String> posTags;
-    private ArrayList<String> plemmas;
-    private ArrayList<String> pposTags;
-    private int[] parents;
-    private int[] pparents;
-    private ArrayList<List<String>> feats;
-    private ArrayList<List<String>> pfeats;
-    private ArrayList<String> deprels;
-    private ArrayList<String> pdeprels;
-
     
     public CoNLL09Sentence(List<CoNLL09Token> tokens) {
         this.tokens = new ArrayList<CoNLL09Token>(tokens);
@@ -101,18 +86,22 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return tokens.iterator();
     }
     
+    /*
+     * ------------------ Slow, but convenient accessors. ---------------------
+     * Most of these getters take O(n) time to construct a list of strings. The
+     * preferred way to access this class is by looping over the tokens, these
+     * provide a convenient alternative.
+     */
+    
     /**
      * Returns my internal representation of the parent index for each token.
      * The wall has index -1.
      */
-    public void setParentsFromHead() {
-        this.parents = new int[size()];
-        for (int i = 0; i < parents.length; i++) {
-            this.parents[i] = tokens.get(i).getHead() - 1;
-        }
-    }
-    
     public int[] getParentsFromHead() {       
+        int[] parents = new int[size()];
+        for (int i = 0; i < parents.length; i++) {
+            parents[i] = tokens.get(i).getHead() - 1;
+        } 
         return parents;
     }
     
@@ -120,18 +109,15 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
      * Returns my internal representation of the parent index for each token.
      * The wall has index -1.
      */
-    public void setParentsFromPhead() {
-        this.pparents = new int[size()];
-        for (int i = 0; i < pparents.length; i++) {
-            this.pparents[i] = tokens.get(i).getPhead() - 1;
-        }
-    }
-
     public int[] getParentsFromPhead() {
+        int[] pparents = new int[size()];
+        for (int i = 0; i < pparents.length; i++) {
+            pparents[i] = tokens.get(i).getPhead() - 1;
+        }
         return pparents;
     }
 
-    /*
+    /**
      * Converts internal representation back to
      * CoNLL09 format.
      */
@@ -142,89 +128,76 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
 
-    public void setWords() {
-        this.words = new ArrayList<String>(size());
+    public List<String> getWords() {
+        List<String> words = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            this.words.add(tokens.get(i).getForm());            
+            words.add(tokens.get(i).getForm());            
         }
-    }
-    
-    public ArrayList<String> getWords() {
         return words;
     }
     
-    public void setLemmas() {
-        this.lemmas = new ArrayList<String>(size());
+    public List<String> getLemmas() {
+        List<String> lemmas = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            this.lemmas.add(tokens.get(i).getLemma());            
+            lemmas.add(tokens.get(i).getLemma());            
         }
-    }
-
-    public ArrayList<String> getLemmas() {
         return lemmas;
     }
 
-
-    public void setPlemmas() {
-        this.plemmas = new ArrayList<String>(size());
+    public List<String> getPlemmas() {
+        List<String> plemmas = new ArrayList<String>(size());
         for (int i=0; i<size(); i++) {
-            this.plemmas.add(tokens.get(i).getPlemma());            
+            plemmas.add(tokens.get(i).getPlemma());            
         }
-    }
-
-    public ArrayList<String> getPlemmas() {
         return plemmas;
-    }
-
-        
-    public void setPosTags() {
-        this.posTags = new ArrayList<String>(size());
-        for (int i=0; i<size(); i++) {
-            this.posTags.add(tokens.get(i).getPos());            
-        }
     }
     
     public List<String> getPosTags() {
+        List<String> posTags = new ArrayList<String>(size());
+        for (int i=0; i<size(); i++) {
+            posTags.add(tokens.get(i).getPos());            
+        }
         return posTags;
     }
     
-    public void setPposTags() {
-        this.pposTags = new ArrayList<String>(size());
-        for (int i=0; i<size(); i++) {
-            this.pposTags.add(tokens.get(i).getPpos());            
-        }
-    }
-    
     public List<String> getPposTags() {
+        List<String> pposTags = new ArrayList<String>(size());
+        for (int i=0; i<size(); i++) {
+            pposTags.add(tokens.get(i).getPpos());            
+        }
         return pposTags;
     }
     
-    public void setFeats() {
-        this.feats = new ArrayList<List<String>>(size());
+    public ArrayList<List<String>> getFeats() {
+        ArrayList<List<String>> feats = new ArrayList<List<String>>(size());
         for (int i=0; i<size(); i++) {
-            this.feats.add(tokens.get(i).getFeat());            
+            feats.add(tokens.get(i).getFeat());            
         }
+        return feats;
     }
         
-    public void setPfeats() {
-        this.pfeats = new ArrayList<List<String>>(size());
+    public ArrayList<List<String>> getPfeats() {
+        ArrayList<List<String>> pfeats = new ArrayList<List<String>>(size());
         for (int i=0; i<size(); i++) {
-            this.pfeats.add(tokens.get(i).getPfeat());            
+            pfeats.add(tokens.get(i).getPfeat());            
         }
+        return pfeats;
     }
         
-    public void setDeprels() {
-        this.deprels = new ArrayList<String>();
+    public List<String> getDeprels() {
+        List<String> deprels = new ArrayList<String>();
         for (int i=0; i<size(); i++) {
-            this.deprels.add(tokens.get(i).getDeprel());            
+            deprels.add(tokens.get(i).getDeprel());            
         }
+        return deprels;
     }
 
-    public void setPdeprels() {
-        this.pdeprels =  new ArrayList<String>();
+    public List<String> getPdeprels() {
+        List<String> pdeprels =  new ArrayList<String>();
         for (int i=0; i<size(); i++) {
-            this.pdeprels.add(tokens.get(i).getPdeprel());            
+            pdeprels.add(tokens.get(i).getPdeprel());            
         }
+        return pdeprels;
     }
 
     public SrlGraph getSrlGraph() {
@@ -354,7 +327,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         } else if (!tokens.equals(other.tokens))
             return false;
         return true;
-    }    
+    }
  
     public String toString() {
         try {
@@ -368,35 +341,55 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
     }
 
-    public SimpleAnnoSentence toSimpleAnnoSentence(CorpusStatisticsPrm prm) {
-        SimpleAnnoSentence s = new SimpleAnnoSentence(this);
-        setWords();
-        s.setWords(words);
-        s.setSrlGraph(getSrlGraph());
-        if (prm.useGoldSyntax) {
-            setParentsFromHead();
-            setLemmas();
-            setPosTags();
-            setFeats();
-            setDeprels();
-            s.setLemmas(lemmas);
-            s.setParents(parents);
-            s.setPosTags(posTags);
-            s.setFeats(feats);
-            s.setDeprels(deprels);
+    public SimpleAnnoSentence toSimpleAnnoSentence(boolean useGoldSyntax) {
+        return toSimpleAnnoSentence(this, useGoldSyntax);
+    }
+    
+    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLL09Sentence cos, boolean useGoldSyntax) {
+        SimpleAnnoSentence s = new SimpleAnnoSentence();
+        s.setSourceSent(cos);
+        s.setWords(cos.getWords());
+        s.setSrlGraph(cos.getSrlGraph());
+        if (useGoldSyntax) {
+            s.setLemmas(cos.getLemmas());
+            s.setParents(cos.getParentsFromHead());
+            s.setPosTags(cos.getPosTags());
+            s.setFeats(cos.getFeats());
+            s.setDeprels(cos.getDeprels());
         } else {
-            setParentsFromPhead();
-            setPlemmas();
-            setPposTags();
-            setPfeats();
-            setPdeprels();
-            s.setLemmas(plemmas);
-            s.setParents(pparents);
-            s.setPosTags(pposTags);
-            s.setFeats(pfeats);
-            s.setDeprels(pdeprels);
+            s.setLemmas(cos.getPlemmas());
+            s.setParents(cos.getParentsFromPhead());
+            s.setPosTags(cos.getPposTags());
+            s.setFeats(cos.getPfeats());
+            s.setDeprels(cos.getPdeprels());
         }
         return s;
+    }
+
+    public static CoNLL09Sentence fromSimpleAnnoSentence(SimpleAnnoSentence sent) {
+        if(sent.getSourceSent() == null || !(sent.getSourceSent() instanceof CoNLL09Sentence)) {
+            // TODO: Implement this case.
+            throw new RuntimeException("The case where the source sentence is not given is not yet implemented.");
+        }
+        // This gets a copy of the source sentence, and so is not destructive.
+        CoNLL09Sentence updatedSentence = new CoNLL09Sentence((CoNLL09Sentence) sent.getSourceSent());
+        for (int i = 0; i < updatedSentence.size(); i++) {
+            CoNLL09Token tok = updatedSentence.get(i);
+            tok.setPlemma(sent.getLemma(i));
+            tok.setPpos(sent.getPosTag(i));
+            tok.setPfeat(sent.getFeats(i));
+            tok.setPhead(sent.getParent(i) + 1);
+            tok.setPdeprel(sent.getDeprel(i));
+        }
+        return updatedSentence;
+    }
+    
+    public static List<SimpleAnnoSentence> toSimpleAnno(Iterable<CoNLL09Sentence> conllSents, boolean useGoldSyntax) {
+        ArrayList<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
+        for (CoNLL09Sentence sent : conllSents) {
+            sents.add(sent.toSimpleAnnoSentence(useGoldSyntax));
+        }
+        return sents;
     }
 
 }

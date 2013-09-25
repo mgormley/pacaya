@@ -55,7 +55,7 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
         
@@ -86,7 +86,7 @@ public class SrlFgExamplesBuilderTest {
         List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);        
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
@@ -128,7 +128,7 @@ public class SrlFgExamplesBuilderTest {
         List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
 
         cs.init(simpleSents);
@@ -180,7 +180,7 @@ public class SrlFgExamplesBuilderTest {
         List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -221,7 +221,7 @@ public class SrlFgExamplesBuilderTest {
         List<SimpleAnnoSentence> simpleSents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         
         CorpusStatistics cs = new CorpusStatistics(csPrm);

@@ -46,7 +46,7 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        List<SimpleAnnoSentence> sents = cr.readSentsToSimple(1, csPrm);
+        List<SimpleAnnoSentence> sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
@@ -81,7 +81,7 @@ public class SrlFeatureExtractorTest {
         List<SimpleAnnoSentence> sents = new ArrayList<SimpleAnnoSentence>();
         for (CoNLL09Sentence sent : conllSents) {
             sent.normalizeRoleNames();
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
             sents.add(simpleSent);
         }
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -134,7 +134,7 @@ public class SrlFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
 
@@ -183,7 +183,7 @@ public class SrlFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm));
+            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
         

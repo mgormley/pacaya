@@ -35,7 +35,7 @@ public class FgExampleTest {
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm));
+        List<SimpleAnnoSentence> sents = getList(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         System.out.println("Done reading.");

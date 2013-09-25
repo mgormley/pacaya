@@ -13,6 +13,7 @@ import org.junit.Test;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
+import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.gm.FgModelTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
@@ -24,7 +25,7 @@ public class SrlFgModelTest {
             InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
             CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
             CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-            List<SimpleAnnoSentence> sents = cr.readSentsToSimple(1, csPrm);
+            List<SimpleAnnoSentence> sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(sents);
             

@@ -297,7 +297,7 @@ public class SrlRunner {
                     sent.intern();
                     sent = mungeData(sent);
                     conllSents.add(sent);
-                    sents.add(sent.toSimpleAnnoSentence(cs.prm));
+                    sents.add(sent.toSimpleAnnoSentence(cs.prm.useGoldSyntax));
                     numTokens += sent.size();
                 }
             }
@@ -379,7 +379,7 @@ public class SrlRunner {
                 for (int i=0; i< simpleSents.size(); i++) {
                     VarConfig vc = predictions.get(i);
                     SimpleAnnoSentence simpleSent = simpleSents.get(i);
-                    CoNLL09Sentence sent = simpleSent.toCoNLL();
+                    CoNLL09Sentence sent = CoNLL09Sentence.fromSimpleAnnoSentence(simpleSent);
                     SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSent);                    
                     sent.setPredApredFromSrlGraph(srlGraph, false);
                     sents.add(sent);

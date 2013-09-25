@@ -68,14 +68,6 @@ public class SrlFgExamplesBuilder {
         this.fts = fts;
         this.cs = cs;
     }
-
-    
-    public FgExamples getData(CoNLL09FileReader reader) {
-        List<SimpleAnnoSentence> sents = reader.readAllToSimple(cs.prm);
-        // We won't normalize role names if that's desired, reading the data this way.
-        System.err.println("Warning:  processing sents directly from CoNLL09FileReader, without data munging.\n");
-        return getData(sents);
-    }
     
     public void preprocess(List<SimpleAnnoSentence> sents) {
         if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {

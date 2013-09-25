@@ -37,7 +37,7 @@ public class ZhaoFeatureExtractorTest {
         timer.start();
         for (int n = 0; n < 49; n++) {
             CoNLL09Sentence sent = reader.next();
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm);
+            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
             log.info("Initializing sentence...");
             SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
             log.info("Processing sentence...");
