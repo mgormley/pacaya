@@ -236,19 +236,17 @@ public class SrlFgExamplesBuilder {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                // NOTE:  IS THIS RIGHT ?
+                // Tries to map the sense variable to its label (e.g. argM-TMP).
+                // If the variable state space does not include that label, we
+                // fall back on the UNKNOWN_SENSE constant. If for some reason
+                // the UNKNOWN_SENSE constant isn't present, we just predict the
+                // first possible sense.
                 if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
                     if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
                         // This is a hack to ensure that something is added at test time.
                         vc.put(senseVar, 0);
                     }
                 }
-//                int senseNameIdx = senseVar.getState(sent.get(i).getPred());
-//                if (senseNameIdx == -1) {
-//                    vc.put(senseVar, senseNameIdx);
-//                } else {
-//                    vc.put(senseVar, senseNameIdx);
-//                }
             }
         }
         return vc;
