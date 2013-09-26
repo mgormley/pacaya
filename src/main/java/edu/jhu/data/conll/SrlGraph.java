@@ -151,7 +151,7 @@ public class SrlGraph {
         this.predArr = new SrlPred[n];
         this.argArr = new SrlArg[n];
     }
-        
+    
     public SrlGraph(CoNLL09Sentence sent) {
         this.n = sent.size();
         this.preds = new ArrayList<SrlPred>();
@@ -269,5 +269,9 @@ public class SrlGraph {
 
     public int getNumPreds() {
         return preds.size();
+    }
+
+    public int getNumArgs() {
+        return args.size();
     }    
 }

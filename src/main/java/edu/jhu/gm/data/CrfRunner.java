@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.cli.ParseException;
@@ -17,18 +19,18 @@ import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.gm.Feature;
+import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.Var;
 import edu.jhu.gm.VarConfig;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
@@ -190,13 +192,18 @@ public class CrfRunner {
 
     private List<VarConfig> decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
-        MbrDecoder decoder = getDecoder();
-        decoder.decode(model, data);
+        List<VarConfig> predictions = new ArrayList<VarConfig>();
+        HashMap<Var,Double> varMargMap = new HashMap<Var,Double>();
 
-        List<VarConfig> predictions = decoder.getMbrVarConfigList();
+        for (int i=0; i<data.size(); i++) {
+            MbrDecoder decoder = getDecoder();
+            decoder.decode(model, data.get(i));
+            predictions.add(decoder.getMbrVarConfig());
+            varMargMap.putAll(decoder.getVarMargMap());
+        }
         if (predOut != null) {
             ErmaWriter ew = new ErmaWriter();
-            ew.writePredictions(predOut, predictions, decoder.getVarMargMap());
+            ew.writePredictions(predOut, predictions, varMargMap);
         }
         return predictions;
     }

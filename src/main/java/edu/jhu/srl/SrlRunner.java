@@ -47,6 +47,7 @@ import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
@@ -366,33 +367,48 @@ public class SrlRunner {
 
     private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
-        MbrDecoder decoder = getDecoder();
-        decoder.decode(model, data);
+        
+        SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
+        // Predicted sentences
+        SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
+        List<VarConfig> predictions = new ArrayList<VarConfig>();
 
-        List<VarConfig> predictions = decoder.getMbrVarConfigList();
+        for (int i=0; i< goldSents.size(); i++) {
+            SimpleAnnoSentence goldSent = goldSents.get(i);
+            SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
+            SrlDecoder decoder = getDecoder();
+            decoder.decode(model, data.get(i));
+
+            // Update SRL graph on the sentence. 
+            SrlGraph srlGraph = decoder.getSrlGraph();
+            predSent.setSrlGraph(srlGraph);
+            // Update the dependency tree on the sentence.
+            int[] parents = decoder.getParents();
+            if (parents != null) {
+                predSent.setParents(parents);
+            }
+            
+            // Get the MBR variable assignment.
+            VarConfig vc = decoder.getMbrVarConfig();
+
+            predictions.add(vc);
+            predSents.add(predSent);
+        }
+        
         if (predOut != null) {
             log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
             if (dataType == DatasetType.CONLL_2009) {
-                @SuppressWarnings("unchecked")
-                SimpleAnnoSentenceCollection simpleSents = (SimpleAnnoSentenceCollection)data.getSourceSentences();
-                List<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
-                for (int i=0; i< simpleSents.size(); i++) {
-                    VarConfig vc = predictions.get(i);
-                    SimpleAnnoSentence simpleSent = simpleSents.get(i);
-                    CoNLL09Sentence sent = CoNLL09Sentence.fromSimpleAnnoSentence(simpleSent);
-                    SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSent);                    
-                    sent.setPredApredFromSrlGraph(srlGraph, false);
-                    sents.add(sent);
-                }
                 CoNLL09Writer cw = new CoNLL09Writer(predOut);
-                for (CoNLL09Sentence sent : sents) {
-                    cw.write(sent);
+                for (SimpleAnnoSentence sent : predSents) {
+                    CoNLL09Sentence conllSent = CoNLL09Sentence.fromSimpleAnnoSentence(sent);
+                    cw.write(conllSent);
                 }
                 cw.close();
             } else {
                 throw new ParseException("Unsupported data type: " + dataType);
             }
         }
+        
         return predictions;
     }
 
@@ -490,12 +506,13 @@ public class SrlRunner {
         return bpPrm;
     }
 
-    private MbrDecoder getDecoder() {
-        MbrDecoderPrm decoderPrm = new MbrDecoderPrm();
-        decoderPrm.infFactory = getInfFactory();
-        decoderPrm.loss = Loss.ACCURACY;
-        MbrDecoder decoder = new MbrDecoder(decoderPrm);
-        return decoder;
+    private SrlDecoder getDecoder() {
+        MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
+        mbrPrm.infFactory = getInfFactory();
+        mbrPrm.loss = Loss.ACCURACY;
+        SrlDecoderPrm prm = new SrlDecoderPrm();
+        prm.mbrPrm = mbrPrm;
+        return new SrlDecoder(prm);
     }
     
     public static void main(String[] args) throws IOException {

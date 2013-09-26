@@ -8,6 +8,7 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.util.Pair;
+import edu.jhu.util.Utilities;
 
 /**
  * Simple representation of a single sentence with many annotations.
@@ -44,6 +45,23 @@ public class SimpleAnnoSentence {
 
     }
 
+    /**
+     * Fairly deep copy constructor. Everything is deeply copied except for the
+     * source sentence and the SRL graph, and the features.
+     */
+    public SimpleAnnoSentence(SimpleAnnoSentence other) {
+        this.words = Utilities.copyOf(other.words);
+        this.lemmas = Utilities.copyOf(other.lemmas);
+        this.posTags = Utilities.copyOf(other.posTags);
+        this.deprels = Utilities.copyOf(other.deprels);
+        this.parents = Utilities.copyOf(other.parents);
+        this.sourceSent = other.sourceSent;
+        // TODO: this should be a deep copy.
+        this.feats = Utilities.copyOf(other.feats);
+        // TODO: this should be a deep copy.
+        this.srlGraph = other.srlGraph;
+    }
+    
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
         return words.get(i);

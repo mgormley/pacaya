@@ -814,4 +814,8 @@ public class Utilities {
         sb.append("}");
         return sb.toString();
     }
+
+    public static <T> ArrayList<T> copyOf(List<T> list) {
+        return list == null ? null : new ArrayList<T>(list);
+    }
 }

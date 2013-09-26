@@ -22,6 +22,7 @@ public class BeliefPropagation implements FgInferencer {
 
     public interface FgInferencerFactory {
         FgInferencer getInferencer(FactorGraph fg);
+        boolean isLogDomain();
     }
     
     public static class BeliefPropagationPrm implements FgInferencerFactory {
@@ -37,6 +38,9 @@ public class BeliefPropagation implements FgInferencer {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
             return new BeliefPropagation(fg, this);
+        }
+        public boolean isLogDomain() {
+            return logDomain;
         }
     }
     

@@ -37,9 +37,9 @@ public class MbrDecoderTest {
         //model.getParams()[1] = 1.0;
         System.out.println(model);
         
-        decoder.decode(model, data);
+        decoder.decode(model, data.get(0));
         
-        VarConfig mbrVc = decoder.getMbrVarConfig(0);
+        VarConfig mbrVc = decoder.getMbrVarConfig();
         
         assertEquals("V", mbrVc.getStateName(fg.getVars().get(0)));
         System.out.println(mbrVc);

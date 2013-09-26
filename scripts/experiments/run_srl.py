@@ -284,7 +284,7 @@ class ParamDefinitions():
         for parser_output in l.parser_outputs:
             # We only want to models where the predicates are given in order to match up
             # with the CoNLL-2009 shared task.
-            for model in [g.model_pg_obs_tree, g.model_pg_lat_tree]:
+            for model in [g.model_pg_lat_tree, g.model_pg_obs_tree]:
                 if model.get("useProjDepTreeFactor") \
                     and not parser_output.get("tagger_parser").endswith("-unsup"):                    
                     # We define the non-latent-tree model for all the input parses,

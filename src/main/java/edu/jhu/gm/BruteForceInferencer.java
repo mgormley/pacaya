@@ -18,6 +18,9 @@ public class BruteForceInferencer implements FgInferencer {
         public FgInferencer getInferencer(FactorGraph fg) {
             return new BruteForceInferencer(fg, this.logDomain);
         }
+        public boolean isLogDomain() {
+            return logDomain;
+        }
     }
     
     private FactorGraph fg;

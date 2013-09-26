@@ -238,8 +238,7 @@ public class SrlFgExamplesBuilderTest {
 
         // 18 role vars and 1 sense.
         assertEquals(18+1, vc.size());
-
-        SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSents.get(0));
+        SrlGraph srlGraph = SrlDecoder.getSrlGraphFromVarConfig(vc, simpleSents.get(0).size());
         assertEquals(2, srlGraph.getPredAt(2).getPosition());
         assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
     }

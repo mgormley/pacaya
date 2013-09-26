@@ -22,6 +22,8 @@ import edu.jhu.gm.VarSet;
  * @author mmitchell
  * @author mgormley
  */
+// TODO: This should (maybe) be divided up into an SrlFactorGraph and a
+// DepParseFactorGraph, with a JointSrlFactorGraph that pulls the two together.
 public class SrlFactorGraph extends FactorGraph {
 
     public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
@@ -176,8 +178,7 @@ public class SrlFactorGraph extends FactorGraph {
     private SenseVar[] senseVars;
 
     // The sentence length.
-    private final int n;
-                
+    private final int n;                
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
         this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
@@ -374,4 +375,8 @@ public class SrlFactorGraph extends FactorGraph {
         }
     }
 
+    public int getSentenceLength() {
+        return n;
+    }
+    
 }

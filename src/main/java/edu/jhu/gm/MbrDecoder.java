@@ -27,69 +27,69 @@ public class MbrDecoder {
     }
 
     private MbrDecoderPrm prm;    
-    private ArrayList<VarConfig> mbrVarConfigList;
+    private VarConfig mbrVarConfig;
     private Map<Var,Double> varMargMap;
+    private ArrayList<DenseFactor> margs;
 
     public MbrDecoder(MbrDecoderPrm prm) {
         this.prm = prm;
     }
 
     /**
-     * Runs inference and computes the MBR variable configuration.
+     * Runs inference and computes the MBR variable configuration. The outputs
+     * are stored on the class, and can be queried after this call to decode.
      * 
      * @param model The input model.
-     * @param data The input data.
+     * @param ex The input data.
      */
-    // TODO: we should really pass something other than an FgExamples object in
-    // since we might not know the true values of the predicted variables.
-    public void decode(FgModel model, FgExamples data) {
+    public void decode(FgModel model, FgExample ex) {
+        mbrVarConfig = new VarConfig();
+        margs = new ArrayList<DenseFactor>();
+        varMargMap = new HashMap<Var,Double>();
+
+        // Add in the observed variables.
+        VarSet obsVars = VarSet.getVarsOfType(ex.getGoldConfig().getVars(), VarType.OBSERVED);
+        mbrVarConfig.put(ex.getGoldConfig().getSubset(obsVars));
+
+        // Run inference.
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
+        FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
+        inf.run();
+        
+        // Get the MBR configuration of all the latent and predicted
+        // variables.
         if (prm.loss == Loss.ACCURACY) {
-            mbrVarConfigList = new ArrayList<VarConfig>();
-            varMargMap = new HashMap<Var,Double>();
-            
-            for (int i = 0; i < data.size(); i++) {
-                FgExample ex = data.get(i);
-                VarConfig mbrVarConfig = new VarConfig();
+            for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
+                Var var = fgLatPred.getVar(varId);
+                DenseFactor marg = inf.getMarginalsForVarId(varId);
+                margs.add(marg);
+                int argmaxState = marg.getArgmaxConfigId();
+                mbrVarConfig.put(var, argmaxState);
 
-                // Add in the observed variables.
-                VarSet obsVars = VarSet.getVarsOfType(ex.getGoldConfig().getVars(), VarType.OBSERVED);
-                mbrVarConfig.put(ex.getGoldConfig().getSubset(obsVars));
-
-                // Run inference.
-                FactorGraph fgLatPred = ex.getFgLatPred();
-                FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
-                fgLatPred = ex.updateFgLatPred(model, inf.isLogDomain());
-                inf.run();
-
-                // Get the MBR configuration of all the latent and predicted
-                // variables.
-                for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
-                    Var var = fgLatPred.getVar(varId);
-                    DenseFactor marg = inf.getMarginalsForVarId(varId);
-                    int argmaxState = marg.getArgmaxConfigId();
-                    mbrVarConfig.put(var, argmaxState);
-                    varMargMap.put(var, marg.getValue(argmaxState));
-                }
-                
-                mbrVarConfigList.add(mbrVarConfig);
+                varMargMap.put(var, marg.getValue(argmaxState));
             }
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
     }
     
-    /** Gets the MBR variable configuration for the i'th example. */
-    public VarConfig getMbrVarConfig(int i) {
-        return mbrVarConfigList.get(i);
+    /** Gets the MBR variable configuration for the example that was decoded. */
+    public VarConfig getMbrVarConfig() {
+        return mbrVarConfig;
     }
-
+    
     /** Gets a map from the variable to the value of its maximum marginal. */
     public Map<Var, Double> getVarMargMap() {
         return varMargMap;
     }
 
-    public List<VarConfig> getMbrVarConfigList() {
-        return mbrVarConfigList;
+    /**
+     * Gets the marginal distribution for each variable in this factor graph.
+     * The i'th DenseFactor in the list corresponds to the i'th variable in the
+     * factor graph.
+     */
+    public List<DenseFactor> getVarMarginals() {
+        return margs;
     }
 
 }
