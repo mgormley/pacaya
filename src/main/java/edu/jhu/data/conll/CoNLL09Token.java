@@ -33,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
  * 
  */
 public class CoNLL09Token {
+    
     private static final Pattern whitespace = Pattern.compile("\\s+");
     private static final Pattern verticalBar = Pattern.compile("\\|");
     
@@ -134,6 +135,14 @@ public class CoNLL09Token {
         this.apreds = other.apreds == null ? null : new ArrayList<String>(other.apreds);
     }
 
+    /** Constructor which leaves all fields empty. */
+    CoNLL09Token() {
+        super();
+        this.id = -1;
+        this.head = -1;
+        this.phead = -1;
+    }
+    
     public void intern() {
         if (form != null) { form = form.intern(); }
         if (lemma != null) { lemma = lemma.intern(); }

@@ -363,21 +363,42 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return s;
     }
 
+    /**
+     * Creates a new CoNLL09Sentence with both columns set for each field
+     * (i.e. PLEMMA and LEMMA are both set from the values on the
+     * SimpleAnnoSentence). The reason for setting both is that the CoNLL-2009
+     * evaluation script uses the "gold" columns for evaluation, but we might
+     * want to utilize the predictions in some downstream task.
+     */
     public static CoNLL09Sentence fromSimpleAnnoSentence(SimpleAnnoSentence sent) {
-        if(sent.getSourceSent() == null || !(sent.getSourceSent() instanceof CoNLL09Sentence)) {
-            // TODO: Implement this case.
-            throw new RuntimeException("The case where the source sentence is not given is not yet implemented.");
-        }
-        // This gets a copy of the source sentence, and so is not destructive.
-        CoNLL09Sentence updatedSentence = new CoNLL09Sentence((CoNLL09Sentence) sent.getSourceSent());
-        for (int i = 0; i < updatedSentence.size(); i++) {
-            CoNLL09Token tok = updatedSentence.get(i);
+        // Get the tokens for this sentence.
+        List<CoNLL09Token> toks = new ArrayList<CoNLL09Token>();
+        for (int i = 0; i < sent.size(); i++) {
+            CoNLL09Token tok = new CoNLL09Token();
+            tok.setId(i+1);
+            tok.setForm(sent.getWord(i));
+            // Set "predicted" columns.
             tok.setPlemma(sent.getLemma(i));
             tok.setPpos(sent.getPosTag(i));
             tok.setPfeat(sent.getFeats(i));
             tok.setPhead(sent.getParent(i) + 1);
             tok.setPdeprel(sent.getDeprel(i));
+            // Set "gold" columns.
+            tok.setLemma(sent.getLemma(i));
+            tok.setPos(sent.getPosTag(i));
+            tok.setFeat(sent.getFeats(i));
+            tok.setHead(sent.getParent(i) + 1);
+            tok.setDeprel(sent.getDeprel(i));
+            
+            toks.add(tok);
         }
+        
+        // Create the new sentence.
+        CoNLL09Sentence updatedSentence = new CoNLL09Sentence(toks);
+        
+        // Update SRL columns from the SRL graph.
+        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph(), false, true);
+        
         return updatedSentence;
     }
     

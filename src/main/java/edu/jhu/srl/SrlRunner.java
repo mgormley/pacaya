@@ -12,6 +12,8 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import cern.colt.Arrays;
+
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
@@ -296,6 +298,7 @@ public class SrlRunner {
                 }
                 if (sent.size() <= maxSentenceLength) {
                     sent.intern();
+                    // TODO: Data munging should maybe be done on the SimpleAnnoSentence.
                     sent = mungeData(sent);
                     conllSents.add(sent);
                     sents.add(sent.toSimpleAnnoSentence(cs.prm.useGoldSyntax));
