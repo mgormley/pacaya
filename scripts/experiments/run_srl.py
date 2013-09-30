@@ -249,6 +249,8 @@ class ParamDefinitions():
         feats.set('useNaradFeats', narad, incl_name=False, incl_arg=True)
         feats.set('useZhaoFeats', zhao, incl_name=False, incl_arg=True)
         feats.set('useDepPathFeats', dep, incl_name=False, incl_arg=True)
+        # CURRENTLY we do not use the features from (Bjorkelund et al., 2009). 
+        feats.set('useBjorkelundFeats', False, incl_name=False, incl_arg=True)
         # Give the feature set a name.
         feats.set('feature_set', feature_set_name, incl_name=True, incl_arg=False)
         return feats

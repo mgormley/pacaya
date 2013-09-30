@@ -36,7 +36,11 @@ public class SentFeatureExtractor {
         /** Whether to add the "Zhao" features. */
         public boolean useZhaoFeats = true;
         public boolean useDepPathFeats = true;
-        public boolean useBjorkelundFeats = true;
+        // NOTE: We default to false on these features since including these
+        // would break a lot of unit tests, which expect the default to be 
+        // only Zhao+Narad features.
+        /** Whether to add the "Bjorkelund" features. */
+        public boolean useBjorkelundFeats = false;
     }
     
     // Parameters for feature extraction.
