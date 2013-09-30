@@ -10,18 +10,21 @@ import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.util.Pair;
 
-public class ZhaoObject {
+public class FeatureObject {
     
-    /* Feature constructor based on CoNLL 09:
+    /* Feature constructor based on CoNLL 2009:
      * "Multilingual Dependency Learning:
      * A Huge Feature Engineering Method to Semantic Dependency Parsing"
-     * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou */    
+     * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou 
+     * and
+     * "Multilingual Semantic Role Labeling"
+     * Anders Bjo ̈rkelund, Love Hafdell, Pierre Nugues */    
 
     private static final String NO_MORPH = "NO_MORPH"; 
 
     private SimpleAnnoSentence sent;
     private int idx = -1;
-    private List<String> feat;
+    private ArrayList<String> feat;
     private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
@@ -39,9 +42,12 @@ public class ZhaoObject {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     private ArrayList<Integer> noFarChildren;
+    /* Additional features owing to Bjorkelund al. 2009 */
+    private int leftSibling;
+    private int rightSibling;
     
     
-    public ZhaoObject(int idx, int[] parents, SimpleAnnoSentence sent) {
+    public FeatureObject(int idx, int[] parents, SimpleAnnoSentence sent) {
         /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
@@ -51,32 +57,36 @@ public class ZhaoObject {
          * 5. syntactic dependency label (dprel), 
          * 6. semantic dependency label (semdprel) 
          * 7. and characters (char) in the word form (only suitable for Chinese and Japanese). */
+        /* Following BJORKELUND, we additionally add sibling features */
         this.idx = idx;
         this.sent = sent;
         this.parents = parents;
+        this.leftSibling = -1;
+        this.rightSibling = sent.size();
+        setSiblings();   
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         setFeat();
         setRootPath();
         setChildren();
-        /* ZHANG:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
+        /* ZHAO:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
          * and high(low) support verb or noun.
          * From the predicate or the argument to the syntactic root along with the syntactic tree, 
          * the first verb(noun) that is met is called as the low support verb(noun), 
          * and the nearest one to the root is called as the high support verb(noun). */
         setFarthestNearestChildren();
         setHighLowSupport();
-        /* ZHANG: Family. Two types of children sets for the predicate or argument candidate are considered, 
+        /* ZHAO: Family. Two types of children sets for the predicate or argument candidate are considered, 
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
         setNoFarChildren();
     }
 
-    public ZhaoObject(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg, int[] parents) {
+    public FeatureObject(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg, int[] parents) {
         this.parents = parents;
         this.linePath = new ArrayList<Integer>();
         this.dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
-        /* ZHANG:  Path. There are two basic types of path between the predicate and the argument candidates. 
+        /* ZHAO:  Path. There are two basic types of path between the predicate and the argument candidates. 
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
          * considering the syntactic root, dpPath is the full path in the syntactic tree. */
@@ -88,7 +98,7 @@ public class ZhaoObject {
     
     // ------------------------ Getters and Setters ------------------------ //
 
-    public List<String> getFeat() {
+    public ArrayList<String> getFeat() {
         return feat;
     }
     
@@ -330,7 +340,8 @@ public class ZhaoObject {
         return dpPathShare;
     }
     
-    private void setDpPathShare(int pidx, int aidx, ZhaoObject zhaoPred, ZhaoObject zhaoArg) {
+    private void setDpPathShare(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg) {
+
         /* ZHAO:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
         List<Pair<Integer, Dir>> argRootPath = zhaoArg.getRootPath();
@@ -349,7 +360,7 @@ public class ZhaoObject {
             argP = argRootPath.get(i);
             predP = predRootPath.get(j);
         }
-        /* ZHANG:  Assume that dpPathShare starts from a node r', 
+        /* ZHAO:  Assume that dpPathShare starts from a node r', 
          * then dpPathPred is from the predicate to r', and dpPathArg is from the argument to r'. */
         // Reverse, so path goes towards the root.
         Collections.reverse(this.dpPathShare);
@@ -385,5 +396,30 @@ public class ZhaoObject {
         }
         
     }
+    
+    public void setSiblings() {
+        if (idx >= 0 && idx < sent.size()) {
+            ArrayList<Integer> siblingsList = DepTree.getSiblingsOf(idx, this.parents);
+            Collections.sort(siblingsList);
+            int wantedIndex = siblingsList.indexOf(idx);
+            int rightSiblingIdx = wantedIndex + 1;
+            int leftSiblingIdx = wantedIndex - 1;
+            if (leftSiblingIdx >= 0) {
+                this.leftSibling = siblingsList.get(leftSiblingIdx);
+            }
+            if (rightSiblingIdx < siblingsList.size()) {
+                this.rightSibling = siblingsList.get(rightSiblingIdx);
+            }
+        }
+    }
+    
+    public int getRightSibling() {
+        return rightSibling;
+    }
 
+    public int getLeftSibling() {
+        return leftSibling;
+    }
+
+    
 }

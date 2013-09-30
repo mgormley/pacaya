@@ -36,6 +36,7 @@ public class SentFeatureExtractor {
         /** Whether to add the "Zhao" features. */
         public boolean useZhaoFeats = true;
         public boolean useDepPathFeats = true;
+        public boolean useBjorkelundFeats = true;
     }
     
     // Parameters for feature extraction.
@@ -45,9 +46,9 @@ public class SentFeatureExtractor {
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private final int[] parents;
-    private ArrayList<ZhaoObject> zhaoSentence;
-    private ZhaoObject zhaoHeadDefault;
-    private ZhaoObject zhaoTailDefault;
+    private ArrayList<FeatureObject> featuredSentence;
+    private FeatureObject featuredHeadDefault;
+    private FeatureObject featuredTailDefault;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
@@ -58,28 +59,27 @@ public class SentFeatureExtractor {
             // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
             this.parents = getParents(sent);
             if (prm.useZhaoFeats || prm.useDepPathFeats) {
-                this.zhaoSentence = createZhaoSentence();
-                this.zhaoHeadDefault = new ZhaoObject(-1, parents, sent);
-                this.zhaoTailDefault = new ZhaoObject(sent.size(), parents, sent);
+                this.featuredSentence = createZhaoSentence();
+                this.featuredHeadDefault = new FeatureObject(-1, parents, sent);
+                this.featuredTailDefault = new FeatureObject(sent.size(), parents, sent);
             }
         } else {
             this.parents = null;
         }
     }
     
-    private ArrayList<ZhaoObject> createZhaoSentence() {
-        ArrayList<ZhaoObject> _zhaoSentence = new ArrayList<ZhaoObject>();
+    private ArrayList<FeatureObject> createZhaoSentence() {
+        ArrayList<FeatureObject> _featuredSentence = new ArrayList<FeatureObject>();
         for (Integer i = 0; i < sent.size(); i++) {
-            _zhaoSentence.add(new ZhaoObject(i, parents, sent));
+            _featuredSentence.add(new FeatureObject(i, parents, sent));
         }
-        return _zhaoSentence;
+        return _featuredSentence;
     }
 
     // Package private for testing.
     int[] getParents(SimpleAnnoSentence sent) {
         return sent.getParents();
     }
-
 
     public int getSentSize() {
         return sent.size();
@@ -114,22 +114,14 @@ public class SentFeatureExtractor {
         if (prm.useZhaoFeats) {
             addZhaoSoloFeatures(idx, feats);
         }
+        if (prm.useBjorkelundFeats) {
+            addBjorkelundSoloFeatures(idx, feats);
+        }
         return feats;
     }
     
     public ArrayList<String> createSenseFeatureSet(int idx) {
-        ArrayList<String> feats = new ArrayList<String>();
-        if (prm.biasOnly) { return feats; }
-        
-        if (prm.useSimpleFeats) {
-            addSimpleSoloFeatures(idx, feats);
-        }
-        if (prm.useNaradFeats) {
-            addNaradowskySoloFeatures(idx, feats);
-        }
-        if (prm.useZhaoFeats) {
-            addZhaoSoloFeatures(idx, feats);
-        }
+        ArrayList<String> feats = createFeatureSet(idx);
         return feats;
     }
     
@@ -164,26 +156,25 @@ public class SentFeatureExtractor {
         if (prm.useDepPathFeats) {
             addDependencyPathFeatures(pidx, aidx, feats);
         }
-        // feats = getNuguesFeatures();
+        if (prm.useBjorkelundFeats) {
+            addBjorkelundPairFeatures(pidx, aidx, feats);
+        }
         return feats;
     }
+
     
-    
+    // ---------- Meg's "Simple" features. ---------- 
     public void addSimpleSoloFeatures(int idx, ArrayList<String> feats) {
         String wordForm = sent.getWord(idx);
-        //System.out.println("word is " + wordForm);
         Set <String> a = sig.getSimpleUnkFeatures(wordForm, idx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
         }
     }
     
-    
     public void addSimplePairFeatures(int pidx, int aidx, ArrayList<String> feats) {
         String predForm = sent.getWord(pidx);
         String argForm = sent.getWord(aidx);
-        //System.out.println("pred is " + predForm);
-        //System.out.println("arg is " + argForm);
         Set <String> a = sig.getSimpleUnkFeatures(predForm, pidx, cs.prm.language);
         for (String c : a) {
             feats.add(c);
@@ -194,37 +185,62 @@ public class SentFeatureExtractor {
         }
 
     }
+
     
-    public boolean capitalized(String wordForm) {
-        if (wordForm.length() == 0) {
-            return true;
+    // ---------- Meg's Dependency Path features. ---------- 
+    public void addDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
+        FeatureObject featurePred = getFeatureObject(pidx);
+        FeatureObject featureArg = getFeatureObject(aidx);
+        FeatureObject featurePredArgPair = new FeatureObject(pidx, aidx, featurePred, featureArg, parents);
+        List<Pair<Integer, Dir>> betweenPath = featurePredArgPair.getBetweenPath();
+        String feat;
+        ArrayList<String> depRelPathWord = new ArrayList<String>();
+        ArrayList<FeatureObject> betweenPathTokens = getTokens(betweenPath);
+        for (FeatureObject t : betweenPathTokens) {
+            depRelPathWord.add(t.getForm());
         }
-        char ch = wordForm.charAt(0);
-        if (Character.isUpperCase(ch)) {
-            return true;
-        }
-        return false;
-    }
+        feat = buildString(depRelPathWord);
+        feats.add(feat);
+        feat = buildString(bag(depRelPathWord));
+        feats.add(feat);
+    }    
+
     
-    public void addNaradowskySoloFeatures(int idx, ArrayList<String> feats) {
+    // ---------- Naradowsky et al.'s 2011 ACL features. ----------
+    public void addNaradowskySenseFeatures(int idx, ArrayList<String> feats) {
         String word = sent.getWord(idx);
         String wordForm = decideForm(word, idx);
         String wordPos = sent.getPosTag(idx);
         String wordLemma = sent.getLemma(idx);
 
         feats.add("head_" + wordForm + "_word");
+        feats.add("head_" + wordLemma + "_lemma");
         feats.add("head_" + wordPos + "_tag");
         feats.add("head_" + wordForm + "_" + wordPos + "_wordtag");
-        feats.add("slen_" + sent.size());
-        feats.add("head_" + wordLemma + "_lemma");
         String cap;
         if (capitalized(wordForm)) {
             cap = "UC";
         } else {
             cap = "LC";
         }
-        feats.add("head_" + cap + "_caps");
+        feats.add("head_" + cap + "_caps");    }
+    
+    public void addNaradowskySoloFeatures(int idx, ArrayList<String> feats) {
+        addNaradowskySenseFeatures(idx, feats);
     }
+
+    /** Made up by Meg based on pair and sense features. 
+    public void addNaradowskySoloFeatures(int idx, ArrayList<String> feats) {
+        addNaradowskySenseFeatures(idx, feats);
+        String word = sent.getWord(idx);
+        String wordForm = decideForm(word, idx);
+        String wordPos = sent.getPosTag(idx);
+
+        feats.add("head_" + wordForm + "_dep_" + wordPos + "_wordpos");
+        feats.add("slen_" + sent.size());    
+        feats.add("head_" + wordForm + "_word");
+        feats.add("head_" + wordPos + "_tag");
+    } **/
     
     
     public void addNaradowskyPairFeatures(int pidx, int aidx, ArrayList<String> feats) {
@@ -282,40 +298,23 @@ public class SentFeatureExtractor {
             }
         }
     }
+    
+    
+    // ---------- Zhao et al's 2009 CoNLL features. ----------     
+    public void addZhaoSenseFeatures(int idx, ArrayList<String> feats) {
+        /* This is the feature set for ENGLISH sense classification given
+         * by Zhao et al 2009.  Spanish sense classification is not given. */
+        FeatureObject p = getFeatureObject(idx);
+        FeatureObject p1 = getFeatureObject(idx + 1);
+        FeatureObject pm1 = getFeatureObject(idx - 1);
 
-    public void addDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        ZhaoObject zhaoPred = getZhaoObject(pidx);
-        ZhaoObject zhaoArg = getZhaoObject(aidx);
-        ZhaoObject zhaoPredArgPair = new ZhaoObject(pidx, aidx, zhaoPred, zhaoArg, parents);
-        List<Pair<Integer, Dir>> betweenPath = zhaoPredArgPair.getBetweenPath();
-        String feat;
-        ArrayList<String> depRelPathWord = new ArrayList<String>();
-        ArrayList<ZhaoObject> betweenPathTokens = getTokens(betweenPath);
-        for (ZhaoObject t : betweenPathTokens) {
-            depRelPathWord.add(t.getForm());
+        addZhaoUnsupervisedSenseFeats(p, p1, pm1, feats);
+        if (prm.withSupervision) {
+            addZhaoSupervisedSenseFeats(p, p1, feats);
         }
-        feat = buildString(depRelPathWord);
-        feats.add(feat);
-        feat = buildString(bag(depRelPathWord));
-        feats.add(feat);
     }
     
-    public void addZhaoSoloFeatures(int idx, ArrayList<String> feats) {
-        // Zhao doesn't have 'solo' features for SRL, just sense.
-        /* This is the feature set for ENGLISH sense classification given
-         * by Zhao et al 2009.  Spanish sense classification is not given.
-         */
-        ZhaoObject p = getZhaoObject(idx);
-        ZhaoObject p1 = getZhaoObject(idx + 1);
-        ZhaoObject pm1 = getZhaoObject(idx - 1);
-  
-        addZhaoUnsupervisedSoloFeats(p, p1, pm1, feats);
-        if (prm.withSupervision) {
-            addZhaoSupervisedSoloFeats(p, p1, feats);
-        }
-    }   
-
-    public void addZhaoUnsupervisedSoloFeats(ZhaoObject p, ZhaoObject p1, ZhaoObject pm1, ArrayList<String> feats) {
+    public void addZhaoUnsupervisedSenseFeats(FeatureObject p, FeatureObject p1, FeatureObject pm1, ArrayList<String> feats) {
         String feat;
         // p.form
         feat = p.getForm();
@@ -328,13 +327,13 @@ public class SentFeatureExtractor {
         feats.add(feat); 
     }
     
-    public void addZhaoSupervisedSoloFeats(ZhaoObject p, ZhaoObject p1, ArrayList<String> feats) {
+    public void addZhaoSupervisedSenseFeats(FeatureObject p, FeatureObject p1, ArrayList<String> feats) {
         String feat;
         // p.lm.pos
-        feat = getZhaoObject(p.getFarLeftChild()).getPos();
+        feat = getFeatureObject(p.getFarLeftChild()).getPos();
         feats.add(feat);
         // p.rm.pos
-        feat = getZhaoObject(p.getFarRightChild()).getPos();
+        feat = getFeatureObject(p.getFarRightChild()).getPos();
         feats.add(feat);
         // p.lemma
         feat = p.getLemma();
@@ -344,8 +343,8 @@ public class SentFeatureExtractor {
         feats.add(feat);
         // p.lemma + p.children.dprel.noDup 
         ArrayList<String> depRelChildren = new ArrayList<String>();
-        ArrayList<ZhaoObject> pChildren = getTokens(p.getChildren());
-        for (ZhaoObject child : pChildren) {
+        ArrayList<FeatureObject> pChildren = getTokens(p.getChildren());
+        for (FeatureObject child : pChildren) {
             depRelChildren.add(child.getDeprel());
         }
         feat = buildString(noDup(depRelChildren));
@@ -354,6 +353,11 @@ public class SentFeatureExtractor {
         // p.lemma + p.currentSense
     }
     
+    public void addZhaoSoloFeatures(int idx, ArrayList<String> feats) {
+        // Zhao doesn't have 'solo' features for SRL, just sense.
+        addZhaoSenseFeatures(idx, feats);
+    }   
+    
     public void addZhaoPairFeatures(int pidx, int aidx, ArrayList<String> feats) {
         /* NOTE:  Not sure about they're "Semantic Connection" features.  What do they correspond to in CoNLL data? 
          * From paper: "This includes semantic head (semhead), left(right) farthest(nearest) 
@@ -361,15 +365,15 @@ public class SentFeatureExtractor {
          * We say a predicate is its argument's semantic head, and the latter is the former's child. 
          * Features related to this type may track the current semantic parsing status." */
 
-        ZhaoObject zhaoPred = getZhaoObject(pidx);
-        ZhaoObject zhaoArg = getZhaoObject(aidx);
-        ZhaoObject zhaoPredArgPair = new ZhaoObject(pidx, aidx, zhaoPred, zhaoArg, parents);
-        ZhaoObject zhaoPredLast = getZhaoObject(pidx - 1);
-        ZhaoObject zhaoPredNext = getZhaoObject(pidx + 1);
-        //ZhaoObject zhaoPredParent = getZhaoObject(zhaoPred.getParent());
-        ZhaoObject zhaoArgLast = getZhaoObject(aidx - 1);
-        ZhaoObject zhaoArgNext = getZhaoObject(aidx + 1);
-        ZhaoObject zhaoArgParent = getZhaoObject(zhaoArg.getParent());
+        FeatureObject zhaoPred = getFeatureObject(pidx);
+        FeatureObject zhaoArg = getFeatureObject(aidx);
+        FeatureObject zhaoPredArgPair = new FeatureObject(pidx, aidx, zhaoPred, zhaoArg, parents);
+        FeatureObject zhaoPredLast = getFeatureObject(pidx - 1);
+        FeatureObject zhaoPredNext = getFeatureObject(pidx + 1);
+        //FeatureObject zhaoPredParent = getFeatureObject(zhaoPred.getParent());
+        FeatureObject zhaoArgLast = getFeatureObject(aidx - 1);
+        FeatureObject zhaoArgNext = getFeatureObject(aidx + 1);
+        FeatureObject zhaoArgParent = getFeatureObject(zhaoArg.getParent());
                 
         ArrayList<Integer> predChildren = zhaoPred.getChildren();
         ArrayList<Integer> argChildren = zhaoArg.getChildren();
@@ -380,10 +384,10 @@ public class SentFeatureExtractor {
         List<Pair<Integer, Dir>> dpPathArg = zhaoPredArgPair.getDpPathArg();
         ArrayList<Integer> linePath = zhaoPredArgPair.getLinePath();
 
-        ArrayList<ZhaoObject> predChildrenTokens = getTokens(predChildren);
-        ArrayList<ZhaoObject> argChildrenTokens = getTokens(argChildren);
-        ArrayList<ZhaoObject> betweenPathTokens = getTokens(betweenPath);
-        ArrayList<ZhaoObject> linePathCoNLL = getTokens(linePath);
+        ArrayList<FeatureObject> predChildrenTokens = getTokens(predChildren);
+        ArrayList<FeatureObject> argChildrenTokens = getTokens(argChildren);
+        ArrayList<FeatureObject> betweenPathTokens = getTokens(betweenPath);
+        ArrayList<FeatureObject> linePathCoNLL = getTokens(linePath);
         
         // Add the supervised features
         if (prm.withSupervision) {
@@ -397,33 +401,8 @@ public class SentFeatureExtractor {
         addZhaoUnsupervisedArgFeats(zhaoArg, zhaoArgLast, zhaoArgNext, argChildrenTokens, feats);
         addZhaoUnsupervisedCombinedFeats(linePath, linePathCoNLL, feats);
     }
-
-    private ZhaoObject getZhaoObject(int idx) {
-        if (idx < 0) {
-            return zhaoHeadDefault;
-        } else if (idx >= zhaoSentence.size()) {
-            return zhaoTailDefault;
-        }
-        return zhaoSentence.get(idx);
-    }
-
-    private ArrayList<ZhaoObject> getTokens(List<Pair<Integer, Dir>> path) {
-        ArrayList<ZhaoObject> pathTokens = new ArrayList<ZhaoObject>();
-        for (Pair<Integer,Dir> p : path) {
-            pathTokens.add(getZhaoObject(p.get1()));
-        }
-        return pathTokens;
-    }
-
-    private ArrayList<ZhaoObject> getTokens(ArrayList<Integer> children) {
-        ArrayList<ZhaoObject> childrenTokens = new ArrayList<ZhaoObject>();
-        for (int child : children) {
-            childrenTokens.add(getZhaoObject(child));
-        }
-        return childrenTokens;
-    }
-
-    private void addZhaoUnsupervisedCombinedFeats(ArrayList<Integer> linePath, ArrayList<ZhaoObject> linePathCoNLL, ArrayList<String> feats) {
+    
+    private void addZhaoUnsupervisedCombinedFeats(ArrayList<Integer> linePath, ArrayList<FeatureObject> linePathCoNLL, ArrayList<String> feats) {
         // ------- Combined features (unsupervised) ------- 
         String feat;
         // a:p|linePath.distance 
@@ -431,19 +410,19 @@ public class SentFeatureExtractor {
         feats.add(feat);
         // a:p|linePath.form.seq 
         ArrayList<String> linePathForm = new ArrayList<String>();
-        for (ZhaoObject t : linePathCoNLL) {
+        for (FeatureObject t : linePathCoNLL) {
             linePathForm.add(t.getForm());
         }
         feat = buildString(linePathForm);
         feats.add(feat);
     }
 
-    private void addZhaoUnsupervisedArgFeats(ZhaoObject zhaoArg, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgLast,
-            ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
+    private void addZhaoUnsupervisedArgFeats(FeatureObject zhaoArg, FeatureObject zhaoArgNext, FeatureObject zhaoArgLast,
+            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
         // ------- Argument features (unsupervised) ------- 
         String feat;
         // a.lm.form
-        feat = getZhaoObject(zhaoArg.getFarLeftChild()).getForm();
+        feat = getFeatureObject(zhaoArg.getFarLeftChild()).getForm();
         feats.add(feat);
         // a_1.form
         feat = zhaoArgLast.getForm();
@@ -453,7 +432,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
         // a.form + a.children.pos 
         ArrayList<String> argChildrenPos = new ArrayList<String>();
-        for (ZhaoObject child : argChildrenTokens) {
+        for (FeatureObject child : argChildrenTokens) {
             argChildrenPos.add(child.getPos());
         }
         feat = zhaoArg.getForm()  + "_" + buildString(argChildrenPos);
@@ -463,7 +442,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
     }
 
-    private void addZhaoUnsupervisedPredFeats(ZhaoObject zhaoPred, ZhaoObject zhaoPredLast, ZhaoObject zhaoPredNext, ArrayList<String> feats) {
+    private void addZhaoUnsupervisedPredFeats(FeatureObject zhaoPred, FeatureObject zhaoPredLast, FeatureObject zhaoPredNext, ArrayList<String> feats) {
         // ------- Predicate features (unsupervised) ------- 
         String feat12;
         // p.pos_1 + p.pos
@@ -474,10 +453,9 @@ public class SentFeatureExtractor {
         feat13 = zhaoPredNext.getPos();
         feats.add(feat13);
     }
-
     
-    private void addZhaoSupervisedCombinedFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ArrayList<String> feats, ArrayList<ZhaoObject> betweenPathTokens,
-            ArrayList<ZhaoObject> linePathCoNLL, List<Pair<Integer, Dir>> dpPathArg) {
+    private void addZhaoSupervisedCombinedFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, ArrayList<String> feats, ArrayList<FeatureObject> betweenPathTokens,
+            ArrayList<FeatureObject> linePathCoNLL, List<Pair<Integer, Dir>> dpPathArg) {
         // ------- Combined features (supervised) -------
         String feat;
         // a.lemma + p.lemma 
@@ -488,7 +466,7 @@ public class SentFeatureExtractor {
         // a:p|dpPath.lemma.bag 
         ArrayList<String> depRelPath = new ArrayList<String>();
         ArrayList<String> depRelPathLemma = new ArrayList<String>();
-        for (ZhaoObject t : betweenPathTokens) {
+        for (FeatureObject t : betweenPathTokens) {
             depRelPath.add(t.getDeprel());
             depRelPathLemma.add(t.getLemma());
         }
@@ -506,7 +484,7 @@ public class SentFeatureExtractor {
         ArrayList<String> linePathFeat = new ArrayList<String>();
         ArrayList<String> linePathLemma = new ArrayList<String>();
         ArrayList<String> linePathDeprel = new ArrayList<String>();
-        for (ZhaoObject t : linePathCoNLL) {
+        for (FeatureObject t : linePathCoNLL) {
             linePathFeat.add(t.getFeat().get(0));
             linePathLemma.add(t.getLemma());
             linePathDeprel.add(t.getDeprel());
@@ -520,7 +498,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
         ArrayList<String> dpPathLemma = new ArrayList<String>();
         for (Pair<Integer, Dir> dpP : dpPathArg) {
-            dpPathLemma.add(getZhaoObject(dpP.get1()).getLemma());            
+            dpPathLemma.add(getFeatureObject(dpP.get1()).getLemma());            
         }
         // a:p|dpPathArgu.lemma.seq 
         feat = buildString(dpPathLemma);
@@ -529,31 +507,18 @@ public class SentFeatureExtractor {
         feat = buildString(bag(dpPathLemma));
         feats.add(feat);
     }
-
-    private String buildString(ArrayList<String> input) {
-        StringBuilder buffer = new StringBuilder(50);
-        int j = input.size();
-        if (j > 0) {
-            buffer.append(input.get(0));
-            for (int i = 1; i < j; i++) {
-                buffer.append("_").append(input.get(i));
-            }
-        }
-        return buffer.toString();
-    }
-
-    private void addZhaoSupervisedArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
-            ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgParent, ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
+    
+    private void addZhaoSupervisedArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
+            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
         // ------- Argument features (supervised) ------- 
         getFirstThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
         getSecondThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
         getThirdThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
     }
 
-
-    private void getFirstThirdSupArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
-            ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgParent, 
-            ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
+    private void getFirstThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
+            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
+            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
         String feat;
         List<String> zhaoArgFeats = zhaoArg.getFeat();
         String a1; String a2; String a3; String a4; String a5; String a6;
@@ -594,75 +559,59 @@ public class SentFeatureExtractor {
         feats.add(feat);
     }
     
-    private ArrayList<String> getChildrenFeat3(ArrayList<ZhaoObject> childrenTokens) {
-        ArrayList<String> childrenFeat3 = new ArrayList<String>();
-        for (ZhaoObject child : childrenTokens) {
-            childrenFeat3.add(child.getFeat().get(2));
-        }
-        return childrenFeat3;
-    }
-
-    private ArrayList<String> getChildrenFeat1(ArrayList<ZhaoObject> childrenTokens) {
-        ArrayList<String> childrenFeat1 = new ArrayList<String>();
-        for (ZhaoObject child : childrenTokens) {
-            childrenFeat1.add(child.getFeat().get(0));
-        }
-        return childrenFeat1;
-    }
-
-    private void getSecondThirdSupArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
-            ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgParent, 
-            ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
-        ZhaoObject argLm = getZhaoObject(zhaoArg.getFarLeftChild());
-        ZhaoObject argRm = getZhaoObject(zhaoArg.getFarRightChild());
-        ZhaoObject argRn = getZhaoObject(zhaoArg.getNearRightChild());
-        //ZhaoObject argLn = getZhaoObject(zhaoArg.getNearLeftChild());
+    private void getSecondThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
+            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
+            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+        FeatureObject argLm = getFeatureObject(zhaoArg.getFarLeftChild());
+        FeatureObject argRm = getFeatureObject(zhaoArg.getFarRightChild());
+        FeatureObject argRn = getFeatureObject(zhaoArg.getNearRightChild());
+        //FeatureObject argLn = getFeatureObject(zhaoArg.getNearLeftChild());
         String feat;
         // a.h.lemma
         feats.add(zhaoArgParent.getLemma());
         // a.lm.dprel + a.form
         feats.add(argLm.getDeprel() + "_" + zhaoArg.getForm());
         // a.lm_1.lemma
-        feats.add(getZhaoObject(zhaoArgLast.getFarLeftChild()).getLemma());
+        feats.add(getFeatureObject(zhaoArgLast.getFarLeftChild()).getLemma());
         // a.lmn.pos (n=0,1) 
         feats.add(argLm.getPos());
-        feats.add(getZhaoObject(zhaoArgNext.getFarLeftChild()).getPos());
+        feats.add(getFeatureObject(zhaoArgNext.getFarLeftChild()).getPos());
         // a.noFarChildren.pos.bag + a.rm.form 
         ArrayList<Integer> noFarChildren = zhaoArg.getNoFarChildren();
         ArrayList<String> noFarChildrenPos = new ArrayList<String>();
         for (Integer i : noFarChildren) {
-            noFarChildrenPos.add(getZhaoObject(i).getPos()); 
+            noFarChildrenPos.add(getFeatureObject(i).getPos()); 
         }
         ArrayList<String> argNoFarChildrenBag = bag(noFarChildrenPos);
         feat = buildString(argNoFarChildrenBag) + argRm.getForm();
         feats.add(feat);
         // a.pphead.lemma
-        feats.add(getZhaoObject(zhaoArg.getParent()).getLemma());
+        feats.add(getFeatureObject(zhaoArg.getParent()).getLemma());
         // a.rm.dprel + a.form
         feats.add(argRm.getDeprel() + "_" + zhaoArg.getForm());
         // a.rm_1.form 
-        feats.add(getZhaoObject(zhaoArgLast.getFarRightChild()).getForm());
+        feats.add(getFeatureObject(zhaoArgLast.getFarRightChild()).getForm());
         // a.rm.lemma
         feats.add(argRm.getLemma());
         // a.rn.dprel + a.form 
         feats.add(argRn.getDeprel() + "_" + zhaoArg.getForm());        
     }
     
-    private void getThirdThirdSupArgFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast,
-            ZhaoObject zhaoPredNext, ZhaoObject zhaoArgLast, ZhaoObject zhaoArgNext, ZhaoObject zhaoArgParent, 
-            ArrayList<ZhaoObject> argChildrenTokens, ArrayList<String> feats) {
+    private void getThirdThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
+            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
+            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
         String feat;
         // a.lowSupportVerb.lemma 
-        feats.add(getZhaoObject(zhaoArg.getArgLowSupport()).getLemma());
+        feats.add(getFeatureObject(zhaoArg.getArgLowSupport()).getLemma());
         // a.lemma + a.h.form 
         feats.add(zhaoArg.getLemma() + "_" + zhaoArgParent.getForm());
         // a.lemma + a.pphead.form 
-        feats.add(zhaoArg.getLemma() + "_" + getZhaoObject(zhaoArg.getParent()).getForm());
+        feats.add(zhaoArg.getLemma() + "_" + getFeatureObject(zhaoArg.getParent()).getForm());
         // a1.lemma
         feats.add(zhaoArgNext.getLemma());
         // a.pos + a.children.dprel.bag
         ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
-        for (ZhaoObject child : argChildrenTokens) {
+        for (FeatureObject child : argChildrenTokens) {
             argChildrenDeprel.add(child.getDeprel());
         }
         ArrayList<String> argChildrenDeprelBag = bag(argChildrenDeprel);
@@ -670,9 +619,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
     }
 
-
-
-    private void addZhaoSupervisedPredFeats(ZhaoObject zhaoPred, ZhaoObject zhaoArg, ZhaoObject zhaoPredLast, ZhaoObject zhaoPredNext, ArrayList<ZhaoObject> predChildrenTokens, ArrayList<String> feats) {
+    private void addZhaoSupervisedPredFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast, FeatureObject zhaoPredNext, ArrayList<FeatureObject> predChildrenTokens, ArrayList<String> feats) {
         // ------- Predicate features (supervised) ------- 
         // p.currentSense + p.lemma 
         feats.add(zhaoPred.getSense() + "_" + zhaoPred.getLemma());
@@ -688,12 +635,12 @@ public class SentFeatureExtractor {
         feats.add(zhaoPredNext.getFeat().get(2));
         // NOTE:  This is supposed to be p.semrm.semdprel  What is this?  
         // I'm not sure.  Here's just a guess.
-        feats.add(getZhaoObject(zhaoPred.getFarRightChild()).getDeprel());
+        feats.add(getFeatureObject(zhaoPred.getFarRightChild()).getDeprel());
         // p.lm.dprel        
-        feats.add(getZhaoObject(zhaoPred.getFarLeftChild()).getDeprel());
+        feats.add(getFeatureObject(zhaoPred.getFarLeftChild()).getDeprel());
         // p.form + p.children.dprel.bag 
         ArrayList<String> predChildrenDeprel = new ArrayList<String>();
-        for (ZhaoObject child : predChildrenTokens) {
+        for (FeatureObject child : predChildrenTokens) {
             predChildrenDeprel.add(child.getDeprel());
         }
         String bagDepPredChildren = buildString(bag(predChildrenDeprel));
@@ -707,12 +654,226 @@ public class SentFeatureExtractor {
         feats.add(zhaoPred.getPos() + "_" + bagDepPredChildren);
     }
 
-    public ArrayList<String> bag(ArrayList<String> elements) {
+    
+    // ---------- Bjorkelund et al, CoNLL2009 features. ---------- 
+    public void addBjorkelundSenseFeatures(int idx, ArrayList<String> feats) {
+        FeatureObject pred = getFeatureObject(idx);
+        FeatureObject predParent = getFeatureObject(pred.getParent());
+        ArrayList<Integer> predChildren = pred.getChildren();
+        // PredWord, PredPOS, PredDeprel, PredFeats
+        addBjorkelundGenericFeatures(idx, feats, "Pred");
+        // predParentWord, predParentPOS, predParentFeats
+        addBjorkelundPredParentFeatures(predParent, feats);
+        // ChildDepSet, ChildWordSet, ChildPOSSet
+        addBjorkelundPredChildFeatures(predChildren, feats);
+        // TODO: DepSubCat: the subcategorization frame of the predicate, e.g. OBJ+OPRD+SUB.
+    }
+    
+    public void addBjorkelundSoloFeatures(int idx, ArrayList<String> feats) {
+        /* No 'solo' features, per se, just Sense features for a solo predicate.
+         * But, some features are the same type for predicate and argument. 
+         * These are defined in add BjorkelundGenericFeatures. */
+        addBjorkelundSenseFeatures(idx, feats);
+    }
+    
+    public void addBjorkelundPairFeatures(int pidx, int aidx, ArrayList<String> feats) {
+        /* From Bjorkelund et al, CoNLL 2009.
+         * Prefixes: 
+         * Pred:  the predicate
+         * PredParent:  the parent of the predicate
+         * Arg:  the argument
+         * Left:  the leftmost dependent of the argument
+         * Right:   the rightmost dependent of the argument
+         * LeftSibling:  the left sibling of the argument
+         * RightSibling:  the right sibling of the argument
+         */        
+        String feat;
+        FeatureObject zhaoPred = getFeatureObject(pidx);
+        FeatureObject zhaoArg = getFeatureObject(aidx);
+        FeatureObject zhaoPredArgPair = new FeatureObject(pidx, aidx, zhaoPred, zhaoArg, parents);
+        FeatureObject predParent = getFeatureObject(zhaoPred.getParent());
+        ArrayList<Integer> predChildren = zhaoPred.getChildren();
+        FeatureObject argLeftSibling = getFeatureObject(zhaoArg.getLeftSibling());
+        FeatureObject argRightSibling = getFeatureObject(zhaoArg.getRightSibling());
+        FeatureObject argLeftDependent = getFeatureObject(zhaoArg.getFarLeftChild());
+        FeatureObject argRightDependent = getFeatureObject(zhaoArg.getFarRightChild());
+        
+        // PredWord, PredPOS, PredFeats, PredDeprel
+        addBjorkelundGenericFeatures(pidx, feats, "Pred");
+        // ArgWord, ArgPOS, ArgFeats, ArgDeprel
+        addBjorkelundGenericFeatures(aidx, feats, "Arg");
+        // PredParentWord, PredParentPOS, PredParentFeats
+        addBjorkelundPredParentFeatures(predParent, feats);
+        // ChildDepSet, ChildWordSet, ChildPOSSet
+        addBjorkelundPredChildFeatures(predChildren, feats);
+        // LeftWord, LeftPOS, LeftFeats
+        addBjorkelundDependentFeats(argLeftDependent, feats, "Left");
+        // RightWord, RightPOS, RightFeats
+        addBjorkelundDependentFeats(argRightDependent, feats, "Right");
+        // LeftSiblingWord, LeftSiblingPOS, LeftSiblingFeats
+        addBjorkelundSiblingFeats(argLeftSibling, feats, "Left");
+        // RightSiblingWord, RightSiblingPOS, RightSiblingFeats
+        addBjorkelundSiblingFeats(argRightSibling, feats, "Right");
+        // DeprelPath, POSPath
+        addBjorkelundPathFeats(zhaoPredArgPair, feats);
+        // Position
+        addBjorkelundPositionFeat(pidx, aidx, feats);
+        
+        // PredLemma
+        feat = zhaoPred.getLemma();
+        feats.add("PredLemma:" + feat);
+        // TODO: Sense: the value of the Pred column, e.g. plan.01.
+        // TODO: DepSubCat: the subcategorization frame of the predicate, e.g. OBJ+OPRD+SUB.
+    }
+    
+    public void addBjorkelundGenericFeatures(int idx, ArrayList<String> feats, String type) {
+        String feat;
+        FeatureObject bjorkWord = getFeatureObject(idx);
+        // ArgWord, PredWord
+        feat = bjorkWord.getForm();
+        feats.add(type + ":" + feat);
+        // ArgPOS, PredPOS,
+        feat = bjorkWord.getPos();
+        feats.add(type + ":" + feat);
+        // ArgFeats, PredFeats
+        feat = buildString(bjorkWord.getFeat());
+        feats.add(type + ":" + feat);
+        // ArgDeprel, PredDeprel
+        feat = bjorkWord.getDeprel();
+        feats.add(type + ":" + feat);
+    }
+
+    public void addBjorkelundPositionFeat(int pidx, int aidx, ArrayList<String> feats) {
+        String feat;
+        // Position: the position of the argument with respect to the predicate, i.e. before, on, or after.
+        if (pidx < aidx) {
+            feat = "before";
+        } else if (pidx > aidx) {
+            feat = "after";
+        } else {
+            feat = "on";
+        }
+        feats.add("Position:" + feat);        
+    }
+
+    public void addBjorkelundPathFeats(FeatureObject zhaoPredArgPair, ArrayList<String> feats) {
+        String feat;
+        List<Pair<Integer, Dir>> betweenPath = zhaoPredArgPair.getBetweenPath();
+        // DeprelPath: the path from predicate to argument concatenating dependency labels with the
+        // direction of the edge, e.g. OBJ↑OPRD↓SUB↓.
+        ArrayList<String> depRelPath = new ArrayList<String>();
+        // POSPath: same as DeprelPath, but dependency labels are exchanged for POS tags, e.g. NN↑NNS↓NNP↓.
+        ArrayList<String> posPath = new ArrayList<String>();
+        ArrayList<FeatureObject> betweenPathTokens = getTokens(betweenPath);
+        for (int i = 0; i < betweenPathTokens.size(); i++) {
+            FeatureObject t = betweenPathTokens.get(i);
+            depRelPath.add(t.getDeprel() + ":" + betweenPath.get(i).get2());
+            posPath.add(t.getPos() + ":" + betweenPath.get(i).get2());
+        }
+        feat = buildString(depRelPath);
+        feats.add("DeprelPath:" + feat);
+        feat = buildString(posPath);
+        feats.add("PosPath:" + feat);
+    }
+
+    public void addBjorkelundSiblingFeats(FeatureObject argSibling, ArrayList<String> feats, String dir) {
+        String feat;
+        // LeftSiblingWord, RightSiblingWord
+        feat = argSibling.getForm();
+        feats.add(dir + "SiblingWord:" + feat);
+        // LeftSiblingPOS, RightSiblingPOS
+        feat = argSibling.getPos();
+        feats.add(dir + "SiblingPos:" + feat);
+        // LeftSiblingFeats, RightSiblingFeats
+        feat = buildString(argSibling.getFeat());
+        feats.add(dir + "SiblingFeats:" + feat);
+    }
+
+    public void addBjorkelundDependentFeats(FeatureObject dependent, ArrayList<String> feats, String dir) {
+        String feat;
+        // LeftWord, RightWord
+        feat = dependent.getForm();
+        feats.add(dir + "Word:" + feat);
+        // LeftPOS, RightPOS
+        feat = dependent.getPos();
+        feats.add(dir + "POS:" + feat);
+        // LeftFeats, RightFeats
+        feat = buildString(dependent.getFeat());
+        feats.add(dir + "Feats:" + feat);
+    }
+
+    public void addBjorkelundPredChildFeatures(ArrayList<Integer> predChildren, ArrayList<String> feats) {
+        String feat;
+        // ChildDepSet: the set of dependency labels of the children of the predicate, e.g. {OBJ, SUB}.
+        ArrayList<String> childDepSet = new ArrayList<String>();
+        // ChildPOSSet: the set of POS tags of the children of the predicate, e.g. {NN, NNS}.
+        ArrayList<String> childPosSet = new ArrayList<String>();
+        // ChildWordSet: the set of words (Form) of the children of the predicate, e.g. {fish, me}.
+        ArrayList<String> childWordSet = new ArrayList<String>();
+        for (int child : predChildren) {
+            childDepSet.add(getFeatureObject(child).getDeprel());
+            childPosSet.add(getFeatureObject(child).getPos());
+            childWordSet.add(getFeatureObject(child).getForm());
+        }
+        feat = buildString(childDepSet);
+        feats.add("ChildDepSet:" + feat);
+        feat = buildString(childPosSet);
+        feats.add("ChildPOSSet:" + feat);
+        feat = buildString(childWordSet);
+        feats.add("ChildWordSet:" + feat);        
+    }
+
+    public void addBjorkelundPredParentFeatures(FeatureObject predParent, ArrayList<String> feats) {
+        String feat;
+        // PredParentWord
+        feat = predParent.getForm();
+        feats.add("PredParentWord:" + feat);
+        // PredParentPOS
+        feat = predParent.getPos();
+        feats.add("PredParentPos:" + feat);
+        // PredParentFeats
+        feat = buildString(predParent.getFeat());
+        feats.add("PredParentFeats:" + feat);        
+    }
+
+    
+
+    // ---------- Helper functions ---------- 
+
+    private String buildString(ArrayList<String> input) {
+        StringBuilder buffer = new StringBuilder(50);
+        int j = input.size();
+        if (j > 0) {
+            buffer.append(input.get(0));
+            for (int i = 1; i < j; i++) {
+                buffer.append("_").append(input.get(i));
+            }
+        }
+        return buffer.toString();
+    }
+    
+    private ArrayList<String> getChildrenFeat3(ArrayList<FeatureObject> childrenTokens) {
+        ArrayList<String> childrenFeat3 = new ArrayList<String>();
+        for (FeatureObject child : childrenTokens) {
+            childrenFeat3.add(child.getFeat().get(2));
+        }
+        return childrenFeat3;
+    }
+
+    private ArrayList<String> getChildrenFeat1(ArrayList<FeatureObject> childrenTokens) {
+        ArrayList<String> childrenFeat1 = new ArrayList<String>();
+        for (FeatureObject child : childrenTokens) {
+            childrenFeat1.add(child.getFeat().get(0));
+        }
+        return childrenFeat1;
+    }
+
+    private ArrayList<String> bag(ArrayList<String> elements) {
         // bag, which removes all duplicated strings and sort the rest
         return (ArrayList<String>) asSortedList(new HashSet<String>(elements));
     }
     
-    public ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
+    private ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
         // noDup, which removes all duplicated neighbored strings.
         ArrayList<String> noDupElements = new ArrayList<String>();
         String lastA = null;
@@ -725,7 +886,43 @@ public class SentFeatureExtractor {
         return noDupElements;
     }
     
-    public static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
+    private FeatureObject getFeatureObject(int idx) {
+        if (idx < 0) {
+            return featuredHeadDefault;
+        } else if (idx >= featuredSentence.size()) {
+            return featuredTailDefault;
+        }
+        return featuredSentence.get(idx);
+    }
+    
+    private boolean capitalized(String wordForm) {
+        if (wordForm.length() == 0) {
+            return true;
+        }
+        char ch = wordForm.charAt(0);
+        if (Character.isUpperCase(ch)) {
+            return true;
+        }
+        return false;
+    }
+
+    private ArrayList<FeatureObject> getTokens(List<Pair<Integer, Dir>> path) {
+        ArrayList<FeatureObject> pathTokens = new ArrayList<FeatureObject>();
+        for (Pair<Integer,Dir> p : path) {
+            pathTokens.add(getFeatureObject(p.get1()));
+        }
+        return pathTokens;
+    }
+
+    private ArrayList<FeatureObject> getTokens(ArrayList<Integer> children) {
+        ArrayList<FeatureObject> childrenTokens = new ArrayList<FeatureObject>();
+        for (int child : children) {
+            childrenTokens.add(getFeatureObject(child));
+        }
+        return childrenTokens;
+    }
+    
+    private static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {
       List<T> list = new ArrayList<T>(c);
       Collections.sort(list);
       return list;
