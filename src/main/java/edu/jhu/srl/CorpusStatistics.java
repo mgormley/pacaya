@@ -1,7 +1,13 @@
 package edu.jhu.srl;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,6 +23,7 @@ import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.prim.util.Utilities;
 import edu.jhu.util.Alphabet;
 
@@ -106,15 +113,16 @@ public class CorpusStatistics implements Serializable {
             for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
                 String role = edge.getLabel();
                 knownRoles.add(role);
-                int position = edge.getPred().getPosition();
+            }
+            for (SrlPred pred : sent.getSrlGraph().getPreds()) {
+                int position = pred.getPosition();
                 String lemma = sent.getLemma(position);
                 Set<String> senses = predSenseSetMap.get(lemma);
                 if (senses == null) {
                     senses = new TreeSet<String>();
                     predSenseSetMap.put(lemma, senses);
                 }
-                senses.add(edge.getPred().getLabel());
-                
+                senses.add(pred.getLabel());
             }
             for (int position = 0; position < sent.size(); position++) {
                 String wordForm = sent.getWord(position);
@@ -143,7 +151,6 @@ public class CorpusStatistics implements Serializable {
         log.info("Known roles: " + roleStateNames);
         log.info("Num known predicates: " + predSenseListMap.size());
     }
-
 
     // ------------------- private ------------------- //
 

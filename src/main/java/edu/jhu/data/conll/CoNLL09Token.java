@@ -44,7 +44,7 @@ public class CoNLL09Token {
     private String form;
     /** 3    LEMMA   Gold lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
     private String lemma;
-    /** 3    LEMMA   Predicted lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
+    /** 3    PLEMMA   Predicted lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
     private String plemma;
     /** 5    POS  Gold part-of-speech tag. */
     private String pos;
