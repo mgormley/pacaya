@@ -418,7 +418,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-lat",
                     "srl-opt",
                     "srl-feats",
-                    "eval",
+                    "srl-eval",
                     )
     
     def __init__(self, options):
@@ -525,7 +525,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        elif self.expname == "eval":
+        elif self.expname == "srl-eval":
             if not self.eval:
                 raise Exception("--eval value required")
             exps = []
@@ -559,7 +559,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 print "exclude_name_keys:", new_params.exclude_name_keys
                 modelIn = old_params.get("modelOut")
                 # Skip non-experiment dirs.
-                if modelIn is None: continue
+                if modelIn is None or not os.path.exists(modelIn): continue
                 if modelIn.startswith("."):
                     modelIn = os.path.join(exp_dir, modelIn)
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
