@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -277,19 +278,32 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return splitRole[0].toLowerCase();
     }
     
-    public void removeDepTrees() {
+    public void removeHeadAndPhead() {
         for (CoNLL09Token tok : tokens) {
             tok.setPhead(0);
             tok.setHead(0);
-            tok.setDeprel("_");
-            tok.setPdeprel("_");
         }    
     }
     
-    public void removeDepLabels() {
+    public void removeDeprealAndPdeprel() {
         for (CoNLL09Token tok : tokens) {
             tok.setDeprel("_");
             tok.setPdeprel("_");
+        }
+    }
+
+    public void removeLemmaAndPlemma() {
+        for (CoNLL09Token tok : tokens) {
+            tok.setLemma("_");
+            tok.setPlemma("_");
+        }
+    }
+    
+    public void removeFeatAndPfeat() {
+        List<String> emptyList = Collections.emptyList();
+        for (CoNLL09Token tok : tokens) {
+            tok.setFeat(emptyList);
+            tok.setPfeat(emptyList);
         }
     }
     

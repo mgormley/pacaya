@@ -177,6 +177,10 @@ public class SrlRunner {
     public static boolean normalizeRoleNames = false;
     @Opt(hasArg = true, description = "Whether to remove the deprel and pdeprel columns from CoNLL-2009 data.")
     public static boolean removeDeprel = false;
+    @Opt(hasArg = true, description = "Whether to remove the lemma and plemma columns from CoNLL-2009 data.")
+    public static boolean removeLemma = false;
+    @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
+    public static boolean removeFeat = false;
 
     // Options for training.
     @Opt(hasArg=true, description="The optimization method to use for training.")
@@ -292,23 +296,26 @@ public class SrlRunner {
         // Read the data and (optionally) write it to the gold file.
         if (dataType == DatasetType.CONLL_2009) {
             List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
-            sents = new SimpleAnnoSentenceCollection();
             CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
             for (CoNLL09Sentence sent : reader) {
-                if (sents.size() >= maxNumSentences) {
+                if (conllSents.size() >= maxNumSentences) {
                     break;
                 }
                 if (sent.size() <= maxSentenceLength) {
                     sent.intern();
-                    // TODO: Data munging should maybe be done on the SimpleAnnoSentence.
-                    sent = mungeData(sent);
                     conllSents.add(sent);
-                    sents.add(sent.toSimpleAnnoSentence(cs.prm.useGoldSyntax));
                     numTokens += sent.size();
                 }
             }
             reader.close();     
 
+            if (normalizeRoleNames) {
+                log.info("Normalizing role names");
+                for (CoNLL09Sentence conllSent : conllSents) {
+                    conllSent.normalizeRoleNames();
+                }
+            }
+            
             if (goldFile != null) {
                 log.info("Writing gold data to file: " + goldFile);
                 CoNLL09Writer cw = new CoNLL09Writer(goldFile);
@@ -316,6 +323,16 @@ public class SrlRunner {
                     cw.write(sent);
                 }
                 cw.close();
+            }
+
+            // Data munging -- this must be done after we write the gold sentences to a file.
+            reduceSupervision(conllSents);
+                        
+            // TODO: We should clearly differentiate between the gold sentences and the input sentence.
+            // Convert CoNLL sentences to SimpleAnnoSentences.
+            sents = new SimpleAnnoSentenceCollection();
+            for (CoNLL09Sentence conllSent : conllSents) {
+                sents.add(conllSent.toSimpleAnnoSentence(cs.prm.useGoldSyntax));
             }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
@@ -349,19 +366,36 @@ public class SrlRunner {
         return data;
     }
 
-    private CoNLL09Sentence mungeData(CoNLL09Sentence sent) {
-        if (normalizeRoleNames) {
-            log.info("Normalizing role names");
-            sent.normalizeRoleNames();
-        }
+    /** Remove various aspects of supervision from the data. */
+    private void reduceSupervision(List<CoNLL09Sentence> conllSents) {
         if (useProjDepTreeFactor) {
+            // TODO: This should be a removeHead option, which is usually
+            // set to true whenever we have latent syntax.
             log.info("Removing all dependency trees from the CoNLL data");
-            sent.removeDepTrees();
+            for (CoNLL09Sentence conllSent : conllSents) {
+                conllSent.removeHeadAndPhead();
+                conllSent.removeDeprealAndPdeprel();
+            }
         } else if (removeDeprel) {
             log.info("Removing syntactic dependency labels from the CoNLL data");  
-            sent.removeDepLabels();
+            for (CoNLL09Sentence conllSent : conllSents) {
+                conllSent.removeDeprealAndPdeprel();
+            }
+        } 
+        
+        if (removeLemma) {
+            log.info("Removing lemmas from the CoNLL data");  
+            for (CoNLL09Sentence conllSent : conllSents) {
+                conllSent.removeLemmaAndPlemma();
+            }
         }
-        return sent;
+        
+        if (removeFeat) {
+            log.info("Removing morphological features from the CoNLL data");  
+            for (CoNLL09Sentence conllSent : conllSents) {
+                conllSent.removeFeatAndPfeat();
+            }
+        }
     }
 
     private void eval(FgExamples data, String name, List<VarConfig> predictions) {

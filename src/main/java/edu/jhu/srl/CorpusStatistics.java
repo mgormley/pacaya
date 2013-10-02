@@ -1,13 +1,7 @@
 package edu.jhu.srl;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -151,7 +145,7 @@ public class CorpusStatistics implements Serializable {
         log.info("Known roles: " + roleStateNames);
         log.info("Num known predicates: " + predSenseListMap.size());
     }
-
+    
     // ------------------- private ------------------- //
 
     private static Map<String, MutableInt> addWord(Map<String, MutableInt> inputHash, String w) {

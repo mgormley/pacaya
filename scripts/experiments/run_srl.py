@@ -396,6 +396,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     known_exps = ( "srl-narad-dev20",
                     "srl-narad",
                     "srl-all",
+                    "srl-all-nosup",
                     "srl-lat",
                     "srl-opt",
                     "srl-feats",
@@ -428,6 +429,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         elif self.expname == "srl-all":
             g.defaults += g.feat_all
+            return self._get_default_pipeline(g, l)
+
+        elif self.expname == "srl-all-nosup":
+            g.defaults += g.feat_all
+            g.defaults.set("removeLemma", True, incl_name=False)
+            g.defaults.set("removeFeat", True, incl_name=False)
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-lat":            
