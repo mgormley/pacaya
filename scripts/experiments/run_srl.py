@@ -155,6 +155,7 @@ class ParamDefinitions():
             predictSense=True,
             normalizeRoleNames=False,
             l2variance="500.0",
+            sgdNumPasses=10,
             )
         
         g.defaults += g.adagrad
