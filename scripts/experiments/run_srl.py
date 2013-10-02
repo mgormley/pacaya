@@ -29,6 +29,12 @@ def get_root_dir():
     print "Using root_dir: " + root_dir
     return root_dir
 
+def get_first_that_exists(*paths):
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    raise Exception("ERROR - None of the required paths exist: " + paths)
+
 def require_path_exists(path):
     if not os.path.exists(path):
         raise Exception("ERROR - Required path does not exist: " + path)
@@ -62,22 +68,28 @@ class PathDefinitions():
         p = Paths()
         
         # --- Define paths to data directories. --- 
-        conll09_sp_dir = "/export/common/data/corpora/LDC/LDC2012T03/data/CoNLL2009-ST-Spanish"
-        if not os.path.exists(conll09_sp_dir):
-            conll09_sp_dir = self.root_dir + "/data/conll2009/CoNLL2009-ST-Spanish"
+        conll09_T03_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T03/data/",
+                                                self.root_dir + "/data/conll2009/LDC2012T03/data")
+        conll09_T04_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T04/data/",
+                                                self.root_dir + "/data/conll2009/LDC2012T04/data")
+        
+        conll09_en_dir = os.path.join(conll09_T04_dir, "CoNLL2009-ST-English")
+        conll09_zh_dir = os.path.join(conll09_T04_dir, "CoNLL2009-ST-Chinese")
+        conll09_de_dir = os.path.join(conll09_T03_dir, "CoNLL2009-ST-German")
+        conll09_cs_dir = os.path.join(conll09_T03_dir, "CoNLL2009-ST-Czech")
+        conll09_ca_dir = os.path.join(conll09_T03_dir, "CoNLL2009-ST-Catalan")
+        
+        conll09_sp_dir = os.path.join(conll09_T03_dir, "CoNLL2009-ST-Spanish")        
         require_path_exists(conll09_sp_dir)
         
         parser_prefix = self.root_dir + "/exp/vem-conll_005"
         require_path_exists(parser_prefix)
         
-        # --- Gold POS tags ---
-        # Gold trees: HEAD column.
+        # --- Gold/Predicted POS tags ---
+        # Gold trees: HEAD column. Supervised parser output: PHEAD column.
         p.pos_gold_train = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
         p.pos_gold_test = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
-        # --- Predicted POS tags ---
-        # Supervised parser output: PHEAD column.
-        p.pos_sup_train = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
-        p.pos_sup_test = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
+        p.pos_gold_eval = conll09_sp_dir + "/CoNLL2009-ST-evaluation-Spanish.txt"
         # Semi-supervised parser output: PHEAD column.
         p.pos_semi_train = parser_prefix + "/dmv_conll09-sp-train_20_True/test-parses.txt"
         p.pos_semi_test = parser_prefix + "/dmv_conll09-sp-dev_20_True/test-parses.txt"
@@ -162,11 +174,11 @@ class ParamDefinitions():
         g.defaults += g.feat_narad
                 
         # Exclude parameters from the command line arguments.
-        g.defaults.set("tagger_parser", "", incl_arg=False)
+        g.defaults.set_incl_arg("tagger_parser", False)
         
         # Exclude parameters from the experiment name.
-        g.defaults.set("train", "", incl_name=False)
-        g.defaults.set("test", "", incl_name=False)
+        g.defaults.set_incl_name("train", False)
+        g.defaults.set_incl_name("test", False)
                         
     def _define_groups_parser_output(self, g, p):
         conll_type = "CONLL_2009"
@@ -181,8 +193,8 @@ class ParamDefinitions():
         # --- Predicted POS tags ---
         # Supervised parser output: PHEAD column.
         g.pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
-                                train = p.pos_sup_train, trainType = conll_type,
-                                test = p.pos_sup_test, testType = conll_type)
+                                train = p.pos_gold_train, trainType = conll_type,
+                                test = p.pos_gold_test, testType = conll_type)
         g.pos_sup.set("removeDeprel", False, incl_name=False)
         g.pos_sup.set("useGoldSyntax", False, incl_name=False)
         # Semi-supervised parser output: PHEAD column.
@@ -209,8 +221,13 @@ class ParamDefinitions():
                                    train = p.brown_unsup_train, trainType = conll_type,
                                    test = p.brown_unsup_test, testType = conll_type)
         g.brown_unsup.set("removeDeprel", True, incl_name=False)
-        g.brown_unsup.set("useGoldSyntax", False, incl_name=False)    
-                    
+        g.brown_unsup.set("useGoldSyntax", False, incl_name=False) 
+           
+        # Eval trees: POS only, not Brown.
+        # TODO: Add Brown tagged version.
+        g.pos_eval = SrlExpParams(tagger_parser = 'pos-eval', 
+                                  test = p.pos_gold_eval, testType = conll_type)
+
     def _define_lists_parser_output(self, g, l): 
         l.parser_outputs = [g.pos_gold, g.pos_sup, g.pos_semi, g.pos_unsup, g.brown_semi, g.brown_unsup]
             
@@ -343,8 +360,8 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
-        script += self.get_eval_script("train")
-        script += self.get_eval_script("test")
+        if self.get("train"): script += self.get_eval_script("train")
+        if self.get("test"):  script += self.get_eval_script("test")
         
         return script
     
@@ -374,7 +391,7 @@ class ScrapeSrl(experiment_runner.PythonExpParams):
         self.always_relaunch()
 
     def get_initial_keys(self):
-        return "dataSet model k s".split()
+        return "tagger_parser model k s".split()
     
     def get_instance(self):
         return ScrapeSrl()
@@ -401,6 +418,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-lat",
                     "srl-opt",
                     "srl-feats",
+                    "eval",
                     )
     
     def __init__(self, options):
@@ -413,6 +431,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.fast = options.fast
         self.expname = options.expname
         self.hprof = options.hprof   
+        self.eval = options.eval
         
         self.prm_defs = ParamDefinitions(options) 
 
@@ -450,7 +469,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-opt":
             # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
             exps = []
-            g.defaults.set("group", "", incl_name=True, incl_arg=False)
+            g.defaults.set_incl_arg("group", False)
             data_settings = SrlExpParams(trainMaxNumSentences=1000,
                                          testMaxNumSentences=500)
             
@@ -504,6 +523,48 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "eval":
+            if not self.eval:
+                raise Exception("--eval value required")
+            exps = []
+            train_exp_dir = os.path.abspath(self.eval)
+            for exp_dir in glob(train_exp_dir + "/*"):
+                name = os.path.basename(exp_dir)                    
+                # Skip files
+                if not os.path.isdir(exp_dir): continue
+                # Read old parameters
+                old_params = SrlExpParams()
+                old_params.read(os.path.join(exp_dir, "expparams.txt"))
+                # Copy over old parameters for viewing in Excel
+                old_params_for_record = SrlExpParams()
+                for key in old_params.keys():
+                    old_params_for_record.set("old:"+key, old_params.get(key), False, False)
+                old_params_for_record.set("old:tagger_parser", old_params.get("tagger_parser"), incl_name=True, incl_arg=False)
+                # Create experiment
+                new_params = old_params + SrlExpParams()
+                # -- remove irrelevant params
+                keys_to_remove = [ "train", "trainType", "trainPredOut",
+                                   "trainGoldOut", "trainMaxSentenceLength",
+                                   "trainMaxNumSentences", 
+                                   "test", "testType", "testPredOut",
+                                   "testGoldOut", "testMaxSentenceLength",
+                                   "testMaxNumSentences", 
+                                   "modelIn", "modelOut", "printModel", "seed", 
+                                   ]
+                for key in keys_to_remove: 
+                    new_params.remove(key)
+                # -- add new params
+                print "exclude_name_keys:", new_params.exclude_name_keys
+                modelIn = old_params.get("modelOut")
+                # Skip non-experiment dirs.
+                if modelIn is None: continue
+                if modelIn.startswith("."):
+                    modelIn = os.path.join(exp_dir, modelIn)
+                new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
+                new_params += g.pos_eval
+                exps.append(g.defaults + old_params_for_record + new_params)
             return self._get_pipeline_from_exps(exps)
         
         else:
@@ -586,6 +647,7 @@ if __name__ == "__main__":
     parser.add_option('-e', '--expname',  help="Experiment name. [" + ", ".join(SrlExpParamsRunner.known_exps) + "]")
     parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
+    parser.add_option('-v', '--eval', help="Experiment directory to use as input for eval")
     (options, args) = parser.parse_args(sys.argv)
     # TODO: Above, we still want to list the experiment names in the usage printout, but we should
     # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.
