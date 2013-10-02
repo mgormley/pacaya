@@ -558,10 +558,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 # -- add new params
                 print "exclude_name_keys:", new_params.exclude_name_keys
                 modelIn = old_params.get("modelOut")
-                # Skip non-experiment dirs.
-                if modelIn is None or not os.path.exists(modelIn): continue
+                # Get model file:
+                # -- skip non-experiment dirs.
+                if modelIn is None: continue
+                # -- prepend the experiment directory to relative paths.
                 if modelIn.startswith("."):
                     modelIn = os.path.join(exp_dir, modelIn)
+                # -- skip failed experiments.
+                if not os.path.exists(modelIn): continue
+                # Create experiment:
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
                 new_params += g.pos_eval
                 exps.append(g.defaults + old_params_for_record + new_params)
