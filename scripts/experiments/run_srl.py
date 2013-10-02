@@ -377,7 +377,9 @@ class SrlExpParams(experiment_runner.JavaExpParams):
             script += "perl %s/scripts/eval/eval09.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
         else:
             script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
-        script += 'grep --after-context 11 "SEMANTIC SCORES:" %s' % (eval_out)
+        script += 'grep --after-context 5 "SYNTACTIC SCORES:" %s\n' % (eval_out)
+        script += 'grep --after-context 11 "SEMANTIC SCORES:" %s\n' % (eval_out)
+        
         return script
     
     def get_java_args(self):
@@ -543,33 +545,30 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     old_params_for_record.set("old:"+key, old_params.get(key), False, False)
                 old_params_for_record.set("old:tagger_parser", old_params.get("tagger_parser"), incl_name=True, incl_arg=False)
                 # Create experiment
-                new_params = old_params + SrlExpParams()
+                new_params = g.defaults + old_params_for_record + old_params + SrlExpParams()
                 # -- remove irrelevant params
                 keys_to_remove = [ "train", "trainType", "trainPredOut",
                                    "trainGoldOut", "trainMaxSentenceLength",
                                    "trainMaxNumSentences", 
-                                   "test", "testType", "testPredOut",
-                                   "testGoldOut", "testMaxSentenceLength",
+                                   "test", "testType", "testMaxSentenceLength",
                                    "testMaxNumSentences", 
                                    "modelIn", "modelOut", "printModel", "seed", 
                                    ]
                 for key in keys_to_remove: 
                     new_params.remove(key)
                 # -- add new params
-                print "exclude_name_keys:", new_params.exclude_name_keys
                 modelIn = old_params.get("modelOut")
-                # Get model file:
-                # -- skip non-experiment dirs.
+                #   - skip non-experiment dirs.
                 if modelIn is None: continue
-                # -- prepend the experiment directory to relative paths.
+                #   - prepend the experiment directory to relative paths.
                 if modelIn.startswith("."):
                     modelIn = os.path.join(exp_dir, modelIn)
-                # -- skip failed experiments.
-                if not os.path.exists(modelIn): continue
-                # Create experiment:
+                #   - skip failed experiments.
+                if not os.path.exists(modelIn): continue                
+                # -- compose the parameters
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
                 new_params += g.pos_eval
-                exps.append(g.defaults + old_params_for_record + new_params)
+                exps.append(new_params)
             return self._get_pipeline_from_exps(exps)
         
         else:
