@@ -82,6 +82,8 @@ public class FeatureObject {
         setNoFarChildren();
     }
 
+    // TODO: This constructor suggests that we should divide this class into a FeaturizedToken and FeaturizedTokenPair.
+    // They would have different access patterns and cache different things.
     public FeatureObject(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg, int[] parents) {
         this.parents = parents;
         this.linePath = new ArrayList<Integer>();
@@ -285,6 +287,7 @@ public class FeatureObject {
         boolean haveArgLow = false;
         boolean havePredLow = false;
         int i;
+        // TODO: This is hardcoded to the Spanish POS tags.
         String argSupport = "n";
         String predSupport = "v";
 
