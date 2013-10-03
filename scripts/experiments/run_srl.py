@@ -360,22 +360,25 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
-        if self.get("train"): script += self.get_eval_script("train")
-        if self.get("test"):  script += self.get_eval_script("test")
+        if self.get("train"): 
+            script += self.get_eval_script("train", True)
+            script += self.get_eval_script("train", False)
+        if self.get("test"):  
+            script += self.get_eval_script("test", True)
+            script += self.get_eval_script("test", False)
         
         return script
     
-    def get_eval_script(self, data_name):    
+    def get_eval_script(self, data_name, predict_sense):    
         script = "\n"
-        script += 'echo "Evaluating %s"\n' % (data_name)
+        script += 'echo "Evaluating %s with predict_sense=%r"\n' % (data_name, predict_sense)
         eval_args = "" 
-        if self.get("normalizeRoles") is not None:
-            pass
         eval_args += " -g " + self.get(data_name + "GoldOut") + " -s " + self.get(data_name + "PredOut")
-        eval_out = data_name + "-eval.out"
-        if self.get("predictSense") == True:
+        if predict_sense:
+            eval_out = data_name + "-eval.out"
             script += "perl %s/scripts/eval/eval09.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
         else:
+            eval_out = data_name + "-no-sense" + "-eval.out"
             script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
         script += 'grep --after-context 5 "SYNTACTIC SCORES:" %s\n' % (eval_out)
         script += 'grep --after-context 11 "SEMANTIC SCORES:" %s\n' % (eval_out)
