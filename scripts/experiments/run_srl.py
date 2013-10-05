@@ -339,11 +339,11 @@ class ParamDefinitions():
      
     def _define_lists_parse_and_srl(self, g, l):
         # Spanish only
-        l.parse_and_srl = self._get_lists_parse_and_srl(g, l.parser_outputs)
+        l.parse_and_srl = self._get_lists_parse_and_srl(g, l.parser_outputs, "-unsup")
         # All languages
-        l.all_parse_and_srl_sup_lat = self._get_lists_parse_and_srl(g, l.all_parser_outputs_sup)
+        l.all_parse_and_srl_sup_lat = self._get_lists_parse_and_srl(g, l.all_parser_outputs_sup, "-sup")
         
-    def _get_lists_parse_and_srl(self, g, parser_outputs):
+    def _get_lists_parse_and_srl(self, g, parser_outputs, tp_for_global_factor):
         '''Gets a list of pipelined or joint training approaches to tagging, parsing, and SRL.
         The parsing is done ahead of time.
         
@@ -357,7 +357,7 @@ class ParamDefinitions():
             # with the CoNLL-2009 shared task.
             for model in [g.model_pg_lat_tree, g.model_pg_obs_tree]:
                 if model.get("useProjDepTreeFactor") \
-                    and not parser_output.get("tagger_parser").endswith("-unsup"):                    
+                    and not parser_output.get("tagger_parser").find(tp_for_global_factor) != -1:                    
                     # We define the non-latent-tree model for all the input parses,
                     # but we only need to define the latent-tree model for one of the input 
                     # datasets.
