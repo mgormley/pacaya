@@ -269,13 +269,15 @@ class ParamDefinitions():
     
     def _define_groups_model(self, g):
         g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED")
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
         g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED")
         g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
 
     def _define_lists_model(self, g, l):
-        l.models = [g.model_pg_obs_tree, g.model_pg_lat_tree,
-                    g.model_ap_obs_tree, g.model_ap_lat_tree,]
+        l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
+                    g.model_ap_obs_tree, g.model_ap_prd_tree, g.model_ap_lat_tree]
                 
     def _get_pos_gold(self, p, lang_short):
         # Gold trees: HEAD column.
