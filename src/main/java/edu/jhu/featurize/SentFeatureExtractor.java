@@ -22,12 +22,34 @@ import edu.jhu.util.Pair;
  * @author mgormley
  */
 public class SentFeatureExtractor {
-
+    /*
+    * Treats features as combinations of feature templates, for:
+    * 1. word form (formFeats)
+    * 2. lemma (lemmaFeats)
+    * 3. part-of-speech (tagFeats)
+    * 4. morphological features (morphFeats)
+    * 5. syntactic dependency label (deprelFeats)
+    * 6. syntactic edges:  children, siblings, parents (edgeFeats)
+    * 7. dependency paths (pathFeats)
+    * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
+    */
+    
+    
     //private static final Logger log = Logger.getLogger(SentFeatureExtractor.class);
     public static class SentFeatureExtractorPrm {
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
         public boolean isProjective = false;
+        /** Switches for feature templates. */
+        public boolean formFeats = true;
+        public boolean lemmaFeats = true;
+        public boolean tagFeats = true;
+        public boolean morphFeats = true;
+        public boolean deprelFeats = true;
+        public boolean edgeFeats = true;
+        public boolean pathFeats = true;
+        public boolean supportFeats = true;
+        /** Whether to use supervised features. */
         public boolean withSupervision = true;
         /** Whether to add the "Simple" features. */
         public boolean useSimpleFeats = true;
@@ -41,6 +63,8 @@ public class SentFeatureExtractor {
         // only Zhao+Narad features.
         /** Whether to add the "Bjorkelund" features. */
         public boolean useBjorkelundFeats = false;
+        /** Whether to add all possible features using the templates defined above. **/
+        public boolean useAllTemplates = false;
     }
     
     // Parameters for feature extraction.
@@ -121,9 +145,17 @@ public class SentFeatureExtractor {
         if (prm.useBjorkelundFeats) {
             addBjorkelundSoloFeatures(idx, feats);
         }
+        if (prm.useAllTemplates ) {
+            addTemplateSoloFeatures(idx, feats);
+        }
         return feats;
     }
     
+    private void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
+        // TODO Auto-generated method stub
+        
+    }
+
     public ArrayList<String> createSenseFeatureSet(int idx) {
         ArrayList<String> feats = createFeatureSet(idx);
         return feats;
@@ -163,10 +195,94 @@ public class SentFeatureExtractor {
         if (prm.useBjorkelundFeats) {
             addBjorkelundPairFeatures(pidx, aidx, feats);
         }
+        if (prm.useAllTemplates) {
+            addTemplatePairFeatures(pidx, aidx, feats);
+        }
+
         return feats;
     }
 
     
+    public void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) { 
+        /* formFeats
+         * lemmaFeats
+         * tagFeats
+         * morphFeats
+         * deprelFeats
+         * edgeFeats
+         * pathFeats
+         * supportFeats */
+        // List that stores all feature templates.
+        ArrayList<Template<String,String>> featTmp = new ArrayList<Template<String,String>>();
+        for (int n=-1; n<=1; n++) {
+            FeatureObject featurePred = getFeatureObject(pidx + n);
+            FeatureObject featureArg = getFeatureObject(aidx + n);
+            FeatureObject featurePredArgPair = new FeatureObject(pidx + n, aidx + n, featurePred, featureArg, parents);
+            Iterable<FeatureObject> pair = new Template<FeatureObject, FeatureObject>(featurePred, featureArg);
+            for (FeatureObject f : pair) {
+                if (prm.formFeats) {
+                    String form = "Form:" + f.getForm();
+                    System.out.println(form);
+                    featTmp = addTemplatePiece(form, featTmp, n);
+                }
+                if (prm.lemmaFeats) {
+                    String lemma = "Lemma:" + f.getLemma();
+                    featTmp = addTemplatePiece(lemma, featTmp, n);
+                }
+                if (prm.tagFeats) {
+                    String tag = "Tag:" + f.getPos();
+                    featTmp = addTemplatePiece(tag, featTmp, n);
+                }
+                System.out.println(featTmp);
+                System.exit(0);
+                /*if (prm.morphFeats) {
+
+            }
+            if (prm.deprelFeats) {
+
+            }
+            if (prm.edgeFeats) {
+
+            }
+            if (prm.pathFeats) {
+
+            }
+            if (prm.supportFeats) {
+
+            }*/
+            }
+        }
+        ArrayList<String> featList = new ArrayList<String>();
+        String seqFeat = buildString(featList);
+        String bagFeat = buildString(bag(featList));
+        String noDupFeat = buildString(noDup(featList));
+    }
+
+    public ArrayList<Template<String, String>> addTemplatePiece(String piece, ArrayList<Template<String,String>> featTmp, Integer n) {
+        ArrayList<Template<String,String>> featTmpCopy = (ArrayList<Template<String, String>>) featTmp.clone();
+        if (n == -1) {
+            piece = "Prev" + piece;
+        } else if (n == 1) {
+            piece = "Next" + piece;
+        }
+        Template<String, String> templateFirst;
+        for (Template<String, String> t : featTmp) {
+            if (t.getSecond() == null) {
+                // Repeat the first feature to combine with later ones.
+                templateFirst = new Template<String,String>();
+                templateFirst.setFirst(t.getFirst());
+                featTmpCopy.add(templateFirst);
+                // Also make a complete feature
+                t.setSecond(piece);
+            }
+        }
+        // Initialize feature templates with new feature value.
+        templateFirst = new Template<String,String>();
+        templateFirst.setFirst(piece);
+        featTmpCopy.add(templateFirst);
+        return featTmpCopy;
+    }
+
     // ---------- Meg's "Simple" features. ---------- 
     public void addSimpleSoloFeatures(int idx, ArrayList<String> feats) {
         String wordForm = sent.getWord(idx);

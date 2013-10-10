@@ -18,7 +18,17 @@ public class FeatureObject {
      * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou 
      * and
      * "Multilingual Semantic Role Labeling"
-     * Anders Bjo ̈rkelund, Love Hafdell, Pierre Nugues */    
+     * Anders Bjo ̈rkelund, Love Hafdell, Pierre Nugues
+     * Treats features as combinations of feature templates, for:
+     * 1. word form (formFeats)
+     * 2. lemma (lemmaFeats)
+     * 3. part-of-speech (tagFeats)
+     * 4. morphological features (morphFeats)
+     * 5. syntactic dependency label (deprelFeats)
+     * 6. syntactic edges:  children, siblings, parents (edgeFeats)
+     * 7. dependency paths (pathFeats)
+     * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
+     */    
 
     private static final String NO_MORPH = "NO_MORPH"; 
 

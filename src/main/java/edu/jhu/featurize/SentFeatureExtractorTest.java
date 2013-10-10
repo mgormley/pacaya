@@ -424,6 +424,38 @@ public class SentFeatureExtractorTest {
         assertEquals(b.getRightSibling(), 4);
     }
     
+    
+    @Test
+    public void testTemplates() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        cs.init(Utilities.getList(simpleSent));
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.withSupervision = false;
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+
+        ArrayList<String> allFeats = new ArrayList<String>();
+        fePrm.withSupervision = true;
+        fePrm.formFeats = true;
+        fePrm.lemmaFeats = true;
+        fePrm.tagFeats = true;
+        fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        allFeats = new ArrayList<String>();
+        for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                fe.addTemplatePairFeatures(i, j, allFeats);
+            }
+        }
+        for (String f : allFeats) {
+            System.out.println(f);
+        }
+        assertEquals(true, true);
+    }
+    
+    
     public static CoNLL09Sentence getSpanishConll09Sentence1() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();  
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
