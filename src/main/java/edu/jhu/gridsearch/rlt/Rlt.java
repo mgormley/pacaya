@@ -535,7 +535,7 @@ public class Rlt {
         row.add(facJG);
 
         // Part 2: + \sum_{k=1}^n -G_{ik} G_{jk} w_{kk}
-        LongDoubleSortedVector ip = facI.G.hadamardProd(facJ.G);
+        LongDoubleSortedVector ip = facI.G.getProd(facJ.G);
         ip.scale(-1.0);
         LongDoubleSortedVector shiftedIp = new LongDoubleSortedVector();
         for (int idx = 0; idx < ip.getUsed(); idx++) {
