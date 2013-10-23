@@ -8,6 +8,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * Tests/example usage of ArgParser and Opt.
+ * 
+ * @author mgormley
+ */
 public class ArgParserTest {
 
     public enum MockEnum {
