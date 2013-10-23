@@ -1,6 +1,10 @@
 package edu.jhu.model.dmv;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,6 +45,9 @@ public class DmvModel implements Model, Serializable {
         } 
         public String toString() {
             return (this == LEFT) ? "l" : "r";
+        }
+        public static Lr fromInt(int dir) {
+            return (dir == DmvModel.LEFT) ? LEFT : RIGHT;
         }
     }
 
@@ -463,6 +470,46 @@ public class DmvModel implements Model, Serializable {
                 assert(Utilities.equals(0.0, logSums[p][dir], delta)); 
             }
         }
+    }
+
+    public String toString() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            printModel(new OutputStreamWriter(baos));
+            return baos.toString("UTF-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public void printModel(Writer writer) throws IOException {
+        for (int c=0; c<numTags; c++) {
+            Label cTag = tagAlphabet.lookupObject(c);
+            writer.write(String.format("WALL --> %s = %f\n", cTag, this.root[c]));
+        }
+        writer.write("\n");
+        for (int p=0; p<numTags; p++) {          
+            Label pTag = tagAlphabet.lookupObject(p);   
+            for (int c=0; c<numTags; c++) {
+                Label cTag = tagAlphabet.lookupObject(c);             
+                for (int dir=0; dir<2; dir++) {
+                    Lr lr = Lr.fromInt(dir);
+                    writer.write(String.format("%s --> %s (%s) = %f\n", pTag, cTag, lr, this.child[c][p][dir]));
+                }
+            }
+        }
+        writer.write("\n");
+        for (int c=0; c<numTags; c++) {
+            Label cTag = tagAlphabet.lookupObject(c);
+            for (int dir=0; dir<2; dir++) {
+                Lr lr = Lr.fromInt(dir);
+                for (int val=0; val<2; val++) {
+                    writer.write(String.format("%s (%s) %d CONT = %f\n", cTag, lr, val, this.decision[c][dir][val][DmvModel.CONT]));
+                    writer.write(String.format("%s (%s) %d  END = %f\n", cTag, lr, val, this.decision[c][dir][val][DmvModel.END]));                    this.decision[c][dir][val][DmvModel.END] = 1.0 - this.decision[c][dir][val][DmvModel.CONT];
+                }
+            }
+        }
+        writer.flush();
     }
     
 }
