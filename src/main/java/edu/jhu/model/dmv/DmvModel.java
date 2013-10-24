@@ -315,7 +315,9 @@ public class DmvModel implements Model, Serializable {
     public void convertRealToLog() {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.log(value);
+                double logValue = Utilities.log(value);
+                assert !Double.isNaN(logValue) : "value=" + value;
+                return logValue;
             }
         });
     }
@@ -461,6 +463,7 @@ public class DmvModel implements Model, Serializable {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
                     logSums[p][dir] = Utilities.logAdd(logSums[p][dir], child[c][p][dir]);
+                    assert(!Double.isNaN(logSums[p][dir]));
                 }
             }
         }

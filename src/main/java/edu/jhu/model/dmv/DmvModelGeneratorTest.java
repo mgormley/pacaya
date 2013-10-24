@@ -11,8 +11,8 @@ public class DmvModelGeneratorTest {
     @Test
     public void testTieredModelGeneration() {
         int numTiers = 3;
-        int numTags = 9;
-        DmvModel dmvModel = DmvModelGenerator.getTieredModel(numTiers, numTags, new StochasticRealParamGenerator());
+        int numTags = 7;
+        DmvModel dmvModel = DmvModelGenerator.getTieredModel(numTiers, numTags, new StochasticRealParamGenerator(10.0));
 
         DmvDepTreeGenerator generator = new DmvDepTreeGenerator(dmvModel, System.currentTimeMillis());
         dmvModel.convertLogToReal();

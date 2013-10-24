@@ -4,6 +4,7 @@ import edu.jhu.data.Label;
 import edu.jhu.data.TaggedWord;
 import edu.jhu.prim.map.IntIntHashMap;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.dist.Beta;
 import edu.jhu.util.dist.Gaussian;
 
@@ -48,13 +49,15 @@ public class DmvModelGenerator {
             int ctier = idxTierMap.get(c);
             
             dmv.root[c] = gen.getRoot(ctier, numTiers);
-
+            assert !Double.isNaN(dmv.root[c]);
+            
             for (int p=0; p<numTags; p++) {
                 // Get the tier of the parent.
                 int ptier = idxTierMap.get(p);
                 
                 for (int dir=0; dir<2; dir++) {
                     dmv.child[c][p][dir] = gen.getChild(ptier, ctier, numTiers);
+                    assert !Double.isNaN(dmv.child[c][p][dir]);                    
                 }
             }
 
@@ -62,14 +65,65 @@ public class DmvModelGenerator {
                 for (int val=0; val<2; val++) {
                     dmv.decision[c][dir][val][DmvModel.CONT] = gen.getCont(ctier, numTiers, val, dir);
                     dmv.decision[c][dir][val][DmvModel.END] = 1.0 - dmv.decision[c][dir][val][DmvModel.CONT];
+                    assert !Double.isNaN(dmv.decision[c][dir][val][DmvModel.CONT]);                    
+                    assert !Double.isNaN(dmv.decision[c][dir][val][DmvModel.END]);                    
                 }
             }
         }
 
+        final MinFinder minFinder = new MinFinder();
+        dmv.applyStop(minFinder);
+        dmv.applyStop(new LambdaOneToOne<Double, Double>() {
+            public Double call(Double value) {
+                return value - minFinder.min;
+            }
+        });
+        dmv.applyChild(minFinder);
+        dmv.applyChild(new LambdaOneToOne<Double, Double>() {
+            public Double call(Double value) {
+                return value - minFinder.min;
+            }
+        });
+        minFinder.min = Double.POSITIVE_INFINITY;
+        dmv.applyRoot(minFinder);
+        dmv.applyRoot(new LambdaOneToOne<Double, Double>() {
+            public Double call(Double value) {
+                return value - minFinder.min;
+            }
+        });
+
+        dmv.apply(new NegativeFinder());
+
         dmv.normalize();
+        dmv.apply(new NegativeFinder());
         dmv.convertRealToLog();
+        dmv.apply(new NaNFinder());
         dmv.assertLogNormalized(1e-13);
         return dmv;
+    }
+
+    public static class NegativeFinder implements LambdaOneToOne<Double,Double> {
+        public Double call(Double val) {
+            assert val >= 0 : val;
+            return val;
+        }
+    }
+    
+    public static class NaNFinder implements LambdaOneToOne<Double,Double> {
+        public Double call(Double val) {
+            assert !Double.isNaN(val);
+            return val;
+        }
+    }
+    
+    public static class MinFinder implements LambdaOneToOne<Double,Double> {
+        public double min = Double.POSITIVE_INFINITY;
+        public Double call(Double val) {
+            if (val < min) {
+                min = val;
+            }
+            return val;
+        }
     }
     
     public interface RealParamGen {
@@ -125,8 +179,11 @@ public class DmvModelGenerator {
     
     public static class StochasticRealParamGenerator implements RealParamGen {
     
-        private double standardDeviation = 0.1;
+        private double standardDeviation;
             
+        public StochasticRealParamGenerator(double standardDeviation) {
+            this.standardDeviation = standardDeviation;
+        }
         
         public double getRoot(int ctier, int numTiers) {
             // Do an exponential falloff, so that we prefer to generate the top tier from the root.
