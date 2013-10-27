@@ -17,9 +17,8 @@ import org.apache.commons.collections.map.ReferenceMap;
  * @param <V> The value type.
  */
 // TODO: make the cache itself only a SoftReference.
-public class CachedFastDiskStore<K,V extends Serializable> {
+public class CachedFastDiskStore<K,V extends Serializable> extends FastDiskStore<K, V> {
 
-    private FastDiskStore<K, V> fds;
     private Map<K,V> cache;
     
     /**
@@ -30,7 +29,7 @@ public class CachedFastDiskStore<K,V extends Serializable> {
      */
     @SuppressWarnings("unchecked")
     public CachedFastDiskStore(File path, boolean gzipOnSerialize) throws FileNotFoundException {    
-        fds = new FastDiskStore<K,V>(path, gzipOnSerialize);
+        super(path, gzipOnSerialize);
         cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
     }
     
@@ -43,12 +42,12 @@ public class CachedFastDiskStore<K,V extends Serializable> {
      */
     @SuppressWarnings("unchecked")
     public CachedFastDiskStore(File path, boolean gzipOnSerialize, int maxEntriesInMemory) throws FileNotFoundException {    
-        fds = new FastDiskStore<K,V>(path, gzipOnSerialize);
+        super(path, gzipOnSerialize);
         cache = new LRUMap(maxEntriesInMemory);
     }
 
     public void put(K key, V value) throws IOException {  
-        fds.put(key, value);
+        super.put(key, value);
         cache.put(key, value);
     }
     
@@ -56,7 +55,7 @@ public class CachedFastDiskStore<K,V extends Serializable> {
         V value = cache.get(key);
         if (value == null) {
             // Get the value from disk and put it in the cache.
-            value = fds.get(key);
+            value = super.get(key);
             cache.put(key, value);
         }
         return value;

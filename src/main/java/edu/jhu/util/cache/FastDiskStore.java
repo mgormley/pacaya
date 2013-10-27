@@ -10,7 +10,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -25,23 +26,31 @@ public class FastDiskStore<K,V extends Serializable> {
 
     private static final int SIZE_OF_INT = Integer.SIZE / 8;
     // Map from key to position in the file.
-    private HashMap<K,Long> keyPosMap;
+    private LinkedHashMap<K,Long> keyPosMap;
     // File containing the values.
     private RandomAccessFile raf;
     // The current insertion position.
     private long curPos;
     // Whether to gzip serialized objects.
     private final boolean gzipOnSerialize;
+    // The number of entries.
+    private int numEntries;
         
     public FastDiskStore(File path, boolean gzipOnSerialize) throws FileNotFoundException {
         path.getParentFile().mkdirs();
-        keyPosMap = new HashMap<K, Long>();
+        keyPosMap = new LinkedHashMap<K, Long>();
         raf = new RandomAccessFile(path, "rw");
         curPos = 0;
+        numEntries = 0;
         this.gzipOnSerialize = gzipOnSerialize;
     }
     
-    public void put(K key, V value) throws IOException {        
+    public void put(K key, V value) throws IOException {   
+        if (keyPosMap.containsKey(key)) {
+            // TODO: support multiple puts per key.
+            throw new IllegalStateException("FastDiskStore currently only supports one put call per key.");
+        }
+        
         raf.seek(curPos);
         byte[] valBytes = serialize(value);
         // Write the number of bytes.
@@ -52,7 +61,8 @@ public class FastDiskStore<K,V extends Serializable> {
         keyPosMap.put(key, curPos);
         // Increment the current position.
         curPos += SIZE_OF_INT;
-        curPos += valBytes.length;
+        curPos += valBytes.length;        
+        numEntries++;
     }
     
     @SuppressWarnings("unchecked")
@@ -69,6 +79,10 @@ public class FastDiskStore<K,V extends Serializable> {
         return (V) readBytes(numBytes);
     }
 
+    public int size() {
+        return numEntries;
+    }
+    
     private Object readBytes(int numBytes) throws IOException {
         byte[] bytes = new byte[numBytes];
         int numRead = raf.read(bytes);
@@ -114,6 +128,43 @@ public class FastDiskStore<K,V extends Serializable> {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
-    }   
+    }
+    
+    public Iterator<K> keyIterator() {
+        return keyPosMap.keySet().iterator();
+    }
+    
+    public Iterator<V> valueIterator() {
+        return new FastDiskStoreValueIterator();
+    }  
+    
+    private class FastDiskStoreValueIterator implements Iterator<V> {
+
+        private Iterator<K> keyIter = keyIterator();
+        
+        @Override
+        public boolean hasNext() {
+            return keyIter.hasNext();
+        }
+
+        @Override
+        public V next() {
+            if (!hasNext()) {
+                return null;
+            }
+            try {
+                return get(keyIter.next());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new RuntimeException("not implemented");
+        }
+        
+    }
+
     
 }
