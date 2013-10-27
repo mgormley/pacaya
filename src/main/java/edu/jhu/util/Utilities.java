@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -817,5 +818,13 @@ public class Utilities {
 
     public static <T> ArrayList<T> copyOf(List<T> list) {
         return list == null ? null : new ArrayList<T>(list);
+    }
+
+    public static <T> Iterable<T> asIterable(final Iterator<T> iterator) {
+        return new Iterable<T>() {
+            public Iterator<T> iterator() {
+                return iterator;
+            }            
+        };
     }
 }

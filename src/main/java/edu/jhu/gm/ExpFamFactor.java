@@ -9,6 +9,8 @@ package edu.jhu.gm;
 // TODO: At the moment, this is just an IDENTIFIER for exponential family
 // factors...the actual behavior of this class is identical to ExplicitFactor.
 public class ExpFamFactor extends ExplicitFactor implements Factor {
+    
+    private static final long serialVersionUID = 1L;
 
     public ExpFamFactor(VarSet vars, Object templateKey) {
         super(vars, templateKey);

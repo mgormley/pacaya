@@ -1,10 +1,13 @@
 package edu.jhu.gm;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-import edu.jhu.util.Alphabet;
+import edu.jhu.util.Utilities;
+import edu.jhu.util.cache.CachedFastDiskStore;
 
 /**
  * A collection of samples for a graphical model represented as factor graphs.
@@ -12,9 +15,10 @@ import edu.jhu.util.Alphabet;
  * @author mgormley
  *
  */
-public class FgExamples implements Iterable<FgExample> {
+public class FgExamples {
         
-    private ArrayList<FgExample> examples;
+    private CachedFastDiskStore<Integer, FgExample> examples;
+    
     /**
      * This is a hack to carry around the source sentences. For example, the
      * CoNLL2009 sentences from which these examples were generated.
@@ -24,17 +28,29 @@ public class FgExamples implements Iterable<FgExample> {
 
     public FgExamples(FeatureTemplateList fts) {
         this.fts = fts;
-        this.examples = new ArrayList<FgExample>();
+        try {
+            this.examples = new CachedFastDiskStore<Integer, FgExample>(new File("./cache.binary.gz"), true);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     /** Adds an example. */
     public void add(FgExample example) {
-        examples.add(example);
+        try {
+            examples.put(examples.size(), example);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     /** Gets the i'th example. */
     public FgExample get(int i) {
-        return examples.get(i);
+        try {
+            return examples.get(i);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     
     /** Gets the number of examples. */
@@ -42,14 +58,9 @@ public class FgExamples implements Iterable<FgExample> {
         return examples.size();
     }
 
-    @Override
-    public Iterator<FgExample> iterator() {
-        return examples.iterator();
-    }
-
     public List<VarConfig> getGoldConfigs() {
         List<VarConfig> varConfigList = new ArrayList<VarConfig>();
-        for (FgExample ex : examples) {
+        for (FgExample ex : Utilities.asIterable(examples.valueIterator())) {
             varConfigList.add(ex.getGoldConfig());
         }
         return varConfigList;
@@ -57,7 +68,7 @@ public class FgExamples implements Iterable<FgExample> {
 
     public int getNumFactors() {
         int numFactors = 0;
-        for (FgExample ex : examples) {
+        for (FgExample ex : Utilities.asIterable(examples.valueIterator())) {
             numFactors += ex.getOriginalFactorGraph().getNumFactors();
         }
         return numFactors;
@@ -65,7 +76,7 @@ public class FgExamples implements Iterable<FgExample> {
 
     public int getNumVars() {
         int numVars = 0;
-        for (FgExample ex : examples) {
+        for (FgExample ex : Utilities.asIterable(examples.valueIterator())) {
             numVars += ex.getOriginalFactorGraph().getNumVars();
         }
         return numVars;

@@ -1,12 +1,11 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-import edu.jhu.gm.FactorGraph.FgNode;
-import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Lambda;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.Lambda.LambdaBinOpDouble;
+import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Multinomials;
 import edu.jhu.util.math.Vectors;
 
@@ -16,7 +15,9 @@ import edu.jhu.util.math.Vectors;
  * @author mgormley
  *
  */
-public class DenseFactor {
+public class DenseFactor implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     /** All variables without an id are given this value. */
     public static final int UNINITIALIZED_NODE_ID = -1;

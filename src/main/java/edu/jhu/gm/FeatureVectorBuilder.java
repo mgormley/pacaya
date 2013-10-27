@@ -3,7 +3,7 @@ package edu.jhu.gm;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.map.IntDoubleHashMap;
 import edu.jhu.prim.util.Pair;
-import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.util.sort.IntDoubleSort;
 
 /**
  * For building large (e.g. 20000+) sparse feature vectors quickly.
@@ -29,7 +29,7 @@ public class FeatureVectorBuilder extends IntDoubleHashMap {
         Pair<int[], double[]> ivs = this.getIndicesAndValues();
         int[] index = ivs.get1();
         double[] values = ivs.get2();
-        Sort.sortIndexAsc(index, values);
+        IntDoubleSort.sortIndexAsc(index, values);
         return new FeatureVector(index, values);
     }
     

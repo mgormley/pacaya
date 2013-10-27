@@ -2,6 +2,7 @@ package edu.jhu.gm.data;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -351,8 +352,9 @@ public class ErmaReader {
         }
     }
     
-    private static class SimpleLookupFeatureExtractor implements ObsFeatureExtractor {
-
+    private static class SimpleLookupFeatureExtractor implements ObsFeatureExtractor, Serializable {
+        
+        private static final long serialVersionUID = 1L;
         private ArrayList<ArrayList<FeatureVector>> feature_ref_vec;
 
         public SimpleLookupFeatureExtractor(

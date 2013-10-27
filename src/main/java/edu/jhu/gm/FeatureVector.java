@@ -4,6 +4,8 @@ import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class FeatureVector extends IntDoubleSortedVector {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Large FeatureVectors (e.g. 20,000+ features) should almost always be
      * constructed via a FeatureVectorBuilder, which has much faster support for

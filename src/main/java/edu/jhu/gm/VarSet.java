@@ -21,6 +21,8 @@ import edu.jhu.prim.set.SmallSet;
 // TODO: Move all the VarConfig related methods to VarConfig.
 public class VarSet extends SmallSet<Var> {
 
+    private static final long serialVersionUID = 1L;
+
     public VarSet() {
         super();
     }

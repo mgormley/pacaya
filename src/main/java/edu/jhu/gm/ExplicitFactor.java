@@ -7,12 +7,14 @@ package edu.jhu.gm;
  */
 public class ExplicitFactor extends DenseFactor implements Factor {
 
+    private static final long serialVersionUID = 1L;
+
     // The unique key identifying the template for this factor.
     protected Object templateKey;
     // The ID of the template for this factor -- which is only ever set by the
     // FeatureTemplateList.
     private int templateId = -1;
-    
+        
     public ExplicitFactor(VarSet vars, Object templateKey) {
         super(vars);
         this.templateKey = templateKey;

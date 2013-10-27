@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
@@ -9,8 +10,9 @@ import java.util.HashMap;
  *
  */
 // TODO: Maybe rename this to VarsAssignment.
-public class VarConfig {
+public class VarConfig implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private HashMap<Var,Integer> config;
     private VarSet vars;
     

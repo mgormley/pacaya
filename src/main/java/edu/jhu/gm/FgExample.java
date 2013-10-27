@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,8 +19,9 @@ import edu.jhu.util.Utilities;
  * 
  */
 // TODO: rename to CrfExample
-public class FgExample {
+public class FgExample implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(FgExample.class);
 
     /** The original factor graph. */

@@ -8,7 +8,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.prim.map.LongDoubleEntry;
-import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.util.sort.IntDoubleSort;
+import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
@@ -29,8 +30,8 @@ public class FactorBuilder {
         
         public Factor(double g, int[] Gind, double[] Gval, IloLPMatrix mat) {
             this.g = g;
-            if (!Sort.isSortedAscAndUnique(Gind)) {
-                Sort.sortIndexAsc(Gind, Gval);
+            if (!IntSort.isSortedAscAndUnique(Gind)) {
+                IntDoubleSort.sortIndexAsc(Gind, Gval);
             }
             this.G = new LongDoubleSortedVector(SafeCast.toLong(Gind), Gval);
             this.mat = mat;

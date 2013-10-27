@@ -1,7 +1,9 @@
 package edu.jhu.gm;
 
-public interface Factor {
+import java.io.Serializable;
 
+public interface Factor extends Serializable {
+    
     /**
      * Gets a new version of the factor graph where the specified variables are
      * clamped to their given values.

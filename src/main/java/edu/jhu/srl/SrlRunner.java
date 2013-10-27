@@ -12,8 +12,6 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import cern.colt.Arrays;
-
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
@@ -31,7 +29,6 @@ import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
-import edu.jhu.gm.MbrDecoder;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.Var;

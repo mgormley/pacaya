@@ -1,9 +1,9 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 
 import edu.jhu.gm.FactorGraph.FgEdge;
@@ -21,7 +21,9 @@ import edu.jhu.gm.FactorGraph.FgNode;
  * 
  */
 // TODO: implements BipartiteGraph<Factor,Var> 
-public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
+public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
    
     /** 
      * A (directed) edge in a factor graph.
@@ -29,7 +31,9 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
      * @author mgormley
      *
      */
-    public class FgEdge extends DirectedGraph<FgNode,FgEdge>.Edge {
+    public class FgEdge extends DirectedGraph<FgNode,FgEdge>.Edge implements Serializable {
+        
+        private static final long serialVersionUID = 1L;
         
         private boolean isVarToFactor;
         private int id;
@@ -128,7 +132,9 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> {
      * @author mgormley
      *
      */
-    public class FgNode extends DirectedGraph<FgNode,FgEdge>.Node {
+    public class FgNode extends DirectedGraph<FgNode,FgEdge>.Node implements Serializable {
+        
+        private static final long serialVersionUID = 1L;
 
         private boolean isVar;
         private Var var;

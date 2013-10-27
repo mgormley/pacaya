@@ -1,15 +1,12 @@
 package edu.jhu.srl;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;

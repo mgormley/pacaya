@@ -20,7 +20,9 @@ import edu.jhu.util.Utilities;
  * @author mgormley
  */
 public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFactor {
-        
+
+    private static final long serialVersionUID = 1L;
+ 
     /**
      * Link variable. When true it indicates that there is an edge between its
      * parent and child.
@@ -28,6 +30,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
      * @author mgormley
      */
     public static class LinkVar extends Var {
+
+        private static final long serialVersionUID = 1L;
 
         // The variable states.
         public static final int TRUE = 1;

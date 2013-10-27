@@ -6,15 +6,12 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Arrays;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
-import edu.jhu.gm.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.Var.VarType;
-import edu.jhu.prim.util.Sort;
 import edu.jhu.prim.util.math.Vectors;
+import edu.jhu.prim.util.sort.DoubleSort;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
@@ -122,7 +119,7 @@ public class FgModelTest {
         model.updateDoublesFromModel(params);
         JUnitUtils.assertArrayEquals(new double[]{1,2,3,4,5,6,7,8,9,10,11,12,13,14}, params, 1e-13);
         
-        Sort.sortDesc(params);
+        DoubleSort.sortDesc(params);
         
         model.updateModelFromDoubles(params);
         

@@ -1,5 +1,6 @@
 package edu.jhu.gm;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,12 +10,16 @@ import java.util.List;
  * @author mgormley
  *
  */
-public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> {
+public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends DirectedGraph<N,E>.Edge> implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
 
     // Due to a compiler error in Java 1.7, the fields in Node/Edge are package
     // private instead of private.
     
-    public class Node {
+    public class Node implements Serializable {
+        
+        private static final long serialVersionUID = 1L;
         ArrayList<E> inEdges;
         ArrayList<E> outEdges;
         /** Whether this node has been added to the graph. */
@@ -45,7 +50,9 @@ public class DirectedGraph<N extends DirectedGraph<N,E>.Node, E extends Directed
         }
     }
     
-    public class Edge {
+    public class Edge implements Serializable {
+        
+        private static final long serialVersionUID = 1L;
         N n1;
         N n2;
         boolean added;
