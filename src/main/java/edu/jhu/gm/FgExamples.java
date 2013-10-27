@@ -31,7 +31,7 @@ public class FgExamples {
         try {
             File cachePath = File.createTempFile("cache", ".binary.gz", new File("."));
             this.examples = new CachedFastDiskStore<Integer, FgExample>(cachePath, true);
-            cachePath.deleteOnExit();
+            // TODO: cachePath.deleteOnExit();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
