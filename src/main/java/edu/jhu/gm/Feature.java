@@ -6,7 +6,7 @@ import java.io.Serializable;
  * A feature in a factor graph model.
  * 
  * @author mgormley
- *
+ * @author mmitchell
  */
 public class Feature implements Serializable {
 
