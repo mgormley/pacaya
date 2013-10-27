@@ -19,7 +19,7 @@ import com.joptimizer.optimizers.PrimalDualMethod;
 
 import edu.jhu.gridsearch.cpt.CptBounds;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
@@ -325,8 +325,8 @@ public class ModelParamSubproblem {
             // to the amount of mass
             // remaining.
             double[] ws = Utilities.copyOf(weights[c]);
-            int[] indices = Sort.getIndexArray(ws);
-            Sort.sortValuesAsc(ws, indices);
+            int[] indices = IntDoubleSort.getIntIndexArray(ws);
+            IntDoubleSort.sortValuesAsc(ws, indices);
             for (int i = 0; i < indices.length && massRemaining > 0; i++) {
                 int m = indices[i];
                 double logMax = Utilities.logAdd(Utilities.log(massRemaining), logProbs[c][m]);

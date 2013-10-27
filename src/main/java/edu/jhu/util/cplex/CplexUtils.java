@@ -13,7 +13,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 
 import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
-import edu.jhu.prim.util.Sort;
+import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.prim.vector.IntDoubleSortedVector;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.Vectors;
@@ -201,7 +201,7 @@ public class CplexUtils {
         IntDoubleSortedVector expectedRow = new IntDoubleSortedVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
-            Sort.sortIndexAsc(ind[m], val[m]);
+            IntDoubleSort.sortIndexAsc(ind[m], val[m]);
             IntDoubleSortedVector row = new IntDoubleSortedVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
@@ -232,7 +232,7 @@ public class CplexUtils {
         IntDoubleSortedVector expectedRow = new IntDoubleSortedVector(denseRow);
 
         for (int m = 0; m < nRows; m++) {
-            Sort.sortIndexAsc(ind[m], val[m]);
+            IntDoubleSort.sortIndexAsc(ind[m], val[m]);
             IntDoubleSortedVector row = new IntDoubleSortedVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
