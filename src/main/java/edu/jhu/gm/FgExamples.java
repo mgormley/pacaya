@@ -29,8 +29,10 @@ public class FgExamples {
     public FgExamples(FeatureTemplateList fts) {
         this.fts = fts;
         try {
-            this.examples = new CachedFastDiskStore<Integer, FgExample>(new File("./cache.binary.gz"), true);
-        } catch (FileNotFoundException e) {
+            File cachePath = File.createTempFile("cache", ".binary.gz", new File("."));
+            this.examples = new CachedFastDiskStore<Integer, FgExample>(cachePath, true);
+            cachePath.deleteOnExit();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
