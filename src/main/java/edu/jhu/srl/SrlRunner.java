@@ -28,6 +28,7 @@ import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.FgExamplesBuilder.CacheType;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder.Loss;
 import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
@@ -179,6 +180,10 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
     public static boolean removeFeat = false;
 
+    // Options for caching.
+    @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
+    public static CacheType cacheType = CacheType.MEMORY_STORE;
+    
     // Options for training.
     @Opt(hasArg=true, description="The optimization method to use for training.")
     public static Optimizer optimizer = Optimizer.LBFGS;
@@ -351,8 +356,10 @@ public class SrlRunner {
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
         if (prm.fgPrm.predictSense) {
+            fts.startGrowth();
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.stopGrowth();
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
@@ -454,6 +461,7 @@ public class SrlRunner {
 
     private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm() {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        
         // Factor graph structure.
         prm.fgPrm.linkVarType = linkVarType;
         prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
@@ -463,6 +471,7 @@ public class SrlRunner {
         prm.fgPrm.unaryFactors = unaryFactors;
         prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
         prm.fgPrm.predictSense = predictSense;
+        
         // Feature extraction.
         prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.useSimpleFeats = useSimpleFeats;
@@ -470,7 +479,13 @@ public class SrlRunner {
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
-        prm.featCountCutoff = featCountCutoff;
+        
+        // Example construction and storage.
+        prm.exPrm.featCountCutoff = featCountCutoff;
+        prm.exPrm.cacheType = cacheType;
+        prm.exPrm.gzipped = true;
+        prm.exPrm.maxEntriesInMemory = -1; // Use SoftReferences.
+        
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;

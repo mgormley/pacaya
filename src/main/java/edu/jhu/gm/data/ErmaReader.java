@@ -14,7 +14,6 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.ExpFamFactor;
 import edu.jhu.gm.FactorGraph;
 import edu.jhu.gm.Feature;
@@ -22,6 +21,9 @@ import edu.jhu.gm.FeatureTemplateList;
 import edu.jhu.gm.FeatureVector;
 import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
+import edu.jhu.gm.FgExamplesMemoryStore;
+import edu.jhu.gm.FgExamplesStore;
+import edu.jhu.gm.ObsFeatureExtractor;
 import edu.jhu.gm.Var;
 import edu.jhu.gm.Var.VarType;
 import edu.jhu.gm.VarConfig;
@@ -70,7 +72,7 @@ public class ErmaReader {
         }
 
         log.info("Reading and converting data from " + dataFile);  
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         try {
             // This will convert each DataSample to an FgExample and add it to data.
             ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
@@ -91,9 +93,9 @@ public class ErmaReader {
      */
     private static class ConvertingDataParser extends DataParser {
         
-        private FgExamples data;
+        private FgExamplesStore data;
         
-        public ConvertingDataParser(String filename, FeatureFile ff, FgExamples data) throws FileNotFoundException {
+        public ConvertingDataParser(String filename, FeatureFile ff, FgExamplesStore data) throws FileNotFoundException {
             super(filename, ff);
             this.data = data;
         }

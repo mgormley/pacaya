@@ -18,7 +18,7 @@ public class FgExamplesTest {
         
         FeatureTemplateList fts = new FeatureTemplateList();
         FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts), fts);
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(ex);
         
         System.out.println(fts);

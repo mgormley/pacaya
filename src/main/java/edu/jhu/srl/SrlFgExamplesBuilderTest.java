@@ -141,7 +141,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.alwaysIncludeLinkVars = true;
         {
             FeatureTemplateList fts = new FeatureTemplateList();
-            prm.featCountCutoff = 0;
+            prm.exPrm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExamples data = builder.getData(simpleSents);            
             // Used to be:  assertEquals(13388, fts.getNumObsFeats());
@@ -152,7 +152,7 @@ public class SrlFgExamplesBuilderTest {
         }
         {
             FeatureTemplateList fts = new FeatureTemplateList();
-            prm.featCountCutoff = 5;
+            prm.exPrm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExamples data = builder.getData(simpleSents);
             // Used to be:  assertEquals(2729, fts.getNumObsFeats());

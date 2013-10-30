@@ -89,7 +89,7 @@ public class CrfObjectiveTest {
             Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
             fts.add(new FeatureTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
             
-            FgExamples data = new FgExamples(fts);
+            FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
             int state=0;
             for (final LogLinearExDesc desc : descList) {
                 for (int i=0; i<desc.getCount(); i++) {

@@ -23,7 +23,7 @@ public class MbrDecoderTest {
         }
         
         FeatureTemplateList fts = new FeatureTemplateList();
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(fg, trainConfig, fts), fts));
         FgModel model = new FgModel(fts);
 

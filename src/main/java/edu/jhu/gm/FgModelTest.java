@@ -139,7 +139,7 @@ public class FgModelTest {
         boolean useLat = true;
         FeatureTemplateList fts = getFtl(useLat);
         
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
         data.add(getExForFts("1a", "2c", fts, useLat));
         data.add(getExForFts("1b", "2b", fts, useLat));
@@ -160,7 +160,7 @@ public class FgModelTest {
         boolean useLat = false;
         FeatureTemplateList fts = getFtl(useLat);
         
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
         data.add(getExForFts("1a", "2c", fts, useLat));
         data.add(getExForFts("1b", "2b", fts, useLat));

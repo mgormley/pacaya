@@ -100,7 +100,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
 
@@ -149,7 +149,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -208,7 +208,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
-        FgExamples data = new FgExamples(fts);
+        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
         data.add(new FgExample(fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
