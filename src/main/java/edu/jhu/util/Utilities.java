@@ -827,4 +827,13 @@ public class Utilities {
             }            
         };
     }
+
+    /** Gets a new list of Strings that have been interned. */
+    public static ArrayList<String> getInternedList(List<String> oldList) {
+        ArrayList<String> newList = new ArrayList<String>(oldList.size());
+        for (String elem : oldList) {
+            newList.add(elem.intern());
+        }
+        return newList;
+    }
 }
