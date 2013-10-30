@@ -19,6 +19,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.AccuracyEvaluator;
+import edu.jhu.gm.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
@@ -27,6 +28,7 @@ import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.gm.Feature;
 import edu.jhu.gm.FeatureTemplate;
 import edu.jhu.gm.FeatureTemplateList;
+import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgExamplesBuilder.CacheType;
 import edu.jhu.gm.FgModel;
@@ -182,7 +184,9 @@ public class SrlRunner {
 
     // Options for caching.
     @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
-    public static CacheType cacheType = CacheType.MEMORY_STORE;
+    public static CacheType cacheType = CacheType.CACHE;
+    @Opt(hasArg = true, description = "When caching, the maximum number of examples to keep cached in memory or -1 for SoftReference caching.")
+    public static int maxEntriesInMemory = 100;
     
     // Options for training.
     @Opt(hasArg=true, description="The optimization method to use for training.")
@@ -259,8 +263,8 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            List<VarConfig> predictions = decode(model, data, trainType, trainPredOut, name);        
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, trainType, trainPredOut, name);        
+            eval(name, pair);
         }
                 
         if (modelOut != null) {
@@ -283,8 +287,8 @@ public class SrlRunner {
             FgExamples data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name);
             // Decode and evaluate the test data.
-            List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, testType, testPredOut, name);
+            eval(name, pair);
         }
     }
 
@@ -401,27 +405,33 @@ public class SrlRunner {
             }
         }
     }
-
-    private void eval(FgExamples data, String name, List<VarConfig> predictions) {
+    
+    private void eval(String name, VarConfigPair pair) {
         AccuracyEvaluator accEval = new AccuracyEvaluator();
-        double accuracy = accEval.evaluate(data.getGoldConfigs(), predictions);
+        double accuracy = accEval.evaluate(pair.gold, pair.pred);
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
-
-    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    
+    private VarConfigPair decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
         
         SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
         // Predicted sentences
         SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
-        List<VarConfig> predictions = new ArrayList<VarConfig>();
-
+        List<VarConfig> predVcs = new ArrayList<VarConfig>();
+        List<VarConfig> goldVcs = new ArrayList<VarConfig>();
+        
         for (int i=0; i< goldSents.size(); i++) {
+            FgExample ex = data.get(i);
             SimpleAnnoSentence goldSent = goldSents.get(i);
             SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
             SrlDecoder decoder = getDecoder();
-            decoder.decode(model, data.get(i));
-
+            decoder.decode(model, ex);
+            
+            // Get the MBR variable assignment.
+            VarConfig predVc = decoder.getMbrVarConfig();
+            predVcs.add(predVc);
+            
             // Update SRL graph on the sentence. 
             SrlGraph srlGraph = decoder.getSrlGraph();
             predSent.setSrlGraph(srlGraph);
@@ -429,13 +439,11 @@ public class SrlRunner {
             int[] parents = decoder.getParents();
             if (parents != null) {
                 predSent.setParents(parents);
-            }
-            
-            // Get the MBR variable assignment.
-            VarConfig vc = decoder.getMbrVarConfig();
-
-            predictions.add(vc);
+            }            
             predSents.add(predSent);
+            
+            // Get the gold variable assignment.
+            goldVcs.add(ex.getGoldConfig());
         }
         
         if (predOut != null) {
@@ -452,7 +460,7 @@ public class SrlRunner {
             }
         }
         
-        return predictions;
+        return new VarConfigPair(goldVcs, predVcs);
     }
 
     
@@ -484,7 +492,7 @@ public class SrlRunner {
         prm.exPrm.featCountCutoff = featCountCutoff;
         prm.exPrm.cacheType = cacheType;
         prm.exPrm.gzipped = true;
-        prm.exPrm.maxEntriesInMemory = -1; // Use SoftReferences.
+        prm.exPrm.maxEntriesInMemory = maxEntriesInMemory;
         
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;

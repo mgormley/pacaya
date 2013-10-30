@@ -91,6 +91,7 @@ public class FgExamplesBuilder {
         boolean doingFeatCutoff = (fts.isGrowing() && prm.featCountCutoff > 0);
 
         if (doingFeatCutoff) {
+            log.info("Applying feature count cutoff: " + prm.featCountCutoff);
             cutoffFeatures(prm.featCountCutoff, fts, factory);
         }
 

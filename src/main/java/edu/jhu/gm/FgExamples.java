@@ -19,9 +19,6 @@ public interface FgExamples extends Iterable<FgExample> {
 
     /** Gets the feature templates for these examples. */
     public FeatureTemplateList getTemplates();
-    
-    /** Gets the gold variable assignments for each example. */
-    public List<VarConfig> getGoldConfigs();
 
     @Deprecated
     public void setSourceSentences(Object sents);

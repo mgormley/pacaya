@@ -6,6 +6,15 @@ import edu.jhu.gm.Var.VarType;
 
 public class AccuracyEvaluator {
 
+    public static class VarConfigPair {
+        public List<VarConfig> gold;
+        public List<VarConfig> pred;
+        public VarConfigPair(List<VarConfig> gold, List<VarConfig> pred) {
+            this.gold = gold;
+            this.pred = pred;
+        }        
+    }
+    
     /** Computes the accuracy on the PREDICTED variables. */
     public double evaluate(List<VarConfig> goldConfigs, List<VarConfig> predictedConfigs) {
         int numCorrect = 0;

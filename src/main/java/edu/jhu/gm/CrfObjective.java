@@ -22,6 +22,7 @@ public class CrfObjective implements Function, BatchFunction {
     private FgExamples data;
     private FgModel model;
     private FgModel gradient;
+    private FgInferencerFactory infFactory;
     
     // Cached inferencers for each example, indexed by example id.
     private ArrayList<FgInferencer> infLatList;
@@ -32,19 +33,9 @@ public class CrfObjective implements Function, BatchFunction {
         this.numParams = model.getNumParams();
         this.data = data;
         this.model = model;
+        this.infFactory = infFactory;
         this.gradient = new FgModel(model);
         this.gradient.zero();
-        
-        log.debug("Caching inferencers for all examples.");
-        // Cache all the inferencers.
-        infLatList = new ArrayList<FgInferencer>(data.size());
-        infLatPredList = new ArrayList<FgInferencer>(data.size());
-        for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
-            // Just get the factor graphs, without updating them.
-            infLatList.add(infFactory.getInferencer(ex.getFgLat()));
-            infLatPredList.add(infFactory.getInferencer(ex.getFgLatPred()));
-        }
     }
         
     public void setPoint(double[] params) {
@@ -112,7 +103,7 @@ public class CrfObjective implements Function, BatchFunction {
         FeatureTemplateList fts = data.getTemplates();
         
         // Run inference to compute Z(y,x) by summing over the latent variables w.
-        FgInferencer infLat = infLatList.get(i);
+        FgInferencer infLat = getInfLat(ex);
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();
 
@@ -135,7 +126,7 @@ public class CrfObjective implements Function, BatchFunction {
         infLat.clear();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        FgInferencer infLatPred = infLatPredList.get(i);
+        FgInferencer infLatPred = getInfLatPred(ex);
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();
 
@@ -208,14 +199,14 @@ public class CrfObjective implements Function, BatchFunction {
         FgExample ex = data.get(i);
         
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        FgInferencer infLat = infLatList.get(i);
+        FgInferencer infLat = getInfLat(ex);
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();
         addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, gradient);
         infLat.clear();
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        FgInferencer infLatPred = infLatPredList.get(i);
+        FgInferencer infLatPred = getInfLatPred(ex);
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();
         addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), -1.0, gradient);
@@ -298,7 +289,7 @@ public class CrfObjective implements Function, BatchFunction {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLat = infLatList.get(i);
+            FgInferencer infLat = getInfLat(ex);
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
             addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, feats);
@@ -315,7 +306,7 @@ public class CrfObjective implements Function, BatchFunction {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLatPred = infLatPredList.get(i);
+            FgInferencer infLatPred = getInfLatPred(ex);
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();
             addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), 1.0, feats);
@@ -337,6 +328,16 @@ public class CrfObjective implements Function, BatchFunction {
     @Override
     public int getNumExamples() {
         return data.size();
+    }
+
+    // The old way was to cache all the inferencers. This causes problems
+    // because the examples might be recreated on a call to data.get(i).
+    private FgInferencer getInfLat(FgExample ex) {
+        return infFactory.getInferencer(ex.getFgLat());
+    }
+
+    private FgInferencer getInfLatPred(FgExample ex) {
+        return infFactory.getInferencer(ex.getFgLatPred());
     }
     
 }

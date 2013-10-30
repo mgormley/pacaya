@@ -120,14 +120,6 @@ public class BeliefPropagation implements FgInferencer {
             }
             order = sched.getOrder();
         }
-        
-
-//        // TODO: REMOVE THIS!!!!!! Only using this to establish memory usage.
-//        // Initialization.
-//        for (int i=0; i<msgs.length; i++) {
-//            // TODO: consider alternate initializations.
-//            msgs[i] = new Messages(fg.getEdge(i));
-//        }
     }
     
     /** @inheritDoc */

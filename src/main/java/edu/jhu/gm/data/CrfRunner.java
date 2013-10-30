@@ -14,13 +14,14 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.AccuracyEvaluator;
+import edu.jhu.gm.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.CrfTrainer;
 import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.gm.DenseFactor;
 import edu.jhu.gm.FeatureTemplateList;
+import edu.jhu.gm.FgExample;
 import edu.jhu.gm.FgExamples;
 import edu.jhu.gm.FgModel;
 import edu.jhu.gm.MbrDecoder;
@@ -139,8 +140,8 @@ public class CrfRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            List<VarConfig> predictions = decode(model, data, trainPredOut, name);        
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, trainPredOut, name);        
+            eval(name, pair);
         }
         
         if (modelOut != null) {
@@ -163,8 +164,8 @@ public class CrfRunner {
             FgExamples data = getData(templates, testType, test, name);
 
             // Decode and evaluate the test data.
-            List<VarConfig> predictions = decode(model, data, testPredOut, name);
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, testPredOut, name);
+            eval(name, pair);
         }
     }
 
@@ -184,28 +185,31 @@ public class CrfRunner {
         return data;
     }
 
-    private void eval(FgExamples data, String name, List<VarConfig> predictions) {
+    private void eval(String name, VarConfigPair pair) {
         AccuracyEvaluator accEval = new AccuracyEvaluator();
-        double accuracy = accEval.evaluate(data.getGoldConfigs(), predictions);
+        double accuracy = accEval.evaluate(pair.gold, pair.pred);
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
 
-    private List<VarConfig> decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
+    private VarConfigPair decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
-        List<VarConfig> predictions = new ArrayList<VarConfig>();
+        List<VarConfig> predVcs = new ArrayList<VarConfig>();
+        List<VarConfig> goldVcs = new ArrayList<VarConfig>();
         HashMap<Var,Double> varMargMap = new HashMap<Var,Double>();
 
         for (int i=0; i<data.size(); i++) {
             MbrDecoder decoder = getDecoder();
-            decoder.decode(model, data.get(i));
-            predictions.add(decoder.getMbrVarConfig());
+            FgExample ex = data.get(i);
+            decoder.decode(model, ex);
+            predVcs.add(decoder.getMbrVarConfig());
             varMargMap.putAll(decoder.getVarMargMap());
+            goldVcs.add(ex.getGoldConfig());
         }
         if (predOut != null) {
             ErmaWriter ew = new ErmaWriter();
-            ew.writePredictions(predOut, predictions, varMargMap);
+            ew.writePredictions(predOut, predVcs, varMargMap);
         }
-        return predictions;
+        return new VarConfigPair(goldVcs, predVcs);
     }
 
     /* --------- Factory Methods ---------- */

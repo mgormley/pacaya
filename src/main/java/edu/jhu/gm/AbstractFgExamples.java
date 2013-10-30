@@ -46,14 +46,6 @@ public abstract class AbstractFgExamples implements FgExamples {
     //
     // TODO: For the disk-backed and caching versions of FgExamples these will be very slow.
     
-    public List<VarConfig> getGoldConfigs() {
-        List<VarConfig> varConfigList = new ArrayList<VarConfig>();
-        for (FgExample ex : this) {
-            varConfigList.add(ex.getGoldConfig());
-        }
-        return varConfigList;
-    }
-
     public int getNumFactors() {
         int numFactors = 0;
         for (FgExample ex : this) {

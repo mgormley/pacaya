@@ -45,7 +45,6 @@ public class SrlDecoder {
      * 
      * @param model The model.
      * @param ex The example to decode.
-     * @param sent The sentence corresponding to the example.
      */
     public void decode(FgModel model, FgExample ex) {
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
