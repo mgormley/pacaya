@@ -17,7 +17,7 @@ import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.Regularizer;
-import edu.jhu.prim.util.Utilities;
+import edu.jhu.util.Utilities;
 
 /**
  * Trainer for a conditional random field (CRF) represented as a factor graph.

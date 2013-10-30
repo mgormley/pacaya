@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
-import edu.jhu.prim.util.Utilities;
+import edu.jhu.util.Utilities;
 
 public class MalletLBFGS implements Maximizer {
 

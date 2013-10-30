@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.prim.util.Utilities;
+import edu.jhu.util.Utilities;
 
 public abstract class AbstractSlowFunction implements Function, SlowFunction {
 

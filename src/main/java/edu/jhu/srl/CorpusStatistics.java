@@ -18,8 +18,8 @@ import edu.jhu.data.Label;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.prim.util.Utilities;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Utilities;
 
 /**
  * Extract corpus statistics about a CoNLL-2009 dataset.

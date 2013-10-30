@@ -18,9 +18,9 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.prim.util.Utilities;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
+import edu.jhu.util.Utilities;
 
 public class SrlDecoder {
 
