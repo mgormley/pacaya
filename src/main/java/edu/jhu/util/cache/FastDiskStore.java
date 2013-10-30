@@ -10,8 +10,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
+import java.util.AbstractSequentialList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -22,7 +27,7 @@ import java.util.zip.GZIPOutputStream;
  * @param <K> The key type.
  * @param <V> The value type.
  */
-public class FastDiskStore<K,V extends Serializable> {
+public class FastDiskStore<K,V extends Serializable> implements Map<K, V> {
 
     private static final int SIZE_OF_INT = Integer.SIZE / 8;
     // Map from key to position in the file.
@@ -45,38 +50,49 @@ public class FastDiskStore<K,V extends Serializable> {
         this.gzipOnSerialize = gzipOnSerialize;
     }
     
-    public void put(K key, V value) throws IOException {   
+    @Override
+    public V put(K key, V value) {   
         if (keyPosMap.containsKey(key)) {
             // TODO: support multiple puts per key.
             throw new IllegalStateException("FastDiskStore currently only supports one put call per key.");
         }
-        
-        raf.seek(curPos);
         byte[] valBytes = serialize(value);
-        // Write the number of bytes.
-        raf.writeInt(valBytes.length);
-        // Write the bytes.
-        raf.write(valBytes);
+        try {
+            raf.seek(curPos);
+            // Write the number of bytes.
+            raf.writeInt(valBytes.length);
+            // Write the bytes.
+            raf.write(valBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         // Add the position to the map.
         keyPosMap.put(key, curPos);
         // Increment the current position.
         curPos += SIZE_OF_INT;
         curPos += valBytes.length;        
         numEntries++;
+        
+        return null;
     }
     
+    @Override
     @SuppressWarnings("unchecked")
-    public V get(K key) throws IOException {
+    public V get(Object key) {
         Long pos = keyPosMap.get(key);
         if (pos == null) {
             return null;
         }
-        if (pos > raf.length()) {
-            throw new IllegalStateException("Illegal position for key: " + key);
+        try {
+            if (pos > raf.length()) {
+                throw new IllegalStateException("Illegal position for key: " + key);
+            }
+            raf.seek(pos);
+            int numBytes = raf.readInt();
+            return (V) readBytes(numBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        raf.seek(pos);
-        int numBytes = raf.readInt();
-        return (V) readBytes(numBytes);
     }
 
     public int size() {
@@ -94,7 +110,7 @@ public class FastDiskStore<K,V extends Serializable> {
     
 
     /** Serializes and gzips an object. */
-    public byte[] serialize(Serializable obj) {
+    private byte[] serialize(Serializable obj) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out;
@@ -113,7 +129,7 @@ public class FastDiskStore<K,V extends Serializable> {
     }
 
     /** Deserialize and ungzip an object. */
-    public Object deserialize(byte[] bytes) {
+    private Object deserialize(byte[] bytes) {
         try {
             InputStream is = new ByteArrayInputStream(bytes);
             if (gzipOnSerialize) {
@@ -152,11 +168,7 @@ public class FastDiskStore<K,V extends Serializable> {
             if (!hasNext()) {
                 return null;
             }
-            try {
-                return get(keyIter.next());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            return get(keyIter.next());
         }
 
         @Override
@@ -166,5 +178,87 @@ public class FastDiskStore<K,V extends Serializable> {
         
     }
 
+    @Override
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+
+    @Override
+    public Set<K> keySet() {
+        return keyPosMap.keySet();
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+        return keyPosMap.containsKey(key);
+    }
+
+    @Override
+    public void putAll(Map<? extends K, ? extends V> m) {
+        for (Map.Entry<? extends K, ? extends V> entry : m.entrySet()) {
+            this.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    @Override
+    public Collection<V> values() {      
+        return new IteratorOnlyCollection<V>(valueIterator());
+    }
+    
+    /** A collection which only supports iteration. */    
+    private static class IteratorOnlyCollection<T> extends AbstractSequentialList<T> {
+
+        private Iterator<T> iterator;
+                
+        public IteratorOnlyCollection(Iterator<T> iterator) {
+            this.iterator = iterator;
+        }
+        
+        @Override
+        public Iterator<T> iterator() {
+            return iterator;
+        }
+
+        @Override
+        public ListIterator<T> listIterator(int index) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int size() {
+            throw new UnsupportedOperationException();
+        }
+        
+    }
+    
+    // ----------------------- Unsupported Operations --------------------
+
+    /** @throws UnsupportedOperationException */
+    @Override
+    public void clear() {
+        // TODO: Support removal.
+        // numEntries = 0;
+        // curPos = 0;
+        // keyPosMap.clear();
+        throw new UnsupportedOperationException();
+    }
+    
+    /** @throws UnsupportedOperationException */
+    @Override
+    public boolean containsValue(Object value) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** @throws UnsupportedOperationException */
+    @Override
+    public V remove(Object key) {
+        throw new UnsupportedOperationException();
+    }
+
+    /** @throws UnsupportedOperationException */
+    @Override
+    public Set<java.util.Map.Entry<K, V>> entrySet() {
+        throw new UnsupportedOperationException();
+    }
     
 }
