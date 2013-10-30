@@ -1,8 +1,8 @@
 package edu.jhu.srl;
 
-import edu.jhu.gm.FeatureTemplateList;
-import edu.jhu.gm.FgExamples;
-import edu.jhu.gm.FgModel;
+import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.model.FgModel;
 
 public class SrlFgModel extends FgModel {
 

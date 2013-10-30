@@ -8,13 +8,13 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.gm.ExpFamFactor;
-import edu.jhu.gm.FactorGraph;
-import edu.jhu.gm.ProjDepTreeFactor;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarSet;
+import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.ProjDepTreeFactor;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var.VarType;
 
 /**
  * A factor graph for SRL.
