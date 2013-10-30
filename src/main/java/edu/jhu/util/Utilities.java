@@ -311,15 +311,6 @@ public class Utilities {
         return newArray;
     }
 
-    public static double[] copyOf(double[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static double[] copyOf(double[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-
     public static boolean[][][][] copyOf(boolean[][][][] array) {
         boolean[][][][] clone = new boolean[array.length][][][];
         for (int i = 0; i < clone.length; i++) {
@@ -365,6 +356,14 @@ public class Utilities {
     }
 
     public static int[] copyOf(int[] original) {
+        return Arrays.copyOf(original, original.length);
+    }
+
+    public static double[] copyOf(double[] original, int newLength) {
+        return Arrays.copyOf(original, newLength);
+    }
+
+    public static double[] copyOf(double[] original) {
         return Arrays.copyOf(original, original.length);
     }
 
