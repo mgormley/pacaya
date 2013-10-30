@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import edu.jhu.util.Utilities;
+
 /**
  * A discrete variable in a factor graph.
  * 
@@ -35,10 +37,11 @@ public class Var implements Comparable<Var>, Serializable {
     /** State names, where the i'th entry gives the state names of the i'th state. */
     private ArrayList<String> stateNames;
     
-    /** Counter used to create a unique id for each instance of this class. */
-    private static final AtomicInteger instanceCounter = new AtomicInteger();
-    /** An id that is unique to this instance of this class. */
-    private int instanceId = instanceCounter.incrementAndGet();
+    // TODO: Remove
+    //    /** Counter used to create a unique id for each instance of this class. */
+    //    private static final AtomicInteger instanceCounter = new AtomicInteger();
+    //    /** An id that is unique to this instance of this class. */
+    //    private int instanceId = instanceCounter.incrementAndGet();
         
     /**
      * 
@@ -50,10 +53,11 @@ public class Var implements Comparable<Var>, Serializable {
     public Var(VarType type, int numStates, String name, List<String> stateNames) {
         this.type = type;
         this.numStates = numStates;
-        this.name = name;
+        // Store and intern the name and state names.
+        this.name = name.intern();
         if (stateNames != null) {
             assert(numStates == stateNames.size());
-            this.stateNames = new ArrayList<String>(stateNames);
+            this.stateNames = Utilities.getInternedList(stateNames);
         }
     }
 
@@ -84,23 +88,90 @@ public class Var implements Comparable<Var>, Serializable {
     public int getState(String stateName) {
         return stateNames.indexOf(stateName);
     }
-    
-    /*
-     * The compareTo, equals, and hashCode methods only depend on the instanceId of
-     * the variable.
-     */
 
     @Override
-    public int compareTo(Var other) {
-        return this.instanceId - other.instanceId;
+    public String toString() {
+        return "Var [type=" + type + ", numStates=" + numStates
+                + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
+    
+    // TODO: Remove
+//    /*
+//     * The compareTo, equals, and hashCode methods only depend on the instanceId of
+//     * the variable.
+//     */
+//
+//    @Override
+//    public int compareTo(Var other) {
+//        return this.instanceId - other.instanceId;
+//    }
+//    
+//    @Override
+//    public int hashCode() {
+//        final int prime = 31;
+//        int result = 1;
+//        result = prime * result + this.instanceId;
+//        return result;
+//    }
+//
+//    @Override
+//    public boolean equals(Object obj) {
+//        if (this == obj)
+//            return true;
+//        if (obj == null)
+//            return false;
+//        if (getClass() != obj.getClass())
+//            return false;
+//        Var other = (Var) obj;
+//        if (this.instanceId != other.instanceId)
+//            return false;
+//        return true;
+//    }
+
+    /*
+     * The following allows Var object equality to be determined by the number
+     * of states, the type, the name, and the state names. This is much slow
+     * than using the instanceId but may be preferable for code clarity.
+     */
+    
+    @Override
+    public int compareTo(Var other) {
+        int c;
+                
+        c = this.numStates - other.numStates;
+        if (c != 0) { return c; }
+
+        c = this.type.compareTo(other.type);
+        if (c != 0) { return c; }
+
+        c = this.name.compareTo(other.name);
+        if (c != 0) { return c; }
+        
+        c = this.stateNames.size() - other.stateNames.size();
+        if (c != 0) { return c; }        
+        for (int i=0; i<this.stateNames.size(); i++) {
+            c = this.stateNames.get(i).compareTo(other.stateNames.get(i));
+            if (c != 0) { return c; }
+        }
+
+        return c;
+    }
+
+    private int hash = 0;
     
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + this.instanceId;
-        return result;
+        if (hash == 0) {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((name == null) ? 0 : name.hashCode());
+            result = prime * result + numStates;
+            result = prime * result + ((type == null) ? 0 : type.hashCode());
+            result = prime * result + ((stateNames == null) ? 0 : stateNames.hashCode());
+            //return result;
+            hash = result;
+        }
+        return hash;            
     }
 
     @Override
@@ -112,15 +183,23 @@ public class Var implements Comparable<Var>, Serializable {
         if (getClass() != obj.getClass())
             return false;
         Var other = (Var) obj;
-        if (this.instanceId != other.instanceId)
+        if (numStates != other.numStates)
             return false;
+        if (type != other.type)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        
+        if (stateNames == null) {
+            if (other.stateNames != null)
+                return false;
+        } else if (!stateNames.equals(other.stateNames))
+            return false;
+        
         return true;
-    }
-
-    @Override
-    public String toString() {
-        return "Var [type=" + type + ", numStates=" + numStates
-                + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
     
 }
