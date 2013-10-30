@@ -11,6 +11,8 @@
 /tests
 /exp
 /other/dantzig_wolfe/VRP
+.project
+.classpath
 
 # /lib/
 /lib/cplex.jar
