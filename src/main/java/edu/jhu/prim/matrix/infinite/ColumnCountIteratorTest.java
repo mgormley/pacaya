@@ -1,4 +1,4 @@
-package edu.jhu.util.matrix.infinite;
+package edu.jhu.prim.matrix.infinite;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

@@ -1,6 +1,6 @@
-package edu.jhu.util.matrix;
+package edu.jhu.prim.matrix;
 
-import edu.jhu.util.matrix.infinite.ColumnCountIterator;
+import edu.jhu.prim.matrix.infinite.ColumnCountIterator;
 
 public class DenseBinaryMatrix implements BinaryMatrix {
 

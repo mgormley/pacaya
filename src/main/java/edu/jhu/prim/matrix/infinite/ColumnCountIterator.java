@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.jhu.util.matrix.infinite;
+package edu.jhu.prim.matrix.infinite;
 
 import java.util.Iterator;
 

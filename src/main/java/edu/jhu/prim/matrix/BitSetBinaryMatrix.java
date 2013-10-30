@@ -1,9 +1,9 @@
-package edu.jhu.util.matrix;
+package edu.jhu.prim.matrix;
 
 import java.util.BitSet;
 
+import edu.jhu.prim.matrix.infinite.ColumnCountIterator;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.matrix.infinite.ColumnCountIterator;
 
 public class BitSetBinaryMatrix implements BinaryMatrix {
 

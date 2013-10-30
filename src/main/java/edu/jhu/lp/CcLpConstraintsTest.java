@@ -6,7 +6,7 @@ import org.junit.Test;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
-import edu.jhu.util.matrix.DenseDoubleMatrix;
+import edu.jhu.prim.matrix.DenseDoubleMatrix;
 
 
 public class CcLpConstraintsTest {

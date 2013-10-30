@@ -1,4 +1,4 @@
-package edu.jhu.util.matrix;
+package edu.jhu.prim.matrix;
 
 import edu.jhu.prim.map.IntDoubleEntry;
 

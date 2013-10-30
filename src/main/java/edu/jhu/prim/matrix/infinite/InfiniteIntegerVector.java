@@ -1,4 +1,4 @@
-package edu.jhu.util.matrix.infinite;
+package edu.jhu.prim.matrix.infinite;
 
 public interface InfiniteIntegerVector {
 

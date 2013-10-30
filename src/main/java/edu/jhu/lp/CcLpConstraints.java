@@ -5,10 +5,10 @@ import ilog.concert.IloLPMatrix;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.matrix.DenseDoubleMatrix;
-import edu.jhu.util.matrix.SparseColDoubleMatrix;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.prim.map.LongDoubleEntry;
+import edu.jhu.prim.matrix.DenseDoubleMatrix;
+import edu.jhu.prim.matrix.SparseColDoubleMatrix;
 import edu.jhu.util.SafeCast;
 
 /**

@@ -14,16 +14,16 @@ import edu.jhu.lp.CcLpConstraints;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpRows;
+import edu.jhu.prim.matrix.DenseDoubleMatrix;
+import edu.jhu.prim.matrix.DoubleMatrixFactory;
+import edu.jhu.prim.matrix.SparseColDoubleMatrix;
+import edu.jhu.prim.matrix.SparseRowDoubleMatrix;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.dist.Dirichlet;
-import edu.jhu.util.matrix.DenseDoubleMatrix;
-import edu.jhu.util.matrix.DoubleMatrixFactory;
-import edu.jhu.util.matrix.SparseColDoubleMatrix;
-import edu.jhu.util.matrix.SparseRowDoubleMatrix;
 
 /**
  * Reduces the dimensionality of a linear program.
