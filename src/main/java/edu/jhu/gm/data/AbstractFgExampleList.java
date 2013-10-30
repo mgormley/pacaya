@@ -13,7 +13,7 @@ import edu.jhu.gm.feat.FeatureTemplateList;
  * @author mgormley
  *
  */
-public abstract class AbstractFgExamples implements FgExamples {
+public abstract class AbstractFgExampleList implements FgExampleList {
         
     /**
      * This is a hack to carry around the source sentences. For example, the
@@ -22,7 +22,7 @@ public abstract class AbstractFgExamples implements FgExamples {
     private Object sourceSents;
     protected FeatureTemplateList fts;
 
-    public AbstractFgExamples(FeatureTemplateList fts) {
+    public AbstractFgExampleList(FeatureTemplateList fts) {
         this.fts = fts;
     }
 

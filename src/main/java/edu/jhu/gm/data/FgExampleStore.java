@@ -7,7 +7,7 @@ package edu.jhu.gm.data;
  * @author mgormley
  * 
  */
-public interface FgExamplesStore extends FgExamples {
+public interface FgExampleStore extends FgExampleList {
 
     /** Adds an example. */
     public void add(FgExample example);

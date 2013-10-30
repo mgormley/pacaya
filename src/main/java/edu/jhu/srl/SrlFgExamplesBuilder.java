@@ -14,9 +14,9 @@ import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleFactory;
-import edu.jhu.gm.data.FgExamples;
-import edu.jhu.gm.data.FgExamplesBuilder;
-import edu.jhu.gm.data.FgExamplesBuilder.FgExamplesBuilderPrm;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleListBuilder;
+import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Var;
@@ -59,9 +59,9 @@ public class SrlFgExamplesBuilder {
         //this.sents = sents;
     }
 
-    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
-        FgExamplesBuilder builder = new FgExamplesBuilder(prm.exPrm);
-        FgExamples data = builder.getInstance(fts, new SrlFgExampleFactory(sents));
+    public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
+        FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
+        FgExampleList data = builder.getInstance(fts, new SrlFgExampleFactory(sents));
         data.setSourceSentences(sents);
         return data;
     }

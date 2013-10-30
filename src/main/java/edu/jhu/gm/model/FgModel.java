@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.io.Writer;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureTemplate;
 import edu.jhu.gm.feat.FeatureTemplateList;
@@ -68,7 +68,7 @@ public class FgModel implements Serializable {
     /** The feature templates. */
     private FeatureTemplateList templates;
     
-    public FgModel(FgExamples data, boolean includeUnsupportedFeatures) {
+    public FgModel(FgExampleList data, boolean includeUnsupportedFeatures) {
         this(data, data.getTemplates(), includeUnsupportedFeatures);
     }
     
@@ -76,7 +76,7 @@ public class FgModel implements Serializable {
         this(null, templates, true);
     }
     
-    private FgModel(FgExamples data, FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
+    private FgModel(FgExampleList data, FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
         this.templates = templates;
         numTemplates = templates.size();
         
@@ -131,7 +131,7 @@ public class FgModel implements Serializable {
      * For each factor in the data, lookup its configId. Set all the
      * observed features for that configuration to true.
      */
-    private void includeSupportedFeatures(FgExamples data, FeatureTemplateList templates) {
+    private void includeSupportedFeatures(FgExampleList data, FeatureTemplateList templates) {
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {

@@ -51,7 +51,7 @@ public class FgExampleTest {
         prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExampleList data = builder.getData(sents);
         
         FgExample ex = data.get(0);
         

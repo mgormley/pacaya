@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamplesMemoryStore;
+import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureTemplateList;
@@ -33,7 +33,7 @@ public class MbrDecoderTest {
         }
         
         FeatureTemplateList fts = new FeatureTemplateList();
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(fg, trainConfig, fts), fts));
         FgModel model = new FgModel(fts);
 

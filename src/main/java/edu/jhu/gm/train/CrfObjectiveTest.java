@@ -12,8 +12,8 @@ import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
-import edu.jhu.gm.data.FgExamplesMemoryStore;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureTemplate;
 import edu.jhu.gm.feat.FeatureTemplateList;
@@ -103,12 +103,12 @@ public class CrfObjectiveTest {
             return names;
         }
         
-        public FgExamples getData() {
+        public FgExampleList getData() {
             FeatureTemplateList fts = new FeatureTemplateList();
             Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
             fts.add(new FeatureTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
             
-            FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+            FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
             int state=0;
             for (final LogLinearExDesc desc : descList) {
                 for (int i=0; i<desc.getCount(); i++) {
@@ -272,7 +272,7 @@ public class CrfObjectiveTest {
         prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExampleList data = builder.getData(sents);
         
         System.out.println("Num features: " + fts.getNumObsFeats());
         FgModel model = new FgModel(fts);

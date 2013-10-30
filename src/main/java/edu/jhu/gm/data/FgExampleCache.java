@@ -17,15 +17,15 @@ import edu.jhu.gm.feat.FeatureTemplateList;
  * @author mgormley
  * 
  */
-public class FgExamplesCache extends AbstractFgExamples implements FgExamples {
+public class FgExampleCache extends AbstractFgExampleList implements FgExampleList {
 
-    private FgExamples exampleFactory;
+    private FgExampleList exampleFactory;
     private Map<Integer, FgExample> cache;
 
     /**
      * Constructor with a cache that uses SoftReferences.
      */
-    public FgExamplesCache(FeatureTemplateList fts, FgExamples exampleFactory) {
+    public FgExampleCache(FeatureTemplateList fts, FgExampleList exampleFactory) {
         this(fts, exampleFactory, -1);
     }
 
@@ -36,7 +36,7 @@ public class FgExamplesCache extends AbstractFgExamples implements FgExamples {
      *            in-memory cache or -1 to use a SoftReference cache.
      */
     @SuppressWarnings("unchecked")
-    public FgExamplesCache(FeatureTemplateList fts, FgExamples exampleFactory, int maxEntriesInMemory) {
+    public FgExampleCache(FeatureTemplateList fts, FgExampleList exampleFactory, int maxEntriesInMemory) {
         super(fts);
         this.exampleFactory = exampleFactory;
         if (maxEntriesInMemory == -1) {

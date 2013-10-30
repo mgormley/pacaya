@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.FgInferencer;
@@ -34,7 +34,7 @@ public class CrfObjective implements Function, BatchFunction {
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
     private int numParams;
-    private FgExamples data;
+    private FgExampleList data;
     private FgModel model;
     private FgModel gradient;
     private FgInferencerFactory infFactory;
@@ -44,7 +44,7 @@ public class CrfObjective implements Function, BatchFunction {
     private ArrayList<FgInferencer> infLatPredList;
 
         
-    public CrfObjective(FgModel model, FgExamples data, FgInferencerFactory infFactory) {
+    public CrfObjective(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         this.numParams = model.getNumParams();
         this.data = data;
         this.model = model;

@@ -11,7 +11,7 @@ import edu.jhu.gm.feat.FeatureTemplateList;
  * @author mgormley
  *
  */
-public interface FgExamples extends Iterable<FgExample> {
+public interface FgExampleList extends Iterable<FgExample> {
 
     /** Gets the i'th example. */
     public FgExample get(int i);

@@ -2,7 +2,7 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
@@ -45,7 +45,7 @@ public class CrfTrainer {
         }
     }
     
-    public FgModel train(FgModel model, FgExamples data) {
+    public FgModel train(FgModel model, FgExampleList data) {
         double[] params = new double[model.getNumParams()];
         model.updateDoublesFromModel(params);
 

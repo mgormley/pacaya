@@ -10,7 +10,7 @@ import java.io.ObjectOutputStream;
 import org.junit.Test;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamplesMemoryStore;
+import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureTemplate;
 import edu.jhu.gm.feat.FeatureTemplateList;
@@ -146,7 +146,7 @@ public class FgModelTest {
         boolean useLat = true;
         FeatureTemplateList fts = getFtl(useLat);
         
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
         data.add(getExForFts("1a", "2c", fts, useLat));
         data.add(getExForFts("1b", "2b", fts, useLat));
@@ -167,7 +167,7 @@ public class FgModelTest {
         boolean useLat = false;
         FeatureTemplateList fts = getFtl(useLat);
         
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
         data.add(getExForFts("1a", "2c", fts, useLat));
         data.add(getExForFts("1b", "2b", fts, useLat));

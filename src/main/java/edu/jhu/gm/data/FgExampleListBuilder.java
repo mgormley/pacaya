@@ -23,7 +23,7 @@ import edu.jhu.util.Timer;
  * @author mgormley
  * @author mmitchell
  */
-public class FgExamplesBuilder {
+public class FgExampleListBuilder {
 
     /**
      * Combines an FgExampleFactory and a FeatureTemplateList into an FgExamples
@@ -31,7 +31,7 @@ public class FgExamplesBuilder {
      * 
      * @author mgormley
      */
-    public static class FgExampleFactoryWrapper extends AbstractFgExamples implements FgExamples {
+    public static class FgExampleFactoryWrapper extends AbstractFgExampleList implements FgExampleList {
 
         private FgExampleFactory factory;
 
@@ -82,15 +82,15 @@ public class FgExamplesBuilder {
         public File cacheDir = new File(".");
     }
 
-    private static final Logger log = Logger.getLogger(FgExamplesBuilder.class);
+    private static final Logger log = Logger.getLogger(FgExampleListBuilder.class);
 
     private FgExamplesBuilderPrm prm;
 
-    public FgExamplesBuilder(FgExamplesBuilderPrm prm) {
+    public FgExampleListBuilder(FgExamplesBuilderPrm prm) {
         this.prm = prm;
     }
 
-    public FgExamples getInstance(FeatureTemplateList fts, FgExampleFactory factory) {
+    public FgExampleList getInstance(FeatureTemplateList fts, FgExampleFactory factory) {
         boolean doingFeatCutoff = (fts.isGrowing() && prm.featCountCutoff > 0);
 
         if (doingFeatCutoff) {
@@ -99,16 +99,16 @@ public class FgExamplesBuilder {
         }
 
         // Populate the feature template list and stop growth on it.
-        FgExamples data = new FgExampleFactoryWrapper(fts, factory);
+        FgExampleList data = new FgExampleFactoryWrapper(fts, factory);
         if (prm.cacheType == CacheType.CACHE) {
-            data = new FgExamplesCache(fts, data, prm.maxEntriesInMemory);
+            data = new FgExampleCache(fts, data, prm.maxEntriesInMemory);
             constructAndDiscardAll(data);
         } else if (prm.cacheType == CacheType.MEMORY_STORE) {
-            FgExamplesStore store = new FgExamplesMemoryStore(fts);
+            FgExampleStore store = new FgExampleMemoryStore(fts);
             constructAndStoreAll(data, store);
             data = store;
         } else if (prm.cacheType == CacheType.DISK_STORE) {
-            FgExamplesStore store = new FgExamplesDiskStore(fts, prm.cacheDir, prm.gzipped, prm.maxEntriesInMemory);
+            FgExampleStore store = new FgExampleDiskStore(fts, prm.cacheDir, prm.gzipped, prm.maxEntriesInMemory);
             constructAndStoreAll(data, store);
             data = store;
         } else if (prm.cacheType == CacheType.NONE) {
@@ -164,11 +164,11 @@ public class FgExamplesBuilder {
         constructAndDiscardAll(new FgExampleFactoryWrapper(fts, factory));
     }
 
-    public static void constructAndDiscardAll(FgExamples examples) {
+    public static void constructAndDiscardAll(FgExampleList examples) {
         constructAndStoreAll(examples, null);
     }
 
-    public static void constructAndStoreAll(FgExamples examples, FgExamplesStore store) {
+    public static void constructAndStoreAll(FgExampleList examples, FgExampleStore store) {
         Timer fgTimer = new Timer();
         double totFgClampMs = 0;
         double totFeatCacheMs = 0;

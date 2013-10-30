@@ -14,7 +14,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaWriter;
 import edu.jhu.gm.decode.MbrDecoder;
@@ -120,7 +120,7 @@ public class CrfRunner {
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            FgExamples data = getData(templates, trainType, train, name);
+            FgExampleList data = getData(templates, trainType, train, name);
             
             if (model == null) {
                 model = new FgModel(data, includeUnsupportedFeatures);
@@ -163,7 +163,7 @@ public class CrfRunner {
             // Test the model on test data.
             templates.stopGrowth();
             String name = "test";
-            FgExamples data = getData(templates, testType, test, name);
+            FgExampleList data = getData(templates, testType, test, name);
 
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testPredOut, name);
@@ -171,8 +171,8 @@ public class CrfRunner {
         }
     }
 
-    private FgExamples getData(FeatureTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
-        FgExamples data;
+    private FgExampleList getData(FeatureTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+        FgExampleList data;
         if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader();
             data = er.read(featureFileIn, dataFile, templates);        
@@ -193,7 +193,7 @@ public class CrfRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
 
-    private VarConfigPair decode(FgModel model, FgExamples data, File predOut, String name) throws IOException {
+    private VarConfigPair decode(FgModel model, FgExampleList data, File predOut, String name) throws IOException {
         log.info("Running the decoder on " + name + " data.");
         List<VarConfig> predVcs = new ArrayList<VarConfig>();
         List<VarConfig> goldVcs = new ArrayList<VarConfig>();

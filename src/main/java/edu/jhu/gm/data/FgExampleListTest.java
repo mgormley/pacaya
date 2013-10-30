@@ -12,7 +12,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainerTest;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 
-public class FgExamplesTest {
+public class FgExampleListTest {
 
     @Test
     public void testUpdatingOfTemplates() {
@@ -24,7 +24,7 @@ public class FgExamplesTest {
         
         FeatureTemplateList fts = new FeatureTemplateList();
         FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts), fts);
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(ex);
         
         System.out.println(fts);

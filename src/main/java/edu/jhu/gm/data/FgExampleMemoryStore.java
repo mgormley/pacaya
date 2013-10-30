@@ -12,11 +12,11 @@ import edu.jhu.gm.feat.FeatureTemplateList;
  * @author mgormley
  * 
  */
-public class FgExamplesMemoryStore extends AbstractFgExamples implements FgExamplesStore {
+public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExampleStore {
 
     private ArrayList<FgExample> examples;
 
-    public FgExamplesMemoryStore(FeatureTemplateList fts) {
+    public FgExampleMemoryStore(FeatureTemplateList fts) {
         super(fts);
         this.examples = new ArrayList<FgExample>();
     }

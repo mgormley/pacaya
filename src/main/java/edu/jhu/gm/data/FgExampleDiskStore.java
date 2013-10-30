@@ -13,15 +13,15 @@ import edu.jhu.util.cache.CachedFastDiskStore;
  * @author mgormley
  * 
  */
-public class FgExamplesDiskStore extends AbstractFgExamples implements FgExamplesStore {
+public class FgExampleDiskStore extends AbstractFgExampleList implements FgExampleStore {
 
     private CachedFastDiskStore<Integer, FgExample> examples;
 
-    public FgExamplesDiskStore(FeatureTemplateList fts) {
+    public FgExampleDiskStore(FeatureTemplateList fts) {
         this(fts, new File("."), true, -1);
     }
 
-    public FgExamplesDiskStore(FeatureTemplateList fts, File cacheDir, boolean gzipped, int maxEntriesInMemory) {
+    public FgExampleDiskStore(FeatureTemplateList fts, File cacheDir, boolean gzipped, int maxEntriesInMemory) {
         super(fts);
         try {
             File cachePath = File.createTempFile("cache", ".binary.gz", cacheDir);

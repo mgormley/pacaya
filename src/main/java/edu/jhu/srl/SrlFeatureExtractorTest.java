@@ -18,7 +18,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.data.FgExamples;
+import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.VarConfig;
@@ -102,7 +102,7 @@ public class SrlFeatureExtractorTest {
         prm.fgPrm.alwaysIncludeLinkVars = true;
                 
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(sents);
+        FgExampleList data = builder.getData(sents);
         
         FgModel model = new FgModel(data, false);
         System.out.println("Num tokens: " + sents.get(0).size());
@@ -154,7 +154,7 @@ public class SrlFeatureExtractorTest {
         
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(simpleSents);
+        FgExampleList data = builder.getData(simpleSents);
         
         FgModel model = new FgModel(data, false);
         System.out.println("Num tokens: " + sents.get(0).size());

@@ -15,9 +15,9 @@ import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
-import edu.jhu.gm.data.FgExamplesMemoryStore;
-import edu.jhu.gm.data.FgExamplesStore;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.FgExampleStore;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
@@ -47,7 +47,7 @@ public class ErmaReader {
     public ErmaReader() {
     }
     
-    public FgExamples read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
+    public FgExampleList read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
         return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), fts);
     }
     
@@ -61,7 +61,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExamples read(String featureTemplate, String dataFile, FeatureTemplateList fts) {
+    public FgExampleList read(String featureTemplate, String dataFile, FeatureTemplateList fts) {
         FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
@@ -72,7 +72,7 @@ public class ErmaReader {
         }
 
         log.info("Reading and converting data from " + dataFile);  
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         try {
             // This will convert each DataSample to an FgExample and add it to data.
             ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
@@ -93,9 +93,9 @@ public class ErmaReader {
      */
     private static class ConvertingDataParser extends DataParser {
         
-        private FgExamplesStore data;
+        private FgExampleStore data;
         
-        public ConvertingDataParser(String filename, FeatureFile ff, FgExamplesStore data) throws FileNotFoundException {
+        public ConvertingDataParser(String filename, FeatureFile ff, FgExampleStore data) throws FileNotFoundException {
             super(filename, ff);
             this.data = data;
         }

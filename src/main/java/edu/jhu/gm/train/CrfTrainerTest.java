@@ -8,8 +8,8 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
-import edu.jhu.gm.data.FgExamplesMemoryStore;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaReaderTest;
 import edu.jhu.gm.feat.Feature;
@@ -93,7 +93,7 @@ public class CrfTrainerTest {
         exs.addEx(10, "solid");
         exs.addEx(5);
 
-        FgExamples data = exs.getData();
+        FgExampleList data = exs.getData();
         double[] params = new double[]{3.0, 2.0};
         FgModel model = new FgModel(data.getTemplates());
         model.updateModelFromDoubles(params);
@@ -118,7 +118,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
 
@@ -167,7 +167,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -226,7 +226,7 @@ public class CrfTrainerTest {
         FeatureTemplateList fts = new FeatureTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
-        FgExamplesMemoryStore data = new FgExamplesMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(new FgExample(fg, trainConfig, featExtractor, fts));
         FgModel model = new FgModel(fts);
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -243,7 +243,7 @@ public class CrfTrainerTest {
     public void testTrainErmaInput() {
         ErmaReader er = new ErmaReader();
         FeatureTemplateList fts = new FeatureTemplateList();        
-        FgExamples data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
+        FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
         
         FgModel model = new FgModel(fts);
         model = train(model, data);
@@ -254,7 +254,7 @@ public class CrfTrainerTest {
         // Note: This doesn't test the result, just that nothing throws an exception.
     }
     
-    private static FgModel train(FgModel model, FgExamples data) {
+    private static FgModel train(FgModel model, FgExampleList data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;

@@ -19,8 +19,8 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExamples;
-import edu.jhu.gm.data.FgExamplesBuilder.CacheType;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
@@ -239,7 +239,7 @@ public class SrlRunner {
             String name = "train";
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
+            FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name);
             
             if (model == null) {
@@ -284,7 +284,7 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            FgExamples data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
+            FgExampleList data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name);
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testType, testPredOut, name);
@@ -292,10 +292,10 @@ public class SrlRunner {
         }
     }
 
-    private FgExamples getData(FeatureTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
+    private FgExampleList getData(FeatureTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        FgExamples data;
+        FgExampleList data;
         SimpleAnnoSentenceCollection sents;
         int numTokens = 0;
         
@@ -412,7 +412,7 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
     
-    private VarConfigPair decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    private VarConfigPair decode(FgModel model, FgExampleList data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
         
         SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
