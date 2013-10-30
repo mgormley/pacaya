@@ -26,12 +26,12 @@ public class SrlDecoderTest {
     public void testGetSrlGraph() {
         int n = 3;
         VarConfig vc = new VarConfig();
-        vc.put(new SenseVar(VarType.PREDICTED, 2, "v-1_1", Utilities.getList("false","true"), 1), 1);
-        vc.put(new RoleVar(VarType.PREDICTED, 2, "v1_0", Utilities.getList("false","true"), 1, 0), 1);
-        vc.put(new RoleVar(VarType.PREDICTED, 2, "v1_2", Utilities.getList("false","true"), 1, 2), 0);
+        vc.put(new SenseVar(VarType.PREDICTED, 2, "s-1", Utilities.getList("false","true"), 1), 1);
+        vc.put(new RoleVar(VarType.PREDICTED, 2, "r-1_0", Utilities.getList("false","true"), 1, 0), 1);
+        vc.put(new RoleVar(VarType.PREDICTED, 2, "r-1_2", Utilities.getList("false","true"), 1, 2), 0);
         // Self-loop
-        vc.put(new SenseVar(VarType.PREDICTED, 2, "v-1_1", Utilities.getList("false","true"), 2), 1);
-        vc.put(new RoleVar(VarType.PREDICTED, 2, "v1_2", Utilities.getList("false","true"), 2, 2), 1);
+        vc.put(new SenseVar(VarType.PREDICTED, 2, "s-2", Utilities.getList("false","true"), 2), 1);
+        vc.put(new RoleVar(VarType.PREDICTED, 2, "r-2_2", Utilities.getList("false","true"), 2, 2), 1);
         SrlGraph g = SrlDecoder.getSrlGraphFromVarConfig(vc, n);
         
         System.out.println(g);
