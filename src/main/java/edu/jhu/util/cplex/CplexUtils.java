@@ -15,7 +15,7 @@ import org.junit.Assert;
 import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.util.sort.IntDoubleSort;
+import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.vector.IntDoubleSortedVector;
 
 public class CplexUtils {

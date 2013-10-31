@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
-import edu.jhu.prim.util.sort.IntSort;
+import edu.jhu.prim.sort.IntSort;
 
 public class Utilities {
     

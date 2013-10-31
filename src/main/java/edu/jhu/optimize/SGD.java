@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.prim.util.sort.IntSort;
+import edu.jhu.prim.sort.IntSort;
 import edu.jhu.util.Prng;
 
 /**
