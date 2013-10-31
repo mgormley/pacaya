@@ -11,9 +11,9 @@ import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.tuple.Pair;
 
 public class FactorBuilder {
 

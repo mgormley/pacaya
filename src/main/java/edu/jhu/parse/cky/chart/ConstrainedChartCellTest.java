@@ -23,8 +23,8 @@ import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
+import edu.jhu.util.tuple.Pair;
 
 public class ConstrainedChartCellTest {
     

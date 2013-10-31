@@ -10,7 +10,7 @@ import edu.jhu.model.ModelFactory;
 import edu.jhu.model.dmv.DmvMStep;
 import edu.jhu.parse.DepParser;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.util.Pair;
+import edu.jhu.util.tuple.Pair;
 
 public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 

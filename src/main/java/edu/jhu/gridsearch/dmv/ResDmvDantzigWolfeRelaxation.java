@@ -31,8 +31,8 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
+import edu.jhu.util.tuple.Pair;
 
 /**
  * Alternative to DmvDantzigWolfeRelaxation which doesn't use any cuts. This is accomplished by 

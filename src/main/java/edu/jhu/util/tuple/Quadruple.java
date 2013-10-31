@@ -1,4 +1,4 @@
-package edu.jhu.util;
+package edu.jhu.util.tuple;
 
 public class Quadruple<X,Y,Z,A> {
 

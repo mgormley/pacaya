@@ -2,8 +2,8 @@ package edu.jhu.gm.feat;
 
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.map.IntDoubleHashMap;
-import edu.jhu.prim.util.Pair;
 import edu.jhu.prim.util.sort.IntDoubleSort;
+import edu.jhu.util.tuple.Pair;
 
 /**
  * For building large (e.g. 20000+) sparse feature vectors quickly.

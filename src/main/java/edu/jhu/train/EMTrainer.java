@@ -5,8 +5,8 @@ import edu.jhu.util.Timer;
 
 import edu.jhu.model.Model;
 import edu.jhu.model.ModelFactory;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.tuple.Pair;
 
 /**
  * 

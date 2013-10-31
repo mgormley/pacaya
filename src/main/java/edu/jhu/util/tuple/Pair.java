@@ -1,4 +1,6 @@
-package edu.jhu.util;
+package edu.jhu.util.tuple;
+
+import edu.jhu.util.Utilities;
 
 public class Pair<X,Y> {
 

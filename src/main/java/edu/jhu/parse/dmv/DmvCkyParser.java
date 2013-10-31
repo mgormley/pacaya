@@ -26,8 +26,8 @@ import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.ChartCell;
 import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
+import edu.jhu.util.tuple.Pair;
 
 /**
  * CKY parser for the Dependency Model with Valence (DMV).

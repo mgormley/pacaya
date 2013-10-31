@@ -22,13 +22,13 @@ import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.Lambda.LambdaOne;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.tuple.Pair;
 
 public class RunCkyParser {
     

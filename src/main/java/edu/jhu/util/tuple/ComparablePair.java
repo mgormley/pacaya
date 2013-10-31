@@ -1,4 +1,4 @@
-package edu.jhu.util;
+package edu.jhu.util.tuple;
 
 public class ComparablePair<X extends Comparable<X>,Y extends Comparable<Y>> extends Pair<X,Y> implements Comparable<ComparablePair<X,Y>> {
 		

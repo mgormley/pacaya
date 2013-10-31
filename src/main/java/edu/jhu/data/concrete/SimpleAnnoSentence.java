@@ -8,8 +8,8 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.tuple.Pair;
 
 /**
  * Simple representation of a single sentence with many annotations.

@@ -19,10 +19,10 @@ import org.apache.log4j.Logger;
 import edu.jhu.gridsearch.dmv.DmvSolution;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.gridsearch.dmv.WarmStart;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Triple;
 import edu.jhu.util.cplex.CplexPrm;
+import edu.jhu.util.tuple.Pair;
+import edu.jhu.util.tuple.Triple;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     

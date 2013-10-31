@@ -16,10 +16,10 @@ import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.Pair;
 import edu.jhu.util.tuple.UnorderedPair;
 
 /**

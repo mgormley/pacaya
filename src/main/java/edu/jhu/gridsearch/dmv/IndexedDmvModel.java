@@ -14,8 +14,8 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvSentParamCache;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.IntTuple;
-import edu.jhu.util.Pair;
+import edu.jhu.util.tuple.IntTuple;
+import edu.jhu.util.tuple.Pair;
 
 public class IndexedDmvModel implements IndexedCpt {
     

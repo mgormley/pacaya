@@ -1,16 +1,15 @@
-/**
- * 
- */
-package edu.jhu.util;
+package edu.jhu.util.tuple;
 
 import java.util.Arrays;
 
-public class DoubleTuple {
+import edu.jhu.prim.arrays.IntArrays;
+
+public class IntTuple implements Comparable<IntTuple> {
     
-    private final double[] x;
+    private final int[] x;
     
-    public DoubleTuple(double... args) {
-        x = new double[args.length];
+    public IntTuple(int... args) {
+        x = new int[args.length];
         for (int i=0; i<args.length; i++) {
             x[i] = args[i];
         }
@@ -20,10 +19,10 @@ public class DoubleTuple {
         return x.length;
     }
     
-    public double get(int i) {
+    public int get(int i) {
         return x[i];
     }
-    
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -40,15 +39,20 @@ public class DoubleTuple {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        DoubleTuple other = (DoubleTuple) obj;
+        IntTuple other = (IntTuple) obj;
         if (!Arrays.equals(x, other.x))
             return false;
         return true;
     }
-
+    
     @Override
     public String toString() {
         return Arrays.toString(x);
+    }
+
+    @Override
+    public int compareTo(IntTuple other) {
+        return IntArrays.compare(this.x, other.x);
     }
     
 }

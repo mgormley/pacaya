@@ -3,7 +3,6 @@
  */
 package edu.jhu.util.tuple;
 
-import edu.jhu.util.IntTuple;
 
 public class OrderedPair extends IntTuple {
     public OrderedPair(int facIdx, int varIdx) {

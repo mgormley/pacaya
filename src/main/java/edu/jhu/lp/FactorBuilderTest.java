@@ -7,7 +7,7 @@ import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Pair;
+import edu.jhu.util.tuple.Pair;
 
 public class FactorBuilderTest {
 

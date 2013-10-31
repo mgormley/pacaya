@@ -28,10 +28,10 @@ import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.map.LongIntHashMap;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.Pair;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.tuple.OrderedPair;
+import edu.jhu.util.tuple.Pair;
 import edu.jhu.util.tuple.UnorderedPair;
 
 public class Rlt {

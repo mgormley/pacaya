@@ -2,7 +2,7 @@ package edu.jhu.parse;
 
 import java.util.ArrayList;
 
-import edu.jhu.util.Pair;
+import edu.jhu.util.tuple.Pair;
 
 public class IdentityDeltaGenerator implements DeltaGenerator {
 

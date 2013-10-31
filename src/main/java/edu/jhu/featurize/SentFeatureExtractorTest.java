@@ -15,8 +15,8 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.tuple.Pair;
 
 public class SentFeatureExtractorTest {
 

@@ -26,8 +26,8 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.gridsearch.rlt.filter.MaxNumRltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.VarRltRowAdder;
-import edu.jhu.util.Pair;
 import edu.jhu.util.cplex.CplexUtils;
+import edu.jhu.util.tuple.Pair;
 
 public class RltTest {
 

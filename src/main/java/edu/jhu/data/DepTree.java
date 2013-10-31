@@ -7,7 +7,7 @@ import java.util.List;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Pair;
+import edu.jhu.util.tuple.Pair;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
