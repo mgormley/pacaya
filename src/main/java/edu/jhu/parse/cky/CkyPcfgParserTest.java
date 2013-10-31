@@ -12,7 +12,7 @@ import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.util.tuple.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 public class CkyPcfgParserTest {
 

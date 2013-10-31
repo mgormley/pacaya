@@ -2,6 +2,8 @@ package edu.jhu.gridsearch;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.tuple.Triple;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
@@ -21,8 +23,6 @@ import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.gridsearch.dmv.WarmStart;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cplex.CplexPrm;
-import edu.jhu.util.tuple.Pair;
-import edu.jhu.util.tuple.Triple;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     

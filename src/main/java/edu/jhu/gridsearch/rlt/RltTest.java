@@ -3,6 +3,7 @@ package edu.jhu.gridsearch.rlt;
 import static org.junit.Assert.assertEquals;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.tuple.Pair;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -27,7 +28,6 @@ import edu.jhu.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.gridsearch.rlt.filter.MaxNumRltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.VarRltRowAdder;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.tuple.Pair;
 
 public class RltTest {
 

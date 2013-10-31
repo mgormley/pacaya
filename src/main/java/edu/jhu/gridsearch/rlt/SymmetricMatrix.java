@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import edu.jhu.util.tuple.ComparablePair;
+import edu.jhu.prim.tuple.ComparablePair;
 
 public class SymmetricMatrix<T> {
 

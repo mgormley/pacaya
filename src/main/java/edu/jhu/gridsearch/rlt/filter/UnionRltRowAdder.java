@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 import edu.jhu.gridsearch.rlt.Rlt;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.UnorderedPair;
 
 public class UnionRltRowAdder implements RltRowAdder {
 

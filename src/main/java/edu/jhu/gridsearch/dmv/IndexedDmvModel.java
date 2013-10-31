@@ -12,10 +12,10 @@ import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gridsearch.cpt.IndexedCpt;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvSentParamCache;
+import edu.jhu.prim.tuple.IntTuple;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.tuple.IntTuple;
-import edu.jhu.util.tuple.Pair;
 
 public class IndexedDmvModel implements IndexedCpt {
     

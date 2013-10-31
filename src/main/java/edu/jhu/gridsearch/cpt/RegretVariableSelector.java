@@ -8,7 +8,7 @@ import edu.jhu.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.tuple.IntTuple;
+import edu.jhu.prim.tuple.IntTuple;
 
 public class RegretVariableSelector implements VariableSelector {
 

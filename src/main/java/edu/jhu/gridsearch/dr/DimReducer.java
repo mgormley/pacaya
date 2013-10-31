@@ -19,13 +19,13 @@ import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.matrix.DoubleMatrixFactory;
 import edu.jhu.prim.matrix.SparseColDoubleMatrix;
 import edu.jhu.prim.matrix.SparseRowDoubleMatrix;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
 import edu.jhu.util.SafeCast;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.dist.Dirichlet;
-import edu.jhu.util.tuple.Pair;
 
 /**
  * Reduces the dimensionality of a linear program.

@@ -18,8 +18,8 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.IdentityDeltaGenerator.Delta;
+import edu.jhu.prim.tuple.Quadruple;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.tuple.Quadruple;
 
 public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
 

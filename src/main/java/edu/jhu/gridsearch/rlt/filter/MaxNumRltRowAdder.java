@@ -8,10 +8,10 @@ import java.util.Collections;
 import java.util.List;
 
 import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.PairSampler;
+import edu.jhu.prim.tuple.UnorderedPair;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.PairSampler;
-import edu.jhu.util.tuple.UnorderedPair;
 
 /**
  * Randomly accepts only a fixed proportion of the initial rows, and then

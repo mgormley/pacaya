@@ -5,7 +5,7 @@ import edu.jhu.parse.cky.BinaryTree;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
-import edu.jhu.util.tuple.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 
 /**

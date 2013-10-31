@@ -12,7 +12,7 @@ import edu.jhu.model.dmv.UniformDmvModelFactory;
 import edu.jhu.parse.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.relax.RelaxedParserWrapper;
-import edu.jhu.util.tuple.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 

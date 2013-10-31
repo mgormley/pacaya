@@ -1,7 +1,7 @@
 package edu.jhu.train;
 
 import edu.jhu.model.Model;
-import edu.jhu.util.tuple.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 public interface EStep<C> {
 

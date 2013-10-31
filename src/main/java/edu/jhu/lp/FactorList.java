@@ -14,9 +14,9 @@ import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.tuple.Pair;
 
 /**
  * Represents a set of constraints or variable bounds as Gx <= g, or

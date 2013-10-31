@@ -20,9 +20,9 @@ import com.joptimizer.optimizers.PrimalDualMethod;
 import edu.jhu.gridsearch.cpt.CptBounds;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.tuple.Pair;
 
 public class ModelParamSubproblem {
     

@@ -48,12 +48,12 @@ import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.tuple.Triple;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cplex.CplexPrm;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.tuple.Pair;
-import edu.jhu.util.tuple.Triple;
 
 public class DmvRltRelaxation implements DmvRelaxation {
 

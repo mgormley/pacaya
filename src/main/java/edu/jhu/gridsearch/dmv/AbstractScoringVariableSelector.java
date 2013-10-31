@@ -7,7 +7,7 @@ import edu.jhu.gridsearch.cpt.VariableId;
 import edu.jhu.gridsearch.cpt.VariableSelector;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.tuple.IntTuple;
+import edu.jhu.prim.tuple.IntTuple;
 
 public abstract class AbstractScoringVariableSelector implements VariableSelector {
 
