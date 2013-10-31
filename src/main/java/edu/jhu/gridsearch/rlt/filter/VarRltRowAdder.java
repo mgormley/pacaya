@@ -19,7 +19,7 @@ import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.OrderedPair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.UnorderedPair;
-import edu.jhu.util.SafeCast;
+import edu.jhu.prim.util.SafeCast;
 import edu.jhu.util.Utilities;
 
 /**

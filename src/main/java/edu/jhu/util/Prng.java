@@ -27,6 +27,10 @@ public class Prng {
         
     public static Random curRandom;
     public static long seed;
+
+    private Prng() {
+        // private constructor.
+    }
     
     public static void seed(long seed) {
         Prng.seed = seed;

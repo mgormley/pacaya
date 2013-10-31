@@ -3,7 +3,7 @@
  */
 package edu.jhu.gridsearch.rlt;
 
-import edu.jhu.util.SafeCast;
+import edu.jhu.prim.util.SafeCast;
 
 
 public class RltIds {

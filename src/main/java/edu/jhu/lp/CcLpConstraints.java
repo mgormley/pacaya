@@ -9,7 +9,7 @@ import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.matrix.SparseColDoubleMatrix;
-import edu.jhu.util.SafeCast;
+import edu.jhu.prim.util.SafeCast;
 
 /**
  * Represents constraints d <= Ax <= b, where A is a matrix in compressed-column form and

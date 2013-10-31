@@ -30,8 +30,8 @@ import edu.jhu.prim.map.LongIntHashMap;
 import edu.jhu.prim.tuple.OrderedPair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.UnorderedPair;
+import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class Rlt {

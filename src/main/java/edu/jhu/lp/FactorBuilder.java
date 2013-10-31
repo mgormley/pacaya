@@ -9,10 +9,10 @@ import org.apache.log4j.Logger;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class FactorBuilder {
