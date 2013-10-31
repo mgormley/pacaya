@@ -9,9 +9,9 @@ import org.junit.Test;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 
 public class ProjectiveDependencyParserTest {
     

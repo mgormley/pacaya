@@ -12,8 +12,8 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.math.FastMath;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective

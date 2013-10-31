@@ -23,11 +23,11 @@ import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
-import edu.jhu.util.math.FastMath;
 
 
 public class IndexedDmvModelTest {

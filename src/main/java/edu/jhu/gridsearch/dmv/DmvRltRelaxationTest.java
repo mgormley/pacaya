@@ -40,12 +40,12 @@ import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.parse.dmv.DmvCkyParserTest;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cplex.CplexPrm;
-import edu.jhu.util.math.FastMath;
 
 
 public class DmvRltRelaxationTest {

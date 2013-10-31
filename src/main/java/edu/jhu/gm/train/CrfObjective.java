@@ -23,7 +23,7 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 // TODO: Add an option which computes the gradient on only a subset of the
 // variables for use by SGD.

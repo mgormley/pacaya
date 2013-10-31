@@ -16,7 +16,7 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 public class Projections {
 

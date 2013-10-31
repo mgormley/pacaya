@@ -32,10 +32,10 @@ import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 

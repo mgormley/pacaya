@@ -34,13 +34,13 @@ import edu.jhu.parse.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.dmv.DmvCkyParserTest;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 import edu.jhu.util.rproj.RDataFrame;
 import edu.jhu.util.rproj.RRow;
 

@@ -12,7 +12,7 @@ import java.util.Map;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 public class ErmaWriter {
 

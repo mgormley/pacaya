@@ -6,7 +6,7 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.model.Model;
 import edu.jhu.parse.DepParser;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the

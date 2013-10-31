@@ -15,8 +15,8 @@ import edu.jhu.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.IndexedDmvModelTest;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.math.FastMath;
 
 
 public class ProjectionsTest {

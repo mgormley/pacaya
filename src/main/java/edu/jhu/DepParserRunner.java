@@ -41,6 +41,7 @@ import edu.jhu.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.parse.DepParser;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.BnBDmvTrainer;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.LocalBnBDmvTrainer;
@@ -52,7 +53,6 @@ import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.files.Files;
-import edu.jhu.util.math.FastMath;
 
 public class DepParserRunner {
     

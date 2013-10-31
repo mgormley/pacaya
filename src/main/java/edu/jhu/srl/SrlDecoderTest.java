@@ -16,10 +16,10 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.math.FastMath;
 
 public class SrlDecoderTest {
 

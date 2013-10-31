@@ -9,8 +9,8 @@ import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch

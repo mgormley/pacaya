@@ -14,9 +14,9 @@ import edu.jhu.model.Model;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.Lambda.LambdaOneToOne;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
-import edu.jhu.util.math.FastMath;
 import edu.jhu.util.math.LabeledMultinomial;
 
 public class DmvModel implements Model, Serializable {

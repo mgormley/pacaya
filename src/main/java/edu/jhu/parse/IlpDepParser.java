@@ -24,11 +24,11 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.relax.RelaxedDepParser;
 import edu.jhu.prim.Primitives;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 import edu.jhu.util.files.DelayedDeleter;
 import edu.jhu.util.files.Files;
-import edu.jhu.util.math.FastMath;
 
 public class IlpDepParser implements DepParser, RelaxedDepParser {
 

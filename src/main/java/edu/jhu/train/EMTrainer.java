@@ -5,8 +5,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.model.Model;
 import edu.jhu.model.ModelFactory;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 
 /**
  * 

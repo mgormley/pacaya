@@ -5,7 +5,7 @@ import java.util.Arrays;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Bounds for a conditional probability table.

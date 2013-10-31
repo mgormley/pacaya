@@ -12,8 +12,8 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.math.FastMath;
 
 public class BruteForceInferencerTest {
 

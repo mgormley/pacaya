@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 
 public class MidpointVarSplitterTest {

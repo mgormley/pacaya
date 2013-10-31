@@ -23,8 +23,8 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.FastMath;
 
 /**
  * Factor graph example. This class facilitates creation of the clamped factor

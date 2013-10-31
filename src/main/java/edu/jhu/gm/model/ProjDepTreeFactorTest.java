@@ -12,9 +12,9 @@ import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.math.FastMath;
 
 public class ProjDepTreeFactorTest {
 

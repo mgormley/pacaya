@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.util.math.FastMath;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Edge-factored projective dependency parser.

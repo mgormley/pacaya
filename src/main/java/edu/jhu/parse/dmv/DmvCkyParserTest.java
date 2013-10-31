@@ -32,12 +32,12 @@ import edu.jhu.model.dmv.UniformDmvModelFactory;
 import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.collections.Maps;
-import edu.jhu.util.math.FastMath;
 
 
 public class DmvCkyParserTest {
