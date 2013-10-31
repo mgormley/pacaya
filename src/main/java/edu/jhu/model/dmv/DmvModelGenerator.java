@@ -3,8 +3,8 @@ package edu.jhu.model.dmv;
 import edu.jhu.data.Label;
 import edu.jhu.data.TaggedWord;
 import edu.jhu.prim.map.IntIntHashMap;
+import edu.jhu.prim.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.dist.Beta;
 import edu.jhu.util.dist.Gaussian;
 

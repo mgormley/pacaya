@@ -7,8 +7,8 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
-import edu.jhu.util.Lambda;
-import edu.jhu.util.Lambda.LambdaBinOpDouble;
+import edu.jhu.prim.util.Lambda;
+import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.Utilities;
 
 /**

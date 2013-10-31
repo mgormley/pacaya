@@ -18,11 +18,11 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.util.sort.DoubleSort;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 

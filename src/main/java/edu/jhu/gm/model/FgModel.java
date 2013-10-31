@@ -16,10 +16,10 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
+import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Lambda.LambdaBinOpDouble;
-import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.dist.Gaussian;
 
 /**

@@ -7,8 +7,8 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
+import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Lambda.LambdaOne;
 
 /**
  * Binary tree for a context free grammar.
