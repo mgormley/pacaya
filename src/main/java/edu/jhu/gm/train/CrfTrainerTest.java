@@ -35,6 +35,7 @@ import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.train.CrfObjectiveTest.LogLinearEDs;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
@@ -126,7 +127,7 @@ public class CrfTrainerTest {
         
         System.out.println(model);
         System.out.println(fts);
-        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
         JUnitUtils.assertArrayEquals(new double[]{3.58, -0.75, -2.16, -2.17, -3.58, 0.75, 2.16, 2.17, -2.17, -2.17, 3.59, 0.75}, FgModelTest.getParams(model), 1e-2);
         
@@ -174,7 +175,7 @@ public class CrfTrainerTest {
         model = train(model, data);
         
         System.out.println(fts);
-        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
         JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.31, 0.31, -0.31, -0.31, -6.42, -6.52, 10.24, 2.69}, FgModelTest.getParams(model), 1e-2);
           
@@ -233,7 +234,7 @@ public class CrfTrainerTest {
         model = train(model, data);
         
         System.out.println(fts);
-        System.out.println(Utilities.toString(FgModelTest.getParams(model), "%.2f"));
+        System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         // [FALSE, TRUE, A1, A2, A3]
         JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 2.60, 1.90, -4.51}, FgModelTest.getParams(model), 1e-2);
 

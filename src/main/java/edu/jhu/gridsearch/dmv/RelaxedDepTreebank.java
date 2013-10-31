@@ -4,8 +4,8 @@
 package edu.jhu.gridsearch.dmv;
 
 import edu.jhu.data.Sentence;
+import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Utilities;
 
 public class RelaxedDepTreebank {
     private double[][] fracRoots;
@@ -60,7 +60,7 @@ public class RelaxedDepTreebank {
     }
 
     private boolean isFractional(double arcWeight) {
-        if (Utilities.equals(arcWeight, 0.0, 1e-9) || Utilities.equals(arcWeight, 1.0, 1e-9)) {
+        if (Primitives.equals(arcWeight, 0.0, 1e-9) || Primitives.equals(arcWeight, 1.0, 1e-9)) {
             return false;
         }
         return true;

@@ -10,8 +10,8 @@ import edu.jhu.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel.CM;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.Multinomials;
 
 public class RandomVariableSelector implements VariableSelector {
 
@@ -81,7 +81,7 @@ public class RandomVariableSelector implements VariableSelector {
 
         // Only sample from nodes that haven't bottomed out.
         int numNonZeros = 0;
-        double[] adjusted = Utilities.copyOf(freqs);
+        double[] adjusted = DoubleArrays.copyOf(freqs);
         for (int i = 0; i < adjusted.length; i++) {
             c = cms[i].get1();
             m = cms[i].get2();

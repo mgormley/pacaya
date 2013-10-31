@@ -1,8 +1,8 @@
 package edu.jhu.optimize;
 
-import cern.colt.Arrays;
+import edu.jhu.prim.arrays.IntArrays;
+import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 
 public class BatchSampler {
 
@@ -22,7 +22,7 @@ public class BatchSampler {
         this.batchSize = batchSize;
         
         if (!withReplacement) {
-            indices = Utilities.getIndexArray(numExamples);
+            indices = IntSort.getIndexArray(numExamples);
             cur = 0;
         }
     }
@@ -53,7 +53,7 @@ public class BatchSampler {
                 cur = 0;
             }
             if (cur == 0) {
-                Utilities.shuffle(indices);
+                IntArrays.shuffle(indices);
             }
             batch[i] = indices[cur++];
         }

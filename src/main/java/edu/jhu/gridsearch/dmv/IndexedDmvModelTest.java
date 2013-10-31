@@ -22,12 +22,12 @@ import edu.jhu.model.dmv.DmvSentParamCache;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 
 public class IndexedDmvModelTest {
@@ -244,7 +244,7 @@ public class IndexedDmvModelTest {
         
         System.out.println("logProbs: ");
         for (int c=0; c<logProbs.length; c++) {
-            System.out.println(Arrays.toString(Vectors.getExp(logProbs[c])));
+            System.out.println(Arrays.toString(DoubleArrays.getExp(logProbs[c])));
         }
         
         // The weights after running Viterbi EM are just wrong

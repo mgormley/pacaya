@@ -6,8 +6,9 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.IntTuple;
-import edu.jhu.util.Utilities;
 
 public class RegretVariableSelector implements VariableSelector {
 
@@ -38,7 +39,7 @@ public class RegretVariableSelector implements VariableSelector {
             }
         }
         
-        IntTuple max = Utilities.getArgmax(regret);
+        IntTuple max = DoubleArrays.getArgmax(regret);
         int c = max.get(0);
         int m = max.get(1);
 
@@ -84,7 +85,7 @@ public class RegretVariableSelector implements VariableSelector {
                 regret[c][m] = objVals[c][m] - (logProbs[c][m] * featCounts[c][m]);
                 //TODO: this seems to be too strong:
                 //assert Utilities.gte(regret[c][m], 0.0, 1e-7) : String.format("regret[%d][%d] = %f", c, m, regret[c][m]);
-                if (!Utilities.gte(regret[c][m], 0.0, 1e-7)) {
+                if (!Primitives.gte(regret[c][m], 0.0, 1e-7)) {
                     log.warn(String.format("Invalid negative regret: regret[%d][%d] = %f", c, m, regret[c][m]));
                 }
             }

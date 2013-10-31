@@ -2,6 +2,8 @@ package edu.jhu.util;
 
 import java.util.Arrays;
 
+import edu.jhu.prim.arrays.IntArrays;
+
 public class IntTuple implements Comparable<IntTuple> {
     
     private final int[] x;
@@ -50,7 +52,7 @@ public class IntTuple implements Comparable<IntTuple> {
 
     @Override
     public int compareTo(IntTuple other) {
-        return Utilities.compare(this.x, other.x);
+        return IntArrays.compare(this.x, other.x);
     }
     
 }

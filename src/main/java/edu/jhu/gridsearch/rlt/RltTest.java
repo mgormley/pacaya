@@ -1,6 +1,7 @@
 package edu.jhu.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -26,7 +27,6 @@ import edu.jhu.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.gridsearch.rlt.filter.MaxNumRltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.VarRltRowAdder;
 import edu.jhu.util.Pair;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class RltTest {
@@ -467,7 +467,7 @@ public class RltTest {
         double[][] vals = new double[1][];
         rltMat.getCols(rlt.getRltVarIdx(x1, x2), 1, new int[1][], vals);
         for (int i=0; i<vals[0].length; i++) {
-            Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
+            Assert.assertFalse(Primitives.equals(0.0, vals[0][i], 1e-13)); 
         }
     }
     
@@ -508,7 +508,7 @@ public class RltTest {
         double[][] vals = new double[1][];
         rltMat.getCols(rlt.getRltVarIdx(x1, x2), 1, new int[1][], vals);
         for (int i=0; i<vals[0].length; i++) {
-            Assert.assertFalse(Utilities.equals(0.0, vals[0][i], 1e-13)); 
+            Assert.assertFalse(Primitives.equals(0.0, vals[0][i], 1e-13)); 
         }
     }
 

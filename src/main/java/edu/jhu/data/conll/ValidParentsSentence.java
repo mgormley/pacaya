@@ -6,8 +6,8 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
+import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Utilities;
 
 /**
  * A sentence with side information indicating which child-parent dependency
@@ -42,9 +42,9 @@ public class ValidParentsSentence extends Sentence {
         
         final int n = this.size();
         validRoot = new boolean[n];
-        Utilities.fill(validRoot, true);
+        BoolArrays.fill(validRoot, true);
         validParents = new boolean[n][n];
-        Utilities.fill(validParents, true);
+        BoolArrays.fill(validParents, true);
 
         // For each child position (c) which is an argument, invalidate all the
         // parent positions (p) except those for which there is an edge to a

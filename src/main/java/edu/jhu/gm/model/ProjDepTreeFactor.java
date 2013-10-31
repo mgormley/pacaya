@@ -11,6 +11,7 @@ import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Utilities;
 
 /**
@@ -140,8 +141,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         double[][] child = new double[n][n];
 
         // Compute the odds ratios of the messages for each edge in the tree.
-        Utilities.fill(root, Double.NEGATIVE_INFINITY);
-        Utilities.fill(child, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
         for (FgEdge inEdge : parent.getInEdges()) {
             LinkVar link = (LinkVar) inEdge.getVar();
             DenseFactor inMsg = msgs[inEdge.getId()].message;

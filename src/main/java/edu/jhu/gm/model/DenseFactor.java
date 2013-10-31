@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.util.Lambda;
 import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
-import edu.jhu.util.math.Vectors;
 
 /**
  * A multivariate Multinomial distribution. 
@@ -51,7 +52,7 @@ public class DenseFactor implements Serializable {
     /** Copy constructor. */
     public DenseFactor(DenseFactor f) {
         this.vars = f.vars;
-        this.values = Utilities.copyOf(f.values);
+        this.values = DoubleArrays.copyOf(f.values);
         // We don't want to copy the node id since it uniquely refers to the
         // node of the input factor.
     }
@@ -161,12 +162,12 @@ public class DenseFactor implements Serializable {
     
     /** Add the addend to each value. */
     public void add(double addend) {
-        Vectors.add(values, addend);
+        DoubleArrays.add(values, addend);
     }
     
     /** Scale each value by lambda. */
     public void scale(double lambda) {
-        Vectors.scale(values, lambda);
+        DoubleArrays.scale(values, lambda);
     }
     
     /** Normalizes the values. */
@@ -181,22 +182,22 @@ public class DenseFactor implements Serializable {
     
     /** Takes the log of each value. */
     public void convertRealToLog() {
-        Vectors.log(values);
+        DoubleArrays.log(values);
     }
     
     /** Takes the exp of each value. */
     public void convertLogToReal() {
-        Vectors.exp(values);
+        DoubleArrays.exp(values);
     }
 
     /** Gets the sum of the values for this factor. */
     public double getSum() {
-        return Vectors.sum(values);
+        return DoubleArrays.sum(values);
     }
     
     /** Gets the log of the sum of the values for this factor. */
     public double getLogSum() {
-        return Vectors.logSum(values);
+        return DoubleArrays.logSum(values);
     }
     
     /**
@@ -339,7 +340,7 @@ public class DenseFactor implements Serializable {
         if (this.values.length != other.values.length)
             return false;
         for (int i=0; i<values.length; i++) {
-            if (!Utilities.equals(values[i], other.values[i], delta))
+            if (!Primitives.equals(values[i], other.values[i], delta))
                 return false;
         }
         if (vars == null) {
@@ -352,7 +353,7 @@ public class DenseFactor implements Serializable {
 
     /** Gets the ID of the configuration with the maximum value. */
     public int getArgmaxConfigId() {
-        return Vectors.argmax(values);
+        return DoubleArrays.argmax(values);
     }    
     
 }

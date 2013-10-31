@@ -13,12 +13,13 @@ import edu.jhu.gm.feat.FeatureTemplate;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.arrays.BoolArrays;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.dist.Gaussian;
 
 /**
@@ -93,7 +94,7 @@ public class FgModel implements Serializable {
         if (!includeUnsupportedFeatures) {
             includeSupportedFeatures(data, templates);
         } else {
-            Utilities.fill(included, true);
+            BoolArrays.fill(included, true);
         }
       
         // Always include the bias features.
@@ -119,8 +120,8 @@ public class FgModel implements Serializable {
     
     /** Copy constructor. */
     public FgModel(FgModel other) {
-        this.params = Utilities.copyOf(other.params);
-        this.included = Utilities.copyOf(other.included);
+        this.params = DoubleArrays.copyOf(other.params);
+        this.included = BoolArrays.copyOf(other.included);
         this.numParams = other.numParams;
         this.numTemplates = other.numTemplates;
         // We only do a shallow copy of the templates.
@@ -246,7 +247,7 @@ public class FgModel implements Serializable {
     }
     
     public void zero() {
-        Utilities.fill(params, 0.0);
+        DoubleArrays.fill(params, 0.0);
     }
 
     public String toString() {

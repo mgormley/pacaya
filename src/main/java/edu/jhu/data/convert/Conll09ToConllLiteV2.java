@@ -11,11 +11,6 @@ import java.util.Map;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTree;
-import edu.jhu.data.DepTreebank;
-import edu.jhu.data.DepTreebankReader;
-import edu.jhu.data.DepTreebankReader.DatasetType;
-import edu.jhu.data.Sentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
@@ -25,7 +20,6 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.math.Vectors;
 import edu.stanford.nlp.util.StringUtils;
 
 /**

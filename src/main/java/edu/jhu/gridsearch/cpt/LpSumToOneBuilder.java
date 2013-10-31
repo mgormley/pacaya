@@ -1,5 +1,6 @@
 package edu.jhu.gridsearch.cpt;
 
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
@@ -17,7 +18,6 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Sets;
-import edu.jhu.util.math.Vectors;
 
 public class LpSumToOneBuilder {
     
@@ -133,7 +133,7 @@ public class LpSumToOneBuilder {
     private int addSumToOneConstraint(int c, double[] point) throws IloException {
         double[] probs;
         probs = projections.getDefaultProjection(bounds, c, point);
-        double[] logProbs = Vectors.getLog(probs);
+        double[] logProbs = DoubleArrays.getLog(probs);
         
         double vectorSum = 1.0;
         for (int m = 0; m < logProbs.length; m++) {
@@ -196,9 +196,9 @@ public class LpSumToOneBuilder {
         }
         IntArrayList rows = new IntArrayList();
         for (int c = 0; c < idm.getNumConds(); c++) {
-            Vectors.exp(params[c]);
+            DoubleArrays.exp(params[c]);
             // Here the params are probs
-            double sum = Vectors.sum(params[c]);
+            double sum = DoubleArrays.sum(params[c]);
             if (sum > prm.minSumForCuts && numStoCons < prm.maxStoCuts) {
                 log.debug(String.format("Adding cuts for c=%d with sum=%f", c, sum));
                 rows.add(addSumToOneConstraint(c, params[c]));

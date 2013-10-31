@@ -7,6 +7,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
 
@@ -54,7 +55,7 @@ public class SimpleAnnoSentence {
         this.lemmas = Utilities.copyOf(other.lemmas);
         this.posTags = Utilities.copyOf(other.posTags);
         this.deprels = Utilities.copyOf(other.deprels);
-        this.parents = Utilities.copyOf(other.parents);
+        this.parents = IntArrays.copyOf(other.parents);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
         this.feats = Utilities.copyOf(other.feats);

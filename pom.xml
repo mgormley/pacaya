@@ -162,7 +162,7 @@
     <dependency>
       <groupId>edu.jhu.prim</groupId>
       <artifactId>prim</artifactId>
-      <version>1.0.1-SNAPSHOT</version>
+      <version>1.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>edu.jhu.hlt.concrete</groupId>

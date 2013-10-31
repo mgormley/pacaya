@@ -24,6 +24,7 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.relax.RelaxedDepParser;
+import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.DelayedDeleter;
 import edu.jhu.util.Files;
@@ -335,7 +336,7 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
                     relaxTreebank.getFracRoots()[sentId][child-1] = value;
                 } else if (child == 0) {
                     // Skip the arcs that would indicate the parent having a head.
-                    assert(Utilities.equals(value, 0.0, 1e-9));
+                    assert(Primitives.equals(value, 0.0, 1e-9));
                 } else {
                     relaxTreebank.getFracChildren()[sentId][parent-1][child-1] = value;
                 }

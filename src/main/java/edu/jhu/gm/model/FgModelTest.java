@@ -17,12 +17,12 @@ import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.sort.DoubleSort;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Lambda.LambdaUnaryOpDouble;
-import edu.jhu.util.math.Vectors;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 
@@ -106,8 +106,8 @@ public class FgModelTest {
 
         double[] params = new double[model.getNumParams()];
         model.updateDoublesFromModel(params);
-        System.out.println("sum: " + Vectors.sum(params));
-        assertEquals(-2.0817045546109862, Vectors.sum(params), 1e-3);
+        System.out.println("sum: " + DoubleArrays.sum(params));
+        assertEquals(-2.0817045546109862, DoubleArrays.sum(params), 1e-3);
     }
 
     @Test

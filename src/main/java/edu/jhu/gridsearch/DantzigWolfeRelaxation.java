@@ -1,5 +1,6 @@
 package edu.jhu.gridsearch;
 
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
@@ -22,7 +23,6 @@ import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Triple;
 import edu.jhu.util.cplex.CplexPrm;
-import edu.jhu.util.math.Vectors;
 
 public abstract class DantzigWolfeRelaxation implements Relaxation {
     
@@ -283,7 +283,7 @@ public abstract class DantzigWolfeRelaxation implements Relaxation {
         }
         
         // The lower bound oscillates because of the yo-yo effect, so we take the max.
-        double lowerBound = Vectors.max(iterationLowerBounds.toNativeArray());
+        double lowerBound = DoubleArrays.max(iterationLowerBounds.toNativeArray());
         
         log.debug("Number of cut rounds: " + cut);
         log.debug("Number of DW iterations: " + dwIter);

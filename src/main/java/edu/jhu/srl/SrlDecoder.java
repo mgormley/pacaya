@@ -18,9 +18,9 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.util.Utilities;
 
 public class SrlDecoder {
 
@@ -111,8 +111,8 @@ public class SrlDecoder {
         // and compute the MBR dependency parse.
         double[] root = new double[n];
         double[][] child = new double[n][n];
-        Utilities.fill(root, Double.NEGATIVE_INFINITY);
-        Utilities.fill(child, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
             Var var = vars.get(varId);
             DenseFactor marg = margs.get(varId);

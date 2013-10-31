@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.util.math.Vectors;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 /**
  * Gaussian prior (L2 regularizer) on the parameters with mean zero and a
@@ -39,7 +39,7 @@ public class L2 implements Regularizer {
      */
     @Override
     public double getValue() {
-        double sum = Vectors.dotProduct(params, params);
+        double sum = DoubleArrays.dotProduct(params, params);
         sum /= (2 * variance);
         return - sum;
     }

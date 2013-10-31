@@ -11,9 +11,9 @@ import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 public class BruteForceInferencerTest {
 
@@ -63,13 +63,13 @@ public class BruteForceInferencerTest {
         
         marg = bp.getMarginals(fg.getVar(0));
         goldMarg = new double[] { 0.079, 0.920 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-2);
         
         marg = bp.getMarginals(fg.getFactor(3));
         goldMarg = new double[] { 0.013146806000337095, 0.1774818810045508, 0.06607112759143771, 0.7433001854036744 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), logDomain ? 1e-2 : 1e-4);
         
@@ -89,28 +89,28 @@ public class BruteForceInferencerTest {
         assertEquals("A", fg.getVar(0).getName());
         marg = bp.getMarginals(fg.getVar(0));
         goldMarg = new double[] { 0.5, 0.5 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-2);
 
         assertEquals("B", fg.getVar(1).getName());
         marg = bp.getMarginals(fg.getVar(1));
         goldMarg = new double[] { 0.375, 0.625 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-3);
 
         assertEquals("C", fg.getVar(2).getName());
         marg = bp.getMarginals(fg.getVar(2));
         goldMarg = new double[] { 0.4275, 0.5725 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-3);
         
         assertEquals(new VarSet(fg.getVar(0), fg.getVar(1)), fg.getFactor(1).getVars());
         marg = bp.getMarginals(fg.getFactor(1));
         goldMarg = new double[] { 0.3, 0.075, 0.2, 0.425 };
-        if (logDomain) { goldMarg = Vectors.getLog(goldMarg); }
+        if (logDomain) { goldMarg = DoubleArrays.getLog(goldMarg); }
         JUnitUtils.assertArrayEquals(goldMarg,
                 marg.getValues(), 1e-3);
         

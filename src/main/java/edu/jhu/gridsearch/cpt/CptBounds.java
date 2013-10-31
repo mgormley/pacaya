@@ -3,8 +3,9 @@ package edu.jhu.gridsearch.cpt;
 import java.util.Arrays;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 /**
  * Bounds for a conditional probability table.
@@ -45,7 +46,7 @@ public class CptBounds {
                     Arrays.fill(lbs[t][c], DEFAULT_LOWER_BOUND);
                     Arrays.fill(ubs[t][c], DEFAULT_UPPER_BOUND);
 
-                    double totMaxFreqCmVal = Vectors.sum(totMaxFreqCm[c]);
+                    double totMaxFreqCmVal = IntArrays.sum(totMaxFreqCm[c]);
                     for (int m = 0; m < lbs[t][c].length; m++) {
                         if (totMaxFreqCm[c][m] == 0 && totMaxFreqCmVal > 0) {
                             // Upper bound by zero(ish) if this parameter
@@ -80,7 +81,7 @@ public class CptBounds {
     }
 
     public boolean canBranch(Type type, int c, int m) {
-        return !Utilities.lte(ubs[type.getAsInt()][c][m] - lbs[type.getAsInt()][c][m], MIN_BOUND_DIFF);
+        return !Primitives.lte(ubs[type.getAsInt()][c][m] - lbs[type.getAsInt()][c][m], MIN_BOUND_DIFF);
     }
 
     public double getLogSpace() {

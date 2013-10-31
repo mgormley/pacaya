@@ -5,7 +5,7 @@ import java.util.Arrays;
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 public class MalletLBFGS implements Maximizer {
 
@@ -131,7 +131,7 @@ public class MalletLBFGS implements Maximizer {
         
         converged = lbfgs.optimize(prm.maxIterations);
         
-        Utilities.copy(mf.params, point);
+        DoubleArrays.copy(mf.params, point);
         
         return converged;
     }

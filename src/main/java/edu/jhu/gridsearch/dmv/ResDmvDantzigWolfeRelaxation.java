@@ -26,13 +26,13 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 /**
  * Alternative to DmvDantzigWolfeRelaxation which doesn't use any cuts. This is accomplished by 
@@ -102,10 +102,10 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
         }
         // Assert that the model parameters sum to <= 1.0
         for (int c = 0; c < idm.getNumConds(); c++) {
-            double[] probs = Vectors.getExp(optimalLogProbs[c]);
+            double[] probs = DoubleArrays.getExp(optimalLogProbs[c]);
             //assert Utilities.lte(Vectors.sum(probs), 1.0, 1e-8) : String.format("sum(probs[%d]) = %.15g", c, Vectors.sum(probs));
-            if (!Utilities.lte(Vectors.sum(probs), 1.0, 1e-8)) {
-                log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, Vectors.sum(probs)));
+            if (!Primitives.lte(DoubleArrays.sum(probs), 1.0, 1e-8)) {
+                log.warn(String.format("Sum of log probs must be <= 1.0: sum(probs[%d]) = %.15g", c, DoubleArrays.sum(probs)));
             }
         }
         return optimalLogProbs;
@@ -184,7 +184,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                     return false;
                 }
                 for (int m=0; m<logProbs[c].length; m++) {
-                    if (!Utilities.equals(logProbs[c][m], other.logProbs[c][m], 1e-13)) {
+                    if (!Primitives.equals(logProbs[c][m], other.logProbs[c][m], 1e-13)) {
                         return false;
                     }
                 }
@@ -342,12 +342,12 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             double[][] initLogProbs = feasSol.getLogProbs();
             for (int c = 0; c < numConds; c++) {
                 // Project the initial solution onto the feasible region
-                double[] params = Vectors.getExp(initLogProbs[c]);
+                double[] params = DoubleArrays.getExp(initLogProbs[c]);
                 params = projections.getBoundedProjection(bounds, c, params);
                 if (params == null) {
                     throw new IllegalStateException("The initial bounds are infeasible");
                 }
-                initLogProbs[c] = Vectors.getLog(params);
+                initLogProbs[c] = DoubleArrays.getLog(params);
             }
             addGammaVar(initLogProbs);
 
@@ -505,7 +505,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
             if (index != -1) {
                 GammaVar gv = mpr.gammaVars.get(index);
                 log.debug(String.format("CPLEX redcost=%.13f, My redcost=%.13f", cplex.getReducedCost(gv.gammaVar), mReducedCost));
-                assert(Utilities.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-8));
+                assert(Primitives.equals(cplex.getReducedCost(gv.gammaVar), mReducedCost, 1e-8));
             }
         }  
         if (mReducedCost < prm.NEGATIVE_REDUCED_COST_TOLERANCE) {
@@ -632,7 +632,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                 GammaVar gv = mpr.gammaVars.get(i);
                 if (gv.logProbs[c][m] < newLb || newUb < gv.logProbs[c][m]) {
                     // TODO: This isn't blazing fast, but we could make it faster if necessary
-                    double[] params = Vectors.getExp(gv.logProbs[c]);
+                    double[] params = DoubleArrays.getExp(gv.logProbs[c]);
                     params = projections.getBoundedProjection(bounds, c, params);
                     if (params == null) {
                         //throw new IllegalStateException("The bounds are infeasible");
@@ -642,7 +642,7 @@ public class ResDmvDantzigWolfeRelaxation extends DmvDantzigWolfeRelaxation impl
                     for (int mm=0; mm<params.length; mm++) {
                         assert params[mm] >= 0 : String.format("params[%d] = %g", mm, params[mm]);
                     }
-                    double[] lps = Vectors.getLog(params);
+                    double[] lps = DoubleArrays.getLog(params);
                     gv.logProbs[c] = lps;
                     
                     // Update gamma var column  

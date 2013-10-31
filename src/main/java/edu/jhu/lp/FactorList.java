@@ -13,10 +13,10 @@ import org.apache.log4j.Logger;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.math.Vectors;
 
 /**
  * Represents a set of constraints or variable bounds as Gx <= g, or
@@ -137,8 +137,8 @@ public class FactorList implements Iterable<Factor> {
                 if (!CplexUtils.isInfinite(lb[rowIdx])) {
                     // b <= A_i x
                     // 0 <= A_i x - b = (-b - (-A_i x))
-                    double[] vals = Utilities.copyOf(Aval[rowIdx]);
-                    Vectors.scale(vals, -1.0);
+                    double[] vals = DoubleArrays.copyOf(Aval[rowIdx]);
+                    DoubleArrays.scale(vals, -1.0);
                     this.add(new RowFactor(-lb[rowIdx], Aind[rowIdx], vals, rowIdx, RowFactorType.LOWER, mat));
                     numNewFactors++;
                 }

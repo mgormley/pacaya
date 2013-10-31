@@ -4,8 +4,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.prim.util.sort.IntSort;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 
 /**
  * Stochastic gradient descent with minibatches.
@@ -159,14 +159,14 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 // Another full pass through the data has been completed.
                 passCount++;
                 // Get the value of the function on all the examples.
-                value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
+                value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
                 log.debug("Average learning rate: " + avgLr);
             }
         }
         
         // Get the final value of the function on all the examples.
-        double value = function.getValue(Utilities.getIndexArray(function.getNumExamples()));
+        double value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
         log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
         
         // We don't test for convergence.

@@ -4,6 +4,9 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.BoolArrays;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
@@ -39,7 +42,7 @@ public class FullTieBreakerChartCell implements ChartCell {
         isClosed = false;
         
         // Initialize scores to negative infinity.
-        Utilities.fill(maxScores, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(maxScores, Double.NEGATIVE_INFINITY);
         
         // Tie breaking fields.
         this.breakTies = breakTies;
@@ -49,13 +52,13 @@ public class FullTieBreakerChartCell implements ChartCell {
     }
     
     public void reset(Sentence sentence) {
-        Utilities.fill(maxScores, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(maxScores, Double.NEGATIVE_INFINITY);
         Utilities.fill(bps, null);
         nts.clear();
         isClosed = false;
         ntsArray = null;
-        Utilities.fill(maxJit, 0.0);
-        Utilities.fill(maxHasJit, false);
+        DoubleArrays.fill(maxJit, 0.0);
+        BoolArrays.fill(maxHasJit, false);
     }
     
     public final void updateCell(int nt, double score, int mid, Rule r) {
@@ -70,7 +73,7 @@ public class FullTieBreakerChartCell implements ChartCell {
             
             // Compare sentenceProb and prob. If they are equal break the tie by 
             // comparing the jitter.
-            int diff = Utilities.compare(score, maxScores[nt], PROB_EQUALS_TOLERANCE);
+            int diff = Primitives.compare(score, maxScores[nt], PROB_EQUALS_TOLERANCE);
             if (diff == 0) {
                 // Create the jitter for the current contender. 
                 jit = Prng.nextDouble();

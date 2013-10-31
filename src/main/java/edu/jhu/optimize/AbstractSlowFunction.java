@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 public abstract class AbstractSlowFunction implements Function, SlowFunction {
 
@@ -22,7 +22,7 @@ public abstract class AbstractSlowFunction implements Function, SlowFunction {
     @Override
     public void getGradient(double[] gradient) {
         double[] tmp = this.getGradientAtPoint(point);
-        Utilities.copy(tmp, gradient);
+        DoubleArrays.copy(tmp, gradient);
     }
     
     public abstract double getValue(double[] params);

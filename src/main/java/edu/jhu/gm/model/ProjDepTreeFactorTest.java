@@ -1,23 +1,19 @@
 package edu.jhu.gm.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import edu.jhu.gm.inf.BeliefPropagation;
-import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
-import edu.jhu.srl.SrlFactorGraph;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 public class ProjDepTreeFactorTest {
 

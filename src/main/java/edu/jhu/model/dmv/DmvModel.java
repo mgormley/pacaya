@@ -11,12 +11,13 @@ import java.util.Set;
 
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.math.LabeledMultinomial;
-import edu.jhu.util.math.Multinomials;
 
 public class DmvModel implements Model, Serializable {
     
@@ -470,7 +471,7 @@ public class DmvModel implements Model, Serializable {
         // Assert that each sum is within delta of 0.0.
         for (int p=0; p<numTags; p++) {
             for (int dir=0; dir<2; dir++) {
-                assert(Utilities.equals(0.0, logSums[p][dir], delta)); 
+                assert(Primitives.equals(0.0, logSums[p][dir], delta)); 
             }
         }
     }

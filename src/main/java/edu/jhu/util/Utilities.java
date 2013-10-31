@@ -15,16 +15,10 @@ import java.util.regex.Pattern;
 
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
-import edu.jhu.util.cli.Opt;
-import edu.jhu.util.math.LogAddTable;
+import edu.jhu.prim.util.sort.IntSort;
 
 public class Utilities {
-
-    @Opt(hasArg = true, description = "Whether to use a log-add table or log-add exact.")
-    public static boolean useLogAddTable = false;
     
-    private static final double DEFAULT_DELTA = 1e-13;
-
     private Utilities() {
         // private constructor
     }
@@ -32,15 +26,15 @@ public class Utilities {
     private static final Integer INTEGER_ZERO = Integer.valueOf(0);
     private static final Double DOUBLE_ZERO = Double.valueOf(0.0);
     public static final double LOG2 = log(2);
-    
-     public static <X> Integer safeGetInt(Map<X,Integer> map, X key) {
-         Integer value = map.get(key);
-         if (value == null) {
-             return INTEGER_ZERO;
-         }
-         return value;
-     }
-    
+
+    public static <X> Integer safeGetInt(Map<X, Integer> map, X key) {
+        Integer value = map.get(key);
+        if (value == null) {
+            return INTEGER_ZERO;
+        }
+        return value;
+    }
+
     public static <X> Double safeGetDouble(Map<X,Double> map, X key) {
         Double value = map.get(key);
         if (value == null) {
@@ -201,7 +195,7 @@ public class Utilities {
             return n * factorial(n - 1);
         }
     }
-    
+
     /**
      * Adds two probabilities that are stored as log probabilities.
      * @param x log(p)
@@ -209,11 +203,7 @@ public class Utilities {
      * @return log(p + q) = log(exp(x) + exp(y))
      */
     public static double logAdd(double x, double y) {
-        if (useLogAddTable) {
-            return LogAddTable.logAdd(x,y);
-        } else {
             return logAddExact(x,y);
-        }
     }
     
     /**
@@ -226,11 +216,7 @@ public class Utilities {
      * @throws IllegalStateException if x < y
      */
     public static double logSubtract(double x, double y) {
-        if (useLogAddTable) {
-            return LogAddTable.logSubtract(x,y);
-        } else {
             return logSubtractExact(x,y);
-        }
     }
     
     public static double logAddExact(double x, double y) {
@@ -287,168 +273,6 @@ public class Utilities {
         return log(d) / LOG2;
     }
 
-    public static double[][][][] copyOf(double[][][][] array) {
-        double[][][][] clone = new double[array.length][][][];
-        for (int i = 0; i < clone.length; i++) {
-            clone[i] = copyOf(array[i]);
-        }
-        return clone;
-    }
-
-    public static double[][][] copyOf(double[][][] array) {
-        double[][][] clone = new double[array.length][][];
-        for (int i = 0; i < clone.length; i++) {
-            clone[i] = copyOf(array[i]);
-        }
-        return clone;
-    }
-
-    public static double[][] copyOf(double[][] array) {
-        double[][] newArray = new double[array.length][];
-        for (int i = 0; i < array.length; i++) {
-            newArray[i] = Utilities.copyOf(array[i], array[i].length);
-        }
-        return newArray;
-    }
-
-    public static boolean[][][][] copyOf(boolean[][][][] array) {
-        boolean[][][][] clone = new boolean[array.length][][][];
-        for (int i = 0; i < clone.length; i++) {
-            clone[i] = copyOf(array[i]);
-        }
-        return clone;
-    }
-
-    public static boolean[][][] copyOf(boolean[][][] array) {
-        boolean[][][] clone = new boolean[array.length][][];
-        for (int i = 0; i < clone.length; i++) {
-            clone[i] = copyOf(array[i]);
-        }
-        return clone;
-    }
-
-    public static boolean[][] copyOf(boolean[][] array) {
-        boolean[][] newArray = new boolean[array.length][];
-        for (int i = 0; i < array.length; i++) {
-            newArray[i] = Utilities.copyOf(array[i], array[i].length);
-        }
-        return newArray;
-    }
-
-    public static boolean[] copyOf(boolean[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static boolean[] copyOf(boolean[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-    public static int[][] copyOf(int[][] array) {
-        int[][] newArray = new int[array.length][];
-        for (int i = 0; i < array.length; i++) {
-            newArray[i] = Utilities.copyOf(array[i], array[i].length);
-        }
-        return newArray;
-    }
-
-    public static int[] copyOf(int[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static int[] copyOf(int[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-    public static double[] copyOf(double[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static double[] copyOf(double[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-
-    public static long[] copyOf(long[] original, int newLength) {
-        return Arrays.copyOf(original, newLength);
-    }
-
-    public static long[] copyOf(long[] original) {
-        return Arrays.copyOf(original, original.length);
-    }
-    
-    public static void copy(int[][] array, int[][] clone) {
-        assert (array.length == clone.length);
-        for (int i = 0; i < array.length; i++) {
-            copy(array[i], clone[i]);
-        }
-    }
-
-    public static void copy(int[] array, int[] clone) {
-        assert (array.length == clone.length);
-        System.arraycopy(array, 0, clone, 0, array.length);
-    }
-
-    public static void copy(double[] array, double[] clone) {
-        assert (array.length == clone.length);
-        System.arraycopy(array, 0, clone, 0, array.length);
-    }
-
-    public static void copy(double[][] array, double[][] clone) {
-        assert (array.length == clone.length);
-        for (int i = 0; i < clone.length; i++) {
-            copy(array[i], clone[i]);
-        }
-    }
-
-    public static void copy(double[][][] array, double[][][] clone) {
-        assert (array.length == clone.length);
-        for (int i = 0; i < clone.length; i++) {
-            copy(array[i], clone[i]);
-        }
-    }
-
-    public static void copy(double[][][][] array, double[][][][] clone) {
-        assert (array.length == clone.length);
-        for (int i = 0; i < clone.length; i++) {
-            copy(array[i], clone[i]);
-        }
-    }
-
-    public static double infinityNorm(double[][] gradient) {
-        double maxIN = 0.0;
-        for (int i=0; i<gradient.length; i++) {
-            double tempVal = infinityNorm(gradient[i]);
-            if (tempVal > maxIN) {
-                maxIN = tempVal;
-            }
-        }
-        return maxIN;
-    }
-
-    private static double infinityNorm(double[] gradient) {
-        double maxAbs = 0.0;
-        for (int i=0; i<gradient.length; i++) {
-            double tempVal = Math.abs(gradient[i]);
-            if (tempVal > maxAbs) {
-                maxAbs = tempVal;
-            }
-        }
-        return maxAbs;
-    }
-
-    /**
-     * Fisher-Yates shuffle randomly reorders the elements in array. This
-     * is O(n) in the length of the array.
-     */
-    public static void shuffle(int[] array) {
-      for (int i=array.length-1; i > 0; i--) {
-        int j = Prng.nextInt(i+1);
-        // Swap array[i] and array[j]
-        int tmp = array[i];
-        array[i] = array[j];
-        array[j] = tmp;
-      }
-    }
-
     /**
      * Samples a set of m integers without replacement from the range [0,...,n-1]. 
      * @param m The number of integers to return.
@@ -461,7 +285,7 @@ public class Utilities {
         
         // TODO: Design a faster method that only generates min(m, n-m) integers.
         
-        int[] array = getIndexArray(n);
+        int[] array = IntSort.getIndexArray(n);
         for (int i=0; i<m; i++) {
             int j = Prng.nextInt(n - i) + i;
             // Swap array[i] and array[j]
@@ -474,13 +298,6 @@ public class Utilities {
         
     public static void assertDoubleEquals(double a, double b) {
         assert(Math.abs(a - b) < 0.000000000001);
-    }
-
-    public static void assertSameSize(double[][] newLogPhi, double[][] logPhi) {
-        assert(newLogPhi.length == logPhi.length);
-        for (int k=0; k<logPhi.length; k++) {
-            assert(newLogPhi[k].length == logPhi[k].length); 
-        }
     }
 
     public static double logForIlp(double weight) {
@@ -497,144 +314,6 @@ public class Utilities {
             return -1E10;
         }
         return log(weight);
-    }
-
-    public static boolean equals(int a, int b) {
-        return a == b;
-    }
-
-    public static boolean equals(long a, long b) {
-        return a == b;
-    }
-    
-    public static boolean equals(double a, double b, double delta) {
-        return Math.abs(a - b) < delta;
-    }
-
-    /**
-     * Compares two double values up to some delta.
-     * 
-     * @param a
-     * @param b
-     * @param delta
-     * @return The value 0 if a equals b, a value greater than 0 if if a > b, and a value less than 0 if a < b.  
-     */
-    public static int compare(double a, double b, double delta) {
-        if (equals(a, b, delta)) {
-            return 0;
-        }
-        return Double.compare(a, b);
-    }
-    
-    public static int compare(int a, int b) {
-        return a - b;
-    }
-    
-    public static int compare(int[] x, int[] y) {
-        for (int i=0; i<Math.min(x.length, y.length); i++) {
-            int diff = x[i] - y[i];
-            if (diff != 0) {
-                return diff;
-            }
-        }
-        
-        if (x.length < y.length) {
-            return -1;
-        } else if (x.length > y.length) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-
-    /**
-     * Gets the argmax breaking ties randomly.
-     */
-    public static IntTuple getArgmax(double[][] array) {
-        return getArgmax(array, DEFAULT_DELTA);
-    }
-
-    /**
-     * Gets the argmax breaking ties randomly.
-     */
-    public static IntTuple getArgmax(double[][] array, double delta) {
-        double maxValue = Double.NEGATIVE_INFINITY;
-        int maxX = -1;
-        int maxY = -1;
-        double numMax = 1;
-        for (int x=0; x<array.length; x++) {
-            for (int y=0; y<array[x].length; y++) {
-                double diff = Utilities.compare(array[x][y], maxValue, delta);
-                if (diff == 0 && Prng.nextDouble() < 1.0 / numMax) {
-                    maxValue = array[x][y];
-                    maxX = x;
-                    maxY = y;
-                    numMax++;
-                } else if (diff > 0) {
-                    maxValue = array[x][y];
-                    maxX = x;
-                    maxY = y;
-                    numMax = 1;
-                }
-            }
-        }
-        return new IntTuple(maxX, maxY);
-    }
-
-    public static boolean lte(double a, double b) {
-        return a <= b + DEFAULT_DELTA;
-    }
-    
-    public static boolean lte(double a, double b, double delta) {
-        return a <= b + delta;
-    }
-
-    public static boolean gte(double a, double b) {
-        return a + DEFAULT_DELTA >= b;
-    }
-    
-    public static boolean gte(double a, double b, double delta) {
-        return a + delta >= b;
-    }    
-    
-    public static String deepToString(double[][] array) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[");
-        for (double[] arr : array) {
-            sb.append("[");
-            for (double a : arr) {
-                sb.append(String.format("%10.3g, ", a));
-            }
-            sb.append("], ");
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-    
-    /**
-     * Gets an array where array[i] = i.
-     * @param length The length of the array.
-     * @return The new index array.
-     */
-    public static int[] getIndexArray(int length) {
-        int[] index = new int[length];
-        for (int i=0; i<index.length; i++) {
-            index[i] = i;
-        }
-        return index;
-    }
-    
-    /**
-     * Gets an array where array[i] = i.
-     * @param length The length of the array.
-     * @return The new index array.
-     */
-    public static long[] getLongIndexArray(int length) {
-        long[] index = new long[length];
-        for (int i=0; i<index.length; i++) {
-            index[i] = i;
-        }
-        return index;
     }
 
     public static List<File> getMatchingFiles(File file, String regexStr) {
@@ -683,103 +362,12 @@ public class Utilities {
         }
     }
     
-    public static void fill(double[][] array, double value) {
-        for (int i=0; i<array.length; i++) {
-            Arrays.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(double[][][] array, double value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(double[][][][] array, double value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(int[][] array, int value) {
-        for (int i=0; i<array.length; i++) {
-            Arrays.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(int[][][] array, int value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(int[][][][] array, int value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(boolean[][] array, boolean value) {
-        for (int i=0; i<array.length; i++) {
-            Arrays.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(boolean[][][] array, boolean value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-    
-    public static void fill(boolean[][][][] array, boolean value) {
-        for (int i=0; i<array.length; i++) {
-            Utilities.fill(array[i], value);
-        }
-    }
-
     public static void fill(Object[][] array, Object value) {
         for (int i=0; i<array.length; i++) {
             Arrays.fill(array[i], value);
         }
     }
     
-    /**
-     * Faster version of Arrays.fill(). That standard version does NOT use
-     * memset, and only iterates over the array filling each value. This method
-     * works out to be much faster and seems to be using memset as appropriate.
-     */
-    // TODO: Iterating is still the fastest way to fill an array.
-    public static void fill(final double[] array, final double value) {
-        //        final int n = array.length;
-        //        if (n > 0) {
-        //            array[0] = value;
-        //        }
-        //        for (int i = 1; i < n; i += i) {
-        //           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
-        //        }
-        for (int i=0; i<array.length; i++) {
-            array[i] = value;
-        }
-    }
-    
-    /**
-     * Faster version of Arrays.fill(). That standard version does NOT use
-     * memset, and only iterates over the array filling each value. This method
-     * works out to be much faster and seems to be using memset as appropriate.
-     */
-    public static void fill(final boolean[] array, final boolean value) {
-        //        final int n = array.length;
-        //        if (n > 0) {
-        //            array[0] = value;
-        //        }
-        //        for (int i = 1; i < n; i += i) {
-        //           System.arraycopy(array, 0, array, i, ((n - i) < i) ? (n - i) : i);
-        //        }
-        for (int i=0; i<array.length; i++) {
-            array[i] = value;
-        }
-    }
-
     /**
      * Faster version of Arrays.fill(). That standard version does NOT use
      * memset, and only iterates over the array filling each value. This method
@@ -800,19 +388,6 @@ public class Utilities {
 
     public static <T> List<T> getList(T... args) {
         return Arrays.asList(args);
-    }
-
-    public static String toString(double[] array, String formatString) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        for (int i=0; i<array.length; i++) {
-            sb.append(String.format(formatString, array[i]));
-            if (i < array.length -1) {
-                sb.append(", ");
-            }
-        }
-        sb.append("}");
-        return sb.toString();
     }
 
     public static <T> ArrayList<T> copyOf(List<T> list) {

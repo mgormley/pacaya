@@ -4,7 +4,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import edu.jhu.util.math.Vectors;
+
+import edu.jhu.prim.arrays.DoubleArrays;
 
 
 public class DirichletTest {
@@ -15,7 +16,7 @@ public class DirichletTest {
         Dirichlet dir = new Dirichlet(new double[]{0.1, 0.1, 0.1});
         double[] props = dir.draw();
         System.out.println(Arrays.toString(props));
-        Assert.assertEquals(1.0, Vectors.sum(props), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(props), 1e-13);
     }
     
 
@@ -24,7 +25,7 @@ public class DirichletTest {
         Dirichlet dir = new Dirichlet(0.01, 1000);
         double[] props = dir.draw();
         System.out.println(Arrays.toString(props));
-        Assert.assertEquals(1.0, Vectors.sum(props), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(props), 1e-13);
     }
     
 
@@ -33,7 +34,7 @@ public class DirichletTest {
         Dirichlet dir = new Dirichlet(1000, 100);
         double[] props = dir.draw();
         System.out.println(Arrays.toString(props));
-        Assert.assertEquals(1.0, Vectors.sum(props), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(props), 1e-13);
     }
     
 }

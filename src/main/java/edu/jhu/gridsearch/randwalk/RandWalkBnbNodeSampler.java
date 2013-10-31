@@ -9,10 +9,10 @@ import edu.jhu.gridsearch.Relaxation;
 import edu.jhu.gridsearch.Solution;
 import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.math.Vectors;
 
 /**
  * Implementation of the random walk algorithm (Knuth, 1975) for estimating tree
@@ -52,15 +52,15 @@ public class RandWalkBnbNodeSampler extends LazyBranchAndBoundSolver {
         }
 
         public double getMean() {
-            return Vectors.mean(estimates.toNativeArray());
+            return DoubleArrays.mean(estimates.toNativeArray());
         }
         
         public double getVariance() {
-            return Vectors.variance(estimates.toNativeArray());
+            return DoubleArrays.variance(estimates.toNativeArray());
         }
         
         public double getStdDev() {
-            return Vectors.stdDev(estimates.toNativeArray());
+            return DoubleArrays.stdDev(estimates.toNativeArray());
         }
         
         public int getNumSamples() {

@@ -7,11 +7,11 @@ import java.util.Arrays;
 import org.junit.Test;
 
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
-import edu.jhu.util.math.Vectors;
 
 public class ProjectiveDependencyParserTest {
     
@@ -161,8 +161,8 @@ public class ProjectiveDependencyParserTest {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
         
-        Vectors.log(root);
-        Vectors.log(child);
+        DoubleArrays.log(root);
+        DoubleArrays.log(child);
         
         DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root,  child);
         

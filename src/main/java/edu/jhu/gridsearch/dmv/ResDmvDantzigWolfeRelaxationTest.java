@@ -27,12 +27,13 @@ import edu.jhu.model.dmv.DmvMStep;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.parse.dmv.DmvCkyParserTest;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 import edu.jhu.util.rproj.RDataFrame;
 import edu.jhu.util.rproj.RRow;
 
@@ -85,8 +86,8 @@ public class ResDmvDantzigWolfeRelaxationTest {
         
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
+            DoubleArrays.exp(logProbs[c]);
+            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + DoubleArrays.sum(logProbs[c]));
             for (int m=0; m<logProbs[c].length; m++) {
                 
             }
@@ -105,8 +106,8 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
+            DoubleArrays.exp(logProbs[c]);
+            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + DoubleArrays.sum(logProbs[c]));
             for (int m=0; m<logProbs[c].length; m++) {
                 
             }
@@ -126,8 +127,8 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
+            DoubleArrays.exp(logProbs[c]);
+            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + DoubleArrays.sum(logProbs[c]));
         }
     }
 
@@ -148,9 +149,9 @@ public class ResDmvDantzigWolfeRelaxationTest {
 
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
-            Assert.assertTrue(Utilities.lte(Vectors.sum(logProbs[c]), 1.0, 1e-13));
+            DoubleArrays.exp(logProbs[c]);
+            System.out.println(dw.getIdm().getName(c, 0) + " sum=" + DoubleArrays.sum(logProbs[c]));
+            Assert.assertTrue(Primitives.lte(DoubleArrays.sum(logProbs[c]), 1.0, 1e-13));
         }
     }
     
@@ -207,7 +208,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         System.out.println("Printing probabilities");
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            double[] probs = Vectors.getExp(logProbs[c]);
+            double[] probs = DoubleArrays.getExp(logProbs[c]);
             //System.out.println(dw.getIdm().getName(c, 0) + " sum=" + Vectors.sum(logProbs[c]));
             for (int m=0; m<logProbs[c].length; m++) {
                 System.out.println(dw.getIdm().getName(c, m) + "=" + probs[m]);
@@ -236,7 +237,7 @@ public class ResDmvDantzigWolfeRelaxationTest {
         for (int s = 0; s < sentences.size(); s++) {
             double[] fracRoots = relaxSol.getTreebank().getFracRoots()[s];
             double[][] fracChildren = relaxSol.getTreebank().getFracChildren()[s];
-            double sum = Vectors.sum(fracChildren) + Vectors.sum(fracRoots);
+            double sum = DoubleArrays.sum(fracChildren) + DoubleArrays.sum(fracRoots);
             System.out.println(s + " fracParseSum: " + sum);
             assertEquals(sum, sentences.get(s).size(), 1e-13);
         }
@@ -258,13 +259,13 @@ public class ResDmvDantzigWolfeRelaxationTest {
         double maxSum = 0.0;
         double[][] logProbs = relaxSol.getLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            double sum = Vectors.sum(logProbs[c]);
+            DoubleArrays.exp(logProbs[c]);
+            double sum = DoubleArrays.sum(logProbs[c]);
             if (sum > maxSum) {
                 maxSum = sum;
             }
         }
-        Assert.assertTrue(Utilities.lte(maxSum, 1.0, 1e-13));
+        Assert.assertTrue(Primitives.lte(maxSum, 1.0, 1e-13));
     }
     
     @Test

@@ -9,8 +9,8 @@ import edu.jhu.gridsearch.RelaxedSolution;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.prim.Primitives;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 
 /**
  * The LP solution guided rule of Martin (1998) to order the children
@@ -53,8 +53,8 @@ public class RelaxSolChildOrderer implements ChildOrderer {
         assert type == Type.PARAM || type == Type.COUNT;
         
         if (!parent.getStatus().hasSolution() ||
-                (type == Type.PARAM && Utilities.equals(parent.getLogProbs()[c][m], root.getLogProbs()[c][m], equalityTolerance)) ||
-                (type == Type.COUNT && Utilities.equals(parent.getFeatCounts()[c][m], root.getFeatCounts()[c][m], equalityTolerance))) {
+                (type == Type.PARAM && Primitives.equals(parent.getLogProbs()[c][m], root.getLogProbs()[c][m], equalityTolerance)) ||
+                (type == Type.COUNT && Primitives.equals(parent.getFeatCounts()[c][m], root.getFeatCounts()[c][m], equalityTolerance))) {
             // Break ties randomly.
             if (Prng.nextBoolean()) {
                 order.add(c1);

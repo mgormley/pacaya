@@ -20,6 +20,7 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.parse.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
@@ -187,7 +188,7 @@ public class ViterbiEmDmvProjector implements DmvProjector {
         // Compute the score for the solution
         double score = relax.computeTrueObjective(logProbs, treebank);
         log.debug("Computed true objective: " + score);
-        assert Utilities.equals(score, trainer.getLogLikelihood(), 1e-5) : "difference = " + (score - trainer.getLogLikelihood());
+        assert Primitives.equals(score, trainer.getLogLikelihood(), 1e-5) : "difference = " + (score - trainer.getLogLikelihood());
                 
         // We let the DmvProblemNode compute the score
         DmvSolution sol = new DmvSolution(logProbs, idm, treebank, score);

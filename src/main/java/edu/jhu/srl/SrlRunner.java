@@ -217,7 +217,8 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            Utilities.useLogAddTable = true;
+            //TODO: Utilities.useLogAddTable = true;
+            throw new RuntimeException();
         }
         
         // Get a model.

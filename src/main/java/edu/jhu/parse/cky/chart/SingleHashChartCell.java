@@ -4,9 +4,9 @@ import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 
 /**
  * Cell that stores every entry in a single hash table.
@@ -67,7 +67,7 @@ public class SingleHashChartCell implements ChartCell {
             
             // Compare sentenceProb and prob. If they are equal break the tie by 
             // comparing the jitter.
-            int diff = Utilities.compare(score, entry.maxScore, PROB_EQUALS_TOLERANCE);
+            int diff = Primitives.compare(score, entry.maxScore, PROB_EQUALS_TOLERANCE);
             if (diff == 0) {
                 // Create the jitter for the current contender. 
                 jit = Prng.nextDouble();

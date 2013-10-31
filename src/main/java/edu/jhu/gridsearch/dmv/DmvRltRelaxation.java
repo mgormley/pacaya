@@ -44,16 +44,16 @@ import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.relax.DmvParseLpBuilder;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvTreeProgram;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
 import edu.jhu.util.Triple;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexPrm;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.math.Vectors;
 
 public class DmvRltRelaxation implements DmvRelaxation {
 
@@ -447,7 +447,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
                 log.trace("Simplex solution value: " + lowerBound);
                 double prevLowerBound = cutIterLowerBounds.size() > 0 ? cutIterLowerBounds.get(cutIterLowerBounds.size() - 1)
                         : INTERNAL_WORST_SCORE;
-                if (!Utilities.lte(prevLowerBound, lowerBound, prm.OBJ_VAL_DECREASE_TOLERANCE)) {
+                if (!Primitives.lte(prevLowerBound, lowerBound, prm.OBJ_VAL_DECREASE_TOLERANCE)) {
                     Status prevStatus = cutIterStatuses.size() > 0 ? cutIterStatuses.get(cutIterLowerBounds.size() - 1)
                             : Status.Unknown;
                     log.warn(String.format("Lower bound should monotonically increase: prev=%f cur=%f. prevStatus=%s curStatus=%s.", prevLowerBound, lowerBound, prevStatus, cplex.getStatus()));
@@ -503,7 +503,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
         
         // The lower bound should be strictly increasing, because we add cuts. We still
         // keep track of the lower bounds in case we terminate early.
-        double lowerBound = Vectors.max(cutIterLowerBounds.toNativeArray());
+        double lowerBound = DoubleArrays.max(cutIterLowerBounds.toNativeArray());
         
         log.debug("Number of cut rounds: " + cut);
         log.debug("Final lower bound: " + lowerBound);
@@ -536,7 +536,7 @@ public class DmvRltRelaxation implements DmvRelaxation {
             // Binding constraints have a slack of zero.
             double[] slacks = cplex.getSlacks(mp.origMatrix);
             for (int i=0; i<slacks.length; i++) {
-                if (Utilities.equals(slacks[i], 0.0, 1e-8)) {
+                if (Primitives.equals(slacks[i], 0.0, 1e-8)) {
                     // This is a binding constraint.
                     rows.add(i);
                 }
@@ -582,8 +582,8 @@ public class DmvRltRelaxation implements DmvRelaxation {
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
         
-        return new DmvRelaxedSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
-                .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
+        return new DmvRelaxedSolution(DoubleArrays.copyOf(optimalLogProbs), treebank, objective, status, DoubleArrays
+                .copyOf(optimalFeatCounts), DoubleArrays.copyOf(objVals), trueRelaxObj);
     }
 
     // Copied from DmvDantzigWolfeRelaxation.

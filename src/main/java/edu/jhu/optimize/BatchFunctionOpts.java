@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.util.math.Vectors;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 public class BatchFunctionOpts {
 
@@ -37,7 +37,7 @@ public class BatchFunctionOpts {
         @Override
         public void getGradient(int[] batch, double[] gradient) {
             function.getGradient(batch, gradient);
-            Vectors.scale(gradient, multiplier);
+            DoubleArrays.scale(gradient, multiplier);
         }
     
         @Override
@@ -92,7 +92,7 @@ public class BatchFunctionOpts {
             double[] g = new double[getNumDimensions()];
             for (BatchFunction f : functions) {
                 f.getGradient(batch, g);
-                Vectors.add(gradient, g);
+                DoubleArrays.add(gradient, g);
             }
         }
     

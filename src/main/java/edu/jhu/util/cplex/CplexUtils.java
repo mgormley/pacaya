@@ -13,10 +13,10 @@ import java.util.Arrays;
 import org.junit.Assert;
 
 import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.prim.vector.IntDoubleSortedVector;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 public class CplexUtils {
 
@@ -236,8 +236,8 @@ public class CplexUtils {
             IntDoubleSortedVector row = new IntDoubleSortedVector(ind[m], val[m]);
             // System.out.println(row + "\n" + expectedRow + "\n" +
             // row.equals(expectedRow, 1e-13));
-            if (row.eq(expectedRow, delta) && Utilities.equals(lb, lbs[m], delta)
-                    && Utilities.equals(ub, ubs[m], delta)) {
+            if (row.eq(expectedRow, delta) && Primitives.equals(lb, lbs[m], delta)
+                    && Primitives.equals(ub, ubs[m], delta)) {
                 return;
             }
         }
@@ -249,7 +249,7 @@ public class CplexUtils {
      */
     public static double getUpperBound(IloNumVar var1, IloNumVar var2) throws IloException {
         double[] prods = getProductsOfBounds(var1, var2);
-        double max = Vectors.max(prods);
+        double max = DoubleArrays.max(prods);
         assert (CPLEX_NEG_INF_CUTOFF < max);
         if (isInfinite(max)) {
             return CplexUtils.CPLEX_POS_INF;
@@ -263,7 +263,7 @@ public class CplexUtils {
      */
     public static double getLowerBound(IloNumVar var1, IloNumVar var2) throws IloException {
         double[] prods = getProductsOfBounds(var1, var2);
-        double min = Vectors.min(prods);
+        double min = DoubleArrays.min(prods);
         assert (min < CPLEX_POS_INF_CUTOFF);
         if (isInfinite(min)) {
             return CplexUtils.CPLEX_NEG_INF;
@@ -315,7 +315,7 @@ public class CplexUtils {
 
         double dualObjVal = 0.0;
         for (int i = 0; i < duals.length; i++) {
-            if (Utilities.equals(lb[i], ub[i], 1e-13) && !isInfinite(lb[i])) {
+            if (Primitives.equals(lb[i], ub[i], 1e-13) && !isInfinite(lb[i])) {
                 dualObjVal += duals[i] * lb[i];
             } else {
                 if (!isInfinite(lb[i]) && conBasis[i] == BasisStatus.AtLower) {
@@ -338,9 +338,9 @@ public class CplexUtils {
         for (int i = 0; i < redCosts.length; i++) {
             double varLb = numVars[i].getLB();
             double varUb = numVars[i].getUB();
-            if (varBasis[i] == BasisStatus.AtLower && !Utilities.equals(varLb, 0.0, 1e-13) && !isInfinite(varLb)) {
+            if (varBasis[i] == BasisStatus.AtLower && !Primitives.equals(varLb, 0.0, 1e-13) && !isInfinite(varLb)) {
                 dualObjVal += redCosts[i] * varLb;
-            } else if (varBasis[i] == BasisStatus.AtUpper && !Utilities.equals(varUb, 0.0, 1e-13) && !isInfinite(varUb)) {
+            } else if (varBasis[i] == BasisStatus.AtUpper && !Primitives.equals(varUb, 0.0, 1e-13) && !isInfinite(varUb)) {
                 dualObjVal += redCosts[i] * varUb;
             } else if (varBasis[i] == BasisStatus.AtLower || varBasis[i] == BasisStatus.AtUpper) {
                 if (!isInfinite(varLb) && isInfinite(varUb)) {

@@ -8,8 +8,8 @@ import org.junit.Test;
 import edu.jhu.optimize.GradientDescentTest.SumSquares;
 import edu.jhu.optimize.GradientDescentTest.XSquared;
 import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.math.Vectors;
 
 public class AdaDeltaTest {
 
@@ -53,7 +53,7 @@ public class AdaDeltaTest {
         double[] offsets = new double[] { 3, -5, 11};
         opt.maximize(negate(bf(new SumSquares(offsets))), initial);
         double[] max = initial;
-        Vectors.scale(offsets, -1.0);
+        DoubleArrays.scale(offsets, -1.0);
         JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
     }
     

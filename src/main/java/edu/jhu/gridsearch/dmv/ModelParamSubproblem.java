@@ -19,10 +19,10 @@ import com.joptimizer.optimizers.PrimalDualMethod;
 
 import edu.jhu.gridsearch.cpt.CptBounds;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.sort.IntDoubleSort;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 public class ModelParamSubproblem {
     
@@ -50,7 +50,7 @@ public class ModelParamSubproblem {
         double[][] logProbs = new double[numConds][];
         for (int c = 0; c < numConds; c++) {
             logProbs[c] = solveModelParamSubproblemJOptimizeProb(weights[c], bounds, c);
-            cost += Vectors.dotProduct(logProbs[c], weights[c]);
+            cost += DoubleArrays.dotProduct(logProbs[c], weights[c]);
         }
         return new Pair<double[][], Double>(logProbs, cost);
     }
@@ -127,7 +127,7 @@ public class ModelParamSubproblem {
         for (int m=0; m<numParams; m++) {
             initProbs[m] = Utilities.exp(bounds.getLb(Type.PARAM, c, m));
         }
-        double remaining = 1.0 - Vectors.sum(initProbs);
+        double remaining = 1.0 - DoubleArrays.sum(initProbs);
         for (int m=0; m<numParams; m++) {
             double diff = Math.min(remaining, Utilities.exp(bounds.getUb(Type.PARAM, c, m)) - initProbs[m]);
             initProbs[m] += diff;
@@ -186,7 +186,7 @@ public class ModelParamSubproblem {
         double[][] logProbs = new double[numConds][];
         for (int c = 0; c < numConds; c++) {
             logProbs[c] = solveModelParamSubproblemJOptimizeLogProb(weights[c], bounds, c);
-            cost += Vectors.dotProduct(logProbs[c], weights[c]);
+            cost += DoubleArrays.dotProduct(logProbs[c], weights[c]);
         }
         return new Pair<double[][], Double>(logProbs, cost);
     }
@@ -278,7 +278,7 @@ public class ModelParamSubproblem {
             response = opt.optimize();
         } catch (Exception e) {
             if (e.getMessage().contains("initial")) {
-                log.error(String.format("sum(initLogProbs) = %e", Vectors.sum(initLogProbs)));
+                log.error(String.format("sum(initLogProbs) = %e", DoubleArrays.sum(initLogProbs)));
             }
             throw new RuntimeException(e);
         }
@@ -324,7 +324,7 @@ public class ModelParamSubproblem {
             // parameter up (making their product smaller) to its upper bound or
             // to the amount of mass
             // remaining.
-            double[] ws = Utilities.copyOf(weights[c]);
+            double[] ws = DoubleArrays.copyOf(weights[c]);
             int[] indices = IntDoubleSort.getIntIndexArray(ws);
             IntDoubleSort.sortValuesAsc(ws, indices);
             for (int i = 0; i < indices.length && massRemaining > 0; i++) {
@@ -340,7 +340,7 @@ public class ModelParamSubproblem {
 
             assert !(massRemaining < MIN_MASS_REMAINING) : "massRemaining=" + massRemaining;
 
-            cost += Vectors.dotProduct(logProbs[c], weights[c]);
+            cost += DoubleArrays.dotProduct(logProbs[c], weights[c]);
         }
         return new Pair<double[][], Double>(logProbs, cost);
     }
@@ -348,7 +348,7 @@ public class ModelParamSubproblem {
     public static double getReducedCost(double[][] weights, double[][] logProbs) {
         double cost = 0.0;
         for (int c = 0; c < logProbs[c].length; c++) {
-            cost += Vectors.dotProduct(logProbs[c], weights[c]);
+            cost += DoubleArrays.dotProduct(logProbs[c], weights[c]);
         }
         return cost;
     }

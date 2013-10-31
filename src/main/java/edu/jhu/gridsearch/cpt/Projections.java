@@ -14,9 +14,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
-import edu.jhu.util.math.Vectors;
 
 public class Projections {
 
@@ -52,7 +52,7 @@ public class Projections {
     public double[] getDefaultProjection(CptBounds logBounds, int c, double[] params) throws IloException {
         if (prm.lambdaSmoothing != 0) {
             params = Arrays.copyOf(params, params.length);
-            Vectors.add(params, prm.lambdaSmoothing);
+            DoubleArrays.add(params, prm.lambdaSmoothing);
         }
         if (prm.type == ProjectionType.BOUNDED_MIN_EUCLIDEAN) {
             return getBoundedProjection(logBounds, c, params);

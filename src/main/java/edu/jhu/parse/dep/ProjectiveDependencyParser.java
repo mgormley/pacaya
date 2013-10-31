@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.Utilities;
 
 /**
@@ -42,7 +44,7 @@ public class ProjectiveDependencyParser {
             super(n, type);
             wallScore = new double[n];
             // Initialize chart to negative infinities.
-            Utilities.fill(wallScore, Double.NEGATIVE_INFINITY);
+            DoubleArrays.fill(wallScore, Double.NEGATIVE_INFINITY);
             goalScore = Double.NEGATIVE_INFINITY;
             // Fill backpointers with -1.
             goalBp = -1;
@@ -98,10 +100,10 @@ public class ProjectiveDependencyParser {
             bps = new int[n][n][2][2];
             
             // Initialize chart to negative infinities.
-            Utilities.fill(scores, Double.NEGATIVE_INFINITY);
+            DoubleArrays.fill(scores, Double.NEGATIVE_INFINITY);
             
             // Fill backpointers with -1.
-            Utilities.fill(bps, -1);            
+            IntArrays.fill(bps, -1);            
         }
         
         // TODO: Consider using this method and making chart/bps private.

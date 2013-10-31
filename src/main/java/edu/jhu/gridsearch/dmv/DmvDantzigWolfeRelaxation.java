@@ -36,12 +36,12 @@ import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexPrm;
 
 public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements DmvRelaxation {
@@ -165,8 +165,8 @@ public class DmvDantzigWolfeRelaxation extends DantzigWolfeRelaxation implements
         // Print out proportion of fractional edges
         log.info("Proportion of fractional arcs: " + treebank.getPropFracArcs());
 
-        return new DmvRelaxedSolution(Utilities.copyOf(optimalLogProbs), treebank, objective, status, Utilities
-                .copyOf(optimalFeatCounts), Utilities.copyOf(objVals), trueRelaxObj);
+        return new DmvRelaxedSolution(DoubleArrays.copyOf(optimalLogProbs), treebank, objective, status, DoubleArrays
+                .copyOf(optimalFeatCounts), DoubleArrays.copyOf(objVals), trueRelaxObj);
     }
 
     protected double[][] extractRelaxedLogProbs() throws UnknownObjectException, IloException {
