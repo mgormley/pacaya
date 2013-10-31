@@ -16,8 +16,13 @@ import java.util.regex.Pattern;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.prim.sort.IntSort;
+import edu.jhu.util.cli.Opt;
+import edu.jhu.util.math.LogAddTable;
 
 public class Utilities {
+
+    @Opt(hasArg = true, description = "Whether to use a log-add table or log-add exact.")
+    public static boolean useLogAddTable = false;
     
     private Utilities() {
         // private constructor
@@ -203,7 +208,11 @@ public class Utilities {
      * @return log(p + q) = log(exp(x) + exp(y))
      */
     public static double logAdd(double x, double y) {
+        if (useLogAddTable) {
+            return LogAddTable.logAdd(x,y);
+        } else {
             return logAddExact(x,y);
+        }
     }
     
     /**
@@ -216,7 +225,11 @@ public class Utilities {
      * @throws IllegalStateException if x < y
      */
     public static double logSubtract(double x, double y) {
+        if (useLogAddTable) {
+            return LogAddTable.logSubtract(x,y);
+        } else {
             return logSubtractExact(x,y);
+        }
     }
     
     public static double logAddExact(double x, double y) {
