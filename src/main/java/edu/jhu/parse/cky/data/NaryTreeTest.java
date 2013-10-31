@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky;
+package edu.jhu.parse.cky.data;
 
 import static org.junit.Assert.assertEquals;
 
@@ -10,20 +10,20 @@ import org.junit.Test;
 import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
-public class BinaryTreeTest {
+public class NaryTreeTest {
 
     @Test
-    public void testGetFromPennTreebankString() throws IOException {
+    public void testGetAsPennTreebankString2() throws IOException {
         String origTreeStr = "" +
-                "((VP (VP1 (VB join)\n" +
-                           "(NP (DT the) (NN board) ))\n" +
-                      "(VP2 (PP-CLR (IN as)\n" + 
-                                   "(NP (DT a) (NN director) ))\n" +
-                            "(NP-TMP (NNP Nov.) (CD 29) ))))\n";
+                "((S (VP (VB join)\n" +
+                    "(NP (DT the) (NN board) )\n" +
+                    "(PP-CLR (IN as)\n" + 
+                      "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
+                    "(NP-TMP (NNP Nov.) (CD 29) )) ))\n";
         
         StringReader reader = new StringReader(origTreeStr);
         Alphabet<Label> alphabet = new Alphabet<Label>();
-        BinaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader).leftBinarize(alphabet);
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
         System.out.println(alphabet);
@@ -35,7 +35,52 @@ public class BinaryTreeTest {
     }
 
     @Test
-    public void testCollapseToNaryTree() throws IOException {
+    public void testGetFromPennTreebankString() throws IOException {
+        String origTreeStr = "" +
+                "((VP (VB join)\n" +
+                    "(NP (DT the) (NN board) )\n" +
+                    "(PP-CLR (IN as)\n" + 
+                      "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
+                    "(NP-TMP (NNP Nov.) (CD 29) )))\n";
+        
+        StringReader reader = new StringReader(origTreeStr);
+        Alphabet<Label> alphabet = new Alphabet<Label>();
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
+        String newTreeStr = tree.getAsPennTreebankString();
+        
+        System.out.println(alphabet);
+        System.out.println(newTreeStr);
+        newTreeStr = canonicalizeTreeString(newTreeStr);
+        origTreeStr = canonicalizeTreeString(origTreeStr);
+
+        assertEquals(origTreeStr, newTreeStr);
+    }
+
+    @Test
+    public void testUpdateStartEnd() throws IOException {
+        String origTreeStr = "" +
+                "((VP (VB join)\n" +
+                    "(NP (DT the) (NN board) )\n" +
+                    "(PP-CLR (IN as)\n" + 
+                      "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
+                    "(NP-TMP (NNP Nov.) (CD 29) )))\n";
+        
+        StringReader reader = new StringReader(origTreeStr);
+        Alphabet<Label> alphabet = new Alphabet<Label>();
+        NaryTree tree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
+        String newTreeStr = tree.getAsPennTreebankString();
+        
+        System.out.println(newTreeStr);
+        tree.updateStartEnd();
+        assertEquals(0, tree.getStart());
+        assertEquals(9, tree.getEnd());
+        assertEquals(3, tree.getChildren().get(2).getStart());
+        assertEquals(7, tree.getChildren().get(2).getEnd());
+    }
+    
+
+    @Test
+    public void testBinarize() throws IOException {
         String origBinaryTreeStr = "" + 
                 "((VP (@VP (@VP (VB join)\n" +
                                    "(NP (DT the)\n" +
@@ -53,7 +98,6 @@ public class BinaryTreeTest {
                       "(NP (DT a) (JJ nonexecutive) (NN director) ))\n" +
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
-        // First just build (and check) the binary tree.
         StringReader reader = new StringReader(origNaryTreeStr);
         Alphabet<Label> alphabet = new Alphabet<Label>();
         NaryTree naryTree = NaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
@@ -67,20 +111,7 @@ public class BinaryTreeTest {
         System.out.println(newBinaryTreeStr);
         newBinaryTreeStr = canonicalizeTreeString(newBinaryTreeStr);
         origBinaryTreeStr = canonicalizeTreeString(origBinaryTreeStr);
-        assertEquals(origBinaryTreeStr, newBinaryTreeStr);
-        
-        // Now do the actual collapsing.
-        naryTree = binaryTree.collapseToNary(alphabet);
-
-        String newNaryTreeStr = naryTree.getAsPennTreebankString();
-
-        // Test the collapsed tree.
-        System.out.println(alphabet);
-        System.out.println(newNaryTreeStr);
-        newNaryTreeStr = canonicalizeTreeString(newNaryTreeStr);
-        origNaryTreeStr = canonicalizeTreeString(origNaryTreeStr);
-        assertEquals(origNaryTreeStr, newNaryTreeStr);
-        
+        assertEquals(origBinaryTreeStr, newBinaryTreeStr);        
     }
     
     private static String canonicalizeTreeString(String newTreeStr) {

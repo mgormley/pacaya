@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.parse.cky.BinaryTree;
-import edu.jhu.parse.cky.NaryTree;
+import edu.jhu.parse.cky.data.BinaryTree;
+import edu.jhu.parse.cky.data.NaryTree;
 
 /**
  * Representation of a single sentence with many annotations.

@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky;
+package edu.jhu.parse.cky.data;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -9,6 +9,7 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
+import edu.jhu.parse.cky.GrammarConstants;
 import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.files.Files;

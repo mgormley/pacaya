@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky;
+package edu.jhu.parse.cky.data;
 
 import java.io.BufferedWriter;
 import java.io.File;
