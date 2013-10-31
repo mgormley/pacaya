@@ -1,9 +1,9 @@
 package edu.jhu.util.dist;
 
+import java.util.Arrays;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 

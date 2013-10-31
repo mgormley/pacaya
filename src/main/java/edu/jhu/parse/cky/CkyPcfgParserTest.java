@@ -1,7 +1,6 @@
 package edu.jhu.parse.cky;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;

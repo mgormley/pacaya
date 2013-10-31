@@ -17,8 +17,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.ilp.ZimplRunner;
 import edu.jhu.ilp.decomp.BlockFileWriter;
-import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.IlpDepParser;
+import edu.jhu.parse.IlpFormulation;
 import edu.jhu.util.collections.Maps;
 import edu.jhu.util.files.Files;
 

@@ -1,9 +1,9 @@
 package edu.jhu.gm.feat;
 
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.Var.VarType;
 
 /**
  * For testing only.

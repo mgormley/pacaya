@@ -2,12 +2,12 @@ package edu.jhu.gridsearch.randwalk;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.LazyBranchAndBoundSolver;
 import edu.jhu.gridsearch.ProblemNode;
 import edu.jhu.gridsearch.Projector;
 import edu.jhu.gridsearch.Relaxation;
 import edu.jhu.gridsearch.Solution;
-import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;

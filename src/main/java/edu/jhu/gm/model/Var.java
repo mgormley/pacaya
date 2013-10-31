@@ -3,7 +3,6 @@ package edu.jhu.gm.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.jhu.util.collections.Lists;
 

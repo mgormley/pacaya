@@ -14,9 +14,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.train.CrfTrainerTest;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
-import edu.jhu.util.Alphabet;
 
 public class MbrDecoderTest {
 

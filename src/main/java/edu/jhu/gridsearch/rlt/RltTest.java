@@ -1,9 +1,6 @@
 package edu.jhu.gridsearch.rlt;
 
 import static org.junit.Assert.assertEquals;
-import edu.jhu.prim.Primitives;
-import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.prim.tuple.Pair;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloNumVar;
@@ -14,7 +11,6 @@ import ilog.cplex.IloCplex.UnknownObjectException;
 
 import java.io.File;
 import java.util.Arrays;
-
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -27,6 +23,9 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.rlt.Rlt.RltPrm;
 import edu.jhu.gridsearch.rlt.filter.MaxNumRltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.VarRltRowAdder;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class RltTest {

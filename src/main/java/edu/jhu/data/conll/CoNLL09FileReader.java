@@ -3,7 +3,6 @@ package edu.jhu.data.conll;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,10 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
  * Reads a single file in CoNLL-2009 format.

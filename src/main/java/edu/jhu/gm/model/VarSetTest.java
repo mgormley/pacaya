@@ -3,11 +3,10 @@ package edu.jhu.gm.model;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Arrays;
 
 import edu.jhu.gm.model.Var.VarType;
 

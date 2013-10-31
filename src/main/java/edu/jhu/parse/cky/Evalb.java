@@ -1,7 +1,6 @@
 package edu.jhu.parse.cky;
 
 import java.io.File;
-import java.util.List;
 
 import edu.jhu.util.files.Files;
 import edu.jhu.util.sys.System;

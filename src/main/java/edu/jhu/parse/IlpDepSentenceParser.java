@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-import edu.jhu.util.Timer;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
@@ -15,7 +14,7 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.util.Timer;
 import edu.jhu.util.files.Files;
 
 /**

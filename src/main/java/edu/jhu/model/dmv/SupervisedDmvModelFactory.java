@@ -3,9 +3,9 @@
  */
 package edu.jhu.model.dmv;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
 
 public class SupervisedDmvModelFactory extends AbstractDmvModelFactory implements DmvModelFactory {
     

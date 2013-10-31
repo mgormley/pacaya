@@ -3,7 +3,6 @@ package edu.jhu.util.cli;
 import java.io.File;
 
 import org.apache.commons.cli.ParseException;
-
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

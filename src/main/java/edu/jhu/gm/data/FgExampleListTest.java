@@ -1,6 +1,6 @@
 package edu.jhu.gm.data;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -9,7 +9,6 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.train.CrfTrainerTest;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 
 public class FgExampleListTest {

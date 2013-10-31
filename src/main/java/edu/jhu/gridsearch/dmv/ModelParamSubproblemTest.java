@@ -2,14 +2,12 @@ package edu.jhu.gridsearch.dmv;
 
 import junit.framework.Assert;
 
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.gridsearch.cpt.CptBounds;
-import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Prng;

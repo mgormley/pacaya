@@ -2,10 +2,10 @@ package edu.jhu.gridsearch.dmv;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.Label;
 import edu.jhu.data.Tag;
 import edu.jhu.data.WallDepTreeNode;
+import edu.jhu.util.Alphabet;
 
 public class ShinyEdges {
     

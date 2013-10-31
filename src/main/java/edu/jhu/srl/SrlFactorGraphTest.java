@@ -13,10 +13,10 @@ import java.util.Map;
 import org.junit.Test;
 
 import edu.jhu.gm.model.Factor;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;

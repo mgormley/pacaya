@@ -6,16 +6,16 @@ import java.util.List;
 import java.util.Map;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.Var.VarType;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.

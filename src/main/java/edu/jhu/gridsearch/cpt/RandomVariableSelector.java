@@ -1,14 +1,12 @@
 package edu.jhu.gridsearch.cpt;
 
-import java.util.Arrays;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel.CM;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;

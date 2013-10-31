@@ -3,7 +3,6 @@ package edu.jhu.gridsearch.rlt.filter;
 import ilog.concert.IloException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;

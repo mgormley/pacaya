@@ -10,12 +10,12 @@ import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FactorGraph.FgEdge;
+import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.util.Timer;
 
 /**

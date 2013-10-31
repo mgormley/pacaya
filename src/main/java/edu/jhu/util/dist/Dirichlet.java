@@ -3,9 +3,7 @@ package edu.jhu.util.dist;
 import java.util.Arrays;
 
 import cern.jet.random.Gamma;
-
 import edu.jhu.prim.arrays.Multinomials;
-import edu.jhu.util.Prng;
 
 public class Dirichlet {
 

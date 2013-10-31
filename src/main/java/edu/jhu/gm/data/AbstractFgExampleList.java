@@ -1,8 +1,6 @@
 package edu.jhu.gm.data;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import edu.jhu.gm.feat.FeatureTemplateList;

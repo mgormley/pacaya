@@ -16,12 +16,10 @@
  */
 package cc.mallet.optimize;
 
-import java.util.logging.*;
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import cc.mallet.optimize.BackTrackLineSearch;
-import cc.mallet.optimize.LineOptimizer;
-import cc.mallet.optimize.Optimizable;
 import cc.mallet.types.MatrixOps;
 import cc.mallet.util.MalletLogger;
 

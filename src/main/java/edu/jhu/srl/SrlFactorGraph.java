@@ -11,10 +11,10 @@ import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 
 /**
  * A factor graph for SRL.

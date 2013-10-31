@@ -18,8 +18,6 @@ import edu.jhu.model.dmv.CopyingDmvModelFactory;
 import edu.jhu.model.dmv.DmvMStep;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.parse.DepParser;
-import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;

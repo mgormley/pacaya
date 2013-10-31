@@ -5,7 +5,6 @@ import ilog.concert.IloException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.prim.sample.PairSampler;

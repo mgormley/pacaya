@@ -1,7 +1,5 @@
 package edu.jhu.gridsearch.cpt;
 
-import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.list.IntArrayList;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 import ilog.concert.IloLinearNumExpr;
@@ -16,6 +14,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Sets;
 

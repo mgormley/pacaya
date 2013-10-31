@@ -1,6 +1,5 @@
 package edu.jhu.gridsearch;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 

@@ -1,6 +1,6 @@
 package edu.jhu.gm.train;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 
@@ -24,15 +24,15 @@ import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
+import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.ProjDepTreeFactor;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.train.CrfObjectiveTest.LogLinearEDs;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.prim.arrays.DoubleArrays;

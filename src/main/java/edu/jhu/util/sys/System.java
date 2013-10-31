@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-import org.apache.commons.cli.CommandLine;
-
 import edu.jhu.util.files.Files;
 
 public class System {

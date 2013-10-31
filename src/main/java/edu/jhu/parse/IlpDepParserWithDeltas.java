@@ -18,7 +18,6 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.IdentityDeltaGenerator.Delta;
-import edu.jhu.prim.tuple.Quadruple;
 import edu.jhu.util.collections.Maps;
 import edu.jhu.util.math.FastMath;
 

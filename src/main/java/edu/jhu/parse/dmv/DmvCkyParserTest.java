@@ -5,6 +5,7 @@ import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_B;
 import static edu.jhu.parse.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,6 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
@@ -31,7 +31,6 @@ import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
 import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;

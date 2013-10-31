@@ -7,10 +7,10 @@ import org.junit.Test;
 
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 
 public class BfsBpScheduleTest {
 

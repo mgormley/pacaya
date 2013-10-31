@@ -5,9 +5,9 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.optimize.GradientDescentTest.SumSquares;
 import edu.jhu.optimize.GradientDescentTest.XSquared;
-import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 

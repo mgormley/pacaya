@@ -1,9 +1,5 @@
 package edu.jhu.gridsearch;
 
-import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.list.DoubleArrayList;
-import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.tuple.Triple;
 import ilog.concert.IloException;
 import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
@@ -18,9 +14,13 @@ import java.util.HashSet;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gridsearch.dmv.DmvSolution;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.dmv.DmvSolution;
 import edu.jhu.gridsearch.dmv.WarmStart;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.tuple.Triple;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cplex.CplexPrm;
 

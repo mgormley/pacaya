@@ -1,7 +1,7 @@
 package edu.jhu.train;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
 
 public interface TrainCorpus {
     

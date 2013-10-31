@@ -1,9 +1,9 @@
 package edu.jhu.model.dmv;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
 import edu.jhu.train.TrainCorpus;
+import edu.jhu.util.Alphabet;
 
 public abstract class AbstractDmvModelFactory implements DmvModelFactory {
 

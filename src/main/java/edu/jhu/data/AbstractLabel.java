@@ -1,6 +1,5 @@
 package edu.jhu.data;
 
-import java.io.Serializable;
 
 /** 
  * Implements the hashCode, equals, and compareTo methods based on the getLabel() method.

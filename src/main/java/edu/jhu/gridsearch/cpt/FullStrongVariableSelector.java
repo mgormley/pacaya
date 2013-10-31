@@ -8,8 +8,8 @@ import edu.jhu.gridsearch.ProblemNode;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.gridsearch.dmv.DmvRelaxation;
-import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.DmvRelaxedSolution;
+import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 
 public class FullStrongVariableSelector implements VariableSelector {
 

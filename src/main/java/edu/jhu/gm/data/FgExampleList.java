@@ -1,7 +1,5 @@
 package edu.jhu.gm.data;
 
-import java.util.List;
-
 import edu.jhu.gm.feat.FeatureTemplateList;
 
 

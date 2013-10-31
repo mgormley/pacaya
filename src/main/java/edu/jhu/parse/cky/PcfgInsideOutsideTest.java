@@ -11,8 +11,8 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.data.Tag;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
+import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.math.FastMath;
 

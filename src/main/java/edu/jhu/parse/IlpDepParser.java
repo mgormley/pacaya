@@ -9,7 +9,6 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-import edu.jhu.util.Timer;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
@@ -26,6 +25,7 @@ import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.relax.RelaxedDepParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.util.Timer;
 import edu.jhu.util.files.DelayedDeleter;
 import edu.jhu.util.files.Files;
 import edu.jhu.util.math.FastMath;
