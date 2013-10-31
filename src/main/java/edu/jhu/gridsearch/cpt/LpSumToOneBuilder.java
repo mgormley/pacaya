@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Sets;
+import edu.jhu.util.collections.Sets;
 
 public class LpSumToOneBuilder {
     
