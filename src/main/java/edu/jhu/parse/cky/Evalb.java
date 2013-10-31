@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import edu.jhu.util.Command;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 public class Evalb {
 

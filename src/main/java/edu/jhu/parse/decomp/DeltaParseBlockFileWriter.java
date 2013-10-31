@@ -19,8 +19,8 @@ import edu.jhu.ilp.ZimplRunner;
 import edu.jhu.ilp.decomp.BlockFileWriter;
 import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.IlpDepParser;
-import edu.jhu.util.Files;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.files.Files;
 
 public class DeltaParseBlockFileWriter implements BlockFileWriter {
 

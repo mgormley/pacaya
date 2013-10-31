@@ -7,7 +7,7 @@ import java.io.StringWriter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 public class CoNLLXReadWriteTest {
 

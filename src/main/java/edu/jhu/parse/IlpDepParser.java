@@ -26,9 +26,9 @@ import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.relax.RelaxedDepParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.DelayedDeleter;
-import edu.jhu.util.Files;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.files.DelayedDeleter;
+import edu.jhu.util.files.Files;
 
 public class IlpDepParser implements DepParser, RelaxedDepParser {
 

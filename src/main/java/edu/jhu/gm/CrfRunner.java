@@ -34,11 +34,11 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.files.Files;
 
 /**
  * Runner for the CRF library. This is meant to be used for arbitrary graphical

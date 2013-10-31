@@ -16,7 +16,7 @@ import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 /**
  * TODO: switch this to be a wrapper class for an object implementing the ViterbiParser interface

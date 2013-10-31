@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import edu.jhu.util.Command;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 public class ClGurobiIlpSolver implements IlpSolver {
 

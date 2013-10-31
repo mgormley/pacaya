@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.FileListIterator;
 import edu.jhu.util.Utilities;
+import edu.jhu.util.files.FileListIterator;
 
 /**
  * Reads a file or directory of CoNLL-2009 files.

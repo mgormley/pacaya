@@ -1,4 +1,4 @@
-package edu.jhu.util;
+package edu.jhu.util.files;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,8 +18,12 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import edu.jhu.util.Command;
+
 public class Files {
 
+    private static final int NUM_DIGITS = 3;
+    
     private Files() {
         // private constructor
     }
@@ -74,8 +78,8 @@ public class Files {
      * not create the file. This method is not thread safe.
      */
     private static File getTempPath(String prefix, File parentDir) throws IOException {
-        final int maxI = (int)Math.pow(10, Command.NUM_DIGITS);
-        String formatStr = "%s_%0"+Command.NUM_DIGITS+"d";
+        final int maxI = (int)Math.pow(10, NUM_DIGITS);
+        String formatStr = "%s_%0"+NUM_DIGITS+"d";
         File path;
         int i;
         for (i=0; i<maxI; i++) {

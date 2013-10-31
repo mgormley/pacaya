@@ -19,8 +19,8 @@ import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
+import edu.jhu.util.files.Files;
 
 
 public class InitializedIlpDepParserWithDeltasTest {

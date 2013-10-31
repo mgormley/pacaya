@@ -11,7 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 
 /**

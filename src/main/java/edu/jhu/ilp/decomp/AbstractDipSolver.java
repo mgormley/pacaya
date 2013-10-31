@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.ilp.IlpSolver;
 import edu.jhu.util.Command;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
 
 /**
  * TODO: add handling of initial solution

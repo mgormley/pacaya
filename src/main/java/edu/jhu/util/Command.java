@@ -8,9 +8,9 @@ import java.io.InputStream;
 
 import org.apache.commons.cli.CommandLine;
 
-public class Command {
+import edu.jhu.util.files.Files;
 
-    static final int NUM_DIGITS = 3;
+public class Command {
 
     private Command() {
         // private constructor

@@ -5,7 +5,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import edu.jhu.util.Files;
+
+import edu.jhu.util.files.Files;
 
 public class DummyBlockFileWriter implements BlockFileWriter {
 

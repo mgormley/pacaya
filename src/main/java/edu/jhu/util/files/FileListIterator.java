@@ -1,4 +1,4 @@
-package edu.jhu.util;
+package edu.jhu.util.files;
 
 import java.io.File;
 import java.util.Iterator;
