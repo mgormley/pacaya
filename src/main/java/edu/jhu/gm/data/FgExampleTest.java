@@ -1,7 +1,6 @@
 package edu.jhu.gm.data;
 
 import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
-import static edu.jhu.util.Utilities.getList;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -20,6 +19,7 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.util.collections.Lists;
 
 public class FgExampleTest {
 
@@ -28,9 +28,9 @@ public class FgExampleTest {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
-        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
-        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "subj", "_", false, "_", getList("arg0")));
-        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 2, 2, "v", "_", true, "ate.1", getList("_")));
+        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 2, "det", "_", false, "_", Lists.getList("_")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 2, "subj", "_", false, "_", Lists.getList("arg0")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 2, "v", "_", true, "ate.1", Lists.getList("_")));
         //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         

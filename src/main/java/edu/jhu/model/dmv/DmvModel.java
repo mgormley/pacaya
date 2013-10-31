@@ -16,7 +16,7 @@ import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 import edu.jhu.util.math.LabeledMultinomial;
 
 public class DmvModel implements Model, Serializable {
@@ -308,7 +308,7 @@ public class DmvModel implements Model, Serializable {
     public void logAddConstant(final double logAddend) {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.logAdd(value, logAddend);
+                return FastMath.logAdd(value, logAddend);
             }
         });
     }
@@ -316,7 +316,7 @@ public class DmvModel implements Model, Serializable {
     public void convertRealToLog() {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                double logValue = Utilities.log(value);
+                double logValue = FastMath.log(value);
                 assert !Double.isNaN(logValue) : "value=" + value;
                 return logValue;
             }
@@ -326,7 +326,7 @@ public class DmvModel implements Model, Serializable {
     public void convertLogToReal() {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.exp(value);
+                return FastMath.exp(value);
             }
         });
     }
@@ -414,12 +414,12 @@ public class DmvModel implements Model, Serializable {
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    logSums[p][dir] = Utilities.logAdd(logSums[p][dir], child[c][p][dir]);
+                    logSums[p][dir] = FastMath.logAdd(logSums[p][dir], child[c][p][dir]);
                 }
             }
         }
         // Subtract off the normalizing constants.
-        double uniform = Utilities.log(1.0 / numTags);
+        double uniform = FastMath.log(1.0 / numTags);
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
@@ -463,7 +463,7 @@ public class DmvModel implements Model, Serializable {
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    logSums[p][dir] = Utilities.logAdd(logSums[p][dir], child[c][p][dir]);
+                    logSums[p][dir] = FastMath.logAdd(logSums[p][dir], child[c][p][dir]);
                     assert(!Double.isNaN(logSums[p][dir]));
                 }
             }

@@ -26,9 +26,9 @@ import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.files.Files;
 
 public class RunCkyParser {
     
@@ -237,7 +237,7 @@ public class RunCkyParser {
             Alphabet<Label> ntAlphabet) throws FileNotFoundException,
             IOException {
         NaryTreebank naryTrees = new NaryTreebank();
-        List<File> mrgFiles = Utilities.getMatchingFiles(train, ".*\\.mrg");
+        List<File> mrgFiles = Files.getMatchingFiles(train, ".*\\.mrg");
         for (File mrgFile : mrgFiles) {
             BufferedReader reader = new BufferedReader(new FileReader(mrgFile));
             NaryTreebank tmpTrees = NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader);

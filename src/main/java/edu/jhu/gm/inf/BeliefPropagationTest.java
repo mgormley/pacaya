@@ -16,7 +16,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 
 public class BeliefPropagationTest {
@@ -80,9 +80,9 @@ public class BeliefPropagationTest {
         FactorGraph fg = new FactorGraph();
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Utilities.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Utilities.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
         
         // Emission factors. 
         ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit");; 

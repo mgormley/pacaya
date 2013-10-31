@@ -19,7 +19,8 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.IdentityDeltaGenerator.Delta;
 import edu.jhu.prim.tuple.Quadruple;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Maps;
+import edu.jhu.util.math.FastMath;
 
 public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
 
@@ -74,11 +75,11 @@ public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
         // Root
         for (Label child : dmv.getVocab()) {
-            double origWeight = Utilities.exp(dmv.getRootWeight(child));
+            double origWeight = FastMath.exp(dmv.getRootWeight(child));
             for (Delta delta : deltaGen.getDeltas(origWeight)) {
                 String deltaId = delta.getId();
                 double weight = delta.getWeight();
-                double logWeight = Utilities.logForIlp(weight);
+                double logWeight = FastMath.logForIlp(weight);
                 chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
                         WallDepTreeNode.WALL_LABEL.getLabel(), Lr.RIGHT.toString(), child.getLabel(), deltaId, weight, logWeight);
                 // TODO: Remove this once we've updated the zimpl code never use these weights. This is a dummy weight. 
@@ -90,11 +91,11 @@ public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
         for (Label child : dmv.getVocab()) {
             for (Label parent : dmv.getVocab()) {
                 for (Lr lr : Lr.values()) {
-                    double origWeight = Utilities.exp(dmv.getChildWeight(parent, lr, child));
+                    double origWeight = FastMath.exp(dmv.getChildWeight(parent, lr, child));
                     for (Delta delta : deltaGen.getDeltas(origWeight)) {
                         String deltaId = delta.getId();
                         double weight = delta.getWeight();
-                        double logWeight = Utilities.logForIlp(weight);
+                        double logWeight = FastMath.logForIlp(weight);
                         chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
                                 parent.getLabel(), lr, child.getLabel(), deltaId, weight, logWeight);
                     }
@@ -129,7 +130,7 @@ public class IlpDepParserWithDeltas extends IlpDepParser implements DepParser {
                 String deltaId = splits[splits.length-1];
                 long longVal = Math.round(value);
                 if (longVal == 1) {
-                    Utilities.increment(cwDeltaCounts, deltaId, 1);
+                    Maps.increment(cwDeltaCounts, deltaId, 1);
                 }
             }
         }

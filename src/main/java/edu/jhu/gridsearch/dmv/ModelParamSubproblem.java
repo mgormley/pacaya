@@ -22,7 +22,7 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class ModelParamSubproblem {
     
@@ -67,9 +67,9 @@ public class ModelParamSubproblem {
                     double xm = X.getQuick(m);
                     if (weights[m] > 0.0) {
                         if (xm < 0) {
-                            value += weights[m] * Utilities.log(0.0);
+                            value += weights[m] * FastMath.log(0.0);
                         } else {
-                            value += weights[m] * Utilities.log(xm);
+                            value += weights[m] * FastMath.log(xm);
                         }
                     }
                 }
@@ -110,14 +110,14 @@ public class ModelParamSubproblem {
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = -1;
-            inequalities[m] = new LinearMultivariateRealFunction(F1.make(factors), Utilities.exp(bounds.getLb(Type.PARAM, c, m)) - 1e-13);
+            inequalities[m] = new LinearMultivariateRealFunction(F1.make(factors), FastMath.exp(bounds.getLb(Type.PARAM, c, m)) - 1e-13);
         }
         
         // Upper bounds
         for (int m=0; m<numParams; m++) {
             double[] factors = new double[numParams];
             factors[m] = 1;
-            inequalities[numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), - (Utilities.exp((bounds.getUb(Type.PARAM, c, m)) + 1e-13)));
+            inequalities[numParams+m] = new LinearMultivariateRealFunction(F1.make(factors), - (FastMath.exp((bounds.getUb(Type.PARAM, c, m)) + 1e-13)));
         }
 
         OptimizationRequest or = new OptimizationRequest();
@@ -125,11 +125,11 @@ public class ModelParamSubproblem {
         // TODO: better initialization!!!
         double[] initProbs = new double[numParams];
         for (int m=0; m<numParams; m++) {
-            initProbs[m] = Utilities.exp(bounds.getLb(Type.PARAM, c, m));
+            initProbs[m] = FastMath.exp(bounds.getLb(Type.PARAM, c, m));
         }
         double remaining = 1.0 - DoubleArrays.sum(initProbs);
         for (int m=0; m<numParams; m++) {
-            double diff = Math.min(remaining, Utilities.exp(bounds.getUb(Type.PARAM, c, m)) - initProbs[m]);
+            double diff = Math.min(remaining, FastMath.exp(bounds.getUb(Type.PARAM, c, m)) - initProbs[m]);
             initProbs[m] += diff;
             remaining -= diff;
             if (remaining <= 0) {
@@ -166,7 +166,7 @@ public class ModelParamSubproblem {
             if (solution[m] < 0) {
                 solution[m] = CptBounds.DEFAULT_LOWER_BOUND;
             } else {
-                solution[m] = Math.max(Utilities.log(solution[m]), CptBounds.DEFAULT_LOWER_BOUND);
+                solution[m] = Math.max(FastMath.log(solution[m]), CptBounds.DEFAULT_LOWER_BOUND);
             }
         }
         //Multinomials.normalizeLogProps(solution);
@@ -311,7 +311,7 @@ public class ModelParamSubproblem {
             // Initialize each parameter to its lower bound
             for (int m = 0; m < numParams; m++) {
                 logProbs[c][m] = bounds.getLb(Type.PARAM, c, m);
-                massRemaining -= Utilities.exp(logProbs[c][m]);
+                massRemaining -= FastMath.exp(logProbs[c][m]);
             }
 
             if (massRemaining < MIN_MASS_REMAINING) {
@@ -329,13 +329,13 @@ public class ModelParamSubproblem {
             IntDoubleSort.sortValuesAsc(ws, indices);
             for (int i = 0; i < indices.length && massRemaining > 0; i++) {
                 int m = indices[i];
-                double logMax = Utilities.logAdd(Utilities.log(massRemaining), logProbs[c][m]);
+                double logMax = FastMath.logAdd(FastMath.log(massRemaining), logProbs[c][m]);
                 // double logMax = Utilities.log(massRemaining +
                 // Utilities.exp(logProbs[c][m]));
                 double diff = Math.min(logMax, bounds.getUb(Type.PARAM, c, m)) - logProbs[c][m];
-                massRemaining += Utilities.exp(logProbs[c][m]);
+                massRemaining += FastMath.exp(logProbs[c][m]);
                 logProbs[c][m] += diff;
-                massRemaining -= Utilities.exp(logProbs[c][m]);
+                massRemaining -= FastMath.exp(logProbs[c][m]);
             }
 
             assert !(massRemaining < MIN_MASS_REMAINING) : "massRemaining=" + massRemaining;

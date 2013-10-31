@@ -9,7 +9,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 /**
  * A multivariate Multinomial distribution. 
@@ -93,7 +93,7 @@ public class DenseFactor implements Serializable {
         for (int i=0; i<this.values.length; i++) {
             int j = iter.next();
             if (logDomain) {
-                marg.values[j] = Utilities.logAdd(marg.values[j], this.values[i]);
+                marg.values[j] = FastMath.logAdd(marg.values[j], this.values[i]);
             } else {
                 marg.values[j] += this.values[i];
             }

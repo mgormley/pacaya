@@ -12,13 +12,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import edu.jhu.util.Command;
 
 public class Files {
 
@@ -97,7 +98,7 @@ public class Files {
     }
 
     public static boolean fileContains(File file, String text) {
-        Process proc = Command.runProcess(new String[]{"grep", "-r", text, file.getAbsolutePath()}, null, new File("."));
+        Process proc = edu.jhu.util.sys.System.runProcess(new String[]{"grep", "-r", text, file.getAbsolutePath()}, null, new File("."));
         if (proc.exitValue() == 0) {
             return true;
         } else {
@@ -211,4 +212,26 @@ public class Files {
             throw new RuntimeException(e);
         }
     }
+
+    public static List<File> getMatchingFiles(File file, String regexStr) {
+        Pattern regex = Pattern.compile(regexStr);
+        return getMatchingFiles(file, regex);
+    }
+
+    private static List<File> getMatchingFiles(File file, Pattern regex) {
+        ArrayList<File> files = new ArrayList<File>();
+        if (file.exists()) {
+            if (file.isFile()) {
+                if (regex.matcher(file.getName()).matches()) {
+                    files.add(file);
+                }
+            } else {
+                for (File subFile : file.listFiles()) {
+                    files.addAll(getMatchingFiles(subFile, regex));
+                }
+            }
+        }
+        return files;
+    }
+    
 }

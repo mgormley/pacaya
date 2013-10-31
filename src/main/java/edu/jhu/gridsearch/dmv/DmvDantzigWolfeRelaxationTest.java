@@ -40,7 +40,7 @@ import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 import edu.jhu.util.rproj.RDataFrame;
 import edu.jhu.util.rproj.RRow;
 
@@ -160,8 +160,8 @@ public class DmvDantzigWolfeRelaxationTest {
         
         double newL, newU;
 
-        newL = Utilities.log(0.11);
-        newU = Utilities.log(0.90);
+        newL = FastMath.log(0.11);
+        newU = FastMath.log(0.90);
         
         DmvRelaxedSolution relaxSol;
         

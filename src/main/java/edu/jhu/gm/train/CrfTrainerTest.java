@@ -39,7 +39,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 public class CrfTrainerTest {
 
@@ -209,7 +209,7 @@ public class CrfTrainerTest {
                         f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
                         fg.addFactor(f);
 
-                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Utilities.getList("A1", "A2", "A3"));
+                        childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
                         fg.addFactor(new ExpFamFactor(new VarSet(childRoles[i][j]), SrlFactorTemplate.ROLE_UNARY));
                         
                         //trainConfig.put(childVars[i][j], 0);

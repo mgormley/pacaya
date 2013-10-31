@@ -5,8 +5,8 @@ import ilog.concert.IloException;
 import java.util.Collection;
 
 import edu.jhu.gridsearch.rlt.Rlt;
+import edu.jhu.prim.sample.PairSampler;
 import edu.jhu.prim.tuple.OrderedPair;
-import edu.jhu.prim.tuple.PairSampler;
 import edu.jhu.prim.tuple.UnorderedPair;
 
 /**

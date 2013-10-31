@@ -26,9 +26,9 @@ import edu.jhu.model.dmv.DmvModel.Lr;
 import edu.jhu.parse.relax.RelaxedDepParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.files.DelayedDeleter;
 import edu.jhu.util.files.Files;
+import edu.jhu.util.math.FastMath;
 
 public class IlpDepParser implements DepParser, RelaxedDepParser {
 
@@ -235,8 +235,8 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
                     // We should always stop immediately on the left.
                     weight = adjacent ? 1.0 : 0.0;
                 }
-                double logWeightStop = Utilities.logForIlp(weight);
-                double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
+                double logWeightStop = FastMath.logForIlp(weight);
+                double logWeightNotStop = FastMath.logForIlp(1.0 - weight);
                 stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", WallDepTreeNode.WALL_LABEL.getLabel(), leftRight, adja, weight, logWeightStop, logWeightNotStop);
             }
         }
@@ -245,9 +245,9 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
             for (Lr lr : Lr.values()) {
                 for (boolean adjacent : DmvModel.ADJACENTS) {
                     String leftRight = lr.toString();
-                    double weight = Utilities.exp(dmv.getStopWeight(parent, lr, adjacent));
-                    double logWeightStop = Utilities.logForIlp(weight);
-                    double logWeightNotStop = Utilities.logForIlp(1.0 - weight);
+                    double weight = FastMath.exp(dmv.getStopWeight(parent, lr, adjacent));
+                    double logWeightStop = FastMath.logForIlp(weight);
+                    double logWeightNotStop = FastMath.logForIlp(1.0 - weight);
                     // TODO: This integer encoding of adjacency is the reverse from DmvModel.END and DmvModel.CONT.
                     int adja = adjacent ? 1 : 0;
                     stopWeightsWriter.format("\"%s\" %s %d %.13E %.13E %.13E\n", parent.getLabel(), leftRight, adja, weight, logWeightStop, logWeightNotStop);
@@ -262,8 +262,8 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
         PrintWriter chooseWeightsWriter = new PrintWriter(chooseWeightsFile);
         // Root
         for (Label child : dmv.getVocab()) {
-            double weight = Utilities.exp(dmv.getRootWeight(child));
-            double logWeight = Utilities.logForIlp(weight);
+            double weight = FastMath.exp(dmv.getRootWeight(child));
+            double logWeight = FastMath.logForIlp(weight);
             chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
                     WallDepTreeNode.WALL_LABEL.getLabel(), Lr.RIGHT.toString(), child.getLabel(), weight, logWeight);
             // TODO: Remove this once we've updated the zimpl code never use these weights. This is a dummy weight. 
@@ -274,8 +274,8 @@ public class IlpDepParser implements DepParser, RelaxedDepParser {
         for (Label child : dmv.getVocab()) {
             for (Label parent : dmv.getVocab()) {
                 for (Lr lr : Lr.values()) {
-                    double weight = Utilities.exp(dmv.getChildWeight(parent, lr, child));
-                    double logWeight = Utilities.logForIlp(weight);
+                    double weight = FastMath.exp(dmv.getChildWeight(parent, lr, child));
+                    double logWeight = FastMath.logForIlp(weight);
                     chooseWeightsWriter.format("\"%s\" \"%s\" \"%s\" %.13E %.13E\n", 
                             parent.getLabel(), lr, child.getLabel(), weight, logWeight);
                 }

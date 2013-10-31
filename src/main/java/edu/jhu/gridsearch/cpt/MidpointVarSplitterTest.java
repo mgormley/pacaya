@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 
 public class MidpointVarSplitterTest {
@@ -135,14 +135,14 @@ public class MidpointVarSplitterTest {
         assertEquals(2, lDeltas.size());
         bounds.forwardApply(lDeltas);
         System.out.println(bounds);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 1)), 0.6, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 1)), 0.6, 1e-9);
         bounds.reverseApply(lDeltas);
         
         assertEquals(2, uDeltas.size());
         bounds.forwardApply(uDeltas);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 1)), 0.6, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 1)), 0.6, 1e-9);
     }
     
     @Test
@@ -170,16 +170,16 @@ public class MidpointVarSplitterTest {
         assertEquals(4, lDeltas.size());
         bounds.forwardApply(lDeltas);
         System.out.println(bounds);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 1)), 0.6, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 2)), 0.6, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 3)), 0.6, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 1)), 0.6, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 2)), 0.6, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 3)), 0.6, 1e-9);
         bounds.reverseApply(lDeltas);
         
         // Test upper bound side
         assertEquals(1, uDeltas.size());
         bounds.forwardApply(uDeltas);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
         bounds.reverseApply(uDeltas);
     }
         
@@ -210,15 +210,15 @@ public class MidpointVarSplitterTest {
         assertEquals(4, lDeltas.size());
         bounds.forwardApply(lDeltas);
         System.out.println(bounds);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 1)), 1 - 0.4 - 0.12 - 0.13, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 2)), 1 - 0.4 - 0.11 - 0.13, 1e-9);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 3)), 1 - 0.4 - 0.11 - 0.12, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 1)), 1 - 0.4 - 0.12 - 0.13, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 2)), 1 - 0.4 - 0.11 - 0.13, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 3)), 1 - 0.4 - 0.11 - 0.12, 1e-9);
         bounds.reverseApply(lDeltas);
         
         assertEquals(1, uDeltas.size());
         bounds.forwardApply(uDeltas);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
     }
     
     @Test
@@ -248,15 +248,15 @@ public class MidpointVarSplitterTest {
         assertEquals(1, lDeltas.size());
         bounds.forwardApply(lDeltas);
         System.out.println(bounds);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 0)), 0.4, 1e-9);
         bounds.reverseApply(lDeltas);
         
         assertEquals(3, uDeltas.size());
         bounds.forwardApply(uDeltas);
-        assertEquals(Utilities.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 1)), 0.11, 1e-9); // This bound remains untouched.
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 2)), 0.15, 1e-9);
-        assertEquals(Utilities.exp(bounds.getLb(Type.PARAM, 0, 3)), 0.25, 1e-9);
+        assertEquals(FastMath.exp(bounds.getUb(Type.PARAM, 0, 0)), 0.4, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 1)), 0.11, 1e-9); // This bound remains untouched.
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 2)), 0.15, 1e-9);
+        assertEquals(FastMath.exp(bounds.getLb(Type.PARAM, 0, 3)), 0.25, 1e-9);
     }
 
     private List<CptBoundsDeltaList> splitAtProb(CptBounds bounds, int c, int m, double prob) {
@@ -268,7 +268,7 @@ public class MidpointVarSplitterTest {
     }
 
     private double safeLog(double newLbProb) {
-        double newLb = Utilities.log(newLbProb);
+        double newLb = FastMath.log(newLbProb);
         if (newLb <= CptBounds.DEFAULT_LOWER_BOUND) {
             return CptBounds.DEFAULT_LOWER_BOUND;
         }

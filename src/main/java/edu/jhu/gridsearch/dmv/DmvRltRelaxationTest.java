@@ -44,8 +44,8 @@ import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexPrm;
+import edu.jhu.util.math.FastMath;
 
 
 public class DmvRltRelaxationTest {
@@ -175,8 +175,8 @@ public class DmvRltRelaxationTest {
         
         double newL, newU;
 
-        newL = Utilities.log(0.11);
-        newU = Utilities.log(0.90);
+        newL = FastMath.log(0.11);
+        newU = FastMath.log(0.90);
         
         DmvRelaxedSolution relaxSol;
         

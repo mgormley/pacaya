@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.Utilities;
 import edu.jhu.util.files.FileListIterator;
+import edu.jhu.util.files.Files;
 
 /**
  * Reads a file or directory of CoNLL-2009 files.
@@ -25,7 +25,7 @@ public class CoNLL09DirReader implements Iterable<CoNLL09Sentence> {
     private List<File> files;
     
     public CoNLL09DirReader(File path) {
-        files = Utilities.getMatchingFiles(path, ".*\\.conll");
+        files = Files.getMatchingFiles(path, ".*\\.conll");
     }
     
     public CoNLL09DirReader(String path) {

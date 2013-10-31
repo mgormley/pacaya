@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 /**
  * Edge-factored projective dependency parser.
@@ -61,8 +61,8 @@ public class ProjectiveDependencyParser {
                     goalBp = child;
                 }
             } else {
-                wallScore[child] = Utilities.logAdd(wallScore[child], score);
-                goalScore = Utilities.logAdd(goalScore, score);
+                wallScore[child] = FastMath.logAdd(wallScore[child], score);
+                goalScore = FastMath.logAdd(goalScore, score);
                 // Don't update the backpointer.
             }
         }
@@ -122,7 +122,7 @@ public class ProjectiveDependencyParser {
                     bps[s][t][d][ic] = r;
                 }
             } else {
-                scores[s][t][d][ic] = Utilities.logAdd(scores[s][t][d][ic], score);
+                scores[s][t][d][ic] = FastMath.logAdd(scores[s][t][d][ic], score);
                 // Don't update the backpointer.
                 
                 // Commented out for speed.

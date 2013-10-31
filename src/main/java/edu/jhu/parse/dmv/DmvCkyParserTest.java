@@ -37,7 +37,8 @@ import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Maps;
+import edu.jhu.util.math.FastMath;
 
 
 public class DmvCkyParserTest {
@@ -84,7 +85,7 @@ public class DmvCkyParserTest {
         DmvModel model = getTwoPosTagInstance();
         SentenceCollection sentences = new SentenceCollection(model.getTagAlphabet());
         sentences.addSentenceFromString("a/A b/B");
-        double expectedParseWeight = Utilities.log(0.0078125); // 0.5^7
+        double expectedParseWeight = FastMath.log(0.0078125); // 0.5^7
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
@@ -101,7 +102,7 @@ public class DmvCkyParserTest {
         DmvModel model = getTwoPosTagInstance();
         SentenceCollection sentences = new SentenceCollection(model.getTagAlphabet());
         sentences.addSentenceFromString("a/A b/B a/A");
-        double expectedParseWeight = Utilities.log(Math.pow(0.5, 10)); // 0.5^7
+        double expectedParseWeight = FastMath.log(Math.pow(0.5, 10)); // 0.5^7
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
@@ -200,7 +201,7 @@ public class DmvCkyParserTest {
         // Note: we have n-1 continues since the root always only generates a single child.
         int n = sentences.get(0).size();
         int m = model.root.length;
-        double expectedParseWeight = Utilities.log(Math.pow(0.5, n * 2 + n-1) * Math.pow(1./m, n));
+        double expectedParseWeight = FastMath.log(Math.pow(0.5, n * 2 + n-1) * Math.pow(1./m, n));
 
         System.out.println("Expected log likelihood: " + expectedParseWeight);
         
@@ -211,7 +212,7 @@ public class DmvCkyParserTest {
             DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
             ParentsArray pa = new ParentsArray(dpTrees.get(0).getParents());
             System.out.println(Arrays.toString(pa.parents));
-            Utilities.increment(counter, pa, 1);
+            Maps.increment(counter, pa, 1);
         }
         for (ParentsArray pa : counter.keySet()) {
             System.out.printf("%5d %s\n", counter.get(pa), pa);

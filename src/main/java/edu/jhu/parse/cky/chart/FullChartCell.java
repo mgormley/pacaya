@@ -8,7 +8,7 @@ import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 /**
  * Cell that stores every possible entry explicitly. This is suitable for
@@ -91,7 +91,7 @@ public class FullChartCell implements ChartCell {
         }
         if (computeInside) {
             // Compute the inside score.
-            scores[nt] = Utilities.logAdd(scores[nt], score);
+            scores[nt] = FastMath.logAdd(scores[nt], score);
             // Add a dummy backpointer, so that the above non-null check still works.
             bps[nt] = BackPointer.NON_NULL_BACKPOINTER;
         } else {

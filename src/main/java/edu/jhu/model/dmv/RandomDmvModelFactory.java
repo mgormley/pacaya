@@ -5,7 +5,7 @@ package edu.jhu.model.dmv;
 
 import edu.jhu.util.Alphabet;
 import edu.jhu.data.Label;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class RandomDmvModelFactory extends AbstractDmvModelFactory implements DmvModelFactory {
 
@@ -20,7 +20,7 @@ public class RandomDmvModelFactory extends AbstractDmvModelFactory implements Dm
         DmvModel dmv = new DmvModel(alphabet);
         dmv.setRandom();
         dmv.logNormalize();
-        dmv.logAddConstant(Utilities.log(lambda));
+        dmv.logAddConstant(FastMath.log(lambda));
         dmv.logNormalize();
         return dmv;
     }

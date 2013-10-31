@@ -1,6 +1,6 @@
 package edu.jhu.gm.train;
 
-import static edu.jhu.util.Utilities.getList;
+import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -20,23 +20,23 @@ import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
-import edu.jhu.gm.inf.BfsBpSchedule;
-import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.FactorGraph.FgEdge;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -45,8 +45,8 @@ import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Utilities;
-import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.math.FastMath;
 
 public class CrfObjectiveTest {
     
@@ -253,8 +253,8 @@ public class CrfObjectiveTest {
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
 //        tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
-        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "subj", "_", false, "_", getList("arg0")));
-        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 2, "subj", "_", false, "_", Lists.getList("arg0")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", Lists.getList("feat"), Lists.getList("feat") , 0, 0, "v", "_", true, "ate.1", Lists.getList("_")));
         //tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
                 
@@ -288,7 +288,7 @@ public class CrfObjectiveTest {
         // Check that the partition function is computed identically for each variable.
         for (Var v : fgLat.getVars()) {
             double partition = ((BeliefPropagation)infLat).getPartitionFunctionAtVarNode(fgLat.getNode(v));
-            assertEquals(2, logDomain ? Utilities.exp(partition) : partition, 1e-3);
+            assertEquals(2, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         
         System.out.println("-------- Running LatPred Inference-----------");
@@ -314,13 +314,13 @@ public class CrfObjectiveTest {
         for (Var v : fgLatPred.getVars()) {
             double partition = ((BeliefPropagation)infLatPred).getPartitionFunctionAtVarNode(fgLatPred.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(2*3, logDomain ? Utilities.exp(partition) : partition, 1e-3);
+            assertEquals(2*3, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         
         CrfObjective obj = new CrfObjective(model, data, infFactory);
         obj.setPoint(FgModelTest.getParams(model));
         double ll = obj.getValue();        
-        assertEquals(2./6., Utilities.exp(ll), 1e-13);
+        assertEquals(2./6., FastMath.exp(ll), 1e-13);
     }
 
     public FgInferencerFactory getInfFactory(boolean logDomain) {

@@ -24,7 +24,7 @@ import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 public class FgModelTest {
 
@@ -204,8 +204,8 @@ public class FgModelTest {
     }
     
     private FgExample getExForFts(String state1, String state2, FeatureTemplateList fts, boolean useLat) {
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
         fg.addFactor(new ExpFamFactor(new VarSet(v1, v2), "key2"));
         
@@ -222,8 +222,8 @@ public class FgModelTest {
     
     public static FeatureTemplateList getFtl(boolean useLat) {
         FeatureTemplateList fts = new FeatureTemplateList();
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Utilities.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Utilities.getList("2a", "2b", "2c"));
+        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
+        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             alphabet.lookupIndex(new Feature("feat1"));

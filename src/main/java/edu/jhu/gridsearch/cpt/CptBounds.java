@@ -5,7 +5,7 @@ import java.util.Arrays;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.IntArrays;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 /**
  * Bounds for a conditional probability table.
@@ -22,7 +22,7 @@ public class CptBounds {
     /**
      * Model parameter lower bound: log(1 / (one trillion)) ~= -27
      */
-    public static final double DEFAULT_LOWER_BOUND = Utilities.log(Math.pow(10, -12));
+    public static final double DEFAULT_LOWER_BOUND = FastMath.log(Math.pow(10, -12));
 
     private static final double MIN_BOUND_DIFF = 1.0 / Math.pow(2, 6);
 
@@ -89,7 +89,7 @@ public class CptBounds {
         int t = Type.PARAM.getAsInt();
         for (int c = 0; c < lbs[t].length; c++) {
             for (int m = 0; m < lbs[t][c].length; m++) {
-                logSpace += Utilities.logSubtractExact(ubs[t][c][m],
+                logSpace += FastMath.logSubtractExact(ubs[t][c][m],
                         lbs[t][c][m]);
             }
         }
@@ -116,7 +116,7 @@ public class CptBounds {
             int numParams = getNumParams(c);
             // Sum the upper bounds
             for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, getUb(Type.PARAM, c, m));
+                logSum = FastMath.logAdd(logSum, getUb(Type.PARAM, c, m));
             }
             
             if (logSum < -1e-10) {
@@ -131,7 +131,7 @@ public class CptBounds {
             int numParams = getNumParams(c);
             // Sum the lower bounds
             for (int m = 0; m < numParams; m++) {
-                logSum = Utilities.logAdd(logSum, getLb(Type.PARAM, c, m));
+                logSum = FastMath.logAdd(logSum, getLb(Type.PARAM, c, m));
             }
             
             if (logSum > 1e-10) {

@@ -16,7 +16,7 @@ import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class Projections {
 
@@ -129,8 +129,8 @@ public class Projections {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
-            lbs[m] = Utilities.exp(logBounds.getLb(Type.PARAM, c, m));
-            ubs[m] = Utilities.exp(logBounds.getUb(Type.PARAM, c, m));
+            lbs[m] = FastMath.exp(logBounds.getLb(Type.PARAM, c, m));
+            ubs[m] = FastMath.exp(logBounds.getUb(Type.PARAM, c, m));
         }
         
         return getBoundedProjection(params, lbs, ubs);

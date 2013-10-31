@@ -11,7 +11,7 @@ import edu.jhu.gridsearch.dmv.DmvRelaxation;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch
@@ -160,7 +160,7 @@ public class LazyBranchAndBoundSolver {
                     rootLogSpace = relax.getBounds().getLogSpace();
                     logSpaceRemain = rootLogSpace;
                 }
-                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
+                logSpaceRemain = FastMath.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
             // Update state of the tree with this nodes children.
@@ -349,8 +349,8 @@ public class LazyBranchAndBoundSolver {
         //                log.warn("Log space remaining differs between subtraction and addition versions.");
         //            }
         //        }
-        log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
-        log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
+        log.info("Space remaining: " + FastMath.exp(logSpaceRemain));
+        log.info("Proportion of root space remaining: " + FastMath.exp(logSpaceRemain - rootLogSpace));
     }
 
     protected void printTimers(int numProcessed) {

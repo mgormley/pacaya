@@ -12,7 +12,7 @@ import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 public class DmvCnfGrammar {
     
@@ -210,10 +210,10 @@ public class DmvCnfGrammar {
 
     private ArrayList<Rule> getAllRules() {
         ArrayList<Rule> allRules = new ArrayList<Rule>();
-        Utilities.addAll(allRules, root);
-        Utilities.addAll(allRules, child);
-        Utilities.addAll(allRules, decision);
-        Utilities.addAll(allRules, structural);
+        Lists.addAll(allRules, root);
+        Lists.addAll(allRules, child);
+        Lists.addAll(allRules, decision);
+        Lists.addAll(allRules, structural);
         return allRules;
     }
     

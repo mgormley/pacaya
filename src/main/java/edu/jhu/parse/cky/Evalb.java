@@ -3,8 +3,8 @@ package edu.jhu.parse.cky;
 import java.io.File;
 import java.util.List;
 
-import edu.jhu.util.Command;
 import edu.jhu.util.files.Files;
+import edu.jhu.util.sys.System;
 
 public class Evalb {
 
@@ -37,7 +37,7 @@ public class Evalb {
                 goldTrees.getAbsolutePath(),
                 testTrees.getAbsolutePath(),
         };
-        Command.runCommand(cmd, logFile, new File("."));    
+        System.runCommand(cmd, logFile, new File("."));    
         Files.cat(logFile);
     }
     

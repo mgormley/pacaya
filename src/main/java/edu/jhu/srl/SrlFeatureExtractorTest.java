@@ -1,6 +1,5 @@
 package edu.jhu.srl;
 
-import static edu.jhu.util.Utilities.getList;
 import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
@@ -21,14 +20,14 @@ import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Unit tests for {@link SrlFeatureExtractorTest}.
@@ -124,12 +123,12 @@ public class SrlFeatureExtractorTest {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
-        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", getList("feat"), getList("feat") , 3, 3, "subj", "_", false, "_", getList("arg0")));
-        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
-        tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", getList("feat"), getList("feat") , 2, 2, "obj", "_", false, "_", getList("arg1")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "_", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 3, 3, "subj", "_", false, "_", Lists.getList("arg0")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "_", "V", "_", Lists.getList("feat"), Lists.getList("feat") , 0, 0, "v", "_", true, "ate.1", Lists.getList("_")));
+        tokens.add(new CoNLL09Token(4, "food", "_", "_", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 2, "obj", "_", false, "_", Lists.getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
-        List<CoNLL09Sentence> sents = getList(sent);
+        List<CoNLL09Sentence> sents = Lists.getList(sent);
         SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -210,9 +209,9 @@ public class SrlFeatureExtractorTest {
     }
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        List<String> words = Utilities.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Utilities.getList("A1", "A2", "A3"), null);
+        HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
+        List<String> words = Lists.getList("w1", "w2", "w3");
+        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null);
     }
 
 }

@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.bayesnet.BayesNetReaderTest;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 public class FactorGraphTest {
 
@@ -165,14 +165,14 @@ public class FactorGraphTest {
         FactorGraph fg = new FactorGraph();
 
         // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Utilities.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Utilities.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Utilities.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Utilities.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Utilities.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
 
         // Emission factors. 
         ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0, w0), "emit"); 
@@ -229,19 +229,19 @@ public class FactorGraphTest {
         FactorGraph fg = new FactorGraph();
 
         // Create three words.
-        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Utilities.getList("man", "dog"));
-        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Utilities.getList("run", "jump"));
-        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Utilities.getList("fence", "bucket"));
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
 
         // Create latent classes.
-        Var z0 = new Var(VarType.LATENT, 2, "z0", Utilities.getList("C1", "C2"));
-        Var z1 = new Var(VarType.LATENT, 2, "z1", Utilities.getList("C1", "C2"));
-        Var z2 = new Var(VarType.LATENT, 2, "z2", Utilities.getList("C1", "C2"));
+        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
+        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
+        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
         
         // Create three tags.
-        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Utilities.getList("N", "V"));
-        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Utilities.getList("N", "V"));
-        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Utilities.getList("N", "V"));
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
 
         // Emission factors. 
         ExpFamFactor emit0 = new ExpFamFactor(new VarSet(z0, w0), "emit"); 

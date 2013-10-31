@@ -19,7 +19,7 @@ import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Extract corpus statistics about a CoNLL-2009 dataset.
@@ -53,7 +53,7 @@ public class CorpusStatistics implements Serializable {
     
     public static final String UNKNOWN_ROLE = "argUNK";
     public static final String UNKNOWN_SENSE = "senseUNK";
-    public static List<String> SENSES_FOR_UNK_PRED = Utilities.getList(UNKNOWN_SENSE); 
+    public static List<String> SENSES_FOR_UNK_PRED = Lists.getList(UNKNOWN_SENSE); 
 
     public Set<String> knownWords = new HashSet<String>();
     public Set<String> knownUnks = new HashSet<String>();

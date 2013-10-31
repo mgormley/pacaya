@@ -1,5 +1,7 @@
 package edu.jhu.parse.cky.chart;
 
+import java.util.Arrays;
+
 import edu.jhu.data.Sentence;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;
@@ -9,7 +11,6 @@ import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 
 /**
  * This class is identical to <code>FullChartCell</code> except that it adds the
@@ -53,7 +54,7 @@ public class FullTieBreakerChartCell implements ChartCell {
     
     public void reset(Sentence sentence) {
         DoubleArrays.fill(maxScores, Double.NEGATIVE_INFINITY);
-        Utilities.fill(bps, null);
+        Arrays.fill(bps, null);
         nts.clear();
         isClosed = false;
         ntsArray = null;

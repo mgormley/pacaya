@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 /**
  * A discrete variable in a factor graph.
@@ -57,7 +57,7 @@ public class Var implements Comparable<Var>, Serializable {
         this.name = name.intern();
         if (stateNames != null) {
             assert(numStates == stateNames.size());
-            this.stateNames = Utilities.getInternedList(stateNames);
+            this.stateNames = Lists.getInternedList(stateNames);
         }
     }
 

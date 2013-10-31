@@ -19,11 +19,11 @@ import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.matrix.DoubleMatrixFactory;
 import edu.jhu.prim.matrix.SparseColDoubleMatrix;
 import edu.jhu.prim.matrix.SparseRowDoubleMatrix;
+import edu.jhu.prim.sample.Sample;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.dist.Dirichlet;
 
@@ -316,7 +316,7 @@ public class DimReducer {
         for (int i=0; i<S.getNumRows(); i++) {
             if (nCols > numNonZerosPerRow) {
                 // Choose a subset of columns to be nonzeros.
-                colInds = Utilities.sampleWithoutReplacement(numNonZerosPerRow, nCols);
+                colInds = Sample.sampleWithoutReplacement(numNonZerosPerRow, nCols);
             }
             if (prm.dist == SamplingDistribution.UNIFORM || prm.dist == SamplingDistribution.DIRICHLET) {
                 // Sample the values for the nonzeros.

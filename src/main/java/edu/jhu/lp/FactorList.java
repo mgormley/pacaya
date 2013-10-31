@@ -15,7 +15,7 @@ import edu.jhu.lp.FactorBuilder.RowFactor;
 import edu.jhu.lp.FactorBuilder.RowFactorType;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.cplex.CplexUtils;
 
 /**
@@ -62,7 +62,7 @@ public class FactorList implements Iterable<Factor> {
     }
 
     public FactorList sublist(int start, int end) {
-        return new FactorList(Utilities.sublist(rows, start, end));
+        return new FactorList(Lists.sublist(rows, start, end));
     }
 
     /**

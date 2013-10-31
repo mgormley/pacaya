@@ -12,7 +12,7 @@ import java.util.Map;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class ErmaWriter {
 
@@ -35,7 +35,7 @@ public class ErmaWriter {
                 if (var.getType() == VarType.OBSERVED) {
                     writer.write("1.0");
                 } else {
-                    writer.write(String.valueOf(Utilities.exp(marginals.get(var))));
+                    writer.write(String.valueOf(FastMath.exp(marginals.get(var))));
                 }
                 writer.write("\n");
             }

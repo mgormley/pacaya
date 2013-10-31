@@ -5,7 +5,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.SafeEquals;
 
 /**
  * AdaGrad (Duchi et al., 2010) -- a first order stochastic gradient method with

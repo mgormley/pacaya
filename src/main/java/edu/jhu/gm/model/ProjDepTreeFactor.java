@@ -12,7 +12,8 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.math.FastMath;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -38,7 +39,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         public static final int TRUE = 1;
         public static final int FALSE = 0;
         
-        private static final List<String> BOOLEANS = Utilities.getList("FALSE", "TRUE");
+        private static final List<String> BOOLEANS = Lists.getList("FALSE", "TRUE");
         private int parent;
         private int child;     
         
@@ -152,7 +153,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             } else {
                 oddsRatio = inMsg.getValue(LinkVar.TRUE) / inMsg.getValue(LinkVar.FALSE);
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
-                oddsRatio = Utilities.log(oddsRatio);
+                oddsRatio = FastMath.log(oddsRatio);
             }
             
             if (link.getParent() == -1) {
@@ -178,7 +179,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         }
 
         double partition = logDomain ? pi + chart.getLogPartitionFunction() :
-            pi * Utilities.exp(chart.getLogPartitionFunction());
+            pi * FastMath.exp(chart.getLogPartitionFunction());
 
         if (log.isTraceEnabled()) {
             log.trace(String.format("partition: %.2f", partition));
@@ -197,12 +198,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                     // error. We want beliefFalse to be effectively 0.0 in this
                     // case, but we use the floating point error to determine
                     // how small zero should be.
-                    beliefFalse = Utilities.log(Math.abs(partition - beliefTrue));
+                    beliefFalse = FastMath.log(Math.abs(partition - beliefTrue));
                 } else {
-                    beliefFalse = Utilities.logSubtract(partition, beliefTrue);
+                    beliefFalse = FastMath.logSubtract(partition, beliefTrue);
                 }
             } else {
-                beliefTrue = pi * Utilities.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
+                beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
                 beliefFalse = partition - beliefTrue;
             }
 

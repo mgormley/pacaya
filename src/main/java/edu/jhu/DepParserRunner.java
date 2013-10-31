@@ -49,10 +49,10 @@ import edu.jhu.train.TrainerFactory;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.files.Files;
+import edu.jhu.util.math.FastMath;
 
 public class DepParserRunner {
     
@@ -266,7 +266,7 @@ public class DepParserRunner {
         SentenceCollection sentences = goldTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
         double logLikelihood = parser.getLastParseWeight();
-        double perTokenCrossEnt = - logLikelihood / Utilities.log(2) / sentences.getNumTokens();
+        double perTokenCrossEnt = - logLikelihood / FastMath.log(2) / sentences.getNumTokens();
         log.info(String.format("LogLikelihood on %s: %.4f", datasetName, logLikelihood));
         log.info(String.format("Per token cross entropy on %s: %.3f", datasetName, perTokenCrossEnt));
         

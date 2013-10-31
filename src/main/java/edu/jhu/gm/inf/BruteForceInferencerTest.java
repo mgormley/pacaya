@@ -13,7 +13,7 @@ import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class BruteForceInferencerTest {
 
@@ -74,7 +74,7 @@ public class BruteForceInferencerTest {
                 marg.getValues(), logDomain ? 1e-2 : 1e-4);
         
         double goldPartition = 0.5932;
-        if (logDomain) { goldPartition = Utilities.log(goldPartition); }
+        if (logDomain) { goldPartition = FastMath.log(goldPartition); }
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
     }
     
@@ -115,7 +115,7 @@ public class BruteForceInferencerTest {
                 marg.getValues(), 1e-3);
         
         double goldPartition = 2.00;
-        if (logDomain) { goldPartition = Utilities.log(goldPartition); }
+        if (logDomain) { goldPartition = FastMath.log(goldPartition); }
         assertEquals(goldPartition, bp.getPartition(), 1e-2);
     }
     

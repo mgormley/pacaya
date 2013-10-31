@@ -27,7 +27,7 @@ import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 
 public class IndexedDmvModelTest {
@@ -161,9 +161,9 @@ public class IndexedDmvModelTest {
             Assert.assertTrue(logProbs[c].length == 2 || logProbs[c].length == 3);
         }
         
-        logProbs[0][1] = Utilities.log(0.2);
-        logProbs[1][1] = Utilities.log(0.4);
-        logProbs[3][0] = Utilities.log(0.6);
+        logProbs[0][1] = FastMath.log(0.2);
+        logProbs[1][1] = FastMath.log(0.4);
+        logProbs[3][0] = FastMath.log(0.6);
         
         DmvModel model = idm.getDmvModel(logProbs);
         model.convertLogToReal();

@@ -13,7 +13,8 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
+import edu.jhu.util.math.FastMath;
 
 public class ProjDepTreeFactorTest {
 
@@ -106,7 +107,7 @@ public class ProjDepTreeFactorTest {
         assertEquals((162+216+96)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 2), 1e-3);
 
         // Check partition function.
-        assertEquals(45+28+20+84+162+216+96, logDomain ? Utilities.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(45+28+20+84+162+216+96, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
     }
 
     @Test
@@ -150,7 +151,7 @@ public class ProjDepTreeFactorTest {
         fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Utilities.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
         ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar, childVars[0][1]), SrlFactorTemplate.LINK_ROLE_BINARY);
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 3);
@@ -192,7 +193,7 @@ public class ProjDepTreeFactorTest {
         double Z = 3*3 + 3*7 + 8*2 + 8*5;
 
         // Check partition function.
-        assertEquals(Z, logDomain ? Utilities.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(Z, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
         // Check expected counts.
         assertEquals((3*3 + 3*7)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
         assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
@@ -207,7 +208,7 @@ public class ProjDepTreeFactorTest {
         double[] root = new double[] {1, 1}; 
         double[][] child = new double[][]{ {1, 1}, {1, 1} };
 
-        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Utilities.getList("arg0", "_"));
+        Var roleVar = new Var(VarType.PREDICTED, 2, "Role_1_0", Lists.getList("arg0", "_"));
 
         // Create an edge factored dependency tree factor graph.
         //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
@@ -293,11 +294,11 @@ public class ProjDepTreeFactorTest {
         
         double Z = 4;
         // Check partition function.
-        assertEquals(Z, logDomain ? Utilities.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        assertEquals(Z, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
         for (Var v : fg.getVars()) {
             double partition = bp.getPartitionFunctionAtVarNode(fg.getNode(v));
             System.out.format("Var=%s partition=%.4f\n", v.toString(), partition);
-            assertEquals(Z, logDomain ? Utilities.exp(partition) : partition, 1e-3);
+            assertEquals(Z, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         // Check expected counts.
         System.out.println(getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0));
@@ -313,7 +314,7 @@ public class ProjDepTreeFactorTest {
         } else {
             marg = bp.getMarginals(childVars[i][j]);
         }        
-        return logDomain ? Utilities.exp(marg.getValue(LinkVar.TRUE)) : marg.getValue(LinkVar.TRUE);
+        return logDomain ? FastMath.exp(marg.getValue(LinkVar.TRUE)) : marg.getValue(LinkVar.TRUE);
     }
 
 }

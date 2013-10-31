@@ -14,7 +14,7 @@ import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class PcfgInsideOutsideTest {
     
@@ -37,8 +37,8 @@ public class PcfgInsideOutsideTest {
         PcfgIoChart chart = parseSentence(sent , grammar, loopOrder);
         
         // There are three valid trees with weights -11, -12, -15.
-        double sum = Utilities.logAdd(-11, -12);
-        sum = Utilities.logAdd(sum, -15);
+        double sum = FastMath.logAdd(-11, -12);
+        sum = FastMath.logAdd(sum, -15);
         assertEquals(-10.673, sum, 1e-3);
         assertEquals(-10.673, chart.getLogInsideScore(grammar.getRootSymbol(), 0, sent.size()), 1e-3);
         assertEquals(0, chart.getLogOutsideScore(grammar.getRootSymbol(), 0, sent.size()), 1e-3);
@@ -46,8 +46,8 @@ public class PcfgInsideOutsideTest {
         // Each of the three trees uses this NP from 3 to 5. So the outside
         // score should be the sums of those trees minus 3 from each of their
         // weights, since 3 is the weight of this NP.
-        sum = Utilities.logAdd(-8, -9);
-        sum = Utilities.logAdd(sum, -12);
+        sum = FastMath.logAdd(-8, -9);
+        sum = FastMath.logAdd(sum, -12);
         assertEquals(sum, chart.getLogOutsideScore(grammar.getNtAlphabet().lookupIndex(new Tag("NP")), 3, 5), 1e-13);
         
         System.out.println("");

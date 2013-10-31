@@ -23,7 +23,7 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 // TODO: Add an option which computes the gradient on only a subset of the
 // variables for use by SGD.
@@ -122,7 +122,7 @@ public class CrfObjective implements Function, BatchFunction {
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();
 
-        double numerator = infLat.isLogDomain() ? infLat.getPartition() : Utilities.log(infLat.getPartition());
+        double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
 
         // "Multiply" in all the fully clamped factors. These are the
         // factors which do not include any latent variables. 
@@ -145,7 +145,7 @@ public class CrfObjective implements Function, BatchFunction {
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();
 
-        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : Utilities.log(infLatPred.getPartition());
+        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());
 
         // "Multiply" in all the fully clamped factors. These are the
         // factors which do not include any latent or predicted variables.
@@ -272,7 +272,7 @@ public class CrfObjective implements Function, BatchFunction {
                         // Get the probability of the c'th configuration for this factor.
                         double prob = factorMarginal.getValue(c);
                         if (inferencer.isLogDomain()) {
-                            prob = Utilities.exp(prob);
+                            prob = FastMath.exp(prob);
                         }
                         // Get the feature counts when they are clamped to the c'th configuration for this factor.
                         FeatureVector fv = ex.getObservationFeatures(factorId);

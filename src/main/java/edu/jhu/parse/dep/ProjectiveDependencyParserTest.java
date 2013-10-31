@@ -11,7 +11,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class ProjectiveDependencyParserTest {
     
@@ -167,37 +167,37 @@ public class ProjectiveDependencyParserTest {
         DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root,  child);
         
         // Check inside scores.
-        assertEquals(7, Utilities.exp(chart.getLogInsideScore(1, 2)), 1e-13);
-        assertEquals(9, Utilities.exp(chart.getLogInsideScore(2, 1)), 1e-13);
-        assertEquals(45+20, Utilities.exp(chart.getLogInsideScore(0, 2)), 1e-13);
-        assertEquals(45+28+20, Utilities.exp(chart.getLogInsideScore(-1, 0)), 1e-13);
-        assertEquals(84, Utilities.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
-        assertEquals(162+216+96, Utilities.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
+        assertEquals(7, FastMath.exp(chart.getLogInsideScore(1, 2)), 1e-13);
+        assertEquals(9, FastMath.exp(chart.getLogInsideScore(2, 1)), 1e-13);
+        assertEquals(45+20, FastMath.exp(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(45+28+20, FastMath.exp(chart.getLogInsideScore(-1, 0)), 1e-13);
+        assertEquals(84, FastMath.exp(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(162+216+96, FastMath.exp(chart.getLogInsideScore(-1, 2)), 1e-3);
         
         // Check partition function.
-        assertEquals(45+28+20+84+162+216+96, Utilities.exp(chart.getLogPartitionFunction()), 1e-3);
+        assertEquals(45+28+20+84+162+216+96, FastMath.exp(chart.getLogPartitionFunction()), 1e-3);
         
         // Check outside scores.
-        assertEquals(1*4+2*6, Utilities.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
-        assertEquals(1*5+3*6+3*8, Utilities.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
-        assertEquals(1, Utilities.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
-        assertEquals(1, Utilities.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
-        assertEquals(1, Utilities.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
-        assertEquals(1, Utilities.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
-        assertEquals(2*7+3*9, Utilities.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
+        assertEquals(1*4+2*6, FastMath.exp(chart.getLogOutsideScore(1, 2)), 1e-13);
+        assertEquals(1*5+3*6+3*8, FastMath.exp(chart.getLogOutsideScore(2, 1)), 1e-13); // why is this 3*6 and not just 3?
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(0, 2)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 0)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 1)), 1e-13);
+        assertEquals(1, FastMath.exp(chart.getLogOutsideScore(-1, 2)), 1e-3);
+        assertEquals(2*7+3*9, FastMath.exp(chart.getLogOutsideScore(1, 0)), 1e-3);
 
         // Check sums.
-        assertEquals(28+84, Utilities.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
-        assertEquals(45+162+216, Utilities.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
-        assertEquals(28+20+96, Utilities.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
-        assertEquals(96+216, Utilities.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
+        assertEquals(28+84, FastMath.exp(chart.getLogSumOfPotentials(1, 2)), 1e-3);
+        assertEquals(45+162+216, FastMath.exp(chart.getLogSumOfPotentials(2, 1)), 1e-3);
+        assertEquals(28+20+96, FastMath.exp(chart.getLogSumOfPotentials(0, 1)), 1e-3);
+        assertEquals(96+216, FastMath.exp(chart.getLogSumOfPotentials(2, 0)), 1e-3);
         
         // Check expected counts.
         double Z = 45+28+20+84+162+216+96;
-        assertEquals((28+84)/Z, Utilities.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
-        assertEquals((45+162+216)/Z, Utilities.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
-        assertEquals((28+20+96)/Z, Utilities.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
-        assertEquals((96+216)/Z, Utilities.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
+        assertEquals((28+84)/Z, FastMath.exp(chart.getLogExpectedCount(1, 2)), 1e-3);
+        assertEquals((45+162+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 1)), 1e-3);
+        assertEquals((28+20+96)/Z, FastMath.exp(chart.getLogExpectedCount(0, 1)), 1e-3);
+        assertEquals((96+216)/Z, FastMath.exp(chart.getLogExpectedCount(2, 0)), 1e-3);        
     }
     
 }

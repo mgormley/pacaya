@@ -25,7 +25,7 @@ import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.DmvViterbiEMTrainer;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.math.FastMath;
 
 public class ViterbiEmDmvProjector implements DmvProjector {
 
@@ -153,7 +153,7 @@ public class ViterbiEmDmvProjector implements DmvProjector {
         // TODO: this is a slow conversion
         DmvModel model = idm.getDmvModel(logProbs);
         // We must smooth the weights so that there exists some valid parse
-        model.logAddConstant(Utilities.log(lambda));
+        model.logAddConstant(FastMath.log(lambda));
         model.logNormalize();
         DmvModelFactory modelFactory = new CopyingDmvModelFactory(model);
         return runViterbiEmHelper(modelFactory);
