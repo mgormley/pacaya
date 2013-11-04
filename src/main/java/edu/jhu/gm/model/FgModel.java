@@ -16,7 +16,6 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.srl.MutableInt;
 import edu.jhu.util.Alphabet;
@@ -34,23 +33,6 @@ import edu.jhu.util.dist.Gaussian;
 // (particularly when serialized) is smaller.
 public class FgModel implements Serializable {
 
-    public interface TemplateModel {
-
-        void add(int config, int feat, double addend);
-        
-        double[] getParams(int config);
-        
-        void printModel(Writer writer) throws IOException; 
-        
-        int getNumParams();
-
-        int getNumConfigs();
-
-        int getNumFeats(int c);
-        
-        void apply(LambdaBinOpDouble lambda);
-    }
-    
     private static final long serialVersionUID = 4477788767217412525L;
     /**
      * The model parameters. Indexed by feature template index, variable
