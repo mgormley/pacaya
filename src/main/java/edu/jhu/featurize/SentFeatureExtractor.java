@@ -3,8 +3,11 @@ package edu.jhu.featurize;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
@@ -196,14 +199,17 @@ public class SentFeatureExtractor {
             addBjorkelundPairFeatures(pidx, aidx, feats);
         }
         if (prm.useAllTemplates) {
-            addTemplatePairFeatures(pidx, aidx, feats);
+            addTemplatePairFeatures(pidx, aidx);
         }
 
         return feats;
     }
 
-    
-    public void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) { 
+
+    /* Basically the idea here is, gather every possible piece (POS, lemma, etc.) to place in a pair;
+     * then make those pairs. We use a window of length 3 to look at the previous word, current word,
+     * and next word for features, on both the first word and second word. */
+    public ArrayList<String> addTemplatePairFeatures(int pidx, int aidx) { 
         /* formFeats
          * lemmaFeats
          * tagFeats
@@ -212,75 +218,81 @@ public class SentFeatureExtractor {
          * edgeFeats
          * pathFeats
          * supportFeats */
-        // List that stores all feature templates.
-        ArrayList<Template<String,String>> featTmp = new ArrayList<Template<String,String>>();
+        ArrayList<String> predFeatureList = new ArrayList<String>();
+        ArrayList<String> argFeatureList = new ArrayList<String>();
+        // Using a window of size 3:  previous word, current word, next word.
         for (int n=-1; n<=1; n++) {
             FeatureObject featurePred = getFeatureObject(pidx + n);
             FeatureObject featureArg = getFeatureObject(aidx + n);
-            FeatureObject featurePredArgPair = new FeatureObject(pidx + n, aidx + n, featurePred, featureArg, parents);
-            Iterable<FeatureObject> pair = new Template<FeatureObject, FeatureObject>(featurePred, featureArg);
-            for (FeatureObject f : pair) {
-                if (prm.formFeats) {
-                    String form = "Form:" + f.getForm();
-                    System.out.println(form);
-                    featTmp = addTemplatePiece(form, featTmp, n);
-                }
-                if (prm.lemmaFeats) {
-                    String lemma = "Lemma:" + f.getLemma();
-                    featTmp = addTemplatePiece(lemma, featTmp, n);
-                }
-                if (prm.tagFeats) {
-                    String tag = "Tag:" + f.getPos();
-                    featTmp = addTemplatePiece(tag, featTmp, n);
-                }
-                System.out.println(featTmp);
-                System.exit(0);
-                /*if (prm.morphFeats) {
-
-            }
-            if (prm.deprelFeats) {
-
-            }
-            if (prm.edgeFeats) {
-
-            }
-            if (prm.pathFeats) {
-
-            }
-            if (prm.supportFeats) {
-
-            }*/
-            }
+            //FeatureObject featurePredArgPair = new FeatureObject(pidx + n, aidx + n, featurePred, featureArg, parents);
+            //Iterable<FeatureObject> pair = new Template<FeatureObject, FeatureObject>(featurePred, featureArg);
+            predFeatureList = addTemplatePieces(featurePred, predFeatureList, n);
+            argFeatureList = addTemplatePieces(featureArg, argFeatureList, n);
         }
-        ArrayList<String> featList = new ArrayList<String>();
-        String seqFeat = buildString(featList);
-        String bagFeat = buildString(bag(featList));
-        String noDupFeat = buildString(noDup(featList));
+        ArrayList<String> feats = makeFeatures(predFeatureList, argFeatureList);
+        //ArrayList<String> featList = new ArrayList<String>();
+        //String seqFeat = buildString(featList);
+        //String bagFeat = buildString(bag(featList));
+        //String noDupFeat = buildString(noDup(featList));
+        return feats;
     }
 
-    public ArrayList<Template<String, String>> addTemplatePiece(String piece, ArrayList<Template<String,String>> featTmp, Integer n) {
-        ArrayList<Template<String,String>> featTmpCopy = (ArrayList<Template<String, String>>) featTmp.clone();
+    private ArrayList<String> makeFeatures(ArrayList<String> predFeatureList, ArrayList<String> argFeatureList) {
+        ArrayList<String> featList = new ArrayList<String>();
+        for (String a : predFeatureList) {
+            for (String b : argFeatureList) {
+                String feature = a + "_" + b;
+                featList.add(feature);
+            }
+        }
+        return featList;
+    }
+
+    private ArrayList<String> addTemplatePieces(FeatureObject featureObj, ArrayList<String> featureList, Integer n) {
+        if (prm.formFeats) {
+            String form = "Form:" + featureObj.getForm();
+            featureList = addTemplatePiece(form, featureList, n);
+        }
+        if (prm.lemmaFeats) {
+            String lemma = "Lemma:" + featureObj.getLemma();
+            featureList = addTemplatePiece(lemma, featureList, n);
+        }
+        if (prm.tagFeats) {
+            String tag = "Tag:" + featureObj.getPos();
+            featureList = addTemplatePiece(tag, featureList, n);
+        }
+
+        /*if (prm.morphFeats) {
+
+        }
+        if (prm.deprelFeats) {
+
+        }
+        if (prm.edgeFeats) {
+
+        }
+        if (prm.pathFeats) {
+
+        }
+        if (prm.supportFeats) {
+
+        }*/
+
+        return featureList;
+    
+    }
+
+    /* @param   piece   An annotated bit (POS tag, lemma, etc.) that will be used in the construction of a feature. 
+     * @param   featTmp List storing feature templates.
+     * @param   n       Window index (previous word, current word, or next word) */
+    public ArrayList<String> addTemplatePiece(String piece, ArrayList<String> featTmp, Integer n) {
         if (n == -1) {
             piece = "Prev" + piece;
         } else if (n == 1) {
             piece = "Next" + piece;
         }
-        Template<String, String> templateFirst;
-        for (Template<String, String> t : featTmp) {
-            if (t.getSecond() == null) {
-                // Repeat the first feature to combine with later ones.
-                templateFirst = new Template<String,String>();
-                templateFirst.setFirst(t.getFirst());
-                featTmpCopy.add(templateFirst);
-                // Also make a complete feature
-                t.setSecond(piece);
-            }
-        }
-        // Initialize feature templates with new feature value.
-        templateFirst = new Template<String,String>();
-        templateFirst.setFirst(piece);
-        featTmpCopy.add(templateFirst);
-        return featTmpCopy;
+        featTmp.add(piece);
+        return featTmp;
     }
 
     // ---------- Meg's "Simple" features. ---------- 

@@ -446,13 +446,13 @@ public class SentFeatureExtractorTest {
         allFeats = new ArrayList<String>();
         for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
-                fe.addTemplatePairFeatures(i, j, allFeats);
+                ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);
+                allFeats.addAll(pairFeatures);
             }
         }
         for (String f : allFeats) {
             System.out.println(f);
         }
-        assertEquals(true, true);
     }
     
     
