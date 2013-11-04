@@ -367,8 +367,8 @@ public class SrlRunner {
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
-        log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
-        log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
         log.info(String.format("Num feature templates: %d", data.getTemplates().size()));
         log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
         return data;
