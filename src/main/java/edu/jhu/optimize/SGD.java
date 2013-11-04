@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.apache.log4j.Logger;
 
 import edu.jhu.prim.sort.IntSort;
+import edu.jhu.util.Timer;
 
 /**
  * Stochastic gradient descent with minibatches.
@@ -117,6 +118,8 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         assert (function.getNumDimensions() == point.length);
         double[] gradient = new double[point.length];
         
+        Timer timer = new Timer();
+        timer.start();
         int passCount = 0;
         double passCountFrac = 0;
         for (iterCount=0; iterCount < iterations; iterCount++) {
@@ -154,19 +157,19 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // If a full pass through the data has been completed...
             passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
-            if ((int) Math.floor(passCountFrac) > passCount) {
-                // Another full pass through the data has been completed.
-                passCount++;
+            if ((int) Math.floor(passCountFrac) > passCount || iterCount == iterations - 1) {
+                // Another full pass through the data has been completed or we're on the last iteration.
                 // Get the value of the function on all the examples.
                 value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
                 log.debug("Average learning rate: " + avgLr);
+                log.debug(String.format("Average time per pass (min): %.2g", timer.totSec() / 60.0 / passCountFrac));
+            }
+            if ((int) Math.floor(passCountFrac) > passCount) {
+                // Another full pass through the data has been completed.
+                passCount++;
             }
         }
-        
-        // Get the final value of the function on all the examples.
-        double value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
-        log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
         
         // We don't test for convergence.
         return false;
