@@ -25,6 +25,7 @@ import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.prim.vector.IntDoubleVectorSlice;
 
 // TODO: Add an option which computes the gradient on only a subset of the
 // variables for use by SGD.
@@ -50,7 +51,7 @@ public class CrfObjective implements Function, BatchFunction {
         this.data = data;
         this.model = model;
         this.infFactory = infFactory;
-        this.gradient = new FgModel(model);
+        this.gradient = model.getDenseCopy();
         this.gradient.zero();
     }
         
@@ -132,7 +133,7 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
+                    IntDoubleVectorSlice params = model.getParams(fts.getTemplateId(f), goldConfig);
                     numerator += ex.getObservationFeatures(a).dot(params);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
@@ -156,7 +157,7 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
+                    IntDoubleVectorSlice params = model.getParams(fts.getTemplateId(f), goldConfig);
                     denominator += ex.getObservationFeatures(a).dot(params);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
@@ -198,7 +199,7 @@ public class CrfObjective implements Function, BatchFunction {
         for (int i=0; i<batch.length; i++) {
             log.trace("Computing gradient for example " + batch[i]);
             addGradientForExample(batch[i], gradient);
-        }        
+        }
         this.gradient.scale(1.0 / batch.length);
         gradient.updateDoublesFromModel(g);
     }
@@ -301,7 +302,7 @@ public class CrfObjective implements Function, BatchFunction {
     /** Gets the "observed" feature counts. */
     public FeatureVector getObservedFeatureCounts(double[] params) {
         model.updateModelFromDoubles(params);
-        FgModel feats = new FgModel(model);
+        FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
@@ -318,7 +319,7 @@ public class CrfObjective implements Function, BatchFunction {
     /** Gets the "expected" feature counts. */
     public FeatureVector getExpectedFeatureCounts(double[] params) {
         model.updateModelFromDoubles(params);
-        FgModel feats = new FgModel(model);
+        FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);

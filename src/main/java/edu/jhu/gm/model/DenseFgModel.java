@@ -183,31 +183,15 @@ public class DenseFgModel implements Serializable, IFgModel {
     
     public void updateModelFromDoubles(double[] inParams) {
         assert (numParams == inParams.length);
-        int i=0;
-        for (int t=0; t<params.length; t++) {
-            for (int c = 0; c < params[t].length; c++) {
-                for (int k = 0; k < params[t][c].length; k++) {
-                    if (included[t][c][k]) {
-                        // Update the model.
-                        params[t][c][k] = inParams[i++];
-                    }
-                }
-            }
+        for (int i=0; i<numParams; i++) {
+            this.params.set(i, inParams[i]);
         }
     }
     
     public void updateDoublesFromModel(double[] outParams) {
         assert (numParams == outParams.length);
-        int i=0;
-        for (int t=0; t<params.length; t++) {
-            for (int c = 0; c < params[t].length; c++) {
-                for (int k = 0; k < params[t][c].length; k++) {
-                    if (included[t][c][k]) {
-                        // Update the doubles.
-                        outParams[i++] = params[t][c][k];
-                    }
-                }
-            }
+        for (int i=0; i<numParams; i++) {
+            outParams[i] = this.params.get(i);
         }
     }
     
@@ -233,6 +217,13 @@ public class DenseFgModel implements Serializable, IFgModel {
                 params.add(indices[t][c][f], multiplier * fvVal[i]);
             }
         }
+    }
+    
+    public void add(DenseFgModel other) {
+        if (other.indices != this.indices) {
+            throw new IllegalStateException("Only copies of this model can be added to it.");
+        }
+        this.params.add(other.params);
     }
     
     // TODO: Return a IntDoubleVector view of the parameters. A pythonic "slice" of them.

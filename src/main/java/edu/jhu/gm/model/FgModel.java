@@ -14,10 +14,13 @@ import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
-import edu.jhu.srl.MutableInt;
+import edu.jhu.prim.vector.IntDoubleDenseVector;
+import edu.jhu.prim.vector.IntDoubleSortedVector;
+import edu.jhu.prim.vector.IntDoubleVector;
+import edu.jhu.prim.vector.IntDoubleVectorSlice;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.dist.Gaussian;
 
@@ -34,16 +37,18 @@ import edu.jhu.util.dist.Gaussian;
 public class FgModel implements Serializable, IFgModel {
 
     private static final long serialVersionUID = 4477788767217412525L;
+    /** The model parameters. */
+    private final IntDoubleVector params;
     /**
-     * The model parameters. Indexed by feature template index, variable
+     * The model parameters indices. Indexed by feature template index, variable
      * assignment config index, and observation function feature index.
      */
-    private double[][][] params;
+    private final int[][][] indices;
     /**
      * Whether or not the correspondingly indexed model parameter is included in
      * this model.
      */
-    private boolean[][][] included;
+    private final boolean[][][] included;
     /** The number of feature templates. */
     private int numTemplates;
     /** The number of parameters in the model. */
@@ -63,13 +68,13 @@ public class FgModel implements Serializable, IFgModel {
         this.templates = templates;
         numTemplates = templates.size();
         
-        this.params = new double[numTemplates][][];
+        this.indices = new int[numTemplates][][];
         this.included = new boolean[numTemplates][][];
         for (int t=0; t<numTemplates; t++) {
             FeatureTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
-            params[t] = new double[numConfigs][alphabet.size()];
+            indices[t] = new int[numConfigs][alphabet.size()];
             included[t] = new boolean[numConfigs][alphabet.size()];
         }
         
@@ -80,34 +85,53 @@ public class FgModel implements Serializable, IFgModel {
         }
       
         // Always include the bias features.
-        for (int t=0; t<params.length; t++) {
+        for (int t=0; t<indices.length; t++) {
             FeatureTemplate template = templates.get(t);
             Alphabet<Feature> alphabet = template.getAlphabet();            
             for (int k = 0; k < alphabet.size(); k++) {
                 if (alphabet.lookupObject(k).isBiasFeature()) {
-                    for (int c = 0; c < params[t].length; c++) {
+                    for (int c = 0; c < indices[t].length; c++) {
                         included[t][c][k] = true;
                     }        
                 }
             }
         }
         
-        // Count the number of parameters, accounting for excluded params.
-        final MutableInt count = new MutableInt(0);
-        apply(new LambdaUnaryOpDouble() {
-            public double call(double v) { count.increment(); return v; }
-        });
-        numParams = count.get();
+        // Set the indices to track only the included parameters.
+        // All other entries are set to -1.
+        // Also: Count the number of parameters, accounting for excluded params.
+        for (int t=0; t<indices.length; t++) {
+            for (int c = 0; c < indices[t].length; c++) {
+                for (int k = 0; k < indices[t][c].length; k++) {
+                    indices[t][c][k] = included[t][c][k] ? numParams++ : -1;
+                }
+            }
+        }
+        
+        this.params = new IntDoubleDenseVector(numParams);
+        for (int i=0; i<numParams; i++) {
+            params.set(i, 0.0);
+        }
+    }
+    
+    /** Shallow copy constructor which also sets params. */
+    private FgModel(FgModel other, IntDoubleVector params) {
+        this.params = params;
+        this.indices = other.indices;
+        this.included = other.included;
+        this.numParams = other.numParams;
+        this.numTemplates = other.numTemplates;
+        this.templates = other.templates;
     }
     
     /** Copy constructor. */
-    public FgModel(FgModel other) {
-        this.params = DoubleArrays.copyOf(other.params);
-        this.included = BoolArrays.copyOf(other.included);
-        this.numParams = other.numParams;
-        this.numTemplates = other.numTemplates;
-        // We only do a shallow copy of the templates.
-        this.templates = other.templates;
+    public FgModel getDenseCopy() {
+        return new FgModel(this, new IntDoubleDenseVector(params));
+    }
+    
+    /** Copy constructor. */
+    public FgModel getSparseCopy() {
+        return new FgModel(this, new IntDoubleSortedVector(params));
     }
 
     /**
@@ -155,61 +179,53 @@ public class FgModel implements Serializable, IFgModel {
     
     public void updateModelFromDoubles(double[] inParams) {
         assert (numParams == inParams.length);
-        int i=0;
-        for (int t=0; t<params.length; t++) {
-            for (int c = 0; c < params[t].length; c++) {
-                for (int k = 0; k < params[t][c].length; k++) {
-                    if (included[t][c][k]) {
-                        // Update the model.
-                        params[t][c][k] = inParams[i++];
-                    }
-                }
-            }
+        for (int i=0; i<numParams; i++) {
+            this.params.set(i, inParams[i]);
         }
     }
     
     public void updateDoublesFromModel(double[] outParams) {
         assert (numParams == outParams.length);
-        int i=0;
-        for (int t=0; t<params.length; t++) {
-            for (int c = 0; c < params[t].length; c++) {
-                for (int k = 0; k < params[t][c].length; k++) {
-                    if (included[t][c][k]) {
-                        // Update the doubles.
-                        outParams[i++] = params[t][c][k];
-                    }
-                }
-            }
+        for (int i=0; i<numParams; i++) {
+            outParams[i] = this.params.get(i);
         }
     }
+    
     public void add(int ft, int config, int feat, double addend) {
       if (!included[ft][config][feat]) {
           throw new IllegalArgumentException("The specified parameter is not included in this model");
       }
-      params[ft][config][feat] += addend;
+      params.add(indices[ft][config][feat], addend);
     }
 
     public void addIfParamExists(int ft, int config, int feat, double addend) {
         if (included[ft][config][feat]) {
-            params[ft][config][feat] += addend;
+            params.add(indices[ft][config][feat], addend);
         }
     }
 
     public void addIfParamExists(int t, int c, FeatureVector fv, double multiplier) {
-        boolean[] incl = included[t][c];
-        double[] theta = params[t][c];
         int[] fvInd = fv.getInternalIndices();
         double[] fvVal = fv.getInternalValues();
         for (int i=0; i<fvInd.length; i++) {
             int f = fvInd[i];
-            if (incl[f]) {
-                theta[f] += multiplier * fvVal[i];
+            if (included[t][c][f]) {
+                params.add(indices[t][c][f], multiplier * fvVal[i]);
             }
         }
     }
     
-    public double[] getParams(int ft, int config) {
-        return params[ft][config];
+    public void add(FgModel other) {
+        if (other.indices != this.indices) {
+            throw new IllegalStateException("Only copies of this model can be added to it.");
+        }
+        this.params.add(other.params);
+    }
+    
+    public IntDoubleVectorSlice getParams(int ft, int config) {
+        int start = indices[ft][config][0];
+        int size = indices[ft][config].length;
+        return new IntDoubleVectorSlice((IntDoubleDenseVector)params, start, size);
     }
     
     public int getNumParams() {
@@ -217,19 +233,15 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public int getNumTemplates() {
-        return params.length;
+        return indices.length;
     }
 
     public int getNumConfigs(int ft) {
-        return params[ft].length;
+        return indices[ft].length;
     }
 
     public int getNumFeats(int ft, int c) {
-        return params[ft][c].length;
-    }
-    
-    public void zero() {
-        DoubleArrays.fill(params, 0.0);
+        return indices[ft][c].length;
     }
 
     public String toString() {
@@ -249,7 +261,7 @@ public class FgModel implements Serializable, IFgModel {
             Alphabet<Feature> alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
                 //VarConfig vc = vars.getVarConfig(c);
-                for (int k = 0; k < params[t][c].length; k++) {
+                for (int k = 0; k < indices[t][c].length; k++) {
                     if (included[t][c][k]) {
                         writer.write(template.getKey().toString());
                         writer.write("_");
@@ -257,7 +269,7 @@ public class FgModel implements Serializable, IFgModel {
                         writer.write("_");
                         writer.write(alphabet.lookupObject(k).toString());
                         writer.write("\t");
-                        writer.write(String.format("%.13g", params[t][c][k]));
+                        writer.write(String.format("%.13g", params.get(indices[t][c][k])));
                         writer.write("\n");
                     }
                 }
@@ -269,14 +281,28 @@ public class FgModel implements Serializable, IFgModel {
     public FeatureTemplateList getTemplates() {
         return templates;
     }
+    
+    public void apply(FnIntDoubleToDouble lambda) {
+        params.apply(lambda);
+    }
+
+    /** ONLY FOR TESTING. */
+    void apply(final LambdaUnaryOpDouble lambda) {
+        params.apply(new FnIntDoubleToDouble() {
+            @Override
+            public double call(int idx, double val) {
+                return lambda.call(val);
+            }
+        });
+    }
 
     /**
      * Fill the model parameters with values randomly drawn from ~ Normal(0, 1).
      */
     public void setRandomStandardNormal() {
-        LambdaUnaryOpDouble lambda = new LambdaUnaryOpDouble() {
+        FnIntDoubleToDouble lambda = new FnIntDoubleToDouble() {
             @Override
-            public double call(double obj) {
+            public double call(int idx, double val) {
                 return Gaussian.nextDouble(0.0, 1.0);
             }
         };
@@ -284,31 +310,23 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public void fill(final double value) {
-        apply(new LambdaUnaryOpDouble() {
+        apply(new FnIntDoubleToDouble() {
             @Override
-            public double call(double obj) {
+            public double call(int idx, double ignored) {
                 return value;
             }
         });
     }
     
-    public void apply(LambdaUnaryOpDouble lambda) {
-        for (int t=0; t<params.length; t++) {
-            for (int c = 0; c < params[t].length; c++) {
-                for (int k = 0; k < params[t][c].length; k++) {
-                    if (included[t][c][k]) {
-                        params[t][c][k] = lambda.call(params[t][c][k]);
-                    }
-                }
-            }
-        }
+    public void zero() {
+        fill(0.0);
     }
 
     public void scale(final double multiplier) {
-        apply(new LambdaUnaryOpDouble() {
+        apply(new FnIntDoubleToDouble() {
             @Override
-            public double call(double value) {
-                return multiplier * value;
+            public double call(int idx, double val) {
+                return multiplier * val;
             }
         });
     }
