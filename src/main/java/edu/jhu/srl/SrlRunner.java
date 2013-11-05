@@ -76,7 +76,9 @@ public class SrlRunner {
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
-
+    @Opt(hasArg = true, description = "Number of threads for computation.")
+    public static int numThreads = 1;
+    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
@@ -536,6 +538,7 @@ public class SrlRunner {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
+        prm.crfObjPrm.numThreads = numThreads;
         return prm;
     }
 

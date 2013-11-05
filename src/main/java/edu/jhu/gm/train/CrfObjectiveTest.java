@@ -37,6 +37,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
@@ -189,7 +190,7 @@ public class CrfObjectiveTest {
         model.updateModelFromDoubles(params);
         
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(model, exs.getData(), getInfFactory(logDomain));
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), getInfFactory(logDomain));
         obj.setPoint(params);
         
         // Test log-likelihood.
@@ -223,7 +224,7 @@ public class CrfObjectiveTest {
         
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         infFactory = getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(model, exs.getData(), infFactory);
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
         obj.setPoint(params);        
         
         assertEquals(2, exs.getAlphabet().size());
@@ -319,7 +320,7 @@ public class CrfObjectiveTest {
             assertEquals(2*3, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         
-        CrfObjective obj = new CrfObjective(model, data, infFactory);
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
         obj.setPoint(FgModelTest.getParams(model));
         double ll = obj.getValue();        
         assertEquals(2./6., FastMath.exp(ll), 1e-13);

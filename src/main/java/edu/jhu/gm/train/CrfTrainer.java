@@ -6,6 +6,7 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.BatchFunctionOpts;
 import edu.jhu.optimize.BatchMaximizer;
@@ -34,6 +35,7 @@ public class CrfTrainer {
         public Maximizer maximizer = new MalletLBFGS(new MalletLBFGSPrm());
         public BatchMaximizer batchMaximizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
+        public CrfObjectivePrm crfObjPrm = new CrfObjectivePrm();
     }
         
     private CrfTrainerPrm prm; 
@@ -49,7 +51,7 @@ public class CrfTrainer {
         double[] params = new double[model.getNumParams()];
         model.updateDoublesFromModel(params);
 
-        CrfObjective objective = new CrfObjective(model, data, prm.infFactory);
+        CrfObjective objective = new CrfObjective(prm.crfObjPrm, model, data, prm.infFactory);
         if (prm.maximizer != null) {
             Function fn = objective;
             if (prm.regularizer != null) {
@@ -71,6 +73,7 @@ public class CrfTrainer {
             log.info("Final objective value: " + fn.getValue(IntSort.getIndexArray(fn.getNumExamples())));
         }
         model.updateModelFromDoubles(params);
+        objective.shutdown();
         return model;
     }
     
