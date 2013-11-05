@@ -33,22 +33,27 @@ public class FgExampleDiskStore extends AbstractFgExampleList implements FgExamp
     }
 
     /** Adds an example. */
-    public void add(FgExample example) {
+    public synchronized void add(FgExample example) {
         examples.put(examples.size(), example);
     }
 
     /** Gets the i'th example. */
-    public FgExample get(int i) {
+    public synchronized FgExample get(int i) {
         return examples.get(i);
     }
 
     /** Gets the number of examples. */
-    public int size() {
+    public synchronized int size() {
         return examples.size();
     }
 
-    public Iterator<FgExample> iterator() {
-        return examples.valueIterator();
-    }
+    // In an old version of this class, we used the following iterator. 
+    // However there was no way to ensure its thread safety. The iterator
+    // in the abstract base class however, relies on get(i) which is thread 
+    // safe.
+    //
+    //    public Iterator<FgExample> iterator() {
+    //        return examples.valueIterator();
+    //    }
 
 }

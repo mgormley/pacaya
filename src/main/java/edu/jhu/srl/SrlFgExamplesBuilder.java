@@ -50,8 +50,6 @@ public class SrlFgExamplesBuilder {
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
 
-    private Timer fgTimer = new Timer();
-
     public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
         this.fts = fts;
@@ -66,6 +64,9 @@ public class SrlFgExamplesBuilder {
         return data;
     }
     
+    /** 
+     * This class is read-only and thread-safe.
+     */
     private class SrlFgExampleFactory implements FgExampleFactory {
 
         private SimpleAnnoSentenceCollection sents;
@@ -77,7 +78,6 @@ public class SrlFgExamplesBuilder {
         public FgExample get(int i, FeatureTemplateList fts) {
             SimpleAnnoSentence sent = sents.get(i);
             
-            fgTimer.start();
             // Precompute a few things.
             SrlGraph srlGraph = sent.getSrlGraph();
             
@@ -91,7 +91,6 @@ public class SrlFgExamplesBuilder {
             // Create a feature extractor for this example.
             SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
             ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
-            fgTimer.stop();            
             
             // Create the example solely to count the features.
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
