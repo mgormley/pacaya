@@ -443,14 +443,15 @@ public class SentFeatureExtractorTest {
         fePrm.lemmaFeats = true;
         fePrm.tagFeats = true;
         fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        allFeats = new ArrayList<String>();
-        for (int i = 0; i < sent.size(); i++) {
+        //allFeats = new ArrayList<String>();
+        ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(0, 5);
+        /*for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);
                 allFeats.addAll(pairFeatures);
             }
-        }
-        for (String f : allFeats) {
+        }*/
+        for (String f : pairFeatures) {
             System.out.println(f);
         }
     }

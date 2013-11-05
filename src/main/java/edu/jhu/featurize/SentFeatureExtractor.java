@@ -220,16 +220,24 @@ public class SentFeatureExtractor {
          * supportFeats */
         ArrayList<String> predFeatureList = new ArrayList<String>();
         ArrayList<String> argFeatureList = new ArrayList<String>();
+        ArrayList<String> predArgPairFeatureList = new ArrayList<String>();
         // Using a window of size 3:  previous word, current word, next word.
         for (int n=-1; n<=1; n++) {
             FeatureObject featurePred = getFeatureObject(pidx + n);
             FeatureObject featureArg = getFeatureObject(aidx + n);
-            //FeatureObject featurePredArgPair = new FeatureObject(pidx + n, aidx + n, featurePred, featureArg, parents);
+            FeatureObject featurePredArgPair = new FeatureObject(pidx + n, aidx + n, featurePred, featureArg, parents);
             //Iterable<FeatureObject> pair = new Template<FeatureObject, FeatureObject>(featurePred, featureArg);
             predFeatureList = addTemplatePieces(featurePred, predFeatureList, n);
             argFeatureList = addTemplatePieces(featureArg, argFeatureList, n);
+            predArgPairFeatureList = addPathTemplatePieces(featurePredArgPair, predArgPairFeatureList, n);
         }
         ArrayList<String> feats = makeFeatures(predFeatureList, argFeatureList);
+        ArrayList<String> argFeats = makeFeatures(argFeatureList, argFeatureList);
+        ArrayList<String> predFeats = makeFeatures(predFeatureList, predFeatureList);
+        feats.addAll(argFeats);
+        feats.addAll(predFeats);
+        feats.addAll(predArgPairFeatureList);
+        
         //ArrayList<String> featList = new ArrayList<String>();
         //String seqFeat = buildString(featList);
         //String bagFeat = buildString(bag(featList));
@@ -237,10 +245,10 @@ public class SentFeatureExtractor {
         return feats;
     }
 
-    private ArrayList<String> makeFeatures(ArrayList<String> predFeatureList, ArrayList<String> argFeatureList) {
+    private ArrayList<String> makeFeatures(ArrayList<String> featureList1, ArrayList<String> featureList2) {
         ArrayList<String> featList = new ArrayList<String>();
-        for (String a : predFeatureList) {
-            for (String b : argFeatureList) {
+        for (String a : featureList1) {
+            for (String b : featureList2) {
                 String feature = a + "_" + b;
                 featList.add(feature);
             }
@@ -248,6 +256,80 @@ public class SentFeatureExtractor {
         return featList;
     }
 
+    private ArrayList<String> addPathTemplatePieces(FeatureObject featureObj, ArrayList<String> featureList, Integer n) {
+        String feat;
+        // Initialize Path structures.
+        List<Pair<Integer, Dir>> betweenPath = featureObj.getBetweenPath();
+        ArrayList<Integer> linePath = featureObj.getLinePath();
+        List<Pair<Integer, Dir>> dpPathPred = featureObj.getDpPathPred();
+        List<Pair<Integer, Dir>> dpPathArg = featureObj.getDpPathArg();
+        List<Pair<Integer, Dir>> dpPathShare = featureObj.getDpPathShare();
+
+        ArrayList<FeatureObject> betweenPathTokens = getTokens(betweenPath);
+        ArrayList<FeatureObject> linePathCoNLL = getTokens(linePath);
+        ArrayList<FeatureObject> dpPathPredTokens = getTokens(dpPathPred);
+        ArrayList<FeatureObject> dpPathArgTokens = getTokens(dpPathArg);
+        ArrayList<FeatureObject> dpPathShareTokens = getTokens(dpPathShare);
+        
+        ArrayList<ArrayList<FeatureObject>> pathLists = new ArrayList<ArrayList<FeatureObject>>();
+        pathLists.add(betweenPathTokens);
+        pathLists.add(linePathCoNLL);
+        pathLists.add(dpPathPredTokens);
+        pathLists.add(dpPathArgTokens);
+        pathLists.add(dpPathShareTokens);
+        Collection<ArrayList<String>> subFeatureLists;
+        for (ArrayList<FeatureObject> pathList : pathLists) {
+            subFeatureLists = addTemplatePieces(pathList);
+            for (ArrayList<String> subFeatureList : subFeatureLists) {
+                feat = "Seq:" + buildString(subFeatureList);
+                featureList.add(feat);
+                feat = "Bag:" + buildString(bag(subFeatureList));
+                featureList.add(feat);
+                feat = "NoDup:" + buildString(noDup(subFeatureList));
+                featureList.add(feat);
+            }
+        }
+        
+        return featureList;
+    }
+    
+    private Collection<ArrayList<String>> addTemplatePieces(ArrayList<FeatureObject> featureObjList) {
+        //ArrayList<ArrayList<String>> featureList = new ArrayList<ArrayList<String>>();
+        //String[][] featureList = new String[][]{};
+        HashMap<Integer, ArrayList<String>> subFeatureListsMap = new HashMap<Integer, ArrayList<String>>();
+        String feat;
+        for (FeatureObject featureObj : featureObjList) {
+                int n = 0;
+                if (prm.formFeats) {
+                    feat = "Form:" + featureObj.getForm();
+                    addFeature(subFeatureListsMap, n, feat);
+                    n++;
+                }
+                if (prm.lemmaFeats) {
+                    feat = "Lemma:" + featureObj.getLemma();
+                    addFeature(subFeatureListsMap, n, feat);
+                    n++;
+                }
+                if (prm.tagFeats) {
+                    feat = "Tag:" + featureObj.getPos();
+                    addFeature(subFeatureListsMap, n, feat);
+                    n++;
+                }
+        }
+        return subFeatureListsMap.values();
+    }
+
+    private void addFeature(HashMap<Integer, ArrayList<String>> subFeatureLists, int n, String feat) {
+        ArrayList<String> subFeatureList;
+        if (n >= subFeatureLists.size()) {
+            subFeatureList = new ArrayList<String>();
+        } else {
+            subFeatureList = subFeatureLists.get(n);
+        }
+        subFeatureList.add(feat);
+        subFeatureLists.put(n, subFeatureList);
+    }
+    
     private ArrayList<String> addTemplatePieces(FeatureObject featureObj, ArrayList<String> featureList, Integer n) {
         if (prm.formFeats) {
             String form = "Form:" + featureObj.getForm();
@@ -277,6 +359,10 @@ public class SentFeatureExtractor {
         if (prm.supportFeats) {
 
         }*/
+        ArrayList<Integer> children = featureObj.getChildren();
+        ArrayList<FeatureObject> childrenTokens = getTokens(children);
+
+
 
         return featureList;
     
