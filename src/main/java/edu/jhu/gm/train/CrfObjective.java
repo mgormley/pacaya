@@ -16,6 +16,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.GlobalFactor;
+import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.VarConfig;
@@ -210,7 +211,7 @@ public class CrfObjective implements Function, BatchFunction {
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
      */
-    private void addGradientForExample(int i, FgModel gradient) {
+    private void addGradientForExample(int i, IFgModel gradient) {
         FgExample ex = data.get(i);
         
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
@@ -239,7 +240,7 @@ public class CrfObjective implements Function, BatchFunction {
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
     private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FeatureTemplateList fts,
-            double multiplier, FgModel gradient) {
+            double multiplier, IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
