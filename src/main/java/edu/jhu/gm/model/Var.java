@@ -145,12 +145,18 @@ public class Var implements Comparable<Var>, Serializable {
 
         c = this.name.compareTo(other.name);
         if (c != 0) { return c; }
-        
-        c = this.stateNames.size() - other.stateNames.size();
-        if (c != 0) { return c; }        
-        for (int i=0; i<this.stateNames.size(); i++) {
-            c = this.stateNames.get(i).compareTo(other.stateNames.get(i));
-            if (c != 0) { return c; }
+
+        if (this.stateNames == null && other.stateNames != null) {
+            return -1;
+        } else if (this.stateNames != null && other.stateNames == null) {
+            return 1;
+        } else if (this.stateNames != null && other.stateNames != null) {
+            c = this.stateNames.size() - other.stateNames.size();
+            if (c != 0) { return c; }        
+            for (int i=0; i<this.stateNames.size(); i++) {
+                c = this.stateNames.get(i).compareTo(other.stateNames.get(i));
+                if (c != 0) { return c; }
+            }
         }
 
         return c;
