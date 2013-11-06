@@ -48,16 +48,21 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
 
     /** Gets the i'th example. */
     public FgExample get(int i) {
-        FgExample ex = cache.get(i);
+        FgExample ex;
+        synchronized (cache) {
+            ex = cache.get(i);
+        }
         if (ex == null) {            
             ex = exampleFactory.get(i);
-            cache.put(i, ex);
+            synchronized (cache) {
+                cache.put(i, ex);
+            }
         }
         return ex;
     }
 
     /** Gets the number of examples. */
-    public int size() {
+    public synchronized int size() {
         return exampleFactory.size();
     }
 

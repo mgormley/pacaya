@@ -48,6 +48,7 @@ import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
@@ -76,7 +77,9 @@ public class SrlRunner {
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
-
+    @Opt(hasArg = true, description = "Number of threads for computation.")
+    public static int threads = 1;
+    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
@@ -216,8 +219,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            //TODO: Utilities.useLogAddTable = true;
-            throw new RuntimeException();
+            FastMath.useLogAddTable = true;
         }
         
         // Get a model.
@@ -361,6 +363,7 @@ public class SrlRunner {
         // where we've never seen the predicate.
         if (prm.fgPrm.predictSense) {
             fts.startGrowth();
+            // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
             fts.stopGrowth();
@@ -536,6 +539,7 @@ public class SrlRunner {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
+        prm.crfObjPrm.numThreads = threads;
         return prm;
     }
 

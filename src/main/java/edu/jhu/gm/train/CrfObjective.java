@@ -1,6 +1,11 @@
 package edu.jhu.gm.train;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -16,6 +21,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.GlobalFactor;
+import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.VarConfig;
@@ -23,34 +29,38 @@ import edu.jhu.gm.util.IntIter;
 import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.prim.vector.IntDoubleVectorSlice;
+import edu.jhu.util.Threads;
 
-// TODO: Add an option which computes the gradient on only a subset of the
-// variables for use by SGD.
 public class CrfObjective implements Function, BatchFunction {
     
     private static final Logger log = Logger.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
+    public static class CrfObjectivePrm {
+        public int numThreads = 1;
+    }
+    
+    private CrfObjectivePrm prm;
     private int numParams;
     private FgExampleList data;
     private FgModel model;
     private FgModel gradient;
     private FgInferencerFactory infFactory;
-    
-    // Cached inferencers for each example, indexed by example id.
-    private ArrayList<FgInferencer> infLatList;
-    private ArrayList<FgInferencer> infLatPredList;
-
+    private ExecutorService pool;
         
-    public CrfObjective(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+    public CrfObjective(CrfObjectivePrm prm, FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+        this.prm = prm;
         this.numParams = model.getNumParams();
         this.data = data;
         this.model = model;
         this.infFactory = infFactory;
-        this.gradient = new FgModel(model);
+        this.gradient = model.getDenseCopy();
         this.gradient.zero();
+        this.pool = Executors.newFixedThreadPool(prm.numThreads);
     }
         
     public void setPoint(double[] params) {
@@ -76,20 +86,7 @@ public class CrfObjective implements Function, BatchFunction {
      */
     @Override
     public double getValue() {        
-        // TODO: we shouldn't run inference again just to compute this!!
-        log.warn("Running inference an extra time to compute marginal likelihood.");
-        
-        double ll = 0.0;
-        for (int i=0; i<data.size(); i++) {
-            log.trace("Computing marginal log-likelihood for example " + i);
-            ll += getMarginalLogLikelihoodForExample(i);
-        }
-        ll /= data.size();
-        log.info("Average marginal log-likelihood: " + ll);
-        if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood of data should be <= 0: " + ll);
-        }
-        return ll;
+        return getValue(IntSort.getIndexArray(data.size()));
     }
 
     /**
@@ -98,19 +95,53 @@ public class CrfObjective implements Function, BatchFunction {
      */
     @Override
     public double getValue(int[] batch) {
+        // TODO: we shouldn't run inference again just to compute this!!
+        boolean isFullDataset = batch.length == data.size();
         double ll = 0.0;
-        for (int i=0; i<batch.length; i++) {
-            ll += getMarginalLogLikelihoodForExample(batch[i]);
+        
+        if (prm.numThreads == 1) {
+            // Run serially.
+            for (int i=0; i<batch.length; i++) {
+                ll += getMarginalLogLikelihoodForExample(batch[i]);
+            }
+        } else {
+            // Run in parallel.
+            ArrayList<Callable<Double>> tasks = new ArrayList<Callable<Double>>();
+            for (int i = 0; i < batch.length; i++) {
+                tasks.add(new LogLikelihoodOfExample(batch[i]));
+            }
+            List<Double> results = Threads.getAllResults(pool, tasks);
+            for (Double r : results) {
+                ll += r;
+            }
         }
+        
+        
         ll /= batch.length;
-        if (batch.length == data.size()) {
+        if (isFullDataset) {
             // Print out the likelihood if we're computing it on the entire dataset.
             log.info("Average marginal log-likelihood: " + ll);
         }
         if ( ll > MAX_LOG_LIKELIHOOD ) {
-            log.warn("Log-likelihood for batch should be <= 0: " + ll);
+            String name = isFullDataset ? "data" : "batch";
+            log.warn("Log-likelihood for " + name + " should be <= 0: " + ll);
         }
         return ll;
+    }
+    
+    private class LogLikelihoodOfExample implements Callable<Double> {
+
+        private int i;
+        
+        public LogLikelihoodOfExample(int i) {
+            this.i = i;
+        }
+
+        @Override
+        public Double call() throws Exception {
+            return getMarginalLogLikelihoodForExample(i);
+        }
+        
     }
         
     private double getMarginalLogLikelihoodForExample(int i) {
@@ -131,8 +162,8 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
-                    numerator += ex.getObservationFeatures(a).dot(params);
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    numerator += model.dot(fts.getTemplateId(f), goldConfig, fv);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
                 }
@@ -155,8 +186,8 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    double[] params = model.getParams(fts.getTemplateId(f), goldConfig);
-                    denominator += ex.getObservationFeatures(a).dot(params);
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    denominator += model.dot(fts.getTemplateId(f), goldConfig, fv);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
                 }
@@ -178,13 +209,7 @@ public class CrfObjective implements Function, BatchFunction {
      */
     @Override
     public void getGradient(double[] g) {
-        this.gradient.zero();
-        for (int i=0; i<data.size(); i++) {
-            log.trace("Computing gradient for example " + i);
-            addGradientForExample(i, gradient);
-        }        
-        this.gradient.scale(1.0 / data.size());
-        gradient.updateDoublesFromModel(g);
+        getGradient(IntSort.getIndexArray(data.size()), g);
     }
 
     /**
@@ -193,13 +218,49 @@ public class CrfObjective implements Function, BatchFunction {
      */
     @Override
     public void getGradient(int[] batch, double[] g) {
-        this.gradient.zero();
-        for (int i=0; i<batch.length; i++) {
-            log.trace("Computing gradient for example " + batch[i]);
-            addGradientForExample(batch[i], gradient);
-        }        
+        this.gradient.zero();   
+        if (prm.numThreads == 1) {
+            // Run serially.
+            for (int i=0; i<batch.length; i++) {
+                log.trace("Computing gradient for example " + batch[i]);
+                addGradientForExample(batch[i], gradient);
+            }
+        } else {
+            // Run in parallel.
+            ArrayList<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
+            for (int i = 0; i < batch.length; i++) {
+                tasks.add(new AddGradientOfExample(gradient, batch[i]));
+            }
+            Threads.getAllResults(pool, tasks);
+        }     
         this.gradient.scale(1.0 / batch.length);
         gradient.updateDoublesFromModel(g);
+    }
+
+    private class AddGradientOfExample implements Callable<Object> {
+
+        private FgModel gradient;
+        private int i;
+
+        public AddGradientOfExample(FgModel gradient, int i) {
+            this.gradient = gradient;
+            this.i = i;
+        }
+
+        @Override
+        public Object call() {
+            log.trace("Computing gradient for example " + i);
+            FgModel sparseg;
+            synchronized (gradient) {
+                sparseg = gradient.getSparseCopy();
+            }
+            addGradientForExample(i, gradient);
+            synchronized (gradient) {
+                gradient.add(sparseg);
+            }
+            return null;
+        }
+        
     }
     
     /**
@@ -210,7 +271,7 @@ public class CrfObjective implements Function, BatchFunction {
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
      */
-    private void addGradientForExample(int i, FgModel gradient) {
+    private void addGradientForExample(int i, IFgModel gradient) {
         FgExample ex = data.get(i);
         
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
@@ -239,7 +300,7 @@ public class CrfObjective implements Function, BatchFunction {
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
     private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FeatureTemplateList fts,
-            double multiplier, FgModel gradient) {
+            double multiplier, IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
@@ -284,10 +345,6 @@ public class CrfObjective implements Function, BatchFunction {
                         // Scale the feature counts by the marginal probability of the c'th configuration.
                         // Update the gradient for each feature.
                         gradient.addIfParamExists(fts.getTemplateId(f), config, fv, multiplier * prob);
-                        // OLD WAY: This was too slow.
-                        // for (IntDoubleEntry entry : fv) {
-                        //     gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
-                        // }
                     }
                     assert(iter == null || !iter.hasNext());
                 }
@@ -300,7 +357,7 @@ public class CrfObjective implements Function, BatchFunction {
     /** Gets the "observed" feature counts. */
     public FeatureVector getObservedFeatureCounts(double[] params) {
         model.updateModelFromDoubles(params);
-        FgModel feats = new FgModel(model);
+        FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
@@ -317,7 +374,7 @@ public class CrfObjective implements Function, BatchFunction {
     /** Gets the "expected" feature counts. */
     public FeatureVector getExpectedFeatureCounts(double[] params) {
         model.updateModelFromDoubles(params);
-        FgModel feats = new FgModel(model);
+        FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
@@ -353,6 +410,15 @@ public class CrfObjective implements Function, BatchFunction {
 
     private FgInferencer getInfLatPred(FgExample ex) {
         return infFactory.getInferencer(ex.getFgLatPred());
+    }
+
+    public void shutdown() {
+        pool.shutdown();
+        try {
+            pool.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
     
 }

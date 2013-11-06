@@ -86,7 +86,8 @@ public class CrfTrainerTest {
         }
     }
 
-    @Test
+    // TODO: @Test 
+    // Add this test back when we support features of x and y.
     public void testLogLinearModelShapes() {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(30, "circle", "solid");

@@ -14,6 +14,8 @@ import edu.jhu.gm.feat.FeatureTemplateList;
  */
 public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExampleStore {
 
+    // Note: ArrayList is not synchronized, so we must synchronize access to
+    // this class.
     private ArrayList<FgExample> examples;
 
     public FgExampleMemoryStore(FeatureTemplateList fts) {
@@ -22,22 +24,18 @@ public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExa
     }
 
     /** Adds an example. */
-    public void add(FgExample example) {
+    public synchronized void add(FgExample example) {
         examples.add(example);
     }
 
     /** Gets the i'th example. */
-    public FgExample get(int i) {
+    public synchronized FgExample get(int i) {
         return examples.get(i);
     }
 
     /** Gets the number of examples. */
-    public int size() {
+    public synchronized int size() {
         return examples.size();
-    }
-
-    public Iterator<FgExample> iterator() {
-        return examples.iterator();
     }
 
 }

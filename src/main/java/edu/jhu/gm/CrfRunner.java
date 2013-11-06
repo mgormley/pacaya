@@ -34,6 +34,7 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -101,8 +102,7 @@ public class CrfRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            //TODO: Utilities.useLogAddTable = true;
-            throw new RuntimeException();
+            FastMath.useLogAddTable = true;
         }
         
         // Get a model.

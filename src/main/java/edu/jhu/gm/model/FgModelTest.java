@@ -55,6 +55,9 @@ public class FgModelTest {
     public void testApply() {
         FeatureTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
+        
+        assertEquals(3*2*2+2*1, model.getNumParams());
+        
         final MutableInt x = new MutableInt(0);
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
