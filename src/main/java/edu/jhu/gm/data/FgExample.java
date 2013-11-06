@@ -24,7 +24,6 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.prim.vector.IntDoubleVectorSlice;
 import edu.jhu.util.Timer;
 
 /**

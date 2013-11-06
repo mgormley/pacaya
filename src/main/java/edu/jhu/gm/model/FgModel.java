@@ -20,7 +20,6 @@ import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleSortedVector;
 import edu.jhu.prim.vector.IntDoubleVector;
-import edu.jhu.prim.vector.IntDoubleVectorSlice;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.dist.Gaussian;
 

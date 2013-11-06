@@ -31,7 +31,6 @@ import edu.jhu.optimize.Function;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.prim.vector.IntDoubleVectorSlice;
 import edu.jhu.util.Threads;
 
 public class CrfObjective implements Function, BatchFunction {
