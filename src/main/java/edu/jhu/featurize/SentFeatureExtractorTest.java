@@ -191,7 +191,7 @@ public class SentFeatureExtractorTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         // Shared path to root for two indices.
@@ -209,7 +209,7 @@ public class SentFeatureExtractorTest {
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
 
         // Shared path to root for two indices.
@@ -249,7 +249,7 @@ public class SentFeatureExtractorTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         // Shared path to root for two indices.
@@ -269,7 +269,7 @@ public class SentFeatureExtractorTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
 
         // Shared path to root for two indices.
@@ -305,7 +305,7 @@ public class SentFeatureExtractorTest {
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         zhaoPred = new FeatureObject(0, parents, simpleSent);
@@ -316,7 +316,7 @@ public class SentFeatureExtractorTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(6, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
     }
 
