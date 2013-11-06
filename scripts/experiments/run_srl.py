@@ -20,6 +20,7 @@ from experiments.core import pipeline
 import re
 import random
 from experiments.core.pipeline import write_script, RootStage, Stage
+import multiprocessing
 
 # ---------------------------- Handy Functions ----------------------------------
 
@@ -152,7 +153,9 @@ class ParamDefinitions():
         self.fast = options.fast
         self.expname = options.expname
         self.path_defs = PathDefinitions(options)
-                
+        self.queue = options.queue
+        self.big_machine = (multiprocessing.cpu_count() > 2)
+        
     def get_param_groups_and_lists(self):        
         g = ParamGroups()
         l = ParamGroupLists()
@@ -184,6 +187,13 @@ class ParamDefinitions():
         g.defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
+        if self.queue:
+            threads = 63
+        elif self.big_machine:
+            threads = 2
+        else:
+            threads = 1
+        g.defaults.set("threads", threads, incl_arg=False, incl_name=False)
         
         g.defaults.update(
             printModel="./model.txt",                          
@@ -370,7 +380,7 @@ class ParamDefinitions():
     
     def get_srl_work_mem_megs(self, exp):
         ''' Gets the (expected) memory limit for the given parameters in exp. '''
-        if exp.get("biasOnly") != True and re.search(r"test[^.]+\.local", os.uname()[1]):
+        if self.queue:
             if exp.get("testMaxSentenceLength") is not None and exp.get("testMaxSentenceLength") <= 20 and \
                     exp.get("trainMaxSentenceLength") is not None and exp.get("trainMaxSentenceLength") <= 20:
                 # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
@@ -503,11 +513,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(trainMaxSentenceLength=20)
             return self._get_default_pipeline(g, l)
         
-        elif self.expname == "srl-narad":
+        elif self.expname == "srl-narad":            
             g.defaults += g.feat_narad
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
+            g.defaults += SrlExpParams(trainMaxNumSentences=1000,
+                                       testMaxNumSentences=100)
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l)
 
