@@ -222,10 +222,17 @@ public class FgModel implements Serializable, IFgModel {
         this.params.add(other.params);
     }
     
-    public IntDoubleVectorSlice getParams(int ft, int config) {
-        int start = indices[ft][config][0];
-        int size = indices[ft][config].length;
-        return new IntDoubleVectorSlice((IntDoubleDenseVector)params, start, size);
+    public double dot(int t, int c, FeatureVector fv) {        
+        double dot = 0.0;
+        int[] fvInd = fv.getInternalIndices();
+        double[] fvVal = fv.getInternalValues();
+        for (int i=0; i<fvInd.length; i++) {
+            int f = fvInd[i];
+            if (f < included[t][c].length && included[t][c][f]) {
+                dot += fvVal[i] * params.get(indices[t][c][f]);
+            }
+        }
+        return dot;
     }
     
     public int getNumParams() {

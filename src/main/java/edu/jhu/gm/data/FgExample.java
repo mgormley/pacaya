@@ -213,13 +213,13 @@ public class FgExample implements Serializable {
                     // where the predicted variables (might) have been clamped.
                     int config = (iter != null) ? iter.next() : c;
                     
-                    IntDoubleVectorSlice params = model.getParams(model.getTemplates().getTemplateId(f), config);
                     FeatureVector fv = getObservationFeatures(a);
+                    double dot = model.dot(model.getTemplates().getTemplateId(f), config, fv);
                     if (logDomain) {
                         // Set to log of the factor's value.
-                        factor.setValue(c, fv.dot(params));
+                        factor.setValue(c, dot);
                     } else {
-                        factor.setValue(c, FastMath.exp(fv.dot(params)));
+                        factor.setValue(c, FastMath.exp(dot));
                     }
                 }
 

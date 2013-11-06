@@ -162,8 +162,8 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    IntDoubleVectorSlice params = model.getParams(fts.getTemplateId(f), goldConfig);
-                    numerator += ex.getObservationFeatures(a).dot(params);
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    numerator += model.dot(fts.getTemplateId(f), goldConfig, fv);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
                 }
@@ -186,8 +186,8 @@ public class CrfObjective implements Function, BatchFunction {
             if (f.getVars().size() == 0) {
                 if (f instanceof ExpFamFactor) {
                     int goldConfig = ex.getGoldConfigIdxPred(a);
-                    IntDoubleVectorSlice params = model.getParams(fts.getTemplateId(f), goldConfig);
-                    denominator += ex.getObservationFeatures(a).dot(params);
+                    FeatureVector fv = ex.getObservationFeatures(a);
+                    denominator += model.dot(fts.getTemplateId(f), goldConfig, fv);
                 } else {
                     throw new UnsupportedFactorTypeException(f);
                 }
@@ -345,10 +345,6 @@ public class CrfObjective implements Function, BatchFunction {
                         // Scale the feature counts by the marginal probability of the c'th configuration.
                         // Update the gradient for each feature.
                         gradient.addIfParamExists(fts.getTemplateId(f), config, fv, multiplier * prob);
-                        // OLD WAY: This was too slow.
-                        // for (IntDoubleEntry entry : fv) {
-                        //     gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * prob * entry.get());
-                        // }
                     }
                     assert(iter == null || !iter.hasNext());
                 }
