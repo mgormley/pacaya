@@ -193,7 +193,7 @@ class ParamDefinitions():
             threads = 2
         else:
             threads = 1
-        g.defaults.set("threads", threads, incl_arg=False, incl_name=False)
+        g.defaults.set("threads", threads, incl_name=False)
         
         g.defaults.update(
             printModel="./model.txt",                          
