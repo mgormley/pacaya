@@ -188,12 +188,13 @@ class ParamDefinitions():
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
         if self.queue:
-            threads = 63
+            threads = 20
         elif self.big_machine:
             threads = 2
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
+        g.defaults.set("sgdBatchSize", threads)
         
         g.defaults.update(
             printModel="./model.txt",                          
@@ -398,7 +399,7 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*1024
             else:
                 if exp.get("useProjDepTreeFactor"):
-                    base_work_mem_megs = 200 * 1024
+                    base_work_mem_megs = 50 * 1024
                 else:
                     base_work_mem_megs = 50 * 1024
         else:
