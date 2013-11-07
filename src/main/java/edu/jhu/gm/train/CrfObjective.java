@@ -251,9 +251,9 @@ public class CrfObjective implements Function, BatchFunction {
             log.trace("Computing gradient for example " + i);
             FgModel sparseg;
             synchronized (gradient) {
-                sparseg = gradient.getSparseCopy();
+                sparseg = gradient.getSparseZeroedCopy();
             }
-            addGradientForExample(i, gradient);
+            addGradientForExample(i, sparseg);
             synchronized (gradient) {
                 gradient.add(sparseg);
             }

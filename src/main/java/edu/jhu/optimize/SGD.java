@@ -163,7 +163,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
                 log.debug("Average learning rate: " + avgLr);
-                log.debug(String.format("Average time per pass (min): %.2g", timer.totSec() / 60.0 / passCountFrac));
+                log.debug(String.format("Average time per pass (min): %f", timer.totSec() / 60.0 / passCountFrac));
             }
             if ((int) Math.floor(passCountFrac) > passCount) {
                 // Another full pass through the data has been completed.
