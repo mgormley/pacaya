@@ -444,7 +444,7 @@ public class SentFeatureExtractorTest {
         fePrm.tagFeats = true;
         fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //allFeats = new ArrayList<String>();
-        ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(0, 5);
+        ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(1, 5);
         /*for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);

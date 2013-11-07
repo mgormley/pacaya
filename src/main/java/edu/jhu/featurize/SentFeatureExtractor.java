@@ -33,7 +33,7 @@ public class SentFeatureExtractor {
     * 3. part-of-speech (tagFeats)
     * 4. morphological features (morphFeats)
     * 5. syntactic dependency label (deprelFeats)
-    * 6. syntactic edges:  children, siblings, parents (edgeFeats)
+    * 6. family children, siblings, parents (familyFeats)
     * 7. dependency paths (pathFeats)
     * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
     */
@@ -50,7 +50,7 @@ public class SentFeatureExtractor {
         public boolean tagFeats = true;
         public boolean morphFeats = true;
         public boolean deprelFeats = true;
-        public boolean edgeFeats = true;
+        public boolean familyFeats = true;
         public boolean pathFeats = true;
         public boolean supportFeats = true;
         /** Whether to use supervised features. */
@@ -215,75 +215,98 @@ public class SentFeatureExtractor {
          * tagFeats
          * morphFeats
          * deprelFeats
-         * edgeFeats
+         * familyFeats
          * pathFeats
          * supportFeats */
         // Eventually we want all the feature templates stored in here.
         ArrayList<String> feats = new ArrayList<String>();
         // predicate object
-        FeatureObject featurePred;
+        FeatureObject predObject;
         // argument object
-        FeatureObject featureArg;
+        FeatureObject argObject;
         // pred-argument path object
-        FeatureObject featurePredArgPair;
-        // the next few arrays hold feature 'pieces'
-        // that are used to construct a feature following a feature template.
+        FeatureObject predArgPathObject;
         
         // feature pieces from the predicate object
-        ArrayList<String> predFeatureList = new ArrayList<String>();
+        ArrayList<String> predPieces = new ArrayList<String>();
         // feature pieces from the argument object
-        ArrayList<String> argFeatureList = new ArrayList<String>();
-        // feature pieces from the pred children
-        ArrayList<String> predChildrenFeatureList = new ArrayList<String>();
-        // feature pieces from the arg children
-        ArrayList<String> argChildrenFeatureList = new ArrayList<String>();
+        ArrayList<String> argPieces = new ArrayList<String>();
         // feature pieces from pred-arg path object.
-        ArrayList<String> predArgPathFeatureList = new ArrayList<String>();
+        ArrayList<ArrayList<String>> predArgPathPieces = new ArrayList<ArrayList<String>>();
+        // feature pieces from family objects.
+        ArrayList<ArrayList<String>> familyPieces = new ArrayList<ArrayList<String>>();
         // newly constructed features to add into feats
         ArrayList<String> newFeats;
+        ArrayList<String> pathFeats;
+        ArrayList<String> familyFeats;
         
         // For pred and arg in isolation features,
         // use a window of size 3:  previous word, current word, next word.
         for (int n=-1; n<=1; n++) {
             // Get the pred and arg feature objects.
-            featurePred = getFeatureObject(pidx + n);
-            featureArg = getFeatureObject(aidx + n);
+            predObject = getFeatureObject(pidx + n);
+            argObject = getFeatureObject(aidx + n);
             // store the feature pieces for preds and args.
-            predFeatureList = getTemplatePieces(featurePred, predFeatureList, n);
-            argFeatureList = getTemplatePieces(featureArg, argFeatureList, n);
+            predPieces = makePieces(predObject, n);
+            argPieces = makePieces(argObject, n);
             // assemble and add in the pred features
-            newFeats = makeFeatures(predFeatureList, predFeatureList);
+            newFeats = makeFeatures(predPieces);
+            feats.addAll(newFeats);
+            newFeats = makeFeatures(predPieces, predPieces);
             feats.addAll(newFeats);
             // assemble and add in the arg features.
-            newFeats = makeFeatures(argFeatureList, argFeatureList);
+            newFeats = makeFeatures(argPieces);
+            feats.addAll(newFeats);
+            newFeats = makeFeatures(argPieces, argPieces);
             feats.addAll(newFeats);
             // assemble and add the (pred, arg) pair features.
-            newFeats = makeFeatures(predFeatureList, argFeatureList);
+            newFeats = makeFeatures(predPieces, argPieces);
             feats.addAll(newFeats);
             // Syntactic path-based features are only using the current context,
             // not a sliding window around pred/arg.
-            // We could do this, but Zhang et al don't seem to,
+            // We could do this, but Zhao et al don't seem to,
             // and it would result in a bazillion more features....
             if (n == 0) {
                 if (prm.pathFeats) {
-                    featurePredArgPair = new FeatureObject(pidx, aidx, featurePred, featureArg, parents);
-                    predArgPathFeatureList = getPathTemplatePieces(featurePredArgPair, predArgPathFeatureList);
-                    feats.addAll(predArgPathFeatureList);
+                    /* Path.
+                     * From Zhao et al:
+                     * There are two basic types of path between the predicate and the 
+                     * argument candidates. One is the linear path (linePath) in the sequence, 
+                     * the other is the path in the syntactic parsing tree (dpPath). 
+                     * For the latter, we further divide it into four sub-types by considering 
+                     * the syntactic root, dpPath is the full path in the syntactic tree. 
+                     * Leading two paths to the root from the predicate and the argument, 
+                     * respectively, the common part of these two paths will be dpPathShare. 
+                     * Assume that dpPathShare starts from a node r′, then dpPathPred is 
+                     * from the predicate to r′, and dpPathArg is from the argument to r′.
+                     */
+                    predArgPathObject = new FeatureObject(pidx, aidx, predObject, argObject, parents);
+                    // get the feature pieces for the pred-arg path features.
+                    predArgPathPieces = makePathPieces(predArgPathObject);
+                    // makeFeatures out of these pieces.
+                    // TODO:  features in combination.
+                    pathFeats = makeFeaturesConcat(predArgPathPieces);
+                    feats.addAll(pathFeats);
+                    newFeats = makeFeatures(argPieces, pathFeats);
+                    feats.addAll(newFeats);
+                    newFeats = makeFeatures(predPieces, pathFeats);
+                    feats.addAll(newFeats);
                 }
-                if (prm.edgeFeats) {
-                    // arg children features
-                    ArrayList<Integer> argChildren = featureArg.getChildren();
-                    ArrayList<FeatureObject> argChildrenTokens = getTokens(argChildren);
-                    makeSyntacticFeatures(argChildrenTokens, argChildrenFeatureList);
-                    feats.addAll(argChildrenFeatureList);
-                    // arg parent features
-                    // arg sibling features
-                    // pred children features
-                    // NOTE:  These aren't working yet.  Pick up here.
-                    ArrayList<Integer> predChildren = featurePred.getChildren();
-                    ArrayList<FeatureObject> predChildrenTokens = getTokens(predChildren);
-                    makeSyntacticFeatures(predChildrenTokens, predChildrenFeatureList);
-                    feats.addAll(predChildrenFeatureList);
+                if (prm.familyFeats) {
+                    /*
+                     * Family. Two types of children sets for the predicate or argument 
+                     * candidate are considered, the first includes all syntactic children 
+                     * (children), the second also includes all but excludes the left most 
+                     * and the right most children (noFarChildren).
+                     */
+                    familyPieces = makeFamilyPieces(predObject, argObject);
+                    // TODO:  features in combination.
+                    familyFeats = makeFeaturesConcat(familyPieces);
+                    feats.addAll(familyFeats);
+                    newFeats = makeFeatures(argPieces, familyFeats);
+                    feats.addAll(newFeats);
+                    newFeats = makeFeatures(predPieces, familyFeats);
+                    feats.addAll(newFeats);
                 }
                 if (prm.supportFeats) {
 
@@ -294,11 +317,89 @@ public class SentFeatureExtractor {
         return feats;
     }
     
+    private ArrayList<ArrayList<String>> makeFamilyPieces(FeatureObject predObject, FeatureObject argObject) {
+
+        int n = 0;
+        // holds tmp feature objects for each group of objects (children, siblings), and parent.
+        FeatureObject newObject;
+        ArrayList<FeatureObject> newObjectList = new ArrayList<FeatureObject>();
+        // holds tmp feature pieces for each group
+        ArrayList<ArrayList<String>> newFeaturePieces1 = new ArrayList<ArrayList<String>>();
+        ArrayList<String> newFeaturePieces2 = new ArrayList<String>();
+        // holds all feature pieces
+        ArrayList<ArrayList<String>> featurePieces = new ArrayList<ArrayList<String>>();
+        
+        // pred children features
+        newObjectList = getFeatureObjectList(predObject.getChildren());
+        newFeaturePieces1 = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces1);
+        // pred noFarChildren features
+        newObjectList = getFeatureObjectList(predObject.getNoFarChildren());
+        newFeaturePieces1 = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces1);
+        // pred parent features
+        int predParent = predObject.getParent();                    
+        newObject = getFeatureObject(predParent);
+        newFeaturePieces2 = makePieces(newObject, n);
+        featurePieces.add(newFeaturePieces2);
+        // pred sibling features
+        
+        // arg children features
+        newObjectList = getFeatureObjectList(argObject.getChildren());
+        newFeaturePieces1 = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces1);
+        // arg noFarChildren features
+        newObjectList = getFeatureObjectList(argObject.getNoFarChildren());
+        newFeaturePieces1 = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces1);
+        // arg parent features
+        int argParent = argObject.getParent();                    
+        newObject = getFeatureObject(argParent);
+        newFeaturePieces2 = makePieces(newObject, n);
+        featurePieces.add(newFeaturePieces2);
+        // arg sibling features
+
+        return featurePieces;
+    }
+    
+    private ArrayList<String> makeFeaturesConcat(ArrayList<ArrayList<String>> predArgPathPieces) {
+        // Given a collected group of items for a pred or arg candidate,
+        // mush them together into a feature.
+        String feat;
+        ArrayList<String> featureList = new ArrayList<String>();
+        for (ArrayList<String> p : predArgPathPieces) {
+            feat = "Seq:" + buildString(p);
+            featureList.add(feat);
+            feat = "Bag:" + buildString(bag(p));
+            featureList.add(feat);
+            feat = "NoDup:" + buildString(noDup(p));
+            featureList.add(feat);
+        }
+        return featureList;
+    }
+
+    private ArrayList<String> makeFeatures(ArrayList<String> featureList) {
+        return featureList;
+    }
+
+    private ArrayList<String> makeFeatures(ArrayList<String> featureList1, ArrayList<String> featureList2) {
+        ArrayList<String> featureList = new ArrayList<String>();
+        for (String a : featureList1) {
+            for (String b : featureList2) {
+                String ab = a + "_" + b;
+                featureList.add(ab);
+            }
+        }
+        return featureList;
+    }
+
+    
     /* Gathers pieces to be used in feature templates.
      * @param featureObj a pred or argument object.
      * @return featureList a list of feature pieces to be used in the templates.
      */
-    private ArrayList<String> getTemplatePieces(FeatureObject featureObj, ArrayList<String> featureList, Integer n) {        
+    private ArrayList<String> makePieces(FeatureObject featureObj, Integer n) {        
+        ArrayList<String> featureList = new ArrayList<String>();
         String feat;
         String morphFeat = "";
         String prefix = "";
@@ -338,68 +439,65 @@ public class SentFeatureExtractor {
         return featureList;
     }
 
-    private ArrayList<String> makeFeatures(ArrayList<String> featureList1, ArrayList<String> featureList2) {
-        ArrayList<String> featList = new ArrayList<String>();
-        for (String a : featureList1) {
-            for (String b : featureList2) {
-                String feature = a + "_" + b;
-                featList.add(feature);
-            }
-        }
-        return featList;
-    }
 
     /* Gathers pieces to be used in feature templates.
      * @param featureObj a pred-argument path object.
      * @return featureList a list of feature pieces to be used in the templates.
      */
-    private ArrayList<String> getPathTemplatePieces(FeatureObject featureObj, ArrayList<String> featureList) {
+    private ArrayList<ArrayList<String>> makePathPieces(FeatureObject featureObj) {
+        // holds tmp feature objects for each path type (line, dp, etc).
+        ArrayList<FeatureObject> newObjectList = new ArrayList<FeatureObject>();
+        // holds tmp feature pieces for each path type (line, dp, etc).
+        ArrayList<ArrayList<String>> newFeaturePieces = new ArrayList<ArrayList<String>>();
+        // holds all feature pieces
+        ArrayList<ArrayList<String>> featurePieces = new ArrayList<ArrayList<String>>();
+        
         // straight path between words
         ArrayList<Integer> linePath = featureObj.getLinePath();
         // dependency path between words
         List<Pair<Integer, Dir>> dependencyPath = featureObj.getDependencyPath();
-        /* Subsections of the dependency path between words.
-         * From Zhang et al:
-         * Leading two paths to the root from the predicate and the argument, 
-         * respectively, the common part of these two paths will be dpPathShare. 
-         * Assume that dpPathShare starts from a node r′, then dpPathPred is 
-         * from the predicate to r′, and dpPathArg is from the argument to r′.
-         */
         List<Pair<Integer, Dir>> dpPathPred = featureObj.getDpPathPred();
         List<Pair<Integer, Dir>> dpPathArg = featureObj.getDpPathArg();
         List<Pair<Integer, Dir>> dpPathShare = featureObj.getDpPathShare();
         /* For each path, create lists of FeatureObjects for all of the words in the path,
-         * then make features out of them and add them to featureList.
-        */
-        // linePath
-        ArrayList<FeatureObject> linePathCoNLL = getTokens(linePath);
-        makeSyntacticFeatures(linePathCoNLL, featureList);
-        // dependencyPath
-        ArrayList<FeatureObject> dependencyPathTokens = getTokens(dependencyPath);
-        makeSyntacticFeatures(dependencyPathTokens, featureList);
-        // dpPathPred
-        ArrayList<FeatureObject> dpPathPredTokens = getTokens(dpPathPred);
-        makeSyntacticFeatures(dpPathPredTokens, featureList);
-        // dpPathArg
-        ArrayList<FeatureObject> dpPathArgTokens = getTokens(dpPathArg);
-        makeSyntacticFeatures(dpPathArgTokens, featureList);
-        // dpPathShare
-        ArrayList<FeatureObject> dpPathShareTokens = getTokens(dpPathShare);
-        makeSyntacticFeatures(dpPathShareTokens, featureList);
+         * then make features out of them and add them to the featurePieces list.
+         */
+        // linePath featurepiece lists
+        newObjectList = getFeatureObjectList(linePath);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces);
+        // dependencyPath featurepiece lists
+        newObjectList = getFeatureObjectList(dependencyPath);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces);
+        // dpPathPred featurepiece lists
+        newObjectList = getFeatureObjectList(dpPathPred);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces);
+        // dpPathArg featurepiece lists
+        newObjectList = getFeatureObjectList(dpPathArg);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces);
+        // dpPathShare featurepiece lists
+        newObjectList = getFeatureObjectList(dpPathShare);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.addAll(newFeaturePieces);
         
-        return featureList;
+        return featurePieces;
     }
     
     /* Given a list of feature objects (e.g., some set of items along
-     * a syntactic path), get all the possible feature pieces (POS tags, etc), and create
-     * features out of them.
+     * a syntactic path), get all the possible feature pieces (POS tags, etc).
+     * @return feature pieces for all objects as a list.
      */
-    private void makeSyntacticFeatures(ArrayList<FeatureObject> pathList, ArrayList<String> featureList) {
+    private ArrayList<ArrayList<String>> makeListPieces(ArrayList<FeatureObject> pathList) {
         // Sets of feature pieces along the path.
         ArrayList<String> featurePieceList;
         String feat;
+        String morphFeat = "";
         FeatureObject featureObj;
-        ArrayList<ArrayList<String>> subFeatureLists = new ArrayList<ArrayList<String>>();
+        // Feature pieces along all paths.
+        ArrayList<ArrayList<String>> featurePieceLists = new ArrayList<ArrayList<String>>();
         // NOTE:  There is probably a much faster way to do this.
         if (prm.formFeats) {
             featurePieceList = new ArrayList<String>();
@@ -408,7 +506,7 @@ public class SentFeatureExtractor {
                 feat = "Form:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
-            subFeatureLists.add(featurePieceList);
+            featurePieceLists.add(featurePieceList);
         }
         if (prm.lemmaFeats) {
             featurePieceList = new ArrayList<String>();
@@ -417,7 +515,7 @@ public class SentFeatureExtractor {
                 feat = "Lemma:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
-            subFeatureLists.add(featurePieceList);
+            featurePieceLists.add(featurePieceList);
         }
         if (prm.tagFeats) {
             featurePieceList = new ArrayList<String>();
@@ -426,9 +524,9 @@ public class SentFeatureExtractor {
                 feat = "Tag:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
-            subFeatureLists.add(featurePieceList);
+            featurePieceLists.add(featurePieceList);
         }
-        /*if (prm.morphFeats) {
+        if (prm.morphFeats) {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
                 featureObj = pathList.get(x);
@@ -436,10 +534,11 @@ public class SentFeatureExtractor {
                 for (int i = 0; i < morphFeats.size(); i++) {
                     feat = "Feat:" + morphFeats.get(i);
                     featurePieceList.add(feat);
+                    morphFeat = morphFeat + "_" + feat;
+                    featurePieceList.add(morphFeat);
                 }
             }
-        }  */      
-        
+        }      
         if (prm.deprelFeats) {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
@@ -447,16 +546,9 @@ public class SentFeatureExtractor {
                 feat = "Deprel:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
-            subFeatureLists.add(featurePieceList);
+            featurePieceLists.add(featurePieceList);
         }
-        for (ArrayList<String> subFeatureList : subFeatureLists) {
-            feat = "Seq:" + buildString(subFeatureList);
-            featureList.add(feat);
-            feat = "Bag:" + buildString(bag(subFeatureList));
-            featureList.add(feat);
-            feat = "NoDup:" + buildString(noDup(subFeatureList));
-            featureList.add(feat);
-        }
+        return featurePieceLists;
     }    
 
     // ---------- Meg's "Simple" features. ---------- 
@@ -485,14 +577,14 @@ public class SentFeatureExtractor {
     
     // ---------- Meg's Dependency Path features. ---------- 
     public void addDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        FeatureObject featurePred = getFeatureObject(pidx);
-        FeatureObject featureArg = getFeatureObject(aidx);
-        FeatureObject featurePredArgPair = new FeatureObject(pidx, aidx, featurePred, featureArg, parents);
-        List<Pair<Integer, Dir>> dependencyPath = featurePredArgPair.getDependencyPath();
+        FeatureObject predObject = getFeatureObject(pidx);
+        FeatureObject argObject = getFeatureObject(aidx);
+        FeatureObject predArgPathObject = new FeatureObject(pidx, aidx, predObject, argObject, parents);
+        List<Pair<Integer, Dir>> dependencyPath = predArgPathObject.getDependencyPath();
         String feat;
         ArrayList<String> depRelPathWord = new ArrayList<String>();
-        ArrayList<FeatureObject> dependencyPathTokens = getTokens(dependencyPath);
-        for (FeatureObject t : dependencyPathTokens) {
+        ArrayList<FeatureObject> dependencyPathObjectList = getFeatureObjectList(dependencyPath);
+        for (FeatureObject t : dependencyPathObjectList) {
             depRelPathWord.add(t.getForm());
         }
         feat = buildString(depRelPathWord);
@@ -639,7 +731,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
         // p.lemma + p.children.dprel.noDup 
         ArrayList<String> depRelChildren = new ArrayList<String>();
-        ArrayList<FeatureObject> pChildren = getTokens(p.getChildren());
+        ArrayList<FeatureObject> pChildren = getFeatureObjectList(p.getChildren());
         for (FeatureObject child : pChildren) {
             depRelChildren.add(child.getDeprel());
         }
@@ -680,21 +772,21 @@ public class SentFeatureExtractor {
         List<Pair<Integer, Dir>> dpPathArg = zhaoPredArgPair.getDpPathArg();
         ArrayList<Integer> linePath = zhaoPredArgPair.getLinePath();
 
-        ArrayList<FeatureObject> predChildrenTokens = getTokens(predChildren);
-        ArrayList<FeatureObject> argChildrenTokens = getTokens(argChildren);
-        ArrayList<FeatureObject> dependencyPathTokens = getTokens(dependencyPath);
-        ArrayList<FeatureObject> linePathCoNLL = getTokens(linePath);
+        ArrayList<FeatureObject> predChildrenObjectList = getFeatureObjectList(predChildren);
+        ArrayList<FeatureObject> argChildrenObjectList = getFeatureObjectList(argChildren);
+        ArrayList<FeatureObject> dependencyPathObjectList = getFeatureObjectList(dependencyPath);
+        ArrayList<FeatureObject> linePathCoNLL = getFeatureObjectList(linePath);
         
         // Add the supervised features
         if (prm.withSupervision) {
-            addZhaoSupervisedPredFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, predChildrenTokens, feats);
-            addZhaoSupervisedArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
-            addZhaoSupervisedCombinedFeats(zhaoPred, zhaoArg, feats, dependencyPathTokens, linePathCoNLL, dpPathArg); 
+            addZhaoSupervisedPredFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, predChildrenObjectList, feats);
+            addZhaoSupervisedArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenObjectList, feats);
+            addZhaoSupervisedCombinedFeats(zhaoPred, zhaoArg, feats, dependencyPathObjectList, linePathCoNLL, dpPathArg); 
         }
         
         // Add the unsupervised features
         addZhaoUnsupervisedPredFeats(zhaoPred, zhaoPredLast, zhaoPredNext, feats);
-        addZhaoUnsupervisedArgFeats(zhaoArg, zhaoArgLast, zhaoArgNext, argChildrenTokens, feats);
+        addZhaoUnsupervisedArgFeats(zhaoArg, zhaoArgLast, zhaoArgNext, argChildrenObjectList, feats);
         addZhaoUnsupervisedCombinedFeats(linePath, linePathCoNLL, feats);
     }
     
@@ -714,7 +806,7 @@ public class SentFeatureExtractor {
     }
 
     private void addZhaoUnsupervisedArgFeats(FeatureObject zhaoArg, FeatureObject zhaoArgNext, FeatureObject zhaoArgLast,
-            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+            ArrayList<FeatureObject> argChildrenObjectList, ArrayList<String> feats) {
         // ------- Argument features (unsupervised) ------- 
         String feat;
         // a.lm.form
@@ -728,7 +820,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
         // a.form + a.children.pos 
         ArrayList<String> argChildrenPos = new ArrayList<String>();
-        for (FeatureObject child : argChildrenTokens) {
+        for (FeatureObject child : argChildrenObjectList) {
             argChildrenPos.add(child.getPos());
         }
         feat = zhaoArg.getForm()  + "_" + buildString(argChildrenPos);
@@ -750,7 +842,7 @@ public class SentFeatureExtractor {
         feats.add(feat13);
     }
     
-    private void addZhaoSupervisedCombinedFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, ArrayList<String> feats, ArrayList<FeatureObject> dependencyPathTokens,
+    private void addZhaoSupervisedCombinedFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, ArrayList<String> feats, ArrayList<FeatureObject> dependencyPathObjectList,
             ArrayList<FeatureObject> linePathCoNLL, List<Pair<Integer, Dir>> dpPathArg) {
         // ------- Combined features (supervised) -------
         String feat;
@@ -762,7 +854,7 @@ public class SentFeatureExtractor {
         // a:p|dpPath.lemma.bag 
         ArrayList<String> depRelPath = new ArrayList<String>();
         ArrayList<String> depRelPathLemma = new ArrayList<String>();
-        for (FeatureObject t : dependencyPathTokens) {
+        for (FeatureObject t : dependencyPathObjectList) {
             depRelPath.add(t.getDeprel());
             depRelPathLemma.add(t.getLemma());
         }
@@ -805,16 +897,16 @@ public class SentFeatureExtractor {
     }
     
     private void addZhaoSupervisedArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
-            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+            FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, ArrayList<FeatureObject> argChildrenObjectList, ArrayList<String> feats) {
         // ------- Argument features (supervised) ------- 
-        getFirstThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
-        getSecondThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
-        getThirdThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenTokens, feats);
+        getFirstThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenObjectList, feats);
+        getSecondThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenObjectList, feats);
+        getThirdThirdSupArgFeats(zhaoPred, zhaoArg, zhaoPredLast, zhaoPredNext, zhaoArgLast, zhaoArgNext, zhaoArgParent, argChildrenObjectList, feats);
     }
 
     private void getFirstThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
             FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
-            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+            ArrayList<FeatureObject> argChildrenObjectList, ArrayList<String> feats) {
         String feat;
         List<String> zhaoArgFeats = zhaoArg.getFeat();
         String a1; String a2; String a3; String a4; String a5; String a6;
@@ -844,12 +936,12 @@ public class SentFeatureExtractor {
         feat = zhaoArgParent.getFeat().get(2);
         feats.add(feat);
         // a.children.FEAT1.noDup 
-        ArrayList<String> argChildrenFeat1 = getChildrenFeat1(argChildrenTokens);
+        ArrayList<String> argChildrenFeat1 = getChildrenFeat1(argChildrenObjectList);
         ArrayList<String> argChildrenFeat1NoDup = noDup(argChildrenFeat1);
         feat = buildString(argChildrenFeat1NoDup);
         feats.add(feat);
         // a.children.FEAT3.bag 
-        ArrayList<String> argChildrenFeat3 = getChildrenFeat3(argChildrenTokens);
+        ArrayList<String> argChildrenFeat3 = getChildrenFeat3(argChildrenObjectList);
         ArrayList<String> argChildrenFeat3Bag = bag(argChildrenFeat3);
         feat = buildString(argChildrenFeat3Bag);
         feats.add(feat);
@@ -857,7 +949,7 @@ public class SentFeatureExtractor {
     
     private void getSecondThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
             FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
-            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+            ArrayList<FeatureObject> argChildrenObjectList, ArrayList<String> feats) {
         FeatureObject argLm = getFeatureObject(zhaoArg.getFarLeftChild());
         FeatureObject argRm = getFeatureObject(zhaoArg.getFarRightChild());
         FeatureObject argRn = getFeatureObject(zhaoArg.getNearRightChild());
@@ -895,7 +987,7 @@ public class SentFeatureExtractor {
     
     private void getThirdThirdSupArgFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast,
             FeatureObject zhaoPredNext, FeatureObject zhaoArgLast, FeatureObject zhaoArgNext, FeatureObject zhaoArgParent, 
-            ArrayList<FeatureObject> argChildrenTokens, ArrayList<String> feats) {
+            ArrayList<FeatureObject> argChildrenObjectList, ArrayList<String> feats) {
         String feat;
         // a.lowSupportVerb.lemma 
         feats.add(getFeatureObject(zhaoArg.getArgLowSupport()).getLemma());
@@ -907,7 +999,7 @@ public class SentFeatureExtractor {
         feats.add(zhaoArgNext.getLemma());
         // a.pos + a.children.dprel.bag
         ArrayList<String> argChildrenDeprel = new ArrayList<String>(); 
-        for (FeatureObject child : argChildrenTokens) {
+        for (FeatureObject child : argChildrenObjectList) {
             argChildrenDeprel.add(child.getDeprel());
         }
         ArrayList<String> argChildrenDeprelBag = bag(argChildrenDeprel);
@@ -915,7 +1007,7 @@ public class SentFeatureExtractor {
         feats.add(feat);
     }
 
-    private void addZhaoSupervisedPredFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast, FeatureObject zhaoPredNext, ArrayList<FeatureObject> predChildrenTokens, ArrayList<String> feats) {
+    private void addZhaoSupervisedPredFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast, FeatureObject zhaoPredNext, ArrayList<FeatureObject> predChildrenObjectList, ArrayList<String> feats) {
         // ------- Predicate features (supervised) ------- 
         // p.currentSense + p.lemma 
         feats.add(zhaoPred.getSense() + "_" + zhaoPred.getLemma());
@@ -936,7 +1028,7 @@ public class SentFeatureExtractor {
         feats.add(getFeatureObject(zhaoPred.getFarLeftChild()).getDeprel());
         // p.form + p.children.dprel.bag 
         ArrayList<String> predChildrenDeprel = new ArrayList<String>();
-        for (FeatureObject child : predChildrenTokens) {
+        for (FeatureObject child : predChildrenObjectList) {
             predChildrenDeprel.add(child.getDeprel());
         }
         String bagDepPredChildren = buildString(bag(predChildrenDeprel));
@@ -1060,9 +1152,9 @@ public class SentFeatureExtractor {
         ArrayList<String> depRelPath = new ArrayList<String>();
         // POSPath: same as DeprelPath, but dependency labels are exchanged for POS tags, e.g. NN↑NNS↓NNP↓.
         ArrayList<String> posPath = new ArrayList<String>();
-        ArrayList<FeatureObject> dependencyPathTokens = getTokens(dependencyPath);
-        for (int i = 0; i < dependencyPathTokens.size(); i++) {
-            FeatureObject t = dependencyPathTokens.get(i);
+        ArrayList<FeatureObject> dependencyPathObjectList = getFeatureObjectList(dependencyPath);
+        for (int i = 0; i < dependencyPathObjectList.size(); i++) {
+            FeatureObject t = dependencyPathObjectList.get(i);
             depRelPath.add(t.getDeprel() + ":" + dependencyPath.get(i).get2());
             posPath.add(t.getPos() + ":" + dependencyPath.get(i).get2());
         }
@@ -1148,17 +1240,17 @@ public class SentFeatureExtractor {
         return buffer.toString();
     }
     
-    private ArrayList<String> getChildrenFeat3(ArrayList<FeatureObject> childrenTokens) {
+    private ArrayList<String> getChildrenFeat3(ArrayList<FeatureObject> childrenObjectList) {
         ArrayList<String> childrenFeat3 = new ArrayList<String>();
-        for (FeatureObject child : childrenTokens) {
+        for (FeatureObject child : childrenObjectList) {
             childrenFeat3.add(child.getFeat().get(2));
         }
         return childrenFeat3;
     }
 
-    private ArrayList<String> getChildrenFeat1(ArrayList<FeatureObject> childrenTokens) {
+    private ArrayList<String> getChildrenFeat1(ArrayList<FeatureObject> childrenObjectList) {
         ArrayList<String> childrenFeat1 = new ArrayList<String>();
-        for (FeatureObject child : childrenTokens) {
+        for (FeatureObject child : childrenObjectList) {
             childrenFeat1.add(child.getFeat().get(0));
         }
         return childrenFeat1;
@@ -1202,20 +1294,20 @@ public class SentFeatureExtractor {
         return false;
     }
 
-    private ArrayList<FeatureObject> getTokens(List<Pair<Integer, Dir>> path) {
-        ArrayList<FeatureObject> pathTokens = new ArrayList<FeatureObject>();
+    private ArrayList<FeatureObject> getFeatureObjectList(List<Pair<Integer, Dir>> path) {
+        ArrayList<FeatureObject> pathObjectList = new ArrayList<FeatureObject>();
         for (Pair<Integer,Dir> p : path) {
-            pathTokens.add(getFeatureObject(p.get1()));
+            pathObjectList.add(getFeatureObject(p.get1()));
         }
-        return pathTokens;
+        return pathObjectList;
     }
 
-    private ArrayList<FeatureObject> getTokens(ArrayList<Integer> children) {
-        ArrayList<FeatureObject> childrenTokens = new ArrayList<FeatureObject>();
+    private ArrayList<FeatureObject> getFeatureObjectList(ArrayList<Integer> children) {
+        ArrayList<FeatureObject> featureObjectList = new ArrayList<FeatureObject>();
         for (int child : children) {
-            childrenTokens.add(getFeatureObject(child));
+            featureObjectList.add(getFeatureObject(child));
         }
-        return childrenTokens;
+        return featureObjectList;
     }
     
     private static <T extends Comparable<? super T>> List<T> asSortedList(Collection<T> c) {

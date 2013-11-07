@@ -25,7 +25,7 @@ public class FeatureObject {
      * 3. part-of-speech (tagFeats)
      * 4. morphological features (morphFeats)
      * 5. syntactic dependency label (deprelFeats)
-     * 6. syntactic edges:  children, siblings, parents (edgeFeats)
+     * 6. family:  children, siblings, parents (familyFeats)
      * 7. dependency paths (pathFeats)
      * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
      */    
@@ -45,7 +45,7 @@ public class FeatureObject {
     private int argHighSupport;
     private int predLowSupport;
     private int predHighSupport;
-    private List<Pair<Integer, Dir>> betweenPath;
+    private List<Pair<Integer, Dir>> dependencyPath;
     private int[] parents;
     private ArrayList<Integer> linePath;
     private ArrayList<Pair<Integer, Dir>> dpPathShare;
@@ -102,7 +102,7 @@ public class FeatureObject {
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
          * considering the syntactic root, dpPath is the full path in the syntactic tree. */
-        setBetweenPath(pidx, aidx);
+        setDependencyPath(pidx, aidx);
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
     }
@@ -207,6 +207,7 @@ public class FeatureObject {
 
     public void setChildren() {
         if (idx < 0 || idx >= sent.size()) {
+            // Something that cannot possibly have children.
             this.children = new ArrayList<Integer>();
             this.children.add(-1);
         } else {
@@ -333,12 +334,12 @@ public class FeatureObject {
     }
     
     
-    public List<Pair<Integer,Dir>> getBetweenPath() {
-        return betweenPath;
+    public List<Pair<Integer,Dir>> getDependencyPath() {
+        return dependencyPath;
     }
     
-    public void setBetweenPath(int pidx, int aidx) {
-        this.betweenPath = DepTree.getDependencyPath(pidx, aidx, parents);
+    public void setDependencyPath(int pidx, int aidx) {
+        this.dependencyPath = DepTree.getDependencyPath(pidx, aidx, parents);
     }
     
     public List<Pair<Integer, Dir>> getDpPathPred() {
