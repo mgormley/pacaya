@@ -6,6 +6,8 @@ import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.Feature;
@@ -15,10 +17,11 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.map.IntDoubleMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
-import edu.jhu.prim.vector.IntDoubleSortedVector;
+import edu.jhu.prim.vector.IntDoubleHashVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.dist.Gaussian;
@@ -34,6 +37,8 @@ import edu.jhu.util.dist.Gaussian;
 // template/config as a SparseVector so that the footprint of this object
 // (particularly when serialized) is smaller.
 public class FgModel implements Serializable, IFgModel {
+
+    private static final Logger log = Logger.getLogger(FgModel.class);
 
     private static final long serialVersionUID = 4477788767217412525L;
     /** The model parameters. */
@@ -128,9 +133,9 @@ public class FgModel implements Serializable, IFgModel {
         return new FgModel(this, new IntDoubleDenseVector(params));
     }
     
-    /** Copy constructor. */
-    public FgModel getSparseCopy() {
-        return new FgModel(this, new IntDoubleSortedVector(params));
+    /** Copy constructor, which initializes the parameter vector to all zeros. */
+    public FgModel getSparseZeroedCopy() {
+        return new FgModel(this, new IntDoubleHashVector(10000));
     }
 
     /**
@@ -214,9 +219,17 @@ public class FgModel implements Serializable, IFgModel {
         }
     }
     
+    private boolean shouldLogNumExplicitParams = true;
+    
     public void add(FgModel other) {
         if (other.indices != this.indices) {
             throw new IllegalStateException("Only copies of this model can be added to it.");
+        }
+        if (shouldLogNumExplicitParams && other.params instanceof IntDoubleMap) {
+            // Only log this once for posterity.
+            log.debug(String.format("Adding %d explicit params to model from a %s.",
+                    ((IntDoubleMap) other.params).size(), other.params.getClass()));
+            shouldLogNumExplicitParams = false;
         }
         this.params.add(other.params);
     }
