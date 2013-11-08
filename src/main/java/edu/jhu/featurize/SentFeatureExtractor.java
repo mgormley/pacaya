@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -45,6 +46,7 @@ public class SentFeatureExtractor {
         public boolean biasOnly = false;
         public boolean isProjective = false;
         /** Switches for feature templates. */
+        public boolean useTemplates = true;
         public boolean formFeats = true;
         public boolean lemmaFeats = true;
         public boolean tagFeats = true;
@@ -52,7 +54,7 @@ public class SentFeatureExtractor {
         public boolean deprelFeats = true;
         public boolean familyFeats = true;
         public boolean pathFeats = true;
-        public boolean supportFeats = true;
+        public boolean syntacticConnectionFeats = true;
         /** Whether to use supervised features. */
         public boolean withSupervision = true;
         /** Whether to add the "Simple" features. */
@@ -95,6 +97,17 @@ public class SentFeatureExtractor {
                 this.featuredHeadDefault = new FeatureObject(-1, parents, sent);
                 this.featuredTailDefault = new FeatureObject(sent.size(), parents, sent);
             }
+            if (prm.useAllTemplates) {
+                this.prm.useTemplates = true;
+                this.prm.formFeats = true;
+                this.prm.lemmaFeats = true;
+                this.prm.tagFeats = true;
+                this.prm.morphFeats = true;
+                this.prm.deprelFeats = true;
+                this.prm.familyFeats = true;
+                this.prm.pathFeats = true;
+                this.prm.syntacticConnectionFeats = true;
+            }
         } else {
             this.parents = null;
         }
@@ -108,16 +121,16 @@ public class SentFeatureExtractor {
         return _featuredSentence;
     }
 
-    // Package private for testing.
-    int[] getParents(SimpleAnnoSentence sent) {
-        return sent.getParents();
-    }
-
     public int getSentSize() {
         return sent.size();
     }
     
     // ----------------- Extracting Features on the Observations ONLY -----------------
+
+    // Package private for testing.
+    int[] getParents(SimpleAnnoSentence sent) {
+        return sent.getParents();
+    }
 
     /**
      * Creates a feature set for the given word position.
@@ -149,7 +162,7 @@ public class SentFeatureExtractor {
         if (prm.useBjorkelundFeats) {
             addBjorkelundSoloFeatures(idx, feats);
         }
-        if (prm.useAllTemplates ) {
+        if (prm.useTemplates) {
             addTemplateSoloFeatures(idx, feats);
         }
         return feats;
@@ -194,7 +207,7 @@ public class SentFeatureExtractor {
         if (prm.useBjorkelundFeats) {
             addBjorkelundPairFeatures(pidx, aidx, feats);
         }
-        if (prm.useAllTemplates) {
+        if (prm.useTemplates) {
             addTemplatePairFeatures(pidx, aidx);
         }
 
@@ -210,7 +223,8 @@ public class SentFeatureExtractor {
      * then make those pairs. We use a window of length 3 to look at the previous word, current word,
      * and next word for features, on both the first word (pred candidate) and second word (arg candidate). */
     public ArrayList<String> addTemplatePairFeatures(int pidx, int aidx) { 
-        /* formFeats
+        /* Features considered:
+         * formFeats
          * lemmaFeats
          * tagFeats
          * morphFeats
@@ -218,13 +232,16 @@ public class SentFeatureExtractor {
          * familyFeats
          * pathFeats
          * supportFeats */
-        // Eventually we want all the feature templates stored in here.
+        // Eventually we want all the features stored in here.
         ArrayList<String> feats = new ArrayList<String>();
+        // all features that are created, 
+        // from combinations of features of each type.
+        HashMap<Integer,ArrayList<String>> allFeats = new HashMap<Integer,ArrayList<String>>(); 
         // predicate object
         FeatureObject predObject;
         // argument object
         FeatureObject argObject;
-        // pred-argument path object
+        // pred-argument dependency path object
         FeatureObject predArgPathObject;
         
         // feature pieces from the predicate object
@@ -233,13 +250,24 @@ public class SentFeatureExtractor {
         ArrayList<String> argPieces = new ArrayList<String>();
         // feature pieces from pred-arg path object.
         ArrayList<ArrayList<String>> predArgPathPieces = new ArrayList<ArrayList<String>>();
+        // feature pieces from syntactic connection objects.
+        ArrayList<String> predSynConnectPieces = new ArrayList<String>();
+        ArrayList<String> argSynConnectPieces = new ArrayList<String>();
         // feature pieces from family objects.
         ArrayList<ArrayList<String>> familyPieces = new ArrayList<ArrayList<String>>();
-        // newly constructed features to add into feats
-        ArrayList<String> newFeats;
+        // the newly constructed features to add into feats.
+        // these appear in isolation, get combined together, 
+        // with one another, etc.
+        ArrayList<String> predFeats;
+        ArrayList<String> argFeats;
+        ArrayList<String> predSynConnectFeats;
+        ArrayList<String> argSynConnectFeats;
         ArrayList<String> pathFeats;
         ArrayList<String> familyFeats;
-        
+        // holder for features combining all of the above
+        ArrayList<String> newFeats;
+
+        int x = 0;
         // For pred and arg in isolation features,
         // use a window of size 3:  previous word, current word, next word.
         for (int n=-1; n<=1; n++) {
@@ -247,22 +275,42 @@ public class SentFeatureExtractor {
             predObject = getFeatureObject(pidx + n);
             argObject = getFeatureObject(aidx + n);
             // store the feature pieces for preds and args.
-            predPieces = makePieces(predObject, n);
-            argPieces = makePieces(argObject, n);
-            // assemble and add in the pred features
-            newFeats = makeFeatures(predPieces);
-            feats.addAll(newFeats);
-            newFeats = makeFeatures(predPieces, predPieces);
-            feats.addAll(newFeats);
-            // assemble and add in the arg features.
-            newFeats = makeFeatures(argPieces);
-            feats.addAll(newFeats);
-            newFeats = makeFeatures(argPieces, argPieces);
-            feats.addAll(newFeats);
-            // assemble and add the (pred, arg) pair features.
-            newFeats = makeFeatures(predPieces, argPieces);
-            feats.addAll(newFeats);
-            // Syntactic path-based features are only using the current context,
+            predPieces = makePieces(predObject, n, "p");
+            argPieces = makePieces(argObject, n, "a");
+            // assemble the single features
+            // for preds and args
+            predFeats = makeFeatures(predPieces);
+            argFeats = makeFeatures(argPieces);
+            // add them to our list of things to combine.
+            allFeats.put(x, predFeats);
+            x++;
+            allFeats.put(x, argFeats);
+            x++;
+            if (prm.syntacticConnectionFeats) {
+                /*
+                 * Syntactic Connection. This includes syntactic head (h), 
+                 * left(right) farthest(nearest) child (lm,ln,rm,rn), 
+                 * and high(low) support verb or noun. 
+                 * Support verb(noun):  From the predicate or the argument 
+                 * to the syntactic root along with the syntactic tree, 
+                 * the first verb(noun) that is met is called as the low 
+                 * support verb(noun), and the nearest one to the root is 
+                 * called as the high support verb(noun).
+                 * MM:  Also including sibling.
+                 */
+                predSynConnectPieces = makeSynConnectPieces(predObject, n);
+                argSynConnectPieces = makeSynConnectPieces(argObject, n);
+                // assemble the single features
+                // for preds and args
+                predSynConnectFeats = makeFeatures(predSynConnectPieces);
+                argSynConnectFeats = makeFeatures(argSynConnectPieces);
+                // add them to our list of things to combine.
+                allFeats.put(x, predSynConnectFeats);
+                x++;
+                allFeats.put(x, argSynConnectFeats);
+                x++;
+            }
+            // The following features are only using the current context,
             // not a sliding window around pred/arg.
             // We could do this, but Zhao et al don't seem to,
             // and it would result in a bazillion more features....
@@ -283,14 +331,11 @@ public class SentFeatureExtractor {
                     predArgPathObject = new FeatureObject(pidx, aidx, predObject, argObject, parents);
                     // get the feature pieces for the pred-arg path features.
                     predArgPathPieces = makePathPieces(predArgPathObject);
-                    // makeFeatures out of these pieces.
-                    // TODO:  features in combination.
+                    // make features out of these pieces.
                     pathFeats = makeFeaturesConcat(predArgPathPieces);
-                    feats.addAll(pathFeats);
-                    newFeats = makeFeatures(argPieces, pathFeats);
-                    feats.addAll(newFeats);
-                    newFeats = makeFeatures(predPieces, pathFeats);
-                    feats.addAll(newFeats);
+                    // add them to our list of things to combine.
+                    allFeats.put(x, pathFeats);
+                    x++;
                 }
                 if (prm.familyFeats) {
                     /*
@@ -299,65 +344,143 @@ public class SentFeatureExtractor {
                      * (children), the second also includes all but excludes the left most 
                      * and the right most children (noFarChildren).
                      */
+                    // get the feature pieces for the pred arg "family" features.
                     familyPieces = makeFamilyPieces(predObject, argObject);
-                    // TODO:  features in combination.
+                    // make features out of these pieces.
                     familyFeats = makeFeaturesConcat(familyPieces);
-                    feats.addAll(familyFeats);
-                    newFeats = makeFeatures(argPieces, familyFeats);
-                    feats.addAll(newFeats);
-                    newFeats = makeFeatures(predPieces, familyFeats);
-                    feats.addAll(newFeats);
-                }
-                if (prm.supportFeats) {
-
+                    // add them to our list of things to combine.
+                    allFeats.put(x, familyFeats);
+                    x++;
                 }
             }
-            
+        }
+        
+        // now, combine everything.
+        ArrayList<String> featureList1;
+        ArrayList<String> featureList2;
+        Iterator<Entry<Integer, ArrayList<String>>> it1 = allFeats.entrySet().iterator();
+        while (it1.hasNext()) {
+            Map.Entry pairs1 = it1.next();
+            int key1 = (Integer) pairs1.getKey();
+            featureList1 = (ArrayList<String>) pairs1.getValue();
+            newFeats = makeFeatures(featureList1);
+            feats.addAll(newFeats);
+            for (Entry<Integer, ArrayList<String>> entry2 : allFeats.entrySet()) {
+                int key2 = entry2.getKey();
+                if (key1 != key2) { 
+                    featureList2 = entry2.getValue();
+                    newFeats = makeFeatures(featureList1, featureList2);
+                    feats.addAll(newFeats);
+                }
+            }
         }
         return feats;
     }
     
-    private ArrayList<ArrayList<String>> makeFamilyPieces(FeatureObject predObject, FeatureObject argObject) {
-
-        int n = 0;
-        // holds tmp feature objects for each group of objects (children, siblings), and parent.
+    private ArrayList<String> makeSynConnectPieces(FeatureObject featureObject, int n) {
+        /*
+         * Syntactic Connection. This includes syntactic head (h), 
+         * left(right) farthest(nearest) child (lm,ln,rm,rn), 
+         * and high(low) support verb or noun. 
+         * Support verb(noun):  From the predicate or the argument 
+         * to the syntactic root along with the syntactic tree, 
+         * the first verb(noun) that is met is called as the low 
+         * support verb(noun), and the nearest one to the root is 
+         * called as the high support verb(noun).
+         * MM:  I will also include right and left 'sibling' here.
+         */
+        // tmp holder for each set of constructed feature pieces
+        ArrayList<String> newFeaturePieces = new ArrayList<String>();
+        // holds tmp feature objects for each object (child, support word).
+        int newIdx;
         FeatureObject newObject;
+        // holds all feature pieces
+        ArrayList<String> featurePieces = new ArrayList<String>();
+        
+        // pred high support
+        newIdx = featureObject.getPredHighSupport();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "highSupportPred");
+        featurePieces.addAll(newFeaturePieces);
+        // pred low support
+        newIdx = featureObject.getPredLowSupport();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "lowSupportPred");
+        featurePieces.addAll(newFeaturePieces);
+        // arg high support pieces
+        newIdx = featureObject.getArgHighSupport();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "highSupportArg");
+        featurePieces.addAll(newFeaturePieces);
+        // arg low support pieces
+        newIdx = featureObject.getArgLowSupport();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "lowSupportArg");
+        featurePieces.addAll(newFeaturePieces);
+        // parent pieces
+        newIdx = featureObject.getParent();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "parent");
+        featurePieces.addAll(newFeaturePieces);
+        // far left child pieces
+        newIdx = featureObject.getFarLeftChild();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "flchild");
+        featurePieces.addAll(newFeaturePieces);
+        // far right child pieces
+        newIdx = featureObject.getFarRightChild();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "frchild");
+        featurePieces.addAll(newFeaturePieces);
+        // near left child pieces
+        newIdx = featureObject.getNearLeftChild();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "nlchild");
+        featurePieces.addAll(newFeaturePieces);
+        // near right child pieces
+        newIdx = featureObject.getNearRightChild();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "nrchild");
+        featurePieces.addAll(newFeaturePieces);
+        // left sibling pieces
+        newIdx = featureObject.getLeftSibling();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "lsibling");
+        featurePieces.addAll(newFeaturePieces);
+        // right sibling pieces
+        newIdx = featureObject.getRightSibling();
+        newObject = getFeatureObject(newIdx);
+        newFeaturePieces = makePieces(newObject, n, "rsibling");
+        featurePieces.addAll(newFeaturePieces);
+
+        return featurePieces;
+    }
+
+    private ArrayList<ArrayList<String>> makeFamilyPieces(FeatureObject predObject, FeatureObject argObject) {
+        // holds tmp feature objects for each group of objects (children, siblings).
         ArrayList<FeatureObject> newObjectList = new ArrayList<FeatureObject>();
         // holds tmp feature pieces for each group
-        ArrayList<ArrayList<String>> newFeaturePieces1 = new ArrayList<ArrayList<String>>();
-        ArrayList<String> newFeaturePieces2 = new ArrayList<String>();
+        ArrayList<ArrayList<String>> newFeaturePieces = new ArrayList<ArrayList<String>>();
         // holds all feature pieces
         ArrayList<ArrayList<String>> featurePieces = new ArrayList<ArrayList<String>>();
         
         // pred children features
         newObjectList = getFeatureObjectList(predObject.getChildren());
-        newFeaturePieces1 = makeListPieces(newObjectList);
-        featurePieces.addAll(newFeaturePieces1);
+        newFeaturePieces = makeListPieces(newObjectList, "p.children");
+        featurePieces.addAll(newFeaturePieces);
         // pred noFarChildren features
         newObjectList = getFeatureObjectList(predObject.getNoFarChildren());
-        newFeaturePieces1 = makeListPieces(newObjectList);
-        featurePieces.addAll(newFeaturePieces1);
-        // pred parent features
-        int predParent = predObject.getParent();                    
-        newObject = getFeatureObject(predParent);
-        newFeaturePieces2 = makePieces(newObject, n);
-        featurePieces.add(newFeaturePieces2);
-        // pred sibling features
+        newFeaturePieces = makeListPieces(newObjectList, "p.noFarChildren");
+        featurePieces.addAll(newFeaturePieces);
         
         // arg children features
         newObjectList = getFeatureObjectList(argObject.getChildren());
-        newFeaturePieces1 = makeListPieces(newObjectList);
-        featurePieces.addAll(newFeaturePieces1);
+        newFeaturePieces = makeListPieces(newObjectList, "a.children");
+        featurePieces.addAll(newFeaturePieces);
         // arg noFarChildren features
         newObjectList = getFeatureObjectList(argObject.getNoFarChildren());
-        newFeaturePieces1 = makeListPieces(newObjectList);
-        featurePieces.addAll(newFeaturePieces1);
-        // arg parent features
-        int argParent = argObject.getParent();                    
-        newObject = getFeatureObject(argParent);
-        newFeaturePieces2 = makePieces(newObject, n);
-        featurePieces.add(newFeaturePieces2);
-        // arg sibling features
+        newFeaturePieces = makeListPieces(newObjectList, "a.noFarChildren");
+        featurePieces.addAll(newFeaturePieces);
 
         return featurePieces;
     }
@@ -368,12 +491,16 @@ public class SentFeatureExtractor {
         String feat;
         ArrayList<String> featureList = new ArrayList<String>();
         for (ArrayList<String> p : predArgPathPieces) {
-            feat = "Seq:" + buildString(p);
-            featureList.add(feat);
-            feat = "Bag:" + buildString(bag(p));
-            featureList.add(feat);
-            feat = "NoDup:" + buildString(noDup(p));
-            featureList.add(feat);
+            if (p.size() > 1) {
+                feat = "Seq:" + buildString(p);
+                featureList.add(feat);
+                feat = "Bag:" + buildString(bag(p));
+                featureList.add(feat);
+                feat = "NoDup:" + buildString(noDup(p));
+                featureList.add(feat);
+            } else {
+                featureList.add(buildString(p));
+            }
         }
         return featureList;
     }
@@ -398,16 +525,17 @@ public class SentFeatureExtractor {
      * @param featureObj a pred or argument object.
      * @return featureList a list of feature pieces to be used in the templates.
      */
-    private ArrayList<String> makePieces(FeatureObject featureObj, Integer n) {        
+    private ArrayList<String> makePieces(FeatureObject featureObj, Integer n, String pieceType) {        
         ArrayList<String> featureList = new ArrayList<String>();
         String feat;
         String morphFeat = "";
         String prefix = "";
         if (n == -1) {
-            prefix = "Prev";
+            prefix = "Prev.";
         } else if (n == 1) {
-            prefix = "Next";
+            prefix = "Next.";
         }
+        prefix += pieceType + ".";
         if (prm.formFeats) {
             feat = prefix + "Form:" + featureObj.getForm();
             featureList.add(feat);
@@ -428,8 +556,12 @@ public class SentFeatureExtractor {
             for (int i = 0; i < morphFeats.size(); i++) {
                 feat = prefix + "Feat:" + morphFeats.get(i);
                 featureList.add(feat);
-                morphFeat = morphFeat + "_" + feat;
-                featureList.add(morphFeat);
+                if (i > 0) {
+                    morphFeat = morphFeat + "_" + feat;
+                    featureList.add(morphFeat);
+                } else {
+                    morphFeat = feat;
+                }
             }
         }
         if (prm.deprelFeats) {
@@ -464,23 +596,23 @@ public class SentFeatureExtractor {
          */
         // linePath featurepiece lists
         newObjectList = getFeatureObjectList(linePath);
-        newFeaturePieces = makeListPieces(newObjectList);
+        newFeaturePieces = makeListPieces(newObjectList, "linePath");
         featurePieces.addAll(newFeaturePieces);
         // dependencyPath featurepiece lists
         newObjectList = getFeatureObjectList(dependencyPath);
-        newFeaturePieces = makeListPieces(newObjectList);
+        newFeaturePieces = makeListPieces(newObjectList, "dependencyPath");
         featurePieces.addAll(newFeaturePieces);
         // dpPathPred featurepiece lists
         newObjectList = getFeatureObjectList(dpPathPred);
-        newFeaturePieces = makeListPieces(newObjectList);
+        newFeaturePieces = makeListPieces(newObjectList, "dpPathPred");
         featurePieces.addAll(newFeaturePieces);
         // dpPathArg featurepiece lists
         newObjectList = getFeatureObjectList(dpPathArg);
-        newFeaturePieces = makeListPieces(newObjectList);
+        newFeaturePieces = makeListPieces(newObjectList, "dpPathArg");
         featurePieces.addAll(newFeaturePieces);
         // dpPathShare featurepiece lists
         newObjectList = getFeatureObjectList(dpPathShare);
-        newFeaturePieces = makeListPieces(newObjectList);
+        newFeaturePieces = makeListPieces(newObjectList, "dpPathShare");
         featurePieces.addAll(newFeaturePieces);
         
         return featurePieces;
@@ -490,7 +622,7 @@ public class SentFeatureExtractor {
      * a syntactic path), get all the possible feature pieces (POS tags, etc).
      * @return feature pieces for all objects as a list.
      */
-    private ArrayList<ArrayList<String>> makeListPieces(ArrayList<FeatureObject> pathList) {
+    private ArrayList<ArrayList<String>> makeListPieces(ArrayList<FeatureObject> pathList, String pieceType) {
         // Sets of feature pieces along the path.
         ArrayList<String> featurePieceList;
         String feat;
@@ -498,12 +630,21 @@ public class SentFeatureExtractor {
         FeatureObject featureObj;
         // Feature pieces along all paths.
         ArrayList<ArrayList<String>> featurePieceLists = new ArrayList<ArrayList<String>>();
+        // distance feature
+        featurePieceList = new ArrayList<String>();
+        feat = pieceType + ".Distance:" + Integer.toString(pathList.size());
+        featurePieceList.add(feat);
+        featurePieceLists.add(featurePieceList);
+        // not *totally* necessary.
+        if (pathList.size() == 0) {
+            return featurePieceLists;
+        }
         // NOTE:  There is probably a much faster way to do this.
         if (prm.formFeats) {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
                 featureObj = pathList.get(x);
-                feat = "Form:" + featureObj.getForm();
+                feat = pieceType + ".Form:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
             featurePieceLists.add(featurePieceList);
@@ -512,7 +653,7 @@ public class SentFeatureExtractor {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
                 featureObj = pathList.get(x);
-                feat = "Lemma:" + featureObj.getForm();
+                feat = pieceType + ".Lemma:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
             featurePieceLists.add(featurePieceList);
@@ -521,7 +662,7 @@ public class SentFeatureExtractor {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
                 featureObj = pathList.get(x);
-                feat = "Tag:" + featureObj.getForm();
+                feat = pieceType + ".Tag:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
             featurePieceLists.add(featurePieceList);
@@ -532,18 +673,23 @@ public class SentFeatureExtractor {
                 featureObj = pathList.get(x);
                 ArrayList<String> morphFeats = featureObj.getFeat();
                 for (int i = 0; i < morphFeats.size(); i++) {
-                    feat = "Feat:" + morphFeats.get(i);
+                    feat = pieceType + ".Feat:" + morphFeats.get(i);
                     featurePieceList.add(feat);
-                    morphFeat = morphFeat + "_" + feat;
-                    featurePieceList.add(morphFeat);
+                    if (i > 0) {
+                        morphFeat = morphFeat + "_" + feat;
+                        featurePieceList.add(morphFeat);
+                    } else {
+                        morphFeat = feat;
+                    }
                 }
             }
+            featurePieceLists.add(featurePieceList);
         }      
         if (prm.deprelFeats) {
             featurePieceList = new ArrayList<String>();
             for (int x = 0; x < pathList.size(); x++) {
                 featureObj = pathList.get(x);
-                feat = "Deprel:" + featureObj.getForm();
+                feat = pieceType + ".Deprel:" + featureObj.getForm();
                 featurePieceList.add(feat);
             }
             featurePieceLists.add(featurePieceList);

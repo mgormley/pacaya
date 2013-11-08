@@ -435,14 +435,17 @@ public class SentFeatureExtractorTest {
         cs.init(Utilities.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
 
-        ArrayList<String> allFeats = new ArrayList<String>();
-        fePrm.withSupervision = true;
-        fePrm.formFeats = true;
-        fePrm.lemmaFeats = true;
-        fePrm.tagFeats = true;
-        fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        fePrm.formFeats = false;
+        fePrm.lemmaFeats = false;
+        fePrm.tagFeats = false;
+        fePrm.morphFeats = true;
+        fePrm.deprelFeats = false;
+        fePrm.familyFeats = false;
+        fePrm.pathFeats = false;
+        fePrm.syntacticConnectionFeats = false;
+
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //allFeats = new ArrayList<String>();
         ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(1, 5);
         /*for (int i = 0; i < sent.size(); i++) {
