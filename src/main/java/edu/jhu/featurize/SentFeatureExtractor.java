@@ -214,7 +214,7 @@ public class SentFeatureExtractor {
         return feats;
     }
 
-    private void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
+    public void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
         // TODO Auto-generated method stub
         
     }
@@ -848,7 +848,7 @@ public class SentFeatureExtractor {
         }
     }
     
-    public void addZhaoUnsupervisedSenseFeats(FeatureObject p, FeatureObject p1, FeatureObject pm1, ArrayList<String> feats) {
+    private void addZhaoUnsupervisedSenseFeats(FeatureObject p, FeatureObject p1, FeatureObject pm1, ArrayList<String> feats) {
         String feat;
         // p.form
         feat = p.getForm();
@@ -861,7 +861,7 @@ public class SentFeatureExtractor {
         feats.add(feat); 
     }
     
-    public void addZhaoSupervisedSenseFeats(FeatureObject p, FeatureObject p1, ArrayList<String> feats) {
+    private void addZhaoSupervisedSenseFeats(FeatureObject p, FeatureObject p1, ArrayList<String> feats) {
         String feat;
         // p.lm.pos
         feat = getFeatureObject(p.getFarLeftChild()).getPos();
@@ -1260,7 +1260,7 @@ public class SentFeatureExtractor {
         // TODO: DepSubCat: the subcategorization frame of the predicate, e.g. OBJ+OPRD+SUB.
     }
     
-    public void addBjorkelundGenericFeatures(int idx, ArrayList<String> feats, String type) {
+    private void addBjorkelundGenericFeatures(int idx, ArrayList<String> feats, String type) {
         String feat;
         FeatureObject bjorkWord = getFeatureObject(idx);
         // ArgWord, PredWord
@@ -1277,7 +1277,7 @@ public class SentFeatureExtractor {
         feats.add(type + ":" + feat);
     }
 
-    public void addBjorkelundPositionFeat(int pidx, int aidx, ArrayList<String> feats) {
+    private void addBjorkelundPositionFeat(int pidx, int aidx, ArrayList<String> feats) {
         String feat;
         // Position: the position of the argument with respect to the predicate, i.e. before, on, or after.
         if (pidx < aidx) {
@@ -1290,7 +1290,7 @@ public class SentFeatureExtractor {
         feats.add("Position:" + feat);        
     }
 
-    public void addBjorkelundPathFeats(FeatureObject zhaoPredArgPair, ArrayList<String> feats) {
+    private void addBjorkelundPathFeats(FeatureObject zhaoPredArgPair, ArrayList<String> feats) {
         String feat;
         List<Pair<Integer, Dir>> dependencyPath = zhaoPredArgPair.getDependencyPath();
         // DeprelPath: the path from predicate to argument concatenating dependency labels with the
@@ -1310,7 +1310,7 @@ public class SentFeatureExtractor {
         feats.add("PosPath:" + feat);
     }
 
-    public void addBjorkelundSiblingFeats(FeatureObject argSibling, ArrayList<String> feats, String dir) {
+    private void addBjorkelundSiblingFeats(FeatureObject argSibling, ArrayList<String> feats, String dir) {
         String feat;
         // LeftSiblingWord, RightSiblingWord
         feat = argSibling.getForm();
@@ -1323,7 +1323,7 @@ public class SentFeatureExtractor {
         feats.add(dir + "SiblingFeats:" + feat);
     }
 
-    public void addBjorkelundDependentFeats(FeatureObject dependent, ArrayList<String> feats, String dir) {
+    private void addBjorkelundDependentFeats(FeatureObject dependent, ArrayList<String> feats, String dir) {
         String feat;
         // LeftWord, RightWord
         feat = dependent.getForm();
@@ -1336,7 +1336,7 @@ public class SentFeatureExtractor {
         feats.add(dir + "Feats:" + feat);
     }
 
-    public void addBjorkelundPredChildFeatures(ArrayList<Integer> predChildren, ArrayList<String> feats) {
+    private void addBjorkelundPredChildFeatures(ArrayList<Integer> predChildren, ArrayList<String> feats) {
         String feat;
         // ChildDepSet: the set of dependency labels of the children of the predicate, e.g. {OBJ, SUB}.
         ArrayList<String> childDepSet = new ArrayList<String>();
@@ -1357,7 +1357,7 @@ public class SentFeatureExtractor {
         feats.add("ChildWordSet:" + feat);        
     }
 
-    public void addBjorkelundPredParentFeatures(FeatureObject predParent, ArrayList<String> feats) {
+    private void addBjorkelundPredParentFeatures(FeatureObject predParent, ArrayList<String> feats) {
         String feat;
         // PredParentWord
         feat = predParent.getForm();
