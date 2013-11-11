@@ -36,6 +36,8 @@ public class Var implements Comparable<Var>, Serializable {
     /** State names, where the i'th entry gives the state names of the i'th state. */
     private ArrayList<String> stateNames;
     
+    private int hash = 0;
+    
     // TODO: Remove
     //    /** Counter used to create a unique id for each instance of this class. */
     //    private static final AtomicInteger instanceCounter = new AtomicInteger();
@@ -52,12 +54,8 @@ public class Var implements Comparable<Var>, Serializable {
     public Var(VarType type, int numStates, String name, List<String> stateNames) {
         this.type = type;
         this.numStates = numStates;
-        // Store and intern the name and state names.
+        // Intern the name, but not the state names.
         this.name = name.intern();
-        if (stateNames != null) {
-            assert(numStates == stateNames.size());
-            this.stateNames = Lists.getInternedList(stateNames);
-        }
     }
 
     public int getNumStates() {
@@ -162,8 +160,6 @@ public class Var implements Comparable<Var>, Serializable {
         return c;
     }
 
-    private int hash = 0;
-    
     @Override
     public int hashCode() {
         if (hash == 0) {
