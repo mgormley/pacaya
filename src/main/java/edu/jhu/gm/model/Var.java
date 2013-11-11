@@ -34,7 +34,7 @@ public class Var implements Comparable<Var>, Serializable {
     /** The unique name of this variable. */
     private String name;
     /** State names, where the i'th entry gives the state names of the i'th state. */
-    private ArrayList<String> stateNames;
+    private List<String> stateNames;
     
     private int hash = 0;
     
@@ -56,6 +56,7 @@ public class Var implements Comparable<Var>, Serializable {
         this.numStates = numStates;
         // Intern the name, but not the state names.
         this.name = name.intern();
+        this.stateNames = stateNames;
     }
 
     public int getNumStates() {
@@ -70,7 +71,7 @@ public class Var implements Comparable<Var>, Serializable {
         return name;
     }
 
-    public ArrayList<String> getStateNames() {
+    public List<String> getStateNames() {
         return stateNames;
     }
 
