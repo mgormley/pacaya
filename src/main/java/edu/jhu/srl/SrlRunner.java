@@ -189,6 +189,8 @@ public class SrlRunner {
     public static CacheType cacheType = CacheType.CACHE;
     @Opt(hasArg = true, description = "When caching, the maximum number of examples to keep cached in memory or -1 for SoftReference caching.")
     public static int maxEntriesInMemory = 100;
+    @Opt(hasArg = true, description = "Whether to gzip an object before caching it.")
+    public static boolean gzipCache = false;    
     
     // Options for training.
     @Opt(hasArg=true, description="The optimization method to use for training.")
@@ -494,7 +496,7 @@ public class SrlRunner {
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;
         prm.exPrm.cacheType = cacheType;
-        prm.exPrm.gzipped = true;
+        prm.exPrm.gzipped = gzipCache;
         prm.exPrm.maxEntriesInMemory = maxEntriesInMemory;
         
         // SRL Feature Extraction.

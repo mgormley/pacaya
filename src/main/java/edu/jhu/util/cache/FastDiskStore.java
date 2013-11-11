@@ -1,24 +1,15 @@
 package edu.jhu.util.cache;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.io.Serializable;
-import java.util.AbstractSequentialList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Disk-backed map with insert-only capabilities.
@@ -56,7 +47,7 @@ public class FastDiskStore<K,V extends Serializable> implements Map<K, V> {
             // TODO: support multiple puts per key.
             throw new IllegalStateException("FastDiskStore currently only supports one put call per key.");
         }
-        byte[] valBytes = serialize(value);
+        byte[] valBytes = GzipMap.serialize(value, gzipOnSerialize);
         try {
             raf.seek(curPos);
             // Write the number of bytes.
@@ -105,77 +96,16 @@ public class FastDiskStore<K,V extends Serializable> implements Map<K, V> {
         if (numRead != numBytes) {
             throw new IllegalStateException("Invalid number of bytes read: " + numRead);
         }
-        return deserialize(bytes);
+        return GzipMap.deserialize(bytes, gzipOnSerialize);
     }
     
 
-    /** Serializes and gzips an object. */
-    private byte[] serialize(Serializable obj) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream out;
-            if (gzipOnSerialize) { 
-                out = new ObjectOutputStream(new GZIPOutputStream(baos));
-            } else {
-                out = new ObjectOutputStream(baos);
-            }
-            out.writeObject(obj);
-            out.flush();
-            out.close();
-            return baos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /** Deserialize and ungzip an object. */
-    private Object deserialize(byte[] bytes) {
-        try {
-            InputStream is = new ByteArrayInputStream(bytes);
-            if (gzipOnSerialize) {
-                is = new GZIPInputStream(is);
-            }
-            ObjectInputStream in = new ObjectInputStream(is);
-            Object inObj = in.readObject();
-            in.close();
-            return inObj;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
     public Iterator<K> keyIterator() {
         return keyPosMap.keySet().iterator();
     }
     
     public Iterator<V> valueIterator() {
-        return new FastDiskStoreValueIterator();
-    }  
-    
-    private class FastDiskStoreValueIterator implements Iterator<V> {
-
-        private Iterator<K> keyIter = keyIterator();
-        
-        @Override
-        public boolean hasNext() {
-            return keyIter.hasNext();
-        }
-
-        @Override
-        public V next() {
-            if (!hasNext()) {
-                return null;
-            }
-            return get(keyIter.next());
-        }
-
-        @Override
-        public void remove() {
-            throw new RuntimeException("not implemented");
-        }
-        
+        return new MapValueIterator<K,V>(keyIterator(), this);
     }
 
     @Override
@@ -204,33 +134,7 @@ public class FastDiskStore<K,V extends Serializable> implements Map<K, V> {
     public Collection<V> values() {      
         return new IteratorOnlyCollection<V>(valueIterator());
     }
-    
-    /** A collection which only supports iteration. */    
-    private static class IteratorOnlyCollection<T> extends AbstractSequentialList<T> {
-
-        private Iterator<T> iterator;
-                
-        public IteratorOnlyCollection(Iterator<T> iterator) {
-            this.iterator = iterator;
-        }
         
-        @Override
-        public Iterator<T> iterator() {
-            return iterator;
-        }
-
-        @Override
-        public ListIterator<T> listIterator(int index) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public int size() {
-            throw new UnsupportedOperationException();
-        }
-        
-    }
-    
     // ----------------------- Unsupported Operations --------------------
 
     /** @throws UnsupportedOperationException */

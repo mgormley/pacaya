@@ -101,7 +101,7 @@ public class FgExampleListBuilder {
         // Populate the feature template list and stop growth on it.
         FgExampleList data = new FgExampleFactoryWrapper(fts, factory);
         if (prm.cacheType == CacheType.CACHE) {
-            data = new FgExampleCache(fts, data, prm.maxEntriesInMemory);
+            data = new FgExampleCache(fts, data, prm.maxEntriesInMemory, prm.gzipped);
             constructAndDiscardAll(data);
         } else if (prm.cacheType == CacheType.MEMORY_STORE) {
             FgExampleStore store = new FgExampleMemoryStore(fts);

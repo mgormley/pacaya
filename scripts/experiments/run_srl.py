@@ -488,6 +488,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-sup-lat",
                     "srl-lat",
                     "srl-opt",
+                    "srl-benchmark",
                     "srl-feats",
                     "srl-eval",
                     )
@@ -597,6 +598,31 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-benchmark":
+            # Experiment to do grid search over parameters for caching computation.
+            
+            # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
+            exps = []
+            data_settings = SrlExpParams(trainMaxNumSentences=500,
+                                         testMaxNumSentences=1)
+            g.defaults.update(sgdNumPasses=1)            
+            cacheSettings = [           # Number of sents: 100      500 
+                             ("DISK_STORE", False, 1),    # 0.10    0.71
+                             ("DISK_STORE", False, -1),   # 0.05    0.27
+                             ("MEMORY_STORE", False, -1), # 0.06    0.23
+                             ("NONE", False, -1),         # 0.17    0.78 
+                             ("CACHE", True, 1000000),    # 0.62    2.87
+                             ]
+            for cacheType, gzipCache, maxEntriesInMemory in cacheSettings:
+                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings \
+                        + SrlExpParams(cacheType=cacheType, 
+                                       gzipCache=gzipCache,
+                                       maxEntriesInMemory=maxEntriesInMemory)
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exp.remove("test")
+                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feats":

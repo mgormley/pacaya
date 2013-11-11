@@ -6,6 +6,7 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.collections.map.ReferenceMap;
 
 import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.util.cache.GzipMap;
 
 /**
  * An immutable collection of instances for a graphical model.
@@ -26,7 +27,7 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
      * Constructor with a cache that uses SoftReferences.
      */
     public FgExampleCache(FeatureTemplateList fts, FgExampleList exampleFactory) {
-        this(fts, exampleFactory, -1);
+        this(fts, exampleFactory, -1, false);
     }
 
     /**
@@ -36,13 +37,20 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
      *            in-memory cache or -1 to use a SoftReference cache.
      */
     @SuppressWarnings("unchecked")
-    public FgExampleCache(FeatureTemplateList fts, FgExampleList exampleFactory, int maxEntriesInMemory) {
+    public FgExampleCache(FeatureTemplateList fts, FgExampleList exampleFactory, int maxEntriesInMemory, boolean gzipOnSerialize) {
         super(fts);
         this.exampleFactory = exampleFactory;
+        @SuppressWarnings("rawtypes")
+        Map tmp;
         if (maxEntriesInMemory == -1) {
-            cache = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+            tmp = new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
         } else {
-            cache = new LRUMap(maxEntriesInMemory);
+            tmp = new LRUMap(maxEntriesInMemory);
+        }
+        if (gzipOnSerialize) {
+            cache = new GzipMap<Integer, FgExample>(tmp);
+        } else {
+            cache = tmp;
         }
     }
 
