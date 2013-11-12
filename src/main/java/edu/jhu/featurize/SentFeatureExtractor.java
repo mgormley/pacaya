@@ -44,7 +44,7 @@ public class SentFeatureExtractor {
         public boolean biasOnly = false;
         public boolean isProjective = false;
         /** Switches for feature templates. */
-        public boolean useTemplates = true;
+        public boolean useTemplates = false;
         public boolean formFeats = true;
         public boolean lemmaFeats = true;
         public boolean tagFeats = true;
