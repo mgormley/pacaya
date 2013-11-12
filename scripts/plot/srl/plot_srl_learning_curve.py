@@ -4,12 +4,13 @@ from pandas import *
 # Create some dummy filler data.
 d = {'F1' : [1., 2., 3., 4.],
      'propTrainExamples' : [0.2, 0.4, 0.8, 1.0],
-     'method' : ['veryverylongmethod', 'm1', 'm1', 'm1'],
+     
      }
+d['method'] = 'method1'
 
 df = DataFrame(d)
 df2 = df.copy()
-df2['method'] = 'm2'
+df2['method'] = 'method2'
 df = concat([df, df2])
 
 df['F1'] = np.log(df['propTrainExamples'] * 1000) * 10 + np.random.normal(0, 1, len(df))
@@ -53,6 +54,7 @@ class LooseMaxNLocator(mticker.MaxNLocator):
         """
         mticker.MaxNLocator.__init__(self, **kwargs)
         if margin < 0:
+
             raise ValueError('The margin must be non-negative.')
         self._margin = margin
 
@@ -95,7 +97,7 @@ for m in df['method'].unique():
     ax.plot(sf['propTrainExamples'], sf['F1'], 'o-', label=m)
 ax.set_xlabel("Proportion of examples used for training")
 ax.set_ylabel("SRL F1")
-lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), borderaxespad=0.)
+lgd = ax.legend(loc='center left', bbox_to_anchor=(1, 0.5)) #, borderaxespad=0.)
 #fig.figlegend()
 ax.xaxis.set_major_locator(
     LooseMaxNLocator(nbins=9, steps=[1, 2, 5, 10], margin=0.1))

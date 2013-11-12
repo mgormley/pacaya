@@ -1,6 +1,7 @@
 package edu.jhu.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -63,7 +64,9 @@ public class Threads {
     public static <T> List<T> safelyParallelizeBatch(ExecutorService pool, int[] batch, TaskFactory<T> factory) {
         batch = IntArrays.copyOf(batch);
         ArrayList<T> results = new ArrayList<T>();
-        IntSort.sortAsc(batch);
+        if (!IntSort.isSortedAsc(batch)) {
+            Arrays.sort(batch);
+        }
         while (IntArrays.count(batch, -1) < batch.length) {
             ArrayList<Callable<T>> tasks = new ArrayList<Callable<T>>();
             for (int i = 0; i < batch.length; i++) {
