@@ -432,7 +432,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
 
