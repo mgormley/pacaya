@@ -2,6 +2,7 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -75,5 +76,13 @@ public class Lists {
             }            
         };
     }
-
+    
+    public static int[] asArray(List<Integer> list) {
+        int[] array = new int[list.size()];
+        int i=0;
+        for (Integer v : list) {
+            array[i++] = v;
+        }
+        return array;
+    }
 }

@@ -32,6 +32,7 @@ public class BfsBpSchedule implements BpSchedule {
         // Add each connected component to the order.
         for (FgNode root : fg.getConnectedComponents()) {
             if (!fg.isUndirectedTree(root)) {
+                System.out.println("Factor graph: " + fg);
                 throw new IllegalStateException("Connected component is not a tree: " + root);
             }
             // If we have a single global factor, make it the root.
@@ -44,6 +45,7 @@ public class BfsBpSchedule implements BpSchedule {
                 }
             }
             if (numGlobalFactors > 1) {
+                System.out.println("Factor graph: " + fg);
                 // TODO: How could we handle this case?
                 throw new RuntimeException("More than one global factor is not (yet) supported with BfsBpSchedule.");
             } else if (numGlobalFactors == 1) {

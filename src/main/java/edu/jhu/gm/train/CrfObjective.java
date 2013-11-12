@@ -1,6 +1,5 @@
 package edu.jhu.gm.train;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +31,7 @@ import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Threads;
+import edu.jhu.util.Threads.TaskFactory;
 
 public class CrfObjective implements Function, BatchFunction {
     
@@ -105,11 +105,12 @@ public class CrfObjective implements Function, BatchFunction {
             }
         } else {
             // Run in parallel.
-            ArrayList<Callable<Double>> tasks = new ArrayList<Callable<Double>>();
-            for (int i = 0; i < batch.length; i++) {
-                tasks.add(new LogLikelihoodOfExample(batch[i]));
-            }
-            List<Double> results = Threads.getAllResults(pool, tasks);
+            TaskFactory<Double> factory = new TaskFactory<Double>() {
+                public Callable<Double> getTask(int i) {
+                    return new LogLikelihoodOfExample(i);
+                }
+            };
+            List<Double> results = Threads.safelyParallelizeBatch(pool, batch, factory);
             for (Double r : results) {
                 ll += r;
             }
@@ -226,11 +227,12 @@ public class CrfObjective implements Function, BatchFunction {
             }
         } else {
             // Run in parallel.
-            ArrayList<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
-            for (int i = 0; i < batch.length; i++) {
-                tasks.add(new AddGradientOfExample(gradient, batch[i]));
-            }
-            Threads.getAllResults(pool, tasks);
+            TaskFactory<Object> factory = new TaskFactory<Object>() {
+                public Callable<Object> getTask(int i) {
+                    return new AddGradientOfExample(gradient, i);
+                }
+            };
+            Threads.safelyParallelizeBatch(pool, batch, factory);
         }     
         this.gradient.scale(1.0 / batch.length);
         gradient.updateDoublesFromModel(g);
