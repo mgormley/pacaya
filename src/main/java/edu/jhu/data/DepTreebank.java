@@ -1,7 +1,5 @@
 package edu.jhu.data;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,18 +7,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.PtbDepTree.HeadFinderException;
-import edu.jhu.data.conll.CoNLL09DepTree;
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLLXDepTree;
-import edu.jhu.data.conll.CoNLLXDirReader;
-import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.util.Alphabet;
-import edu.stanford.nlp.ling.CategoryWordTag;
-import edu.stanford.nlp.trees.DiskTreebank;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.Treebank;
 
 public class DepTreebank implements Iterable<DepTree> {
 
@@ -29,99 +16,14 @@ public class DepTreebank implements Iterable<DepTree> {
     private static final Logger log = Logger.getLogger(DepTreebank.class);
 
     private SentenceCollection sentences = null;
-    private int maxSentenceLength;
-    private int maxNumSentences;
-    private TreeFilter filter = null;
     private Alphabet<Label> alphabet;
     private ArrayList<DepTree> trees;
-        
+            
     public DepTreebank(Alphabet<Label> alphabet) {
-        this(Integer.MAX_VALUE, Integer.MAX_VALUE, alphabet);
-    }
-
-    public DepTreebank(final int maxSentenceLength, final int maxNumSentences, Alphabet<Label> alphabet) {
-        this(maxSentenceLength, maxNumSentences, null, alphabet);
-    }
-    
-    private DepTreebank(final int maxSentenceLength, final int maxNumSentences, TreeFilter filter, Alphabet<Label> alphabet) {
-        this.maxSentenceLength = maxSentenceLength;
-        this.maxNumSentences = maxNumSentences;
-        this.filter = filter;
         this.alphabet = alphabet;
         this.trees = new ArrayList<DepTree>();
     }
     
-    public void setTreeFilter(TreeFilter filter) {
-        this.filter = filter;
-    }
-    
-    /**
-     * Read constituency trees from the Penn Treebank and use the Collins head
-     * finding rules to extract dependency trees from them.
-     * 
-     * @param trainPath
-     */
-    // TODO: move to 
-    public void loadPtbPath(File trainPath) {
-        Treebank stanfordTreebank = new DiskTreebank();
-        CategoryWordTag.suppressTerminalDetails = true;
-        stanfordTreebank.loadPath(trainPath);
-        for (Tree stanfordTree : stanfordTreebank) {
-            try {
-                if (this.size() >= maxNumSentences) {
-                    break;
-                }
-                DepTree tree = new PtbDepTree(stanfordTree);
-                int len = tree.getNumTokens();
-                if (len <= maxSentenceLength) {
-                    if (filter == null || filter.accept(tree)) {
-                        this.add(tree);
-                    }
-                }
-            } catch (HeadFinderException e) {
-                log.warn("Skipping tree due to HeadFinderException: " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Read constituency trees from the Penn Treebank and use the Collins head
-     * finding rules to extract dependency trees from them.
-     * 
-     * @param trainPath
-     */
-    public void loadCoNLLXPath(File trainPath) {
-        CoNLLXDirReader reader = new CoNLLXDirReader(trainPath);
-        for (CoNLLXSentence sent : reader) {
-            if (this.size() >= maxNumSentences) {
-                break;
-            }
-            DepTree tree = new CoNLLXDepTree(sent, alphabet);
-            int len = tree.getNumTokens();
-            if (len <= maxSentenceLength) {
-                if (filter == null || filter.accept(tree)) {
-                    this.add(tree);
-                }
-            }
-        }
-    }
-    
-    public void loadCoNLL09Path(File trainPath) throws IOException {
-        CoNLL09FileReader reader = new CoNLL09FileReader(trainPath);
-        for (CoNLL09Sentence sent : reader) {
-            if (this.size() >= maxNumSentences) {
-                break;
-            }
-            DepTree tree = new CoNLL09DepTree(sent, alphabet);
-            int len = tree.getNumTokens();
-            if (len <= maxSentenceLength) {
-                if (filter == null || filter.accept(tree)) {
-                    this.add(tree);
-                }
-            }
-        }
-    }
-        
     public SentenceCollection getSentences() {
         if (sentences == null) {
             sentences = new SentenceCollection(this);

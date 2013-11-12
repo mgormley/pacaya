@@ -9,6 +9,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
+import edu.jhu.util.collections.Lists;
+
 /**
  * One token from a CoNNL-X formatted file.
  * 
@@ -110,18 +112,10 @@ public class CoNLLXToken {
         lemma = lemma.intern();
         cpostag = cpostag.intern();
         postag = postag.intern();
-        feats = getInternedList(feats);
+        feats = Lists.getInternedList(feats);
         deprel = deprel.intern();
         phead = phead.intern();
         pdeprel = pdeprel.intern();
-    }
-
-    public static List<String> getInternedList(List<String> oldList) {
-        ArrayList<String> newList = new ArrayList<String>(oldList.size());
-        for (String elem : oldList) {
-            newList.add(elem.intern());
-        }
-        return newList;
     }
 
     /**

@@ -41,18 +41,18 @@ import edu.jhu.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.parse.DepParser;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.BnBDmvTrainer;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.train.Trainer;
 import edu.jhu.train.TrainerFactory;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.files.Files;
 
 public class DepParserRunner {
     
@@ -266,7 +266,7 @@ public class DepParserRunner {
         SentenceCollection sentences = goldTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
         double logLikelihood = parser.getLastParseWeight();
-        double perTokenCrossEnt = - logLikelihood / Utilities.log(2) / sentences.getNumTokens();
+        double perTokenCrossEnt = - logLikelihood / FastMath.log(2) / sentences.getNumTokens();
         log.info(String.format("LogLikelihood on %s: %.4f", datasetName, logLikelihood));
         log.info(String.format("Per token cross entropy on %s: %.3f", datasetName, perTokenCrossEnt));
         

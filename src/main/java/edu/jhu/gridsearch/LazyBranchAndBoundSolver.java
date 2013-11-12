@@ -1,6 +1,5 @@
 package edu.jhu.gridsearch;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -8,9 +7,10 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.FathomStats.FathomStatus;
 import edu.jhu.gridsearch.dmv.DmvRelaxation;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 /**
  * For a maximization problem, this performs eager (as opposed to lazy) branch
@@ -159,7 +159,7 @@ public class LazyBranchAndBoundSolver {
                     rootLogSpace = relax.getBounds().getLogSpace();
                     logSpaceRemain = rootLogSpace;
                 }
-                logSpaceRemain = Utilities.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
+                logSpaceRemain = FastMath.logSubtractExact(logSpaceRemain, relax.getBounds().getLogSpace());
             }
 
             // Update state of the tree with this nodes children.
@@ -178,7 +178,7 @@ public class LazyBranchAndBoundSolver {
         // Print summary
         evalIncumbent(incumbentSolution);
         double relativeDiff = computeRelativeDiff(globalUb, incumbentScore);
-        if (Utilities.lte(relativeDiff, prm.epsilon, 1e-13)) {
+        if (Primitives.lte(relativeDiff, prm.epsilon, 1e-13)) {
             status = SearchStatus.OPTIMAL_SOLUTION_FOUND;
         }
         printSummary(globalUb, relativeDiff, numProcessed, fathom);
@@ -244,7 +244,7 @@ public class LazyBranchAndBoundSolver {
         r.feasSol = prm.projector.getProjectedSolution(r.relaxSol);
         feasTimer.stop();
         
-        if (r.feasSol != null && Utilities.equals(r.feasSol.getScore(), r.relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
+        if (r.feasSol != null && Primitives.equals(r.feasSol.getScore(), r.relaxSol.getScore(), 1e-13)  && !prm.disableFathoming) {
             // Fathom this node: the optimal solution for this subproblem was found.
             r.status = FathomStatus.CompletelySolved;
             return r;
@@ -348,8 +348,8 @@ public class LazyBranchAndBoundSolver {
         //                log.warn("Log space remaining differs between subtraction and addition versions.");
         //            }
         //        }
-        log.info("Space remaining: " + Utilities.exp(logSpaceRemain));
-        log.info("Proportion of root space remaining: " + Utilities.exp(logSpaceRemain - rootLogSpace));
+        log.info("Space remaining: " + FastMath.exp(logSpaceRemain));
+        log.info("Proportion of root space remaining: " + FastMath.exp(logSpaceRemain - rootLogSpace));
     }
 
     protected void printTimers(int numProcessed) {
@@ -374,8 +374,8 @@ public class LazyBranchAndBoundSolver {
     private String getHistogram(double[] bounds) {
         int numBins = 10;
 
-        double max = Vectors.max(bounds);
-        double min = Vectors.min(bounds);
+        double max = DoubleArrays.max(bounds);
+        double min = DoubleArrays.min(bounds);
         double binWidth = (max - min) / numBins;
         
         int[] hist = new int[numBins];

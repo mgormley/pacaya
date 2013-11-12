@@ -6,7 +6,7 @@ import java.util.List;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.util.math.FastMath;
 
 public class MidpointVarSplitter implements VariableSplitter {
 
@@ -39,7 +39,7 @@ public class MidpointVarSplitter implements VariableSplitter {
         // Split the current LB-UB probability space in half
         double lb = origBounds.getLb(Type.PARAM, c, m);
         double ub = origBounds.getUb(Type.PARAM, c, m);
-        double mid = Utilities.logAdd(lb, ub) - Utilities.log(2.0);
+        double mid = FastMath.logAdd(lb, ub) - FastMath.log(2.0);
     
         return splitAtMidPoint(origBounds, c, m, mid);
     }
@@ -63,9 +63,9 @@ public class MidpointVarSplitter implements VariableSplitter {
         double logSumUbs = Double.NEGATIVE_INFINITY;
         for (int n = 0; n < origBounds.getNumParams(c); n++) {
             if (n == m) {
-                logSumUbs = Utilities.logAdd(logSumUbs, mid);                
+                logSumUbs = FastMath.logAdd(logSumUbs, mid);                
             } else {
-                logSumUbs = Utilities.logAdd(logSumUbs, origBounds.getUb(Type.PARAM, c, n));
+                logSumUbs = FastMath.logAdd(logSumUbs, origBounds.getUb(Type.PARAM, c, n));
             }
         }
         if (logSumUbs >= 0.0) {
@@ -78,7 +78,7 @@ public class MidpointVarSplitter implements VariableSplitter {
                 // Since we already have logSumUbs, we subtract off the contribution of
                 // the current parameter w_cn^{max}, to compute the sum relative to this
                 // parameter.
-                double logSumUbsForN = Utilities.logSubtract(logSumUbs, origBounds.getUb(Type.PARAM, c, n));
+                double logSumUbsForN = FastMath.logSubtract(logSumUbs, origBounds.getUb(Type.PARAM, c, n));
                 
                 if (logSumUbsForN >= 0.0) {
                     // The implicit lower bound will be loose (i.e. negative), 
@@ -86,7 +86,7 @@ public class MidpointVarSplitter implements VariableSplitter {
                     continue;
                 }
                 
-                double newLbForN = Utilities.logSubtract(0.0, logSumUbsForN);
+                double newLbForN = FastMath.logSubtract(0.0, logSumUbsForN);
                 if (origBounds.getLb(Type.PARAM, c, n) < newLbForN) {
                     // e.g. [0.6, 0.0] implied by sum-to-one constraints
                     uDelta = new CptBoundsDelta(Type.PARAM, c, n, Lu.LOWER, newLbForN - origBounds.getLb(Type.PARAM, c, n));
@@ -105,9 +105,9 @@ public class MidpointVarSplitter implements VariableSplitter {
         double logSumLbs = Double.NEGATIVE_INFINITY;
         for (int n = 0; n < origBounds.getNumParams(c); n++) {
             if (n == m) {
-                logSumLbs = Utilities.logAdd(logSumLbs, mid);                
+                logSumLbs = FastMath.logAdd(logSumLbs, mid);                
             } else {
-                logSumLbs = Utilities.logAdd(logSumLbs, origBounds.getLb(Type.PARAM, c, n));
+                logSumLbs = FastMath.logAdd(logSumLbs, origBounds.getLb(Type.PARAM, c, n));
             }
         }
         if (logSumLbs <= 0.0) {
@@ -120,9 +120,9 @@ public class MidpointVarSplitter implements VariableSplitter {
                 // Since we already have logSumLbs, we subtract off the contribution of
                 // the current parameter w_cn^{min}, to compute the sum relative to this
                 // parameter.
-                double logSumLbsForN = Utilities.logSubtract(logSumLbs, origBounds.getLb(Type.PARAM, c, n));
+                double logSumLbsForN = FastMath.logSubtract(logSumLbs, origBounds.getLb(Type.PARAM, c, n));
                 assert (logSumLbsForN <= 0.0);
-                double newUbForN = Utilities.logSubtract(0.0, logSumLbsForN);
+                double newUbForN = FastMath.logSubtract(0.0, logSumLbsForN);
                 if (origBounds.getUb(Type.PARAM, c, n) > newUbForN) {
                     // e.g. [0.0, 0.6] implied by sum-to-one constraints
                     lDelta = new CptBoundsDelta(Type.PARAM, c, n, Lu.UPPER, newUbForN - origBounds.getUb(Type.PARAM, c, n));

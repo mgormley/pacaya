@@ -20,6 +20,7 @@ from experiments.core import pipeline
 import re
 import random
 from experiments.core.pipeline import write_script, RootStage, Stage
+import multiprocessing
 
 # ---------------------------- Handy Functions ----------------------------------
 
@@ -152,7 +153,9 @@ class ParamDefinitions():
         self.fast = options.fast
         self.expname = options.expname
         self.path_defs = PathDefinitions(options)
-                
+        self.queue = options.queue
+        self.big_machine = (multiprocessing.cpu_count() > 2)
+        
     def get_param_groups_and_lists(self):        
         g = ParamGroups()
         l = ParamGroupLists()
@@ -184,6 +187,14 @@ class ParamDefinitions():
         g.defaults.set("timeoutSeconds", 48*60*60, incl_arg=False, incl_name=False)
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
+        if self.queue:
+            threads = 20
+        elif self.big_machine:
+            threads = 2
+        else:
+            threads = 1
+        g.defaults.set("threads", threads, incl_name=False)
+        g.defaults.set("sgdBatchSize", threads)
         
         g.defaults.update(
             printModel="./model.txt",                          
@@ -269,13 +280,15 @@ class ParamDefinitions():
     
     def _define_groups_model(self, g):
         g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED")
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
         g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED")
         g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
 
     def _define_lists_model(self, g, l):
-        l.models = [g.model_pg_obs_tree, g.model_pg_lat_tree,
-                    g.model_ap_obs_tree, g.model_ap_lat_tree,]
+        l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
+                    g.model_ap_obs_tree, g.model_ap_prd_tree, g.model_ap_lat_tree]
                 
     def _get_pos_gold(self, p, lang_short):
         # Gold trees: HEAD column.
@@ -368,7 +381,7 @@ class ParamDefinitions():
     
     def get_srl_work_mem_megs(self, exp):
         ''' Gets the (expected) memory limit for the given parameters in exp. '''
-        if exp.get("biasOnly") != True and re.search(r"test[^.]+\.local", os.uname()[1]):
+        if self.queue:
             if exp.get("testMaxSentenceLength") is not None and exp.get("testMaxSentenceLength") <= 20 and \
                     exp.get("trainMaxSentenceLength") is not None and exp.get("trainMaxSentenceLength") <= 20:
                 # 2500 of len <= 20 fit in 1G, with  8 roles, and global factor on.
@@ -386,7 +399,7 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*1024
             else:
                 if exp.get("useProjDepTreeFactor"):
-                    base_work_mem_megs = 200 * 1024
+                    base_work_mem_megs = 50 * 1024
                 else:
                     base_work_mem_megs = 50 * 1024
         else:
@@ -475,6 +488,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-sup-lat",
                     "srl-lat",
                     "srl-opt",
+                    "srl-benchmark",
                     "srl-feats",
                     "srl-eval",
                     )
@@ -501,11 +515,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(trainMaxSentenceLength=20)
             return self._get_default_pipeline(g, l)
         
-        elif self.expname == "srl-narad":
+        elif self.expname == "srl-narad":            
             g.defaults += g.feat_narad
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
+            g.defaults += SrlExpParams(trainMaxNumSentences=100,
+                                       testMaxNumSentences=100)
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l)
 
@@ -582,6 +598,31 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-benchmark":
+            # Experiment to do grid search over parameters for caching computation.
+            
+            # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
+            exps = []
+            data_settings = SrlExpParams(trainMaxNumSentences=500,
+                                         testMaxNumSentences=1)
+            g.defaults.update(sgdNumPasses=1)            
+            cacheSettings = [           # Number of sents: 100      500 
+                             ("DISK_STORE", False, 1),    # 0.10    0.71
+                             ("DISK_STORE", False, -1),   # 0.05    0.27
+                             ("MEMORY_STORE", False, -1), # 0.06    0.23
+                             ("NONE", False, -1),         # 0.17    0.78 
+                             ("CACHE", True, 1000000),    # 0.62    2.87
+                             ]
+            for cacheType, gzipCache, maxEntriesInMemory in cacheSettings:
+                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings \
+                        + SrlExpParams(cacheType=cacheType, 
+                                       gzipCache=gzipCache,
+                                       maxEntriesInMemory=maxEntriesInMemory)
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exp.remove("test")
+                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feats":

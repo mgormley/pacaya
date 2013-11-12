@@ -21,14 +21,14 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
-import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.IlpDepParserTest;
+import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
-import edu.jhu.util.math.Vectors;
 
 public class LpDmvRelaxedParserTest {
 
@@ -279,7 +279,7 @@ public class LpDmvRelaxedParserTest {
             double[] fracRoots = trees.getFracRoots()[s];
             double[][] fracChildren = trees.getFracChildren()[s];
             // Check that the wall has "one" child.
-            Assert.assertEquals(1.0, Vectors.sum(fracRoots), 1e-13);
+            Assert.assertEquals(1.0, DoubleArrays.sum(fracRoots), 1e-13);
             // Check that each node has "one" parent.
             int sentLen = fracChildren.length;
             for (int c = 0; c<sentLen; c++) {

@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import edu.jhu.util.Command;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
+import edu.jhu.util.sys.System;
 
 public class ClGurobiIlpSolver implements IlpSolver {
 
@@ -47,7 +47,7 @@ public class ClGurobiIlpSolver implements IlpSolver {
                 lpFile.getAbsolutePath() };
         //TODO: handle infeasible case
         File gurobiLog = new File(tempDir, "gurobi.log");
-        Command.runCommand(cmdArray, gurobiLog, tempDir);
+        System.runCommand(cmdArray, gurobiLog, tempDir);
 
         // Throw exception if optimal solution not found
         if (!Files.fileContains(gurobiLog, "Optimal solution found")) {

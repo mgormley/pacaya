@@ -6,7 +6,6 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 import ilog.cplex.IloCplex.DoubleParam;
 import ilog.cplex.IloCplex.IntParam;
-import ilog.cplex.IloCplex.Status;
 import ilog.cplex.IloCplex.StringParam;
 
 import java.io.BufferedOutputStream;
@@ -23,7 +22,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.util.Command;

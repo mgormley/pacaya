@@ -14,9 +14,9 @@ import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.gridsearch.dmv.BasicDmvProjector;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.IndexedDmvModelTest;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 
 public class ProjectionsTest {
@@ -38,7 +38,7 @@ public class ProjectionsTest {
     private void validateNormalizedProjection(double[] params) {
         double[] x = Projections.getNormalizedProjection(params, 0.1);        
         System.out.println(Arrays.toString(x));
-        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(x), 1e-13);
     }    
     
     @Test
@@ -51,7 +51,7 @@ public class ProjectionsTest {
     private void validateUnboundedProjection(double[] params) {
         double[] x = Projections.getUnboundedProjection(params);        
         System.out.println(Arrays.toString(x));
-        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(x), 1e-13);
     }
     
     @Test
@@ -71,7 +71,7 @@ public class ProjectionsTest {
     private void validateBoundedProjection(double[] params, double[] lbs, double[] ubs) throws Exception {
         double[] x = projections.getBoundedProjection(params, lbs, ubs);        
         System.out.println(Arrays.toString(x));
-        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(x), 1e-13);
         
         for (int m=0; m<params.length; m++) {
             Assert.assertTrue(lbs[m] <= x[m]);
@@ -102,12 +102,12 @@ public class ProjectionsTest {
         Assert.assertEquals(lbs.length, ubs.length);
         int c = 0;
         for (int m=0; m<lbs.length; m++) {
-            logBounds.set(Type.PARAM, c, m, Utilities.log(lbs[m]), Utilities.log(ubs[m]));
+            logBounds.set(Type.PARAM, c, m, FastMath.log(lbs[m]), FastMath.log(ubs[m]));
         }
         
         double[] x = projections.getBoundedProjection(logBounds, c, params);
         System.out.println(Arrays.toString(x));
-        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(x), 1e-13);
         
         for (int m=0; m<params.length; m++) {
             Assert.assertTrue(lbs[m] <= x[m]);
@@ -148,11 +148,11 @@ public class ProjectionsTest {
         int c = 0;
         double[] x = projections.getBoundedProjection(logBounds, c, params);
         System.out.println(Arrays.toString(x));
-        Assert.assertEquals(1.0, Vectors.sum(x), 1e-13);
+        Assert.assertEquals(1.0, DoubleArrays.sum(x), 1e-13);
         
         for (int m=0; m<params.length; m++) {
-            Assert.assertTrue(Utilities.exp(logBounds.getLb(Type.PARAM, c, m)) <= x[m]);
-            Assert.assertTrue(x[m] <= Utilities.exp(logBounds.getUb(Type.PARAM, c, m)));
+            Assert.assertTrue(FastMath.exp(logBounds.getLb(Type.PARAM, c, m)) <= x[m]);
+            Assert.assertTrue(x[m] <= FastMath.exp(logBounds.getUb(Type.PARAM, c, m)));
         }
     }
     

@@ -7,9 +7,9 @@ import java.util.List;
 
 import edu.jhu.gridsearch.rlt.Rlt;
 import edu.jhu.lp.FactorBuilder.Factor;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.set.LongHashSet;
-import edu.jhu.util.Utilities;
 
 /**
  * Accepts only RLT factors that have a non-zero coefficient for one of the given input matrix variable columns.
@@ -35,7 +35,7 @@ public class VarRltFactorFilter implements RltFactorFilter {
     @Override
     public boolean accept(Factor f) {
         for (LongDoubleEntry ve : f.G) {
-            if (!Utilities.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
+            if (!Primitives.equals(ve.get(), 0.0, 1e-13) && cols.contains(ve.index())) {
                 return true;
             }
         }

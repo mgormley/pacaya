@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.prim.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 public class SlowFunctionWrapper implements Function {
 
@@ -24,7 +24,7 @@ public class SlowFunctionWrapper implements Function {
     @Override
     public void getGradient(double[] gradient) {
         double[] tmp = fn.getGradientAtPoint(point);
-        Utilities.copy(tmp, gradient);
+        DoubleArrays.copy(tmp, gradient);
     }
 
     @Override

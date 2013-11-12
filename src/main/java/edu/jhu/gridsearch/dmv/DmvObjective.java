@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.gridsearch.dmv.IndexedDmvModel.Rhs;
 import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.Primitives;
 
 public class DmvObjective {
     
@@ -42,7 +42,7 @@ public class DmvObjective {
         double quadObj = 0.0;
         for (int c = 0; c < logProbs.length; c++) {
             for (int m = 0; m < logProbs[c].length; m++) {
-                if (!Utilities.equals(featCounts[c][m], 0.0, EQUALITY_TOLERANCE)) {
+                if (!Primitives.equals(featCounts[c][m], 0.0, EQUALITY_TOLERANCE)) {
                     quadObj += (logProbs[c][m] * featCounts[c][m]);
                 }
                 assert (!Double.isNaN(quadObj));

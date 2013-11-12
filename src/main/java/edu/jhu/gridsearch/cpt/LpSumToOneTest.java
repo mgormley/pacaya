@@ -13,9 +13,9 @@ import org.junit.Test;
 import edu.jhu.gridsearch.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.gridsearch.cpt.MidpointVarSplitterTest.MockIndexedCpt;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 
 public class LpSumToOneTest {
@@ -53,10 +53,10 @@ public class LpSumToOneTest {
         
         double[][] logProbs = sto.extractRelaxedLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            double sum = Vectors.sum(logProbs[c]);
+            DoubleArrays.exp(logProbs[c]);
+            double sum = DoubleArrays.sum(logProbs[c]);
             System.out.println(sum);
-            Assert.assertTrue(Utilities.lte(sum, 1.128, 1e-8));
+            Assert.assertTrue(Primitives.lte(sum, 1.128, 1e-8));
         }
     }
     
@@ -97,10 +97,10 @@ public class LpSumToOneTest {
         cplex.solve();
         double[][] logProbs = sto.extractRelaxedLogProbs();
         for (int c=0; c<logProbs.length; c++) {
-            Vectors.exp(logProbs[c]);
-            double sum = Vectors.sum(logProbs[c]);
+            DoubleArrays.exp(logProbs[c]);
+            double sum = DoubleArrays.sum(logProbs[c]);
             System.out.println(sum);
-            Assert.assertTrue(Utilities.lte(sum, 1.128, 1e-8));
+            Assert.assertTrue(Primitives.lte(sum, 1.128, 1e-8));
         }
     }
 }

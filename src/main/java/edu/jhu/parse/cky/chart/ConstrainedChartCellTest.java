@@ -21,9 +21,9 @@ import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
 
 public class ConstrainedChartCellTest {

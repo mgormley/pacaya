@@ -1,7 +1,7 @@
 package edu.jhu.data;
 
-import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
+import edu.stanford.nlp.ling.Label;
 import edu.stanford.nlp.trees.Dependency;
 import edu.stanford.nlp.trees.DependencyFactory;
 import edu.stanford.nlp.trees.Tree;

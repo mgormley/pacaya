@@ -8,7 +8,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.util.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 public class DepTreeTest {
 

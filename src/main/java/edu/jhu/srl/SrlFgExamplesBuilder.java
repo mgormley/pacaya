@@ -1,40 +1,36 @@
 package edu.jhu.srl;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
-import edu.jhu.data.conll.CoNLL09FileReader;
-import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureTemplate;
-import edu.jhu.gm.FeatureTemplateList;
-import edu.jhu.gm.FgExample;
-import edu.jhu.gm.FgExamples;
-import edu.jhu.gm.ObsFeatureExtractor;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarConfig;
+import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.FgExampleFactory;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleListBuilder;
+import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
+import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.Alphabet;
-import edu.jhu.util.CountingAlphabet;
 import edu.jhu.util.Timer;
 
 /**
- * Factory for FgExamples.
+ * Factory for SRL FgExamples.
  * 
  * @author mgormley
  * @author mmitchell
@@ -42,17 +38,10 @@ import edu.jhu.util.Timer;
 public class SrlFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
-        /* These provide default values during testing; otherwise, 
-         * values should be defined by SrlRunner. */
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
-        /**
-         * Minimum number of times (inclusive) a feature must occur in training
-         * to be included in the model. Ignored if non-positive. (Using this
-         * cutoff implies that unsupported features will not be included.)
-         */
-        public int featCountCutoff = -1;
+        public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
     }
     
     private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
@@ -60,105 +49,57 @@ public class SrlFgExamplesBuilder {
     private FeatureTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
-    private Timer fgTimer = new Timer();
 
-    
     public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
         this.fts = fts;
         this.cs = cs;
-    }
-    
-    public void preprocess(SimpleAnnoSentenceCollection sents) {
-        if (!(fts.isGrowing() && prm.featCountCutoff > 0)) {
-            // Skip this preprocessing step since it will have no effect.
-            return;
-        }
-        
-        // Use counting alphabets in this ftl.
-        FeatureTemplateList counter = new FeatureTemplateList(true);
-        for (int i=0; i<sents.size(); i++) {
-            SimpleAnnoSentence sent = sents.get(i);
-            if (i % 1000 == 0 && i > 0) {
-                log.debug("Preprocessed " + i + " examples...");
-            }
-            
-            fgTimer.start();
-            // Precompute a few things.
-            SrlGraph srlGraph = sent.getSrlGraph();
-            
-            Set<Integer> knownPreds = getKnownPreds(srlGraph);
-            
-            // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
-            // Get the variable assignments given in the training data.
-            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-
-            // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
-            fgTimer.stop();            
-            
-            // Create the example solely to count the features.
-            new FgExample(sfg, trainConfig, featExtractor, counter);
-        }
-        
-        for (int t=0; t<counter.size(); t++) {            
-            FeatureTemplate template = counter.get(t);
-            CountingAlphabet<Feature> countAlphabet = (CountingAlphabet<Feature>) template.getAlphabet();
-            
-            // Create a copy of this template, with a new alphabet.
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            fts.add(new FeatureTemplate(template.getVars(), alphabet, template.getKey()));
-
-            // Discard the features which occurred fewer times than the cutoff.
-            for (int i=0; i<countAlphabet.size(); i++) {
-                int count = countAlphabet.lookupObjectCount(i);
-                Feature feat = countAlphabet.lookupObject(i);
-                if (count >= prm.featCountCutoff || feat.isBiasFeature()) {
-                    alphabet.lookupIndex(feat);
-                }
-            }
-            alphabet.stopGrowth();
-        }
+        //this.sents = sents;
     }
 
-    public FgExamples getData(SimpleAnnoSentenceCollection sents) {
-        preprocess(sents);
-        
-        FgExamples data = new FgExamples(fts);
-        for (int i=0; i<sents.size(); i++) {
-            SimpleAnnoSentence sent = sents.get(i);
-            if (i % 1000 == 0 && i > 0) {
-                log.debug("Built " + i + " examples...");
-            }
-            
-            fgTimer.start();
-            // Precompute a few things.
-            SrlGraph srlGraph = sent.getSrlGraph();
-            
-            Set<Integer> knownPreds = getKnownPreds(srlGraph);
-            
-            // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
-            // Get the variable assignments given in the training data.
-            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-
-            // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
-            fgTimer.stop();            
-            
-            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
-            data.add(ex);
-        }
-        
-        log.info("Time (ms) to construct factor graph: " + fgTimer.totMs());
-        log.info("Time (ms) to clamp factor graphs: " + data.getTotMsFgClampTimer());
-        log.info("Time (ms) to cache features: " + data.getTotMsFeatCacheTimer());
-        
+    public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
+        FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
+        FgExampleList data = builder.getInstance(fts, new SrlFgExampleFactory(sents));
         data.setSourceSentences(sents);
         return data;
+    }
+    
+    /** 
+     * This class is read-only and thread-safe.
+     */
+    private class SrlFgExampleFactory implements FgExampleFactory {
+
+        private SimpleAnnoSentenceCollection sents;
+
+        public SrlFgExampleFactory(SimpleAnnoSentenceCollection sents) {
+            this.sents = sents;
+        }
+        
+        public FgExample get(int i, FeatureTemplateList fts) {
+            SimpleAnnoSentence sent = sents.get(i);
+            
+            // Precompute a few things.
+            SrlGraph srlGraph = sent.getSrlGraph();
+            
+            Set<Integer> knownPreds = getKnownPreds(srlGraph);
+            
+            // Construct the factor graph.
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
+            // Get the variable assignments given in the training data.
+            VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
+    
+            // Create a feature extractor for this example.
+            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
+            
+            // Create the example solely to count the features.
+            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
+            return ex;
+        }
+        
+        public int size() {
+            return sents.size();
+        }
     }
     
     private static Set<Integer> getKnownPreds(SrlGraph srlGraph) {
@@ -170,7 +111,7 @@ public class SrlFgExamplesBuilder {
         return knownPreds;
     }
 
-    private VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
+    private static VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
         VarConfig vc = new VarConfig();
 
         // LINK VARS
@@ -248,7 +189,7 @@ public class SrlFgExamplesBuilder {
      * Trys to put the entry (var, stateName) in vc.
      * @return True iff the entry (var, stateName) was added to vc.
      */
-    private boolean tryPut(VarConfig vc, Var var, String stateName) {
+    private static boolean tryPut(VarConfig vc, Var var, String stateName) {
         int stateNameIdx = var.getState(stateName);
         if (stateNameIdx == -1) {
             return false;

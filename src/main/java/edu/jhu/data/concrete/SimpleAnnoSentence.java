@@ -7,8 +7,9 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.util.Pair;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.arrays.IntArrays;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Simple representation of a single sentence with many annotations.
@@ -50,14 +51,14 @@ public class SimpleAnnoSentence {
      * source sentence and the SRL graph, and the features.
      */
     public SimpleAnnoSentence(SimpleAnnoSentence other) {
-        this.words = Utilities.copyOf(other.words);
-        this.lemmas = Utilities.copyOf(other.lemmas);
-        this.posTags = Utilities.copyOf(other.posTags);
-        this.deprels = Utilities.copyOf(other.deprels);
-        this.parents = Utilities.copyOf(other.parents);
+        this.words = Lists.copyOf(other.words);
+        this.lemmas = Lists.copyOf(other.lemmas);
+        this.posTags = Lists.copyOf(other.posTags);
+        this.deprels = Lists.copyOf(other.deprels);
+        this.parents = IntArrays.copyOf(other.parents);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
-        this.feats = Utilities.copyOf(other.feats);
+        this.feats = Lists.copyOf(other.feats);
         // TODO: this should be a deep copy.
         this.srlGraph = other.srlGraph;
     }

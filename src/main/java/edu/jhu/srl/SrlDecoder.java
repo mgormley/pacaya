@@ -8,17 +8,17 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.gm.DenseFactor;
-import edu.jhu.gm.FgExample;
-import edu.jhu.gm.FgModel;
-import edu.jhu.gm.MbrDecoder;
-import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarConfig;
+import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.decode.MbrDecoder;
+import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.prim.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 
@@ -45,7 +45,6 @@ public class SrlDecoder {
      * 
      * @param model The model.
      * @param ex The example to decode.
-     * @param sent The sentence corresponding to the example.
      */
     public void decode(FgModel model, FgExample ex) {
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
@@ -112,8 +111,8 @@ public class SrlDecoder {
         // and compute the MBR dependency parse.
         double[] root = new double[n];
         double[][] child = new double[n][n];
-        Utilities.fill(root, Double.NEGATIVE_INFINITY);
-        Utilities.fill(child, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
             Var var = vars.get(varId);
             DenseFactor marg = margs.get(varId);

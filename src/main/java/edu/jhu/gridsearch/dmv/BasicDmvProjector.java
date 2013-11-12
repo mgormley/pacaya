@@ -12,9 +12,8 @@ import edu.jhu.gridsearch.cpt.Projections;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm;
 import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Vectors;
 
 public class BasicDmvProjector implements DmvProjector {
 
@@ -81,18 +80,18 @@ public class BasicDmvProjector implements DmvProjector {
 
 	private double[][] getProjectedParams(double[][] relaxedLogProbs) {
 		// TODO: must use bounds here?   
-        double[][] logProbs = Utilities.copyOf(relaxedLogProbs);
+        double[][] logProbs = DoubleArrays.copyOf(relaxedLogProbs);
         // Project the model parameters back onto the feasible (sum-to-one)
         // region ignoring the model parameter bounds (we just want a good solution)
         // there's no reason to constrain it.
         for (int c = 0; c < logProbs.length; c++) {
-            double[] probs = Vectors.getExp(logProbs[c]);
+            double[] probs = DoubleArrays.getExp(logProbs[c]);
             try {
                 probs = projector.getDefaultProjection(prm.rootBounds, c, probs);
             } catch (IloException e) {
                 throw new RuntimeException(e);
             }
-            logProbs[c] = Vectors.getLog(probs); 
+            logProbs[c] = DoubleArrays.getLog(probs); 
         }
         // Create a new DmvModel from these model parameters
 		return logProbs;

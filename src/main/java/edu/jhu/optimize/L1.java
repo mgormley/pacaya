@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.util.math.Vectors;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 /**
  * L1 regularizer on the parameters.
@@ -66,7 +66,7 @@ public class L1 implements Regularizer {
             }
         }
         // Since we're subtracting this norm.
-        Vectors.scale(gradient, -1);
+        DoubleArrays.scale(gradient, -1);
     }
 
     @Override

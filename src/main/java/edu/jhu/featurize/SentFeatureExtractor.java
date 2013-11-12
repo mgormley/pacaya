@@ -15,10 +15,8 @@ import java.util.Set;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.util.Pair;
 
 /**
  * Feature extraction from the observations on a particular sentence.

@@ -14,16 +14,18 @@ import edu.jhu.lp.CcLpConstraints;
 import edu.jhu.lp.FactorBuilder.Factor;
 import edu.jhu.lp.FactorList;
 import edu.jhu.lp.LpRows;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.matrix.DenseDoubleMatrix;
+import edu.jhu.prim.matrix.DoubleMatrixFactory;
+import edu.jhu.prim.matrix.SparseColDoubleMatrix;
+import edu.jhu.prim.matrix.SparseRowDoubleMatrix;
+import edu.jhu.prim.sample.Sample;
+import edu.jhu.prim.sort.IntSort;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.Pair;
-import edu.jhu.util.SafeCast;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cplex.CplexUtils;
 import edu.jhu.util.dist.Dirichlet;
-import edu.jhu.util.matrix.DenseDoubleMatrix;
-import edu.jhu.util.matrix.DoubleMatrixFactory;
-import edu.jhu.util.matrix.SparseColDoubleMatrix;
-import edu.jhu.util.matrix.SparseRowDoubleMatrix;
 
 /**
  * Reduces the dimensionality of a linear program.
@@ -186,7 +188,7 @@ public class DimReducer {
             LongDoubleSortedVector coef = new LongDoubleSortedVector();
             for (int j=0; j<SA.getNumColumns(); j++) {
                 double SA_ij = SA.get(i, j);
-                if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
+                if (!Primitives.equals(SA_ij, 0.0, prm.multZeroDelta)) {
                     coef.set(j, SA_ij);
                 }
             }
@@ -203,7 +205,7 @@ public class DimReducer {
         for (int i=0; i<S.getNumRows(); i++) {
             for (int j=0; j<S.getNumColumns(); j++) {
                 double SA_ij = S.get(i, j);
-                if (!Utilities.equals(SA_ij, 0.0, prm.multZeroDelta)) {
+                if (!Primitives.equals(SA_ij, 0.0, prm.multZeroDelta)) {
                     count++;
                 }
             }
@@ -305,7 +307,7 @@ public class DimReducer {
         Dirichlet dirichletDist = new Dirichlet(alphaVal, numNonZerosPerRow);
         
         // Initialize to all the column indices.
-        int[] colInds = Utilities.getIndexArray(numNonZerosPerRow);
+        int[] colInds = IntSort.getIndexArray(numNonZerosPerRow);
         // Initialize to all ones. This is for the case of prm.dist == SamplingDistribution.ALL_ONES.
         double[] colVals = new double[numNonZerosPerRow];
         Arrays.fill(colVals, 1.0);
@@ -314,7 +316,7 @@ public class DimReducer {
         for (int i=0; i<S.getNumRows(); i++) {
             if (nCols > numNonZerosPerRow) {
                 // Choose a subset of columns to be nonzeros.
-                colInds = Utilities.sampleWithoutReplacement(numNonZerosPerRow, nCols);
+                colInds = Sample.sampleWithoutReplacement(numNonZerosPerRow, nCols);
             }
             if (prm.dist == SamplingDistribution.UNIFORM || prm.dist == SamplingDistribution.DIRICHLET) {
                 // Sample the values for the nonzeros.
@@ -323,7 +325,7 @@ public class DimReducer {
             
             // Add the row to the matrix.
             for (int j=0; j<colInds.length; j++) {
-                if (!Utilities.equals(colVals[j], 0.0, prm.sampZeroDelta)) {
+                if (!Primitives.equals(colVals[j], 0.0, prm.sampZeroDelta)) {
                     // Set the non-zero value in the matrix.
                     S.set(i, colInds[j], colVals[j]);
                     numNonZeros++;

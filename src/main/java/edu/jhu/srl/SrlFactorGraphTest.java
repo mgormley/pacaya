@@ -12,18 +12,18 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import edu.jhu.gm.Factor;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarSet;
+import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Unit tests for {@link SrlFactorGraph}.
@@ -181,8 +181,8 @@ public class SrlFactorGraphTest {
         assertEquals(0, sfg.getSenseVar(0).getParent());
         assertEquals(2, sfg.getSenseVar(2).getParent());
         
-        assertEquals(Utilities.getList("w1.01", "w1.02"), sfg.getSenseVar(0).getStateNames());
-        assertEquals(Utilities.getList("w3.01", "w3.02"), sfg.getSenseVar(2).getStateNames());
+        assertEquals(Lists.getList("w1.01", "w1.02"), sfg.getSenseVar(0).getStateNames());
+        assertEquals(Lists.getList("w3.01", "w3.02"), sfg.getSenseVar(2).getStateNames());
         
         // Assertions about the Sense factors.
         int numSenseFactors = 0;
@@ -202,13 +202,13 @@ public class SrlFactorGraphTest {
 
             @Override
             public List<String> get(Object predicate) {
-                return Utilities.getList(predicate + ".01", predicate + ".02");
+                return Lists.getList(predicate + ".01", predicate + ".02");
             }
             
         };
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Utilities.getList(0, 2));
-        List<String> words = Utilities.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Utilities.getList("A1", "A2", "A3"), psMap);
+        HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
+        List<String> words = Lists.getList("w1", "w2", "w3");
+        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap);
     }
     
 }

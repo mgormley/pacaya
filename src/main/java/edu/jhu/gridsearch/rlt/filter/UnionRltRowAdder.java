@@ -3,15 +3,14 @@ package edu.jhu.gridsearch.rlt.filter;
 import ilog.concert.IloException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import edu.jhu.gridsearch.rlt.Rlt;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.UnorderedPair;
 
 public class UnionRltRowAdder implements RltRowAdder {
 

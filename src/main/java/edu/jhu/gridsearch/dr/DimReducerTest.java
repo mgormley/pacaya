@@ -16,11 +16,11 @@ import org.junit.Test;
 
 import edu.jhu.gridsearch.dr.DimReducer.ConstraintConversion;
 import edu.jhu.gridsearch.dr.DimReducer.DimReducerPrm;
+import edu.jhu.prim.matrix.DenseDoubleMatrix;
+import edu.jhu.prim.matrix.SparseColDoubleMatrix;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.matrix.DenseDoubleMatrix;
-import edu.jhu.util.matrix.SparseColDoubleMatrix;
 
 public class DimReducerTest {
 

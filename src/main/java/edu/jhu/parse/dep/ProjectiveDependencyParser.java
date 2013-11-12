@@ -4,7 +4,9 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.IntArrays;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Edge-factored projective dependency parser.
@@ -42,7 +44,7 @@ public class ProjectiveDependencyParser {
             super(n, type);
             wallScore = new double[n];
             // Initialize chart to negative infinities.
-            Utilities.fill(wallScore, Double.NEGATIVE_INFINITY);
+            DoubleArrays.fill(wallScore, Double.NEGATIVE_INFINITY);
             goalScore = Double.NEGATIVE_INFINITY;
             // Fill backpointers with -1.
             goalBp = -1;
@@ -59,8 +61,8 @@ public class ProjectiveDependencyParser {
                     goalBp = child;
                 }
             } else {
-                wallScore[child] = Utilities.logAdd(wallScore[child], score);
-                goalScore = Utilities.logAdd(goalScore, score);
+                wallScore[child] = FastMath.logAdd(wallScore[child], score);
+                goalScore = FastMath.logAdd(goalScore, score);
                 // Don't update the backpointer.
             }
         }
@@ -98,10 +100,10 @@ public class ProjectiveDependencyParser {
             bps = new int[n][n][2][2];
             
             // Initialize chart to negative infinities.
-            Utilities.fill(scores, Double.NEGATIVE_INFINITY);
+            DoubleArrays.fill(scores, Double.NEGATIVE_INFINITY);
             
             // Fill backpointers with -1.
-            Utilities.fill(bps, -1);            
+            IntArrays.fill(bps, -1);            
         }
         
         // TODO: Consider using this method and making chart/bps private.
@@ -120,7 +122,7 @@ public class ProjectiveDependencyParser {
                     bps[s][t][d][ic] = r;
                 }
             } else {
-                scores[s][t][d][ic] = Utilities.logAdd(scores[s][t][d][ic], score);
+                scores[s][t][d][ic] = FastMath.logAdd(scores[s][t][d][ic], score);
                 // Don't update the backpointer.
                 
                 // Commented out for speed.

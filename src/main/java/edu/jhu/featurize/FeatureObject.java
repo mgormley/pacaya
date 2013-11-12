@@ -8,7 +8,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.util.Pair;
+import edu.jhu.prim.tuple.Pair;
 
 public class FeatureObject {
     

@@ -3,7 +3,6 @@ package edu.jhu.parse;
 import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;
 
-
 import org.junit.Before;
 import org.junit.Test;
 

@@ -17,19 +17,19 @@ import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.BeliefPropagation.BpScheduleType;
-import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.CrfTrainer;
-import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.gm.FeatureTemplateList;
-import edu.jhu.gm.FgExample;
-import edu.jhu.gm.FgExamples;
-import edu.jhu.gm.FgModel;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarConfig;
+import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.train.CrfTrainer;
+import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
@@ -65,7 +65,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(simpleSents);
+        FgExampleList data = builder.getData(simpleSents);
         
 //        System.out.println("Num features: " + alphabet.size());
 //        FgModel model = new FgModel(alphabet);
@@ -95,7 +95,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(simpleSents);
+        FgExampleList data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         //assertEquals(1, obsAlphabet.size());
         //assertEquals(6*2 + 2 + 6, fts.size());
@@ -141,9 +141,9 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.alwaysIncludeLinkVars = true;
         {
             FeatureTemplateList fts = new FeatureTemplateList();
-            prm.featCountCutoff = 0;
+            prm.exPrm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            FgExamples data = builder.getData(simpleSents);            
+            FgExampleList data = builder.getData(simpleSents);            
             // Used to be:  assertEquals(13388, fts.getNumObsFeats());
             assertEquals(13313, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
@@ -152,9 +152,9 @@ public class SrlFgExamplesBuilderTest {
         }
         {
             FeatureTemplateList fts = new FeatureTemplateList();
-            prm.featCountCutoff = 5;
+            prm.exPrm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            FgExamples data = builder.getData(simpleSents);
+            FgExampleList data = builder.getData(simpleSents);
             // Used to be:  assertEquals(2729, fts.getNumObsFeats());
             assertEquals(2749, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
@@ -190,7 +190,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(simpleSents);
+        FgExampleList data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -230,7 +230,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.predictSense = true;
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        FgExamples data = builder.getData(simpleSents);
+        FgExampleList data = builder.getData(simpleSents);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -272,7 +272,7 @@ public class SrlFgExamplesBuilderTest {
         return parents;
     }
     
-    private static FgModel train(FgModel model, FgExamples data) {
+    private static FgModel train(FgModel model, FgExampleList data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = true;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;

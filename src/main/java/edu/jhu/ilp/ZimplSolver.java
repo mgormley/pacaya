@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.jhu.ilp.decomp.AbstractDipSolver;
-import edu.jhu.ilp.decomp.DipMilpBlockSolver;
 
 public class ZimplSolver  {
     

@@ -5,13 +5,12 @@ import ilog.concert.IloException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import edu.jhu.gridsearch.rlt.Rlt;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.PairSampler;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.sample.PairSampler;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.UnorderedPair;
+import edu.jhu.util.collections.Lists;
 
 /**
  * Randomly accepts only a fixed proportion of the initial rows, and then
@@ -54,7 +53,7 @@ public class MaxNumRltRowAdder implements RltRowAdder {
             if (initCount < initMax) {
                 Collection<OrderedPair> rltRows = PairSampler.sampleOrderedPairs(startFac, endFac, 0, numVars, initProp);
                 if (rltRows.size() + initCount > initMax) {
-                    rltRows = Utilities.sublist(new ArrayList<OrderedPair>(rltRows), 0, (int)initMax - initCount);
+                    rltRows = Lists.sublist(new ArrayList<OrderedPair>(rltRows), 0, (int)initMax - initCount);
                 }
                 initCount += rltRows.size();
                 return rltRows;
@@ -65,7 +64,7 @@ public class MaxNumRltRowAdder implements RltRowAdder {
             if (cutCount < cutMax) {
                 Collection<OrderedPair> rltRows = PairSampler.sampleOrderedPairs(startFac, endFac, 0, numVars, 1.0);
                 if (rltRows.size() + cutCount > cutMax) {
-                    rltRows = Utilities.sublist(new ArrayList<OrderedPair>(rltRows), 0, (int)cutMax - cutCount);
+                    rltRows = Lists.sublist(new ArrayList<OrderedPair>(rltRows), 0, (int)cutMax - cutCount);
                 }
                 cutCount += rltRows.size();
                 return rltRows;
@@ -83,7 +82,7 @@ public class MaxNumRltRowAdder implements RltRowAdder {
             if (initCount < initMax) {
                 Collection<UnorderedPair> rltRows = PairSampler.sampleUnorderedPairs(startFac1, endFac1, startFac2, endFac2, initProp);
                 if (rltRows.size() + initCount > initMax) {
-                    rltRows = Utilities.sublist(new ArrayList<UnorderedPair>(rltRows), 0, (int)initMax - initCount);
+                    rltRows = Lists.sublist(new ArrayList<UnorderedPair>(rltRows), 0, (int)initMax - initCount);
                 }
                 initCount += rltRows.size();
                 return rltRows;
@@ -94,7 +93,7 @@ public class MaxNumRltRowAdder implements RltRowAdder {
             if (cutCount < cutMax) {
                 Collection<UnorderedPair> rltRows = PairSampler.sampleUnorderedPairs(startFac1, endFac1, startFac2, endFac2, 1.0);
                 if (rltRows.size() + cutCount > cutMax) {
-                    rltRows = Utilities.sublist(new ArrayList<UnorderedPair>(rltRows), 0, (int)cutMax - cutCount);
+                    rltRows = Lists.sublist(new ArrayList<UnorderedPair>(rltRows), 0, (int)cutMax - cutCount);
                 }
                 cutCount += rltRows.size();
                 return rltRows;

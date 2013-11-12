@@ -6,7 +6,7 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.model.Model;
 import edu.jhu.parse.DepParser;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.util.math.FastMath;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the
@@ -38,7 +38,7 @@ public class DependencyParserEvaluator {
         SentenceCollection sentences = goldTreebank.getSentences();
         parses = parser.getViterbiParse(sentences, model);
         logLikelihood = parser.getLastParseWeight();
-        perTokenCrossEnt = - logLikelihood / Utilities.log(2) / sentences.getNumTokens();
+        perTokenCrossEnt = - logLikelihood / FastMath.log(2) / sentences.getNumTokens();
         
         evaluate(parses);
     }

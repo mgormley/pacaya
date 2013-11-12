@@ -4,24 +4,22 @@ import static junit.framework.Assert.assertEquals;
 
 import java.util.List;
 
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.gridsearch.ProblemNode;
-import edu.jhu.gridsearch.Relaxation;
 import edu.jhu.gridsearch.RelaxedSolution;
 import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.gridsearch.cpt.RandomVariableSelector;
 import edu.jhu.gridsearch.cpt.VariableSelector;
 import edu.jhu.gridsearch.cpt.VariableSplitter;
-import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.gridsearch.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Prng;

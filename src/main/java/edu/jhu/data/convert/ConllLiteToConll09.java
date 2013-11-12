@@ -3,7 +3,6 @@ package edu.jhu.data.convert;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;

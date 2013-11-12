@@ -1,14 +1,14 @@
 package edu.jhu.ilp;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-
 import gurobi.GRB;
 import gurobi.GRBEnv;
 import gurobi.GRBException;
 import gurobi.GRBModel;
 import gurobi.GRBVar;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class JavaGurobiIlpSolver implements IlpSolver {
 

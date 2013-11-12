@@ -1,18 +1,23 @@
 package edu.jhu.model.dmv;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
+import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.util.Lambda.LambdaOneToOne;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Lambda.LambdaOneToOne;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.math.LabeledMultinomial;
-import edu.jhu.util.math.Multinomials;
 
 public class DmvModel implements Model, Serializable {
     
@@ -41,6 +46,9 @@ public class DmvModel implements Model, Serializable {
         } 
         public String toString() {
             return (this == LEFT) ? "l" : "r";
+        }
+        public static Lr fromInt(int dir) {
+            return (dir == DmvModel.LEFT) ? LEFT : RIGHT;
         }
     }
 
@@ -300,7 +308,7 @@ public class DmvModel implements Model, Serializable {
     public void logAddConstant(final double logAddend) {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.logAdd(value, logAddend);
+                return FastMath.logAdd(value, logAddend);
             }
         });
     }
@@ -308,7 +316,9 @@ public class DmvModel implements Model, Serializable {
     public void convertRealToLog() {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.log(value);
+                double logValue = FastMath.log(value);
+                assert !Double.isNaN(logValue) : "value=" + value;
+                return logValue;
             }
         });
     }
@@ -316,7 +326,7 @@ public class DmvModel implements Model, Serializable {
     public void convertLogToReal() {
         apply(new LambdaOneToOne<Double, Double>() {
             public Double call(Double value) {
-                return Utilities.exp(value);
+                return FastMath.exp(value);
             }
         });
     }
@@ -404,12 +414,12 @@ public class DmvModel implements Model, Serializable {
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    logSums[p][dir] = Utilities.logAdd(logSums[p][dir], child[c][p][dir]);
+                    logSums[p][dir] = FastMath.logAdd(logSums[p][dir], child[c][p][dir]);
                 }
             }
         }
         // Subtract off the normalizing constants.
-        double uniform = Utilities.log(1.0 / numTags);
+        double uniform = FastMath.log(1.0 / numTags);
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
@@ -453,16 +463,57 @@ public class DmvModel implements Model, Serializable {
         for (int c=0; c<numTags; c++) {
             for (int p=0; p<numTags; p++) {
                 for (int dir=0; dir<2; dir++) {
-                    logSums[p][dir] = Utilities.logAdd(logSums[p][dir], child[c][p][dir]);
+                    logSums[p][dir] = FastMath.logAdd(logSums[p][dir], child[c][p][dir]);
+                    assert(!Double.isNaN(logSums[p][dir]));
                 }
             }
         }
         // Assert that each sum is within delta of 0.0.
         for (int p=0; p<numTags; p++) {
             for (int dir=0; dir<2; dir++) {
-                assert(Utilities.equals(0.0, logSums[p][dir], delta)); 
+                assert(Primitives.equals(0.0, logSums[p][dir], delta)); 
             }
         }
+    }
+
+    public String toString() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            printModel(new OutputStreamWriter(baos));
+            return baos.toString("UTF-8");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public void printModel(Writer writer) throws IOException {
+        for (int c=0; c<numTags; c++) {
+            Label cTag = tagAlphabet.lookupObject(c);
+            writer.write(String.format("WALL --> %s = %f\n", cTag, this.root[c]));
+        }
+        writer.write("\n");
+        for (int p=0; p<numTags; p++) {          
+            Label pTag = tagAlphabet.lookupObject(p);   
+            for (int c=0; c<numTags; c++) {
+                Label cTag = tagAlphabet.lookupObject(c);             
+                for (int dir=0; dir<2; dir++) {
+                    Lr lr = Lr.fromInt(dir);
+                    writer.write(String.format("%s --> %s (%s) = %f\n", pTag, cTag, lr, this.child[c][p][dir]));
+                }
+            }
+        }
+        writer.write("\n");
+        for (int c=0; c<numTags; c++) {
+            Label cTag = tagAlphabet.lookupObject(c);
+            for (int dir=0; dir<2; dir++) {
+                Lr lr = Lr.fromInt(dir);
+                for (int val=0; val<2; val++) {
+                    writer.write(String.format("%s (%s) %d CONT = %f\n", cTag, lr, val, this.decision[c][dir][val][DmvModel.CONT]));
+                    writer.write(String.format("%s (%s) %d  END = %f\n", cTag, lr, val, this.decision[c][dir][val][DmvModel.END]));                    this.decision[c][dir][val][DmvModel.END] = 1.0 - this.decision[c][dir][val][DmvModel.CONT];
+                }
+            }
+        }
+        writer.flush();
     }
     
 }

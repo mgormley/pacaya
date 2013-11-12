@@ -5,9 +5,9 @@ import ilog.concert.IloException;
 import java.util.Collection;
 
 import edu.jhu.gridsearch.rlt.Rlt;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.PairSampler;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.sample.PairSampler;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.UnorderedPair;
 
 /**
  * Randomly accepts only a fixed proportion of the rows.

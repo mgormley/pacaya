@@ -1,16 +1,16 @@
 package edu.jhu.data.conll;
 
-import org.apache.commons.cli.ParseException;
-
 import java.io.File;
 import java.io.IOException;
+
+import org.apache.commons.cli.ParseException;
+import org.apache.log4j.Logger;
 
 import edu.jhu.data.BrownClusterTagger;
 import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import org.apache.log4j.Logger;
 
 public class CoNLL09BrownTagger {
 

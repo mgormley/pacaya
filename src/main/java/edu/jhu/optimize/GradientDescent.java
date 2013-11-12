@@ -4,8 +4,6 @@ import java.util.Arrays;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.Utilities;
-
 /**
  * Stochastic gradient descent.
  * 

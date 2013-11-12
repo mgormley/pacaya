@@ -3,11 +3,11 @@ package edu.jhu.gridsearch.dmv;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBounds;
+import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.VariableId;
 import edu.jhu.gridsearch.cpt.VariableSelector;
-import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
-import edu.jhu.util.IntTuple;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.tuple.IntTuple;
 
 public abstract class AbstractScoringVariableSelector implements VariableSelector {
 
@@ -31,7 +31,7 @@ public abstract class AbstractScoringVariableSelector implements VariableSelecto
         }
         
         // Get the max, breaking ties randomly.
-        IntTuple max = Utilities.getArgmax(scores);
+        IntTuple max = DoubleArrays.getArgmax(scores);
         int c = max.get(0);
         int m = max.get(1);
 

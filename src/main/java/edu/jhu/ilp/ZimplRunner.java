@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import edu.jhu.util.Command;
+import edu.jhu.util.sys.System;
 
 
 public class ZimplRunner {
@@ -77,7 +77,7 @@ public class ZimplRunner {
                 "-v"+String.valueOf(verbosity), 
                 zimplFile.getAbsolutePath() };
         File zimplLog = new File(tempDir, "zimpl.log");
-        Command.runCommand(cmdArray, zimplLog, tempDir);
+        System.runCommand(cmdArray, zimplLog, tempDir);
     }
 
     /**

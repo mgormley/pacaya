@@ -27,12 +27,12 @@ import edu.jhu.lp.LpRows;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.map.LongIntHashMap;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.tuple.UnorderedPair;
+import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.Pair;
-import edu.jhu.util.SafeCast;
 import edu.jhu.util.cplex.CplexUtils;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.UnorderedPair;
 
 public class Rlt {
 
@@ -535,7 +535,7 @@ public class Rlt {
         row.add(facJG);
 
         // Part 2: + \sum_{k=1}^n -G_{ik} G_{jk} w_{kk}
-        LongDoubleSortedVector ip = facI.G.hadamardProd(facJ.G);
+        LongDoubleSortedVector ip = facI.G.getProd(facJ.G);
         ip.scale(-1.0);
         LongDoubleSortedVector shiftedIp = new LongDoubleSortedVector();
         for (int idx = 0; idx < ip.getUsed(); idx++) {

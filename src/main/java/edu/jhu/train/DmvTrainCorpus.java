@@ -3,12 +3,12 @@ package edu.jhu.train;
 import java.util.Arrays;
 import java.util.Set;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 
 public class DmvTrainCorpus implements TrainCorpus {

@@ -12,32 +12,32 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import cern.colt.Arrays;
-
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.gm.AccuracyEvaluator;
-import edu.jhu.gm.BeliefPropagation.BeliefPropagationPrm;
-import edu.jhu.gm.BeliefPropagation.BpScheduleType;
-import edu.jhu.gm.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.CrfTrainer;
-import edu.jhu.gm.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.gm.Feature;
-import edu.jhu.gm.FeatureTemplate;
-import edu.jhu.gm.FeatureTemplateList;
-import edu.jhu.gm.FgExamples;
-import edu.jhu.gm.FgModel;
-import edu.jhu.gm.MbrDecoder;
-import edu.jhu.gm.MbrDecoder.Loss;
-import edu.jhu.gm.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarConfig;
-import edu.jhu.gm.VarSet;
+import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
+import edu.jhu.gm.decode.MbrDecoder.Loss;
+import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.eval.AccuracyEvaluator;
+import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
+import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.FeatureTemplate;
+import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.train.CrfTrainer;
+import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.optimize.AdaDelta;
 import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.optimize.AdaGrad;
@@ -48,16 +48,16 @@ import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Utilities;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.files.Files;
 
 /**
  * Pipeline runner for SRL experiments.
@@ -77,7 +77,9 @@ public class SrlRunner {
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
-
+    @Opt(hasArg = true, description = "Number of threads for computation.")
+    public static int threads = 1;
+    
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
     public static File train = null;
@@ -182,6 +184,14 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
     public static boolean removeFeat = false;
 
+    // Options for caching.
+    @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
+    public static CacheType cacheType = CacheType.CACHE;
+    @Opt(hasArg = true, description = "When caching, the maximum number of examples to keep cached in memory or -1 for SoftReference caching.")
+    public static int maxEntriesInMemory = 100;
+    @Opt(hasArg = true, description = "Whether to gzip an object before caching it.")
+    public static boolean gzipCache = false;    
+    
     // Options for training.
     @Opt(hasArg=true, description="The optimization method to use for training.")
     public static Optimizer optimizer = Optimizer.LBFGS;
@@ -211,7 +221,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            Utilities.useLogAddTable = true;
+            FastMath.useLogAddTable = true;
         }
         
         // Get a model.
@@ -233,7 +243,7 @@ public class SrlRunner {
             String name = "train";
             // Train a model.
             // TODO: add option for useUnsupportedFeatures.
-            FgExamples data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
+            FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name);
             
             if (model == null) {
@@ -257,8 +267,8 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            List<VarConfig> predictions = decode(model, data, trainType, trainPredOut, name);        
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, trainType, trainPredOut, name);        
+            eval(name, pair);
         }
                 
         if (modelOut != null) {
@@ -278,18 +288,18 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            FgExamples data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
+            FgExampleList data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name);
             // Decode and evaluate the test data.
-            List<VarConfig> predictions = decode(model, data, testType, testPredOut, name);
-            eval(data, name, predictions);
+            VarConfigPair pair = decode(model, data, testType, testPredOut, name);
+            eval(name, pair);
         }
     }
 
-    private FgExamples getData(FeatureTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
+    private FgExampleList getData(FeatureTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        FgExamples data;
+        FgExampleList data;
         SimpleAnnoSentenceCollection sents;
         int numTokens = 0;
         
@@ -354,13 +364,16 @@ public class SrlRunner {
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
         if (prm.fgPrm.predictSense) {
+            fts.startGrowth();
+            // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.stopGrowth();
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
-        log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
-        log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
         log.info(String.format("Num feature templates: %d", data.getTemplates().size()));
         log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
         return data;
@@ -397,27 +410,33 @@ public class SrlRunner {
             }
         }
     }
-
-    private void eval(FgExamples data, String name, List<VarConfig> predictions) {
+    
+    private void eval(String name, VarConfigPair pair) {
         AccuracyEvaluator accEval = new AccuracyEvaluator();
-        double accuracy = accEval.evaluate(data.getGoldConfigs(), predictions);
+        double accuracy = accEval.evaluate(pair.gold, pair.pred);
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
-
-    private List<VarConfig> decode(FgModel model, FgExamples data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    
+    private VarConfigPair decode(FgModel model, FgExampleList data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
         
         SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
         // Predicted sentences
         SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
-        List<VarConfig> predictions = new ArrayList<VarConfig>();
-
+        List<VarConfig> predVcs = new ArrayList<VarConfig>();
+        List<VarConfig> goldVcs = new ArrayList<VarConfig>();
+        
         for (int i=0; i< goldSents.size(); i++) {
+            FgExample ex = data.get(i);
             SimpleAnnoSentence goldSent = goldSents.get(i);
             SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
             SrlDecoder decoder = getDecoder();
-            decoder.decode(model, data.get(i));
-
+            decoder.decode(model, ex);
+            
+            // Get the MBR variable assignment.
+            VarConfig predVc = decoder.getMbrVarConfig();
+            predVcs.add(predVc);
+            
             // Update SRL graph on the sentence. 
             SrlGraph srlGraph = decoder.getSrlGraph();
             predSent.setSrlGraph(srlGraph);
@@ -425,13 +444,11 @@ public class SrlRunner {
             int[] parents = decoder.getParents();
             if (parents != null) {
                 predSent.setParents(parents);
-            }
-            
-            // Get the MBR variable assignment.
-            VarConfig vc = decoder.getMbrVarConfig();
-
-            predictions.add(vc);
+            }            
             predSents.add(predSent);
+            
+            // Get the gold variable assignment.
+            goldVcs.add(ex.getGoldConfig());
         }
         
         if (predOut != null) {
@@ -448,7 +465,7 @@ public class SrlRunner {
             }
         }
         
-        return predictions;
+        return new VarConfigPair(goldVcs, predVcs);
     }
 
     
@@ -457,6 +474,7 @@ public class SrlRunner {
 
     private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm() {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        
         // Factor graph structure.
         prm.fgPrm.linkVarType = linkVarType;
         prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
@@ -466,6 +484,7 @@ public class SrlRunner {
         prm.fgPrm.unaryFactors = unaryFactors;
         prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
         prm.fgPrm.predictSense = predictSense;
+        
         // Feature extraction.
         prm.fePrm.biasOnly = biasOnly;
         prm.fePrm.useSimpleFeats = useSimpleFeats;
@@ -473,7 +492,13 @@ public class SrlRunner {
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
-        prm.featCountCutoff = featCountCutoff;
+        
+        // Example construction and storage.
+        prm.exPrm.featCountCutoff = featCountCutoff;
+        prm.exPrm.cacheType = cacheType;
+        prm.exPrm.gzipped = gzipCache;
+        prm.exPrm.maxEntriesInMemory = maxEntriesInMemory;
+        
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;
@@ -516,6 +541,7 @@ public class SrlRunner {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
+        prm.crfObjPrm.numThreads = threads;
         return prm;
     }
 

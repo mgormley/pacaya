@@ -17,8 +17,8 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 import edu.jhu.ilp.IlpSolver;
-import edu.jhu.util.Command;
-import edu.jhu.util.Files;
+import edu.jhu.util.files.Files;
+import edu.jhu.util.sys.System;
 
 /**
  * TODO: add handling of initial solution
@@ -103,7 +103,7 @@ public abstract class AbstractDipSolver implements IlpSolver {
             String[] cmdArray = new String[] { getDipBinary(), "--param", paramFile.getAbsolutePath() };
             // TODO: handle infeasible case
             File milpBlockLog = new File(tempDir, "dipSolver.log");
-            Command.runCommand(cmdArray, milpBlockLog, tempDir);
+            System.runCommand(cmdArray, milpBlockLog, tempDir);
 
             // Throw exception if optimal solution not found
             if (!Files.fileContains(milpBlockLog, "Optimal Solution")) {

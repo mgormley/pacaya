@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.featurize.SentFeatureExtractor;
-
 /**
  * Cache for SentFeatureExtractor.
  * 

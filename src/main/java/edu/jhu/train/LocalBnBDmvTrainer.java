@@ -32,10 +32,10 @@ import edu.jhu.gridsearch.dmv.IndexedDmvModel;
 import edu.jhu.gridsearch.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
 
 public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
 
@@ -170,7 +170,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     
     public static void setBoundsFromInitSol(DmvRelaxation dw, DmvSolution initSol, double offsetProb, double probOfSkipCm) {
         boolean forward = true;
-        double offsetLogProb = Utilities.log(offsetProb);
+        double offsetLogProb = FastMath.log(offsetProb);
         double[][] logProbs = initSol.getLogProbs();
         int[][] featCounts = initSol.getFeatCounts(); 
               
@@ -192,13 +192,13 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
                     newU = CptBounds.DEFAULT_UPPER_BOUND;
                 } else {
                     // Constrain the bounds to be +/- offsetLogProb from logProbs[c][m]
-                    newU = Utilities.logAdd(logProbs[c][m], offsetLogProb);
+                    newU = FastMath.logAdd(logProbs[c][m], offsetLogProb);
                     if (newU > CptBounds.DEFAULT_UPPER_BOUND) {
                         newU = CptBounds.DEFAULT_UPPER_BOUND;
                     }
     
                     if (logProbs[c][m] > offsetLogProb) {
-                        newL = Utilities.logSubtract(logProbs[c][m], offsetLogProb);                    
+                        newL = FastMath.logSubtract(logProbs[c][m], offsetLogProb);                    
                     } else {
                         newL = CptBounds.DEFAULT_LOWER_BOUND;
                     }

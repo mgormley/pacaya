@@ -1,6 +1,6 @@
 package edu.jhu.optimize;
 
-import edu.jhu.util.math.Vectors;
+import edu.jhu.prim.arrays.DoubleArrays;
 
 public class FunctionOpts {
 
@@ -37,7 +37,7 @@ public class FunctionOpts {
         @Override
         public void getGradient(double[] gradient) {
             function.getGradient(gradient);
-            Vectors.scale(gradient, multiplier);
+            DoubleArrays.scale(gradient, multiplier);
         }
     
         @Override
@@ -83,7 +83,7 @@ public class FunctionOpts {
             double[] g = new double[getNumDimensions()];
             for (Function f : functions) {
                 f.getGradient(g);
-                Vectors.add(gradient, g);
+                DoubleArrays.add(gradient, g);
             }
         }
     

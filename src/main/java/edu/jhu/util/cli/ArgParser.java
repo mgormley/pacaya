@@ -19,6 +19,11 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
 
+/**
+ * Command line argument parser.
+ * 
+ * @author mgormley
+ */
 public class ArgParser {
 
     private static final Logger log = Logger.getLogger(ArgParser.class);

@@ -17,18 +17,22 @@ import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
-import edu.jhu.parse.cky.NaryTree.NaryTreeNodeFilter;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
+import edu.jhu.parse.cky.data.BinaryTree;
+import edu.jhu.parse.cky.data.BinaryTreebank;
+import edu.jhu.parse.cky.data.NaryTree;
+import edu.jhu.parse.cky.data.NaryTreebank;
+import edu.jhu.parse.cky.data.NaryTree.NaryTreeNodeFilter;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.Lambda.LambdaOne;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.files.Files;
 
 public class RunCkyParser {
     
@@ -237,7 +241,7 @@ public class RunCkyParser {
             Alphabet<Label> ntAlphabet) throws FileNotFoundException,
             IOException {
         NaryTreebank naryTrees = new NaryTreebank();
-        List<File> mrgFiles = Utilities.getMatchingFiles(train, ".*\\.mrg");
+        List<File> mrgFiles = Files.getMatchingFiles(train, ".*\\.mrg");
         for (File mrgFile : mrgFiles) {
             BufferedReader reader = new BufferedReader(new FileReader(mrgFile));
             NaryTreebank tmpTrees = NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader);

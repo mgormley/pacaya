@@ -17,10 +17,10 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.ilp.ZimplRunner;
 import edu.jhu.ilp.decomp.BlockFileWriter;
-import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.IlpDepParser;
-import edu.jhu.util.Files;
-import edu.jhu.util.Utilities;
+import edu.jhu.parse.IlpFormulation;
+import edu.jhu.util.collections.Maps;
+import edu.jhu.util.files.Files;
 
 public class DeltaParseBlockFileWriter implements BlockFileWriter {
 
@@ -106,7 +106,7 @@ public class DeltaParseBlockFileWriter implements BlockFileWriter {
                 String varType = varSplits[0];
                 if (!varType.equals("cwDelta") && varSplits.length > 1) {
                     int sentId = Integer.parseInt(varSplits[1]);
-                    Utilities.addToSet(rowsToSents, row, sentId);
+                    Maps.addToSet(rowsToSents, row, sentId);
                 } else {
                     couplingRows.add(row);
                 }

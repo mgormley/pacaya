@@ -7,8 +7,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.util.FileListIterator;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.files.FileListIterator;
+import edu.jhu.util.files.Files;
 
 /**
  * Reads a file or directory of CoNLL-X files.
@@ -23,7 +23,7 @@ public class CoNLLXDirReader implements Iterable<CoNLLXSentence> {
     private List<File> files;
     
     public CoNLLXDirReader(File path) {
-        files = Utilities.getMatchingFiles(path, ".*\\.conll");
+        files = Files.getMatchingFiles(path, ".*\\.conll");
     }
     
     public CoNLLXDirReader(String path) {

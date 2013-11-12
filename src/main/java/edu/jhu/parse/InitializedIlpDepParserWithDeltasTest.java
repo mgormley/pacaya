@@ -6,7 +6,6 @@ import java.io.File;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,8 +18,8 @@ import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.util.Files;
 import edu.jhu.util.Prng;
+import edu.jhu.util.files.Files;
 
 
 public class InitializedIlpDepParserWithDeltasTest {

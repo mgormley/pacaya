@@ -1,7 +1,7 @@
 package edu.jhu.featurize;
 
-import static edu.jhu.util.Utilities.getList;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +13,10 @@ import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.util.Pair;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Lists;
 
 public class SentFeatureExtractorTest {
 
@@ -30,7 +30,7 @@ public class SentFeatureExtractorTest {
             csPrm.useGoldSyntax = true;
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-            cs.init(Utilities.getList(simpleSent));
+            cs.init(Lists.getList(simpleSent));
             SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
             int[] goldParents = fe.getParents(simpleSent);
             assertArrayEquals(new int[] { 1, 2, -1, 2 }, goldParents);
@@ -41,7 +41,7 @@ public class SentFeatureExtractorTest {
             csPrm.useGoldSyntax = false;
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-            cs.init(Utilities.getList(simpleSent));
+            cs.init(Lists.getList(simpleSent));
             SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
             int[] predParents = fe.getParents(simpleSent);
             assertArrayEquals(new int[] { 2, 0, -1, 2 }, predParents);
@@ -55,7 +55,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
@@ -87,7 +87,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -108,7 +108,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -122,7 +122,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = false;
         cs = new CorpusStatistics(csPrm);
         simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         fePrm = new SentFeatureExtractorPrm();
         fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         parents = fe.getParents(simpleSent);
@@ -143,7 +143,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -177,7 +177,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -235,7 +235,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -295,7 +295,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = false;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -328,7 +328,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
@@ -358,7 +358,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
 
@@ -381,7 +381,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
 
@@ -399,7 +399,7 @@ public class SentFeatureExtractorTest {
         csPrm.useGoldSyntax = false;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Utilities.getList(simpleSent));
+        cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
@@ -493,10 +493,10 @@ public class SentFeatureExtractorTest {
     public static CoNLL09Sentence getDogConll09Sentence() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
-        tokens.add(new CoNLL09Token(1, "the", "_", "GoldDet", "Det", "_", getList("feat"), getList("feat") , 2, 3, "det", "_", false, "_", getList("_")));
-        tokens.add(new CoNLL09Token(2, "dog", "_", "GoldN", "N", "_", getList("feat"), getList("feat") , 3, 1, "subj", "_", false, "_", getList("arg0")));
-        tokens.add(new CoNLL09Token(3, "ate", "_", "GoldV", "V", "_", getList("feat"), getList("feat") , 0, 0, "v", "_", true, "ate.1", getList("_")));
-        tokens.add(new CoNLL09Token(4, "food", "_", "GoldN", "N", "_", getList("feat"), getList("feat") , 3, 3, "obj", "_", false, "_", getList("arg1")));
+        tokens.add(new CoNLL09Token(1, "the", "_", "GoldDet", "Det", "_", Lists.getList("feat"), Lists.getList("feat") , 2, 3, "det", "_", false, "_", Lists.getList("_")));
+        tokens.add(new CoNLL09Token(2, "dog", "_", "GoldN", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 3, 1, "subj", "_", false, "_", Lists.getList("arg0")));
+        tokens.add(new CoNLL09Token(3, "ate", "_", "GoldV", "V", "_", Lists.getList("feat"), Lists.getList("feat") , 0, 0, "v", "_", true, "ate.1", Lists.getList("_")));
+        tokens.add(new CoNLL09Token(4, "food", "_", "GoldN", "N", "_", Lists.getList("feat"), Lists.getList("feat") , 3, 3, "obj", "_", false, "_", Lists.getList("arg1")));
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         return sent;

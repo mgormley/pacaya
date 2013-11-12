@@ -1,9 +1,6 @@
 package edu.jhu.util;
 
-import java.util.HashMap;
-
 import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.srl.MutableInt;
 
 /**
  * Bidirectional mapping of Objects to ints.

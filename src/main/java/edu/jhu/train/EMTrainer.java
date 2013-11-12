@@ -1,12 +1,12 @@
 package edu.jhu.train;
 
 import org.apache.log4j.Logger;
-import edu.jhu.util.Timer;
 
 import edu.jhu.model.Model;
 import edu.jhu.model.ModelFactory;
-import edu.jhu.util.Pair;
-import edu.jhu.util.Utilities;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.Timer;
 
 /**
  * 
@@ -111,8 +111,8 @@ public class EMTrainer<C> implements Trainer<C> {
             
             // Check for convergence or iteration limit
             log.info("logLikelihood = " + logLikelihood);
-            log.info("likelihood ratio = " + Utilities.exp(prevLogLikelihood - logLikelihood));
-            if (prevLogLikelihood - logLikelihood > Utilities.log(prm.convergenceRatio)) {
+            log.info("likelihood ratio = " + FastMath.exp(prevLogLikelihood - logLikelihood));
+            if (prevLogLikelihood - logLikelihood > FastMath.log(prm.convergenceRatio)) {
                 log.info("Stopping training due to convergence");
                 break;
             } else if (prevLogLikelihood == Double.NEGATIVE_INFINITY && logLikelihood == Double.NEGATIVE_INFINITY && iterCount > 0) {

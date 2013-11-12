@@ -1,9 +1,9 @@
 package edu.jhu.model.dmv;
 
-import edu.jhu.util.Alphabet;
 import edu.jhu.data.Label;
 import edu.jhu.data.TaggedWord;
 import edu.jhu.model.dmv.DmvModel.Lr;
+import edu.jhu.util.Alphabet;
 
 public class SimpleStaticDmvModel {
 

@@ -5,8 +5,8 @@ import ilog.concert.IloException;
 import java.util.Collection;
 
 import edu.jhu.gridsearch.rlt.Rlt;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.UnorderedPair;
 
 public interface RltRowAdder {
 

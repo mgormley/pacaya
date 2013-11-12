@@ -8,7 +8,6 @@ import java.util.Stack;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.LazyBranchAndBoundSolver.NodeResult;
-import edu.jhu.gridsearch.dmv.DmvProblemNode;
 import edu.jhu.gridsearch.dmv.RelaxSolChildOrderer;
 import edu.jhu.util.IterIterator;
 

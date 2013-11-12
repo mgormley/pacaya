@@ -3,15 +3,16 @@
  */
 package edu.jhu.lp;
 
-import edu.jhu.prim.list.DoubleArrayList;
-import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.prim.vector.LongDoubleSortedVector;
-import edu.jhu.util.SafeCast;
 import ilog.concert.IloException;
 import ilog.concert.IloLPMatrix;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import edu.jhu.prim.list.DoubleArrayList;
+import edu.jhu.prim.list.IntArrayList;
+import edu.jhu.prim.util.SafeCast;
+import edu.jhu.prim.vector.LongDoubleSortedVector;
 
 
 /**

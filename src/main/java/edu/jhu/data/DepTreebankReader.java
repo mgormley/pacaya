@@ -32,20 +32,19 @@ public class DepTreebankReader {
     }
     
     public static DepTreebank getTreebank(File trainPath, DatasetType trainType, int maxSentenceLength, Alphabet<Label> alphabet) throws IOException {
-        DepTreebank trainTreebank;
-
         // Create the original trainTreebank with a throw-away alphabet.
-        trainTreebank = new DepTreebank(maxSentenceLength, maxNumSentences, new Alphabet<Label>());
+        DepTreebank trainTreebank = new DepTreebank(new Alphabet<Label>());
+        DepTreebankLoader loader = new DepTreebankLoader(maxSentenceLength, maxNumSentences);
         if (mustContainVerb) {
-            trainTreebank.setTreeFilter(new VerbTreeFilter());
+            loader.setTreeFilter(new VerbTreeFilter());
         }
         
         if (trainType == DatasetType.PTB) {
-            trainTreebank.loadPtbPath(trainPath);
+            loader.loadPtbPath(trainTreebank, trainPath);
         } else if (trainType == DatasetType.CONLL_X) {
-            trainTreebank.loadCoNLLXPath(trainPath);
+            loader.loadCoNLLXPath(trainTreebank, trainPath);
         } else if (trainType == DatasetType.CONLL_2009) {
-            trainTreebank.loadCoNLL09Path(trainPath);
+            loader.loadCoNLL09Path(trainTreebank, trainPath);
         } else {
             throw new RuntimeException("Unhandled dataset type: " + trainType);
         }

@@ -5,6 +5,7 @@ import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_B;
 import static edu.jhu.parse.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,6 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
@@ -31,13 +31,13 @@ import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
 import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
-import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
-import edu.jhu.util.Utilities;
+import edu.jhu.util.collections.Maps;
 
 
 public class DmvCkyParserTest {
@@ -84,7 +84,7 @@ public class DmvCkyParserTest {
         DmvModel model = getTwoPosTagInstance();
         SentenceCollection sentences = new SentenceCollection(model.getTagAlphabet());
         sentences.addSentenceFromString("a/A b/B");
-        double expectedParseWeight = Utilities.log(0.0078125); // 0.5^7
+        double expectedParseWeight = FastMath.log(0.0078125); // 0.5^7
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
@@ -101,7 +101,7 @@ public class DmvCkyParserTest {
         DmvModel model = getTwoPosTagInstance();
         SentenceCollection sentences = new SentenceCollection(model.getTagAlphabet());
         sentences.addSentenceFromString("a/A b/B a/A");
-        double expectedParseWeight = Utilities.log(Math.pow(0.5, 10)); // 0.5^7
+        double expectedParseWeight = FastMath.log(Math.pow(0.5, 10)); // 0.5^7
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
@@ -200,7 +200,7 @@ public class DmvCkyParserTest {
         // Note: we have n-1 continues since the root always only generates a single child.
         int n = sentences.get(0).size();
         int m = model.root.length;
-        double expectedParseWeight = Utilities.log(Math.pow(0.5, n * 2 + n-1) * Math.pow(1./m, n));
+        double expectedParseWeight = FastMath.log(Math.pow(0.5, n * 2 + n-1) * Math.pow(1./m, n));
 
         System.out.println("Expected log likelihood: " + expectedParseWeight);
         
@@ -211,7 +211,7 @@ public class DmvCkyParserTest {
             DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
             ParentsArray pa = new ParentsArray(dpTrees.get(0).getParents());
             System.out.println(Arrays.toString(pa.parents));
-            Utilities.increment(counter, pa, 1);
+            Maps.increment(counter, pa, 1);
         }
         for (ParentsArray pa : counter.keySet()) {
             System.out.printf("%5d %s\n", counter.get(pa), pa);

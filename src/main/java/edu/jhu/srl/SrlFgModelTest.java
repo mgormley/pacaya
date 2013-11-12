@@ -13,7 +13,7 @@ import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.gm.FgModelTest;
+import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 public class SrlFgModelTest {

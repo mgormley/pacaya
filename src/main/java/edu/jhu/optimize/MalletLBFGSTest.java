@@ -7,8 +7,8 @@ import org.junit.Test;
 import edu.jhu.optimize.GradientDescentTest.SumSquares;
 import edu.jhu.optimize.GradientDescentTest.XSquared;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
-import edu.jhu.util.math.Vectors;
 
 public class MalletLBFGSTest {
     
@@ -51,7 +51,7 @@ public class MalletLBFGSTest {
         double[] offsets = new double[] { 3, -5, 11};
         opt.maximize(new FunctionOpts.NegateFunction(new SumSquares(offsets)), initial);
         double[] max = initial;
-        Vectors.scale(offsets, -1.0);
+        DoubleArrays.scale(offsets, -1.0);
         JUnitUtils.assertArrayEquals(offsets, max, 1e-10);
     }
     

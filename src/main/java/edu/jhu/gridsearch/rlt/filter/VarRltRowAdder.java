@@ -16,11 +16,11 @@ import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.IntObjectHashMap;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.set.IntHashSet;
-import edu.jhu.util.Pair;
-import edu.jhu.util.SafeCast;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.tuple.OrderedPair;
-import edu.jhu.util.tuple.UnorderedPair;
+import edu.jhu.prim.tuple.OrderedPair;
+import edu.jhu.prim.tuple.Pair;
+import edu.jhu.prim.tuple.UnorderedPair;
+import edu.jhu.prim.util.SafeCast;
+import edu.jhu.util.collections.Maps;
 
 /**
  * Adds only RLT rows that have a non-zero coefficient for some RLT variable corresponding
@@ -64,14 +64,14 @@ public class VarRltRowAdder implements RltRowAdder {
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<OrderedPair> rltRows = new HashSet<OrderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
+            IntArrayList list1 = Maps.safeGetList(varConsMap, varIdPair.get1());
             for (int i=0; i<list1.size(); i++) {
                 int consId1 = list1.get(i);
                 // Add a RLT row for the current factor multiplied with the
                 // variable corresponding to the second variable in this pair.
                 rltRows.add(new OrderedPair(consId1, varIdPair.get2()));
             }
-            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            IntArrayList list2 = Maps.safeGetList(varConsMap, varIdPair.get2());
             for (int i=0; i<list2.size(); i++) {
                 int consId2 = list2.get(i);
                 // Add a RLT row for the current factor multiplied with the
@@ -94,8 +94,8 @@ public class VarRltRowAdder implements RltRowAdder {
         // For each pair of variable ids, lookup the corresponding pair of lists of factors.
         Set<UnorderedPair> rltRows = new HashSet<UnorderedPair>();
         for (UnorderedPair varIdPair : varIdPairs) {
-            IntArrayList list1 = Utilities.safeGetList(varConsMap, varIdPair.get1());
-            IntArrayList list2 = Utilities.safeGetList(varConsMap, varIdPair.get2());
+            IntArrayList list1 = Maps.safeGetList(varConsMap, varIdPair.get1());
+            IntArrayList list2 = Maps.safeGetList(varConsMap, varIdPair.get2());
             for (int i=0; i<list1.size(); i++) {
                 int consId1 = list1.get(i);
                 for (int j=0; j<list2.size(); j++) {
@@ -131,7 +131,7 @@ public class VarRltRowAdder implements RltRowAdder {
                 if (ve.get() != 0.0) {
                     int veIdx = SafeCast.safeLongToInt(ve.index());
                     if (inputVarIds.contains(veIdx)) {
-                        Utilities.addToList(varConsMap, veIdx, i);
+                        Maps.addToList(varConsMap, veIdx, i);
                     }
                 }
             }

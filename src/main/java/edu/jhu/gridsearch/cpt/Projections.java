@@ -14,9 +14,9 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Type;
 import edu.jhu.gridsearch.cpt.Projections.ProjectionsPrm.ProjectionType;
-import edu.jhu.util.Utilities;
-import edu.jhu.util.math.Multinomials;
-import edu.jhu.util.math.Vectors;
+import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.util.math.FastMath;
 
 public class Projections {
 
@@ -52,7 +52,7 @@ public class Projections {
     public double[] getDefaultProjection(CptBounds logBounds, int c, double[] params) throws IloException {
         if (prm.lambdaSmoothing != 0) {
             params = Arrays.copyOf(params, params.length);
-            Vectors.add(params, prm.lambdaSmoothing);
+            DoubleArrays.add(params, prm.lambdaSmoothing);
         }
         if (prm.type == ProjectionType.BOUNDED_MIN_EUCLIDEAN) {
             return getBoundedProjection(logBounds, c, params);
@@ -129,8 +129,8 @@ public class Projections {
         double[] lbs = new double[params.length];
         double[] ubs = new double[params.length];
         for (int m = 0; m < params.length; m++) {
-            lbs[m] = Utilities.exp(logBounds.getLb(Type.PARAM, c, m));
-            ubs[m] = Utilities.exp(logBounds.getUb(Type.PARAM, c, m));
+            lbs[m] = FastMath.exp(logBounds.getLb(Type.PARAM, c, m));
+            ubs[m] = FastMath.exp(logBounds.getUb(Type.PARAM, c, m));
         }
         
         return getBoundedProjection(params, lbs, ubs);

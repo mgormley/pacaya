@@ -1,5 +1,6 @@
 package edu.jhu.srl;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -7,14 +8,13 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.gm.ExpFamFactor;
-import edu.jhu.gm.FactorGraph;
-import edu.jhu.gm.ProjDepTreeFactor;
-import edu.jhu.gm.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.Var;
-import edu.jhu.gm.Var.VarType;
-import edu.jhu.gm.VarSet;
+import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.ProjDepTreeFactor;
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarSet;
 
 /**
  * A factor graph for SRL.
@@ -26,16 +26,19 @@ import edu.jhu.gm.VarSet;
 // DepParseFactorGraph, with a JointSrlFactorGraph that pulls the two together.
 public class SrlFactorGraph extends FactorGraph {
 
-    public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
+    private static final long serialVersionUID = 1L;
 
+    public static final String TEMPLATE_KEY_FOR_UNKNOWN_SENSE = SrlFactorTemplate.SENSE_UNARY + "_" + CorpusStatistics.UNKNOWN_SENSE;
     private static final Logger log = Logger.getLogger(SrlFactorGraph.class); 
 
     /**
      * Parameters for the SrlFactorGraph.
      * @author mgormley
      */
-    public static class SrlFactorGraphPrm {
-        
+    public static class SrlFactorGraphPrm implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
         /** The structure of the Role variables. */
         public RoleStructure roleStructure = RoleStructure.ALL_PAIRS;
         
@@ -88,6 +91,8 @@ public class SrlFactorGraph extends FactorGraph {
      */
     public static class SrlFactor extends ExpFamFactor {
 
+        private static final long serialVersionUID = 1L;
+
         SrlFactorTemplate type;
         
         public SrlFactor(VarSet vars, SrlFactorTemplate type) {
@@ -127,6 +132,8 @@ public class SrlFactorGraph extends FactorGraph {
      */
     public static class RoleVar extends Var {
         
+        private static final long serialVersionUID = 1L;
+
         private int parent;
         private int child;     
         
@@ -153,7 +160,9 @@ public class SrlFactorGraph extends FactorGraph {
      * @author mgormley
      */
     public static class SenseVar extends Var {
-        
+
+        private static final long serialVersionUID = 1L;
+
         private int parent;
         
         public SenseVar(VarType type, int numStates, String name, List<String> stateNames, int parent) {

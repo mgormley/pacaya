@@ -2,7 +2,6 @@ package edu.jhu.train;
 
 import junit.framework.Assert;
 
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,11 +12,10 @@ import edu.jhu.gridsearch.LazyBranchAndBoundSolver.SearchStatus;
 import edu.jhu.gridsearch.cpt.BasicCptBoundsDeltaFactory;
 import edu.jhu.gridsearch.cpt.CptBoundsDeltaFactory;
 import edu.jhu.gridsearch.cpt.MidpointVarSplitter;
+import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.gridsearch.cpt.RegretVariableSelector;
 import edu.jhu.gridsearch.cpt.VariableSelector;
 import edu.jhu.gridsearch.cpt.VariableSplitter;
-import edu.jhu.gridsearch.cpt.MidpointVarSplitter.MidpointChoice;
-import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation;
 import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
 import edu.jhu.gridsearch.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.model.dmv.DmvDepTreeGenerator;

@@ -25,8 +25,8 @@ import edu.jhu.parse.cky.chart.Chart.BackPointer;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.ChartCell;
 import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.util.Pair;
 import edu.jhu.util.Timer;
 
 /**
