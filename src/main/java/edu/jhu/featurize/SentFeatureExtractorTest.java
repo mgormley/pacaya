@@ -441,7 +441,7 @@ public class SentFeatureExtractorTest {
         fePrm.tagFeats = false;
         fePrm.morphFeats = true;
         fePrm.deprelFeats = false;
-        fePrm.familyFeats = false;
+        fePrm.childrenFeats = false;
         fePrm.pathFeats = false;
         fePrm.syntacticConnectionFeats = false;
 

@@ -165,6 +165,25 @@ public class SrlRunner {
     public static boolean useBjorkelundFeats = true;
     @Opt(hasArg = true, description = "Whether to add dependency path features.")
     public static boolean useDepPathFeats = true;
+    // Options for feature templating.
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add form features.")
+    public static boolean formFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add lemma features.")
+    public static boolean lemmaFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add tag features.")
+    public static boolean tagFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add morphological features.")
+    public static boolean morphFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency relation features.")
+    public static boolean deprelFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependent children features.")
+    public static boolean childrenFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency path features.")
+    public static boolean pathFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency parent features.")
+    public static boolean syntacticConnectionFeats = false;
+    @Opt(hasArg = true, description = "Feature Templating:  Whether to use all feature template features.")
+    public static boolean useAllTemplates = false;
 
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -492,6 +511,15 @@ public class SrlRunner {
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
+        prm.fePrm.formFeats = formFeats;
+        prm.fePrm.lemmaFeats = lemmaFeats;
+        prm.fePrm.tagFeats = tagFeats;
+        prm.fePrm.morphFeats = morphFeats;
+        prm.fePrm.deprelFeats = deprelFeats;
+        prm.fePrm.childrenFeats = childrenFeats;
+        prm.fePrm.pathFeats = pathFeats;
+        prm.fePrm.syntacticConnectionFeats = syntacticConnectionFeats;
+        prm.fePrm.useAllTemplates = useAllTemplates;
         
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;

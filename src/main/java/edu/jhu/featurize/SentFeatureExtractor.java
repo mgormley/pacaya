@@ -32,9 +32,9 @@ public class SentFeatureExtractor {
     * 3. part-of-speech (tagFeats)
     * 4. morphological features (morphFeats)
     * 5. syntactic dependency label (deprelFeats)
-    * 6. family children, siblings, parents (familyFeats)
+    * 6. children (childrenFeats)
     * 7. dependency paths (pathFeats)
-    * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
+    * 8. 'high' and 'low' support, siblings, parents (syntacticConnectionFeats)
     */
     
     
@@ -50,7 +50,7 @@ public class SentFeatureExtractor {
         public boolean tagFeats = true;
         public boolean morphFeats = true;
         public boolean deprelFeats = true;
-        public boolean familyFeats = true;
+        public boolean childrenFeats = true;
         public boolean pathFeats = true;
         public boolean syntacticConnectionFeats = true;
         /** Whether to use supervised features. */
@@ -90,6 +90,7 @@ public class SentFeatureExtractor {
         if (!prm.biasOnly) {
             // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
             this.parents = getParents(sent);
+            // TBD:  Should this be defined differently?
             if (prm.useZhaoFeats || prm.useDepPathFeats) {
                 this.featuredSentence = createZhaoSentence();
                 this.featuredHeadDefault = new FeatureObject(-1, parents, sent);
@@ -102,9 +103,19 @@ public class SentFeatureExtractor {
                 this.prm.tagFeats = true;
                 this.prm.morphFeats = true;
                 this.prm.deprelFeats = true;
-                this.prm.familyFeats = true;
+                this.prm.childrenFeats = true;
                 this.prm.pathFeats = true;
                 this.prm.syntacticConnectionFeats = true;
+            } else if (prm.useAllTemplates || 
+                       prm.formFeats ||
+                       prm.lemmaFeats ||
+                       prm.tagFeats ||
+                       prm.morphFeats ||
+                       prm.deprelFeats ||
+                       prm.childrenFeats ||
+                       prm.pathFeats ||
+                       prm.syntacticConnectionFeats) {
+                this.prm.useTemplates = true;
             }
         } else {
             this.parents = null;
@@ -227,9 +238,9 @@ public class SentFeatureExtractor {
          * tagFeats
          * morphFeats
          * deprelFeats
-         * familyFeats
+         * childrenFeats
          * pathFeats
-         * supportFeats */
+         * syntacticConnectionFeats */
         // Eventually we want all the features stored in here.
         ArrayList<String> feats = new ArrayList<String>();
         // all features that are created, 
@@ -251,8 +262,8 @@ public class SentFeatureExtractor {
         // feature pieces from syntactic connection objects.
         ArrayList<String> predSynConnectPieces = new ArrayList<String>();
         ArrayList<String> argSynConnectPieces = new ArrayList<String>();
-        // feature pieces from family objects.
-        ArrayList<ArrayList<String>> familyPieces = new ArrayList<ArrayList<String>>();
+        // feature pieces from children objects.
+        ArrayList<ArrayList<String>> childrenPieces = new ArrayList<ArrayList<String>>();
         // the newly constructed features to add into feats.
         // these appear in isolation, get combined together, 
         // with one another, etc.
@@ -261,7 +272,7 @@ public class SentFeatureExtractor {
         ArrayList<String> predSynConnectFeats;
         ArrayList<String> argSynConnectFeats;
         ArrayList<String> pathFeats;
-        ArrayList<String> familyFeats;
+        ArrayList<String> childrenFeats;
         // holder for features combining all of the above
         ArrayList<String> newFeats;
 
@@ -335,19 +346,19 @@ public class SentFeatureExtractor {
                     allFeats.put(x, pathFeats);
                     x++;
                 }
-                if (prm.familyFeats) {
+                if (prm.childrenFeats) {
                     /*
                      * Family. Two types of children sets for the predicate or argument 
                      * candidate are considered, the first includes all syntactic children 
                      * (children), the second also includes all but excludes the left most 
                      * and the right most children (noFarChildren).
                      */
-                    // get the feature pieces for the pred arg "family" features.
-                    familyPieces = makeFamilyPieces(predObject, argObject);
+                    // get the feature pieces for the pred arg "children" features.
+                    childrenPieces = makeFamilyPieces(predObject, argObject);
                     // make features out of these pieces.
-                    familyFeats = makeFeaturesConcat(familyPieces);
+                    childrenFeats = makeFeaturesConcat(childrenPieces);
                     // add them to our list of things to combine.
-                    allFeats.put(x, familyFeats);
+                    allFeats.put(x, childrenFeats);
                     x++;
                 }
             }

@@ -25,9 +25,9 @@ public class FeatureObject {
      * 3. part-of-speech (tagFeats)
      * 4. morphological features (morphFeats)
      * 5. syntactic dependency label (deprelFeats)
-     * 6. family:  children, siblings, parents (familyFeats)
+     * 6. children (childrenFeats)
      * 7. dependency paths (pathFeats)
-     * 8. 'high' and 'low' support (combining dependency path + PoS, supportFeats).
+     * 8. 'high' and 'low' support, siblings, parents (syntacticConnectionFeats).
      */    
 
     private static final String NO_MORPH = "NO_MORPH"; 
