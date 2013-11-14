@@ -84,14 +84,16 @@ class LooseMaxNLocator(mticker.MaxNLocator):
 from matplotlib import rc
 #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 ### for Palatino and other serif fonts use:
-rc('text', usetex=False)
-#rc('font', family='serif')
-rc('font',**{'family':'serif','serif':['Palatino']})
+rc('text', usetex=True)
+rc('font', family='serif')
+#rc('font',**{'family':'serif','serif':['Cambria']})
 
 #mpl.rcParams['text.usetex']=True
 #mpl.rcParams['text.latex.unicode']=True
 
 fig, ax = plt.subplots()
+fig.set_size_inches(4,3)
+
 for m in df['method'].unique():
     sf = df[df.method == m]
     ax.plot(sf['propTrainExamples'], sf['F1'], 'o-', label=m)
