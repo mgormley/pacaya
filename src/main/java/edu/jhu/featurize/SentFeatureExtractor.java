@@ -217,7 +217,7 @@ public class SentFeatureExtractor {
             addBjorkelundPairFeatures(pidx, aidx, feats);
         }
         if (prm.useTemplates) {
-            addTemplatePairFeatures(pidx, aidx);
+            addTemplatePairFeatures(pidx, aidx, feats);
         }
 
         return feats;
@@ -231,7 +231,7 @@ public class SentFeatureExtractor {
     /* Basically the idea here is, gather every possible feature piece (POS, lemma, etc.) to place in a pair;
      * then make those pairs. We use a window of length 3 to look at the previous word, current word,
      * and next word for features, on both the first word (pred candidate) and second word (arg candidate). */
-    public ArrayList<String> addTemplatePairFeatures(int pidx, int aidx) { 
+    public void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) { 
         /* Features considered:
          * formFeats
          * lemmaFeats
@@ -241,8 +241,6 @@ public class SentFeatureExtractor {
          * childrenFeats
          * pathFeats
          * syntacticConnectionFeats */
-        // Eventually we want all the features stored in here.
-        ArrayList<String> feats = new ArrayList<String>();
         // all features that are created, 
         // from combinations of features of each type.
         HashMap<Integer,ArrayList<String>> allFeats = new HashMap<Integer,ArrayList<String>>(); 
@@ -383,7 +381,6 @@ public class SentFeatureExtractor {
                 }
             }
         }
-        return feats;
     }
     
     private ArrayList<String> makeSynConnectPieces(FeatureObject featureObject, int n) {

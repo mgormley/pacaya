@@ -433,6 +433,7 @@ public class SentFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
+        ArrayList<String> allFeats = new ArrayList<String>();
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
 
@@ -447,14 +448,14 @@ public class SentFeatureExtractorTest {
 
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //allFeats = new ArrayList<String>();
-        ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(1, 5);
+        fe.addTemplatePairFeatures(1, 5, allFeats);
         /*for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {
                 ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);
                 allFeats.addAll(pairFeatures);
             }
         }*/
-        for (String f : pairFeatures) {
+        for (String f : allFeats) {
             System.out.println(f);
         }
     }
