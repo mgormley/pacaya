@@ -58,15 +58,15 @@ class EvalC09(experiment_runner.PythonExpParams):
         lang = self.get("lang")
         ldc_dir = self.get("ldc_dir")
         is_ood = self.get("is_ood")
-        sub_dir = self.get("sub_dir")
-        name = self.get("name")
-        code = self.get("code")
-        
+        sub_dir = self.get("sub_dir")        
                         
         if is_ood:
             ood = "-ood"
         else:
             ood = "" 
+            
+        # Store for convenience during scraping.
+        self.update(lang_ood=lang+ood)
         
         # Example:    
         # perl scripts/eval/eval09-no_sense.pl \ 
@@ -74,7 +74,7 @@ class EvalC09(experiment_runner.PythonExpParams):
         #    -s data/conll2009/LDC2012T03/data/eval-data/0c01/CoNLL2009-ST-evaluation-Spanish-Joint-closed.txt
         
         gold_file = "%s/data/CoNLL2009-ST-%s/CoNLL2009-ST-evaluation-%s%s.txt" % (ldc_dir, lang, lang, ood)
-        pred_file = "%s/data/eval-data/0c01/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (ldc_dir, lang, ood)
+        pred_file = "%s/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (sub_dir, lang, ood)
                 
         script = "\n"
         if self.get("fast"):
