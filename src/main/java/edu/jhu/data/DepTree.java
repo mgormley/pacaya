@@ -235,7 +235,7 @@ public class DepTree implements Iterable<DepTreeNode> {
     }
 
     public enum Dir {
-        UP, DOWN
+        UP, DOWN, NONE
     }
     
     /**

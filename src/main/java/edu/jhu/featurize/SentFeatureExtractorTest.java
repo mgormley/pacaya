@@ -437,17 +437,18 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
 
-        fePrm.formFeats = false;
-        fePrm.lemmaFeats = false;
-        fePrm.tagFeats = false;
+        fePrm.formFeats = true;
+        fePrm.lemmaFeats = true;
+        fePrm.tagFeats = true;
         fePrm.morphFeats = true;
-        fePrm.deprelFeats = false;
-        fePrm.childrenFeats = false;
-        fePrm.pathFeats = false;
-        fePrm.syntacticConnectionFeats = false;
+        fePrm.deprelFeats = true;
+        fePrm.childrenFeats = true;
+        fePrm.pathFeats = true;
+        fePrm.syntacticConnectionFeats = true;
 
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //allFeats = new ArrayList<String>();
+        // using "es" and "hicieron"...
         fe.addTemplatePairFeatures(1, 5, allFeats);
         /*for (int i = 0; i < sent.size(); i++) {
             for (int j = 0; j < sent.size(); j++) {

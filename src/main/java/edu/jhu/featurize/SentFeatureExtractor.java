@@ -256,12 +256,12 @@ public class SentFeatureExtractor {
         // feature pieces from the argument object
         ArrayList<String> argPieces = new ArrayList<String>();
         // feature pieces from pred-arg path object.
-        ArrayList<ArrayList<String>> predArgPathPieces = new ArrayList<ArrayList<String>>();
+        HashMap<String, HashMap<String, ArrayList<String>>> predArgPathPieces = new HashMap<String, HashMap<String, ArrayList<String>>>();
         // feature pieces from syntactic connection objects.
         ArrayList<String> predSynConnectPieces = new ArrayList<String>();
         ArrayList<String> argSynConnectPieces = new ArrayList<String>();
         // feature pieces from children objects.
-        ArrayList<ArrayList<String>> childrenPieces = new ArrayList<ArrayList<String>>();
+        HashMap<String, HashMap<String, ArrayList<String>>> childrenPieces = new HashMap<String, HashMap<String, ArrayList<String>>>();
         // the newly constructed features to add into feats.
         // these appear in isolation, get combined together, 
         // with one another, etc.
@@ -462,70 +462,32 @@ public class SentFeatureExtractor {
         return featurePieces;
     }
 
-    private ArrayList<ArrayList<String>> makeFamilyPieces(FeatureObject predObject, FeatureObject argObject) {
+    private HashMap<String, HashMap<String, ArrayList<String>>> makeFamilyPieces(FeatureObject predObject, FeatureObject argObject) {
         // holds tmp feature objects for each group of objects (children, siblings).
         ArrayList<FeatureObject> newObjectList = new ArrayList<FeatureObject>();
         // holds tmp feature pieces for each group
-        ArrayList<ArrayList<String>> newFeaturePieces = new ArrayList<ArrayList<String>>();
-        // holds all feature pieces
-        ArrayList<ArrayList<String>> featurePieces = new ArrayList<ArrayList<String>>();
+        HashMap<String, HashMap<String, ArrayList<String>>> featurePieces = new HashMap<String, HashMap<String, ArrayList<String>>>();
+        HashMap<String, ArrayList<String>> newFeaturePieces = new HashMap<String, ArrayList<String>>();
         
         // pred children features
         newObjectList = getFeatureObjectList(predObject.getChildren());
-        newFeaturePieces = makeListPieces(newObjectList, "p.children");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("p.children", newFeaturePieces);
         // pred noFarChildren features
         newObjectList = getFeatureObjectList(predObject.getNoFarChildren());
-        newFeaturePieces = makeListPieces(newObjectList, "p.noFarChildren");
-        featurePieces.addAll(newFeaturePieces);
-        
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("p.noFarChildren", newFeaturePieces);
         // arg children features
         newObjectList = getFeatureObjectList(argObject.getChildren());
-        newFeaturePieces = makeListPieces(newObjectList, "a.children");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("a.children", newFeaturePieces);
         // arg noFarChildren features
         newObjectList = getFeatureObjectList(argObject.getNoFarChildren());
-        newFeaturePieces = makeListPieces(newObjectList, "a.noFarChildren");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("a.noFarChildren", newFeaturePieces);
 
         return featurePieces;
     }
-    
-    private ArrayList<String> makeFeaturesConcat(ArrayList<ArrayList<String>> predArgPathPieces) {
-        // Given a collected group of items for a pred or arg candidate,
-        // mush them together into a feature.
-        String feat;
-        ArrayList<String> featureList = new ArrayList<String>();
-        for (ArrayList<String> p : predArgPathPieces) {
-            if (p.size() > 1) {
-                feat = "Seq:" + buildString(p);
-                featureList.add(feat);
-                feat = "Bag:" + buildString(bag(p));
-                featureList.add(feat);
-                feat = "NoDup:" + buildString(noDup(p));
-                featureList.add(feat);
-            } else {
-                featureList.add(buildString(p));
-            }
-        }
-        return featureList;
-    }
-
-    private ArrayList<String> makeFeatures(ArrayList<String> featureList) {
-        return featureList;
-    }
-
-    private ArrayList<String> makeFeatures(ArrayList<String> featureList1, ArrayList<String> featureList2) {
-        ArrayList<String> featureList = new ArrayList<String>();
-        for (String a : featureList1) {
-            for (String b : featureList2) {
-                String ab = a + "_" + b;
-                featureList.add(ab);
-            }
-        }
-        return featureList;
-    }
-
     
     /* Gathers pieces to be used in feature templates.
      * @param featureObj a pred or argument object.
@@ -582,13 +544,13 @@ public class SentFeatureExtractor {
      * @param featureObj a pred-argument path object.
      * @return featureList a list of feature pieces to be used in the templates.
      */
-    private ArrayList<ArrayList<String>> makePathPieces(FeatureObject featureObj) {
+    private HashMap<String, HashMap<String, ArrayList<String>>> makePathPieces(FeatureObject featureObj) {
         // holds tmp feature objects for each path type (line, dp, etc).
         ArrayList<FeatureObject> newObjectList = new ArrayList<FeatureObject>();
         // holds tmp feature pieces for each path type (line, dp, etc).
-        ArrayList<ArrayList<String>> newFeaturePieces = new ArrayList<ArrayList<String>>();
+        HashMap<String, ArrayList<String>> newFeaturePieces = new HashMap<String, ArrayList<String>>();
         // holds all feature pieces
-        ArrayList<ArrayList<String>> featurePieces = new ArrayList<ArrayList<String>>();
+        HashMap<String, HashMap<String, ArrayList<String>>> featurePieces = new HashMap<String, HashMap<String, ArrayList<String>>>();
         
         // straight path between words
         ArrayList<Integer> linePath = featureObj.getLinePath();
@@ -602,25 +564,26 @@ public class SentFeatureExtractor {
          */
         // linePath featurepiece lists
         newObjectList = getFeatureObjectList(linePath);
-        newFeaturePieces = makeListPieces(newObjectList, "linePath");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("linePath", newFeaturePieces);
         // dependencyPath featurepiece lists
         newObjectList = getFeatureObjectList(dependencyPath);
-        newFeaturePieces = makeListPieces(newObjectList, "dependencyPath");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("dpPath", newFeaturePieces);
+        // NOTE:  does dpPathArg usually == dependencyPath?
         // dpPathPred featurepiece lists
         newObjectList = getFeatureObjectList(dpPathPred);
-        newFeaturePieces = makeListPieces(newObjectList, "dpPathPred");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("dpPathPred", newFeaturePieces);
         // dpPathArg featurepiece lists
         newObjectList = getFeatureObjectList(dpPathArg);
-        newFeaturePieces = makeListPieces(newObjectList, "dpPathArg");
-        featurePieces.addAll(newFeaturePieces);
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("dpPathArg", newFeaturePieces);
         // dpPathShare featurepiece lists
         newObjectList = getFeatureObjectList(dpPathShare);
-        newFeaturePieces = makeListPieces(newObjectList, "dpPathShare");
-        featurePieces.addAll(newFeaturePieces);
-        
+        newFeaturePieces = makeListPieces(newObjectList);
+        featurePieces.put("dpPathShare", newFeaturePieces);
+
         return featurePieces;
     }
     
@@ -628,81 +591,126 @@ public class SentFeatureExtractor {
      * a syntactic path), get all the possible feature pieces (POS tags, etc).
      * @return feature pieces for all objects as a list.
      */
-    private ArrayList<ArrayList<String>> makeListPieces(ArrayList<FeatureObject> pathList, String pieceType) {
+    private HashMap<String, ArrayList<String>> makeListPieces(ArrayList<FeatureObject> pathList) {
         // Sets of feature pieces along the path.
-        ArrayList<String> featurePieceList;
+        HashMap<String, ArrayList<String>> featurePieceList;
         String feat;
         String morphFeat = "";
+        ArrayList<String> p;
+        // For adding directionality, following Bjorkelund.
+        Dir d;
         FeatureObject featureObj;
         // Feature pieces along all paths.
-        ArrayList<ArrayList<String>> featurePieceLists = new ArrayList<ArrayList<String>>();
+        featurePieceList = new HashMap<String, ArrayList<String>>();
         // distance feature
-        featurePieceList = new ArrayList<String>();
-        feat = pieceType + ".Distance:" + Integer.toString(pathList.size());
-        featurePieceList.add(feat);
-        featurePieceLists.add(featurePieceList);
+        String prefix = "Dist";
+        feat = Integer.toString(pathList.size());
+        if (!featurePieceList.containsKey(prefix)) {
+            featurePieceList.put(prefix, new ArrayList<String>());
+        }
+        p = featurePieceList.get(prefix);
+        p.add(feat);
         // not *totally* necessary.
         if (pathList.size() == 0) {
-            return featurePieceLists;
+            return featurePieceList;
         }
         // NOTE:  There is probably a much faster way to do this.
-        if (prm.formFeats) {
-            featurePieceList = new ArrayList<String>();
-            for (int x = 0; x < pathList.size(); x++) {
-                featureObj = pathList.get(x);
-                feat = pieceType + ".Form:" + featureObj.getForm();
-                featurePieceList.add(feat);
+        for (int x = 0; x < pathList.size(); x++) {
+            featureObj = pathList.get(x);
+            d = featureObj.getDirection();
+            if (prm.formFeats) {
+                buildPiece("Form", featureObj.getForm(), d, featurePieceList);
             }
-            featurePieceLists.add(featurePieceList);
-        }
-        if (prm.lemmaFeats) {
-            featurePieceList = new ArrayList<String>();
-            for (int x = 0; x < pathList.size(); x++) {
-                featureObj = pathList.get(x);
-                feat = pieceType + ".Lemma:" + featureObj.getForm();
-                featurePieceList.add(feat);
+            if (prm.lemmaFeats) {
+                buildPiece("Lemma", featureObj.getLemma(), d, featurePieceList);
             }
-            featurePieceLists.add(featurePieceList);
-        }
-        if (prm.tagFeats) {
-            featurePieceList = new ArrayList<String>();
-            for (int x = 0; x < pathList.size(); x++) {
-                featureObj = pathList.get(x);
-                feat = pieceType + ".Tag:" + featureObj.getForm();
-                featurePieceList.add(feat);
+            if (prm.tagFeats) {
+                buildPiece("Pos", featureObj.getPos(), d, featurePieceList);
             }
-            featurePieceLists.add(featurePieceList);
-        }
-        if (prm.morphFeats) {
-            featurePieceList = new ArrayList<String>();
-            for (int x = 0; x < pathList.size(); x++) {
-                featureObj = pathList.get(x);
+            if (prm.morphFeats) {
                 ArrayList<String> morphFeats = featureObj.getFeat();
+                morphFeat = "";
                 for (int i = 0; i < morphFeats.size(); i++) {
-                    feat = pieceType + ".Feat:" + morphFeats.get(i);
-                    featurePieceList.add(feat);
+                    feat = morphFeats.get(i);
+                    buildPiece("Feat", feat, d, featurePieceList);
                     if (i > 0) {
-                        morphFeat = morphFeat + "_" + feat;
-                        featurePieceList.add(morphFeat);
+                        morphFeat += "_" + feat;
+                        buildPiece("Concat.Feat", morphFeat, d, featurePieceList);
                     } else {
                         morphFeat = feat;
                     }
                 }
             }
-            featurePieceLists.add(featurePieceList);
-        }      
-        if (prm.deprelFeats) {
-            featurePieceList = new ArrayList<String>();
-            for (int x = 0; x < pathList.size(); x++) {
-                featureObj = pathList.get(x);
-                feat = pieceType + ".Deprel:" + featureObj.getForm();
-                featurePieceList.add(feat);
+            if (prm.deprelFeats) {
+                buildPiece("Deprel", featureObj.getDeprel(), d, featurePieceList);
             }
-            featurePieceLists.add(featurePieceList);
         }
-        return featurePieceLists;
+        return featurePieceList;
     }    
 
+    private void buildPiece(String prefix, String tag, Dir d, HashMap<String, ArrayList<String>> featurePieceList) {
+        if (!featurePieceList.containsKey(prefix)) {
+            featurePieceList.put(prefix, new ArrayList<String>());
+        }
+        ArrayList<String> p = featurePieceList.get(prefix);
+        String feat = tag;
+        p.add(feat);
+        prefix += ".Dir";
+        if (!featurePieceList.containsKey(prefix)) {
+            featurePieceList.put(prefix, new ArrayList<String>());
+        }
+        p = featurePieceList.get(prefix);
+        // Doesn't matter; this is just for readability.
+        if (d != Dir.NONE) {
+            feat = tag + d;
+        } else {
+            feat = tag;
+        }
+        p.add(feat);        
+    }
+
+    private ArrayList<String> makeFeaturesConcat(HashMap<String, HashMap<String, ArrayList<String>>> allPieces) {
+        // Given a collected group of items for a pred or arg candidate,
+        // mush them together into a feature.
+        String feat;
+        String prefix;
+        ArrayList<String> p = new ArrayList<String>();
+        ArrayList<String> featureList = new ArrayList<String>();
+        for (String a : allPieces.keySet()) {
+            for (Entry<String, ArrayList<String>> b : allPieces.get(a).entrySet()) {
+                prefix = a + "." + b.getKey() + ".";
+                p = b.getValue();
+                if (p.size() > 1) {
+                    feat = "Seq:" + prefix + buildString(p);
+                    featureList.add(feat);
+                    feat = "Bag:" + prefix + buildString(bag(p));
+                    featureList.add(feat);
+                    feat = "NoDup:" + prefix + buildString(noDup(p));
+                    featureList.add(feat);
+                } else {
+                    feat = prefix + buildString(p);
+                    featureList.add(feat);
+                }
+            }
+        }
+        return featureList;
+    }
+
+    private ArrayList<String> makeFeatures(ArrayList<String> featureList) {
+        return featureList;
+    }
+
+    private ArrayList<String> makeFeatures(ArrayList<String> featureList1, ArrayList<String> featureList2) {
+        ArrayList<String> featureList = new ArrayList<String>();
+        for (String a : featureList1) {
+            for (String b : featureList2) {
+                String ab = a + "_" + b;
+                featureList.add(ab);
+            }
+        }
+        return featureList;
+    }
+    
     // ---------- Meg's "Simple" features. ---------- 
     public void addSimpleSoloFeatures(int idx, ArrayList<String> feats) {
         String wordForm = sent.getWord(idx);
@@ -899,11 +907,13 @@ public class SentFeatureExtractor {
     }   
     
     public void addZhaoPairFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        /* NOTE:  Not sure about they're "Semantic Connection" features.  What do they correspond to in CoNLL data? 
+        /* NOTE:  Not sure about they're "Semantic Connection" features.  
+         * What do they correspond to in CoNLL data? 
          * From paper: "This includes semantic head (semhead), left(right) farthest(nearest) 
          * semantic child (semlm, semln, semrm, semrn). 
          * We say a predicate is its argument's semantic head, and the latter is the former's child. 
-         * Features related to this type may track the current semantic parsing status." */
+         * Features related to this type may track the current semantic parsing status." 
+         * If a semantic predicate is given, then the SRL task is moot... */
 
         FeatureObject zhaoPred = getFeatureObject(pidx);
         FeatureObject zhaoArg = getFeatureObject(aidx);
@@ -1449,7 +1459,11 @@ public class SentFeatureExtractor {
     private ArrayList<FeatureObject> getFeatureObjectList(List<Pair<Integer, Dir>> path) {
         ArrayList<FeatureObject> pathObjectList = new ArrayList<FeatureObject>();
         for (Pair<Integer,Dir> p : path) {
-            pathObjectList.add(getFeatureObject(p.get1()));
+            FeatureObject newFeatureObject = getFeatureObject(p.get1());
+            // Adding directionality here, given the type of path.
+            // These serve as additional features following Bjorkelund.
+            newFeatureObject.setDirection(p.get2());
+            pathObjectList.add(newFeatureObject);
         }
         return pathObjectList;
     }

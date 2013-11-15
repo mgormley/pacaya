@@ -55,6 +55,7 @@ public class FeatureObject {
     /* Additional features owing to Bjorkelund al. 2009 */
     private int leftSibling;
     private int rightSibling;
+    private Dir direction = Dir.NONE;
     
     
     public FeatureObject(int idx, int[] parents, SimpleAnnoSentence sent) {
@@ -92,7 +93,8 @@ public class FeatureObject {
         setNoFarChildren();
     }
 
-    // TODO: This constructor suggests that we should divide this class into a FeaturizedToken and FeaturizedTokenPair.
+    // TODO: This constructor suggests that we should divide this class into 
+    // a FeaturizedToken and FeaturizedTokenPair.
     // They would have different access patterns and cache different things.
     public FeatureObject(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg, int[] parents) {
         this.parents = parents;
@@ -433,6 +435,18 @@ public class FeatureObject {
 
     public int getLeftSibling() {
         return leftSibling;
+    }
+
+    public void setDirection(Dir dir) {
+        this.direction = dir;
+        
+    }
+
+    public Dir getDirection() {
+        if (direction == null) {
+            System.err.println("ERROR: no direction defined.");
+        }
+        return direction;
     }
 
     
