@@ -74,8 +74,19 @@ class EvalC09(experiment_runner.PythonExpParams):
         #    -s data/conll2009/LDC2012T03/data/eval-data/0c01/CoNLL2009-ST-evaluation-Spanish-Joint-closed.txt
         
         gold_file = "%s/data/CoNLL2009-ST-%s/CoNLL2009-ST-evaluation-%s%s.txt" % (ldc_dir, lang, lang, ood)
-        pred_file = "%s/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (sub_dir, lang, ood)
-                
+        if not os.path.exists(gold_file):
+            raise Exception("gold file doesn't exist %s" % (gold_file))
+        
+        joint_file = "%s/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (sub_dir, lang, ood)
+        srl_only_file = "%s/CoNLL2009-ST-evaluation-%s-SRLonly-closed%s.txt" % (sub_dir, lang, ood)
+        
+        if os.path.exists(joint_file):
+            pred_file = joint_file
+        elif os.path.exists(srl_only_file):
+            pred_file = srl_only_file
+        else:
+            raise Exception("predicted file doesn't exists joint_file=%s srl_only_file=%s" % (joint_file, srl_only_file))  
+        
         script = "\n"
         if self.get("fast"):
             num_lines = 100
