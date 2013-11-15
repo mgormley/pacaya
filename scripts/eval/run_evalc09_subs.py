@@ -111,7 +111,6 @@ class CoNLL09EvalNoSense(ExpParamsRunner):
     def __init__(self, options):
         ExpParamsRunner.__init__(self, "evalc09", options.queue, print_to_console=True)
         self.options = options
-        self.csv_file = options.csv_file
         self.ldcT03 = os.path.abspath(options.ldcT03)
         self.ldcT04 = os.path.abspath(options.ldcT04)
         self.dry_run = options.dry_run    
@@ -171,10 +170,8 @@ if __name__ == "__main__":
     usage = "%prog "
 
     parser = OptionParser(usage=usage)
-    parser.add_option('--csv_file', default="out.csv", help="Out file for CSV")
     parser.add_option('--ldcT03', default="./data/conll2009/LDC2012T03", help="path to LDC2012T03")
     parser.add_option('--ldcT04', default="./data/conll2009/LDC2012T04", help="path to LDC2012T04")
-    parser.add_option('--tmp', default="./tmp",  help="Temp directory")
     #
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
