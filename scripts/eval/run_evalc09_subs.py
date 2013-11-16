@@ -54,38 +54,40 @@ class EvalC09(experiment_runner.PythonExpParams):
         return EvalC09()
         
     def create_experiment_script(self, exp_dir):
-        #def eval_one(self, lang, ldc_dir, is_ood, sub_dir):
         lang = self.get("lang")
         ldc_dir = self.get("ldc_dir")
-        is_ood = self.get("is_ood")
+        ood = self.get("ood")
         sub_dir = self.get("sub_dir")        
                         
-        if is_ood:
-            ood = "-ood"
+        if ood:
+            ood_str = "-ood"
         else:
-            ood = "" 
+            ood_str = "" 
             
         # Store for convenience during scraping.
-        self.update(lang_ood=lang+ood)
+        self.update(lang_ood=lang+ood_str)
         
         # Example:    
         # perl scripts/eval/eval09-no_sense.pl \ 
         #    -g data/conll2009/LDC2012T03/data/CoNLL2009-ST-Spanish/CoNLL2009-ST-evaluation-Spanish.txt \ 
         #    -s data/conll2009/LDC2012T03/data/eval-data/0c01/CoNLL2009-ST-evaluation-Spanish-Joint-closed.txt
         
-        gold_file = "%s/data/CoNLL2009-ST-%s/CoNLL2009-ST-evaluation-%s%s.txt" % (ldc_dir, lang, lang, ood)
+        gold_file = "%s/data/CoNLL2009-ST-%s/CoNLL2009-ST-evaluation-%s%s.txt" % (ldc_dir, lang, lang, ood_str)
         if not os.path.exists(gold_file):
-            raise Exception("gold file doesn't exist %s" % (gold_file))
+            #raise Exception("gold file doesn't exist %s" % (gold_file))
+            print "WARN: gold file doesn't exist %s" % (gold_file)
         
-        joint_file = "%s/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (sub_dir, lang, ood)
-        srl_only_file = "%s/CoNLL2009-ST-evaluation-%s-SRLonly-closed%s.txt" % (sub_dir, lang, ood)
+        joint_file = "%s/CoNLL2009-ST-evaluation-%s-Joint-closed%s.txt" % (sub_dir, lang, ood_str)
+        srl_only_file = "%s/CoNLL2009-ST-evaluation-%s-SRLonly-closed%s.txt" % (sub_dir, lang, ood_str)
         
         if os.path.exists(joint_file):
             pred_file = joint_file
         elif os.path.exists(srl_only_file):
             pred_file = srl_only_file
         else:
-            raise Exception("predicted file doesn't exists joint_file=%s srl_only_file=%s" % (joint_file, srl_only_file))  
+            pred_file = joint_file
+            #raise Exception("predicted file doesn't exists joint_file=%s srl_only_file=%s" % (joint_file, srl_only_file))  
+            print "WARN: predicted file doesn't exists joint_file=%s srl_only_file=%s" % (joint_file, srl_only_file)  
         
         script = "\n"
         if self.get("fast"):
@@ -144,7 +146,7 @@ class CoNLL09EvalNoSense(ExpParamsRunner):
         print self.code_name_map
         
         # Out of Domain languages
-        ood_langs = ["German", "English", "Chinese"]
+        ood_langs = ["German", "English", "Czech"]
         ldcT03_langs =  ["Catalan", "Spanish", "German", "Czech"]
         ldcT04_langs = ["English", "Chinese"]
         all_langs = ldcT03_langs + ldcT04_langs
@@ -169,7 +171,8 @@ class CoNLL09EvalNoSense(ExpParamsRunner):
                     exps.append(exp)
             
         if self.fast:
-            exps = exps[:len(all_langs)*2]
+            random.shuffle(exps)
+            exps = exps[:40]
         root = RootStage()
         root.add_dependents(exps)         
         scrape = run_srl.ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
