@@ -142,7 +142,7 @@ public class Chart {
      * @param start The start of the span of the requested tree.
      * @param end The end of the span of the requested tree.
      * @param rootSymbol The symbol of the root of the requested tree.
-     * @return 
+     * @return The highest probability tree or null if no parse exists.
      */
     private BinaryTree getViterbiTree(int start, int end, int rootSymbol) {
         ChartCell cell = chart[start][end];

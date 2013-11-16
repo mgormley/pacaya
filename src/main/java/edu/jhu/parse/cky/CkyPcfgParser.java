@@ -7,6 +7,7 @@ import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.parse.cky.chart.ChartCell;
 import edu.jhu.parse.cky.chart.ConstrainedChartCell.ChartCellConstraint;
 import edu.jhu.parse.cky.chart.ScoresSnapshot;
+import edu.jhu.train.Prm;
 
 /**
  * CKY Parsing algorithm for a CNF PCFG grammar.
@@ -125,6 +126,18 @@ public class CkyPcfgParser {
                     for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
                         double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
                         cell.updateCell(r.getParent(), score, end, r);
+                    }
+                }
+                
+                if (width == sent.length) {
+                    // Apply unary rules a second time to get ROOT rules in last chart cell.
+                    scoresSnapshot = cell.getScoresSnapshot();
+                    nts = cell.getNts();
+                    for(final int parentNt : nts) {
+                        for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
+                            double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
+                            cell.updateCell(r.getParent(), score, end, r);
+                        }
                     }
                 }
                 
