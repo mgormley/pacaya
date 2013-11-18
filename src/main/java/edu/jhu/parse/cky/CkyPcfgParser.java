@@ -47,6 +47,7 @@ public class CkyPcfgParser {
     private final ParseType parseType;
     private final boolean cacheChart;
     private final ChartCellConstraint constraint;
+    private final Scorer scorer;
     
     public CkyPcfgParser(CkyPcfgParserPrm prm) {
         this.loopOrder = prm.loopOrder;
@@ -54,6 +55,7 @@ public class CkyPcfgParser {
         this.parseType = prm.parseType;
         this.cacheChart = prm.cacheChart;
         this.constraint = prm.constraint;
+        this.scorer = prm.scorer;
     }
     
     public final Chart parseSentence(final Sentence sentence, final CnfGrammar grammar) {
@@ -69,7 +71,7 @@ public class CkyPcfgParser {
             chart.reset(sentence);
         }
         int[] sent = sentence.getLabelIds();
-        parseSentence(sent, grammar, loopOrder, chart);
+        parseSentence(sent, grammar, loopOrder, chart, scorer);
         return chart;    
      }
     
@@ -93,12 +95,12 @@ public class CkyPcfgParser {
      * @param loopOrder The loop order to use when parsing.
      * @param chart The output chart.
      */
-    public static final void parseSentence(final int[] sent, final CnfGrammar grammar, final LoopOrder loopOrder, final Chart chart) {
+    public static final void parseSentence(final int[] sent, final CnfGrammar grammar, final LoopOrder loopOrder, final Chart chart, final Scorer scorer) {
         // Apply lexical rules to each word.
         for (int i = 0; i <= sent.length - 1; i++) {
             ChartCell cell = chart.getCell(i, i+1);
             for (final Rule r : grammar.getLexicalRulesWithChild(sent[i])) {
-                double score = r.getScore();
+                double score = scorer.score(r, i, i+1, i+1);
                 cell.updateCell(r.getParent(), score, i+1, r);
             }
         }
@@ -111,35 +113,18 @@ public class CkyPcfgParser {
                 
                 // Apply binary rules.
                 if (loopOrder == LoopOrder.CARTESIAN_PRODUCT) {
-                    processCellCartesianProduct(grammar, chart, start, end, cell);
+                    processCellCartesianProduct(grammar, chart, start, end, cell, scorer);
                 } else if (loopOrder == LoopOrder.LEFT_CHILD) {
-                    processCellLeftChild(grammar, chart, start, end, cell);
+                    processCellLeftChild(grammar, chart, start, end, cell, scorer);
                 } else if (loopOrder == LoopOrder.RIGHT_CHILD) {
-                    processCellRightChild(grammar, chart, start, end, cell);
+                    processCellRightChild(grammar, chart, start, end, cell, scorer);
                 } else {
                     throw new RuntimeException("Not implemented: " + loopOrder);
                 }
                 
-                // Apply unary rules.
-                ScoresSnapshot scoresSnapshot = cell.getScoresSnapshot();
-                int[] nts = cell.getNts();
-                for(final int parentNt : nts) {
-                    for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
-                        double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
-                        cell.updateCell(r.getParent(), score, end, r);
-                    }
-                }
-                
+                processCellUnaryRules(grammar, start, end, cell, scorer);
                 if (width == sent.length) {
-                    // Apply unary rules a second time to get ROOT rules in last chart cell.
-                    scoresSnapshot = cell.getScoresSnapshot();
-                    nts = cell.getNts();
-                    for(final int parentNt : nts) {
-                        for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
-                            double score = r.getScore() + scoresSnapshot.getScore(r.getLeftChild());
-                            cell.updateCell(r.getParent(), score, end, r);
-                        }
-                    }
+                    processCellUnaryRules(grammar, start, end, cell, scorer);
                 }
                 
                 cell.close();
@@ -148,13 +133,28 @@ public class CkyPcfgParser {
     
     }
 
+    /** Process a cell, unary rules only. */
+    private static final void processCellUnaryRules(final CnfGrammar grammar, final int start, final int end,
+            final ChartCell cell, final Scorer scorer) {
+        // Apply unary rules.
+        ScoresSnapshot scoresSnapshot = cell.getScoresSnapshot();
+        int[] nts = cell.getNts();
+        for(final int parentNt : nts) {
+            for (final Rule r : grammar.getUnaryRulesWithChild(parentNt)) {
+                double score = scorer.score(r, start, end, end)
+                        + scoresSnapshot.getScore(r.getLeftChild());
+                cell.updateCell(r.getParent(), score, end, r);
+            }
+        }
+    }
+
     /**
      * Process a cell (binary rules only) using the Cartesian product of the children's rules.
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private static final void processCellCartesianProduct(CnfGrammar grammar, Chart chart, int start,
-            int end, ChartCell cell) {
+    private static final void processCellCartesianProduct(final CnfGrammar grammar, final Chart chart, final int start,
+            final int end, final ChartCell cell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftCell = chart.getCell(start, mid);
@@ -167,7 +167,7 @@ public class CkyPcfgParser {
                     double rightScoreForNt = rightCell.getScore(rightChildNt);
                     // Lookup the rules with those left/right children.
                     for (final Rule r : grammar.getBinaryRulesWithChildren(leftChildNt, rightChildNt)) {
-                        double score = r.getScore()
+                        double score = scorer.score(r, start, mid, end) 
                                 + leftScoreForNt
                                 + rightScoreForNt;
                         cell.updateCell(r.getParent(), score, mid, r);
@@ -182,8 +182,8 @@ public class CkyPcfgParser {
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private static final void processCellLeftChild(CnfGrammar grammar, Chart chart, int start,
-            int end, ChartCell cell) {
+    private static final void processCellLeftChild(final CnfGrammar grammar, final Chart chart, final int start,
+            final int end, final ChartCell cell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftCell = chart.getCell(start, mid);
@@ -197,7 +197,7 @@ public class CkyPcfgParser {
                     // Check whether the right child of that rule is in the right child cell.
                     double rightScoreForNt = rightCell.getScore(r.getRightChild());
                     if (rightScoreForNt > Double.NEGATIVE_INFINITY) {
-                        double score = r.getScore() 
+                        double score = scorer.score(r, start, mid, end)
                                 + leftScoreForNt
                                 + rightScoreForNt;
                         cell.updateCell(r.getParent(), score, mid, r);
@@ -212,8 +212,8 @@ public class CkyPcfgParser {
      * 
      * This follows the description in (Dunlop et al., 2010).
      */
-    private static final void processCellRightChild(CnfGrammar grammar, Chart chart, int start,
-            int end, ChartCell cell) {
+    private static final void processCellRightChild(final CnfGrammar grammar, final Chart chart, final int start,
+            final int end, final ChartCell cell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftCell = chart.getCell(start, mid);
@@ -227,7 +227,7 @@ public class CkyPcfgParser {
                     // Check whether the left child of that rule is in the left child cell.
                     double leftScoreForNt = leftCell.getScore(r.getLeftChild());
                     if (leftScoreForNt > Double.NEGATIVE_INFINITY) {
-                        double score = r.getScore() 
+                        double score = scorer.score(r, start, mid, end)
                                 + leftScoreForNt
                                 + rightScoreForNt;
                         cell.updateCell(r.getParent(), score, mid, r);

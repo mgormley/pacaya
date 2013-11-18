@@ -15,6 +15,7 @@ public class PcfgInsideOutside {
         // Whether or not to cache the chart cells between calls to the parser.
         public boolean cacheChart = true;
         public LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        public Scorer scorer = new RuleScorer();
     }
     
     /**
@@ -81,6 +82,7 @@ public class PcfgInsideOutside {
     private final ParseType parseType;
     private final boolean cacheChart;
     private final ChartCellConstraint constraint;
+    private final Scorer scorer;
     
     public PcfgInsideOutside(PcfgInsideOutsidePrm prm) {
         // Fixed Parameters.
@@ -90,6 +92,7 @@ public class PcfgInsideOutside {
         // Others.
         this.loopOrder = prm.loopOrder;
         this.cacheChart = prm.cacheChart;
+        this.scorer = prm.scorer;
     }
     
     public final PcfgIoChart runInsideOutside(final Sentence sentence, final CnfGrammar grammar) {
@@ -107,8 +110,8 @@ public class PcfgInsideOutside {
             outChart.reset(sentence);
         }
         int[] sent = sentence.getLabelIds();
-        CkyPcfgParser.parseSentence(sent, grammar, loopOrder, inChart);
-        runOutsideAlgorithm(sent, grammar, loopOrder, inChart, outChart);
+        CkyPcfgParser.parseSentence(sent, grammar, loopOrder, inChart, scorer);
+        runOutsideAlgorithm(sent, grammar, loopOrder, inChart, outChart, scorer);
         return new PcfgIoChart(sentence, grammar, inChart, outChart);    
      }
     
@@ -121,7 +124,7 @@ public class PcfgInsideOutside {
      * @param inChart The inside chart, already populated.
      * @param outChart The outside chart (the output of this function).
      */
-    public static void runOutsideAlgorithm(final int[] sent, final CnfGrammar grammar, final LoopOrder loopOrder, final Chart inChart, final Chart outChart) {
+    public static void runOutsideAlgorithm(final int[] sent, final CnfGrammar grammar, final LoopOrder loopOrder, final Chart inChart, final Chart outChart, final Scorer scorer) {
         // Base case.
         // -- part I: outsideScore(S, 0, n) = 0 = log(1).
         ChartCell outRootCell = outChart.getCell(0, sent.length);
@@ -148,7 +151,8 @@ public class PcfgInsideOutside {
                         // incomplete.
                         //ChartCell inCell = inChart.getCell(start, end); // TODO: move this out of the loop.
                         //if (inCell.getScore(r.getLeftChild()) > Double.NEGATIVE_INFINITY) {                            
-                            double score = r.getScore() + scoresSnapshot.getScore(parentNt);
+                            double score = scorer.score(r, start, end, end)
+                                    + scoresSnapshot.getScore(parentNt);
                             outCell.updateCell(r.getLeftChild(), score, end, r);
                         //}
                     }
@@ -156,11 +160,11 @@ public class PcfgInsideOutside {
                 
                 // Apply binary rules.
                 if (loopOrder == LoopOrder.CARTESIAN_PRODUCT) {
-                    processCellCartesianProduct(grammar, inChart, outChart, start, end, outCell);
+                    processCellCartesianProduct(grammar, inChart, outChart, start, end, outCell, scorer);
                 } else if (loopOrder == LoopOrder.LEFT_CHILD) {
-                    processCellLeftChild(grammar, inChart, outChart, start, end, outCell);
+                    processCellLeftChild(grammar, inChart, outChart, start, end, outCell, scorer);
                 } else if (loopOrder == LoopOrder.RIGHT_CHILD) {
-                    processCellRightChild(grammar, inChart, outChart, start, end, outCell);
+                    processCellRightChild(grammar, inChart, outChart, start, end, outCell, scorer);
                 } else {
                     throw new RuntimeException("Not implemented: " + loopOrder);
                 }
@@ -172,7 +176,8 @@ public class PcfgInsideOutside {
             ChartCell outCell = outChart.getCell(i, i+1);
             ScoresSnapshot scoresSnapshot = outCell.getScoresSnapshot();
             for (final Rule r : grammar.getLexicalRulesWithChild(sent[i])) {
-                double score = r.getScore() + scoresSnapshot.getScore(r.getParent());
+                double score = scorer.score(r, i, i+1, i+1)
+                        + scoresSnapshot.getScore(r.getParent());
                 outCell.updateCell(r.getLeftChild(), score, i+1, r);
             }
         }
@@ -184,7 +189,7 @@ public class PcfgInsideOutside {
      * This follows the description in (Dunlop et al., 2010).
      */
     private static void processCellCartesianProduct(final CnfGrammar grammar, final Chart inChart,
-            final Chart outChart, int start, int end, ChartCell outCell) {
+            final Chart outChart, final int start, final int end, final ChartCell outCell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftInCell = inChart.getCell(start, mid);
@@ -200,12 +205,13 @@ public class PcfgInsideOutside {
                     // Lookup the rules with those left/right children.
                     for (final Rule r : grammar.getBinaryRulesWithChildren(leftChildNt, rightChildNt)) {
                         double cellScoreForNt = outCell.getScore(r.getParent());
+                        double score = scorer.score(r, start, mid, end);
                         // Update left cell.
-                        double addendLeft = r.getScore()
+                        double addendLeft = score
                                 + cellScoreForNt + rightScoreForNt;
                         leftOutCell.updateCell(leftChildNt, addendLeft, mid, r);
                         // Update right cell.
-                        double addendRight = r.getScore()
+                        double addendRight = score
                                 + leftScoreForNt + cellScoreForNt;
                         rightOutCell.updateCell(rightChildNt, addendRight, mid, r);
                     }
@@ -220,7 +226,7 @@ public class PcfgInsideOutside {
      * This follows the description in (Dunlop et al., 2010).
      */
     private static void processCellLeftChild(final CnfGrammar grammar, final Chart inChart,
-            final Chart outChart, int start, int end, ChartCell outCell) {
+            final Chart outChart, final int start, final int end, final ChartCell outCell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftInCell = inChart.getCell(start, mid);
@@ -238,12 +244,13 @@ public class PcfgInsideOutside {
                     double rightScoreForNt = rightInCell.getScore(rightChildNt);
                     if (rightScoreForNt > Double.NEGATIVE_INFINITY) {
                         double cellScoreForNt = outCell.getScore(r.getParent());
+                        double score = scorer.score(r, start, mid, end);
                         // Update left cell.
-                        double addendLeft = r.getScore()
+                        double addendLeft = score
                                 + cellScoreForNt + rightScoreForNt;
                         leftOutCell.updateCell(leftChildNt, addendLeft, mid, r);
                         // Update right cell.
-                        double addendRight = r.getScore()
+                        double addendRight = score
                                 + leftScoreForNt + cellScoreForNt;
                         rightOutCell.updateCell(rightChildNt, addendRight, mid, r);
                     }
@@ -258,7 +265,7 @@ public class PcfgInsideOutside {
      * This follows the description in (Dunlop et al., 2010).
      */
     private static void processCellRightChild(final CnfGrammar grammar, final Chart inChart,
-            final Chart outChart, int start, int end, ChartCell outCell) {
+            final Chart outChart, final int start, final int end, final ChartCell outCell, final Scorer scorer) {
         // Apply binary rules.
         for (int mid = start + 1; mid <= end - 1; mid++) {
             ChartCell leftInCell = inChart.getCell(start, mid);
@@ -276,12 +283,13 @@ public class PcfgInsideOutside {
                     double leftScoreForNt = leftInCell.getScore(leftChildNt);
                     if (leftScoreForNt > Double.NEGATIVE_INFINITY) {
                         double cellScoreForNt = outCell.getScore(r.getParent());
+                        double score = scorer.score(r, start, mid, end);
                         // Update left cell.
-                        double addendLeft = r.getScore()
+                        double addendLeft = score
                                 + cellScoreForNt + rightScoreForNt;
                         leftOutCell.updateCell(leftChildNt, addendLeft, mid, r);
                         // Update right cell.
-                        double addendRight = r.getScore()
+                        double addendRight = score
                                 + leftScoreForNt + cellScoreForNt;
                         rightOutCell.updateCell(rightChildNt, addendRight, mid, r);
                     }

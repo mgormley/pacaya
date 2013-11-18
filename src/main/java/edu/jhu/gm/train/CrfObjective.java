@@ -317,6 +317,7 @@ public class CrfObjective implements Function, BatchFunction {
                     // Update the gradient for each feature.
                     FeatureVector fv = ex.getObservationFeatures(factorId);
                     int config = ex.getGoldConfigIdxPred(factorId);
+                    // TODO: this iterator is slow.
                     for (IntDoubleEntry entry : fv) {
                         gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
                     }
