@@ -34,6 +34,7 @@ public class CkyPcfgParser {
         public ChartCellType cellType = ChartCellType.FULL;
         public ParseType parseType = ParseType.VITERBI;
         public ChartCellConstraint constraint = null;
+        public Scorer scorer = new RuleScorer();
     }
     
     public enum LoopOrder { LEFT_CHILD, RIGHT_CHILD, CARTESIAN_PRODUCT }
