@@ -178,24 +178,18 @@
       <groupId>cplex</groupId>
       <artifactId>cplex</artifactId>
       <version>12.5</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/cplex.jar</systemPath> 
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>gurobi</groupId>
       <artifactId>gurobi</artifactId>
       <version>3.0.1</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/gurobi.jar</systemPath> 
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>joptimizer</groupId>
       <artifactId>joptimizer</artifactId>
       <version>1.3.0</version>
-      <scope>system</scope>
-      <systemPath>${project.basedir}/lib/joptimizer-1.3.0.jar</systemPath> 
       <optional>true</optional>
     </dependency>
   </dependencies>
