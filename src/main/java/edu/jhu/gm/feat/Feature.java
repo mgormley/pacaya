@@ -11,24 +11,36 @@ import java.io.Serializable;
 public class Feature implements Serializable {
 
     private static final long serialVersionUID = -5575331602054552730L;
-    private String name;
-    private boolean isBias = false;
+    private final Object name;
+    private final boolean isBias;
+    private final int hashCode;
     
-    public Feature(String name) {
+    public Feature(Object name) {
         if (name == null) {
             throw new IllegalStateException("Feature names must be non-null.");
         }
         this.name = name;
+        this.isBias = false;
+        hashCode = computeHash();
     }
 
-    public Feature(String name, boolean b) {
+    public Feature(Object name, boolean isBias) {
         this.name = name;
-        setBias(b);
+        this.isBias = isBias;
+        hashCode = computeHash();
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return hashCode;
+    }
+
+    private int computeHash() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (isBias ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
     }
 
     @Override
@@ -40,6 +52,8 @@ public class Feature implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         Feature other = (Feature) obj;
+        if (isBias != other.isBias)
+            return false;
         if (name == null) {
             if (other.name != null)
                 return false;
@@ -50,15 +64,11 @@ public class Feature implements Serializable {
 
     @Override
     public String toString() {
-        return name;
+        return name.toString();
     }
     
     public boolean isBiasFeature() {
         return isBias;
-    }
-    
-    public void setBias(boolean bias) {
-        isBias = bias;
     }
             
 }

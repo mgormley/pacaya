@@ -24,6 +24,7 @@ import edu.jhu.util.Alphabet;
  * A factor for FgExamples constructed from LogLinearExDesc objects.
  * @author mgormley
  */
+@Deprecated
 public class LogLinearEDs {
 
     /**

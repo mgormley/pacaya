@@ -182,7 +182,7 @@ public class FgModel implements Serializable, IFgModel {
     }
     
     public void updateModelFromDoubles(double[] inParams) {
-        assert (numParams == inParams.length);
+        assert numParams == inParams.length : String.format("numParams=%d inParams.length=%d", numParams, inParams.length);
         for (int i=0; i<numParams; i++) {
             this.params.set(i, inParams[i]);
         }
