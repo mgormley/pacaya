@@ -39,7 +39,7 @@ public class LogLinearData {
         private String label;
         private FeatureVector obsFeatures;
 
-        public LogLinearExample(int weight, String label, FeatureVector obsFeatures) {
+        public LogLinearExample(double weight, String label, FeatureVector obsFeatures) {
             this.weight = weight;
             this.label = label;
             this.obsFeatures = obsFeatures;
@@ -69,7 +69,7 @@ public class LogLinearData {
      * @param label The label, y.
      * @param featNames The binary features on the observations, x.
      */
-    public void addEx(int weight, String label, List<? extends Object> featNames) {
+    public void addEx(double weight, String label, List<? extends Object> featNames) {
         FeatureVector features = new FeatureVector();
         for (Object featName : featNames) {
             features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
