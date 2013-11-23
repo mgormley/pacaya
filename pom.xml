@@ -9,12 +9,6 @@
 
   <name>edu.jhu.parsing</name>
 
-  <parent>
-    <groupId>edu.jhu.hlt.parent</groupId>
-    <artifactId>parent</artifactId>
-    <version>1.0.0</version>
-  </parent>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
@@ -88,6 +82,30 @@
         </executions>
       </plugin>
       -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -102,6 +120,7 @@
       <groupId>edu.jhu.erma</groupId>
       <artifactId>erma</artifactId>
       <version>1.0.1-SNAPSHOT</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>cc.mallet</groupId>
@@ -168,11 +187,13 @@
       <groupId>edu.jhu.hlt.concrete</groupId>
       <artifactId>concrete-java</artifactId>
       <version>1.2.0</version>
+      <optional>true</optional>
     </dependency>  
     <dependency>
-        <groupId>edu.jhu.hlt.concrete</groupId>
-        <artifactId>concrete-protobufs</artifactId>
-        <version>1.2.0</version>
+      <groupId>edu.jhu.hlt.concrete</groupId>
+      <artifactId>concrete-protobufs</artifactId>
+      <version>1.2.0</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>cplex</groupId>
@@ -194,19 +215,26 @@
     </dependency>
   </dependencies>
 
+<!-- For deploying to COE. -->
 <!--
-<distributionManagement>
+  <parent>
+    <groupId>edu.jhu.hlt.parent</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+-->
+<!-- For deploying to CLSP. -->
+  <distributionManagement>
     <repository>
-        <id>checker</id>
-        <name>checker-releases</name>
-        <url>http://localhost:8081/artifactory/libs-release-local</url>
+      <id>checker</id>
+      <name>checker-releases</name>
+      <url>http://localhost:8081/artifactory/libs-release-local</url>
     </repository>
     <snapshotRepository>
-        <id>checker</id>
-        <name>checker-snapshots</name>
-        <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
+      <id>checker</id>
+      <name>checker-snapshots</name>
+      <url>http://localhost:8081/artifactory/libs-snapshot-local</url>
     </snapshotRepository>
-</distributionManagement>
--->
+  </distributionManagement>
 
 </project>
