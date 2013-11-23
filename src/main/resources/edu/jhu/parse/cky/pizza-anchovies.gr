@@ -1,4 +1,4 @@
-# Grammar for the sentence: time flies like an arrow
+# Grammar for the sentence: she eats pizza without anchovies
 S
 S -> N V -1
 V -> V N -1
