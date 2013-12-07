@@ -124,7 +124,8 @@ public class FgExampleListBuilder {
 
     /**
      * Populate and stop growth on the fts by creating each example and keeping
-     * only those features which pass the feature count cutoff threshold.
+     * only those features which pass the feature count cutoff threshold, and
+     * bias features.
      * 
      * @param featCountCutoff Minimum number of times (inclusive) a feature must
      *            occur in training to be included in the model. Ignored if
@@ -153,6 +154,7 @@ public class FgExampleListBuilder {
             for (int i = 0; i < countAlphabet.size(); i++) {
                 int count = countAlphabet.lookupObjectCount(i);
                 Feature feat = countAlphabet.lookupObject(i);
+                // Always keep bias features.
                 if (count >= featCountCutoff || feat.isBiasFeature()) {
                     alphabet.lookupIndex(feat);
                 }

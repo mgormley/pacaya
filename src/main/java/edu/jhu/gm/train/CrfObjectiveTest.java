@@ -13,12 +13,8 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
 import edu.jhu.gm.feat.FeatureTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -27,228 +23,23 @@ import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
-import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
 
 public class CrfObjectiveTest {
-    
-    /**
-     * A description of a collection of identical log-linear model examples.
-     * 
-     * @author mgormley
-     * @author mmitchell
-     */
-    public static class LogLinearExDesc {
-        private int count;
-        private FeatureVector features;
-        public LogLinearExDesc(int count, FeatureVector features) {
-            this.count = count;
-            this.features = features;
-        }
-        public int getCount() {
-            return count;
-        }
-        public FeatureVector getFeatures() {
-            return features;
-        }         
-    }
-    
-    /**
-     * A factor for FgExamples constructed from LogLinearExDesc objects.
-     * @author mgormley
-     */
-    public static class LogLinearEDs {
-
-        private static final Object TEMPLATE_KEY = "loglin";
-        private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
-
-        public void addEx(int count, String... featNames) {
-            FeatureVector features = new FeatureVector();
-            for (String featName : featNames) {
-                features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
-            }
-            LogLinearExDesc ex = new LogLinearExDesc(count, features);
-            descList.add(ex);
-        }
-        
-        public List<String> getStateNames() {
-            List<String> names = new ArrayList<String>();
-            for (LogLinearExDesc desc : descList) {
-                StringBuilder sb = new StringBuilder();
-                for (IntDoubleEntry entry : desc.getFeatures()) {
-                    sb.append(entry.index());
-                    sb.append(":");
-                }
-                names.add(sb.toString());
-            }
-            return names;
-        }
-        
-        public FgExampleList getData() {
-            FeatureTemplateList fts = new FeatureTemplateList();
-            Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-            fts.add(new FeatureTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
-            
-            FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-            int state=0;
-            for (final LogLinearExDesc desc : descList) {
-                for (int i=0; i<desc.getCount(); i++) {
-                    final VarConfig trainConfig = new VarConfig();
-                    trainConfig.put(v0, state);
-                    
-                    FactorGraph fg = new FactorGraph();
-                    v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                    ExpFamFactor f0 = new ExpFamFactor(new VarSet(v0), TEMPLATE_KEY);
-                    fg.addFactor(f0);
-                    ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
-                        @Override
-                        public FeatureVector calcObsFeatureVector(int factorId) {
-                            // TODO: This doesn't do the right thing...we
-                            // actually want features of the predicted state,
-                            // which isn't possible to set when only looking at
-                            // the observations.
-                            // Instead we need to be aware of the VarConfig of the predicted vars.
-                            return desc.getFeatures();
-                        }
-                        public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                                VarConfig goldConfig, FeatureTemplateList fts) {             
-                            // Do nothing.               
-                        }
-                        public void clear() {
-                            // Do nothing.
-                        }
-                    };
-                    data.add(new FgExample(fg, trainConfig, featExtractor, fts));
-                }
-                state++;
-            }
-            return data;
-        }
-
-        public Alphabet<Feature> getAlphabet() {
-            return alphabet;
-        }
-    }
-
-    // TODO: The following 4 tests require support for features of x and y.
-    // Currently, we only support features of x conjoined with the values of y.
-    //TODO: @Test
-    public void testLogLinearModelShapesLogProbs() {
-        // Test with inference in the log-domain.
-        boolean logDomain = true;        
-        testLogLinearModelShapesHelper(logDomain);
-    }
-    
-    //TODO: @Test
-    public void testLogLinearModelShapesProbs() {
-        // Test with inference in the prob-domain.
-        boolean logDomain = false;        
-        testLogLinearModelShapesHelper(logDomain);
-    }
-    
-    //TODO: @Test
-    public void testLogLinearModelShapesOneExampleLogProbs() {
-        boolean logDomain = true;
-        testLogLinearModelShapesOneExampleHelper(logDomain);
-    }
-
-    //TODO: @Test
-    public void testLogLinearModelShapesOneExampleProbs() {
-        boolean logDomain = false;
-        testLogLinearModelShapesOneExampleHelper(logDomain);
-    }
-
-    private void testLogLinearModelShapesHelper(boolean logDomain) {
-        LogLinearEDs exs = new LogLinearEDs();
-        exs.addEx(30, "circle", "solid");
-        exs.addEx(15, "circle");
-        exs.addEx(10, "solid");
-        exs.addEx(5);
-
-        double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getData().getTemplates());
-        model.updateModelFromDoubles(params);
-        
-        // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), getInfFactory(logDomain));
-        obj.setPoint(params);
-        
-        // Test log-likelihood.
-        double ll = obj.getValue();
-        System.out.println(ll);
-        assertEquals(-95.531, ll, 1e-3);
-        
-        // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertEquals(45, obsFeats.get(0), 1e-13);
-        assertEquals(40, obsFeats.get(1), 1e-13);
-        
-        // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
-        assertEquals(57.15444760934599, expFeats.get(0), 1e-3);
-        assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
-        
-        // Test gradient.        
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
-        JUnitUtils.assertArrayEquals(new double[]{-12.154447609345993, -12.847824678672943}, gradient, 1e-3);
-    }
-    
-    private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
-        LogLinearEDs exs = new LogLinearEDs();
-        exs.addEx(1, "circle");
-        exs.addEx(0, "solid");
-        double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getData().getTemplates());
-        model.updateModelFromDoubles(params);
-        
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        infFactory = getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
-        obj.setPoint(params);        
-        
-        assertEquals(2, exs.getAlphabet().size());
-
-        // Test log-likelihood.
-        double ll = obj.getValue();
-        System.out.println(ll);
-        assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
-        
-        // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertEquals(1, obsFeats.get(0), 1e-13);
-        assertEquals(0, obsFeats.get(1), 1e-13);        
-        
-        // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
-        assertEquals(0.7310, expFeats.get(0), 1e-3);
-        assertEquals(0.2689, expFeats.get(1), 1e-3);
-        
-        // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
-        JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
-    }
     
     @Test
     public void testSrlLogLikelihood() throws Exception {
@@ -326,7 +117,7 @@ public class CrfObjectiveTest {
         assertEquals(2./6., FastMath.exp(ll), 1e-13);
     }
 
-    public FgInferencerFactory getInfFactory(boolean logDomain) {
+    public static FgInferencerFactory getInfFactory(boolean logDomain) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         bpPrm.logDomain = logDomain;
         bpPrm.schedule = BpScheduleType.TREE_LIKE;

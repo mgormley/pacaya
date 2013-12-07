@@ -181,14 +181,6 @@ public class FeatureObject {
         }
         return sent.getParent(idx);
     }
-
-    public String getSense() {
-        SrlPred pred = sent.getSrlGraph().getPredAt(idx);
-        if (pred == null) {
-            return "NO_SENSE";
-        }
-        return sent.getSrlGraph().getPredAt(idx).getLabel();
-    }
     
     public List<Pair<Integer, Dir>> getRootPath() {
         return rootPath;

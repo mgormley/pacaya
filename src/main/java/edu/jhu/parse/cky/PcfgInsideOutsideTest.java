@@ -40,7 +40,7 @@ public class PcfgInsideOutsideTest {
         double sum = FastMath.logAdd(-11, -12);
         sum = FastMath.logAdd(sum, -15);
         assertEquals(-10.673, sum, 1e-3);
-        assertEquals(-10.673, chart.getLogInsideScore(grammar.getRootSymbol(), 0, sent.size()), 1e-3);
+        assertEquals(-10.660, chart.getLogInsideScore(grammar.getRootSymbol(), 0, sent.size()), 1e-3);
         assertEquals(0, chart.getLogOutsideScore(grammar.getRootSymbol(), 0, sent.size()), 1e-3);
 
         // Each of the three trees uses this NP from 3 to 5. So the outside

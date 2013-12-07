@@ -125,7 +125,11 @@ public class RunCkyParser {
             Chart chart = parser.parseSentence(sent, grammar);
             timer.stop();
             Pair<BinaryTree, Double> pair = chart.getViterbiParse();
-            binaryParses.add(pair.get1());
+            BinaryTree parse = pair.get1();
+            if (parse == null) {
+                log.warn("Unable to parse sentence: " + sent);
+            }
+            binaryParses.add(parse);
             log.debug("Avg seconds per parse: " + timer.avgSec());
         }
         

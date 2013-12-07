@@ -120,6 +120,30 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(goldTree, treeStr);
         Assert.assertEquals(-46.24, logProb, 1e-2);
     }
+    
+    @Test
+    public void testConrailOnR0() throws IOException {
+        LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        ChartCellType cellType = ChartCellType.FULL;
+        
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromFile(r0GrammarFile);
+        
+        CnfGrammar grammar = builder.getGrammar(loopOrder);
+                
+        Pair<BinaryTree, Double> pair = parseSentence("Conrail", grammar, loopOrder, cellType);
+        BinaryTree tree = pair.get1();
+        double logProb = pair.get2();
+        
+        System.out.println(logProb);
+        System.out.println(tree);
+        System.out.println(tree.getAsPennTreebankString());
+        String goldTree = "((ROOT (NP (NNP Conrail))))";
+        String treeStr = tree.getAsPennTreebankString().replaceAll("\\s+", " ");
+        System.out.println(treeStr);
+        Assert.assertEquals(goldTree, treeStr);
+        Assert.assertEquals(-16.8401, logProb, 1e-2);
+    }
 
     public void testPetrovGrammar() throws IOException {
         LoopOrder loopOrder = LoopOrder.LEFT_CHILD;

@@ -81,16 +81,17 @@ class SrlScraper(Scraper):
         if not os.path.exists(eval_file):
             return
         lines = self.read_stdout_lines(eval_file)
+        num_regex = ".*?(\d+\.\d\d)[^=]*?$"        
         # SYNTACTIC SCORES
-        exp.set(data_name + "-Labeled-attachment-score", get_following(lines, "Labeled   attachment score:[^=]+\s*="))
-        exp.set(data_name + "-Unlabeled-attachment-score", get_following(lines, "Unlabeled attachment score:[^=]+\s*="))
-        # SEMANTIC SCORES
-        exp.set(data_name + "-Labeled-F1",        get_following(lines, "Labeled F1:\s+"))
-        exp.set(data_name + "-Labeled-precision", get_following(lines, "Labeled precision:[^=]+\s*="))
-        exp.set(data_name + "-Labeled-recall",    get_following(lines, "Labeled recall:[^=]+\s*="))
-        exp.set(data_name + "-Unlabeled-F1",        get_following(lines, "Unlabeled F1:\s+"))
-        exp.set(data_name + "-Unlabeled-precision", get_following(lines, "Unlabeled precision:[^=]+\s*="))
-        exp.set(data_name + "-Unlabeled-recall",    get_following(lines, "Unlabeled recall:[^=]+\s*="))
+        exp.set(data_name + "-Labeled-attachment-score", get_group1(lines, "Labeled   attachment score:" + num_regex))
+        exp.set(data_name + "-Unlabeled-attachment-score", get_group1(lines, "Unlabeled attachment score:" + num_regex))
+        # SEMANTIC SCORES        
+        exp.set(data_name + "-Labeled-F1",        get_group1(lines, "Labeled F1:" + num_regex))
+        exp.set(data_name + "-Labeled-precision", get_group1(lines, "Labeled precision:" + num_regex))
+        exp.set(data_name + "-Labeled-recall",    get_group1(lines, "Labeled recall:" + num_regex))
+        exp.set(data_name + "-Unlabeled-F1",        get_group1(lines, "Unlabeled F1:" + num_regex))
+        exp.set(data_name + "-Unlabeled-precision", get_group1(lines, "Unlabeled precision:" + num_regex))
+        exp.set(data_name + "-Unlabeled-recall",    get_group1(lines, "Unlabeled recall:" + num_regex))
             
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"

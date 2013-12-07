@@ -1171,12 +1171,17 @@ public class SentFeatureExtractor {
 
     private void addZhaoSupervisedPredFeats(FeatureObject zhaoPred, FeatureObject zhaoArg, FeatureObject zhaoPredLast, FeatureObject zhaoPredNext, ArrayList<FeatureObject> predChildrenObjectList, ArrayList<String> feats) {
         // ------- Predicate features (supervised) ------- 
-        // p.currentSense + p.lemma 
-        feats.add(zhaoPred.getSense() + "_" + zhaoPred.getLemma());
-        // p.currentSense + p.pos 
-        feats.add(zhaoPred.getSense() + "_" + zhaoPred.getPos());
-        // p.currentSense + a.pos 
-        feats.add(zhaoPred.getSense() + "_" + zhaoArg.getPos());
+        
+        // NOTE: We cannot include these features in our model since they would have
+        // to use the gold predicate sense.
+        // 
+        //        // p.currentSense + p.lemma 
+        //        feats.add(zhaoPred.getSense() + "_" + zhaoPred.getLemma());
+        //        // p.currentSense + p.pos 
+        //        feats.add(zhaoPred.getSense() + "_" + zhaoPred.getPos());
+        //        // p.currentSense + a.pos 
+        //        feats.add(zhaoPred.getSense() + "_" + zhaoArg.getPos());
+        
         // p_1.FEAT1
         feats.add(zhaoPredLast.getFeat().get(0));
         // p.FEAT2
