@@ -18,7 +18,17 @@ public class FeatureObject {
      * Hai Zhao, Wenliang Chen, Chunyu Kit, Guodong Zhou 
      * and
      * "Multilingual Semantic Role Labeling"
-     * Anders Bjo ̈rkelund, Love Hafdell, Pierre Nugues */    
+     * Anders Bjo ̈rkelund, Love Hafdell, Pierre Nugues
+     * Treats features as combinations of feature templates, for:
+     * 1. word form (formFeats)
+     * 2. lemma (lemmaFeats)
+     * 3. part-of-speech (tagFeats)
+     * 4. morphological features (morphFeats)
+     * 5. syntactic dependency label (deprelFeats)
+     * 6. children (childrenFeats)
+     * 7. dependency paths (pathFeats)
+     * 8. 'high' and 'low' support, siblings, parents (syntacticConnectionFeats).
+     */    
 
     private static final String NO_MORPH = "NO_MORPH"; 
 
@@ -35,7 +45,7 @@ public class FeatureObject {
     private int argHighSupport;
     private int predLowSupport;
     private int predHighSupport;
-    private List<Pair<Integer, Dir>> betweenPath;
+    private List<Pair<Integer, Dir>> dependencyPath;
     private int[] parents;
     private ArrayList<Integer> linePath;
     private ArrayList<Pair<Integer, Dir>> dpPathShare;
@@ -45,6 +55,7 @@ public class FeatureObject {
     /* Additional features owing to Bjorkelund al. 2009 */
     private int leftSibling;
     private int rightSibling;
+    private Dir direction = Dir.NONE;
     
     
     public FeatureObject(int idx, int[] parents, SimpleAnnoSentence sent) {
@@ -82,7 +93,8 @@ public class FeatureObject {
         setNoFarChildren();
     }
 
-    // TODO: This constructor suggests that we should divide this class into a FeaturizedToken and FeaturizedTokenPair.
+    // TODO: This constructor suggests that we should divide this class into 
+    // a FeaturizedToken and FeaturizedTokenPair.
     // They would have different access patterns and cache different things.
     public FeatureObject(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg, int[] parents) {
         this.parents = parents;
@@ -92,7 +104,7 @@ public class FeatureObject {
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
          * considering the syntactic root, dpPath is the full path in the syntactic tree. */
-        setBetweenPath(pidx, aidx);
+        setDependencyPath(pidx, aidx);
         setLinePath(pidx, aidx);
         setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
     }
@@ -189,6 +201,7 @@ public class FeatureObject {
 
     public void setChildren() {
         if (idx < 0 || idx >= sent.size()) {
+            // Something that cannot possibly have children.
             this.children = new ArrayList<Integer>();
             this.children.add(-1);
         } else {
@@ -315,12 +328,12 @@ public class FeatureObject {
     }
     
     
-    public List<Pair<Integer,Dir>> getBetweenPath() {
-        return betweenPath;
+    public List<Pair<Integer,Dir>> getDependencyPath() {
+        return dependencyPath;
     }
     
-    public void setBetweenPath(int pidx, int aidx) {
-        this.betweenPath = DepTree.getDependencyPath(pidx, aidx, parents);
+    public void setDependencyPath(int pidx, int aidx) {
+        this.dependencyPath = DepTree.getDependencyPath(pidx, aidx, parents);
     }
     
     public List<Pair<Integer, Dir>> getDpPathPred() {
@@ -414,6 +427,18 @@ public class FeatureObject {
 
     public int getLeftSibling() {
         return leftSibling;
+    }
+
+    public void setDirection(Dir dir) {
+        this.direction = dir;
+        
+    }
+
+    public Dir getDirection() {
+        if (direction == null) {
+            System.err.println("ERROR: no direction defined.");
+        }
+        return direction;
     }
 
     

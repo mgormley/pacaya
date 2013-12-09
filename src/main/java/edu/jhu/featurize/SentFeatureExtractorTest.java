@@ -191,7 +191,7 @@ public class SentFeatureExtractorTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         // Shared path to root for two indices.
@@ -209,7 +209,7 @@ public class SentFeatureExtractorTest {
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
 
         // Shared path to root for two indices.
@@ -249,7 +249,7 @@ public class SentFeatureExtractorTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         // Shared path to root for two indices.
@@ -269,7 +269,7 @@ public class SentFeatureExtractorTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
 
         // Shared path to root for two indices.
@@ -305,7 +305,7 @@ public class SentFeatureExtractorTest {
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getBetweenPath();
+        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
         zhaoPred = new FeatureObject(0, parents, simpleSent);
@@ -316,7 +316,7 @@ public class SentFeatureExtractorTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(6, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getBetweenPath();
+        seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);        
     }
 
@@ -423,6 +423,44 @@ public class SentFeatureExtractorTest {
         assertEquals(b.getLeftSibling(), 2);
         assertEquals(b.getRightSibling(), 4);
     }
+    
+    
+    @Test
+    public void testTemplates() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        cs.init(Lists.getList(simpleSent));
+        ArrayList<String> allFeats = new ArrayList<String>();
+        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        fePrm.withSupervision = false;
+
+        fePrm.formFeats = true;
+        fePrm.lemmaFeats = true;
+        fePrm.tagFeats = true;
+        fePrm.morphFeats = true;
+        fePrm.deprelFeats = true;
+        fePrm.childrenFeats = true;
+        fePrm.pathFeats = true;
+        fePrm.syntacticConnectionFeats = true;
+
+        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
+        //allFeats = new ArrayList<String>();
+        // using "es" and "hicieron"...
+        fe.addTemplatePairFeatures(1, 5, allFeats);
+        /*for (int i = 0; i < sent.size(); i++) {
+            for (int j = 0; j < sent.size(); j++) {
+                ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);
+                allFeats.addAll(pairFeatures);
+            }
+        }*/
+        for (String f : allFeats) {
+            System.out.println(f);
+        }
+    }
+    
     
     public static CoNLL09Sentence getSpanishConll09Sentence1() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();  

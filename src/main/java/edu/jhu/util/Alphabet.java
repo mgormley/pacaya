@@ -27,6 +27,12 @@ public class Alphabet<T> implements Serializable {
 		objIdxMap = new HashMap<T, Integer>();
 	}
 	
+	public Alphabet(int initialCapacity) {
+        isGrowing = true;
+        idxObjMap = new ArrayList<T>(initialCapacity);
+        objIdxMap = new HashMap<T, Integer>(initialCapacity);
+    }
+	
 	public Alphabet(Alphabet<T> other) {
 		isGrowing = true;
 		idxObjMap = new ArrayList<T>(other.idxObjMap);

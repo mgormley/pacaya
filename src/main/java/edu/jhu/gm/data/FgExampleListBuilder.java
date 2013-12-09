@@ -141,6 +141,7 @@ public class FgExampleListBuilder {
         FeatureTemplateList countFts = new FeatureTemplateList(true);
         constructAndDiscardAll(countFts, factory);
 
+        log.info("Num features before cutoff: " + countFts.getNumObsFeats());
         for (int t = 0; t < countFts.size(); t++) {
             FeatureTemplate template = countFts.get(t);
             CountingAlphabet<Feature> countAlphabet = (CountingAlphabet<Feature>) template.getAlphabet();
