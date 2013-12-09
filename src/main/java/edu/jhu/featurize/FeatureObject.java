@@ -74,23 +74,23 @@ public class FeatureObject {
         this.parents = parents;
         this.leftSibling = -1;
         this.rightSibling = sent.size();
-        setSiblings();   
+        cacheSiblings();   
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
-        setFeat();
-        setRootPath();
-        setChildren();
+        cacheFeat();
+        cacheRootPath();
+        cacheChildren();
         /* ZHAO:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
          * and high(low) support verb or noun.
          * From the predicate or the argument to the syntactic root along with the syntactic tree, 
          * the first verb(noun) that is met is called as the low support verb(noun), 
          * and the nearest one to the root is called as the high support verb(noun). */
-        setFarthestNearestChildren();
-        setHighLowSupport();
+        cacheFarthestNearestChildren();
+        cacheHighLowSupport();
         /* ZHAO: Family. Two types of children sets for the predicate or argument candidate are considered, 
          * the first includes all syntactic children (children), the second also includes all but 
          * excludes the left most and the right most children (noFarChildren). */
-        setNoFarChildren();
+        cacheNoFarChildren();
     }
 
     // TODO: This constructor suggests that we should divide this class into 
@@ -104,19 +104,19 @@ public class FeatureObject {
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 
          * considering the syntactic root, dpPath is the full path in the syntactic tree. */
-        setDependencyPath(pidx, aidx);
-        setLinePath(pidx, aidx);
-        setDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
+        cacheDependencyPath(pidx, aidx);
+        cacheLinePath(pidx, aidx);
+        cacheDpPathShare(pidx, aidx, zhaoPred, zhaoArg);
     }
     
     
-    // ------------------------ Getters and Setters ------------------------ //
+    // ------------------------ Getters and Caching Methods ------------------------ //
 
     public ArrayList<String> getFeat() {
         return feat;
     }
     
-    public void setFeat() {
+    private void cacheFeat() {
         feat = new ArrayList<String>(6);
         if (idx == -1 || idx >= sent.size()) {
             for (int i = 0; i < 6; i++) {
@@ -186,7 +186,7 @@ public class FeatureObject {
         return rootPath;
     }
     
-    private void setRootPath() {
+    private void cacheRootPath() {
         if (idx < 0 || idx >= sent.size()) {
             this.rootPath =  new ArrayList<Pair<Integer,Dir>>();
             this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
@@ -199,7 +199,7 @@ public class FeatureObject {
         return children;
     }
 
-    public void setChildren() {
+    private void cacheChildren() {
         if (idx < 0 || idx >= sent.size()) {
             // Something that cannot possibly have children.
             this.children = new ArrayList<Integer>();
@@ -226,7 +226,7 @@ public class FeatureObject {
     }
     
     
-    public void setFarthestNearestChildren() {
+    private void cacheFarthestNearestChildren() {
         // Farthest and nearest child to the left; farthest and nearest child to the right.
         ArrayList<Integer> leftChildren = new ArrayList<Integer>();
         ArrayList<Integer> rightChildren = new ArrayList<Integer>();
@@ -262,7 +262,7 @@ public class FeatureObject {
         return noFarChildren;
     }
     
-    public void setNoFarChildren() {
+    private void cacheNoFarChildren() {
         this.noFarChildren = new ArrayList<Integer>();
         this.noFarChildren.add(nearLeftChild);
         this.noFarChildren.add(nearRightChild);
@@ -286,7 +286,7 @@ public class FeatureObject {
     }
 
     
-    public void setHighLowSupport() {
+    private void cacheHighLowSupport() {
         // Support features
         String parentPos;
         boolean haveArgLow = false;
@@ -332,7 +332,7 @@ public class FeatureObject {
         return dependencyPath;
     }
     
-    public void setDependencyPath(int pidx, int aidx) {
+    private void cacheDependencyPath(int pidx, int aidx) {
         this.dependencyPath = DepTree.getDependencyPath(pidx, aidx, parents);
     }
     
@@ -348,7 +348,7 @@ public class FeatureObject {
         return dpPathShare;
     }
     
-    private void setDpPathShare(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg) {
+    private void cacheDpPathShare(int pidx, int aidx, FeatureObject zhaoPred, FeatureObject zhaoArg) {
 
         /* ZHAO:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
@@ -388,7 +388,7 @@ public class FeatureObject {
         return linePath;
     }
     
-    public void setLinePath(int pidx, int aidx) {
+    private void cacheLinePath(int pidx, int aidx) {
         int startIdx;
         int endIdx; 
         if (pidx < aidx) {
@@ -405,7 +405,7 @@ public class FeatureObject {
         
     }
     
-    public void setSiblings() {
+    private void cacheSiblings() {
         if (idx >= 0 && idx < sent.size()) {
             ArrayList<Integer> siblingsList = DepTree.getSiblingsOf(idx, this.parents);
             Collections.sort(siblingsList);
@@ -429,14 +429,14 @@ public class FeatureObject {
         return leftSibling;
     }
 
-    public void setDirection(Dir dir) {
-        this.direction = dir;
-        
-    }
-
     public Dir getDirection() {
         return direction;
     }
 
+    // TODO: Remove this when possible.
+    @Deprecated
+    public void setDirection(Dir dir) {
+        this.direction = dir;
+    }
     
 }
