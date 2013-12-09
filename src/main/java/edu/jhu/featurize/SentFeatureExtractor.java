@@ -106,16 +106,6 @@ public class SentFeatureExtractor {
                 this.prm.childrenFeats = true;
                 this.prm.pathFeats = true;
                 this.prm.syntacticConnectionFeats = true;
-            } else if (prm.useAllTemplates || 
-                       prm.formFeats ||
-                       prm.lemmaFeats ||
-                       prm.tagFeats ||
-                       prm.morphFeats ||
-                       prm.deprelFeats ||
-                       prm.childrenFeats ||
-                       prm.pathFeats ||
-                       prm.syntacticConnectionFeats) {
-                this.prm.useTemplates = true;
             }
         } else {
             this.parents = null;
