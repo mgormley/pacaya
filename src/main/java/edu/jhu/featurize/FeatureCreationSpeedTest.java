@@ -17,6 +17,7 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.Triple;
 import edu.jhu.prim.tuple.Tuple;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.MurmurHash3;
 import edu.jhu.util.Timer;
 
 /**
@@ -27,7 +28,7 @@ import edu.jhu.util.Timer;
  */
 public class FeatureCreationSpeedTest {
 
-    //@Test
+    @Test
     public void testSpeedOfFeatureCreation() throws UnsupportedEncodingException, FileNotFoundException {
         // Params
         final int numExamples = 10000;
@@ -49,11 +50,11 @@ public class FeatureCreationSpeedTest {
         //testFeatExtract(numTemplates, sents, new TupleExtractor());
         //testFeatExtract(numTemplates, sents, new StringExtractor());
         
-        //testFeatExtract(numRounds, numTemplates, sents, 0, false);
+        testFeatExtract(numRounds, numTemplates, sents, 2, false);
         
-        testFeatExtract(numRounds, numTemplates, sents, 0, true);
-        testFeatExtract(numRounds, numTemplates, sents, 1, true);
-        testFeatExtract(numRounds, numTemplates, sents, 2, true);
+//        testFeatExtract(numRounds, numTemplates, sents, 0, true);
+//        testFeatExtract(numRounds, numTemplates, sents, 1, true);
+//        testFeatExtract(numRounds, numTemplates, sents, 2, true);
     }
     
     private void testFeatExtract(int numRounds, final int numTemplates, SimpleAnnoSentenceCollection sents, final int opt, final boolean lookup) {
@@ -113,8 +114,14 @@ public class FeatureCreationSpeedTest {
                                 extTimer.stop();
                                 
                                 hashTimer.start();
-                                Feature feat = new Feature(featName);
-                                hashSum += feat.hashCode();
+                                Feature feat = null;
+                                if (opt != 2) {
+                                    feat = new Feature(featName);
+                                    hashSum += feat.hashCode();
+                                } else {
+                                    String data = (String)featName;
+                                    hashSum += MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
+                                }
                                 hashTimer.stop();
                                 
                                 if (lookup) {
