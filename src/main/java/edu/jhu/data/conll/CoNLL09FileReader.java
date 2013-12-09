@@ -103,10 +103,10 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
     public List<CoNLL09Sentence> readSents(int maxSents, int maxSentLen) {
         ArrayList<CoNLL09Sentence> sents = new ArrayList<CoNLL09Sentence>();
         for (CoNLL09Sentence sent : this) {
-            if (sents.size() > maxSents) {
+            if (sents.size() >= maxSents) {
                 break;
             }
-            if (sent.size() > maxSentLen) {
+            if (sent.size() >= maxSentLen) {
                 continue;
             }
             sents.add(sent);
