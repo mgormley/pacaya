@@ -651,7 +651,7 @@ public class SentFeatureExtractor {
         }
         p = featurePieceList.get(prefix);
         // Doesn't matter; this is just for readability.
-        if (d != Dir.NONE) {
+        if (d != null) {
             feat = tag + d;
         } else {
             feat = tag;

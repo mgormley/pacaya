@@ -55,7 +55,7 @@ public class FeatureObject {
     /* Additional features owing to Bjorkelund al. 2009 */
     private int leftSibling;
     private int rightSibling;
-    private Dir direction = Dir.NONE;
+    private Dir direction = null; // null indicates no direction
     
     
     public FeatureObject(int idx, int[] parents, SimpleAnnoSentence sent) {
@@ -435,9 +435,6 @@ public class FeatureObject {
     }
 
     public Dir getDirection() {
-        if (direction == null) {
-            System.err.println("ERROR: no direction defined.");
-        }
         return direction;
     }
 
