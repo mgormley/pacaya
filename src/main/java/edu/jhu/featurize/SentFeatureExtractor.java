@@ -97,7 +97,6 @@ public class SentFeatureExtractor {
                 this.featuredTailDefault = new FeatureObject(sent.size(), parents, sent);
             }
             if (prm.useAllTemplates) {
-                this.prm.useTemplates = true;
                 this.prm.formFeats = true;
                 this.prm.lemmaFeats = true;
                 this.prm.tagFeats = true;
