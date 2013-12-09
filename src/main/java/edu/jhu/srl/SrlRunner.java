@@ -165,6 +165,8 @@ public class SrlRunner {
     public static boolean useBjorkelundFeats = true;
     @Opt(hasArg = true, description = "Whether to add dependency path features.")
     public static boolean useDepPathFeats = true;
+    @Opt(hasArg = true, description = "Whether to include pairs of features.")
+    public static boolean useTemplates = false;
     // Options for feature templating.
     @Opt(hasArg = true, description = "Feature Templating:  Whether to add form features.")
     public static boolean formFeats = false;
@@ -511,6 +513,7 @@ public class SrlRunner {
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useDepPathFeats = useDepPathFeats;
+        prm.fePrm.useTemplates = useTemplates;
         prm.fePrm.formFeats = formFeats;
         prm.fePrm.lemmaFeats = lemmaFeats;
         prm.fePrm.tagFeats = tagFeats;
