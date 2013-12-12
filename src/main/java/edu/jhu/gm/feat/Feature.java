@@ -36,11 +36,7 @@ public class Feature implements Serializable {
     }
 
     private int computeHash() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + (isBias ? 1231 : 1237);
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        return result;
+        return ((name == null) ? 0 : name.hashCode());
     }
 
     @Override
