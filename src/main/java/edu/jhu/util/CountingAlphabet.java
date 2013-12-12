@@ -3,11 +3,12 @@ package edu.jhu.util;
 import edu.jhu.prim.list.IntArrayList;
 
 /**
- * Bidirectional mapping of Objects to ints.
+ * Bidirectional mapping of Objects to ints. This version keeps track of the
+ * number of times the index was looked up for each object.
  * 
  * @author mgormley
  * @author mmitchell
- *
+ * 
  */
 public class CountingAlphabet<T> extends Alphabet<T> {
 
