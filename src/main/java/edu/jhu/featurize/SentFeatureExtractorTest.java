@@ -341,10 +341,10 @@ public class SentFeatureExtractorTest {
         assertEquals(zhaoObj.getFarRightChild(), -2);
         assertEquals(zhaoObj.getNearLeftChild(), -2);
         assertEquals(zhaoObj.getNearRightChild(), -2);
-        assertEquals(zhaoObj.getArgHighSupport(), -1);
-        assertEquals(zhaoObj.getArgLowSupport(), -1);
-        assertEquals(zhaoObj.getPredHighSupport(), 1);
-        assertEquals(zhaoObj.getPredLowSupport(), 5);
+        assertEquals(zhaoObj.getHighSupportNoun(), -1);
+        assertEquals(zhaoObj.getLowSupportNoun(), -1);
+        assertEquals(zhaoObj.getHighSupportVerb(), 1);
+        assertEquals(zhaoObj.getLowSupportVerb(), 5);
         ArrayList<Integer> expectedNoFarChildren = new ArrayList<Integer>();
         expectedNoFarChildren.add(-2);
         expectedNoFarChildren.add(-2);
@@ -404,24 +404,24 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
         FeaturizedToken b = new FeaturizedToken(3, parents, simpleSent);
-        assertEquals(b.getRightSibling(), 4);
-        assertEquals(b.getLeftSibling(), 0);
+        assertEquals(b.getNearRightSibling(), 4);
+        assertEquals(b.getNearLeftSibling(), 0);
         b = new FeaturizedToken(0, parents, simpleSent);
-        assertEquals(b.getLeftSibling(), -1);
-        assertEquals(b.getRightSibling(), 3);
+        assertEquals(b.getNearLeftSibling(), -1);
+        assertEquals(b.getNearRightSibling(), 3);
         sent = getSpanishConll09Sentence2();
         simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         parents = fe.getParents(simpleSent);
         b = new FeaturizedToken(3, parents, simpleSent);
         // Only true when we're using predicted siblings.
-        assertEquals(b.getLeftSibling(), -1);
-        assertEquals(b.getRightSibling(), 7);
+        assertEquals(b.getNearLeftSibling(), -1);
+        assertEquals(b.getNearRightSibling(), 7);
         csPrm.useGoldSyntax = true;
         simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         parents = fe.getParents(simpleSent);
         b = new FeaturizedToken(3, parents, simpleSent);
-        assertEquals(b.getLeftSibling(), 2);
-        assertEquals(b.getRightSibling(), 4);
+        assertEquals(b.getNearLeftSibling(), 2);
+        assertEquals(b.getNearRightSibling(), 4);
     }
     
     

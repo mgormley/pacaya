@@ -16,9 +16,10 @@ import edu.jhu.gm.feat.Feature;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.Triple;
 import edu.jhu.prim.tuple.Tuple;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
-import edu.jhu.util.MurmurHash3;
 import edu.jhu.util.Timer;
+import edu.jhu.util.hash.MurmurHash3;
 
 /**
  * Class for comparing methods of representing features. Allows for testing of
@@ -31,7 +32,7 @@ public class FeatureCreationSpeedTest {
     @Test
     public void testSpeedOfFeatureCreation() throws UnsupportedEncodingException, FileNotFoundException {
         // Params
-        final int numExamples = 10000;
+        final int numExamples = 50000;
         final int numTemplates = 1;
         final int numRounds = 2;
 
@@ -50,7 +51,7 @@ public class FeatureCreationSpeedTest {
         //testFeatExtract(numTemplates, sents, new TupleExtractor());
         //testFeatExtract(numTemplates, sents, new StringExtractor());
         
-        testFeatExtract(numRounds, numTemplates, sents, 2, false);
+        testFeatExtract(numRounds, numTemplates, sents, 3, false);
         
 //        testFeatExtract(numRounds, numTemplates, sents, 0, true);
 //        testFeatExtract(numRounds, numTemplates, sents, 1, true);
@@ -107,6 +108,9 @@ public class FeatureCreationSpeedTest {
                                     featName = new Tuple(t,"pred", pWord, "arg", aWord);
                                 } else if (opt == 2) {
                                     featName = t + "_pred_" + pWord + "_arg_" + aWord;
+                                } else if (opt == 3) {
+                                    String data = t + "_pred_" + pWord + "_arg_" + aWord;
+                                    featName = FastMath.mod(MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789), 200000);
                                 } else {
                                     featName = null;
                                 }
@@ -115,13 +119,8 @@ public class FeatureCreationSpeedTest {
                                 
                                 hashTimer.start();
                                 Feature feat = null;
-                                if (opt != 2) {
-                                    feat = new Feature(featName);
-                                    hashSum += feat.hashCode();
-                                } else {
-                                    String data = (String)featName;
-                                    hashSum += MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789);
-                                }
+                                feat = new Feature(featName);
+                                hashSum += feat.hashCode();
                                 hashTimer.stop();
                                 
                                 if (lookup) {

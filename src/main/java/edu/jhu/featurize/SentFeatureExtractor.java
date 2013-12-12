@@ -392,22 +392,22 @@ public class SentFeatureExtractor {
         ArrayList<String> featurePieces = new ArrayList<String>();
         
         // pred high support
-        newIdx = featureObject.getPredHighSupport();
+        newIdx = featureObject.getHighSupportVerb();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "highSupportPred");
         featurePieces.addAll(newFeaturePieces);
         // pred low support
-        newIdx = featureObject.getPredLowSupport();
+        newIdx = featureObject.getLowSupportVerb();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "lowSupportPred");
         featurePieces.addAll(newFeaturePieces);
         // arg high support pieces
-        newIdx = featureObject.getArgHighSupport();
+        newIdx = featureObject.getHighSupportNoun();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "highSupportArg");
         featurePieces.addAll(newFeaturePieces);
         // arg low support pieces
-        newIdx = featureObject.getArgLowSupport();
+        newIdx = featureObject.getLowSupportNoun();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "lowSupportArg");
         featurePieces.addAll(newFeaturePieces);
@@ -437,12 +437,12 @@ public class SentFeatureExtractor {
         newFeaturePieces = makePieces(newObject, n, "nrchild");
         featurePieces.addAll(newFeaturePieces);
         // left sibling pieces
-        newIdx = featureObject.getLeftSibling();
+        newIdx = featureObject.getNearLeftSibling();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "lsibling");
         featurePieces.addAll(newFeaturePieces);
         // right sibling pieces
-        newIdx = featureObject.getRightSibling();
+        newIdx = featureObject.getNearRightSibling();
         newObject = getFeatureObject(newIdx);
         newFeaturePieces = makePieces(newObject, n, "rsibling");
         featurePieces.addAll(newFeaturePieces);
@@ -1140,7 +1140,7 @@ public class SentFeatureExtractor {
             ArrayList<FeaturizedToken> argChildrenObjectList, ArrayList<String> feats) {
         String feat;
         // a.lowSupportVerb.lemma 
-        feats.add(getFeatureObject(zhaoArg.getArgLowSupport()).getLemma());
+        feats.add(getFeatureObject(zhaoArg.getLowSupportNoun()).getLemma());
         // a.lemma + a.h.form 
         feats.add(zhaoArg.getLemma() + "_" + zhaoArgParent.getForm());
         // a.lemma + a.pphead.form 
@@ -1236,8 +1236,8 @@ public class SentFeatureExtractor {
         FeaturizedTokenPair zhaoPredArgPair = new FeaturizedTokenPair(pidx, aidx, zhaoPred, zhaoArg, parents);
         FeaturizedToken predParent = getFeatureObject(zhaoPred.getParent());
         ArrayList<Integer> predChildren = zhaoPred.getChildren();
-        FeaturizedToken argLeftSibling = getFeatureObject(zhaoArg.getLeftSibling());
-        FeaturizedToken argRightSibling = getFeatureObject(zhaoArg.getRightSibling());
+        FeaturizedToken argLeftSibling = getFeatureObject(zhaoArg.getNearLeftSibling());
+        FeaturizedToken argRightSibling = getFeatureObject(zhaoArg.getNearRightSibling());
         FeaturizedToken argLeftDependent = getFeatureObject(zhaoArg.getFarLeftChild());
         FeaturizedToken argRightDependent = getFeatureObject(zhaoArg.getFarRightChild());
         
@@ -1411,12 +1411,12 @@ public class SentFeatureExtractor {
         return childrenFeat1;
     }
 
-    private ArrayList<String> bag(ArrayList<String> elements) {
+    private static ArrayList<String> bag(ArrayList<String> elements) {
         // bag, which removes all duplicated strings and sort the rest
         return (ArrayList<String>) asSortedList(new HashSet<String>(elements));
     }
     
-    private ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
+    private static ArrayList<String> noDup(ArrayList<String> argChildrenFeat1) {
         // noDup, which removes all duplicated neighbored strings.
         ArrayList<String> noDupElements = new ArrayList<String>();
         String lastA = null;

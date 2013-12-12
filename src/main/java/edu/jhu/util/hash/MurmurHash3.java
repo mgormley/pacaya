@@ -1,4 +1,4 @@
-package edu.jhu.util;
+package edu.jhu.util.hash;
 
 /**
  *  The MurmurHash3 algorithm was created by Austin Appleby.  This java port was authored by

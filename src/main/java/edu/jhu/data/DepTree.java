@@ -112,95 +112,6 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
 
-    /**
-     * Checks if a dependency tree represented as a parents array contains a cycle.
-     * 
-     * @param parents
-     *            A parents array where parents[i] contains the index of the
-     *            parent of the word at position i, with parents[i] = -1
-     *            indicating that the parent of word i is the wall node.
-     * @return True if the tree specified by the parents array contains a cycle,
-     *         False otherwise.
-     */
-    public static boolean containsCycle(int[] parents) {
-        for (int i=0; i<parents.length; i++) {
-            int numAncestors = 0;
-            int parent = parents[i];
-            while(parent != WallDepTreeNode.WALL_POSITION) {
-                numAncestors += 1;
-                if (numAncestors > parents.length - 1) {
-                    return true;
-                }
-                parent = parents[parent];
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Checks that a dependency tree represented as a parents array is projective.
-     * 
-     * @param parents
-     *            A parents array where parents[i] contains the index of the
-     *            parent of the word at position i, with parents[i] = -1
-     *            indicating that the parent of word i is the wall node.
-     * @return True if the tree specified by the parents array is projective,
-     *         False otherwise.
-     */
-    public static boolean checkIsProjective(int[] parents) {
-        for (int i=0; i<parents.length; i++) {
-            int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
-            int minI = i < pari ? i : pari;
-            int maxI = i > pari ? i : pari;
-            for (int j=0; j<parents.length; j++) {
-                if (j == i) {
-                    continue;
-                }
-                if (minI < j && j < maxI) {
-                    if (!(minI <= parents[j] && parents[j] <= maxI)) {
-                        return false;
-                    }
-                } else {
-                    if (!(parents[j] <= minI || parents[j] >= maxI)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Counts of the number of children in a dependency tree for the given
-     * parent index.
-     * 
-     * @param parents
-     *            A parents array where parents[i] contains the index of the
-     *            parent of the word at position i, with parents[i] = -1
-     *            indicating that the parent of word i is the wall node.
-     * @return The number of entries in <code>parents</code> that equal
-     *         <code>parent</code>.
-     */
-    public static int countChildrenOf(int[] parents, int parent) {
-        int count = 0;
-        for (int i=0; i<parents.length; i++) {
-            if (parents[i] == parent) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public static ArrayList<Integer> getChildrenOf(int[] parents, int parent) {
-        ArrayList<Integer> children = new ArrayList<Integer>();
-        for (int i=0; i<parents.length; i++) {
-            if (parents[i] == parent) {
-                children.add(i);
-            }
-        }
-        return children;
-    }
-
     @Override
     public String toString() {
         return nodes.toString();
@@ -294,7 +205,13 @@ public class DepTree implements Iterable<DepTreeNode> {
         return path;
     }
 
-    public static ArrayList<Integer> getSiblingsOf(int idx, int[] parents) {
+    /**
+     * Gets the siblings of the specified word.
+     * @param parents The parents array.
+     * @param idx The word for which to extract siblings.
+     * @return The indices of the siblings.
+     */
+    public static ArrayList<Integer> getSiblingsOf(int[] parents, int idx) {
         int parent = parents[idx];
         ArrayList<Integer> siblings = new ArrayList<Integer>();
         for (int i=0; i<parents.length; i++) {
@@ -303,6 +220,102 @@ public class DepTree implements Iterable<DepTreeNode> {
             }
         }
         return siblings;
+    }
+
+    /**
+     * Checks if a dependency tree represented as a parents array contains a cycle.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @return True if the tree specified by the parents array contains a cycle,
+     *         False otherwise.
+     */
+    public static boolean containsCycle(int[] parents) {
+        for (int i=0; i<parents.length; i++) {
+            int numAncestors = 0;
+            int parent = parents[i];
+            while(parent != WallDepTreeNode.WALL_POSITION) {
+                numAncestors += 1;
+                if (numAncestors > parents.length - 1) {
+                    return true;
+                }
+                parent = parents[parent];
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks that a dependency tree represented as a parents array is projective.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @return True if the tree specified by the parents array is projective,
+     *         False otherwise.
+     */
+    public static boolean checkIsProjective(int[] parents) {
+        for (int i=0; i<parents.length; i++) {
+            int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
+            int minI = i < pari ? i : pari;
+            int maxI = i > pari ? i : pari;
+            for (int j=0; j<parents.length; j++) {
+                if (j == i) {
+                    continue;
+                }
+                if (minI < j && j < maxI) {
+                    if (!(minI <= parents[j] && parents[j] <= maxI)) {
+                        return false;
+                    }
+                } else {
+                    if (!(parents[j] <= minI || parents[j] >= maxI)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Counts of the number of children in a dependency tree for the given
+     * parent index.
+     * 
+     * @param parents
+     *            A parents array where parents[i] contains the index of the
+     *            parent of the word at position i, with parents[i] = -1
+     *            indicating that the parent of word i is the wall node.
+     * @param parent The parent for which the children should be counted.
+     * @return The number of entries in <code>parents</code> that equal
+     *         <code>parent</code>.
+     */
+    public static int countChildrenOf(int[] parents, int parent) {
+        int count = 0;
+        for (int i=0; i<parents.length; i++) {
+            if (parents[i] == parent) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Gets the children of the specified parent.
+     * @param parents A parents array.
+     * @param parent The parent for which the children should be  extracted.
+     * @return The indices of the children.
+     */
+    public static ArrayList<Integer> getChildrenOf(int[] parents, int parent) {
+        ArrayList<Integer> children = new ArrayList<Integer>();
+        for (int i=0; i<parents.length; i++) {
+            if (parents[i] == parent) {
+                children.add(i);
+            }
+        }
+        return children;
     }
     
     

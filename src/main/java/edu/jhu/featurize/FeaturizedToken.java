@@ -9,6 +9,7 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.prim.tuple.Pair;
+import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Cache of features for a single word in a sentence, this permits indexing into
@@ -40,22 +41,23 @@ public class FeaturizedToken {
 
     private SimpleAnnoSentence sent;
     private int idx = -1;
+    private String featStr;
     private ArrayList<String> feat;
-    private ArrayList<Integer> children;
     private Integer farRightChild;
     private Integer farLeftChild;
     private Integer nearLeftChild;
     private Integer nearRightChild;
     private List<Pair<Integer, Dir>> rootPath;
-    private int argLowSupport;
-    private int argHighSupport;
-    private int predLowSupport;
-    private int predHighSupport;
+    private int lowSupportNoun;
+    private int highSupportNoun;
+    private int lowSupportVerb;
+    private int highSupportVerb;
     private int[] parents;
+    private ArrayList<Integer> children;
     private ArrayList<Integer> noFarChildren;
     /* Additional features owing to Bjorkelund al. 2009 */
-    private int leftSibling;
-    private int rightSibling;
+    private int nearLeftSibling;
+    private int nearRightSibling;
     private Dir direction = null; // null indicates no direction
         
     public FeaturizedToken(int idx, int[] parents, SimpleAnnoSentence sent) {
@@ -72,12 +74,13 @@ public class FeaturizedToken {
         this.idx = idx;
         this.sent = sent;
         this.parents = parents;
-        this.leftSibling = -1;
-        this.rightSibling = sent.size();
+        this.nearLeftSibling = -1;
+        this.nearRightSibling = sent.size();
         cacheSiblings();   
         // Basic strings available from input.
         // These are concatenated in different ways to create features.
         cacheFeat();
+        cacheFeatStr();
         cacheRootPath();
         cacheChildren();
         /* ZHAO:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
@@ -118,6 +121,14 @@ public class FeaturizedToken {
                 }
             }
         }
+    }
+
+    public String getFeatStr() {
+        return featStr;
+    }
+    
+    private void cacheFeatStr() {
+        featStr = StringUtils.join(feat, "_");
     }
     
     public String getForm() {
@@ -190,7 +201,7 @@ public class FeaturizedToken {
         } else {
             this.children = DepTree.getChildrenOf(parents, idx);
         }
-    }    
+    }
     
     public int getFarLeftChild() {
         return farLeftChild;
@@ -251,21 +262,21 @@ public class FeaturizedToken {
         this.noFarChildren.add(nearRightChild);
     }
     
-    public int getArgHighSupport() {
-        return argHighSupport;
+    public int getHighSupportNoun() {
+        return highSupportNoun;
     }
     
-    public int getArgLowSupport() {
-        return argLowSupport;
+    public int getLowSupportNoun() {
+        return lowSupportNoun;
     }
     
 
-    public int getPredHighSupport() {
-        return predHighSupport;
+    public int getHighSupportVerb() {
+        return highSupportVerb;
     }
     
-    public int getPredLowSupport() {
-        return predLowSupport;
+    public int getLowSupportVerb() {
+        return lowSupportVerb;
     }
 
     
@@ -276,62 +287,62 @@ public class FeaturizedToken {
         boolean havePredLow = false;
         int i;
         // TODO: This is hardcoded to the Spanish POS tags.
-        String argSupport = "n";
-        String predSupport = "v";
+        String supportNounTag = "n";
+        String supportVerbTag = "v";
 
-        this.argLowSupport = -1;
-        this.argHighSupport = -1;
-        this.predLowSupport = -1;
-        this.predHighSupport = -1;
+        this.lowSupportNoun = -1;
+        this.highSupportNoun = -1;
+        this.lowSupportVerb = -1;
+        this.highSupportVerb = -1;
         for (Pair<Integer,Dir> a : rootPath) {
             i = a.get1();
             if (i == -1) {
                 break;
             }
             parentPos = sent.getPosTag(i);
-            if (parentPos.equals(argSupport)) {
+            if (parentPos.equals(supportNounTag)) {
                 if (!haveArgLow) {
                     haveArgLow = true;
-                    this.argLowSupport = i;
-                    this.argHighSupport = i;
+                    this.lowSupportNoun = i;
+                    this.highSupportNoun = i;
                 } else {
-                    this.argHighSupport = i;
+                    this.highSupportNoun = i;
                 }
-            } else if (parentPos.equals(predSupport)) {
+            } else if (parentPos.equals(supportVerbTag)) {
                 if (!havePredLow) {
                     havePredLow = true;
-                    this.predLowSupport = i;
-                    this.predHighSupport = i;
+                    this.lowSupportVerb = i;
+                    this.highSupportVerb = i;
                 } else {
-                    this.predHighSupport = i;
+                    this.highSupportVerb = i;
                 }
             }
             
         }
     }
+    
+    public int getNearRightSibling() {
+        return nearRightSibling;
+    }
+
+    public int getNearLeftSibling() {
+        return nearLeftSibling;
+    }
         
     private void cacheSiblings() {
         if (idx >= 0 && idx < sent.size()) {
-            ArrayList<Integer> siblingsList = DepTree.getSiblingsOf(idx, this.parents);
+            ArrayList<Integer> siblingsList = DepTree.getSiblingsOf(this.parents, idx);
             Collections.sort(siblingsList);
             int wantedIndex = siblingsList.indexOf(idx);
             int rightSiblingIdx = wantedIndex + 1;
             int leftSiblingIdx = wantedIndex - 1;
             if (leftSiblingIdx >= 0) {
-                this.leftSibling = siblingsList.get(leftSiblingIdx);
+                this.nearLeftSibling = siblingsList.get(leftSiblingIdx);
             }
             if (rightSiblingIdx < siblingsList.size()) {
-                this.rightSibling = siblingsList.get(rightSiblingIdx);
+                this.nearRightSibling = siblingsList.get(rightSiblingIdx);
             }
         }
-    }
-    
-    public int getRightSibling() {
-        return rightSibling;
-    }
-
-    public int getLeftSibling() {
-        return leftSibling;
     }
 
     public Dir getDirection() {

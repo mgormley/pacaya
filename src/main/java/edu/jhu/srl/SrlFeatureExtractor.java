@@ -16,6 +16,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
@@ -139,10 +140,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             for (String obsFeat : obsFeats) {
                 String fname = prefix + obsFeat;
                 int hash = fname.hashCode();
-                hash = hash % prm.featureHashMod;
-                if (hash < 0) {
-                    hash += prm.featureHashMod;
-                }
+                FastMath.mod(hash, prm.featureHashMod);
                 fname = Integer.toString(hash);
                 int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
                 if (fidx != -1) {
