@@ -18,7 +18,7 @@ import edu.jhu.srl.SrlRunner;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Defines a little language for structured feature templates, and the feature
+ * Defines a 'little language' for structured feature templates, and the feature
  * extractors for those templates.
  * 
  * @author mgormley

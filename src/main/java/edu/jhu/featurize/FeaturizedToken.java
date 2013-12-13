@@ -62,7 +62,7 @@ public class FeaturizedToken {
     private int nearRightSibling;
     private Dir direction = null; // null indicates no direction
         
-    public FeaturizedToken(int idx, int[] parents, SimpleAnnoSentence sent) {
+    public FeaturizedToken(int idx, SimpleAnnoSentence sent) {
         /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
@@ -75,7 +75,7 @@ public class FeaturizedToken {
         /* Following BJORKELUND, we additionally add sibling features */
         this.idx = idx;
         this.sent = sent;
-        this.parents = parents;
+        this.parents = sent.getParents();
         this.nearLeftSibling = -1;
         this.nearRightSibling = sent.size();
     }

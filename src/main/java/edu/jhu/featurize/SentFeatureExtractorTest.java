@@ -91,8 +91,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(1, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(0, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(1, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(0, simpleSent);
         FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(1, 0, zhaoPred, zhaoArg, parents);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
@@ -112,8 +112,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
 
         String predPos = zhaoPred.getPos();
         String argPos = zhaoArg.getPos();
@@ -126,8 +126,8 @@ public class SentFeatureExtractorTest {
         fePrm = new SentFeatureExtractorPrm();
         fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         parents = fe.getParents(simpleSent);
-        zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        zhaoPred = new FeaturizedToken(3, simpleSent);
+        zhaoArg = new FeaturizedToken(4, simpleSent);
         
         predPos = zhaoPred.getPos();
         argPos = zhaoArg.getPos();
@@ -147,8 +147,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
         List<String> predFeat = zhaoPred.getFeat();
         List<String> argFeat = zhaoArg.getFeat();
         ArrayList<String> intendedPredFeats = new ArrayList<String>();
@@ -183,8 +183,8 @@ public class SentFeatureExtractorTest {
         int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
         FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -201,8 +201,8 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
 
         // New example indices.
-        zhaoPred = new FeaturizedToken(0, parents, simpleSent);
-        zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        zhaoPred = new FeaturizedToken(0, simpleSent);
+        zhaoArg = new FeaturizedToken(4, simpleSent);
         zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -241,8 +241,8 @@ public class SentFeatureExtractorTest {
         int[] parents = fe.getParents(simpleSent);
         
         // Example indices.
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
         FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
         
         // Path between two indices.
@@ -260,8 +260,8 @@ public class SentFeatureExtractorTest {
         assertEquals(dpPathShare,expectedDpPathShare);
         
         // New example indices.
-        zhaoPred = new FeaturizedToken(0, parents, simpleSent);
-        zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        zhaoPred = new FeaturizedToken(0, simpleSent);
+        zhaoArg = new FeaturizedToken(4, simpleSent);
         zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
 
         // Path between two indices.
@@ -299,8 +299,8 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, parents, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
         FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -308,8 +308,8 @@ public class SentFeatureExtractorTest {
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath,seenPath);
 
-        zhaoPred = new FeaturizedToken(0, parents, simpleSent);
-        zhaoArg = new FeaturizedToken(4, parents, simpleSent);
+        zhaoPred = new FeaturizedToken(0, simpleSent);
+        zhaoArg = new FeaturizedToken(4, simpleSent);
         zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
 
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
@@ -333,7 +333,7 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoObj = new FeaturizedToken(3, parents, simpleSent);
+        FeaturizedToken zhaoObj = new FeaturizedToken(3, simpleSent);
         assertEquals(zhaoObj.getParent(), 5);
         assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
         assertEquals(zhaoObj.getFarLeftChild(), -2);
@@ -403,23 +403,23 @@ public class SentFeatureExtractorTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
         int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken b = new FeaturizedToken(3, parents, simpleSent);
+        FeaturizedToken b = new FeaturizedToken(3, simpleSent);
         assertEquals(b.getNearRightSibling(), 4);
         assertEquals(b.getNearLeftSibling(), 0);
-        b = new FeaturizedToken(0, parents, simpleSent);
+        b = new FeaturizedToken(0, simpleSent);
         assertEquals(b.getNearLeftSibling(), -1);
         assertEquals(b.getNearRightSibling(), 3);
         sent = getSpanishConll09Sentence2();
         simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         parents = fe.getParents(simpleSent);
-        b = new FeaturizedToken(3, parents, simpleSent);
+        b = new FeaturizedToken(3, simpleSent);
         // Only true when we're using predicted siblings.
         assertEquals(b.getNearLeftSibling(), -1);
         assertEquals(b.getNearRightSibling(), 7);
         csPrm.useGoldSyntax = true;
         simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         parents = fe.getParents(simpleSent);
-        b = new FeaturizedToken(3, parents, simpleSent);
+        b = new FeaturizedToken(3, simpleSent);
         assertEquals(b.getNearLeftSibling(), 2);
         assertEquals(b.getNearRightSibling(), 4);
     }

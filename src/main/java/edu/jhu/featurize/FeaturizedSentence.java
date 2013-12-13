@@ -22,8 +22,8 @@ public class FeaturizedSentence {
         int[] parents = sent.getParents();
         this.toks = new FeaturizedToken[sent.size()];
         this.pairs = new FeaturizedTokenPair[sent.size()][sent.size()];
-        this.featuredHeadDefault = new FeaturizedToken(-1, parents, sent);
-        this.featuredTailDefault = new FeaturizedToken(sent.size(), parents, sent);
+        this.featuredHeadDefault = new FeaturizedToken(-1, sent);
+        this.featuredTailDefault = new FeaturizedToken(sent.size(), sent);
     }
     
     public FeaturizedToken getFeatTok(int idx) {
@@ -33,7 +33,7 @@ public class FeaturizedSentence {
             return featuredTailDefault;
         }      
         if (toks[idx] == null) {
-            this.toks[idx] = new FeaturizedToken(idx, sent.getParents(), sent);
+            this.toks[idx] = new FeaturizedToken(idx, sent);
         }
         return toks[idx];
     }
