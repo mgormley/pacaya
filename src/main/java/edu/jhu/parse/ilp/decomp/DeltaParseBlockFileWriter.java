@@ -1,4 +1,4 @@
-package edu.jhu.parse.decomp;
+package edu.jhu.parse.ilp.decomp;
 
 import java.io.BufferedReader;
 import java.io.File;
