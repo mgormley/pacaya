@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.BrownClusterTagger;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
@@ -110,6 +111,10 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
     public static int testMaxNumSentences = Integer.MAX_VALUE; 
 
+    // Options for train/test data
+    @Opt(hasArg = true, description = "Brown cluster file")
+    public static File brownClusters = null;    
+    
     // Options for model IO
     @Opt(hasArg = true, description = "File from which we should read a serialized model.")
     public static File modelIn = null;
@@ -372,6 +377,16 @@ public class SrlRunner {
         log.info("Num " + name + " sentences: " + sents.size());   
         log.info("Num " + name + " tokens: " + numTokens);
 
+        if (brownClusters != null) {
+            log.info("Adding Brown clusters.");
+            BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+            bct.read(brownClusters);
+            bct.addClusters(sents);
+            log.info("Brown cluster miss rate: " + bct.getMissRate());
+        } else {
+            log.warn("No Brown cluster file specified.");            
+        }
+        
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);

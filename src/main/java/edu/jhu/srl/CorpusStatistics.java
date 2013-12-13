@@ -35,6 +35,7 @@ public class CorpusStatistics implements Serializable {
      */
     public static class CorpusStatisticsPrm implements Serializable {
         private static final long serialVersionUID = 1848012037725581753L;
+        // TODO: Remove useGoldSyntax since it's no longer used in CorpusStatistics.
         public boolean useGoldSyntax = false;
         public String language = "es";
         /**

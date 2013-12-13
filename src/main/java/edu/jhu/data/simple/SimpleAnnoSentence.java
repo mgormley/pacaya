@@ -27,6 +27,7 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
+    private List<String> clusters;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
     /**
@@ -54,6 +55,7 @@ public class SimpleAnnoSentence {
         this.words = Lists.copyOf(other.words);
         this.lemmas = Lists.copyOf(other.lemmas);
         this.posTags = Lists.copyOf(other.posTags);
+        this.clusters = Lists.copyOf(other.clusters);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
         this.sourceSent = other.sourceSent;
@@ -71,6 +73,11 @@ public class SimpleAnnoSentence {
     /** Gets the i'th POS tag as a String. */
     public String getPosTag(int i) {
         return posTags.get(i);
+    }
+
+    /** Gets the i'th Distributional Similarity Cluster ID as a String. */
+    public String getCluster(int i) {
+        return clusters.get(i);
     }
     
     /** Gets the i'th lemma as a String. */
@@ -100,7 +107,9 @@ public class SimpleAnnoSentence {
         return getSpan(words, span);
     }
 
-    
+    /**
+     * Gets a list of parent indices corresponding to a token span.
+     */
     public List<Integer> getParents(Span span) {
         return getSpan(parents, span);
     }
@@ -112,15 +121,20 @@ public class SimpleAnnoSentence {
     public List<String> getPosTags(Span span) {
         return getSpan(posTags, span);
     }
+    
+    /**
+     * Gets a list of Distributional Similarity Cluster IDs corresponding to a token span.
+     */
+    public List<String> getClusters(Span span) {
+        return getSpan(clusters, span);
+    }
 
     /**
      * Gets a list of lemmas corresponding to a token span.
      */
     public List<String> getLemmas(Span span) {
         return getSpan(lemmas, span);
-    }
-
-    
+    }    
     
     /**
      * Gets a list of word/POS tags corresponding to a token span.
@@ -150,6 +164,15 @@ public class SimpleAnnoSentence {
      */
     public String getPosTagsStr(Span span) {
         return getSpanStr(posTags, span);
+    }
+    
+    /**
+     * Gets a single string representing the Distributional Similarity Cluster IDs in a given token span.
+     * 
+     * @param span
+     */
+    public String getClustersStr(Span span) {
+        return getSpanStr(clusters, span);
     }
 
     /**
@@ -263,6 +286,14 @@ public class SimpleAnnoSentence {
 
     public void setPosTags(List<String> posTags) {
         this.posTags = posTags;
+    }
+
+    public List<String> getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(List<String> clusters) {
+        this.clusters = clusters;
     }
     
     public int[] getParents() {

@@ -6,9 +6,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -28,6 +31,14 @@ public class BrownClusterTagger {
     /** Alphabet to use when constructing sentences. */
     private Alphabet<Label> alphabet;
     
+    // Internal counting for miss rate.
+    private int numLookups = 0;
+    private int numMisses = 0;
+    
+    public BrownClusterTagger(int maxTagLength) {
+        this(null, maxTagLength);
+    }
+        
     public BrownClusterTagger(Alphabet<Label> alphabet, int maxTagLength) {
         this.alphabet = alphabet;
         this.maxTagLength = maxTagLength;
@@ -48,7 +59,7 @@ public class BrownClusterTagger {
             String cluster = splits[0];
             String word = splits[1];
             String cutCluster = cluster.substring(0, Math.min(cluster.length(), maxTagLength));
-            map.put(word, cutCluster);
+            map.put(word.intern(), cutCluster.intern());
         }
     }
 
@@ -57,8 +68,28 @@ public class BrownClusterTagger {
         String cluster = map.get(word);
         if (cluster == null) {
             cluster = OOV_CLUSTER;
+            numMisses++;
         }
+        numLookups++;
         return cluster;
+    }
+    
+    public double getMissRate() {
+        return (double) numMisses / numLookups;
+    }
+
+    public void addClusters(SimpleAnnoSentenceCollection sents) {
+        for (SimpleAnnoSentence s : sents) {
+            addClusters(s);
+        }
+    }
+
+    public void addClusters(SimpleAnnoSentence sent) {
+        ArrayList<String> clusters = new ArrayList<String>();
+        for (String word : sent.getWords()) {
+            clusters.add(getCluster(word));
+        }
+        sent.setClusters(clusters);
     }
     
     public SentenceCollection getTagged(SentenceCollection sents) {
