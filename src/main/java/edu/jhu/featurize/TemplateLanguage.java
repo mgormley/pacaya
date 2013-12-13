@@ -24,9 +24,9 @@ import edu.stanford.nlp.util.StringUtils;
  * @author mgormley
  * @author mmitchell
  */
-public class TokenFeatureExtractor2 {
+public class TemplateLanguage {
 
-    private static final Logger log = Logger.getLogger(TokenFeatureExtractor2.class);
+    private static final Logger log = Logger.getLogger(TemplateLanguage.class);
 
     /** Annotation Type. */
     public enum AT {
@@ -293,7 +293,7 @@ public class TokenFeatureExtractor2 {
     private final SrlBerkeleySignatureBuilder sig;
     private final FeaturizedSentence fSent; 
     
-    public TokenFeatureExtractor2(SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public TemplateLanguage(SimpleAnnoSentence sent, CorpusStatistics cs) {
         //this.sent = sent;
         //this.cs = cs;
         this.sig = cs.sig;
