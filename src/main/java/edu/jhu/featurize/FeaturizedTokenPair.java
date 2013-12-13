@@ -38,8 +38,8 @@ public class FeaturizedTokenPair {
 
     private int pidx;
     private int aidx;
-    private FeaturizedToken zhaoPred;
-    private FeaturizedToken zhaoArg;    
+    private FeaturizedToken pTok;
+    private FeaturizedToken aTok;    
     private int[] parents;
     
     private ArrayList<Integer> linePath;
@@ -48,7 +48,7 @@ public class FeaturizedTokenPair {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     
-    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken zhaoPred, FeaturizedToken zhaoArg, int[] parents) {
+    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken pTok, FeaturizedToken aTok, int[] parents) {
         this.parents = parents;
         /* ZHAO:  Path. There are two basic types of path between the predicate and the argument candidates. 
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
@@ -87,8 +87,8 @@ public class FeaturizedTokenPair {
         this.dpPathShare = new ArrayList<Pair<Integer,DepTree.Dir>>();
         /* ZHAO:  Leading two paths to the root from the predicate and the argument, respectively, 
          * the common part of these two paths will be dpPathShare. */
-        List<Pair<Integer, Dir>> argRootPath = zhaoArg.getRootPath();
-        List<Pair<Integer, Dir>> predRootPath = zhaoPred.getRootPath();
+        List<Pair<Integer, Dir>> argRootPath = aTok.getRootPath();
+        List<Pair<Integer, Dir>> predRootPath = pTok.getRootPath();
         int i = argRootPath.size() - 1;
         int j = predRootPath.size() - 1;
         Pair<Integer,DepTree.Dir> argP = argRootPath.get(i);
