@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -177,7 +178,7 @@ public class FeaturizedTokenPairTest {
     }
 
     public static CoNLL09Sentence getDogConll09Sentence() {
-        return SentFeatureExtractorTest.getDogConll09Sentence();
+        return SimpleAnnoSentenceTest.getDogConll09Sentence();
     }
 
 }

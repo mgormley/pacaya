@@ -8,6 +8,7 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.concrete.SimpleAnnoSentenceTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
@@ -132,7 +133,7 @@ public class FeaturizedTokenTest {
     }
     
     public static CoNLL09Sentence getDogConll09Sentence() {
-        return SentFeatureExtractorTest.getDogConll09Sentence();
+        return SimpleAnnoSentenceTest.getDogConll09Sentence();
     }
 
 }
