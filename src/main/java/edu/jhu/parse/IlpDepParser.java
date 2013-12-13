@@ -16,7 +16,7 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.data.WallDepTreeNode;
-import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
 import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;

@@ -1,7 +1,7 @@
 package edu.jhu.model.dmv;
 
 import edu.jhu.data.DepTreebank;
-import edu.jhu.gridsearch.dmv.IndexedDmvModel;
+import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.model.Model;
 import edu.jhu.train.MStep;
 import edu.jhu.train.TrainCorpus;

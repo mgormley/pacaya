@@ -5,7 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.gridsearch.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
+import edu.jhu.globalopt.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
 import edu.jhu.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
 import edu.jhu.util.Prng;
 

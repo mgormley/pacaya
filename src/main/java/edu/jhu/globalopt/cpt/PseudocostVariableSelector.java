@@ -1,0 +1,94 @@
+package edu.jhu.globalopt.cpt;
+
+import java.util.List;
+
+import org.apache.log4j.Logger;
+
+import edu.jhu.globalopt.ProblemNode;
+import edu.jhu.globalopt.cpt.CptBoundsDelta.Lu;
+import edu.jhu.globalopt.dmv.AbstractScoringVariableSelector;
+import edu.jhu.globalopt.dmv.DmvProblemNode;
+import edu.jhu.globalopt.dmv.DmvRelaxation;
+import edu.jhu.globalopt.dmv.IndexedDmvModel;
+
+public class PseudocostVariableSelector extends AbstractScoringVariableSelector implements VariableSelector {
+    private static final Logger log = Logger.getLogger(PseudocostVariableSelector.class);
+
+    private static final int RELIABILITY_THRESHOLD = 2;
+    private int[][][] numObserved;
+    private double[][][] deltaSum;
+    private double[][] scores;
+    private IndexedDmvModel idm;
+    private VariableSplitter varSplitter;
+
+    public PseudocostVariableSelector(VariableSplitter varSplitter) {
+        this.varSplitter = varSplitter;
+    }
+    
+    @Override
+    public double[][] getScores(DmvProblemNode node, DmvRelaxation relax) {
+        if (scores == null) {
+            idm = relax.getIdm();
+
+            scores = new double[idm.getNumConds()][];
+            deltaSum = new double[idm.getNumConds()][][];
+            numObserved = new int[idm.getNumConds()][][];
+            
+            for (int c = 0; c < idm.getNumConds(); c++) {
+                scores[c] = new double[idm.getNumParams(c)];
+                deltaSum[c] = new double[idm.getNumParams(c)][2];
+                numObserved[c] = new int[idm.getNumParams(c)][2];
+            }
+        }
+        
+        // Initialize unreliable pseudocost values with strong branching.
+        CptBounds origBounds = relax.getBounds();
+        double parentBound = node.getLocalUb();
+        for (int c = 0; c < idm.getNumConds(); c++) {
+            for (int m = 0; m < idm.getNumParams(c); m++) {
+                if (numObserved[c][m][0] < RELIABILITY_THRESHOLD || numObserved[c][m][1] < RELIABILITY_THRESHOLD) {
+                    List<CptBoundsDeltaList> deltas = varSplitter.split(origBounds, new VariableId(c, m));
+                    List<ProblemNode> children = node.branch(deltas);
+                    assert(children.size() == 2);
+                    for (int lu = 0; lu < 2; lu++) {
+                        if (numObserved[c][m][lu] < RELIABILITY_THRESHOLD) {
+                            DmvProblemNode child = (DmvProblemNode)children.get(lu);
+                            assert(child.getDeltas().getPrimary().getLu().getAsInt() == lu);
+                            relax.getRelaxedSolution(child);
+                            double cBound = child.getLocalUb();
+                            double cDelta = parentBound - cBound;
+                            deltaSum[c][m][lu] += cDelta;
+                            numObserved[c][m][lu]++;
+
+                            String name = idm.getName(c, m);
+                            log.trace(String.format("Probing: c=%d m=%d lu=%d name=%s diff=%f", c, m, lu, name, cDelta));
+                        }
+                    }
+                    updateScore(c, m);
+                }
+            }
+        }
+        
+        // Update the pseudocosts with the current node.
+        CptBoundsDelta primaryDelta = node.getDeltas().getPrimary();
+        if (primaryDelta != null) {
+            int c = primaryDelta.getC();
+            int m = primaryDelta.getM();
+            int lu = primaryDelta.getLu().getAsInt();
+            // Since we're doing maximization...
+            deltaSum[c][m][lu] += node.getParent().getLocalUb() - node.getLocalUb();
+            numObserved[c][m][lu]++;
+            updateScore(c, m);
+        }
+        
+        return scores;
+    }
+
+    private void updateScore(int c, int m) {
+        double lDelta = deltaSum[c][m][Lu.LOWER.getAsInt()] / numObserved[c][m][Lu.LOWER.getAsInt()];
+        double uDelta = deltaSum[c][m][Lu.UPPER.getAsInt()] / numObserved[c][m][Lu.UPPER.getAsInt()];
+        // The product score used in SCIP. See Eq (5.2) in Tobias Achterberg's thesis.
+        scores[c][m] = FullStrongVariableSelector.computeScore(lDelta, uDelta);
+    }
+
+}

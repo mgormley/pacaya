@@ -7,7 +7,7 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;

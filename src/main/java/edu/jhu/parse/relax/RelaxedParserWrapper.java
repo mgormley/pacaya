@@ -2,12 +2,12 @@ package edu.jhu.parse.relax;
 
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.gridsearch.dmv.BasicDmvProjector;
-import edu.jhu.gridsearch.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.gridsearch.dmv.DmvObjective;
-import edu.jhu.gridsearch.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.gridsearch.dmv.IndexedDmvModel;
-import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.globalopt.dmv.BasicDmvProjector;
+import edu.jhu.globalopt.dmv.DmvObjective;
+import edu.jhu.globalopt.dmv.IndexedDmvModel;
+import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
+import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorPrm;
+import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.DepParser;

@@ -9,7 +9,7 @@ import org.junit.Test;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.gridsearch.dmv.RelaxedDepTreebank;
+import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
 import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.Model;

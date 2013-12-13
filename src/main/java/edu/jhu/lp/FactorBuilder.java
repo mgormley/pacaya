@@ -6,7 +6,7 @@ import ilog.concert.IloNumVar;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
+import edu.jhu.globalopt.cpt.CptBoundsDelta.Lu;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.sort.IntSort;
