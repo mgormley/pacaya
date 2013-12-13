@@ -13,7 +13,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gridsearch.cpt.CptBoundsDelta.Lu;
-import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
 import edu.jhu.gridsearch.rlt.filter.AllRltRowAdder;
 import edu.jhu.gridsearch.rlt.filter.RltFactorFilter;
 import edu.jhu.gridsearch.rlt.filter.RltRowAdder;
@@ -27,6 +26,8 @@ import edu.jhu.lp.LpRows;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.map.LongDoubleEntry;
 import edu.jhu.prim.map.LongIntHashMap;
+import edu.jhu.prim.matrix.sym.SymIntMat;
+import edu.jhu.prim.matrix.sym.SymmetricMatrix;
 import edu.jhu.prim.tuple.OrderedPair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.UnorderedPair;
@@ -261,6 +262,16 @@ public class Rlt {
         return inputMatrix.getIndex(var);
     }
 
+    /**
+     * For testing only.
+     * Convenience class for IloNumVars.
+     */
+    public static class SymVarMat extends SymmetricMatrix<IloNumVar> {
+        public IloNumVar[] getRowAsArray(int i) {
+            return getRowAsArray(i, new IloNumVar[] {});
+        }
+    }
+    
     /**
      * For testing only.
      */

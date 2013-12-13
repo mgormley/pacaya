@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.junit.Assert;
 
-import edu.jhu.gridsearch.rlt.SymmetricMatrix.SymVarMat;
+import edu.jhu.gridsearch.rlt.Rlt.SymVarMat;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.sort.IntDoubleSort;
