@@ -5,6 +5,9 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.tag.FileMapTagReducer;
+import edu.jhu.tag.OovTagReducer;
+import edu.jhu.tag.Ptb45To17TagReducer;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.Opt;
 

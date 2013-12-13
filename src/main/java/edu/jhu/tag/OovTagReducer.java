@@ -1,5 +1,7 @@
-package edu.jhu.data;
+package edu.jhu.tag;
 
+import edu.jhu.data.Label;
+import edu.jhu.data.TaggedWord;
 import edu.jhu.util.Alphabet;
 
 public class OovTagReducer extends AbstractTagReducer {

@@ -30,7 +30,7 @@ public class TaggedWord implements Label {
      * For reducing from 45 to 17 tags.
      */
     @Deprecated
-    void setTag(String tag) {
+    public void setTag(String tag) {
         this.tag = tag;
     }
     

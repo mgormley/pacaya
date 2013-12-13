@@ -1,4 +1,4 @@
-package edu.jhu.data;
+package edu.jhu.tag;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import edu.jhu.data.Label;
+import edu.jhu.data.Sentence;
+import edu.jhu.data.SentenceCollection;
+import edu.jhu.data.TaggedWord;
+import edu.jhu.data.Word;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.util.Alphabet;

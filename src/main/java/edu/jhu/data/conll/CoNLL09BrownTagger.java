@@ -6,8 +6,8 @@ import java.io.IOException;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.BrownClusterTagger;
 import edu.jhu.data.Label;
+import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;

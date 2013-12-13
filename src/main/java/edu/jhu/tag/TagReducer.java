@@ -1,4 +1,6 @@
-package edu.jhu.data;
+package edu.jhu.tag;
+
+import edu.jhu.data.DepTreebank;
 
 public interface TagReducer {
 

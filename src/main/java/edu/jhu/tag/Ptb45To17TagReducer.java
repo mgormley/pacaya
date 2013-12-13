@@ -1,4 +1,5 @@
-package edu.jhu.data;
+package edu.jhu.tag;
+
 
 
 public class Ptb45To17TagReducer extends AbstractTagReducer implements TagReducer {

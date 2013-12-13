@@ -1,4 +1,4 @@
-package edu.jhu.data;
+package edu.jhu.tag;
 
 import java.io.BufferedReader;
 import java.io.File;
