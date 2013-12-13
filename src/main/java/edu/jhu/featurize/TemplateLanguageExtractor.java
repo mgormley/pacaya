@@ -47,6 +47,12 @@ public class TemplateLanguageExtractor {
         this.fSent = new FeaturizedSentence(sent);
     }
     
+    public void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<Object> feats) {
+        for (FeatTemplate tpl : tpls) {
+            addFeatures(tpl, pidx, cidx, feats);
+        }
+    }
+    
     public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<Object> feats) {
         int idx = pidx;
         if (tpl instanceof FeatTemplate1) {
@@ -94,8 +100,10 @@ public class TemplateLanguageExtractor {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokProperty prop = tpl.prop;
         idx = getModifiedPosition(mod, idx);
         String val = getTokProp(prop, idx);
-        Object feat = toFeat(tpl.name, val);
-        feats.add(feat);
+        if (val != null) {
+            Object feat = toFeat(tpl.getName(), val);
+            feats.add(feat);
+        }
     }
     
     /** Same as above except that it permits properties of the token which expand to multiple strings. */
@@ -104,7 +112,7 @@ public class TemplateLanguageExtractor {
         idx = getModifiedPosition(mod, idx);
         List<String> vals = getTokPropList(prop, idx);
         for (String val : vals) {
-            feats.add(toFeat(tpl.name, val));
+            feats.add(toFeat(tpl.getName(), val));
         }
     }
 
@@ -128,14 +136,14 @@ public class TemplateLanguageExtractor {
             List<Integer> indices = getPositionList(pl, pidx, cidx);
             vals = getTokPropsForList(prop, indices);
             vals = getModifiedList(lmod, vals);
-            feat = toFeat(tpl.name, vals);
+            feat = toFeat(tpl.getName(), vals);
             feats.add(feat);
             return;
         case PATH_P_C: case PATH_C_ROOT: case PATH_P_ROOT: case PATH_LCA_ROOT: 
             List<Pair<Integer, Dir>> path = getPath(pl, pidx, cidx);
             vals = getTokPropsForPath(prop, includeDir, path);
             vals = getModifiedList(lmod, vals);
-            feat = toFeat(tpl.name, vals);
+            feat = toFeat(tpl.getName(), vals);
             feats.add(feat);
             return;
         default:
@@ -189,7 +197,7 @@ public class TemplateLanguageExtractor {
         }
     }
     
-    public int getModifiedPosition(PositionModifier mod, int idx) {
+    private int getModifiedPosition(PositionModifier mod, int idx) {
         FeaturizedToken tok = null;
         if (mod != PositionModifier.BEFORE1 && mod != PositionModifier.AFTER1) {
             tok = getFeatTok(idx);
@@ -210,12 +218,6 @@ public class TemplateLanguageExtractor {
             // --------------------- DepTree ---------------------  
         case HEAD:
             return tok.getParent();
-        case LMD:
-            // TODO: Implement this in FeaturizedToken.
-            throw new IllegalStateException("not yet implemented");
-        case RMD:
-            // TODO: Implement this in FeaturizedToken.
-            throw new IllegalStateException("not yet implemented");
         case LNS:
             return tok.getNearLeftSibling();
         case RNS:
@@ -244,7 +246,10 @@ public class TemplateLanguageExtractor {
     private List<String> getTokPropsForPath(TokProperty prop, boolean includeDir, List<Pair<Integer,Dir>> path) {
         List<String> props = new ArrayList<String>(path.size());
         for (Pair<Integer,Dir> edge : path) {
-            props.add(getTokProp(prop, edge.get1()));
+            String val = getTokProp(prop, edge.get1());
+            if (val != null) {
+                props.add(val);
+            }
             if (includeDir) {
                 props.add(edge.get2().name());
             }
@@ -255,7 +260,10 @@ public class TemplateLanguageExtractor {
     private List<String> getTokPropsForList(TokProperty prop, List<Integer> indices) {
         List<String> props = new ArrayList<String>(indices.size());
         for (int idx : indices) {
-            props.add(getTokProp(prop, idx));
+            String val = getTokProp(prop, idx);
+            if (val != null) {
+                props.add(val);
+            }
         }
         return props;
     }
@@ -270,6 +278,9 @@ public class TemplateLanguageExtractor {
         }
     }
     
+    /**
+     * @return The property or null if the property is not included.
+     */
     private String getTokProp(TokProperty prop, int idx) {
         FeaturizedToken tok = getFeatTok(idx);
         switch (prop) {
@@ -284,17 +295,16 @@ public class TemplateLanguageExtractor {
                 return form.substring(0, Math.max(form.length(), 5));    
             } else {
                 return null;
-            }            
+            }
         case LEMMA:
             return tok.getLemma();
         case POS:
             return tok.getPos();
         case BC0:
-            //TODO: return tok.getBrownCluster(4);    
-            throw new IllegalStateException();
+            String cluster = tok.getCluster();
+            return cluster.substring(0, Math.max(cluster.length(), 5));    
         case BC1:
-            //TODO: return tok.getBrownCluster();
-            throw new IllegalStateException();
+            return tok.getCluster();
         case DEPREL:
             return tok.getDeprel();
         case MORPHO:
@@ -338,7 +348,7 @@ public class TemplateLanguageExtractor {
     }
 
     private Object toFeat(String name, Collection<String> vals) {
-        return name + org.apache.commons.lang.StringUtils.join(vals, "_");
+        return name + "_" + org.apache.commons.lang.StringUtils.join(vals, "_");
     }
 
     private Object toFeat(Object f1, Object f2) {

@@ -1,20 +1,14 @@
 package edu.jhu.featurize;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.log4j.Logger;
-
-import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
-import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.prim.list.IntArrayList;
-import edu.jhu.prim.tuple.Pair;
-import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.srl.SrlRunner;
+import edu.jhu.util.collections.Lists;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -40,7 +34,9 @@ public class TemplateLanguage {
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
     public enum TokPropList {
-        MORPHO, CH, CHPRE_N, CHSUF_N;
+        MORPHO,
+        // Not implemented:
+        // CH, CHPRE_N, CHSUF_N;
     }
 
     /** Directed Edge Property. A mapping from a directed edge to a string. */
@@ -52,7 +48,8 @@ public class TemplateLanguage {
     public enum PositionModifier {
         BEFORE1, AFTER1,
         //
-        HEAD, LMD, RMD, LNS, RNS, LMC, RMC, LNC, RNC,
+        HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
+        // Not implemented: LMD, RMD,         
         //
         LOW_SV, LOW_SN, HIGH_SV, HIGH_SN,
     }
@@ -85,8 +82,9 @@ public class TemplateLanguage {
     }
 
     private static ArrayList<Description> desc = new ArrayList<Description>();
-
-    private static void desc(Object obj, String name, String description, AT... requiredLevels) {
+    private static Map<Enum<?>, Description> descMap = new HashMap<Enum<?>, Description>();
+    
+    private static void desc(Enum<?> obj, String name, String description, AT... requiredLevels) {
         desc.add(new Description(obj, name, description, requiredLevels));
     }
     
@@ -105,9 +103,10 @@ public class TemplateLanguage {
         
         /** Word property list expansion. A mapping from a position to a list of strings. */ 
         desc(TokPropList.MORPHO, "m1", "Morphological features", AT.MORPHO);
-        desc(TokPropList.CH, "ch", "Each character of the word", AT.WORD);
-        desc(TokPropList.CHPRE_N, "chpre_n", "Character n-gram prefix", AT.WORD);
-        desc(TokPropList.CHSUF_N, "chsuf_n", "Character n-gram suffix", AT.WORD);
+        // TODO: 
+        // desc(TokPropList.CH, "ch", "Each character of the word", AT.WORD);
+        // desc(TokPropList.CHPRE_N, "chpre_n", "Character n-gram prefix", AT.WORD);
+        // desc(TokPropList.CHSUF_N, "chsuf_n", "Character n-gram suffix", AT.WORD);
    
         /** Directed Edge Property. A mapping from a directed edge to a string. */
         desc(EdgeProperty.DIR, "dir", "Direction of an edge in a path", AT.DEP_TREE);
@@ -118,14 +117,15 @@ public class TemplateLanguage {
         desc(PositionModifier.AFTER1, "w_{1}", "1 after w", AT.WORD);
         //
         desc(PositionModifier.HEAD, "w_{head}", "Syntactic head of w", AT.DEP_TREE);
-        desc(PositionModifier.LMD, "w_{lmd}", "Leftmost descendent", AT.DEP_TREE);
-        desc(PositionModifier.RMD, "w_{rmd}", "Rightmost descendent", AT.DEP_TREE);
         desc(PositionModifier.LNS, "w_{lns}", "Left nearest sibling", AT.DEP_TREE);
         desc(PositionModifier.RNS, "w_{rns}", "Right nearest sibling", AT.DEP_TREE);
         desc(PositionModifier.LMC, "w_{lmc}", "Leftmost child", AT.DEP_TREE);
         desc(PositionModifier.RMC, "w_{rmc}", "Rightmost child", AT.DEP_TREE);
         desc(PositionModifier.LNC, "w_{lnc}", "Left nearest child", AT.DEP_TREE);
         desc(PositionModifier.RNC, "w_{rnc}", "Right nearest child", AT.DEP_TREE);
+        // TODO:
+        //desc(PositionModifier.LMD, "w_{lmd}", "Leftmost descendent", AT.DEP_TREE);
+        //desc(PositionModifier.RMD, "w_{rmd}", "Rightmost descendent", AT.DEP_TREE);
         //
         desc(PositionModifier.LOW_SV, "first(t, VERB, path(p, root))", "Low support Verb", AT.POS, AT.DEP_TREE);
         desc(PositionModifier.LOW_SN, "first(t, NOUN, path(p, root))", "Low support Noun", AT.POS, AT.DEP_TREE);
@@ -161,11 +161,16 @@ public class TemplateLanguage {
         /** Positions. */
         desc(Position.PARENT, "p", "Parent");
         desc(Position.CHILD, "c", "Child");
+        
+        // Create the mapping of enums to their descriptions.
+        for (Description d : desc) {
+            descMap.put(d.getObj(), d);
+        }
     }
     
     /** Feature function description. */
     public static class Description {
-        private Object obj;
+        private Enum<?> obj;
         private String name;
         private String description;
         private AT[] requiredLevels;
@@ -178,12 +183,24 @@ public class TemplateLanguage {
          * @param description Plain text description of this property.
          * @param requiredLevels Required levels of annotation.
          */
-        private Description(Object obj, String name, String description, AT... requiredLevels) {
+        private Description(Enum<?> obj, String name, String description, AT... requiredLevels) {
             this.obj = obj;
             this.name = name;
             this.description = description;
             this.requiredLevels = requiredLevels;
         }
+        public Enum<?> getObj() {
+            return obj;
+        }
+        public String getName() {
+            return name;
+        }
+        public String getDescription() {
+            return description;
+        }
+        public AT[] getRequiredLevels() {
+            return requiredLevels;
+        }        
     }
     
     public static abstract class FeatTemplate {
@@ -194,6 +211,7 @@ public class TemplateLanguage {
         public String getName() {
             return name;
         }
+        public abstract List<Enum<?>> getStructure();
     }
     
     /**
@@ -202,11 +220,10 @@ public class TemplateLanguage {
      *     c_{head}.dr
      *     first(t, NOUN, path(p, root)).bc0
      */
-    public class FeatTemplate1 extends FeatTemplate {
+    public static class FeatTemplate1 extends FeatTemplate {
         public Position pos; 
         public PositionModifier mod; 
         public TokProperty prop;
-        public String name;
         /**
          * Constructor.
          * @param pos Position to start from.
@@ -219,6 +236,9 @@ public class TemplateLanguage {
             this.mod = mod;
             this.prop = prop;
         }
+        public List<Enum<?>> getStructure() {
+            return Lists.getList(pos, mod, prop);
+        }
     }
     
     /**
@@ -226,11 +246,10 @@ public class TemplateLanguage {
      *     p.morpho
      * which extract multiple features of a single token.
      */
-    public class FeatTemplate2 extends FeatTemplate {
+    public static class FeatTemplate2 extends FeatTemplate {
         public Position pos;
         public PositionModifier mod; 
         public TokPropList prop; 
-        public String name;
         /**
          * Constructor.
          * @param pos Position to start from.
@@ -243,6 +262,9 @@ public class TemplateLanguage {
             this.mod = mod;
             this.prop = prop;
         }
+        public List<Enum<?>> getStructure() {
+            return Lists.getList(pos, mod, prop);
+        }
     }
 
     /**
@@ -251,12 +273,11 @@ public class TemplateLanguage {
      *    children(p).bc0.seq
      *    line(p,c).t.noDup
      */
-    public class FeatTemplate3 extends FeatTemplate {
+    public static class FeatTemplate3 extends FeatTemplate {
         public PositionList pl; 
         public TokProperty prop; 
         public boolean includeDir;
         public ListModifier lmod;
-        public String name;
         /**
          * Constructor. 
          * @param pl Position list which is a function of the parent/child positions.
@@ -270,6 +291,13 @@ public class TemplateLanguage {
             this.prop = prop;
             this.lmod = lmod;
         }
+        public List<Enum<?>> getStructure() {
+            if (includeDir) {
+                return Lists.getList(pl, prop, EdgeProperty.DIR, prop);
+            } else {
+                return Lists.getList(pl, prop, prop);
+            }
+        }
     }
     
     /**
@@ -277,15 +305,63 @@ public class TemplateLanguage {
      *     p.w+c_{-1}.bc0
      *     p.t+c.t
      */
-    public class BigramTemplate extends FeatTemplate {
+    public static class BigramTemplate extends FeatTemplate {
         public FeatTemplate tpl1;
         public FeatTemplate tpl2;
-        public String name;
         public BigramTemplate(FeatTemplate tpl1, FeatTemplate tpl2) {
             super(StringUtils.join(new String[]{tpl1.getName(), tpl2.getName()}, "+"));
             this.tpl1 = tpl1;
             this.tpl2 = tpl2;
         }
+        public List<Enum<?>> getStructure() {
+            List<Enum<?>> s = new ArrayList<Enum<?>>(tpl1.getStructure());
+            s.addAll(tpl2.getStructure());
+            return s;
+        }
+    }
+    
+    /* ---------------------------- Utilities for Checking Feature Template Sets -------------------- */
+    
+    public static boolean hasRequiredAnnotationTypes(SimpleAnnoSentence sent, Set<AT> types) {
+        for (AT type : types) {
+            if (!hasRequiredAnnotationType(sent, type)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    public static boolean hasRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
+        switch (type) {
+        case WORD:
+            return sent.getWords() != null;
+        case LEMMA:
+            return sent.getLemmas() != null;
+        case POS:
+            return sent.getPosTags() != null;
+        case BROWN:
+            return sent.getClusters() != null;
+        case DEP_TREE:
+            return sent.getParents() != null;
+        case LABEL_DEP_TREE:
+            return sent.getParents() != null && sent.getDeprels() != null;
+        case MORPHO:
+            return sent.getFeats() != null;
+        default:
+            throw new IllegalStateException();
+        }
+    }
+
+    public static Set<AT> getRequiredAnnotationTypes(List<FeatTemplate> tpls) {
+        HashSet<AT> types = new HashSet<AT>();
+        for (FeatTemplate tpl : tpls) {
+            for (Enum<?> obj : tpl.getStructure()) {
+                for (AT type : descMap.get(obj).getRequiredLevels()) {
+                    types.add(type);
+                }
+            }
+        }
+        return types;
     }
     
 }
