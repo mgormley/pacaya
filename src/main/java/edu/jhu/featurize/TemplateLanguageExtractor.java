@@ -44,7 +44,7 @@ public class TemplateLanguageExtractor {
         //this.sent = sent;
         //this.cs = cs;
         this.sig = cs.sig;
-        this.fSent = new FeaturizedSentence(sent);
+        this.fSent = new FeaturizedSentence(sent, cs);
     }
     
     public void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<Object> feats) {

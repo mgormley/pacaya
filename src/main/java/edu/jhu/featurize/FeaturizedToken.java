@@ -6,9 +6,10 @@ import java.util.List;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
+import edu.jhu.data.conll.LanguageConstants;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.srl.CorpusStatistics;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
@@ -41,6 +42,8 @@ public class FeaturizedToken {
 
     private SimpleAnnoSentence sent;
     private int idx = -1;
+    private CorpusStatistics cs;
+    
     private String featStr;
     private List<String> feat;
     private List<String> feat6;
@@ -63,7 +66,12 @@ public class FeaturizedToken {
     private int nearRightSibling;
     private Dir direction = null; // null indicates no direction
         
+    // The CorpusStatistics parameter is only needed if getHighSupportNoun/Verb is used.
     public FeaturizedToken(int idx, SimpleAnnoSentence sent) {
+        this(idx, sent, null);
+    }
+    
+    public FeaturizedToken(int idx, SimpleAnnoSentence sent, CorpusStatistics cs) {
         /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
@@ -79,6 +87,7 @@ public class FeaturizedToken {
         this.parents = sent.getParents();
         this.nearLeftSibling = -1;
         this.nearRightSibling = sent.size();
+        this.cs = cs;
     }
     
     // ------------------------ Getters and Caching Methods ------------------------ //
@@ -340,6 +349,10 @@ public class FeaturizedToken {
         if (cachedSupports) {
             return;
         }
+        if (cs == null) {
+            throw new IllegalStateException("High/low support verb/noun requires " +
+            		"CorpusStatistics to be provided at construction time.");
+        }
         ensureRootPath();
         
         // Support features
@@ -347,9 +360,6 @@ public class FeaturizedToken {
         boolean haveArgLow = false;
         boolean havePredLow = false;
         int i;
-        // TODO: This is hardcoded to the Spanish POS tags.
-        String supportNounTag = "n";
-        String supportVerbTag = "v";
 
         this.lowSupportNoun = -1;
         this.highSupportNoun = -1;
@@ -361,7 +371,7 @@ public class FeaturizedToken {
                 break;
             }
             parentPos = sent.getPosTag(i);
-            if (parentPos.equals(supportNounTag)) {
+            if (LanguageConstants.isNoun(parentPos, cs.getLanguage())) {
                 if (!haveArgLow) {
                     haveArgLow = true;
                     this.lowSupportNoun = i;
@@ -369,7 +379,7 @@ public class FeaturizedToken {
                 } else {
                     this.highSupportNoun = i;
                 }
-            } else if (parentPos.equals(supportVerbTag)) {
+            } else if (LanguageConstants.isVerb(parentPos, cs.getLanguage())) {
                 if (!havePredLow) {
                     havePredLow = true;
                     this.lowSupportVerb = i;
@@ -377,7 +387,7 @@ public class FeaturizedToken {
                 } else {
                     this.highSupportVerb = i;
                 }
-            }            
+            }
         }
         cachedSupports = true;
     }

@@ -10,7 +10,9 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.util.collections.Lists;
 
 public class FeaturizedTokenTest {
 
@@ -99,8 +101,10 @@ public class FeaturizedTokenTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-
-        FeaturizedToken zhaoObj = new FeaturizedToken(3, simpleSent);
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        cs.init(Lists.getList(simpleSent));
+        
+        FeaturizedToken zhaoObj = new FeaturizedToken(3, simpleSent, cs);
         assertEquals(zhaoObj.getParent(), 5);
         assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
         assertEquals(zhaoObj.getFarLeftChild(), -2);

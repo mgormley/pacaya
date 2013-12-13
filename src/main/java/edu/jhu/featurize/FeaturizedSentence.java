@@ -1,6 +1,7 @@
 package edu.jhu.featurize;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.srl.CorpusStatistics;
 
 /**
  * Lazily created featurized sentence.
@@ -11,19 +12,20 @@ import edu.jhu.data.simple.SimpleAnnoSentence;
 public class FeaturizedSentence {
 
     private SimpleAnnoSentence sent;
+    private CorpusStatistics cs;
     
     private FeaturizedToken[] toks;
     private FeaturizedTokenPair[][] pairs;
     private FeaturizedToken featuredHeadDefault;
     private FeaturizedToken featuredTailDefault;
     
-    public FeaturizedSentence(SimpleAnnoSentence sent) {
+    public FeaturizedSentence(SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.sent = sent;
-        int[] parents = sent.getParents();
+        this.cs = cs;
         this.toks = new FeaturizedToken[sent.size()];
         this.pairs = new FeaturizedTokenPair[sent.size()][sent.size()];
-        this.featuredHeadDefault = new FeaturizedToken(-1, sent);
-        this.featuredTailDefault = new FeaturizedToken(sent.size(), sent);
+        this.featuredHeadDefault = new FeaturizedToken(-1, sent, cs);
+        this.featuredTailDefault = new FeaturizedToken(sent.size(), sent, cs);
     }
     
     public FeaturizedToken getFeatTok(int idx) {
@@ -33,7 +35,7 @@ public class FeaturizedSentence {
             return featuredTailDefault;
         }      
         if (toks[idx] == null) {
-            this.toks[idx] = new FeaturizedToken(idx, sent);
+            this.toks[idx] = new FeaturizedToken(idx, sent, cs);
         }
         return toks[idx];
     }

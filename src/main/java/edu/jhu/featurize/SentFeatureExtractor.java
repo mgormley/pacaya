@@ -89,7 +89,7 @@ public class SentFeatureExtractor {
             this.parents = getParents(sent);
             // TBD:  Should this be defined differently?
             if (prm.useZhaoFeats || prm.useDepPathFeats || prm.useBjorkelundFeats) {
-                fSent = new FeaturizedSentence(sent);
+                fSent = new FeaturizedSentence(sent, cs);
             }
             if (prm.useAllTemplates) {
                 this.prm.formFeats = true;

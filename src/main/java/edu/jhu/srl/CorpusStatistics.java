@@ -185,4 +185,8 @@ public class CorpusStatistics implements Serializable {
         return initialized;
     }
 
+    public String getLanguage() {
+        return prm.language;
+    }
+
 }
