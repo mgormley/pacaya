@@ -7,9 +7,9 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;

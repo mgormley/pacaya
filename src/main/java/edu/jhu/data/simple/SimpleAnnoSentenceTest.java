@@ -1,4 +1,4 @@
-package edu.jhu.data.concrete;
+package edu.jhu.data.simple;
 
 import static org.junit.Assert.*;
 

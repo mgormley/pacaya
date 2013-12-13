@@ -9,10 +9,10 @@ import java.io.ObjectOutputStream;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 

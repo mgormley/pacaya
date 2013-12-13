@@ -1,6 +1,6 @@
 package edu.jhu.featurize;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentence;
 
 /**
  * Lazily created featurized sentence.

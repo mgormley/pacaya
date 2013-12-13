@@ -9,12 +9,12 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExampleList;

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
+import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.hlt.concrete.Concrete.Communication;
 import edu.jhu.hlt.concrete.Concrete.DependencyParse;
 import edu.jhu.hlt.concrete.Concrete.DependencyParse.Dependency;

@@ -1,6 +1,6 @@
 package edu.jhu.gm.train;
 
-import static edu.jhu.data.concrete.SimpleAnnoSentenceCollection.getSingleton;
+import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureTemplateList;

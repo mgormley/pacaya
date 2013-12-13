@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.concrete.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;

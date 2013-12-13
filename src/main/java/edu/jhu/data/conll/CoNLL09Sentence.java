@@ -11,11 +11,11 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
+import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.

@@ -1,4 +1,4 @@
-package edu.jhu.data.concrete;
+package edu.jhu.data.simple;
 
 import java.util.ArrayList;
 import java.util.List;

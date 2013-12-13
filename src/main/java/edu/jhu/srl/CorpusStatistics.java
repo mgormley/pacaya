@@ -15,9 +15,9 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.Label;
-import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
+import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 

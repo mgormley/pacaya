@@ -5,11 +5,11 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.concrete.SimpleAnnoSentence;
-import edu.jhu.data.concrete.SimpleAnnoSentenceCollection;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
+import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExample;
