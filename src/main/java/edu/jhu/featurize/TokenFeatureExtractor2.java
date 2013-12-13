@@ -275,6 +275,7 @@ public class TokenFeatureExtractor2 {
     /**
      * For bigram feature templates of the form:
      *     p.w+c_{-1}.bc0
+     *     p.t+c.t
      */
     public class BigramTemplate extends FeatTemplate {
         public FeatTemplate tpl1;
@@ -299,14 +300,40 @@ public class TokenFeatureExtractor2 {
         this.fSent = new FeaturizedSentence(sent);
     }
     
-    public void addFeatures(FeatTemplate1 ft, List<Object> feats) {
+    public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<Object> feats) {
+        int idx = pidx;
+        if (tpl instanceof FeatTemplate1) {
+            addTokenFeature((FeatTemplate1) tpl, idx, feats);
+        } else if (tpl instanceof FeatTemplate2) {
+            addTokenFeatures((FeatTemplate2) tpl, idx, feats);            
+        } else if (tpl instanceof FeatTemplate3) {
+            addListFeature((FeatTemplate3) tpl, pidx, cidx, feats);
+        } else if (tpl instanceof BigramTemplate) {
+            addBigramFeature((BigramTemplate) tpl, pidx, cidx, feats);
+        }
+    }
         
+    /**
+     * For bigram feature templates of the form:
+     *     p.w+c_{-1}.bc0
+     *     p.t+c.t
+     * @param tpl Structured feature template.
+     * @param pidx Token to which the parent position refers.
+     * @param cidx Token to which the child position refers.
+     * @param feats The feature list to which this will be added.
+     */
+    public void addBigramFeature(BigramTemplate tpl, int pidx, int cidx, List<Object> feats) {
+        ArrayList<Object> feats1 = new ArrayList<Object>();
+        ArrayList<Object> feats2 = new ArrayList<Object>();
+        addFeatures(tpl.tpl1, pidx, cidx, feats1);
+        addFeatures(tpl.tpl2, pidx, cidx, feats2);
+        for (Object f1 : feats1) {
+            for (Object f2 : feats2) {
+                feats.add(toFeat(f1, f2));
+            }
+        }
     }
 
-    public void addFeatures(BigramTemplate bg, int pidx, int cidx) {
-
-    }
-        
     /**
      * Adds features of the form: 
      *     p.bc1
@@ -314,7 +341,7 @@ public class TokenFeatureExtractor2 {
      *     first(t, NOUN, path(p, root)).bc0
      * @param tpl Structured feature template.
      * @param idx Token to which the original position refers.
-     * @param The feature list to which this will be added.
+     * @param feats The feature list to which this will be added.
      */
     public void addTokenFeature(FeatTemplate1 tpl, int idx, List<Object> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokProperty prop = tpl.prop;
@@ -343,6 +370,7 @@ public class TokenFeatureExtractor2 {
      * @param tpl Structured feature template.
      * @param pidx Token to which the parent position refers.
      * @param cidx Token to which the child position refers.
+     * @param feats The feature list to which this will be added.
      */
     public void addListFeature(FeatTemplate3 tpl, int pidx, int cidx, List<Object> feats) {
         PositionList pl = tpl.pl; TokProperty prop = tpl.prop; boolean includeDir = tpl.includeDir; ListModifier lmod = tpl.lmod;
@@ -564,6 +592,14 @@ public class TokenFeatureExtractor2 {
 
     private Object toFeat(String name, Collection<String> vals) {
         return name + org.apache.commons.lang.StringUtils.join(vals, "_");
+    }
+
+    private Object toFeat(Object f1, Object f2) {
+        if (f1 instanceof String && f2 instanceof String) {
+            return f1 + "_" + f2;
+        } else {
+            return new Pair<Object,Object>(f1, f2);
+        }
     }
 
 }
