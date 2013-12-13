@@ -48,6 +48,7 @@ public class FeaturizedToken {
     private Integer nearLeftChild;
     private Integer nearRightChild;
     private List<Pair<Integer, Dir>> rootPath;
+    private boolean cachedSupports = false;
     private int lowSupportNoun;
     private int highSupportNoun;
     private int lowSupportVerb;
@@ -56,6 +57,7 @@ public class FeaturizedToken {
     private ArrayList<Integer> children;
     private ArrayList<Integer> noFarChildren;
     /* Additional features owing to Bjorkelund al. 2009 */
+    private boolean cachedSiblings = false;
     private int nearLeftSibling;
     private int nearRightSibling;
     private Dir direction = null; // null indicates no direction
@@ -76,29 +78,14 @@ public class FeaturizedToken {
         this.parents = parents;
         this.nearLeftSibling = -1;
         this.nearRightSibling = sent.size();
-        cacheSiblings();   
-        // Basic strings available from input.
-        // These are concatenated in different ways to create features.
-        cacheFeat();
-        cacheFeatStr();
-        cacheRootPath();
-        cacheChildren();
-        /* ZHAO:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
-         * and high(low) support verb or noun.
-         * From the predicate or the argument to the syntactic root along with the syntactic tree, 
-         * the first verb(noun) that is met is called as the low support verb(noun), 
-         * and the nearest one to the root is called as the high support verb(noun). */
-        cacheFarthestNearestChildren();
-        cacheHighLowSupport();
-        /* ZHAO: Family. Two types of children sets for the predicate or argument candidate are considered, 
-         * the first includes all syntactic children (children), the second also includes all but 
-         * excludes the left most and the right most children (noFarChildren). */
-        cacheNoFarChildren();
-    }    
+    }
     
     // ------------------------ Getters and Caching Methods ------------------------ //
 
     public ArrayList<String> getFeat() {
+        if (feat == null) {
+            cacheFeat();
+        }
         return feat;
     }
     
@@ -124,11 +111,10 @@ public class FeaturizedToken {
     }
 
     public String getFeatStr() {
+        if (featStr == null) {
+            featStr = StringUtils.join(feat, "_");
+        }
         return featStr;
-    }
-    
-    private void cacheFeatStr() {
-        featStr = StringUtils.join(feat, "_");
     }
     
     public String getForm() {
@@ -177,10 +163,14 @@ public class FeaturizedToken {
     }
     
     public List<Pair<Integer, Dir>> getRootPath() {
+        ensureRootPath();
         return rootPath;
     }
     
-    private void cacheRootPath() {
+    private void ensureRootPath() {
+        if (rootPath != null) {
+            return;
+        }
         if (idx < 0 || idx >= sent.size()) {
             this.rootPath =  new ArrayList<Pair<Integer,Dir>>();
             this.rootPath.add(new Pair<Integer, Dir>(-1,Dir.UP));
@@ -190,10 +180,14 @@ public class FeaturizedToken {
     }
     
     public ArrayList<Integer> getChildren() {
+        ensureChildren();
         return children;
     }
 
-    private void cacheChildren() {
+    private void ensureChildren() {
+        if (children != null) {
+            return;
+        }
         if (idx < 0 || idx >= sent.size()) {
             // Something that cannot possibly have children.
             this.children = new ArrayList<Integer>();
@@ -204,23 +198,40 @@ public class FeaturizedToken {
     }
     
     public int getFarLeftChild() {
+        if (farLeftChild == null) {
+            cacheFarthestNearestChildren();
+        }
         return farLeftChild;
     }
 
     public int getFarRightChild() {
+        if (farRightChild == null) {
+            cacheFarthestNearestChildren();
+        }
         return farRightChild;
     }
     
     public int getNearLeftChild() {
+        if (nearLeftChild == null) {
+            cacheFarthestNearestChildren();
+        }
         return nearLeftChild;
     }
     
     public int getNearRightChild() {
+        if (nearRightChild == null) {
+            cacheFarthestNearestChildren();
+        }
         return nearRightChild;
     }
     
-    
+    /* ZHAO:  Syntactic Connection. This includes syntactic head (h), left(right) farthest(nearest) child (lm,ln,rm,rn), 
+     * and high(low) support verb or noun.
+     * From the predicate or the argument to the syntactic root along with the syntactic tree, 
+     * the first verb(noun) that is met is called as the low support verb(noun), 
+     * and the nearest one to the root is called as the high support verb(noun). */
     private void cacheFarthestNearestChildren() {
+        ensureChildren();
         // Farthest and nearest child to the left; farthest and nearest child to the right.
         ArrayList<Integer> leftChildren = new ArrayList<Integer>();
         ArrayList<Integer> rightChildren = new ArrayList<Integer>();
@@ -253,9 +264,15 @@ public class FeaturizedToken {
     }
     
     public ArrayList<Integer> getNoFarChildren() {
+        if (noFarChildren == null) {
+            cacheNoFarChildren();
+        }
         return noFarChildren;
     }
-    
+
+    /* ZHAO: Family. Two types of children sets for the predicate or argument candidate are considered, 
+     * the first includes all syntactic children (children), the second also includes all but 
+     * excludes the left most and the right most children (noFarChildren). */
     private void cacheNoFarChildren() {
         this.noFarChildren = new ArrayList<Integer>();
         this.noFarChildren.add(nearLeftChild);
@@ -263,24 +280,31 @@ public class FeaturizedToken {
     }
     
     public int getHighSupportNoun() {
+        ensureHighLowSupport();
         return highSupportNoun;
     }
     
     public int getLowSupportNoun() {
+        ensureHighLowSupport();
         return lowSupportNoun;
-    }
-    
+    }    
 
     public int getHighSupportVerb() {
+        ensureHighLowSupport();
         return highSupportVerb;
     }
     
     public int getLowSupportVerb() {
+        ensureHighLowSupport();
         return lowSupportVerb;
     }
-
     
-    private void cacheHighLowSupport() {
+    private void ensureHighLowSupport() {
+        if (cachedSupports) {
+            return;
+        }
+        ensureRootPath();
+        
         // Support features
         String parentPos;
         boolean haveArgLow = false;
@@ -316,20 +340,25 @@ public class FeaturizedToken {
                 } else {
                     this.highSupportVerb = i;
                 }
-            }
-            
+            }            
         }
+        cachedSupports = true;
     }
     
     public int getNearRightSibling() {
+        ensureSiblings();
         return nearRightSibling;
     }
 
     public int getNearLeftSibling() {
+        ensureSiblings();
         return nearLeftSibling;
     }
         
-    private void cacheSiblings() {
+    private void ensureSiblings() {
+        if (cachedSiblings) {
+            return;
+        }
         if (idx >= 0 && idx < sent.size()) {
             ArrayList<Integer> siblingsList = DepTree.getSiblingsOf(this.parents, idx);
             Collections.sort(siblingsList);
@@ -343,6 +372,7 @@ public class FeaturizedToken {
                 this.nearRightSibling = siblingsList.get(rightSiblingIdx);
             }
         }
+        cachedSiblings = true;
     }
 
     public Dir getDirection() {

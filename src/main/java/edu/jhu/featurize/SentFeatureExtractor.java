@@ -77,9 +77,7 @@ public class SentFeatureExtractor {
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private final int[] parents;
-    private ArrayList<FeaturizedToken> featuredSentence;
-    private FeaturizedToken featuredHeadDefault;
-    private FeaturizedToken featuredTailDefault;
+    private FeaturizedSentence fSent;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
@@ -91,9 +89,7 @@ public class SentFeatureExtractor {
             this.parents = getParents(sent);
             // TBD:  Should this be defined differently?
             if (prm.useZhaoFeats || prm.useDepPathFeats || prm.useBjorkelundFeats) {
-                this.featuredSentence = createZhaoSentence();
-                this.featuredHeadDefault = new FeaturizedToken(-1, parents, sent);
-                this.featuredTailDefault = new FeaturizedToken(sent.size(), parents, sent);
+                fSent = new FeaturizedSentence(sent);
             }
             if (prm.useAllTemplates) {
                 this.prm.formFeats = true;
@@ -108,14 +104,6 @@ public class SentFeatureExtractor {
         } else {
             this.parents = null;
         }
-    }
-    
-    private ArrayList<FeaturizedToken> createZhaoSentence() {
-        ArrayList<FeaturizedToken> _featuredSentence = new ArrayList<FeaturizedToken>();
-        for (Integer i = 0; i < sent.size(); i++) {
-            _featuredSentence.add(new FeaturizedToken(i, parents, sent));
-        }
-        return _featuredSentence;
     }
 
     public int getSentSize() {
@@ -323,7 +311,7 @@ public class SentFeatureExtractor {
                      * Assume that dpPathShare starts from a node r′, then dpPathPred is 
                      * from the predicate to r′, and dpPathArg is from the argument to r′.
                      */
-                    predArgPathObject = new FeaturizedTokenPair(pidx, aidx, predObject, argObject, parents);
+                    predArgPathObject = getFeatureObject(pidx, aidx);
                     // get the feature pieces for the pred-arg path features.
                     predArgPathPieces = makePathPieces(predArgPathObject);
                     // make features out of these pieces.
@@ -727,7 +715,7 @@ public class SentFeatureExtractor {
     public void addDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
         FeaturizedToken predObject = getFeatureObject(pidx);
         FeaturizedToken argObject = getFeatureObject(aidx);
-        FeaturizedTokenPair predArgPathObject = new FeaturizedTokenPair(pidx, aidx, predObject, argObject, parents);
+        FeaturizedTokenPair predArgPathObject = getFeatureObject(pidx, aidx);
         List<Pair<Integer, Dir>> dependencyPath = predArgPathObject.getDependencyPath();
         String feat;
         ArrayList<String> depRelPathWord = new ArrayList<String>();
@@ -905,7 +893,7 @@ public class SentFeatureExtractor {
 
         FeaturizedToken zhaoPred = getFeatureObject(pidx);
         FeaturizedToken zhaoArg = getFeatureObject(aidx);
-        FeaturizedTokenPair zhaoPredArgPair = new FeaturizedTokenPair(pidx, aidx, zhaoPred, zhaoArg, parents);
+        FeaturizedTokenPair zhaoPredArgPair = getFeatureObject(pidx, aidx);
         FeaturizedToken zhaoPredLast = getFeatureObject(pidx - 1);
         FeaturizedToken zhaoPredNext = getFeatureObject(pidx + 1);
         //FeatureObject zhaoPredParent = getFeatureObject(zhaoPred.getParent());
@@ -1233,7 +1221,7 @@ public class SentFeatureExtractor {
         String feat;
         FeaturizedToken zhaoPred = getFeatureObject(pidx);
         FeaturizedToken zhaoArg = getFeatureObject(aidx);
-        FeaturizedTokenPair zhaoPredArgPair = new FeaturizedTokenPair(pidx, aidx, zhaoPred, zhaoArg, parents);
+        FeaturizedTokenPair zhaoPredArgPair = getFeatureObject(pidx, aidx);
         FeaturizedToken predParent = getFeatureObject(zhaoPred.getParent());
         ArrayList<Integer> predChildren = zhaoPred.getChildren();
         FeaturizedToken argLeftSibling = getFeatureObject(zhaoArg.getNearLeftSibling());
@@ -1430,12 +1418,11 @@ public class SentFeatureExtractor {
     }
     
     private FeaturizedToken getFeatureObject(int idx) {
-        if (idx < 0) {
-            return featuredHeadDefault;
-        } else if (idx >= featuredSentence.size()) {
-            return featuredTailDefault;
-        }
-        return featuredSentence.get(idx);
+        return fSent.getFeatTok(idx);
+    }
+
+    private FeaturizedTokenPair getFeatureObject(int pidx, int cidx) {
+        return fSent.getFeatTokPair(pidx, cidx);
     }
     
     private boolean capitalized(String wordForm) {

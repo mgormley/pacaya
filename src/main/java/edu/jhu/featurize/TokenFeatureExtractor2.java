@@ -10,15 +10,19 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
+import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.SrlRunner;
 import edu.stanford.nlp.util.StringUtils;
 
 /**
- * Feature extractor for individual tokens.
+ * Defines a little language for structured feature templates, and the feature
+ * extractors for those templates.
  * 
  * @author mgormley
+ * @author mmitchell
  */
 public class TokenFeatureExtractor2 {
 
@@ -182,13 +186,23 @@ public class TokenFeatureExtractor2 {
         }
     }
     
+    public static abstract class FeatTemplate {
+        private String name;
+        public FeatTemplate(String name) {
+            this.name = name;
+        }
+        public String getName() {
+            return name;
+        }
+    }
+    
     /**
      * For feature templates of the form: 
      *     p.bc1
      *     c_{head}.dr
      *     first(t, NOUN, path(p, root)).bc0
      */
-    public class FeatTemplate1 {
+    public class FeatTemplate1 extends FeatTemplate {
         public Position pos; 
         public PositionModifier mod; 
         public TokProperty prop;
@@ -200,10 +214,10 @@ public class TokenFeatureExtractor2 {
          * @param prop Property to extract from the modified position.
          */
         public FeatTemplate1(Position pos, PositionModifier mod, TokProperty prop) {
+            super(StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, "."));
             this.pos = pos;
             this.mod = mod;
             this.prop = prop;
-            this.name = StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, ".");
         }
     }
     
@@ -212,7 +226,7 @@ public class TokenFeatureExtractor2 {
      *     p.morpho
      * which extract multiple features of a single token.
      */
-    public class FeatTemplate2 {
+    public class FeatTemplate2 extends FeatTemplate {
         public Position pos;
         public PositionModifier mod; 
         public TokPropList prop; 
@@ -224,10 +238,10 @@ public class TokenFeatureExtractor2 {
          * @param prop Property to extract from the modified position.
          */
         public FeatTemplate2(Position pos, PositionModifier mod, TokPropList prop) {
+            super(StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, "."));
             this.pos = pos;
             this.mod = mod;
             this.prop = prop;
-            this.name = StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, ".");
         }
     }
 
@@ -236,11 +250,8 @@ public class TokenFeatureExtractor2 {
      *    path(lca(p,c),root).bc0+dir.noDup
      *    children(p).bc0.seq
      *    line(p,c).t.noDup
-     *    
-     * @param pidx Token to which the parent position refers.
-     * @param cidx Token to which the child position refers.
      */
-    public class FeatTemplate3 {
+    public class FeatTemplate3 extends FeatTemplate {
         public PositionList pl; 
         public TokProperty prop; 
         public boolean includeDir;
@@ -254,19 +265,46 @@ public class TokenFeatureExtractor2 {
          * @param lmod List modifier.
          */
         public FeatTemplate3(PositionList pl, TokProperty prop, boolean includeDir, ListModifier lmod) {
+            super(StringUtils.join(new String[]{pl.name(), prop.name(), lmod.name()}, "."));
             this.pl = pl;
             this.prop = prop;
             this.lmod = lmod;
-            this.name = StringUtils.join(new String[]{pl.name(), prop.name(), lmod.name()}, ".");
         }
     }
     
-    //private SimpleAnnoSentence sent;
-    //private int idx;
-    private SrlBerkeleySignatureBuilder sig;
-
+    /**
+     * For bigram feature templates of the form:
+     *     p.w+c_{-1}.bc0
+     */
+    public class BigramTemplate extends FeatTemplate {
+        public FeatTemplate tpl1;
+        public FeatTemplate tpl2;
+        public String name;
+        public BigramTemplate(FeatTemplate tpl1, FeatTemplate tpl2) {
+            super(StringUtils.join(new String[]{tpl1.getName(), tpl2.getName()}, "+"));
+            this.tpl1 = tpl1;
+            this.tpl2 = tpl2;
+        }
+    }
+    
+    //private final SimpleAnnoSentence sent;
+    //private final CorpusStatistics cs;
+    private final SrlBerkeleySignatureBuilder sig;
+    private final FeaturizedSentence fSent; 
+    
+    public TokenFeatureExtractor2(SimpleAnnoSentence sent, CorpusStatistics cs) {
+        //this.sent = sent;
+        //this.cs = cs;
+        this.sig = cs.sig;
+        this.fSent = new FeaturizedSentence(sent);
+    }
+    
     public void addFeatures(FeatTemplate1 ft, List<Object> feats) {
         
+    }
+
+    public void addFeatures(BigramTemplate bg, int pidx, int cidx) {
+
     }
         
     /**
@@ -513,13 +551,11 @@ public class TokenFeatureExtractor2 {
     }
     
     private FeaturizedToken getFeatTok(int idx) {
-        // TODO:
-        return null;
+        return fSent.getFeatTok(idx);
     }
     
     private FeaturizedTokenPair getFeatTokPair(int pidx, int cidx) {
-        // TODO:
-        return null;
+        return fSent.getFeatTokPair(pidx, cidx);
     }
     
     private Object toFeat(String... vals) {
