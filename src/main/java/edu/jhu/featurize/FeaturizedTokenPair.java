@@ -48,8 +48,14 @@ public class FeaturizedTokenPair {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     
-    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken pTok, FeaturizedToken aTok, int[] parents) {
-        this.parents = parents;
+    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken pTok, FeaturizedToken aTok, SimpleAnnoSentence sent) {
+        assert pTok.getSent() == aTok.getSent();
+        assert pTok.getSent() == sent;
+        this.parents = sent.getParents();
+        this.pTok = pTok;
+        this.aTok = aTok;
+        this.pidx = pidx;
+        this.aidx = aidx;
         /* ZHAO:  Path. There are two basic types of path between the predicate and the argument candidates. 
          * One is the linear path (linePath) in the sequence, the other is the path in the syntactic 
          * parsing tree (dpPath). For the latter, we further divide it into four sub-types by 

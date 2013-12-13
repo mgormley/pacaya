@@ -1,53 +1,20 @@
 package edu.jhu.featurize;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.concrete.SimpleAnnoSentence;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.collections.Lists;
 
 public class SentFeatureExtractorTest {
 
-    @Test
-    public void testGetParentsAndUseGoldSyntax() {
-        CoNLL09Sentence sent = getDogConll09Sentence();
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        {
-            // Test with gold syntax.
-            CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-            csPrm.useGoldSyntax = true;
-            CorpusStatistics cs = new CorpusStatistics(csPrm);
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-            cs.init(Lists.getList(simpleSent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-            int[] goldParents = fe.getParents(simpleSent);
-            assertArrayEquals(new int[] { 1, 2, -1, 2 }, goldParents);
-        }
-        {
-            // Test without gold syntax.
-            CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-            csPrm.useGoldSyntax = false;
-            CorpusStatistics cs = new CorpusStatistics(csPrm);
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-            cs.init(Lists.getList(simpleSent));
-            SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-            int[] predParents = fe.getParents(simpleSent);
-            assertArrayEquals(new int[] { 2, 0, -1, 2 }, predParents);
-        }
-    }
-    
     @Test
     public void testAddZhaoFeatures() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
@@ -78,277 +45,6 @@ public class SentFeatureExtractorTest {
                 fe.addZhaoPairFeatures(i, j, allFeats);
             }
         }
-    }
-    
-    @Test
-    public void testZhaoPathFeatures() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(1, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(0, simpleSent);
-        FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(1, 0, zhaoPred, zhaoArg, parents);
-        List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
-        desiredDpPathShare.add(new Pair<Integer, Dir>(1,Dir.UP));
-        List<Pair<Integer, Dir>> observedDpPathShare = zhaoLink.getDpPathShare();
-        System.out.println(observedDpPathShare);
-        assertEquals(desiredDpPathShare,observedDpPathShare);
-    }
-    
-    @Test
-    public void testZhaoObjectPos() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
-
-        String predPos = zhaoPred.getPos();
-        String argPos = zhaoArg.getPos();
-        assertEquals(predPos,argPos,"p");
-        
-        csPrm.useGoldSyntax = false;
-        cs = new CorpusStatistics(csPrm);
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        fePrm = new SentFeatureExtractorPrm();
-        fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        parents = fe.getParents(simpleSent);
-        zhaoPred = new FeaturizedToken(3, simpleSent);
-        zhaoArg = new FeaturizedToken(4, simpleSent);
-        
-        predPos = zhaoPred.getPos();
-        argPos = zhaoArg.getPos();
-        
-        assertEquals(predPos,"p");
-        assertEquals(argPos,"WRONG");
-    }
-    
-    @Test
-    public void testZhaoObjectFeat() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
-        List<String> predFeat = zhaoPred.getFeat();
-        List<String> argFeat = zhaoArg.getFeat();
-        ArrayList<String> intendedPredFeats = new ArrayList<String>();
-        intendedPredFeats.add("postype=relative");
-        intendedPredFeats.add("gen=c");
-        intendedPredFeats.add("num=c");
-        intendedPredFeats.add("NO_MORPH");
-        intendedPredFeats.add("NO_MORPH");
-        intendedPredFeats.add("NO_MORPH");
-        assertEquals(predFeat,intendedPredFeats);
-        ArrayList<String> intendedArgFeats = new ArrayList<String>();
-        intendedArgFeats.add("NO_MORPH");
-        intendedArgFeats.add("NO_MORPH");
-        intendedArgFeats.add("NO_MORPH");
-        intendedArgFeats.add("NO_MORPH");
-        intendedArgFeats.add("NO_MORPH");
-        intendedArgFeats.add("NO_MORPH");
-        System.out.println(argFeat);
-        assertEquals(argFeat,intendedArgFeats);
-    }
-    
-    @Test
-    public void testZhaoObjectPathSentence1() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence1();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        
-        // Example indices.
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
-        FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
-
-        // Path between two indices.
-        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
-        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);
-
-        // Shared path to root for two indices.
-        List<Pair<Integer, Dir>> dpPathShare = zhaoLink.getDpPathShare();
-        ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
-        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
-        assertEquals(dpPathShare,expectedDpPathShare);
-
-        // New example indices.
-        zhaoPred = new FeaturizedToken(0, simpleSent);
-        zhaoArg = new FeaturizedToken(4, simpleSent);
-        zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
-
-        // Path between two indices.
-        expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
-        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);        
-
-        // Shared path to root for two indices.
-        dpPathShare = zhaoLink.getDpPathShare();
-        expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
-        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
-        assertEquals(dpPathShare,expectedDpPathShare);
-        
-        // Line path (consecutive indices between two).
-        ArrayList<Integer> linePath = zhaoLink.getLinePath();
-        ArrayList<Integer> expectedLinePath = new ArrayList<Integer>();
-        expectedLinePath.add(0);
-        expectedLinePath.add(1);
-        expectedLinePath.add(2);
-        expectedLinePath.add(3);
-        assertEquals(linePath,expectedLinePath);
-    }
-        
-    @Test
-    public void testZhaoObjectPathSentence2() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        
-        // Example indices.
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
-        FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
-        
-        // Path between two indices.
-        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
-        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);
-
-        // Shared path to root for two indices.
-        List<Pair<Integer, Dir>> dpPathShare = zhaoLink.getDpPathShare();
-        ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
-        expectedDpPathShare.add(new Pair<Integer, Dir>(5, Dir.UP));
-        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
-        assertEquals(dpPathShare,expectedDpPathShare);
-        
-        // New example indices.
-        zhaoPred = new FeaturizedToken(0, simpleSent);
-        zhaoArg = new FeaturizedToken(4, simpleSent);
-        zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
-
-        // Path between two indices.
-        expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
-        expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
-        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);        
-
-        // Shared path to root for two indices.
-        dpPathShare = zhaoLink.getDpPathShare();
-        expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
-        expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
-        assertEquals(dpPathShare,expectedDpPathShare);
-
-        // Line path (consecutive indices between two).
-        ArrayList<Integer> linePath = zhaoLink.getLinePath();
-        ArrayList<Integer> expectedLinePath = new ArrayList<Integer>();
-        expectedLinePath.add(0);
-        expectedLinePath.add(1);
-        expectedLinePath.add(2);
-        expectedLinePath.add(3);
-        assertEquals(linePath,expectedLinePath);
-    }
-    
-    @Test
-    public void testZhaoObjectPathSentence2PredictedSyntax() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = false;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
-        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
-        FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(3, 4, zhaoPred, zhaoArg, parents);
-
-        ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
-        List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);
-
-        zhaoPred = new FeaturizedToken(0, simpleSent);
-        zhaoArg = new FeaturizedToken(4, simpleSent);
-        zhaoLink = new FeaturizedTokenPair(0, 4, zhaoPred, zhaoArg, parents);
-
-        expectedPath = new ArrayList<Pair<Integer, Dir>>();
-        expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
-        expectedPath.add(new Pair<Integer, Dir>(6, Dir.DOWN));
-        expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
-        seenPath = zhaoLink.getDependencyPath();
-        assertEquals(expectedPath,seenPath);        
-    }
-
-    
-    @Test
-    public void testZhaoObjectParentsChildrenSentence2() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        //int[] parents = new int[]{1, -1, 5, 5, 5, 1, 1}; 
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken zhaoObj = new FeaturizedToken(3, simpleSent);
-        assertEquals(zhaoObj.getParent(), 5);
-        assertEquals(zhaoObj.getChildren(), new ArrayList<Integer>());
-        assertEquals(zhaoObj.getFarLeftChild(), -2);
-        assertEquals(zhaoObj.getFarLeftChild(), -2);
-        assertEquals(zhaoObj.getFarRightChild(), -2);
-        assertEquals(zhaoObj.getNearLeftChild(), -2);
-        assertEquals(zhaoObj.getNearRightChild(), -2);
-        assertEquals(zhaoObj.getHighSupportNoun(), -1);
-        assertEquals(zhaoObj.getLowSupportNoun(), -1);
-        assertEquals(zhaoObj.getHighSupportVerb(), 1);
-        assertEquals(zhaoObj.getLowSupportVerb(), 5);
-        ArrayList<Integer> expectedNoFarChildren = new ArrayList<Integer>();
-        expectedNoFarChildren.add(-2);
-        expectedNoFarChildren.add(-2);
-        assertEquals(zhaoObj.getNoFarChildren(), expectedNoFarChildren);
     }
     
     @Test
@@ -391,40 +87,7 @@ public class SentFeatureExtractorTest {
             System.out.println(f);
         }        
     }
-    
-    @Test
-    public void testBjorkelundObjectSiblings() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence1();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = false;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        int[] parents = fe.getParents(simpleSent);
-        FeaturizedToken b = new FeaturizedToken(3, simpleSent);
-        assertEquals(b.getNearRightSibling(), 4);
-        assertEquals(b.getNearLeftSibling(), 0);
-        b = new FeaturizedToken(0, simpleSent);
-        assertEquals(b.getNearLeftSibling(), -1);
-        assertEquals(b.getNearRightSibling(), 3);
-        sent = getSpanishConll09Sentence2();
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        parents = fe.getParents(simpleSent);
-        b = new FeaturizedToken(3, simpleSent);
-        // Only true when we're using predicted siblings.
-        assertEquals(b.getNearLeftSibling(), -1);
-        assertEquals(b.getNearRightSibling(), 7);
-        csPrm.useGoldSyntax = true;
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        parents = fe.getParents(simpleSent);
-        b = new FeaturizedToken(3, simpleSent);
-        assertEquals(b.getNearLeftSibling(), 2);
-        assertEquals(b.getNearRightSibling(), 4);
-    }
-    
-    
+        
     @Test
     public void testTemplates() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
@@ -456,9 +119,10 @@ public class SentFeatureExtractorTest {
                 allFeats.addAll(pairFeatures);
             }
         }*/
-        for (String f : allFeats) {
-            System.out.println(f);
-        }
+        // 
+        //        for (String f : allFeats) {
+        //            System.out.println(f);
+        //        }
     }
     
     

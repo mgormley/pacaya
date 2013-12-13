@@ -29,7 +29,7 @@ import edu.jhu.util.hash.MurmurHash3;
  */
 public class FeatureCreationSpeedTest {
 
-    @Test
+    //@Test
     public void testSpeedOfFeatureCreation() throws UnsupportedEncodingException, FileNotFoundException {
         // Params
         final int numExamples = 50000;

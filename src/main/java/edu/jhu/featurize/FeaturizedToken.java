@@ -384,5 +384,10 @@ public class FeaturizedToken {
     public void setDirection(Dir dir) {
         this.direction = dir;
     }
+
+    // Package private accessor for FeaturizedTokenPair
+    SimpleAnnoSentence getSent() {
+        return sent;
+    }
     
 }

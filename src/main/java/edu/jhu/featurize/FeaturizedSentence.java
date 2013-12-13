@@ -40,7 +40,7 @@ public class FeaturizedSentence {
     
     public FeaturizedTokenPair getFeatTokPair(int pidx, int cidx) {
         if (pairs[pidx][cidx] == null) {
-            pairs[pidx][cidx] = new FeaturizedTokenPair(pidx, cidx, getFeatTok(pidx), getFeatTok(cidx), sent.getParents());
+            pairs[pidx][cidx] = new FeaturizedTokenPair(pidx, cidx, getFeatTok(pidx), getFeatTok(cidx), sent);
         }
         return pairs[pidx][cidx];
     }
