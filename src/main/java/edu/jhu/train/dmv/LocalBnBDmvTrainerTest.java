@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 
 import org.junit.Before;
@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.globalopt.LazyBranchAndBoundSolver.LazyBnbSolverPrm;
-import edu.jhu.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
+import edu.jhu.train.dmv.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
 import edu.jhu.util.Prng;
 
 public class LocalBnBDmvTrainerTest {
@@ -32,7 +32,7 @@ public class LocalBnBDmvTrainerTest {
         prm.probOfSkipCm = 0.1;
         prm.bnbSolverFactory = bnbPrm;
         prm.timeoutSeconds = 10;
-        prm.viterbiTrainer = ViterbiTrainerTest.getDefaultCkyViterbiTrainer();
+        prm.viterbiTrainer = DmvViterbiEMTrainerTest.getDefaultCkyViterbiTrainer();
         LocalBnBDmvTrainer trainer = new LocalBnBDmvTrainer(prm);
 
         SentenceCollection sentences = new SentenceCollection();

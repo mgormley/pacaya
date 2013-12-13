@@ -33,7 +33,7 @@ import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;

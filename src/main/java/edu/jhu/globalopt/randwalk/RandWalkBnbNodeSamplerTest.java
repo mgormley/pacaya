@@ -18,10 +18,10 @@ import edu.jhu.globalopt.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.globalopt.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.globalopt.randwalk.RandWalkBnbNodeSampler.CostEstimator;
 import edu.jhu.globalopt.randwalk.RandWalkBnbNodeSampler.RandWalkBnbSamplerPrm;
-import edu.jhu.train.BnBDmvTrainer;
-import edu.jhu.train.BnBDmvTrainer.BnBDmvTrainerPrm;
-import edu.jhu.train.BnBDmvTrainerTest;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.BnBDmvTrainer;
+import edu.jhu.train.dmv.BnBDmvTrainerTest;
+import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.train.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 
 
 public class RandWalkBnbNodeSamplerTest {

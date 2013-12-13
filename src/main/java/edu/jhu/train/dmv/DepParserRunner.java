@@ -1,4 +1,4 @@
-package edu.jhu;
+package edu.jhu.train.dmv;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -40,13 +40,9 @@ import edu.jhu.globalopt.dmv.DmvSolFactory.InitSol;
 import edu.jhu.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.BnBDmvTrainer;
-import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.train.LocalBnBDmvTrainer;
 import edu.jhu.train.Trainer;
-import edu.jhu.train.TrainerFactory;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -150,7 +146,7 @@ public class DepParserRunner {
                     
             // Train the model
             log.info("Training model");
-            Trainer trainer = TrainerFactory.getTrainer(trainTreebank, goldModel);
+            Trainer trainer = DmvTrainerFactory.getTrainer(trainTreebank, goldModel);
             if (trainer instanceof BnBDmvTrainer) {
                 BnBDmvTrainer bnb = (BnBDmvTrainer) trainer;
                 bnb.init(trainCorpus);
@@ -195,9 +191,9 @@ public class DepParserRunner {
 
     private void runRelaxOnly(DmvModel goldModel, DepTreebank trainTreebank, DmvTrainCorpus trainCorpus)
             throws ParseException {
-        DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(trainTreebank, goldModel));
+        DmvSolFactory initSolFactory = new DmvSolFactory(DmvTrainerFactory.getDmvSolFactoryPrm(trainTreebank, goldModel));
         DmvSolution initSol = initSolFactory.getInitFeasSol(trainCorpus);
-        DmvRelaxationFactory relaxFactory = TrainerFactory.getDmvRelaxationFactory();
+        DmvRelaxationFactory relaxFactory = DmvTrainerFactory.getDmvRelaxationFactory();
         DmvRelaxation relax = relaxFactory.getInstance(trainCorpus, initSol);
         DmvSolution initBoundsSol = updateBounds(trainCorpus, relax, trainTreebank, goldModel);
         Timer timer = new Timer();
@@ -211,7 +207,7 @@ public class DepParserRunner {
             log.info("initBoundsSol: " + initBoundsSol.getScore());
             log.info("relative: " + Math.abs(relaxSol.getScore() - initBoundsSol.getScore()) / Math.abs(initBoundsSol.getScore()));
         }
-        DmvProjectorFactory projectorFactory = TrainerFactory.getDmvProjectorFactory(trainTreebank, goldModel);
+        DmvProjectorFactory projectorFactory = DmvTrainerFactory.getDmvProjectorFactory(trainTreebank, goldModel);
         DmvProjector dmvProjector = (DmvProjector) projectorFactory.getInstance(trainCorpus, relax);
         DmvSolution projSol = dmvProjector.getProjectedDmvSolution(relaxSol);
         if (projSol != null) {
@@ -261,7 +257,7 @@ public class DepParserRunner {
         
         // Evaluation.
         // Note: this parser must return the log-likelihood from parser.getParseWeight()
-        DepParser parser = TrainerFactory.getEvalParser();
+        DepParser parser = DmvTrainerFactory.getEvalParser();
 
         SentenceCollection sentences = goldTreebank.getSentences();
         DepTreebank parses = parser.getViterbiParse(sentences, model);
@@ -335,8 +331,8 @@ public class DepParserRunner {
     private DmvSolution updateBounds(DmvTrainCorpus trainCorpus, DmvRelaxation dw, DepTreebank trainTreebank, DmvModel trueModel) throws ParseException {
         if (initBounds != null) {
             // Initialize the bounds as a hypercube around some initial solution.
-            double offsetProb = TrainerFactory.offsetProb;
-            double probOfSkipCm = TrainerFactory.probOfSkipCm;
+            double offsetProb = DmvTrainerFactory.offsetProb;
+            double probOfSkipCm = DmvTrainerFactory.probOfSkipCm;
             
             DmvSolution goldSol = null;
             if (trueModel != null) { 
@@ -393,7 +389,7 @@ public class DepParserRunner {
         ArgParser parser = new ArgParser(DepParserRunner.class);
         parser.addClass(DepParserRunner.class);
         parser.addClass(DepTreebankReader.class);
-        parser.addClass(TrainerFactory.class);
+        parser.addClass(DmvTrainerFactory.class);
         try {
             parser.parseArgs(args);
         } catch (ParseException e) {

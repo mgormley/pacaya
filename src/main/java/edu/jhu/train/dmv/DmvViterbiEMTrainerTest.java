@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import junit.framework.Assert;
 
@@ -10,15 +10,15 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.ilp.IlpDepSentenceParser;
 import edu.jhu.parse.ilp.IlpFormulation;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 
 
-public class ViterbiTrainerTest {
+public class DmvViterbiEMTrainerTest {
 
     static {
         //Logger.getRootLogger().setLevel(Level.TRACE);

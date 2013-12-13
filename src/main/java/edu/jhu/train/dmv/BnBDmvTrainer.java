@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import org.apache.log4j.Logger;
 
@@ -23,6 +23,8 @@ import edu.jhu.globalopt.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.globalopt.dmv.DmvSolFactory.DmvSolFactoryPrm;
 import edu.jhu.globalopt.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.model.Model;
+import edu.jhu.train.SemiSupervisedCorpus;
+import edu.jhu.train.Trainer;
 
 public class BnBDmvTrainer implements Trainer<DepTreebank> {
 
@@ -51,7 +53,7 @@ public class BnBDmvTrainer implements Trainer<DepTreebank> {
      * The user of BnBDmvTrainer must first call init(corpus) then train(). 
      * TODO: remove public init() and train() methods once we can remove getRootRelaxation. 
      */
-    public void train(TrainCorpus corpus) {
+    public void train(SemiSupervisedCorpus corpus) {
         init((DmvTrainCorpus)corpus);
         train();
     }

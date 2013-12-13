@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -8,10 +8,11 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
+import edu.jhu.train.SemiSupervisedCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 
-public class DmvTrainCorpus implements TrainCorpus {
+public class DmvTrainCorpus implements SemiSupervisedCorpus {
     
     private DepTreebank allTrees;
     private SentenceCollection allSentences;

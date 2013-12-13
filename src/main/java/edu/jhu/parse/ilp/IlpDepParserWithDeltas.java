@@ -17,7 +17,7 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.ilp.IdentityDeltaGenerator.Delta;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Maps;

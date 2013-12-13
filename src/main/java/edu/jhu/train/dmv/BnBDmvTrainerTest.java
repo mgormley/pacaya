@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import junit.framework.Assert;
 
@@ -21,7 +21,7 @@ import edu.jhu.globalopt.dmv.DmvDantzigWolfeRelaxation.DmvRelaxationFactory;
 import edu.jhu.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.train.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.train.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 import edu.jhu.util.Prng;
 
 

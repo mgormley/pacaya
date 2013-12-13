@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import org.apache.log4j.Logger;
 
@@ -9,9 +9,14 @@ import edu.jhu.model.ModelFactory;
 import edu.jhu.model.dmv.DmvMStep;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.tuple.Pair;
+import edu.jhu.train.EMTrainer;
+import edu.jhu.train.EStep;
+import edu.jhu.train.SemiSupervisedCorpus;
+import edu.jhu.train.Trainer;
+import edu.jhu.train.EMTrainer.EMTrainerPrm;
 
 public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
@@ -71,7 +76,7 @@ public class DmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Train
         }
 
         @Override
-        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(TrainCorpus corpus, Model model, int iteration) {
+        public Pair<DepTreebank,Double> getCountsAndLogLikelihood(SemiSupervisedCorpus corpus, Model model, int iteration) {
             //TODO: remove this hacky reset function: 
             //if (iteration == 1 && parser instanceof RelaxedParserWrapper) {
                 //((RelaxedParserWrapper)parser).reset();

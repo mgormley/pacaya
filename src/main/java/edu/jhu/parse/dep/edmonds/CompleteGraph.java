@@ -1,4 +1,4 @@
-package edu.jhu.graph;
+package edu.jhu.parse.dep.edmonds;
 
 /**
  * Represent a complete weighted graph by using a matrix with n rows and n

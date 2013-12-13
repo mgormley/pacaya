@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -8,15 +8,20 @@ import edu.jhu.model.FixableModelFactory;
 import edu.jhu.model.Model;
 import edu.jhu.model.ModelFactory;
 import edu.jhu.model.dmv.DmvMStep;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.EMTrainer;
+import edu.jhu.train.EStep;
+import edu.jhu.train.SemiSupervisedCorpus;
+import edu.jhu.train.Trainer;
+import edu.jhu.train.EMTrainer.EMTrainerPrm;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 
-public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
+public class DeltaDmvViterbiEMTrainer extends EMTrainer<DepTreebank> implements Trainer<DepTreebank> {
 
-    private static final Logger log = Logger.getLogger(DeltaViterbiTrainer.class);
+    private static final Logger log = Logger.getLogger(DeltaDmvViterbiEMTrainer.class);
 
-    public DeltaViterbiTrainer(DepParser deltaParser, DepParser fastParser, ModelFactory modelFactory,
+    public DeltaDmvViterbiEMTrainer(DepParser deltaParser, DepParser fastParser, ModelFactory modelFactory,
             int iterations, double convergenceRatio, double lambda) {
         super(new EMTrainerPrm(iterations, convergenceRatio, 0, Double.POSITIVE_INFINITY), new ViterbiEStepForDeltas(
                 deltaParser, fastParser, modelFactory, iterations, convergenceRatio), new DmvMStep(lambda),
@@ -46,7 +51,7 @@ public class DeltaViterbiTrainer extends EMTrainer<DepTreebank> implements Train
         }
 
         @Override
-        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(TrainCorpus c, Model model, int iteration) {
+        public Pair<DepTreebank, Double> getCountsAndLogLikelihood(SemiSupervisedCorpus c, Model model, int iteration) {
             DmvTrainCorpus corpus = (DmvTrainCorpus) c;
             fixableModelFactory.fixModel(model);
             fastTrainer.train(corpus);

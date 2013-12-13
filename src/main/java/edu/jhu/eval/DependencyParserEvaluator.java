@@ -5,7 +5,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.model.Model;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.prim.util.math.FastMath;
 
 /**

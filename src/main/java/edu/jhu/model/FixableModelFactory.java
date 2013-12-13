@@ -1,6 +1,6 @@
 package edu.jhu.model;
 
-import edu.jhu.train.TrainCorpus;
+import edu.jhu.train.SemiSupervisedCorpus;
 
 public class FixableModelFactory implements ModelFactory {
 
@@ -12,7 +12,7 @@ public class FixableModelFactory implements ModelFactory {
     }
 
     @Override
-    public Model getInstance(TrainCorpus corpus) {
+    public Model getInstance(SemiSupervisedCorpus corpus) {
         if (model == null) {
             return modelFactory.getInstance(corpus);
         } else {

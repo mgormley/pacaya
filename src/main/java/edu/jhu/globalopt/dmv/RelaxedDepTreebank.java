@@ -5,7 +5,7 @@ package edu.jhu.globalopt.dmv;
 
 import edu.jhu.data.Sentence;
 import edu.jhu.prim.Primitives;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 
 public class RelaxedDepTreebank {
     private double[][] fracRoots;

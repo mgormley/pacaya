@@ -1,4 +1,4 @@
-package edu.jhu.parse;
+package edu.jhu.parse.dep;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.Sentence;

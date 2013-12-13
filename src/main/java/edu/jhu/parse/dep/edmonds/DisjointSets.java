@@ -1,4 +1,4 @@
-package edu.jhu.graph;
+package edu.jhu.parse.dep.edmonds;
 
 /**
  * Disjoint set forests with path compression heuristic. Elements and sets are

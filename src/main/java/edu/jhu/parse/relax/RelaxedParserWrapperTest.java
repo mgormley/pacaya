@@ -10,7 +10,7 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 

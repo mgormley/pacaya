@@ -20,9 +20,9 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.train.DmvViterbiEMTrainer;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 
 public class ViterbiEmDmvProjector implements DmvProjector {

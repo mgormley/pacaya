@@ -40,7 +40,7 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cplex.CplexPrm;
 

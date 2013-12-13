@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import java.util.Random;
 
@@ -33,7 +33,9 @@ import edu.jhu.globalopt.dmv.ViterbiEmDmvProjector.ViterbiEmDmvProjectorPrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.SemiSupervisedCorpus;
+import edu.jhu.train.Trainer;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
 
@@ -87,7 +89,7 @@ public class LocalBnBDmvTrainer implements Trainer<DepTreebank> {
     }
 
     @Override
-    public void train(TrainCorpus c) {
+    public void train(SemiSupervisedCorpus c) {
         DmvTrainCorpus corpus = (DmvTrainCorpus)c;
 
         // Get initial solution for B&B and (sometimes) the relaxation.

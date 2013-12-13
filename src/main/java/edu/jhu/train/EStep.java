@@ -5,6 +5,6 @@ import edu.jhu.prim.tuple.Pair;
 
 public interface EStep<C> {
 
-    Pair<C,Double> getCountsAndLogLikelihood(TrainCorpus corpus, Model model, int iteration);
+    Pair<C,Double> getCountsAndLogLikelihood(SemiSupervisedCorpus corpus, Model model, int iteration);
     
 }

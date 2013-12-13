@@ -2,7 +2,7 @@ package edu.jhu.model.dmv;
 
 import edu.jhu.data.Label;
 import edu.jhu.model.Model;
-import edu.jhu.train.TrainCorpus;
+import edu.jhu.train.SemiSupervisedCorpus;
 import edu.jhu.util.Alphabet;
 
 public class FixableDmvModelFactory implements DmvModelFactory {
@@ -27,7 +27,7 @@ public class FixableDmvModelFactory implements DmvModelFactory {
     }
 
     @Override
-    public Model getInstance(TrainCorpus corpus) {
+    public Model getInstance(SemiSupervisedCorpus corpus) {
         return getInstance(corpus.getLabelAlphabet());
     }
 

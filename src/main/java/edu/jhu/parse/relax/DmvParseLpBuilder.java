@@ -24,7 +24,7 @@ import edu.jhu.lp.IloRangeLpRows;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvSentParamCache;
 import edu.jhu.parse.ilp.IlpFormulation;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class DmvParseLpBuilder {

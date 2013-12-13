@@ -14,7 +14,7 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.parse.DepSentenceParser;
+import edu.jhu.parse.dep.DepSentenceParser;
 import edu.jhu.util.Timer;
 import edu.jhu.util.files.Files;
 

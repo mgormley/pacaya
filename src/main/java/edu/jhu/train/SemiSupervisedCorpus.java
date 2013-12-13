@@ -3,7 +3,7 @@ package edu.jhu.train;
 import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
-public interface TrainCorpus {
+public interface SemiSupervisedCorpus {
     
     Alphabet<Label> getLabelAlphabet();
     int size();

@@ -9,7 +9,7 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.model.Model;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 
 /**
  * Computes the proportion of words labeled as arguments that have a syntactic

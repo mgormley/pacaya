@@ -14,7 +14,7 @@ import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.parse.relax.LpDmvRelaxedParserTest;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 public class BasicDmvProjectorTest {

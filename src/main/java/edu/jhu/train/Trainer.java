@@ -4,7 +4,7 @@ import edu.jhu.model.Model;
 
 public interface Trainer<C> {
 
-    void train(TrainCorpus corpus);
+    void train(SemiSupervisedCorpus corpus);
     
     Model getModel();
     

@@ -10,9 +10,9 @@ import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 
 public class RelaxedParserWrapper implements DepParser {
     

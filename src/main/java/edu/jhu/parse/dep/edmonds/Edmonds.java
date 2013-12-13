@@ -1,4 +1,4 @@
-package edu.jhu.graph;
+package edu.jhu.parse.dep.edmonds;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

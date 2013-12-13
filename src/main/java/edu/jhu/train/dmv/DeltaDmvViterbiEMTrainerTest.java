@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import junit.framework.Assert;
 
@@ -10,7 +10,7 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.ilp.DeltaGenerator;
 import edu.jhu.parse.ilp.FixedIntervalDeltaGenerator;
 import edu.jhu.parse.ilp.IlpDepParserWithDeltas;
@@ -18,7 +18,7 @@ import edu.jhu.parse.ilp.IlpDepSentenceParser;
 import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.util.Prng;
 
-public class DeltaViterbiTrainerTest {
+public class DeltaDmvViterbiEMTrainerTest {
 
 
     @Before
@@ -38,7 +38,7 @@ public class DeltaViterbiTrainerTest {
         DepParser deltaParser = new IlpDepParserWithDeltas(IlpFormulation.FLOW_NONPROJ, ilpSolverFactory,
                 deltaGen);
         DmvModelFactory modelFactory = new RandomDmvModelFactory(lambda);
-        DeltaViterbiTrainer trainer = new DeltaViterbiTrainer(deltaParser, fastParser, modelFactory, iterations,
+        DeltaDmvViterbiEMTrainer trainer = new DeltaDmvViterbiEMTrainer(deltaParser, fastParser, modelFactory, iterations,
                 convergenceRatio, lambda);
 
         SentenceCollection sentences = new SentenceCollection();

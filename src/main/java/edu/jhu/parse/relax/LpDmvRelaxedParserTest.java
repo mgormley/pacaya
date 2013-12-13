@@ -25,7 +25,7 @@ import edu.jhu.parse.ilp.IlpDepParserTest;
 import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.Prng;

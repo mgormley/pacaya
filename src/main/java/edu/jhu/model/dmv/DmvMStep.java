@@ -4,7 +4,7 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.model.Model;
 import edu.jhu.train.MStep;
-import edu.jhu.train.TrainCorpus;
+import edu.jhu.train.SemiSupervisedCorpus;
 
 public class DmvMStep implements MStep<DepTreebank> {
 
@@ -15,11 +15,11 @@ public class DmvMStep implements MStep<DepTreebank> {
     }
 
     @Override
-    public Model getModel(TrainCorpus corpus, DepTreebank treebank, Model oldModel) {
+    public Model getModel(SemiSupervisedCorpus corpus, DepTreebank treebank, Model oldModel) {
         return getModel(treebank, (DmvModel) oldModel);
     }
 
-    public Model getModel(TrainCorpus corpus, DepTreebank treebank) {
+    public Model getModel(SemiSupervisedCorpus corpus, DepTreebank treebank) {
         return getModel(treebank);
     }
     

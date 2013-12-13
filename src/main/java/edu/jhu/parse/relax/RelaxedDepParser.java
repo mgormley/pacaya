@@ -2,7 +2,7 @@ package edu.jhu.parse.relax;
 
 import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
 import edu.jhu.model.Model;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 
 public interface RelaxedDepParser {
 

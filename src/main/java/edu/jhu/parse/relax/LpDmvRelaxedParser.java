@@ -12,7 +12,7 @@ import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.cplex.CplexPrm;
 import edu.jhu.util.cplex.CplexUtils;
 

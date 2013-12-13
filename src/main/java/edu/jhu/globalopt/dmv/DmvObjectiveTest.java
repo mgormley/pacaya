@@ -12,7 +12,7 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.relax.LpDmvRelaxedParserTest;
-import edu.jhu.train.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 public class DmvObjectiveTest {

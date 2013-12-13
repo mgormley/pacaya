@@ -4,6 +4,6 @@ import edu.jhu.model.Model;
 
 public interface MStep<C> {
 
-    Model getModel(TrainCorpus corpus, C counts, Model oldModel);
+    Model getModel(SemiSupervisedCorpus corpus, C counts, Model oldModel);
 
 }

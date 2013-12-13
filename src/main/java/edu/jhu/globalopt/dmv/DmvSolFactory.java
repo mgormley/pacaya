@@ -9,13 +9,13 @@ import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
-import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.train.DmvViterbiEMTrainer;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.train.TrainCorpus;
-import edu.jhu.train.TrainerFactory;
+import edu.jhu.train.SemiSupervisedCorpus;
+import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvTrainerFactory;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 
 public class DmvSolFactory {
 
@@ -69,7 +69,7 @@ public class DmvSolFactory {
         this.prm = prm;
     }
     
-    public DmvSolution getInitFeasSol(TrainCorpus corpus) {
+    public DmvSolution getInitFeasSol(SemiSupervisedCorpus corpus) {
         return getSol((DmvTrainCorpus)corpus);
     }
     
@@ -107,7 +107,7 @@ public class DmvSolFactory {
     
         DmvSolution initBoundsSol;
         if (opt == InitSol.VITERBI_EM) {
-            DmvSolFactory initSolFactory = new DmvSolFactory(TrainerFactory.getDmvSolFactoryPrm(null, null));
+            DmvSolFactory initSolFactory = new DmvSolFactory(DmvTrainerFactory.getDmvSolFactoryPrm(null, null));
             initBoundsSol = initSolFactory.getInitFeasSol(corpus);
         } else if (opt == InitSol.GOLD) {
             initBoundsSol = goldSol;

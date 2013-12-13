@@ -20,13 +20,13 @@ import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.DmvSentParamCache;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.DepParser;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.DmvTrainCorpus;
-import edu.jhu.train.DmvViterbiEMTrainer;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 
 

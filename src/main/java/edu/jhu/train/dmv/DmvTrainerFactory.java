@@ -1,4 +1,4 @@
-package edu.jhu.train;
+package edu.jhu.train.dmv;
 
 import java.io.File;
 
@@ -58,11 +58,11 @@ import edu.jhu.model.dmv.FixableDmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.model.dmv.SupervisedDmvModelFactory;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
-import edu.jhu.parse.DepParser;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.Chart.ParseType;
+import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.parse.ilp.DeltaGenerator;
@@ -78,9 +78,10 @@ import edu.jhu.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.parse.relax.RelaxedParserWrapper;
 import edu.jhu.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
-import edu.jhu.train.BnBDmvTrainer.BnBDmvTrainerPrm;
-import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
-import edu.jhu.train.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
+import edu.jhu.train.Trainer;
+import edu.jhu.train.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
+import edu.jhu.train.dmv.LocalBnBDmvTrainer.LocalBnBDmvTrainerPrm;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.cplex.CplexPrm;
 import edu.jhu.util.cplex.CplexPrm.SimplexAlgorithm;
@@ -90,7 +91,7 @@ import edu.jhu.util.cplex.CplexPrm.SimplexAlgorithm;
  * 
  * @author mgormley
  */
-public class TrainerFactory {
+public class DmvTrainerFactory {
 
     @Opt(name = "algorithm", hasArg = true, description = "Inference algorithm")
     public static String algorithm = "viterbi";
@@ -353,7 +354,7 @@ public class TrainerFactory {
         parsePrm.universalPostCons = universalPostCons;
         parsePrm.inclExtraCons = inclExtraParseCons;
         parsePrm.formulation = formulation;
-        parsePrm.setNames = TrainerFactory.rltNames;
+        parsePrm.setNames = DmvTrainerFactory.rltNames;
         return parsePrm;
     }
 

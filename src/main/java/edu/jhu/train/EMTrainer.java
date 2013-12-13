@@ -57,7 +57,7 @@ public class EMTrainer<C> implements Trainer<C> {
     }
     
     @Override
-    public void train(TrainCorpus corpus) {
+    public void train(SemiSupervisedCorpus corpus) {
         double bestLogLikelihood = Double.NEGATIVE_INFINITY;
         Model bestModel = null;
         C bestCounts = null;
@@ -91,7 +91,7 @@ public class EMTrainer<C> implements Trainer<C> {
         return;
     }
 
-    public void trainOnce(TrainCorpus corpus) {
+    public void trainOnce(SemiSupervisedCorpus corpus) {
         // Initialize the parameters of the model
         model = modelFactory.getInstance(corpus);
         
