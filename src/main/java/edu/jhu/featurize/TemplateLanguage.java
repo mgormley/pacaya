@@ -46,7 +46,7 @@ public class TemplateLanguage {
 
     /** Position Modifier. A mapping from one position to another. */
     public enum PositionModifier {
-        BEFORE1, AFTER1,
+        IDENTITY, BEFORE1, AFTER1,
         //
         HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
         // Not implemented: LMD, RMD,         
@@ -113,6 +113,7 @@ public class TemplateLanguage {
         desc(EdgeProperty.DR_DIR, "dr+dir", "Conjunction of dr and dir", AT.LABEL_DEP_TREE);
 
         /** Position Modifier. A mapping from one position to another. */
+        desc(PositionModifier.IDENTITY, "w", "No modification", AT.WORD);
         desc(PositionModifier.BEFORE1, "w_{-1}", "1 before w", AT.WORD);
         desc(PositionModifier.AFTER1, "w_{1}", "1 after w", AT.WORD);
         //

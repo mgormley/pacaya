@@ -199,10 +199,10 @@ public class TemplateLanguageExtractor {
     
     private int getModifiedPosition(PositionModifier mod, int idx) {
         FeaturizedToken tok = null;
-        if (mod != PositionModifier.BEFORE1 && mod != PositionModifier.AFTER1) {
+        if (mod != PositionModifier.IDENTITY && mod != PositionModifier.AFTER1 && mod != PositionModifier.BEFORE1) {
             tok = getFeatTok(idx);
         }
-        switch(mod) {
+        switch(mod) {        
         case LOW_SV: case LOW_SN: case HIGH_SV: case HIGH_SN: 
             log.warn("Assuming Spanish when creating high/low support feature.");
             break;
@@ -211,6 +211,8 @@ public class TemplateLanguageExtractor {
         
         switch (mod) {
             // --------------------- Word ---------------------  
+        case IDENTITY:
+            return idx;
         case BEFORE1:
             return idx - 1;
         case AFTER1:
