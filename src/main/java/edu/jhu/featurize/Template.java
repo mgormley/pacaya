@@ -3,6 +3,7 @@ package edu.jhu.featurize;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+@Deprecated
 public class Template<X,Y> implements Iterable<Y> {
     private Y first;
     private Y second;
