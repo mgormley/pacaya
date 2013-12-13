@@ -42,7 +42,8 @@ public class FeaturizedToken {
     private SimpleAnnoSentence sent;
     private int idx = -1;
     private String featStr;
-    private ArrayList<String> feat;
+    private List<String> feat;
+    private List<String> feat6;
     private Integer farRightChild;
     private Integer farLeftChild;
     private Integer nearLeftChild;
@@ -82,39 +83,66 @@ public class FeaturizedToken {
     
     // ------------------------ Getters and Caching Methods ------------------------ //
 
-    public ArrayList<String> getFeat() {
-        if (feat == null) {
-            cacheFeat();
-        }
+    public List<String> getFeat() {
+        ensureFeat();
         return feat;
     }
     
-    private void cacheFeat() {
-        feat = new ArrayList<String>(6);
-        if (idx == -1 || idx >= sent.size()) {
-            for (int i = 0; i < 6; i++) {
-                feat.add(NO_MORPH);
-            }            
+    private void ensureFeat() {
+        if (feat != null) {
+            return;
+        }
+        if (idx < 0 || idx >= sent.size()) {
+            feat = new ArrayList<String>(1);
+            feat.add(NO_MORPH);
         } else {
             List<String> coNLLFeats = sent.getFeats(idx);
             if (coNLLFeats == null) {
-                for (int i = 0; i < 6; i++) {
-                    feat.add(NO_MORPH);
-                }
+                feat = new ArrayList<String>(1);
+                feat.add(NO_MORPH);
             } else {
-                feat.addAll(coNLLFeats);
-                for (int i = feat.size() ; i < 6; i++) {
-                    feat.add(NO_MORPH);
-                }
+                feat = coNLLFeats;
             }
         }
     }
-
+    
     public String getFeatStr() {
         if (featStr == null) {
+            ensureFeat();
             featStr = StringUtils.join(feat, "_");
         }
         return featStr;
+    }
+
+    // This is preserved for legacy use with the Zhao feature set
+    // which describes FEAT1, FEAT2, etc.
+    public List<String> getFeat6() {
+        ensureFeat6();
+        return feat6;
+    }
+    
+    private void ensureFeat6() {
+        if (feat6 != null) {
+            return;
+        }
+        feat6 = new ArrayList<String>(6);
+        if (idx < 0 || idx >= sent.size()) {
+            for (int i=0; i<6; i++) {
+                feat6.add(NO_MORPH);
+            }
+        } else {
+            List<String> coNLLFeats = sent.getFeats(idx);
+            if (coNLLFeats == null) {
+                for (int i=0; i<6; i++) {
+                    feat6.add(NO_MORPH);
+                }
+            } else {
+                feat6.addAll(coNLLFeats);
+                for (int i=feat6.size(); i<6; i++) {
+                    feat6.add(NO_MORPH);
+                }
+            }
+        }
     }
     
     public String getForm() {
@@ -142,6 +170,15 @@ public class FeaturizedToken {
             return "END_NO_POS";
         }
         return sent.getPosTag(idx);
+    }
+    
+    public String getCluster() {
+        if (idx < 0) {
+            return "BEGIN_NO_CLUSTER";
+        } else if (idx >= sent.size()) {
+            return "END_NO_CLUSTER";
+        }
+        return sent.getCluster(idx);
     }
     
     public String getDeprel() {

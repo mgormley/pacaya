@@ -29,6 +29,28 @@ public class FeaturizedTokenTest {
         intendedPredFeats.add("postype=relative");
         intendedPredFeats.add("gen=c");
         intendedPredFeats.add("num=c");
+        assertEquals(predFeat,intendedPredFeats);
+        ArrayList<String> intendedArgFeats = new ArrayList<String>();
+        intendedArgFeats.add("NO_MORPH");
+        System.out.println(argFeat);
+        assertEquals(argFeat,intendedArgFeats);
+    }
+
+    @Test
+    public void testZhaoObjectFeat6() {
+        CoNLL09Sentence sent = getSpanishConll09Sentence2();
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        csPrm.useGoldSyntax = true;
+        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+
+        FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
+        FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
+        List<String> predFeat = zhaoPred.getFeat6();
+        List<String> argFeat = zhaoArg.getFeat6();
+        ArrayList<String> intendedPredFeats = new ArrayList<String>();
+        intendedPredFeats.add("postype=relative");
+        intendedPredFeats.add("gen=c");
+        intendedPredFeats.add("num=c");
         intendedPredFeats.add("NO_MORPH");
         intendedPredFeats.add("NO_MORPH");
         intendedPredFeats.add("NO_MORPH");

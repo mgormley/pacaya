@@ -496,7 +496,7 @@ public class SentFeatureExtractor {
             // I'm not sure of the best way to iterate over these
             // to make different combinations.
             // Here's one way.
-            ArrayList<String> morphFeats = featureObj.getFeat();
+            List<String> morphFeats = featureObj.getFeat();
             for (int i = 0; i < morphFeats.size(); i++) {
                 feat = prefix + "Feat:" + morphFeats.get(i);
                 featureList.add(feat);
@@ -604,7 +604,7 @@ public class SentFeatureExtractor {
                 buildPiece("Pos", featureObj.getPos(), d, featurePieceList);
             }
             if (prm.morphFeats) {
-                ArrayList<String> morphFeats = featureObj.getFeat();
+                List<String> morphFeats = featureObj.getFeat();
                 morphFeat = "";
                 for (int i = 0; i < morphFeats.size(); i++) {
                     feat = morphFeats.get(i);
@@ -997,7 +997,7 @@ public class SentFeatureExtractor {
             depRelPathLemma.add(t.getLemma());
         }
 
-        feat = buildString(depRelPath) + pred.getFeat().get(0);        
+        feat = buildString(depRelPath) + pred.getFeat6().get(0);        
         feats.add(feat);
         feat = buildString(depRelPathLemma);
         feats.add(feat);
@@ -1011,7 +1011,7 @@ public class SentFeatureExtractor {
         ArrayList<String> linePathLemma = new ArrayList<String>();
         ArrayList<String> linePathDeprel = new ArrayList<String>();
         for (FeaturizedToken t : linePathCoNLL) {
-            linePathFeat.add(t.getFeat().get(0));
+            linePathFeat.add(t.getFeat6().get(0));
             linePathLemma.add(t.getLemma());
             linePathDeprel.add(t.getDeprel());
         }
@@ -1046,7 +1046,7 @@ public class SentFeatureExtractor {
             FeaturizedToken predNext, FeaturizedToken argLast, FeaturizedToken argNext, FeaturizedToken argParent, 
             ArrayList<FeaturizedToken> argChildrenObjectList, ArrayList<String> feats) {
         String feat;
-        List<String> argFeats = arg.getFeat();
+        List<String> argFeats = arg.getFeat6();
         String a1; String a2; String a3; String a4; String a5; String a6;
         a1 = argFeats.get(0);
         a2 = argFeats.get(1);
@@ -1054,10 +1054,10 @@ public class SentFeatureExtractor {
         a4 = argFeats.get(3);
         a5 = argFeats.get(4);
         a6 = argFeats.get(5);
-        List<String> argLastFeats = argLast.getFeat();
+        List<String> argLastFeats = argLast.getFeat6();
         //String last_a1 = argLastFeats.get(0);
         String last_a2 = argLastFeats.get(1);
-        List<String> argNextFeats = argNext.getFeat();
+        List<String> argNextFeats = argNext.getFeat6();
         //String next_a1 = argNextFeats.get(0);
         //String next_a2 = argNextFeats.get(1);
         String next_a3 = argNextFeats.get(2);
@@ -1071,7 +1071,7 @@ public class SentFeatureExtractor {
         feat = a3 + "_" + next_a3;
         feats.add(feat);
         // a.FEAT3 + a.h.FEAT3 
-        feat = argParent.getFeat().get(2);
+        feat = argParent.getFeat6().get(2);
         feats.add(feat);
         // a.children.FEAT1.noDup 
         ArrayList<String> argChildrenFeat1 = getChildrenFeat1(argChildrenObjectList);
@@ -1159,11 +1159,11 @@ public class SentFeatureExtractor {
         //        feats.add(pred.getSense() + "_" + arg.getPos());
         
         // p_1.FEAT1
-        feats.add(predLast.getFeat().get(0));
+        feats.add(predLast.getFeat6().get(0));
         // p.FEAT2
-        feats.add(pred.getFeat().get(1));
+        feats.add(pred.getFeat6().get(1));
         // p1.FEAT3
-        feats.add(predNext.getFeat().get(2));
+        feats.add(predNext.getFeat6().get(2));
         // NOTE:  This is supposed to be p.semrm.semdprel  What is this?  
         // I'm not sure.  Here's just a guess.
         feats.add(getFeatureObject(pred.getFarRightChild()).getDeprel());
@@ -1371,7 +1371,7 @@ public class SentFeatureExtractor {
 
     // ---------- Helper functions ---------- 
 
-    private String buildString(ArrayList<String> input) {
+    private String buildString(List<String> input) {
         StringBuilder buffer = new StringBuilder(50);
         int j = input.size();
         if (j > 0) {
@@ -1386,7 +1386,7 @@ public class SentFeatureExtractor {
     private ArrayList<String> getChildrenFeat3(ArrayList<FeaturizedToken> childrenObjectList) {
         ArrayList<String> childrenFeat3 = new ArrayList<String>();
         for (FeaturizedToken child : childrenObjectList) {
-            childrenFeat3.add(child.getFeat().get(2));
+            childrenFeat3.add(child.getFeat6().get(2));
         }
         return childrenFeat3;
     }
@@ -1394,7 +1394,7 @@ public class SentFeatureExtractor {
     private ArrayList<String> getChildrenFeat1(ArrayList<FeaturizedToken> childrenObjectList) {
         ArrayList<String> childrenFeat1 = new ArrayList<String>();
         for (FeaturizedToken child : childrenObjectList) {
-            childrenFeat1.add(child.getFeat().get(0));
+            childrenFeat1.add(child.getFeat6().get(0));
         }
         return childrenFeat1;
     }
