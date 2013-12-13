@@ -1,4 +1,4 @@
-package edu.jhu.parse;
+package edu.jhu.parse.ilp;
 
 import java.io.File;
 import java.util.Map;
@@ -9,6 +9,7 @@ import edu.jhu.ilp.CopyingMstFileUpdater;
 import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;
+import edu.jhu.parse.DepParser;
 
 public class InitializedIlpDepParserWithDeltas extends IlpDepParserWithDeltas implements DepParser {
     

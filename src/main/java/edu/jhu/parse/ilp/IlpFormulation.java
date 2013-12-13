@@ -1,7 +1,7 @@
 /**
  * 
  */
-package edu.jhu.parse;
+package edu.jhu.parse.ilp;
 
 public enum IlpFormulation {
     DP_PROJ("deptree-dp-proj", true),

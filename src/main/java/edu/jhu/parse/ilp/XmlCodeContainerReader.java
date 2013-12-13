@@ -1,4 +1,4 @@
-package edu.jhu.parse;
+package edu.jhu.parse.ilp;
 
 import java.io.IOException;
 import java.io.InputStream;

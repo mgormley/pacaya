@@ -1,4 +1,4 @@
-package edu.jhu.parse;
+package edu.jhu.parse.ilp;
 
 import static org.junit.Assert.assertArrayEquals;
 import junit.framework.Assert;

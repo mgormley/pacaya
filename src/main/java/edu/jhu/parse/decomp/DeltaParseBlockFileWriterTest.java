@@ -12,12 +12,12 @@ import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.DeltaGenerator;
-import edu.jhu.parse.FactorDeltaGenerator;
-import edu.jhu.parse.FixedIntervalDeltaGenerator;
-import edu.jhu.parse.IlpDepParserWithDeltas;
-import edu.jhu.parse.IlpDepParserWithDeltasTest.MockIlpViterbiParserWithDeltas;
-import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.ilp.DeltaGenerator;
+import edu.jhu.parse.ilp.FactorDeltaGenerator;
+import edu.jhu.parse.ilp.FixedIntervalDeltaGenerator;
+import edu.jhu.parse.ilp.IlpDepParserWithDeltas;
+import edu.jhu.parse.ilp.IlpFormulation;
+import edu.jhu.parse.ilp.IlpDepParserWithDeltasTest.MockIlpViterbiParserWithDeltas;
 import edu.jhu.util.Prng;
 
 

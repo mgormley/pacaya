@@ -11,9 +11,9 @@ import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.parse.DepParser;
-import edu.jhu.parse.IlpDepSentenceParser;
-import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.dmv.DmvCkyParser;
+import edu.jhu.parse.ilp.IlpDepSentenceParser;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.train.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 

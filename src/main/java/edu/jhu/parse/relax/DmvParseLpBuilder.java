@@ -23,7 +23,7 @@ import edu.jhu.globalopt.dmv.ShinyEdges;
 import edu.jhu.lp.IloRangeLpRows;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvSentParamCache;
-import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.cplex.CplexUtils;
 

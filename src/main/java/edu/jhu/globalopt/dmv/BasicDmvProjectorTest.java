@@ -10,7 +10,7 @@ import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorPrm;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.parse.relax.LpDmvRelaxedParserTest;

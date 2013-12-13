@@ -1,4 +1,4 @@
-package edu.jhu.parse;
+package edu.jhu.parse.ilp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,6 +22,7 @@ import edu.jhu.ilp.ZimplSolver;
 import edu.jhu.model.Model;
 import edu.jhu.model.dmv.DmvModel;
 import edu.jhu.model.dmv.DmvModel.Lr;
+import edu.jhu.parse.DepParser;
 import edu.jhu.parse.relax.RelaxedDepParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;

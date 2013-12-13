@@ -2,7 +2,7 @@ package edu.jhu.parse.dmv;
 
 import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_B;
-import static edu.jhu.parse.IlpDepParserTest.getIlpParses;
+import static edu.jhu.parse.ilp.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 
 import java.util.Arrays;
@@ -29,9 +29,9 @@ import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
 import edu.jhu.model.dmv.SimpleStaticDmvModel;
 import edu.jhu.model.dmv.UniformDmvModelFactory;
-import edu.jhu.parse.IlpFormulation;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.train.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;

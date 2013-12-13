@@ -40,7 +40,7 @@ import edu.jhu.globalopt.rlt.Rlt.RltPrm;
 import edu.jhu.globalopt.rlt.filter.UnionRltRowAdder;
 import edu.jhu.globalopt.rlt.filter.VarRltFactorFilter;
 import edu.jhu.globalopt.rlt.filter.VarRltRowAdder;
-import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.parse.relax.DmvParseLpBuilder;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvTreeProgram;

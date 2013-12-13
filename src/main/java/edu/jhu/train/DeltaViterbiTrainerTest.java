@@ -10,12 +10,12 @@ import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.IlpSolverFactory.IlpSolverId;
 import edu.jhu.model.dmv.DmvModelFactory;
 import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.parse.DeltaGenerator;
 import edu.jhu.parse.DepParser;
-import edu.jhu.parse.FixedIntervalDeltaGenerator;
-import edu.jhu.parse.IlpDepParserWithDeltas;
-import edu.jhu.parse.IlpDepSentenceParser;
-import edu.jhu.parse.IlpFormulation;
+import edu.jhu.parse.ilp.DeltaGenerator;
+import edu.jhu.parse.ilp.FixedIntervalDeltaGenerator;
+import edu.jhu.parse.ilp.IlpDepParserWithDeltas;
+import edu.jhu.parse.ilp.IlpDepSentenceParser;
+import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.util.Prng;
 
 public class DeltaViterbiTrainerTest {
