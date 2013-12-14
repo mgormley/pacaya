@@ -15,7 +15,9 @@ import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
+import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
 import edu.jhu.featurize.TemplateLanguage.PositionList;
 import edu.jhu.featurize.TemplateLanguage.PositionModifier;
@@ -61,8 +63,12 @@ public class TemplateLanguageExtractor {
             addTokenFeatures((FeatTemplate2) tpl, idx, feats);            
         } else if (tpl instanceof FeatTemplate3) {
             addListFeature((FeatTemplate3) tpl, pidx, cidx, feats);
+        } else if (tpl instanceof FeatTemplate4) {
+            addOtherFeature((FeatTemplate4) tpl, pidx, cidx, feats);
         } else if (tpl instanceof BigramTemplate) {
             addBigramFeature((BigramTemplate) tpl, pidx, cidx, feats);
+        } else {
+            throw new IllegalStateException("Feature not supported: " + tpl);
         }
     }
         
@@ -146,6 +152,41 @@ public class TemplateLanguageExtractor {
             feat = toFeat(tpl.getName(), vals);
             feats.add(feat);
             return;
+        default:
+            throw new IllegalStateException();
+        }
+    }
+
+    /**
+     * Gets special features.
+     *
+     * @param tpl Structured feature template.
+     * @param pidx Token to which the parent position refers.
+     * @param cidx Token to which the child position refers.
+     * @param feats The feature list to which this will be added.
+     */
+    public void addOtherFeature(FeatTemplate4 tpl, int pidx, int cidx, List<Object> feats) {
+        OtherFeat feat = tpl.feat;        
+        String val = getOtherFeatSingleton(tpl.feat, pidx, cidx);
+        feats.add(toFeat(tpl.getName(), val));
+    }
+    
+    private String getOtherFeatSingleton(OtherFeat feat, int pidx, int cidx) {
+        FeaturizedToken ptok = getFeatTok(pidx);
+        FeaturizedToken atok = getFeatTok(cidx);
+        FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
+        switch (feat) {
+        case DEP_SUB_CAT:
+            log.warn("DepSubCat feature is not implemented.");
+            return "DUMMY_FEATURE_VALUE";
+        case DISTANCE:
+            return Integer.toString(Math.abs(pidx - cidx));
+        case GENEOLOGY:
+            return pair.getGeneologicalRelation();
+        case PATH_LEN:            
+            return Integer.toString(pair.getDependencyPath().size());
+        case RELATIVE:
+            return pair.getRelativePosition();
         default:
             throw new IllegalStateException();
         }

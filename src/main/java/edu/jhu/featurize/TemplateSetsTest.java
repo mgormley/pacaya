@@ -22,8 +22,26 @@ public class TemplateSetsTest {
         int numBigrams = tpls.size();
         System.out.println("Number of bigram templates: " + numBigrams);
         
-        assertEquals(728, numUnigrams);
-        assertEquals(264628, numBigrams);
+        assertEquals(733, numUnigrams);
+        assertEquals(268278, numBigrams);
+    }
+    
+    @Test
+    public void testGetBjorkelund() {
+        List<FeatTemplate> tpls;
+        
+        tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        int numArg = tpls.size();
+        System.out.println("Number of arg templates: " + numArg);        
+        
+        tpls = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        int numSense = tpls.size();
+        System.out.println("Number of sense templates: " + numSense);
+
+        // Bjorkelund lists 32 featurs, one of which is Sense which we don't
+        // treat as observed.
+        assertEquals(31, numArg);
+        assertEquals(11, numSense);
     }
 
 }

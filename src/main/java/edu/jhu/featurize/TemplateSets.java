@@ -1,17 +1,17 @@
 package edu.jhu.featurize;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
+import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
 import edu.jhu.featurize.TemplateLanguage.PositionList;
 import edu.jhu.featurize.TemplateLanguage.PositionModifier;
@@ -20,8 +20,74 @@ import edu.jhu.featurize.TemplateLanguage.TokProperty;
 
 public class TemplateSets {
 
+    private static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
+    private static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
+    
     private TemplateSets() {
         // Private constructor.
+    }
+        
+    public static List<FeatTemplate> getBjorkelundSenseUnigramFeatureTemplates() {
+        // PredWord
+        // PredPOS
+        // PredDeprel
+        // PredFeats
+        // PredParentWord
+        // PredParentPOS
+        // PredParentFeats
+        // DepSubCat
+        // ChildDepSet
+        // ChildWordSet
+        // ChildPOSSet
+        TemplateReader reader = new TemplateReader();
+        try {
+            reader.readFromResource(bjorkelundSenseFeatsResource);
+            return reader.getTemplates();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+    
+    public static List<FeatTemplate> getBjorkelundArgUnigramFeatureTemplates() {
+        // PredWord
+        // PredPOS
+        // PredLemma
+        // PredDeprel
+        // Sense
+        // PredFeats
+        // PredParentWord
+        // PredParentPOS
+        // PredParentFeats
+        // DepSubCat
+        // ChildDepSet
+        // ChildWordSet
+        // ChildPOSSet
+        // ArgWord
+        // ArgPOS
+        // ArgFeats
+        // ArgDeprel
+        // DeprelPath
+        // POSPath
+        // Position
+        // LeftWord
+        // LeftPOS
+        // LeftFeats
+        // RightWord
+        // RightPOS
+        // RightFeats
+        // LeftSiblingWord
+        // LeftSiblingPOS
+        // LeftSiblingFeats
+        // RightSiblingWord
+        // RightSiblingPOS
+        // RightSiblingFeats
+        TemplateReader reader = new TemplateReader();
+        try {
+            reader.readFromResource(bjorkelundArgFeatsResource);
+            return reader.getTemplates();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
     }
     
     public static List<FeatTemplate> getAllUnigramFeatureTemplates() {
@@ -44,7 +110,10 @@ public class TemplateSets {
                     }
                 }
             }
-        }        
+        }     
+        for (OtherFeat feat : OtherFeat.values()) {
+            tpls.add(new FeatTemplate4(feat));
+        }
         return tpls;
     }
     

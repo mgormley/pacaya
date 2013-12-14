@@ -1,0 +1,65 @@
+# PredWord
+p.word
+# PredPOS
+p.pos
+# PredLemma
+p.lemma
+# PredDeprel
+p.deprel
+
+# Sense << TODO: This requires a change to our model.
+
+# PredFeats
+p.morpho
+# PredParentWord
+p.head.word
+# PredParentPOS
+p.head.pos
+# PredParentFeats
+p.head.morpho
+# DepSubCat
+DepSubCat
+# ChildDepSet
+children(p).deprel
+# ChildWordSet
+children(p).word
+# ChildPOSSet
+children(p).pos
+# ArgWord
+c.word
+# ArgPOS
+c.pos
+# ArgFeats
+c.morpho
+# ArgDeprel
+c.deprel
+# DeprelPath
+path(p,c).dir.deprel
+# POSPath
+path(p,c).dir.pos
+# Position
+relative(p,c)
+# LeftWord
+c.lmc.word
+# LeftPOS
+c.lmc.pos
+# LeftFeats
+c.lmc.morpho
+# RightWord
+c.rmc.word
+# RightPOS
+c.rmc.pos
+# RightFeats
+c.rmc.morpho
+# LeftSiblingWord
+c.lns.word
+# LeftSiblingPOS
+c.lns.pos
+# LeftSiblingFeats
+c.lns.morpho
+# RightSiblingWord
+c.rns.word
+# RightSiblingPOS
+c.rns.pos
+# RightSiblingFeats
+c.rns.morpho

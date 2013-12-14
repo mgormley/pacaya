@@ -1,0 +1,22 @@
+# PredWord
+p.word
+# PredPOS
+p.pos
+# PredDeprel
+p.deprel
+# PredFeats
+p.morpho
+# PredParentWord
+p.head.word
+# PredParentPOS
+p.head.pos
+# PredParentFeats
+p.head.morpho
+# DepSubCat
+DepSubCat
+# ChildDepSet
+children(p).deprel
+# ChildWordSet
+children(p).word
+# ChildPOSSet
+children(p).pos

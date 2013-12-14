@@ -149,5 +149,34 @@ public class FeaturizedTokenPair {
         }
         
     }
+
+    public String getGeneologicalRelation() {
+        List<Pair<Integer, Dir>> path = getDependencyPath();
+        if (path.size() == 0) {
+            return "self";
+        } else if (path.size() == 1) {
+            if (path.get(0).get2() == Dir.DOWN) {
+                return "child";
+            } else {
+                return "parent";
+            }
+        } else {
+            if (path.get(0).get2() == Dir.DOWN) {
+                return "descendent";
+            } else {
+                return "ancestor";
+            }
+        }
+    }
+
+    public String getRelativePosition() {
+        if (pidx == aidx) {
+            return "on";
+        } else if (pidx < aidx) {
+            return "before";
+        } else {
+            return "after";
+        }
+    }
     
 }
