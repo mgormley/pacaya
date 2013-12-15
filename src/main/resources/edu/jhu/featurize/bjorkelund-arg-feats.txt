@@ -18,13 +18,13 @@ p.head.pos
 # PredParentFeats
 p.head.morpho
 # DepSubCat
-DepSubCat
+children(p).deprel.seq
 # ChildDepSet
-children(p).deprel
+children(p).deprel.bag
 # ChildWordSet
-children(p).word
+children(p).word.bag
 # ChildPOSSet
-children(p).pos
+children(p).pos.bag
 # ArgWord
 c.word
 # ArgPOS
