@@ -73,7 +73,7 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, DEP_SUB_CAT, PATH_LEN,
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN,
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,
         // PATH_GRAMS,
@@ -170,7 +170,6 @@ public class TemplateLanguage {
         desc(OtherFeat.RELATIVE, "relative(p,c)", "Relative position of p and c: before, after, on.", AT.WORD);
         desc(OtherFeat.DISTANCE, "distance(p,c)", "Distance binned into greater than: 2, 5, 10, 20, 30, or 40", AT.WORD);
         desc(OtherFeat.GENEOLOGY, "geneology(p,c)", "geneological relationship between p and c in a syntactic parse: parent, child, ancestor, descendent.", AT.DEP_TREE);
-        desc(OtherFeat.DEP_SUB_CAT, "DepSubCat", "DepSubCat from Bjorkelund et al. (2009)", AT.LABEL_DEP_TREE);
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         
         // TODO:

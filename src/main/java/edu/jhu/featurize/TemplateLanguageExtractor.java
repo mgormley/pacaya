@@ -176,9 +176,6 @@ public class TemplateLanguageExtractor {
         FeaturizedToken atok = getFeatTok(cidx);
         FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
         switch (feat) {
-        case DEP_SUB_CAT:
-            log.warn("DepSubCat feature is not implemented.");
-            return "DUMMY_FEATURE_VALUE";
         case DISTANCE:
             return Integer.toString(Math.abs(pidx - cidx));
         case GENEOLOGY:
