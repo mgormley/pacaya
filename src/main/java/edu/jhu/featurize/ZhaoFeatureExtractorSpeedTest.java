@@ -16,7 +16,7 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlRunner;
 import edu.jhu.util.Timer;
 
-public class ZhaoFeatureExtractorTest {
+public class ZhaoFeatureExtractorSpeedTest {
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
     
