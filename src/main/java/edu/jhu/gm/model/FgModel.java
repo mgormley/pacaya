@@ -11,8 +11,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
@@ -58,24 +58,24 @@ public class FgModel implements Serializable, IFgModel {
     /** The number of parameters in the model. */
     private int numParams;
     /** The feature templates. */
-    private FeatureTemplateList templates;
+    private FactorTemplateList templates;
     
     public FgModel(FgExampleList data, boolean includeUnsupportedFeatures) {
         this(data, data.getTemplates(), includeUnsupportedFeatures);
     }
     
-    public FgModel(FeatureTemplateList templates) {
+    public FgModel(FactorTemplateList templates) {
         this(null, templates, true);
     }
     
-    private FgModel(FgExampleList data, FeatureTemplateList templates, boolean includeUnsupportedFeatures) {
+    private FgModel(FgExampleList data, FactorTemplateList templates, boolean includeUnsupportedFeatures) {
         this.templates = templates;
         numTemplates = templates.size();
         
         this.indices = new int[numTemplates][][];
         this.included = new boolean[numTemplates][][];
         for (int t=0; t<numTemplates; t++) {
-            FeatureTemplate template = templates.get(t);
+            FactorTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
             indices[t] = new int[numConfigs][alphabet.size()];
@@ -90,7 +90,7 @@ public class FgModel implements Serializable, IFgModel {
       
         // Always include the bias features.
         for (int t=0; t<indices.length; t++) {
-            FeatureTemplate template = templates.get(t);
+            FactorTemplate template = templates.get(t);
             Alphabet<Feature> alphabet = template.getAlphabet();            
             for (int k = 0; k < alphabet.size(); k++) {
                 if (alphabet.lookupObject(k).isBiasFeature()) {
@@ -142,7 +142,7 @@ public class FgModel implements Serializable, IFgModel {
      * For each factor in the data, lookup its configId. Set all the
      * observed features for that configuration to true.
      */
-    private void includeSupportedFeatures(FgExampleList data, FeatureTemplateList templates) {
+    private void includeSupportedFeatures(FgExampleList data, FactorTemplateList templates) {
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
@@ -275,7 +275,7 @@ public class FgModel implements Serializable, IFgModel {
     
     public void printModel(Writer writer) throws IOException {
         for (int t=0; t<numTemplates; t++) {
-            FeatureTemplate template = templates.get(t);
+            FactorTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
@@ -297,7 +297,7 @@ public class FgModel implements Serializable, IFgModel {
         writer.flush();
     }
 
-    public FeatureTemplateList getTemplates() {
+    public FactorTemplateList getTemplates() {
         return templates;
     }
     

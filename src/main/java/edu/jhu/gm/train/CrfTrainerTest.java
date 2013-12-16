@@ -13,8 +13,8 @@ import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaReaderTest;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
@@ -53,9 +53,9 @@ public class CrfTrainerTest {
      */
     public static class SimpleVCFeatureExtractor extends SlowObsFeatureExtractor {
 
-        private FeatureTemplateList fts;
+        private FactorTemplateList fts;
 
-        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FeatureTemplateList fts) {
+        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FactorTemplateList fts) {
             super();
             this.fts = fts;
         }
@@ -117,7 +117,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        FeatureTemplateList fts = new FeatureTemplateList();        
+        FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
@@ -146,7 +146,7 @@ public class CrfTrainerTest {
     }
     
     private double getParam(FgModel model, Object templateKey, String name) {
-        FeatureTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
+        FactorTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
         int feat = ft.getAlphabet().lookupIndex(new Feature(name));
         fail("Somehow we need access to the configId if we want to use this method.");
         return 0.0;
@@ -166,7 +166,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        FeatureTemplateList fts = new FeatureTemplateList();        
+        FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
@@ -225,7 +225,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[0][1], "A2");
         trainConfig.put(childRoles[1][0], "A2");
 
-        FeatureTemplateList fts = new FeatureTemplateList();        
+        FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
@@ -244,7 +244,7 @@ public class CrfTrainerTest {
     @Test
     public void testTrainErmaInput() {
         ErmaReader er = new ErmaReader();
-        FeatureTemplateList fts = new FeatureTemplateList();        
+        FactorTemplateList fts = new FactorTemplateList();        
         FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
         
         FgModel model = new FgModel(fts);

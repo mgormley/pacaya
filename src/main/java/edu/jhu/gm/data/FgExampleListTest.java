@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.Var;
@@ -21,7 +21,7 @@ public class FgExampleListTest {
             vc.put(v, 0);
         }
         
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         FgExample ex = new FgExample(fg, vc, new SimpleVCFeatureExtractor(fg, vc, fts), fts);
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(ex);

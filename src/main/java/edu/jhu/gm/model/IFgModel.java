@@ -3,7 +3,7 @@ package edu.jhu.gm.model;
 import java.io.IOException;
 import java.io.Writer;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 

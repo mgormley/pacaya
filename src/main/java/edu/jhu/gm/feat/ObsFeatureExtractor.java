@@ -22,7 +22,7 @@ public interface ObsFeatureExtractor {
      * @param goldConfig The gold configuration of all variables in the factor graph.
      * @param fts The templates.
      */
-    void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FeatureTemplateList fts);
+    void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FactorTemplateList fts);
 
     /** Signals the feature extractor that it can clear any cached features. */
     void clear();

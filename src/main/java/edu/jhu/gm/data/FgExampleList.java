@@ -1,6 +1,6 @@
 package edu.jhu.gm.data;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 
 
 /**
@@ -18,7 +18,7 @@ public interface FgExampleList extends Iterable<FgExample> {
     public int size();
 
     /** Gets the feature templates for these examples. */
-    public FeatureTemplateList getTemplates();
+    public FactorTemplateList getTemplates();
 
     @Deprecated
     public void setSourceSentences(Object sents);

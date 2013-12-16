@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractorCache;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -43,7 +43,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     private SrlFeatureExtractorPrm prm;
     private SrlFactorGraph sfg;
-    private FeatureTemplateList fts;
+    private FactorTemplateList fts;
     private VarConfig goldConfig;
     private SentFeatureExtractorCache sentFeatExt;
         
@@ -54,7 +54,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
     @Override
     public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
-            FeatureTemplateList fts) {
+            FactorTemplateList fts) {
         this.sfg = (SrlFactorGraph) fg;
         this.goldConfig = goldConfig;
         this.fts = fts;

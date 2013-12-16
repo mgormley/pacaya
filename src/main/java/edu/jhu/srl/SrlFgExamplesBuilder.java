@@ -17,7 +17,7 @@ import edu.jhu.gm.data.FgExampleFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
@@ -46,11 +46,11 @@ public class SrlFgExamplesBuilder {
     
     private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
 
-    private FeatureTemplateList fts;
+    private FactorTemplateList fts;
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
 
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FeatureTemplateList fts, CorpusStatistics cs) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FactorTemplateList fts, CorpusStatistics cs) {
         this.prm = prm;
         this.fts = fts;
         this.cs = cs;
@@ -75,7 +75,7 @@ public class SrlFgExamplesBuilder {
             this.sents = sents;
         }
         
-        public FgExample get(int i, FeatureTemplateList fts) {
+        public FgExample get(int i, FactorTemplateList fts) {
             SimpleAnnoSentence sent = sents.get(i);
             
             // Precompute a few things.

@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -12,11 +13,14 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.tuple.Triple;
 import edu.jhu.prim.tuple.Tuple;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
@@ -150,6 +154,105 @@ public class FeatureCreationSpeedTest {
         System.out.println("Time total            : " + timer.totMs());
     }
     
+    @Test
+    public void testSpeedOfFeatureCreation2() throws UnsupportedEncodingException, FileNotFoundException {
+        // Params
+        final int numExamples = 50001;
+        final int numRounds = 1;
+
+        //InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
+        InputStream inputStream = new FileInputStream("./data/conll2009/LDC2012T04/data/CoNLL2009-ST-English/CoNLL2009-ST-English-train.txt");
+        CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
+        List<CoNLL09Sentence> conllSents = cr.readSents(numExamples);
+        for (CoNLL09Sentence s : conllSents) {
+            s.intern();
+        }
+        SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(conllSents, false);
+        
+        // Run
+        System.out.println("Num sents: " + sents.size());
+        List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+
+        testFeatExtract2(numRounds, tpls, sents, "en", 3, true);
+    }
+    
+    private void testFeatExtract2(int numRounds, List<FeatTemplate> tpls, SimpleAnnoSentenceCollection sents, String language, final int opt, final boolean lookup) {
+        Timer timer = new Timer();
+        Timer lookupTimer = new Timer();
+        Timer hashTimer = new Timer();
+        Timer extTimer = new Timer();
+        long hashSum = 0;
+        
+        CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
+        prm.language = language;
+        CorpusStatistics cs = new CorpusStatistics(prm);
+
+        int numPairs = 0;
+        for (int round = 0; round<numRounds; round++) {
+            numPairs = 0;
+            timer = new Timer();
+            timer.start();
+            lookupTimer = new Timer();
+            hashTimer = new Timer();
+            extTimer = new Timer();
+            
+            Alphabet<Feature> alphabet = new Alphabet<Feature>();
+            try {
+                for (int i=0; i<sents.size(); i++) {
+                    SimpleAnnoSentence sent = sents.get(i);
+                    TemplateLanguageExtractor ext = new TemplateLanguageExtractor(sent, cs);
+                    
+                    for (int pred=0; pred<sent.size(); pred++) {
+                        for (int arg=0; arg<sent.size(); arg++) {
+                            extTimer.start();
+                            List<Object> feats = new ArrayList<Object>();
+                            ext.addFeatures(tpls, pred, arg, feats);
+                            extTimer.stop();
+                            
+                            numPairs++;
+                            for (int t=0; t<feats.size(); t++) {                                
+
+                                extTimer.start();
+                                Object featName = feats.get(t);
+                                extTimer.stop();
+                                
+                                hashTimer.start();
+                                if (opt == 3) {
+                                    String data = (String) featName;
+                                    featName = FastMath.mod(MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789), 200000);
+                                }
+                                Feature feat = null;
+                                feat = new Feature(featName);
+                                hashSum += feat.hashCode();
+                                hashTimer.stop();
+                                
+                                if (lookup) {
+                                    lookupTimer.start();
+                                    alphabet.lookupIndex(feat);
+                                    lookupTimer.stop();
+                                }
+                            }
+                        }
+                    }
+                    if (i % 1000 == 0) {
+                        System.out.println("alphabet.size() = " + alphabet.size());
+                    }
+                }
+                timer.stop();
+                System.out.println("Num features: " + alphabet.size());
+            } catch (OutOfMemoryError e) {
+                System.out.println("Num features at OOM: " + alphabet.size());
+                break;
+            }
+        }
+        System.out.println("Num pairs: " + numPairs);
+        System.out.println("Hash sum: " + hashSum);
+        System.out.println("Time to extract: " + extTimer.totMs());
+        System.out.println("Time to hash: " + hashTimer.totMs());
+        System.out.println("Time to lookup: " + lookupTimer.totMs());
+        System.out.println("Time total            : " + timer.totMs());
+    }
+    
 
     // ---------- Unused Legacy Classes --------------
     private interface Extractor {
@@ -173,7 +276,7 @@ public class FeatureCreationSpeedTest {
     // -----------------------------------------------------
     
     public static void main(String[] args) throws UnsupportedEncodingException, FileNotFoundException {
-        new FeatureCreationSpeedTest().testSpeedOfFeatureCreation();
+        new FeatureCreationSpeedTest().testSpeedOfFeatureCreation2();
     }
 
 }

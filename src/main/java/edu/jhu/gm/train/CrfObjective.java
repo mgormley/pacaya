@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -146,7 +146,7 @@ public class CrfObjective implements Function, BatchFunction {
         
     private double getMarginalLogLikelihoodForExample(int i) {
         FgExample ex = data.get(i);
-        FeatureTemplateList fts = data.getTemplates();
+        FactorTemplateList fts = data.getTemplates();
         
         // Run inference to compute Z(y,x) by summing over the latent variables w.
         FgInferencer infLat = getInfLat(ex);
@@ -300,7 +300,7 @@ public class CrfObjective implements Function, BatchFunction {
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FeatureTemplateList fts,
+    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FactorTemplateList fts,
             double multiplier, IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     

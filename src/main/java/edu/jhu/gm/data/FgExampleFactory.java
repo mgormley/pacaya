@@ -1,6 +1,6 @@
 package edu.jhu.gm.data;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 
 /**
  * A factory of instances for a graphical model represented as factor
@@ -12,7 +12,7 @@ import edu.jhu.gm.feat.FeatureTemplateList;
 public interface FgExampleFactory {
 
     /** Gets the i'th example. */
-    public FgExample get(int i, FeatureTemplateList fts);
+    public FgExample get(int i, FactorTemplateList fts);
 
     /** Gets the number of examples. */
     public int size();

@@ -19,7 +19,7 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ExpFamFactor;
@@ -47,7 +47,7 @@ public class ErmaReader {
     public ErmaReader() {
     }
     
-    public FgExampleList read(File featureTemplate, File dataFile, FeatureTemplateList fts) {
+    public FgExampleList read(File featureTemplate, File dataFile, FactorTemplateList fts) {
         return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), fts);
     }
     
@@ -61,7 +61,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExampleList read(String featureTemplate, String dataFile, FeatureTemplateList fts) {
+    public FgExampleList read(String featureTemplate, String dataFile, FactorTemplateList fts) {
         FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
@@ -165,7 +165,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, FeatureTemplateList fts){
+    private static FgExample toFgExample(DataSample s, FeatureFile ff, FactorTemplateList fts){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
@@ -372,7 +372,7 @@ public class ErmaReader {
 
         @Override
         public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
-                FeatureTemplateList fts) {
+                FactorTemplateList fts) {
             // Do nothing.
         }
 

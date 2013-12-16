@@ -3,7 +3,7 @@ package edu.jhu.gm.data;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 
 /**
  * A simple in-memory mutable collection of instances for a graphical model
@@ -18,7 +18,7 @@ public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExa
     // this class.
     private ArrayList<FgExample> examples;
 
-    public FgExampleMemoryStore(FeatureTemplateList fts) {
+    public FgExampleMemoryStore(FactorTemplateList fts) {
         super(fts);
         this.examples = new ArrayList<FgExample>();
     }

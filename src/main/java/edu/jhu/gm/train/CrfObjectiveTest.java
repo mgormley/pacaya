@@ -13,7 +13,7 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
@@ -58,7 +58,7 @@ public class CrfObjectiveTest {
         SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fgPrm.makeUnknownPredRolesLatent = false;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;

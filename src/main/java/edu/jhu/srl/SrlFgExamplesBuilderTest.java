@@ -19,7 +19,7 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -58,7 +58,7 @@ public class SrlFgExamplesBuilderTest {
         cs.init(simpleSents);
         
         System.out.println("Done reading.");
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         prm.fgPrm.useProjDepTreeFactor = true;
@@ -74,7 +74,7 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testRoleTrainAssignment() throws Exception {
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -140,7 +140,7 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         {
-            FeatureTemplateList fts = new FeatureTemplateList();
+            FactorTemplateList fts = new FactorTemplateList();
             prm.exPrm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExampleList data = builder.getData(simpleSents);            
@@ -151,7 +151,7 @@ public class SrlFgExamplesBuilderTest {
             assertEquals(26168, model.getNumParams());
         }
         {
-            FeatureTemplateList fts = new FeatureTemplateList();
+            FactorTemplateList fts = new FactorTemplateList();
             prm.exPrm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExampleList data = builder.getData(simpleSents);
@@ -165,7 +165,7 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testLinkTrainAssignment() throws Exception {
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -206,7 +206,7 @@ public class SrlFgExamplesBuilderTest {
 
     @Test
     public void testSenseTrainAssignment() throws Exception {
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);

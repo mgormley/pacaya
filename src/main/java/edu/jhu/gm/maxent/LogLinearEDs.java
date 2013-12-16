@@ -7,8 +7,8 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ExpFamFactor;
@@ -75,9 +75,9 @@ public class LogLinearEDs {
     }
     
     public FgExampleList getData() {
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-        fts.add(new FeatureTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
+        fts.add(new FactorTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         int state=0;
@@ -101,7 +101,7 @@ public class LogLinearEDs {
                         return desc.getFeatures();
                     }
                     public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                            VarConfig goldConfig, FeatureTemplateList fts) {             
+                            VarConfig goldConfig, FactorTemplateList fts) {             
                         // Do nothing.               
                     }
                     public void clear() {

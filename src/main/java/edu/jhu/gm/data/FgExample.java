@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -65,7 +65,7 @@ public class FgExample implements Serializable {
      * @param featExtractor Feature extractor on the observations only (i.e. the
      *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FeatureTemplateList fts) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FactorTemplateList fts) {
         checkGoldConfig(fg, goldConfig);
         this.fg = fg;
         this.goldConfig = goldConfig;

@@ -3,7 +3,7 @@ package edu.jhu.gm.data;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 
 /**
  * An abstract collection of instances for a graphical model represented as factor graphs.
@@ -18,9 +18,9 @@ public abstract class AbstractFgExampleList implements FgExampleList {
      * CoNLL2009 sentences from which these examples were generated.
      */
     private Object sourceSents;
-    protected FeatureTemplateList fts;
+    protected FactorTemplateList fts;
 
-    public AbstractFgExampleList(FeatureTemplateList fts) {
+    public AbstractFgExampleList(FactorTemplateList fts) {
         this.fts = fts;
     }
 
@@ -38,7 +38,7 @@ public abstract class AbstractFgExampleList implements FgExampleList {
         return sourceSents;
     }
 
-    public FeatureTemplateList getTemplates() {
+    public FactorTemplateList getTemplates() {
         return fts;
     }
     

@@ -12,8 +12,8 @@ import org.junit.Test;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
@@ -31,7 +31,7 @@ public class FgModelTest {
     @Test
     public void testIsSerializable() throws IOException {
         try {
-            FeatureTemplateList fts = getFtl();
+            FactorTemplateList fts = getFtl();
             // Just test that no exception is thrown.
             FgModel model = new FgModel(fts);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -46,14 +46,14 @@ public class FgModelTest {
 
     @Test
     public void testNumParams() {
-        FeatureTemplateList fts = getFtl();
+        FactorTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
         assertEquals((3*2)*2 + 2*1, model.getNumParams());
     }
     
     @Test
     public void testApply() {
-        FeatureTemplateList fts = getFtl();
+        FactorTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
         
         assertEquals(3*2*2+2*1, model.getNumParams());
@@ -79,7 +79,7 @@ public class FgModelTest {
 
     @Test
     public void testFillAndZero() {
-        FeatureTemplateList fts = getFtl();
+        FactorTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
         model.fill(1.0);
 
@@ -103,7 +103,7 @@ public class FgModelTest {
     public void testSetRandomStandardNormal() {
         Prng.seed(1l);
         
-        FeatureTemplateList fts = getFtl();
+        FactorTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
         model.setRandomStandardNormal();
 
@@ -115,7 +115,7 @@ public class FgModelTest {
 
     @Test
     public void testUpdateDoublesAndModel() {
-        FeatureTemplateList fts = getFtl();
+        FactorTemplateList fts = getFtl();
         FgModel model = new FgModel(fts);
         final MutableInt x = new MutableInt(0);
         model.apply(new LambdaUnaryOpDouble() {
@@ -147,7 +147,7 @@ public class FgModelTest {
     @Test
     public void testExcludeUnsupportedFeaturesWithLatentVars() {
         boolean useLat = true;
-        FeatureTemplateList fts = getFtl(useLat);
+        FactorTemplateList fts = getFtl(useLat);
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
@@ -168,7 +168,7 @@ public class FgModelTest {
     @Test
     public void testExcludeUnsupportedFeatures() {
         boolean useLat = false;
-        FeatureTemplateList fts = getFtl(useLat);
+        FactorTemplateList fts = getFtl(useLat);
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(getExForFts("1a", "2a", fts, useLat));
@@ -206,7 +206,7 @@ public class FgModelTest {
         }
     }
     
-    private FgExample getExForFts(String state1, String state2, FeatureTemplateList fts, boolean useLat) {
+    private FgExample getExForFts(String state1, String state2, FactorTemplateList fts, boolean useLat) {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
@@ -219,24 +219,24 @@ public class FgModelTest {
         return new FgExample(fg, vc, new MockFeatureExtractor(), fts);
     }
 
-    public static FeatureTemplateList getFtl() {
+    public static FactorTemplateList getFtl() {
         return getFtl(false);
     }
     
-    public static FeatureTemplateList getFtl(boolean useLat) {
-        FeatureTemplateList fts = new FeatureTemplateList();
+    public static FactorTemplateList getFtl(boolean useLat) {
+        FactorTemplateList fts = new FactorTemplateList();
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             alphabet.lookupIndex(new Feature("feat1"));
-            fts.add(new FeatureTemplate(new VarSet(v1), alphabet, "key1"));
+            fts.add(new FactorTemplate(new VarSet(v1), alphabet, "key1"));
         }
         {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             alphabet.lookupIndex(new Feature("feat2a"));
             alphabet.lookupIndex(new Feature("feat2b"));
-            fts.add(new FeatureTemplate(new VarSet(v1, v2), alphabet, "key2"));
+            fts.add(new FactorTemplate(new VarSet(v1, v2), alphabet, "key2"));
         }
         return fts;
     }

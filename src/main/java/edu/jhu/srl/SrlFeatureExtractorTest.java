@@ -18,7 +18,7 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -41,7 +41,7 @@ public class SrlFeatureExtractorTest {
         fgPrm.alwaysIncludeLinkVars = true;
         SrlFactorGraph sfg = getSrlFg(fgPrm);
 
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -72,7 +72,7 @@ public class SrlFeatureExtractorTest {
     @Test
     public void testCorrectNumExpandedFeatures() throws Exception {
         // What's up with this one?
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
@@ -119,7 +119,7 @@ public class SrlFeatureExtractorTest {
     
     @Test
     public void testCorrectNumExpandedFeaturesForSmallSent() throws Exception {
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", getList("_")));
@@ -172,7 +172,7 @@ public class SrlFeatureExtractorTest {
         SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
         SrlFactorGraph sfg = getSrlFg(fgPrm);
 
-        FeatureTemplateList fts = new FeatureTemplateList();        
+        FactorTemplateList fts = new FactorTemplateList();        
 
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);

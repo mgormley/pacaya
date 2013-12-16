@@ -22,7 +22,7 @@ import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
 import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -107,14 +107,14 @@ public class CrfRunner {
         
         // Get a model.
         FgModel model = null;
-        FeatureTemplateList templates;
+        FactorTemplateList templates;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
             model = (FgModel) Files.deserialize(modelIn);
             templates = model.getTemplates();
         } else {
-            templates = new FeatureTemplateList();
+            templates = new FactorTemplateList();
         }
         
         if (trainType != null && train != null) {
@@ -171,7 +171,7 @@ public class CrfRunner {
         }
     }
 
-    private FgExampleList getData(FeatureTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+    private FgExampleList getData(FactorTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExampleList data;
         if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader();

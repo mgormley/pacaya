@@ -5,8 +5,8 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 import edu.jhu.util.Timer;
@@ -35,7 +35,7 @@ public class FgExampleListBuilder {
 
         private FgExampleFactory factory;
 
-        public FgExampleFactoryWrapper(FeatureTemplateList fts, FgExampleFactory factory) {
+        public FgExampleFactoryWrapper(FactorTemplateList fts, FgExampleFactory factory) {
             super(fts);
             this.factory = factory;
         }
@@ -90,7 +90,7 @@ public class FgExampleListBuilder {
         this.prm = prm;
     }
 
-    public FgExampleList getInstance(FeatureTemplateList fts, FgExampleFactory factory) {
+    public FgExampleList getInstance(FactorTemplateList fts, FgExampleFactory factory) {
         boolean doingFeatCutoff = (fts.isGrowing() && prm.featCountCutoff > 0);
 
         if (doingFeatCutoff) {
@@ -136,19 +136,19 @@ public class FgExampleListBuilder {
      *            will be stopped at the end of this function call.
      * @param factory The factory generating the examples.
      */
-    public static void cutoffFeatures(int featCountCutoff, FeatureTemplateList fts, FgExampleFactory factory) {
+    public static void cutoffFeatures(int featCountCutoff, FactorTemplateList fts, FgExampleFactory factory) {
         // Use counting alphabets in this ftl.
-        FeatureTemplateList countFts = new FeatureTemplateList(true);
+        FactorTemplateList countFts = new FactorTemplateList(true);
         constructAndDiscardAll(countFts, factory);
 
         log.info("Num features before cutoff: " + countFts.getNumObsFeats());
         for (int t = 0; t < countFts.size(); t++) {
-            FeatureTemplate template = countFts.get(t);
+            FactorTemplate template = countFts.get(t);
             CountingAlphabet<Feature> countAlphabet = (CountingAlphabet<Feature>) template.getAlphabet();
 
             // Create a copy of this template, with a new alphabet.
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            fts.add(new FeatureTemplate(template.getVars(), alphabet, template.getKey()));
+            fts.add(new FactorTemplate(template.getVars(), alphabet, template.getKey()));
 
             // Discard the features which occurred fewer times than the cutoff.
             for (int i = 0; i < countAlphabet.size(); i++) {
@@ -163,7 +163,7 @@ public class FgExampleListBuilder {
         }
     }
 
-    public static void constructAndDiscardAll(FeatureTemplateList fts, FgExampleFactory factory) {
+    public static void constructAndDiscardAll(FactorTemplateList fts, FgExampleFactory factory) {
         constructAndDiscardAll(new FgExampleFactoryWrapper(fts, factory));
     }
 

@@ -12,7 +12,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.Alphabet;
 
-public class FeatureTemplate implements Serializable {
+public class FactorTemplate implements Serializable {
 
     private static final long serialVersionUID = -6605264098531200020L;
     
@@ -27,7 +27,7 @@ public class FeatureTemplate implements Serializable {
     // Accordingly, we use this to construct the state names for a given configuration.
     private VarSet vars;
     
-    public FeatureTemplate(VarSet vars, Alphabet<Feature> alphabet, Object key) {
+    public FactorTemplate(VarSet vars, Alphabet<Feature> alphabet, Object key) {
         super();
         if (VarSet.getVarsOfType(vars, VarType.OBSERVED).size() != 0) {
             throw new IllegalStateException("Only predicted and latent variables may participate in a feature template.");

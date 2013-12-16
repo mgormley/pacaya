@@ -12,26 +12,26 @@ import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 
-public class FeatureTemplateList implements Serializable {
+public class FactorTemplateList implements Serializable {
 
     private static final long serialVersionUID = 5880428795836008068L;
-    private List<FeatureTemplate> fts;
+    private List<FactorTemplate> fts;
     private boolean isGrowing;  
     private Alphabet<Object> templateKeyAlphabet;
     private boolean useCountingAlphabets;
 
-    public FeatureTemplateList() {
+    public FactorTemplateList() {
         this(false);
     }
     
-    public FeatureTemplateList(boolean useCountingAlphabets) {
-        fts = new ArrayList<FeatureTemplate>();
+    public FactorTemplateList(boolean useCountingAlphabets) {
+        fts = new ArrayList<FactorTemplate>();
         isGrowing = true;
         templateKeyAlphabet = new Alphabet<Object>();
         this.useCountingAlphabets = useCountingAlphabets;
     }
 
-    public FeatureTemplate get(int i) {
+    public FactorTemplate get(int i) {
         return fts.get(i);
     }
     
@@ -42,14 +42,14 @@ public class FeatureTemplateList implements Serializable {
     /** Gets the number of observation function features. */
     public int getNumObsFeats() {
         int count = 0;
-        for (FeatureTemplate ft : fts) {
+        for (FactorTemplate ft : fts) {
             count += ft.getAlphabet().size();
         }
         return count;
     }
 
     public void startGrowth() {
-        for (FeatureTemplate ft : fts) {
+        for (FactorTemplate ft : fts) {
             ft.getAlphabet().startGrowth();
         }
         templateKeyAlphabet.startGrowth();
@@ -57,14 +57,14 @@ public class FeatureTemplateList implements Serializable {
     }
 
     public void stopGrowth() {
-        for (FeatureTemplate ft : fts) {
+        for (FactorTemplate ft : fts) {
             ft.getAlphabet().stopGrowth();
         }
         templateKeyAlphabet.stopGrowth();
         isGrowing = false;
     }
     
-    public void add(FeatureTemplate ft) {
+    public void add(FactorTemplate ft) {
         int index = templateKeyAlphabet.lookupIndex(ft.getKey());
         if (index >= fts.size()) {
             fts.add(ft);
@@ -85,7 +85,7 @@ public class FeatureTemplateList implements Serializable {
         }
     }
 
-    private FeatureTemplate lookupTemplate(Factor f) {
+    private FactorTemplate lookupTemplate(Factor f) {
         return fts.get(getTemplateId(f));
     }
     
@@ -94,7 +94,7 @@ public class FeatureTemplateList implements Serializable {
         if (index >= fts.size()) {
             // Add the template.
             Alphabet<Feature> alphabet = useCountingAlphabets ? new CountingAlphabet<Feature>() : new Alphabet<Feature>();
-            fts.add(new FeatureTemplate(f.getVars(), alphabet, f.getTemplateKey()));
+            fts.add(new FactorTemplate(f.getVars(), alphabet, f.getTemplateKey()));
         } else if (index == -1) {
             throw new RuntimeException("Unable to update feature template list for factor: " + f.getTemplateKey());
         } else if (fts.get(index).getNumConfigs() != f.getVars().calcNumConfigs()) {
@@ -109,7 +109,7 @@ public class FeatureTemplateList implements Serializable {
         return index;
     }
 
-    public FeatureTemplate getTemplate(Factor f) {
+    public FactorTemplate getTemplate(Factor f) {
         return fts.get(getTemplateId(f));
     }
     
@@ -124,7 +124,7 @@ public class FeatureTemplateList implements Serializable {
         }
     }
 
-    public FeatureTemplate getTemplateByKey(Object templateKey) {
+    public FactorTemplate getTemplateByKey(Object templateKey) {
         return fts.get(getTemplateIdByKey(templateKey));
     }
 

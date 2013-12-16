@@ -16,11 +16,11 @@ public abstract class SlowObsFeatureExtractor implements ObsFeatureExtractor {
 
     protected FactorGraph fg;
     protected VarConfig goldConfig;
-    protected FeatureTemplateList fts;
+    protected FactorTemplateList fts;
 
     public SlowObsFeatureExtractor() {    }
     
-    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FeatureTemplateList fts) {
+    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FactorTemplateList fts) {
         this.fg = fg;
         this.goldConfig = goldConfig;
         this.fts = fts;

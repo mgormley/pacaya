@@ -19,7 +19,7 @@ import data.VariableSet;
 import dataParser.DataParser;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -46,7 +46,7 @@ public class ErmaReaderTest {
         
         // Read the ERMA files to get our objects.
         ErmaReader er = new ErmaReader();
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         FgExampleList data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, fts);
 
         // Just test that we can construct these without error.

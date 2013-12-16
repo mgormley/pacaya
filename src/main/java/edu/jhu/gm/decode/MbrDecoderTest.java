@@ -8,7 +8,7 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
@@ -30,7 +30,7 @@ public class MbrDecoderTest {
             trainConfig.put(var, 0);
         }
         
-        FeatureTemplateList fts = new FeatureTemplateList();
+        FactorTemplateList fts = new FactorTemplateList();
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
         data.add(new FgExample(fg, trainConfig, new SimpleVCFeatureExtractor(fg, trainConfig, fts), fts));
         FgModel model = new FgModel(fts);

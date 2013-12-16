@@ -26,8 +26,8 @@ import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
 import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureTemplate;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplate;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -252,7 +252,7 @@ public class SrlRunner {
         
         // Get a model.
         SrlFgModel model = null;
-        FeatureTemplateList fts;
+        FactorTemplateList fts;
         CorpusStatistics cs;
         if (modelIn != null) {
             // Read a model from a file.
@@ -261,7 +261,7 @@ public class SrlRunner {
             fts = model.getTemplates();
             cs = model.getCs();
         } else {
-            fts = new FeatureTemplateList();
+            fts = new FactorTemplateList();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
         }
         
@@ -322,7 +322,7 @@ public class SrlRunner {
         }
     }
 
-    private FgExampleList getData(FeatureTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
+    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         FgExampleList data;
@@ -403,7 +403,7 @@ public class SrlRunner {
             fts.startGrowth();
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FeatureTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
             fts.stopGrowth();
         }
         

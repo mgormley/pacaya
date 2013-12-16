@@ -1,7 +1,7 @@
 package edu.jhu.srl;
 
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FeatureTemplateList;
+import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.model.FgModel;
 
 public class SrlFgModel extends FgModel {
@@ -14,7 +14,7 @@ public class SrlFgModel extends FgModel {
         this.cs = cs;
     }
     
-    public SrlFgModel(FeatureTemplateList fts, CorpusStatistics cs) {
+    public SrlFgModel(FactorTemplateList fts, CorpusStatistics cs) {
         super(fts);
         this.cs = cs;
     }
