@@ -24,6 +24,10 @@ import edu.jhu.featurize.TemplateLanguage.PositionModifier;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
 
+/**
+ * Reader for the template little language.
+ * @author mgormley
+ */
 public class TemplateReader {
 
     private static final Pattern STRUCTURE_SEP_REGEX = Pattern.compile(Pattern.quote(TemplateLanguage.STRUCTURE_SEP));

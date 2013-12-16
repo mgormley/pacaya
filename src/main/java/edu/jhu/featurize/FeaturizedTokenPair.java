@@ -15,6 +15,7 @@ import edu.jhu.prim.tuple.Pair;
  * child/argument).
  * 
  * @author mmitchell
+ * @author mgormley
  */
 public class FeaturizedTokenPair {
     

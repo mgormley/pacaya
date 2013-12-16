@@ -31,6 +31,10 @@ import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.collections.Lists;
 
+/**
+ * Tests for the template feature extractor.
+ * @author mgormley
+ */
 public class TemplateLanguageExtractorTest {
 
     @Test

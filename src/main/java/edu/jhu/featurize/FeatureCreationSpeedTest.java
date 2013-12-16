@@ -172,8 +172,12 @@ public class FeatureCreationSpeedTest {
         // Run
         System.out.println("Num sents: " + sents.size());
         List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        //List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
 
-        testFeatExtract2(numRounds, tpls, sents, "en", 3, true);
+        for (int t=0; t<tpls.size(); t++) {
+            System.out.println(tpls.get(t));
+            testFeatExtract2(numRounds, tpls.subList(t, t+1), sents, "en", 3, true);
+        }
     }
     
     private void testFeatExtract2(int numRounds, List<FeatTemplate> tpls, SimpleAnnoSentenceCollection sents, String language, final int opt, final boolean lookup) {

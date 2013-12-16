@@ -17,6 +17,7 @@ import edu.stanford.nlp.util.StringUtils;
  * virtual "words" appearing before or after the sentence (BOS/EOS).
  * 
  * @author mmitchell
+ * @author mgormley
  */
 public class FeaturizedToken {
     
