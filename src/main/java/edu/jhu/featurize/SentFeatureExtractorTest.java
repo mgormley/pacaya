@@ -87,45 +87,7 @@ public class SentFeatureExtractorTest {
             System.out.println(f);
         }        
     }
-        
-    //@Test
-    public void testTemplates() {
-        CoNLL09Sentence sent = getSpanishConll09Sentence2();
-        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        csPrm.useGoldSyntax = true;
-        CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
-        cs.init(Lists.getList(simpleSent));
-        ArrayList<String> allFeats = new ArrayList<String>();
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.withSupervision = false;
-
-        fePrm.formFeats = true;
-        fePrm.lemmaFeats = true;
-        fePrm.tagFeats = true;
-        fePrm.morphFeats = true;
-        fePrm.deprelFeats = true;
-        fePrm.childrenFeats = true;
-        fePrm.pathFeats = true;
-        fePrm.syntacticConnectionFeats = true;
-
-        SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
-        //allFeats = new ArrayList<String>();
-        // using "es" and "hicieron"...
-        fe.addTemplatePairFeatures(1, 5, allFeats);
-        /*for (int i = 0; i < sent.size(); i++) {
-            for (int j = 0; j < sent.size(); j++) {
-                ArrayList<String> pairFeatures = fe.addTemplatePairFeatures(i, j);
-                allFeats.addAll(pairFeatures);
-            }
-        }*/
-        // 
-        //        for (String f : allFeats) {
-        //            System.out.println(f);
-        //        }
-    }
-    
-    
+            
     public static CoNLL09Sentence getSpanishConll09Sentence1() {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();  
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));

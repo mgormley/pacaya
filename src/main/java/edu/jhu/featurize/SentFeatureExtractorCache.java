@@ -48,7 +48,7 @@ public class SentFeatureExtractorCache {
     public ArrayList<String> fastGetObsSenseFeats(int child) {
         if (obsSenseSolo[child] == null) {
             // Lazily construct the observation features.
-            obsSenseSolo[child] = sentFeatExt.createSenseFeatureSet(child);
+            obsSenseSolo[child] = sentFeatExt.createFeatureSet(child);
         }
         return obsSenseSolo[child];
     }
