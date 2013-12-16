@@ -58,9 +58,9 @@ public class TemplateLanguageExtractor {
     public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<Object> feats) {
         int idx = pidx;
         if (tpl instanceof FeatTemplate1) {
-            addTokenFeature((FeatTemplate1) tpl, idx, feats);
+            addTokenFeature((FeatTemplate1) tpl, pidx, cidx, feats);
         } else if (tpl instanceof FeatTemplate2) {
-            addTokenFeatures((FeatTemplate2) tpl, idx, feats);            
+            addTokenFeatures((FeatTemplate2) tpl, pidx, cidx, feats);            
         } else if (tpl instanceof FeatTemplate3) {
             addListFeature((FeatTemplate3) tpl, pidx, cidx, feats);
         } else if (tpl instanceof FeatTemplate4) {
@@ -99,11 +99,13 @@ public class TemplateLanguageExtractor {
      *     c_{head}.dr
      *     first(t, NOUN, path(p, root)).bc0
      * @param tpl Structured feature template.
-     * @param idx Token to which the original position refers.
+     * @param pidx Token to which the parent position refers.
+     * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addTokenFeature(FeatTemplate1 tpl, int idx, List<Object> feats) {
+    public void addTokenFeature(FeatTemplate1 tpl, int pidx, int cidx, List<Object> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokProperty prop = tpl.prop;
+        int idx = getIndexOfPosition(pidx, cidx, pos);
         idx = getModifiedPosition(mod, idx);
         String val = getTokProp(prop, idx);
         if (val != null) {
@@ -111,10 +113,21 @@ public class TemplateLanguageExtractor {
             feats.add(feat);
         }
     }
+
+    private int getIndexOfPosition(int pidx, int cidx, Position pos) {
+        int idx;
+        switch (pos) {
+        case PARENT: idx = pidx; break;
+        case CHILD: idx = cidx; break;
+        default: throw new IllegalStateException();
+        }
+        return idx;
+    }
     
     /** Same as above except that it permits properties of the token which expand to multiple strings. */
-    public void addTokenFeatures(FeatTemplate2 tpl, int idx, List<Object> feats) {
+    public void addTokenFeatures(FeatTemplate2 tpl, int pidx, int cidx, List<Object> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokPropList prop = tpl.prop;
+        int idx = getIndexOfPosition(pidx, cidx, pos);
         idx = getModifiedPosition(mod, idx);
         List<String> vals = getTokPropList(prop, idx);
         for (String val : vals) {
