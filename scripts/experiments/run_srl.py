@@ -233,7 +233,7 @@ class ParamDefinitions():
         
         # Below defines T/F values for features in 
         # this order: 
-        # useSimpleFeats, useNaradFeats, useZhaoFeats, useDepPathFeats        
+        # useSimpleFeats, useNaradFeats, useZhaoFeats, useLexicalDepPathFeats        
         g.feat_all               = self._get_named_feature_set(True, True, True, True, 'all')
         g.feat_simple_narad_zhao = self._get_named_feature_set(True, True, True, False, 'simple_narad_zhao')
         g.feat_simple_narad_dep  = self._get_named_feature_set(True, True, False, True, 'simple_narad_dep')
@@ -262,7 +262,7 @@ class ParamDefinitions():
         feats.set('useSimpleFeats', simple, incl_name=False, incl_arg=True)
         feats.set('useNaradFeats', narad, incl_name=False, incl_arg=True)
         feats.set('useZhaoFeats', zhao, incl_name=False, incl_arg=True)
-        feats.set('useDepPathFeats', dep, incl_name=False, incl_arg=True)
+        feats.set('useLexicalDepPathFeats', dep, incl_name=False, incl_arg=True)
         # CURRENTLY we do not use the features from (Bjorkelund et al., 2009). 
         feats.set('useBjorkelundFeats', False, incl_name=False, incl_arg=True)
         # Give the feature set a name.

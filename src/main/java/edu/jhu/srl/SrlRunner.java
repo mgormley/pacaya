@@ -169,7 +169,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Whether to add the Bjorkelund features.")
     public static boolean useBjorkelundFeats = true;
     @Opt(hasArg = true, description = "Whether to add dependency path features.")
-    public static boolean useDepPathFeats = true;
+    public static boolean useLexicalDepPathFeats = false;
     @Opt(hasArg = true, description = "Whether to include pairs of features.")
     public static boolean useTemplates = false;
     // Options for feature templating.
@@ -527,17 +527,8 @@ public class SrlRunner {
         prm.fePrm.useNaradFeats = useNaradFeats;
         prm.fePrm.useZhaoFeats = useZhaoFeats;
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
-        prm.fePrm.useDepPathFeats = useDepPathFeats;
+        prm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
         prm.fePrm.useTemplates = useTemplates;
-        prm.fePrm.formFeats = formFeats;
-        prm.fePrm.lemmaFeats = lemmaFeats;
-        prm.fePrm.tagFeats = tagFeats;
-        prm.fePrm.morphFeats = morphFeats;
-        prm.fePrm.deprelFeats = deprelFeats;
-        prm.fePrm.childrenFeats = childrenFeats;
-        prm.fePrm.pathFeats = pathFeats;
-        prm.fePrm.syntacticConnectionFeats = syntacticConnectionFeats;
-        prm.fePrm.useAllTemplates = useAllTemplates;
         
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;

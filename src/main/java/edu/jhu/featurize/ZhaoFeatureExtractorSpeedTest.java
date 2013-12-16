@@ -28,7 +28,7 @@ public class ZhaoFeatureExtractorSpeedTest {
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = true;
         fePrm.useNaradFeats = false;
-        fePrm.useDepPathFeats = false;
+        fePrm.useLexicalDepPathFeats = false;
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = true;
         File train = new File("data/conll/CoNLL2009-ST-Spanish-trial.csv");

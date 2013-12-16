@@ -1,14 +1,10 @@
 package edu.jhu.featurize;
 
-import static org.junit.Assert.*;
-
 import java.util.ArrayList;
-
-import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.featurize.SentFeatureExtractorWithTemplates.SentFeatureExtractorWithTemplatesPrm;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.collections.Lists;
@@ -24,7 +20,7 @@ public class SentFeatureExtractorWithTemplatesTest {
         SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
         ArrayList<String> allFeats = new ArrayList<String>();
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        SentFeatureExtractorWithTemplatesPrm fePrm = new SentFeatureExtractorWithTemplatesPrm();
         fePrm.withSupervision = false;
 
         fePrm.formFeats = true;

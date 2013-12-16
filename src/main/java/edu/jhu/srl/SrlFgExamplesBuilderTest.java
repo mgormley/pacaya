@@ -135,7 +135,7 @@ public class SrlFgExamplesBuilderTest {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm.useZhaoFeats = false;
         prm.fePrm.useSimpleFeats = false;
-        prm.fePrm.useDepPathFeats = false;
+        prm.fePrm.useLexicalDepPathFeats = false;
         prm.fePrm = fePrm;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;

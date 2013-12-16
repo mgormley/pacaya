@@ -89,7 +89,7 @@ public class SrlFeatureExtractorTest {
 
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm.biasOnly = false;
-        prm.fePrm.useDepPathFeats = false;
+        prm.fePrm.useLexicalDepPathFeats = false;
         prm.fePrm.useNaradFeats = true;
         prm.fePrm.useSimpleFeats = false;
         prm.fePrm.useZhaoFeats = false;   
@@ -140,7 +140,7 @@ public class SrlFeatureExtractorTest {
 
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         prm.fePrm.biasOnly = false;
-        prm.fePrm.useDepPathFeats = false;
+        prm.fePrm.useLexicalDepPathFeats = false;
         prm.fePrm.useNaradFeats = true;
         prm.fePrm.useSimpleFeats = false;
         prm.fePrm.useZhaoFeats = false;   
@@ -194,7 +194,7 @@ public class SrlFeatureExtractorTest {
         fePrm.useNaradFeats = true;
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = false;
-        fePrm.useDepPathFeats = false;
+        fePrm.useLexicalDepPathFeats = false;
         SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, simpleSents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.featureHashMod = 10; // Enable feature hashing

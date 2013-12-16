@@ -42,41 +42,31 @@ public class SentFeatureExtractor {
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
         public boolean isProjective = false;
-        /** Switches for feature templates. */
-        public boolean useTemplates = false;
-        public boolean formFeats = true;
-        public boolean lemmaFeats = true;
-        public boolean tagFeats = true;
-        public boolean morphFeats = true;
-        public boolean deprelFeats = true;
-        public boolean childrenFeats = true;
-        public boolean pathFeats = true;
-        public boolean syntacticConnectionFeats = true;
         /** Whether to use supervised features. */
         public boolean withSupervision = true;
-        /** Whether to add the "Simple" features. */
-        public boolean useSimpleFeats = true;
         /** Whether to add the "Naradowsky" features. */
         public boolean useNaradFeats = true;
         /** Whether to add the "Zhao" features. */
         public boolean useZhaoFeats = true;
-        public boolean useDepPathFeats = true;
         // NOTE: We default to false on these features since including these
         // would break a lot of unit tests, which expect the default to be 
         // only Zhao+Narad features.
+        /** Whether to add the "Simple" features. */
+        public boolean useSimpleFeats = false;
+        /** Whether to add the Lexical dependency path features. */
+        public boolean useLexicalDepPathFeats = false;
         /** Whether to add the "Bjorkelund" features. */
         public boolean useBjorkelundFeats = false;
-        /** Whether to add all possible features using the templates defined above. **/
-        public boolean useAllTemplates = false;
+        /** Whether to use feature templates. */
+        public boolean useTemplates = false;
     }
     
     // Parameters for feature extraction.
-    protected SentFeatureExtractorPrm prm;
+    private SentFeatureExtractorPrm prm;
     
     private final SimpleAnnoSentence sent;
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
-    private final int[] parents;
     private FeaturizedSentence fSent;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
@@ -84,26 +74,7 @@ public class SentFeatureExtractor {
         this.sent = sent;
         this.cs = cs;
         this.sig = cs.sig;
-        if (!prm.biasOnly) {
-            // Syntactic parents of all the words in this sentence, in order (idx 0 is -1)
-            this.parents = getParents(sent);
-            // TBD:  Should this be defined differently?
-            if (prm.useZhaoFeats || prm.useDepPathFeats || prm.useBjorkelundFeats) {
-                fSent = new FeaturizedSentence(sent, cs);
-            }
-            if (prm.useAllTemplates) {
-                this.prm.formFeats = true;
-                this.prm.lemmaFeats = true;
-                this.prm.tagFeats = true;
-                this.prm.morphFeats = true;
-                this.prm.deprelFeats = true;
-                this.prm.childrenFeats = true;
-                this.prm.pathFeats = true;
-                this.prm.syntacticConnectionFeats = true;
-            }
-        } else {
-            this.parents = null;
-        }
+        fSent = new FeaturizedSentence(sent, cs);
     }
 
     public int getSentSize() {
@@ -111,11 +82,6 @@ public class SentFeatureExtractor {
     }
     
     // ----------------- Extracting Features on the Observations ONLY -----------------
-
-    // Package private for testing.
-    int[] getParents(SimpleAnnoSentence sent) {
-        return sent.getParents();
-    }
 
     /**
      * Creates a feature set for the given word position.
@@ -181,8 +147,8 @@ public class SentFeatureExtractor {
         if (prm.useZhaoFeats) {
             addZhaoPairFeatures(pidx, aidx, feats);
         }
-        if (prm.useDepPathFeats) {
-            addDependencyPathFeatures(pidx, aidx, feats);
+        if (prm.useLexicalDepPathFeats) {
+            addLexicalDependencyPathFeatures(pidx, aidx, feats);
         }
         if (prm.useBjorkelundFeats) {
             addBjorkelundPairFeatures(pidx, aidx, feats);
@@ -226,10 +192,9 @@ public class SentFeatureExtractor {
         }
 
     }
-
     
     // ---------- Meg's Dependency Path features. ---------- 
-    public void addDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
+    public void addLexicalDependencyPathFeatures(int pidx, int aidx, ArrayList<String> feats) {
         FeaturizedToken predObject = getFeatureObject(pidx);
         FeaturizedToken argObject = getFeatureObject(aidx);
         FeaturizedTokenPair predArgPathObject = getFeatureObject(pidx, aidx);

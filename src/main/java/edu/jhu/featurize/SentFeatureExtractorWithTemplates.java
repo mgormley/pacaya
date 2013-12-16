@@ -9,14 +9,45 @@ import java.util.Map.Entry;
 
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
 
 @Deprecated
 public class SentFeatureExtractorWithTemplates extends SentFeatureExtractor {
 
-    public SentFeatureExtractorWithTemplates(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
+
+    //private static final Logger log = Logger.getLogger(SentFeatureExtractor.class);
+    public static class SentFeatureExtractorWithTemplatesPrm extends SentFeatureExtractorPrm {
+        /** Switches for feature templates. */
+        public boolean useTemplates = false;
+        public boolean formFeats = true;
+        public boolean lemmaFeats = true;
+        public boolean tagFeats = true;
+        public boolean morphFeats = true;
+        public boolean deprelFeats = true;
+        public boolean childrenFeats = true;
+        public boolean pathFeats = true;
+        public boolean syntacticConnectionFeats = true;
+        /** Whether to add all possible features using the templates defined above. **/
+        public boolean useAllTemplates = false;
+    }
+    
+    private SentFeatureExtractorWithTemplatesPrm prm;
+
+    public SentFeatureExtractorWithTemplates(SentFeatureExtractorWithTemplatesPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         super(prm, sent, cs);
+        this.prm = prm;
+        if (prm.useAllTemplates) {
+            this.prm.formFeats = true;
+            this.prm.lemmaFeats = true;
+            this.prm.tagFeats = true;
+            this.prm.morphFeats = true;
+            this.prm.deprelFeats = true;
+            this.prm.childrenFeats = true;
+            this.prm.pathFeats = true;
+            this.prm.syntacticConnectionFeats = true;
+        }
     }
 
     public void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
