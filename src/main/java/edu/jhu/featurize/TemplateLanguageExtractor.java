@@ -382,7 +382,8 @@ public class TemplateLanguageExtractor {
         return props;
     }
 
-    private List<String> getTokPropList(TokPropList prop, int idx) {
+    // package private for testing.
+    List<String> getTokPropList(TokPropList prop, int idx) {
         FeaturizedToken tok = getFeatTok(idx);
         switch (prop) {
         case EACH_MORPHO:
@@ -395,7 +396,8 @@ public class TemplateLanguageExtractor {
     /**
      * @return The property or null if the property is not included.
      */
-    private String getTokProp(TokProperty prop, int idx) {
+    // package private for testing.
+    String getTokProp(TokProperty prop, int idx) {
         FeaturizedToken tok = getFeatTok(idx);
         switch (prop) {
         case WORD:
@@ -406,7 +408,7 @@ public class TemplateLanguageExtractor {
         case CHPRE5:
             String form = tok.getForm();
             if (form.length() > 5) {
-                return form.substring(0, Math.max(form.length(), 5));    
+                return form.substring(0, Math.min(form.length(), 5));    
             } else {
                 return null;
             }
@@ -416,7 +418,7 @@ public class TemplateLanguageExtractor {
             return tok.getPos();
         case BC0:
             String cluster = tok.getCluster();
-            return cluster.substring(0, Math.max(cluster.length(), 5));    
+            return cluster.substring(0, Math.min(cluster.length(), 5));    
         case BC1:
             return tok.getCluster();
         case DEPREL:
