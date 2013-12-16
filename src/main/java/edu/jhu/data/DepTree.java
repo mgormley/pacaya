@@ -319,6 +319,26 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
         return children;
     }
+
+    /**
+     * Checks whether idx1 is the ancestor of idx2. If idx1 is the parent of
+     * idx2 this will return true, but if idx1 == idx2, it will return false.
+     * 
+     * @param idx1 The ancestor position.
+     * @param idx2 The descendent position.
+     * @param parents The parents array.
+     * @return Whether idx is the ancestor of idx2.
+     */
+    public static boolean isAncestor(int idx1, int idx2, int[] parents) {
+        int anc = parents[idx2];
+        while (anc != -1) {
+            if (anc == idx1) {
+                return true;
+            }
+            anc = parents[anc];
+        }
+        return false;
+    }
     
     
 }

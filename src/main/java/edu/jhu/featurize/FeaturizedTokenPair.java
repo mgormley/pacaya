@@ -146,21 +146,20 @@ public class FeaturizedTokenPair {
     }
 
     public String getGeneologicalRelation() {
-        List<Pair<Integer, Dir>> path = getDependencyPath();
-        if (path.size() == 0) {
+        if (pidx == aidx) {
             return "self";
-        } else if (path.size() == 1) {
-            if (path.get(0).get2() == Dir.DOWN) {
-                return "child";
-            } else {
-                return "parent";
-            }
+        } else if (pidx == parents[aidx]) {
+            return "parent";
+        } else if (parents[pidx] == aidx) {
+            return "child";
+        } else if (parents[pidx] == parents[aidx]) {
+            return "sibling";
+        } else if (DepTree.isAncestor(pidx, aidx, parents)) {
+            return "ancestor";
+        } else if (DepTree.isAncestor(aidx, pidx, parents)) {
+            return "descendent";
         } else {
-            if (path.get(0).get2() == Dir.DOWN) {
-                return "descendent";
-            } else {
-                return "ancestor";
-            }
+            return "cousin";
         }
     }
 
