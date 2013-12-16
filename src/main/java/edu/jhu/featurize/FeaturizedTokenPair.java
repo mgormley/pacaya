@@ -133,21 +133,16 @@ public class FeaturizedTokenPair {
     }
     
     private void cacheLinePath() {
-        this.linePath = new ArrayList<Integer>();
-        int startIdx;
-        int endIdx; 
+        this.linePath = new ArrayList<Integer>();        
         if (pidx < aidx) {
-            startIdx = pidx;
-            endIdx = aidx;
+            for (int i=pidx; i<=aidx; i++) {
+                this.linePath.add(i);
+            }
         } else {
-            startIdx = aidx;
-            endIdx = pidx;
-        }
-        while (startIdx < endIdx) {
-            this.linePath.add(startIdx);
-            startIdx++;
-        }
-        
+            for (int i=pidx; i>=aidx; i--) {
+                this.linePath.add(i);
+            }
+        }        
     }
 
     public String getGeneologicalRelation() {
