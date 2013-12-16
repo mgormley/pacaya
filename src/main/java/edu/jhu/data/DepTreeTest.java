@@ -20,6 +20,7 @@ public class DepTreeTest {
         List<Pair<Integer, Dir>> goldPath = new ArrayList<Pair<Integer, Dir>>();
         goldPath.add(new Pair<Integer,Dir>(0,Dir.UP));
         goldPath.add(new Pair<Integer,Dir>(1,Dir.DOWN));
+        goldPath.add(new Pair<Integer,Dir>(2,Dir.NONE));
         assertEquals(path, goldPath);
     }
 
@@ -33,6 +34,7 @@ public class DepTreeTest {
         goldPath.add(new Pair<Integer,Dir>(0,Dir.UP));
         goldPath.add(new Pair<Integer,Dir>(2,Dir.DOWN));
         goldPath.add(new Pair<Integer,Dir>(3,Dir.DOWN));
+        goldPath.add(new Pair<Integer,Dir>(4,Dir.NONE));
         assertEquals(path, goldPath);
     }
 
@@ -44,6 +46,7 @@ public class DepTreeTest {
         List<Pair<Integer, Dir>> goldPath = new ArrayList<Pair<Integer, Dir>>();
         goldPath.add(new Pair<Integer,Dir>(1,Dir.UP));
         goldPath.add(new Pair<Integer,Dir>(0,Dir.UP));
+        goldPath.add(new Pair<Integer,Dir>(2,Dir.NONE));
         assertEquals(path, goldPath);
     }
 
@@ -55,6 +58,7 @@ public class DepTreeTest {
         List<Pair<Integer, Dir>> goldPath = new ArrayList<Pair<Integer, Dir>>();
         goldPath.add(new Pair<Integer,Dir>(2,Dir.DOWN));
         goldPath.add(new Pair<Integer,Dir>(3,Dir.DOWN));
+        goldPath.add(new Pair<Integer,Dir>(4,Dir.NONE));
         assertEquals(path, goldPath);
     }
     
@@ -68,6 +72,7 @@ public class DepTreeTest {
         goldPath.add(new Pair<Integer,Dir>(-1,Dir.DOWN));
         goldPath.add(new Pair<Integer,Dir>(2,Dir.DOWN));
         goldPath.add(new Pair<Integer,Dir>(3,Dir.DOWN));
+        goldPath.add(new Pair<Integer,Dir>(4,Dir.NONE));
         assertEquals(path, goldPath);
     }
 
@@ -80,6 +85,7 @@ public class DepTreeTest {
         goldPath.add(new Pair<Integer,Dir>(1,Dir.UP));
         goldPath.add(new Pair<Integer,Dir>(0,Dir.UP));
         goldPath.add(new Pair<Integer,Dir>(2,Dir.UP));
+        goldPath.add(new Pair<Integer,Dir>(-1,Dir.NONE));
         assertEquals(path, goldPath);
     }
 }

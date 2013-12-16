@@ -146,7 +146,7 @@ public class DepTree implements Iterable<DepTreeNode> {
     }
 
     public enum Dir {
-        UP, DOWN
+        UP, DOWN, NONE
     }
     
     /**
@@ -154,15 +154,14 @@ public class DepTree implements Iterable<DepTreeNode> {
      * 
      * <p>
      * For the tree: x0 <-- x1 --> x2, represented by parents=[1, -1, 1] the
-     * dependency path from x0 to x2 would be a list [(0, UP), (1, DOWN)]
+     * dependency path from x0 to x2 would be a list [(0, UP), (1, DOWN), (2, NONE)]
      * </p>
      * 
      * @param start The position of the start token.
      * @param end The position of the end token.
      * @param parents The parents array.
      * @return The path as a list of pairs containing the word positions and the
-     *         direction of the edge, inclusive of the start position and
-     *         exclusive of the end.
+     *         direction of the edge, inclusive of the start and end.
      */
     public static List<Pair<Integer,Dir>> getDependencyPath(int start, int end, int[] parents) {
         int n = parents.length;
@@ -201,6 +200,9 @@ public class DepTree implements Iterable<DepTreeNode> {
         for (int i = lcaIndex; i > 0; i--) {
             path.add(new Pair<Integer,Dir>(endAncList.get(i), Dir.DOWN));
         }
+        
+        // TODO: Update unit tests to reflect this change.
+        path.add(new Pair<Integer,Dir>(end, Dir.NONE));
         
         return path;
     }

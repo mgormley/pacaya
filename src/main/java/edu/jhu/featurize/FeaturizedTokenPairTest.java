@@ -28,6 +28,7 @@ public class FeaturizedTokenPairTest {
         FeaturizedTokenPair zhaoLink = new FeaturizedTokenPair(1, 0, zhaoPred, zhaoArg, simpleSent);
         List<Pair<Integer, Dir>> desiredDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         desiredDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        desiredDpPathShare.add(new Pair<Integer, Dir>(-1, Dir.NONE));
         List<Pair<Integer, Dir>> observedDpPathShare = zhaoLink.getDpPathShare();
         System.out.println(observedDpPathShare);
         assertEquals(desiredDpPathShare, observedDpPathShare);
@@ -49,6 +50,7 @@ public class FeaturizedTokenPairTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
 
@@ -56,6 +58,7 @@ public class FeaturizedTokenPairTest {
         List<Pair<Integer, Dir>> dpPathShare = zhaoLink.getDpPathShare();
         ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        expectedDpPathShare.add(new Pair<Integer, Dir>(-1, Dir.NONE));
         assertEquals(dpPathShare, expectedDpPathShare);
 
         // New example indices.
@@ -67,6 +70,7 @@ public class FeaturizedTokenPairTest {
         expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
 
@@ -74,6 +78,7 @@ public class FeaturizedTokenPairTest {
         dpPathShare = zhaoLink.getDpPathShare();
         expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        expectedDpPathShare.add(new Pair<Integer, Dir>(-1, Dir.NONE));
         assertEquals(dpPathShare, expectedDpPathShare);
 
         // Line path (consecutive indices between two).
@@ -83,7 +88,8 @@ public class FeaturizedTokenPairTest {
         expectedLinePath.add(1);
         expectedLinePath.add(2);
         expectedLinePath.add(3);
-        assertEquals(linePath, expectedLinePath);
+        expectedLinePath.add(4);
+        assertEquals(expectedLinePath, linePath);
     }
 
     @Test
@@ -102,6 +108,7 @@ public class FeaturizedTokenPairTest {
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
 
@@ -110,6 +117,7 @@ public class FeaturizedTokenPairTest {
         ArrayList<Pair<Integer, Dir>> expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         expectedDpPathShare.add(new Pair<Integer, Dir>(5, Dir.UP));
         expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        expectedDpPathShare.add(new Pair<Integer, Dir>(-1, Dir.NONE));
         assertEquals(dpPathShare, expectedDpPathShare);
 
         // New example indices.
@@ -122,6 +130,7 @@ public class FeaturizedTokenPairTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.UP));
         expectedPath.add(new Pair<Integer, Dir>(1, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
 
@@ -129,6 +138,7 @@ public class FeaturizedTokenPairTest {
         dpPathShare = zhaoLink.getDpPathShare();
         expectedDpPathShare = new ArrayList<Pair<Integer, Dir>>();
         expectedDpPathShare.add(new Pair<Integer, Dir>(1, Dir.UP));
+        expectedDpPathShare.add(new Pair<Integer, Dir>(-1, Dir.NONE));
         assertEquals(dpPathShare, expectedDpPathShare);
 
         // Line path (consecutive indices between two).
@@ -138,7 +148,8 @@ public class FeaturizedTokenPairTest {
         expectedLinePath.add(1);
         expectedLinePath.add(2);
         expectedLinePath.add(3);
-        assertEquals(linePath, expectedLinePath);
+        expectedLinePath.add(4);
+        assertEquals(expectedLinePath, linePath);
     }
 
     @Test
@@ -154,6 +165,7 @@ public class FeaturizedTokenPairTest {
 
         ArrayList<Pair<Integer, Dir>> expectedPath = new ArrayList<Pair<Integer, Dir>>();
         expectedPath.add(new Pair<Integer, Dir>(3, Dir.UP));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         List<Pair<Integer, Dir>> seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
 
@@ -165,6 +177,7 @@ public class FeaturizedTokenPairTest {
         expectedPath.add(new Pair<Integer, Dir>(0, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(6, Dir.DOWN));
         expectedPath.add(new Pair<Integer, Dir>(5, Dir.DOWN));
+        expectedPath.add(new Pair<Integer, Dir>(4, Dir.NONE));
         seenPath = zhaoLink.getDependencyPath();
         assertEquals(expectedPath, seenPath);
     }
