@@ -22,8 +22,8 @@ public class TemplateSetsTest {
         int numBigrams = tpls.size();
         System.out.println("Number of bigram templates: " + numBigrams);
         
-        assertEquals(788, numUnigrams);
-        assertEquals(310078, numBigrams);
+        assertEquals(862, numUnigrams);
+        assertEquals(371091, numBigrams);
     }
     
     @Test
@@ -38,10 +38,26 @@ public class TemplateSetsTest {
         int numSense = tpls.size();
         System.out.println("Number of sense templates: " + numSense);
 
-        // Bjorkelund lists 32 featurs, one of which is Sense which we don't
+        // Bjorkelund lists 32 features, one of which is Sense which we don't
         // treat as observed.
         assertEquals(31, numArg);
         assertEquals(11, numSense);
+    } 
+    
+    @Test
+    public void testGetNaradowsky() {
+        List<FeatTemplate> tpls;
+        
+        tpls = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
+        int numArg = tpls.size();
+        System.out.println("Number of arg templates: " + numArg);        
+        
+        tpls = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
+        int numSense = tpls.size();
+        System.out.println("Number of sense templates: " + numSense);
+
+        assertEquals(35, numArg);
+        assertEquals(6, numSense);
     }    
 
     @Test
@@ -50,7 +66,7 @@ public class TemplateSetsTest {
         tpls = TemplateSets.getCoarseUnigramSet1();
         int numArg = tpls.size();
         System.out.println("Number of templates: " + numArg);
-        assertEquals(124, numArg);
+        assertEquals(127, numArg);
     }
 
 }

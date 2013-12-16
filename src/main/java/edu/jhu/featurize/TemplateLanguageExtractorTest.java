@@ -135,10 +135,12 @@ public class TemplateLanguageExtractorTest {
         assertEquals("1101011", extr.getTokProp(TokProperty.BC1, 3));
         assertEquals("cpred", extr.getTokProp(TokProperty.DEPREL, 3));
         assertEquals("UNK-LC-s", extr.getTokProp(TokProperty.UNK, 3));
+        assertEquals("LC", extr.getTokProp(TokProperty.CAPITALIZED, 3));
         // 
         assertEquals("Resultaban", extr.getTokProp(TokProperty.WORD, 1));
         assertEquals("resultaban", extr.getTokProp(TokProperty.LC, 1));
         assertEquals("Resul", extr.getTokProp(TokProperty.CHPRE5, 1));
+        assertEquals("UC", extr.getTokProp(TokProperty.CAPITALIZED, 1));
     }
     
     @Test
@@ -264,10 +266,12 @@ public class TemplateLanguageExtractorTest {
         testOtherFeaturesHelper(2, 0, OtherFeat.GENEOLOGY, "cousin");
         testOtherFeaturesHelper(4, 2, OtherFeat.GENEOLOGY, "sibling");
         //
-        testOtherFeaturesHelper(4, 2, OtherFeat.PATH_LEN, "3");
-        testOtherFeaturesHelper(2, 4, OtherFeat.PATH_LEN, "3");
-        testOtherFeaturesHelper(0, 3, OtherFeat.PATH_LEN, "4");
-        testOtherFeaturesHelper(0, 0, OtherFeat.PATH_LEN, "1");
+        testOtherFeaturesHelper(4, 2, OtherFeat.PATH_LEN, "2"); // is 3
+        testOtherFeaturesHelper(2, 4, OtherFeat.PATH_LEN, "2"); // is 3
+        testOtherFeaturesHelper(0, 3, OtherFeat.PATH_LEN, "2"); // is 4
+        testOtherFeaturesHelper(0, 0, OtherFeat.PATH_LEN, "0"); // is 1
+        // 
+        testOtherFeaturesHelper(0, 0, OtherFeat.SENT_LEN, "5"); // is 7
         //
         testOtherFeaturesHelper(4, 2, OtherFeat.RELATIVE, "after");
         testOtherFeaturesHelper(2, 2, OtherFeat.RELATIVE, "on");

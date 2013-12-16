@@ -154,7 +154,7 @@ public class FeatureCreationSpeedTest {
         System.out.println("Time total            : " + timer.totMs());
     }
     
-    @Test
+    //@Test
     public void testSpeedOfFeatureCreation2() throws UnsupportedEncodingException, FileNotFoundException {
         // Params
         final int numExamples = 50001;

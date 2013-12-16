@@ -259,7 +259,7 @@ public class SentFeatureExtractor {
         feats.add("head_" + wordPos + "_tag");
         feats.add("head_" + wordForm + "_" + wordPos + "_wordtag");
         String cap;
-        if (capitalized(wordForm)) {
+        if (FeaturizedToken.capitalized(wordForm)) {
             cap = "UC";
         } else {
             cap = "LC";
@@ -943,17 +943,6 @@ public class SentFeatureExtractor {
         return fSent.getFeatTokPair(pidx, cidx);
     }
     
-    private boolean capitalized(String wordForm) {
-        if (wordForm.length() == 0) {
-            return true;
-        }
-        char ch = wordForm.charAt(0);
-        if (Character.isUpperCase(ch)) {
-            return true;
-        }
-        return false;
-    }
-
     protected ArrayList<FeaturizedToken> getFeatureObjectList(List<Pair<Integer, Dir>> path) {
         ArrayList<FeaturizedToken> pathObjectList = new ArrayList<FeaturizedToken>();
         for (Pair<Integer,Dir> p : path) {

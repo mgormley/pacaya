@@ -1,3 +1,6 @@
+# Bjorkelund et al. (2009) unigram feature templates for sense prediction.
+#
+
 # PredWord
 p.word
 # PredPOS

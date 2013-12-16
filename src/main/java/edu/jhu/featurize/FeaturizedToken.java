@@ -443,4 +443,19 @@ public class FeaturizedToken {
         return sent;
     }
     
+    public boolean isCapatalized() {
+        return capitalized(getForm());
+    }
+
+    public static boolean capitalized(String wordForm) {
+        if (wordForm.length() == 0) {
+            return true;
+        }
+        char ch = wordForm.charAt(0);
+        if (Character.isUpperCase(ch)) {
+            return true;
+        }
+        return false;
+    }
+    
 }

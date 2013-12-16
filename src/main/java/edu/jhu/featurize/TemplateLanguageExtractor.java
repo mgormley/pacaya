@@ -238,15 +238,26 @@ public class TemplateLanguageExtractor {
             return Integer.toString(Math.abs(pidx - cidx));
         case GENEOLOGY:
             return pair.getGeneologicalRelation();
-        case PATH_LEN:            
-            return Integer.toString(pair.getDependencyPath().size());
         case RELATIVE:
             return pair.getRelativePosition();
         case CONTINUITY:
             return Integer.toString(pair.getCountOfNonConsecutivesInPath());
+        case PATH_LEN:            
+            return Integer.toString(binInt(pair.getDependencyPath().size(), 0, 2, 5, 10, 20, 30, 40));
+        case SENT_LEN:            
+            return Integer.toString(binInt(fSent.size(), 0, 2, 5, 10, 20, 30, 40));
         default:
             throw new IllegalStateException();
         }
+    }
+
+    private int binInt(int size, int...bins) {
+        for (int i=bins.length-1; i >= 0; i--) {
+            if (size >= bins[i]) {
+                return bins[i];
+            }
+        }
+        return Integer.MIN_VALUE;
     }
 
     private <T> Collection<T> getModifiedList(ListModifier lmod, Collection<T> props) {
@@ -405,6 +416,8 @@ public class TemplateLanguageExtractor {
         case LC:
             //TODO: return tok.getFormLc();
             return tok.getForm().toLowerCase();
+        case CAPITALIZED:
+            return tok.isCapatalized() ? "UC" : "LC";
         case CHPRE5:
             String form = tok.getForm();
             if (form.length() > 5) {

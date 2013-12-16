@@ -24,6 +24,9 @@ public class TemplateSets {
 
     private static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
     private static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
+
+    private static final String naradowskyArgFeatsResource = "/edu/jhu/featurize/naradowsky-arg-feats.txt";
+    private static final String naradowskySenseFeatsResource = "/edu/jhu/featurize/naradowsky-sense-feats.txt";
     
     private TemplateSets() {
         // Private constructor.
@@ -93,6 +96,26 @@ public class TemplateSets {
         TemplateReader reader = new TemplateReader();
         try {
             reader.readFromResource(bjorkelundArgFeatsResource);
+            return reader.getTemplates();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+
+    public static List<FeatTemplate> getNaradowskySenseUnigramFeatureTemplates() {
+        TemplateReader reader = new TemplateReader();
+        try {
+            reader.readFromResource(naradowskySenseFeatsResource);
+            return reader.getTemplates();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+    }
+    
+    public static List<FeatTemplate> getNaradowskyArgUnigramFeatureTemplates() {
+        TemplateReader reader = new TemplateReader();
+        try {
+            reader.readFromResource(naradowskyArgFeatsResource);
             return reader.getTemplates();
         } catch (IOException e) {
             throw new RuntimeException();

@@ -46,5 +46,9 @@ public class FeaturizedSentence {
         }
         return pairs[pidx][cidx];
     }
+
+    public int size() {
+        return sent.size();
+    }
     
 }

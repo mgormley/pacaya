@@ -33,7 +33,7 @@ public class TemplateLanguage {
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
-        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5; 
+        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED; 
     }
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
@@ -79,7 +79,7 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS,
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,
     }
@@ -124,9 +124,10 @@ public class TemplateLanguage {
         desc(TokProperty.LC, "lc", "Lower-cased word", AT.WORD);
         desc(TokProperty.UNK, "unk", "Unknown word class", AT.WORD);
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
+        desc(TokProperty.CAPITALIZED, "capitalized", "Whether this word starts with a capital letter", AT.WORD);
         
         /** Word property list expansion. A mapping from a position to a list of strings. */ 
-        desc(TokPropList.EACH_MORPHO, "eachMorpho", "Morphological features", AT.MORPHO);
+        desc(TokPropList.EACH_MORPHO, "eachmorpho", "Morphological features", AT.MORPHO);
         // TODO: 
         // desc(TokPropList.CH, "ch", "Each character of the word", AT.WORD);
         // desc(TokPropList.CHPRE_N, "chpre_n", "Character n-gram prefix", AT.WORD);
@@ -175,6 +176,7 @@ public class TemplateLanguage {
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         desc(OtherFeat.PATH_GRAMS, "1,2,3-grams(path(p,c)).word/pos", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
         desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
+        desc(OtherFeat.SENT_LEN, "sentlen", "Sentence length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         // TODO:
         //desc(OtherFeat.PRED_VOICE_WORD_OR_POS, "p.voice+a.word / p.voice+a.t", "The predicate voice and the  word/POS of the argument.", AT.LABEL_DEP_TREE);
         
