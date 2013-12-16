@@ -234,13 +234,7 @@ public class FeaturizedToken {
         if (children != null) {
             return;
         }
-        if (idx < 0 || idx >= sent.size()) {
-            // Something that cannot possibly have children.
-            this.children = new ArrayList<Integer>();
-            this.children.add(-1);
-        } else {
-            this.children = DepTree.getChildrenOf(parents, idx);
-        }
+        this.children = DepTree.getChildrenOf(parents, idx);
     }
     
     public int getFarLeftChild() {
@@ -320,9 +314,20 @@ public class FeaturizedToken {
      * the first includes all syntactic children (children), the second also includes all but 
      * excludes the left most and the right most children (noFarChildren). */
     private void cacheNoFarChildren() {
+        ensureChildren();
         this.noFarChildren = new ArrayList<Integer>();
-        this.noFarChildren.add(nearLeftChild);
-        this.noFarChildren.add(nearRightChild);
+        // Go through children in order
+        for (int i=0; i<children.size(); i++) {
+            int child = children.get(i);
+            if (child < idx && i == 0) {
+                // Skip the leftmost child.
+                continue;
+            } else if (child > idx && i == children.size()-1) {
+                // Skip the rightmost child.
+                continue;
+            }
+            this.noFarChildren.add(child);
+        }
     }
     
     public int getHighSupportNoun() {

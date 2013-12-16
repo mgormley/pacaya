@@ -117,8 +117,6 @@ public class FeaturizedTokenTest {
         assertEquals(zhaoObj.getHighSupportVerb(), 1);
         assertEquals(zhaoObj.getLowSupportVerb(), 5);
         ArrayList<Integer> expectedNoFarChildren = new ArrayList<Integer>();
-        expectedNoFarChildren.add(-2);
-        expectedNoFarChildren.add(-2);
         assertEquals(zhaoObj.getNoFarChildren(), expectedNoFarChildren);
     }
 
