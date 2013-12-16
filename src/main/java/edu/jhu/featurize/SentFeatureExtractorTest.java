@@ -88,7 +88,7 @@ public class SentFeatureExtractorTest {
         }        
     }
         
-    @Test
+    //@Test
     public void testTemplates() {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();

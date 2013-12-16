@@ -83,7 +83,7 @@ public class TemplateReader {
             TokPropList propl = safeGet(descs, TokPropList.class);
             PositionModifier mod =safeGet(descs, PositionModifier.class);
             ListModifier lmod = safeGet(descs, ListModifier.class);
-            EdgeProperty edge = safeGet(descs, EdgeProperty.class);
+            EdgeProperty eprop = safeGet(descs, EdgeProperty.class);
             OtherFeat other = safeGet(descs, OtherFeat.class);
             
             FeatTemplate tpl;
@@ -93,10 +93,9 @@ public class TemplateReader {
             } else if (pos != null && propl != null) {
                 mod = (mod == null) ? PositionModifier.IDENTITY : mod;  
                 tpl = new FeatTemplate2(pos, mod, propl);
-            } else if (pl != null && prop != null) {
-                boolean includeDir = (edge == EdgeProperty.DIR);
+            } else if (pl != null) {
                 lmod = (lmod == null) ? ListModifier.SEQ : lmod;  
-                tpl = new FeatTemplate3(pl, prop, includeDir, lmod);
+                tpl = new FeatTemplate3(pl, prop, eprop, lmod);
             } else if (other != null) {
                 tpl = new FeatTemplate4(other);
             } else {

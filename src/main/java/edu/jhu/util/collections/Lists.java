@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
+
 public class Lists {
 
     private Lists() {
@@ -56,6 +58,12 @@ public class Lists {
         return Arrays.asList(args);
     }
 
+    public static <T> List<T> cons(T val, T... values) {
+        List<T> list = new ArrayList<T>(Arrays.asList(values));
+        list.add(val);
+        return list;
+    }
+
     public static <T> ArrayList<T> copyOf(List<T> list) {
         return list == null ? null : new ArrayList<T>(list);
     }
@@ -85,4 +93,5 @@ public class Lists {
         }
         return array;
     }
+    
 }

@@ -22,8 +22,8 @@ public class TemplateSetsTest {
         int numBigrams = tpls.size();
         System.out.println("Number of bigram templates: " + numBigrams);
         
-        assertEquals(733, numUnigrams);
-        assertEquals(268278, numBigrams);
+        assertEquals(788, numUnigrams);
+        assertEquals(310078, numBigrams);
     }
     
     @Test
@@ -42,6 +42,15 @@ public class TemplateSetsTest {
         // treat as observed.
         assertEquals(31, numArg);
         assertEquals(11, numSense);
+    }    
+
+    @Test
+    public void testGetCoarseUnigramSet1() {
+        List<FeatTemplate> tpls;        
+        tpls = TemplateSets.getCoarseUnigramSet1();
+        int numArg = tpls.size();
+        System.out.println("Number of templates: " + numArg);
+        assertEquals(124, numArg);
     }
 
 }

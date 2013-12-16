@@ -20,7 +20,7 @@ public class ZhaoFeatureExtractorSpeedTest {
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
     
-    @Test
+    //@Test
     public void testZhaoFeatureBuilding() throws ParseException, IOException {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;

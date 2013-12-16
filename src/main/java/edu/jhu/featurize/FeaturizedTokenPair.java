@@ -173,5 +173,20 @@ public class FeaturizedTokenPair {
             return "after";
         }
     }
+
+    public int getCountOfNonConsecutivesInPath() {
+        List<Pair<Integer,Dir>> path = getDependencyPath();
+        int count = 0;
+        if (path.size() > 0) {
+            for (int i=1; i<path.size(); i++) {
+                int current = path.get(i).get1();
+                int previous = path.get(i-1).get1();
+                if (Math.abs(current - previous) != 1) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
     
 }

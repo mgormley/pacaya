@@ -38,14 +38,14 @@ public class TemplateLanguage {
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
     public enum TokPropList {
-        MORPHO,
+        EACH_MORPHO,
         // Not implemented:
         // CH, CHPRE_N, CHSUF_N;
     }
 
     /** Directed Edge Property. A mapping from a directed edge to a string. */
     public enum EdgeProperty {
-        DIR, 
+        DIR, EDGEREL
     }
 
     /** Position Modifier. A mapping from one position to another. */
@@ -53,14 +53,20 @@ public class TemplateLanguage {
         IDENTITY, BEFORE1, AFTER1,
         //
         HEAD, LNS, RNS, LMC, RMC, LNC, RNC,
-        // Not implemented: LMD, RMD,         
         //
         LOW_SV, LOW_SN, HIGH_SV, HIGH_SN,
     }
 
     /** Position List. Mapping from one or two positions to a position list. */
     public enum PositionList {
-        LINE_P_C, CHILDREN_P, NO_FAR_CHILDREN_P, PATH_P_C, PATH_P_ROOT, PATH_C_ROOT, PATH_LCA_ROOT,
+        LINE_P_C, CHILDREN_P, NO_FAR_CHILDREN_P, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT,;
+
+        public boolean isPath() {
+            switch (this) {
+            case LINE_P_C: case CHILDREN_P: case NO_FAR_CHILDREN_P: return false;
+            default: return true;
+            }
+        }
     }
 
     /** List Modifiers. Mapping of a list of strings to a new list of strings. */
@@ -73,11 +79,9 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN,
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS,
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,
-        // PATH_GRAMS,
-        // CONTINUITY,
     }
 
     /** Positions. */
@@ -122,7 +126,7 @@ public class TemplateLanguage {
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
         
         /** Word property list expansion. A mapping from a position to a list of strings. */ 
-        desc(TokPropList.MORPHO, "morphoExp", "Morphological features", AT.MORPHO);
+        desc(TokPropList.EACH_MORPHO, "eachMorpho", "Morphological features", AT.MORPHO);
         // TODO: 
         // desc(TokPropList.CH, "ch", "Each character of the word", AT.WORD);
         // desc(TokPropList.CHPRE_N, "chpre_n", "Character n-gram prefix", AT.WORD);
@@ -130,9 +134,10 @@ public class TemplateLanguage {
    
         /** Directed Edge Property. A mapping from a directed edge to a string. */
         desc(EdgeProperty.DIR, "dir", "Direction of an edge in a path", AT.DEP_TREE);
+        desc(EdgeProperty.EDGEREL, "edgerel", "Dependency relation of an edge in a path", AT.DEP_TREE);
 
         /** Position Modifier. A mapping from one position to another. */
-        desc(PositionModifier.IDENTITY, "w", "No modification", AT.WORD);
+        desc(PositionModifier.IDENTITY, "0", "No modification", AT.WORD);
         desc(PositionModifier.BEFORE1, "-1", "1 before w", AT.WORD);
         desc(PositionModifier.AFTER1, "1", "1 after w", AT.WORD);
         //
@@ -143,22 +148,19 @@ public class TemplateLanguage {
         desc(PositionModifier.RMC, "rmc", "Rightmost child", AT.DEP_TREE);
         desc(PositionModifier.LNC, "lnc", "Left nearest child", AT.DEP_TREE);
         desc(PositionModifier.RNC, "rnc", "Right nearest child", AT.DEP_TREE);
-        // TODO:
-        //desc(PositionModifier.LMD, "lmd", "Leftmost descendent", AT.DEP_TREE);
-        //desc(PositionModifier.RMD, "rmd", "Rightmost descendent", AT.DEP_TREE);
         //
-        desc(PositionModifier.LOW_SV, "first(t, VERB, path(p, root))", "Low support Verb", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.LOW_SN, "first(t, NOUN, path(p, root))", "Low support Noun", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.HIGH_SV, "first(t, VERB, path(root, p))", "High support Verb", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.HIGH_SN, "first(t, NOUN, path(root, p))", "High support Noun", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.LOW_SV, "first(pos, VERB, path(w, root))", "Low support Verb", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.LOW_SN, "first(pos, NOUN, path(w, root))", "Low support Noun", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.HIGH_SV, "first(pos, VERB, path(root, w))", "High support Verb", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.HIGH_SN, "first(pos, NOUN, path(root, w))", "High support Noun", AT.POS, AT.DEP_TREE);
 
         /** Position List. Mapping from one or two positions to a position list. */
         desc(PositionList.LINE_P_C, "line(p,c)", "horizontal path between p and c", AT.WORD);
         desc(PositionList.CHILDREN_P, "children(p)", "Children of p", AT.DEP_TREE);
         desc(PositionList.NO_FAR_CHILDREN_P, "noFarChildren(p)", "children without the leftmost or rightmost included", AT.DEP_TREE);
         desc(PositionList.PATH_P_C, "path(p,c)", "from parent to child", AT.DEP_TREE);
-        desc(PositionList.PATH_P_ROOT, "path(p,root)", "from parent to root", AT.DEP_TREE);
-        desc(PositionList.PATH_C_ROOT, "path(c,root)", "from child to root", AT.DEP_TREE);
+        desc(PositionList.PATH_P_LCA, "path(p,lca(p,c))", "from parent to least-common-ancestor", AT.DEP_TREE);
+        desc(PositionList.PATH_C_LCA, "path(c,lca(p,c))", "from child to least-common-ancestor", AT.DEP_TREE);
         desc(PositionList.PATH_LCA_ROOT, "path(lca(p,c),root)", "from least-common-ancestor to root ", AT.DEP_TREE);
    
         /** List Modifiers. Mapping of a list of strings to a new list of strings. */
@@ -171,12 +173,11 @@ public class TemplateLanguage {
         desc(OtherFeat.DISTANCE, "distance(p,c)", "Distance binned into greater than: 2, 5, 10, 20, 30, or 40", AT.WORD);
         desc(OtherFeat.GENEOLOGY, "geneology(p,c)", "geneological relationship between p and c in a syntactic parse: parent, child, ancestor, descendent.", AT.DEP_TREE);
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
-        
+        desc(OtherFeat.PATH_GRAMS, "1,2,3-grams(path(p,c)).word/pos", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
+        desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
         // TODO:
-        //desc(OtherFeats.PRED_VOICE_WORD_OR_POS, "p.voice+a.word / p.voice+a.t", "The predicate voice and the  word/POS of the argument.", AT.LABEL_DEP_TREE);
-        //desc(OtherFeats.PATH_GRAMS, "1,2,3-grams(path(p,c)).word/pos", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
-        //desc(OtherFeats.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
-
+        //desc(OtherFeat.PRED_VOICE_WORD_OR_POS, "p.voice+a.word / p.voice+a.t", "The predicate voice and the  word/POS of the argument.", AT.LABEL_DEP_TREE);
+        
         /** Positions. */
         desc(Position.PARENT, "p", "Parent");
         desc(Position.CHILD, "c", "Child");
@@ -318,27 +319,27 @@ public class TemplateLanguage {
     public static class FeatTemplate3 extends FeatTemplate {
         public PositionList pl; 
         public TokProperty prop; 
-        public boolean includeDir;
+        public EdgeProperty eprop;
         public ListModifier lmod;
         /**
          * Constructor. 
          * @param pl Position list which is a function of the parent/child positions.
-         * @param prop Property to extract from the position list.
-         * @param includeDir Whether to include the direction of the edge when constructing a feature from a path.
+         * @param prop (OPTIONAL) Property to extract from the position list or null.
+         * @param eprop (OPTIONAL) Edge property to extract from the path or null.
          * @param lmod List modifier.
          */
-        public FeatTemplate3(PositionList pl, TokProperty prop, boolean includeDir, ListModifier lmod) {
-            super(StringUtils.join(new String[]{pl.name(), prop.name(), lmod.name()}, STRUCTURE_SEP));
+        public FeatTemplate3(PositionList pl, TokProperty prop, EdgeProperty eprop, ListModifier lmod) {
+            super(StringUtils.join(new String[]{pl.name(), safeName(prop), safeName(eprop), lmod.name()}, STRUCTURE_SEP));
             this.pl = pl;
             this.prop = prop;
+            this.eprop = eprop;
             this.lmod = lmod;
         }
         public List<Enum<?>> getStructure() {
-            if (includeDir) {
-                return Lists.getList(pl, prop, EdgeProperty.DIR, prop);
-            } else {
-                return Lists.getList(pl, prop, prop);
-            }
+            return Lists.getList(pl, prop, eprop, prop);
+        }
+        private static String safeName(Enum<?> e) {
+            return e == null ? "" : e.name(); 
         }
     }
     
@@ -421,8 +422,10 @@ public class TemplateLanguage {
         HashSet<AT> types = new HashSet<AT>();
         for (FeatTemplate tpl : tpls) {
             for (Enum<?> obj : tpl.getStructure()) {
-                for (AT type : enumDescMap.get(obj).getRequiredLevels()) {
-                    types.add(type);
+                if (obj != null) {
+                    for (AT type : enumDescMap.get(obj).getRequiredLevels()) {
+                        types.add(type);
+                    }
                 }
             }
         }
