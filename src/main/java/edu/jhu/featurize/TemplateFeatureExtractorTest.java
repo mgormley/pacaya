@@ -35,7 +35,7 @@ import edu.jhu.util.collections.Lists;
  * Tests for the template feature extractor.
  * @author mgormley
  */
-public class TemplateLanguageExtractorTest {
+public class TemplateFeatureExtractorTest {
 
     @Test
     public void testGetAllUnigrams() {
@@ -44,7 +44,7 @@ public class TemplateLanguageExtractorTest {
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
-        TemplateLanguageExtractor extr = new TemplateLanguageExtractor(sent, cs);  
+        TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);  
         
         List<FeatTemplate> tpls = TemplateSets.getAllUnigramFeatureTemplates();
         int pidx = 0;
@@ -98,7 +98,7 @@ public class TemplateLanguageExtractorTest {
 
     private void testPositionModifiersHelper(int pidx, PositionModifier mod, String expectedWord) {
         FeatTemplate tpl = new FeatTemplate1(Position.PARENT, mod, TokProperty.WORD);
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor1();        
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();        
         int cidx = -1;
         ArrayList<Object> feats = new ArrayList<Object>();
         extr.addFeatures(tpl, pidx, cidx, feats);
@@ -111,7 +111,7 @@ public class TemplateLanguageExtractorTest {
     
     @Test
     public void testTokPropLists() {
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor1();
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();
         List<String> feats = extr.getTokPropList(TokPropList.EACH_MORPHO, 3);
         String[] expected = new String[]{"postype=qualificative","gen=m","num=p"};
         assertEquals(new HashSet<String>(Arrays.asList(expected)), new HashSet<String>(feats));
@@ -126,7 +126,7 @@ public class TemplateLanguageExtractorTest {
     
     @Test
     public void testTokProperties() {
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor1();
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();
         assertEquals("baratos", extr.getTokProp(TokProperty.WORD, 3));
         assertEquals("barato", extr.getTokProp(TokProperty.LEMMA, 3));
         assertEquals("a", extr.getTokProp(TokProperty.POS, 3));
@@ -145,7 +145,7 @@ public class TemplateLanguageExtractorTest {
     
     @Test
     public void testBosProperties() {
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor1();
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();
         assertEquals("BEGIN_NO_FORM", extr.getTokProp(TokProperty.WORD, -1));
         assertEquals("BEGIN_NO_LEMMA", extr.getTokProp(TokProperty.LEMMA, -1));
         assertEquals("BEGIN_NO_POS", extr.getTokProp(TokProperty.POS, -1));
@@ -160,7 +160,7 @@ public class TemplateLanguageExtractorTest {
     
     @Test    
     public void testEosProperties() {
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor1();
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();
         int n = SentFeatureExtractorTest.getSpanishConll09Sentence1().size();
         assertEquals("END_NO_FORM", extr.getTokProp(TokProperty.WORD, n));
         assertEquals("END_NO_LEMMA", extr.getTokProp(TokProperty.LEMMA, n));
@@ -240,7 +240,7 @@ public class TemplateLanguageExtractorTest {
 
     private void testPositionListsHelper(int pidx, int cidx, PositionList pl, String expectedVal, boolean includeDir) {
         FeatTemplate tpl = new FeatTemplate3(pl, TokProperty.WORD, includeDir ? EdgeProperty.DIR : null, ListModifier.SEQ);
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor2();        
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<Object> feats = new ArrayList<Object>();
         extr.addFeatures(tpl, pidx, cidx, feats);
         for (Object feat : feats) {
@@ -280,7 +280,7 @@ public class TemplateLanguageExtractorTest {
 
     private void testOtherFeaturesHelper(int pidx, int cidx, OtherFeat f, String expectedVal) {
         FeatTemplate tpl = new FeatTemplate4(f);
-        TemplateLanguageExtractor extr = getCoNLLSentenceExtractor2();        
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<Object> feats = new ArrayList<Object>();
         extr.addFeatures(tpl, pidx, cidx, feats);
         for (Object feat : feats) {
@@ -333,7 +333,7 @@ public class TemplateLanguageExtractorTest {
     
     // Single feature.
     private void getFeatAndAssertEquality(FeatTemplate tpl, String expectedFeat) {
-        TemplateLanguageExtractor extr = getDogSentenceExtractor();  
+        TemplateFeatureExtractor extr = getDogSentenceExtractor();  
         
         int pidx = 0;
         int cidx = 3;
@@ -349,7 +349,7 @@ public class TemplateLanguageExtractorTest {
 
     // Multiple features
     private void getFeatsAndAssertEquality(FeatTemplate tpl, String[] expectedPathGrams) {
-        TemplateLanguageExtractor extr = getDogSentenceExtractor();  
+        TemplateFeatureExtractor extr = getDogSentenceExtractor();  
         int pidx = 0;
         int cidx = 3;
         ArrayList<Object> feats = new ArrayList<Object>();
@@ -361,29 +361,29 @@ public class TemplateLanguageExtractorTest {
         assertEquals(new HashSet<String>(Arrays.asList(expectedPathGrams)), new HashSet<Object>(feats));
     }
 
-    private static TemplateLanguageExtractor getDogSentenceExtractor() {
+    private static TemplateFeatureExtractor getDogSentenceExtractor() {
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
-        TemplateLanguageExtractor extr = new TemplateLanguageExtractor(sent, cs);
+        TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);
         return extr;
     }
 
-    private static TemplateLanguageExtractor getCoNLLSentenceExtractor1() {
+    private static TemplateFeatureExtractor getCoNLLSentenceExtractor1() {
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence1(), true);
         addFakeBrownClusters(sent);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
-        TemplateLanguageExtractor extr = new TemplateLanguageExtractor(sent, cs);
+        TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);
         return extr;
     }
 
-    private static TemplateLanguageExtractor getCoNLLSentenceExtractor2() {
+    private static TemplateFeatureExtractor getCoNLLSentenceExtractor2() {
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence2(), true);
         addFakeBrownClusters(sent);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
-        TemplateLanguageExtractor extr = new TemplateLanguageExtractor(sent, cs);
+        TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);
         return extr;
     }
     

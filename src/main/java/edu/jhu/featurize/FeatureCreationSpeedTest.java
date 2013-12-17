@@ -204,7 +204,7 @@ public class FeatureCreationSpeedTest {
             try {
                 for (int i=0; i<sents.size(); i++) {
                     SimpleAnnoSentence sent = sents.get(i);
-                    TemplateLanguageExtractor ext = new TemplateLanguageExtractor(sent, cs);
+                    TemplateFeatureExtractor ext = new TemplateFeatureExtractor(sent, cs);
                     
                     for (int pred=0; pred<sent.size(); pred++) {
                         for (int arg=0; arg<sent.size(); arg++) {

@@ -34,16 +34,16 @@ import edu.jhu.srl.CorpusStatistics;
  * @author mgormley
  * @author mmitchell
  */
-public class TemplateLanguageExtractor {
+public class TemplateFeatureExtractor {
 
-    private static final Logger log = Logger.getLogger(TemplateLanguageExtractor.class);
+    private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
 
     //private final SimpleAnnoSentence sent;
     //private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private final FeaturizedSentence fSent; 
     
-    public TemplateLanguageExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
         //this.sent = sent;
         //this.cs = cs;
         this.sig = cs.sig;
