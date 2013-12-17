@@ -172,25 +172,6 @@ public class SrlRunner {
     public static boolean useLexicalDepPathFeats = false;
     @Opt(hasArg = true, description = "Whether to include pairs of features.")
     public static boolean useTemplates = false;
-    // Options for feature templating.
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add form features.")
-    public static boolean formFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add lemma features.")
-    public static boolean lemmaFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add tag features.")
-    public static boolean tagFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add morphological features.")
-    public static boolean morphFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency relation features.")
-    public static boolean deprelFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependent children features.")
-    public static boolean childrenFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency path features.")
-    public static boolean pathFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to add dependency parent features.")
-    public static boolean syntacticConnectionFeats = false;
-    @Opt(hasArg = true, description = "Feature Templating:  Whether to use all feature template features.")
-    public static boolean useAllTemplates = false;
 
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -268,7 +249,6 @@ public class SrlRunner {
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            // TODO: add option for useUnsupportedFeatures.
             FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name);
             
@@ -395,8 +375,8 @@ public class SrlRunner {
         log.info("Building factor graphs and extracting features.");
         SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();        
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        data = builder.getData(sents);     
-
+        data = builder.getData(sents);
+        
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
         if (prm.fgPrm.predictSense) {
@@ -410,7 +390,7 @@ public class SrlRunner {
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
         // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num feature templates: %d", data.getTemplates().size()));
+        log.info(String.format("Num factor/clique templates: %d", data.getTemplates().size()));
         log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
         return data;
     }

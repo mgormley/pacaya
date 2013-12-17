@@ -523,7 +523,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += SrlExpParams(trainMaxNumSentences=100,
                                        testMaxNumSentences=100)
             g.defaults += g.feat_all
-            g.defaults.update(useBjorkelundFeats=True, useTemplates=False, useAllTemplates=False)
+            g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
+                              useBjorkelundFeats=True, useTemplates=False, useLexicalDepPathFeats=False)
             return self._get_default_pipeline(g, l)
 
         elif self.expname == "srl-all-sup-lat":

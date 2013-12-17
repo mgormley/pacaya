@@ -156,7 +156,6 @@ public class SentFeatureExtractor {
         if (prm.useTemplates) {
             addTemplatePairFeatures(pidx, aidx, feats);
         }
-
         return feats;
     }
 
