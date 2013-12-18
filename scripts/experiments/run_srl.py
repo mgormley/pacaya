@@ -498,7 +498,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             sys.stderr.write("Unknown experiment setting.\n")
             parser.print_help()
             sys.exit()
-        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True, dry_run=options.dry_run)
+        #if options.fast: name = 
+        name = options.expname if not options.fast else "fast_" + options.expname 
+        ExpParamsRunner.__init__(self, name, options.queue, print_to_console=True, dry_run=options.dry_run)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
