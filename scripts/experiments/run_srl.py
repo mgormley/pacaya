@@ -520,16 +520,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
-            g.defaults += SrlExpParams(trainMaxNumSentences=100,
+            g.defaults += SrlExpParams(trainMaxNumSentences=1000,
                                        testMaxNumSentences=100)
             g.defaults += g.feat_all
             g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
-                              useBjorkelundFeats=True, useTemplates=False, useLexicalDepPathFeats=False)
+                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False,
+                              featureHashMod=2**20, featCountCutoff=0)
             return self._get_default_pipeline(g, l)
 
         elif self.expname == "srl-all-sup-lat":
             # Experiment on all languages with supervised and latent parses.            
             g.defaults += g.feat_all
+            # Using Bjorkelund unigram feature templates.
+            g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
+                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False)
             exps = []
             for parser_srl in l.all_parse_and_srl_sup_lat:
                 exp = g.defaults + parser_srl
