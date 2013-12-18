@@ -18,6 +18,7 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
@@ -509,6 +510,8 @@ public class SrlRunner {
         prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         prm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
         prm.fePrm.useTemplates = useTemplates;
+        prm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        prm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
         
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;

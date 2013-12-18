@@ -38,25 +38,30 @@ public class TemplateFeatureExtractor {
 
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
 
-    //private final SimpleAnnoSentence sent;
-    //private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private final FeaturizedSentence fSent; 
+
+    /**
+     * This constructor is preferred as it allows the FeaturizedSentence to
+     * share work across different feature extractors.
+     */
+    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {
+        this.sig = cs.sig;
+        this.fSent = fSent;
+    }
     
     public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
-        //this.sent = sent;
-        //this.cs = cs;
         this.sig = cs.sig;
         this.fSent = new FeaturizedSentence(sent, cs);
     }
-    
-    public void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<Object> feats) {
+        
+    public void addFeatures(List<FeatTemplate> tpls, int pidx, int cidx, List<String> feats) {
         for (FeatTemplate tpl : tpls) {
             addFeatures(tpl, pidx, cidx, feats);
         }
     }
     
-    public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<Object> feats) {
+    public void addFeatures(FeatTemplate tpl, int pidx, int cidx, List<String> feats) {
         int idx = pidx;
         if (tpl instanceof FeatTemplate1) {
             addTokenFeature((FeatTemplate1) tpl, pidx, cidx, feats);
@@ -82,13 +87,13 @@ public class TemplateFeatureExtractor {
      * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addBigramFeature(BigramTemplate tpl, int pidx, int cidx, List<Object> feats) {
-        ArrayList<Object> feats1 = new ArrayList<Object>();
-        ArrayList<Object> feats2 = new ArrayList<Object>();
+    public void addBigramFeature(BigramTemplate tpl, int pidx, int cidx, List<String> feats) {
+        ArrayList<String> feats1 = new ArrayList<String>();
+        ArrayList<String> feats2 = new ArrayList<String>();
         addFeatures(tpl.tpl1, pidx, cidx, feats1);
         addFeatures(tpl.tpl2, pidx, cidx, feats2);
-        for (Object f1 : feats1) {
-            for (Object f2 : feats2) {
+        for (String f1 : feats1) {
+            for (String f2 : feats2) {
                 feats.add(toFeat(f1, f2));
             }
         }
@@ -104,14 +109,13 @@ public class TemplateFeatureExtractor {
      * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addTokenFeature(FeatTemplate1 tpl, int pidx, int cidx, List<Object> feats) {
+    public void addTokenFeature(FeatTemplate1 tpl, int pidx, int cidx, List<String> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokProperty prop = tpl.prop;
         int idx = getIndexOfPosition(pidx, cidx, pos);
         idx = getModifiedPosition(mod, idx);
         String val = getTokProp(prop, idx);
         if (val != null) {
-            Object feat = toFeat(tpl.getName(), val);
-            feats.add(feat);
+            feats.add(toFeat(tpl.getName(), val));
         }
     }
 
@@ -126,7 +130,7 @@ public class TemplateFeatureExtractor {
     }
     
     /** Same as above except that it permits properties of the token which expand to multiple strings. */
-    public void addTokenFeatures(FeatTemplate2 tpl, int pidx, int cidx, List<Object> feats) {
+    public void addTokenFeatures(FeatTemplate2 tpl, int pidx, int cidx, List<String> feats) {
         Position pos = tpl.pos; PositionModifier mod = tpl.mod; TokPropList prop = tpl.prop;
         int idx = getIndexOfPosition(pidx, cidx, pos);
         idx = getModifiedPosition(mod, idx);
@@ -147,14 +151,14 @@ public class TemplateFeatureExtractor {
      * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addListFeature(FeatTemplate3 tpl, int pidx, int cidx, List<Object> feats) {
+    public void addListFeature(FeatTemplate3 tpl, int pidx, int cidx, List<String> feats) {
         PositionList pl = tpl.pl; TokProperty prop = tpl.prop; EdgeProperty eprop = tpl.eprop; ListModifier lmod = tpl.lmod;
         
         if (prop == null && eprop == null) {
             throw new IllegalStateException("Feature template extracts nothing. One of prop and eprop must be non-null.");
         }
         
-        Object feat;
+        String feat;
         Collection<String> vals;
         switch (pl) {
         case CHILDREN_P: case NO_FAR_CHILDREN_P: case LINE_P_C:
@@ -189,7 +193,7 @@ public class TemplateFeatureExtractor {
      * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addOtherFeature(FeatTemplate4 tpl, int pidx, int cidx, List<Object> feats) {
+    public void addOtherFeature(FeatTemplate4 tpl, int pidx, int cidx, List<String> feats) {
         OtherFeat template = tpl.feat;  
         switch (template) {
         case PATH_GRAMS:
@@ -204,7 +208,7 @@ public class TemplateFeatureExtractor {
     }
 
     // TODO: This is a lot of logic...and should probably live elsewhere.
-    private void addPathGrams(FeatTemplate4 tpl, List<Pair<Integer, Dir>> path, List<Object> feats) {
+    private void addPathGrams(FeatTemplate4 tpl, List<Pair<Integer, Dir>> path, List<String> feats) {
         // For each path n-gram, for n in {1,2,3}:
         for (int n=1; n<=3; n++) {
             for (int start = 0; start <= path.size() - n; start++) {
@@ -472,20 +476,16 @@ public class TemplateFeatureExtractor {
         return fSent.getFeatTokPair(pidx, cidx);
     }
     
-    private Object toFeat(String... vals) {
+    private String toFeat(String... vals) {
         return org.apache.commons.lang.StringUtils.join(vals, "_");
     }
 
-    private Object toFeat(String name, Collection<String> vals) {
+    private String toFeat(String name, Collection<String> vals) {
         return name + "_" + org.apache.commons.lang.StringUtils.join(vals, "_");
     }
 
-    private Object toFeat(Object f1, Object f2) {
-        if (f1 instanceof String && f2 instanceof String) {
-            return f1 + "_" + f2;
-        } else {
-            return new Pair<Object,Object>(f1, f2);
-        }
+    private String toFeat(String f1, String f2) {
+        return f1 + "_" + f2;
     }
 
 }

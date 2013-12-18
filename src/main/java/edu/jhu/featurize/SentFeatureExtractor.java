@@ -3,17 +3,14 @@ package edu.jhu.featurize;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
 
@@ -57,8 +54,11 @@ public class SentFeatureExtractor {
         public boolean useLexicalDepPathFeats = false;
         /** Whether to add the "Bjorkelund" features. */
         public boolean useBjorkelundFeats = false;
-        /** Whether to use feature templates. */
+        /** Whether to use ONLY feature templates. */
         public boolean useTemplates = false;
+        /** Feature templates. */
+        public List<FeatTemplate> soloTemplates = null;
+        public List<FeatTemplate> pairTemplates = null;
     }
     
     // Parameters for feature extraction.
@@ -68,6 +68,7 @@ public class SentFeatureExtractor {
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private FeaturizedSentence fSent;
+    private TemplateFeatureExtractor ext;
         
     public SentFeatureExtractor(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
@@ -75,6 +76,12 @@ public class SentFeatureExtractor {
         this.cs = cs;
         this.sig = cs.sig;
         fSent = new FeaturizedSentence(sent, cs);
+        if (prm.useTemplates) {
+            ext = new TemplateFeatureExtractor(fSent, cs);
+            if (prm.soloTemplates == null || prm.pairTemplates == null) {
+                throw new IllegalStateException("Both template sets must be specified");
+            }
+        }
     }
 
     public int getSentSize() {
@@ -100,6 +107,10 @@ public class SentFeatureExtractor {
     public ArrayList<String> createFeatureSet(int idx) {
         ArrayList<String> feats = new ArrayList<String>();
         if (prm.biasOnly) { return feats; }
+        if (prm.useTemplates) {
+            addTemplateSoloFeatures(idx, feats);
+            return feats;
+        }
         
         if (prm.useSimpleFeats) {
             addSimpleSoloFeatures(idx, feats);
@@ -112,9 +123,6 @@ public class SentFeatureExtractor {
         }
         if (prm.useBjorkelundFeats) {
             addBjorkelundSoloFeatures(idx, feats);
-        }
-        if (prm.useTemplates) {
-            addTemplateSoloFeatures(idx, feats);
         }
         return feats;
     }
@@ -137,7 +145,11 @@ public class SentFeatureExtractor {
     public ArrayList<String> createFeatureSet(int pidx, int aidx) {
         ArrayList<String> feats = new ArrayList<String>();
         if (prm.biasOnly) { return feats; }
-        
+        if (prm.useTemplates) {
+            addTemplatePairFeatures(pidx, aidx, feats);
+            return feats;
+        }
+                
         if (prm.useSimpleFeats) {
             addSimplePairFeatures(pidx, aidx, feats);
         }
@@ -153,20 +165,16 @@ public class SentFeatureExtractor {
         if (prm.useBjorkelundFeats) {
             addBjorkelundPairFeatures(pidx, aidx, feats);
         }
-        if (prm.useTemplates) {
-            addTemplatePairFeatures(pidx, aidx, feats);
-        }
         return feats;
     }
 
     private void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
-        // TODO Auto-generated method stub
-        
+        // TODO: Check that we are NOT using the -1 index here.
+        ext.addFeatures(prm.soloTemplates, idx, -1, feats);
     }
 
     private void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        // TODO Auto-generated method stub
-        
+        ext.addFeatures(prm.pairTemplates, pidx, aidx, feats);        
     }
     
     // ---------- Meg's "Simple" features. ---------- 

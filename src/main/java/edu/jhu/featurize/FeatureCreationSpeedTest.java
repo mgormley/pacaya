@@ -209,7 +209,7 @@ public class FeatureCreationSpeedTest {
                     for (int pred=0; pred<sent.size(); pred++) {
                         for (int arg=0; arg<sent.size(); arg++) {
                             extTimer.start();
-                            List<Object> feats = new ArrayList<Object>();
+                            List<String> feats = new ArrayList<String>();
                             ext.addFeatures(tpls, pred, arg, feats);
                             extTimer.stop();
                             

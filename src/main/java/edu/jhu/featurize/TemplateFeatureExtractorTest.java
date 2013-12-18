@@ -49,7 +49,7 @@ public class TemplateFeatureExtractorTest {
         List<FeatTemplate> tpls = TemplateSets.getAllUnigramFeatureTemplates();
         int pidx = 0;
         int cidx = 3;
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpls, pidx, cidx, feats);
         
         for (Object feat : feats) {
@@ -100,7 +100,7 @@ public class TemplateFeatureExtractorTest {
         FeatTemplate tpl = new FeatTemplate1(Position.PARENT, mod, TokProperty.WORD);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor1();        
         int cidx = -1;
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
@@ -241,7 +241,7 @@ public class TemplateFeatureExtractorTest {
     private void testPositionListsHelper(int pidx, int cidx, PositionList pl, String expectedVal, boolean includeDir) {
         FeatTemplate tpl = new FeatTemplate3(pl, TokProperty.WORD, includeDir ? EdgeProperty.DIR : null, ListModifier.SEQ);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
@@ -281,7 +281,7 @@ public class TemplateFeatureExtractorTest {
     private void testOtherFeaturesHelper(int pidx, int cidx, OtherFeat f, String expectedVal) {
         FeatTemplate tpl = new FeatTemplate4(f);
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
         for (Object feat : feats) {
             System.out.println(feat);
@@ -337,7 +337,7 @@ public class TemplateFeatureExtractorTest {
         
         int pidx = 0;
         int cidx = 3;
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
 
         for (Object feat : feats) {
@@ -352,7 +352,7 @@ public class TemplateFeatureExtractorTest {
         TemplateFeatureExtractor extr = getDogSentenceExtractor();  
         int pidx = 0;
         int cidx = 3;
-        ArrayList<Object> feats = new ArrayList<Object>();
+        ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
 
         for (Object feat : feats) {
