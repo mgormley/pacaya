@@ -520,7 +520,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
-            g.defaults += SrlExpParams(trainMaxNumSentences=1000,
+            g.defaults += SrlExpParams(trainMaxNumSentences=100,
                                        testMaxNumSentences=100)
             g.defaults += g.feat_all
             g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
