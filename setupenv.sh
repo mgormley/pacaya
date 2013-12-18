@@ -29,3 +29,6 @@ export PYTHONPATH=$PYTHONPATH:/home/hltcoe/mgormley/installed/gdata-2.0.14/src
 echo "Adding to PATH."
 export PATH=$ROOT_DIR/bin:$ROOT_DIR/dip_parse:$PATH
 export PATH=$ROOT_DIR/scripts/experiments:$ROOT_DIR/scripts/experiments/core:$PATH
+
+echo ""
+echo "If not installed, you must first run 'bash ./scripts/install-jars.sh'"
