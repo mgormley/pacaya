@@ -22,6 +22,7 @@ import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.hash.MurmurHash3;
 
 /**
  * Feature extractor for SRL. All the "real" feature extraction is done in
@@ -139,10 +140,9 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // Apply the feature-hashing trick.
             for (String obsFeat : obsFeats) {
                 String fname = prefix + obsFeat;
-                int hash = fname.hashCode();
-                FastMath.mod(hash, prm.featureHashMod);
-                fname = Integer.toString(hash);
-                int fidx = alphabet.lookupIndex(new Feature(fname, isBiasFeat));
+                int hash = MurmurHash3.murmurhash3_x86_32(fname, 0, fname.length(), 123456789);
+                hash = FastMath.mod(hash, prm.featureHashMod);
+                int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
                 if (fidx != -1) {
                     int revHash = reverseHashCode(fname);
                     if (revHash < 0) {
