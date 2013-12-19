@@ -243,6 +243,11 @@ public class SrlRunner {
             fts = model.getTemplates();
             cs = model.getCs();
         } else {
+//            if (featureSelection) {
+//                SrlFgExamplesBuilder builder = 
+//            } else {
+//                
+//            }
             fts = new FactorTemplateList();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
         }
@@ -305,8 +310,44 @@ public class SrlRunner {
 
     private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
+        SimpleAnnoSentenceCollection sents = readSentences(cs, dataType, dataFile, goldFile, maxNumSentences,
+                maxSentenceLength, name);        
+        return getData(fts, cs, name, sents);
+    }
+
+    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, String name,
+            SimpleAnnoSentenceCollection sents) {
+        if (!cs.isInitialized()) {
+            log.info("Initializing corpus statistics.");
+            cs.init(sents);
+        }
+
+        log.info("Building factor graphs and extracting features.");
+        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();        
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        FgExampleList data = builder.getData(sents);
+        
+        // Special case: we somehow need to be able to create test examples
+        // where we've never seen the predicate.
+        if (prm.fgPrm.predictSense) {
+            fts.startGrowth();
+            // TODO: This should have a bias feature.
+            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
+            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+            fts.stopGrowth();
+        }
+        
+        log.info(String.format("Num examples in %s: %d", name, data.size()));
+        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        log.info(String.format("Num factor/clique templates: %d", data.getTemplates().size()));
+        log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
+        return data;
+    }
+
+    private SimpleAnnoSentenceCollection readSentences(CorpusStatistics cs, DatasetType dataType, File dataFile,
+            File goldFile, int maxNumSentences, int maxSentenceLength, String name) throws IOException, ParseException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        FgExampleList data;
         SimpleAnnoSentenceCollection sents;
         int numTokens = 0;
         
@@ -367,33 +408,7 @@ public class SrlRunner {
         } else {
             log.warn("No Brown cluster file specified.");            
         }
-        
-        if (!cs.isInitialized()) {
-            log.info("Initializing corpus statistics.");
-            cs.init(sents);
-        }
-
-        log.info("Building factor graphs and extracting features.");
-        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-        data = builder.getData(sents);
-        
-        // Special case: we somehow need to be able to create test examples
-        // where we've never seen the predicate.
-        if (prm.fgPrm.predictSense) {
-            fts.startGrowth();
-            // TODO: This should have a bias feature.
-            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
-            fts.stopGrowth();
-        }
-        
-        log.info(String.format("Num examples in %s: %d", name, data.size()));
-        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
-        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num factor/clique templates: %d", data.getTemplates().size()));
-        log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
-        return data;
+        return sents;
     }
 
     /** Remove various aspects of supervision from the data. */
