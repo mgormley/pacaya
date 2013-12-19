@@ -151,6 +151,10 @@ public class FeaturizedTokenPair {
             return "self";
         } else if (pidx == parents[aidx]) {
             return "parent";
+        } else if (pidx == -1) {
+            return "ancestor";    // Short circuit to avoid ArrayIndexOutOfBounds
+        } else if (aidx == -1) {
+            return "descendent";  // Short circuit to avoid ArrayIndexOutOfBounds
         } else if (parents[pidx] == aidx) {
             return "child";
         } else if (parents[pidx] == parents[aidx]) {
