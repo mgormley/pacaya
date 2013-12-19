@@ -63,7 +63,7 @@ public class CrfObjectiveTest {
         prm.fgPrm.makeUnknownPredRolesLatent = false;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.useProjDepTreeFactor = true;
-        prm.fePrm.biasOnly = true;
+        prm.srlFePrm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExampleList data = builder.getData(sents);

@@ -48,7 +48,7 @@ public class FgExampleTest {
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.fgPrm.linkVarType = VarType.LATENT;
 
-        prm.fePrm.biasOnly = true;
+        prm.srlFePrm.fePrm.biasOnly = true;
         
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExampleList data = builder.getData(sents);

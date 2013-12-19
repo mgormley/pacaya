@@ -4,10 +4,12 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
+import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.featurize.SentFeatureExtractorCache;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -34,6 +36,8 @@ import edu.jhu.util.hash.MurmurHash3;
 public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
     public static class SrlFeatureExtractorPrm {
+        /** Feature options. */
+        public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
         public int featureHashMod = -1;
         /** Whether to create human interpretable feature names when possible. */
@@ -48,9 +52,9 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private VarConfig goldConfig;
     private SentFeatureExtractorCache sentFeatExt;
         
-    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SentFeatureExtractor sentFeatExt) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
-        this.sentFeatExt = new SentFeatureExtractorCache(sentFeatExt);
+        this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
     }
 
     @Override

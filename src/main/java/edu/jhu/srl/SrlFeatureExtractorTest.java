@@ -52,12 +52,10 @@ public class SrlFeatureExtractorTest {
         
         fts.update(sfg);
         
-        SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.biasOnly = true;        
-        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, sents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        prm.fePrm.biasOnly = true;
         prm.featureHashMod = -1; // Disable feature hashing.
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sentFeatExt);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sents.get(0), cs);
         featExt.init(sfg, null, null, new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector(a);
@@ -88,11 +86,11 @@ public class SrlFeatureExtractorTest {
         cs.init(sents);
 
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.fePrm.biasOnly = false;
-        prm.fePrm.useLexicalDepPathFeats = false;
-        prm.fePrm.useNaradFeats = true;
-        prm.fePrm.useSimpleFeats = false;
-        prm.fePrm.useZhaoFeats = false;   
+        prm.srlFePrm.fePrm.biasOnly = false;
+        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
+        prm.srlFePrm.fePrm.useNaradFeats = true;
+        prm.srlFePrm.fePrm.useSimpleFeats = false;
+        prm.srlFePrm.fePrm.useZhaoFeats = false;   
         
         prm.srlFePrm.featureHashMod = -1;
         
@@ -139,11 +137,11 @@ public class SrlFeatureExtractorTest {
         cs.init(simpleSents);
 
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.fePrm.biasOnly = false;
-        prm.fePrm.useLexicalDepPathFeats = false;
-        prm.fePrm.useNaradFeats = true;
-        prm.fePrm.useSimpleFeats = false;
-        prm.fePrm.useZhaoFeats = false;   
+        prm.srlFePrm.fePrm.biasOnly = false;
+        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
+        prm.srlFePrm.fePrm.useNaradFeats = true;
+        prm.srlFePrm.fePrm.useSimpleFeats = false;
+        prm.srlFePrm.fePrm.useZhaoFeats = false;   
         
         prm.srlFePrm.featureHashMod = -1;
         
@@ -195,10 +193,10 @@ public class SrlFeatureExtractorTest {
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = false;
         fePrm.useLexicalDepPathFeats = false;
-        SentFeatureExtractor sentFeatExt= new SentFeatureExtractor(fePrm, simpleSents.get(0), cs);
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        prm.fePrm = fePrm;
         prm.featureHashMod = 10; // Enable feature hashing
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sentFeatExt);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, simpleSents.get(0), cs);
         featExt.init(sfg, null, null, new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector(a);    

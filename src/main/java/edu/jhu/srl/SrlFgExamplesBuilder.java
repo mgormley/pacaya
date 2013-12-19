@@ -39,7 +39,6 @@ public class SrlFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
         public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
-        public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
         public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
     }
@@ -89,8 +88,7 @@ public class SrlFgExamplesBuilder {
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
     
             // Create a feature extractor for this example.
-            SentFeatureExtractor sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sentFeatExt);
+            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
             
             // Create the example solely to count the features.
             FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);

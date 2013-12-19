@@ -243,11 +243,6 @@ public class SrlRunner {
             fts = model.getTemplates();
             cs = model.getCs();
         } else {
-//            if (featureSelection) {
-//                SrlFgExamplesBuilder builder = 
-//            } else {
-//                
-//            }
             fts = new FactorTemplateList();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
         }
@@ -518,15 +513,15 @@ public class SrlRunner {
         prm.fgPrm.predictSense = predictSense;
         
         // Feature extraction.
-        prm.fePrm.biasOnly = biasOnly;
-        prm.fePrm.useSimpleFeats = useSimpleFeats;
-        prm.fePrm.useNaradFeats = useNaradFeats;
-        prm.fePrm.useZhaoFeats = useZhaoFeats;
-        prm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
-        prm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
-        prm.fePrm.useTemplates = useTemplates;
-        prm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
-        prm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        prm.srlFePrm.fePrm.biasOnly = biasOnly;
+        prm.srlFePrm.fePrm.useSimpleFeats = useSimpleFeats;
+        prm.srlFePrm.fePrm.useNaradFeats = useNaradFeats;
+        prm.srlFePrm.fePrm.useZhaoFeats = useZhaoFeats;
+        prm.srlFePrm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
+        prm.srlFePrm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
+        prm.srlFePrm.fePrm.useTemplates = useTemplates;
+        prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
         
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;
