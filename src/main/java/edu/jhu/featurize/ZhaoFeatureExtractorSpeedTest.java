@@ -20,7 +20,7 @@ public class ZhaoFeatureExtractorSpeedTest {
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
     
-    //@Test
+    @Test
     public void testZhaoFeatureBuilding() throws ParseException, IOException {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
@@ -31,6 +31,7 @@ public class ZhaoFeatureExtractorSpeedTest {
         fePrm.useLexicalDepPathFeats = false;
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = true;
+        fePrm.useBjorkelundFeats = false;
         File train = new File("data/conll/CoNLL2009-ST-Spanish-trial.csv");
         CoNLL09FileReader reader = new CoNLL09FileReader(train);
         Timer timer = new Timer();
@@ -41,7 +42,7 @@ public class ZhaoFeatureExtractorSpeedTest {
             log.info("Initializing sentence...");
             SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
             log.info("Processing sentence...");
-            for (int i = 0; i < sent.size(); i++) {
+            for (int i = -1; i < sent.size(); i++) {
                 for (int j = 0; j < sent.size(); j++) {
                     fe.createFeatureSet(i, j);
                 }

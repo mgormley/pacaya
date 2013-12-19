@@ -18,11 +18,10 @@ public class SentFeatureExtractorCache {
     private ArrayList[] obsFeatsSolo;
     // Cache of observation features for each pair of positions in the sentence.
     private ArrayList[][] obsFeatsPair;
-    // Cache of observation features for sense features (separate model).
-    private ArrayList[] obsSenseSolo;
+    // Cache of observation features for each pair of root, child positions.
+    private ArrayList[] obsFeatsPairForRoot;
 
     private SentFeatureExtractor sentFeatExt;
-    
     
     public SentFeatureExtractorCache(SentFeatureExtractor sentFeatExt) {
         this.sentFeatExt = sentFeatExt;
@@ -38,6 +37,9 @@ public class SentFeatureExtractorCache {
     }
     
     public ArrayList<String> fastGetObsFeats(int parent, int child) {
+        if (parent == -1) {
+            return fastGetObsFeatsForRoot(child);
+        }
         if (obsFeatsPair[parent][child] == null) {
             // Lazily construct the observation features.
             obsFeatsPair[parent][child] = sentFeatExt.createFeatureSet(parent, child);
@@ -45,18 +47,18 @@ public class SentFeatureExtractorCache {
         return obsFeatsPair[parent][child];
     }
     
-    public ArrayList<String> fastGetObsSenseFeats(int child) {
-        if (obsSenseSolo[child] == null) {
+    private ArrayList<String> fastGetObsFeatsForRoot(int child) {
+        if (obsFeatsPairForRoot[child] == null) {
             // Lazily construct the observation features.
-            obsSenseSolo[child] = sentFeatExt.createFeatureSet(child);
+            obsFeatsPairForRoot[child] = sentFeatExt.createFeatureSet(-1, child);
         }
-        return obsSenseSolo[child];
+        return obsFeatsPairForRoot[child];
     }
 
     public void clear() {
         obsFeatsSolo = new ArrayList[sentFeatExt.getSentSize()];
         obsFeatsPair = new ArrayList[sentFeatExt.getSentSize()][sentFeatExt.getSentSize()];
-        obsSenseSolo = new ArrayList[sentFeatExt.getSentSize()];
+        obsFeatsPairForRoot = new ArrayList[sentFeatExt.getSentSize()];
     }
 
     

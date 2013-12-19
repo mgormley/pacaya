@@ -82,14 +82,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
                 parent = ((RoleVar)var).getParent();
                 child = ((RoleVar)var).getChild();
             }
-            
+
+            // Get features on the observations for a pair of words.
             // IMPORTANT NOTE: We include the case where the parent is the Wall node (position -1).
-            if (parent == -1) {
-                obsFeats = sentFeatExt.fastGetObsFeats(child);
-            } else {
-                // Get features on the observations for a pair of words.
-                obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
-            }
+            // 
+            // As of 12/18/13, this breaks backwards compatibility with SOME of
+            // the features in SentFeatureExtractor including useNarad and
+            // useSimple.
+            obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
         } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
             SenseVar var = (SenseVar) vars.iterator().next();
             int parent = var.getParent();

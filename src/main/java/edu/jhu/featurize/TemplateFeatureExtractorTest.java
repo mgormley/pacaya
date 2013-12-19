@@ -39,6 +39,15 @@ public class TemplateFeatureExtractorTest {
 
     @Test
     public void testGetAllUnigrams() {
+        extractAllUnigramFeats(0, 3);
+    }
+
+    @Test
+    public void testGetAllUnigramsWithRootParent() {
+        extractAllUnigramFeats(-1, 3);
+    }
+    
+    private List<String> extractAllUnigramFeats(int pidx, int cidx) {
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);
         
@@ -47,15 +56,15 @@ public class TemplateFeatureExtractorTest {
         TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);  
         
         List<FeatTemplate> tpls = TemplateSets.getAllUnigramFeatureTemplates();
-        int pidx = 0;
-        int cidx = 3;
         ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpls, pidx, cidx, feats);
         
         for (Object feat : feats) {
             System.out.println(feat);
         }
+        return feats;
     }
+    
 
     @Test
     public void testParentPosition() {
