@@ -13,6 +13,7 @@ import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
+import edu.jhu.train.Prm;
 
 /**
  * Feature extraction from the observations on a particular sentence.
@@ -35,7 +36,8 @@ public class SentFeatureExtractor {
     
     
     //private static final Logger log = Logger.getLogger(SentFeatureExtractor.class);
-    public static class SentFeatureExtractorPrm {
+    public static class SentFeatureExtractorPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         /** For testing only: this will ensure that the only feature returned is the bias feature. */
         public boolean biasOnly = false;
         public boolean isProjective = false;

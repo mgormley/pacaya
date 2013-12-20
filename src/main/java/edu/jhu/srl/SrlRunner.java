@@ -18,6 +18,7 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -26,9 +27,9 @@ import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
 import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -51,14 +52,22 @@ import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlArgExtractor;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlSenseExtractor;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.UnlabeledDepParseExtractor;
+import edu.jhu.srl.InformationGainFeatureTemplateSelector.ValExtractor;
 import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -151,6 +160,8 @@ public class SrlRunner {
     public static boolean predictSense = false;
 
     // Options for SRL feature extraction.
+    @Opt(hasArg = true, description = "Whether to do feature selection.")
+    public static boolean featureSelection = true;
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
     @Opt(hasArg = true, description = "For preprocessing: Minimum feature count for caching.")
@@ -236,25 +247,47 @@ public class SrlRunner {
         SrlFgModel model = null;
         FactorTemplateList fts;
         CorpusStatistics cs;
+        SrlFeatureExtractorPrm srlFePrm; // TODO: USE THIS!!!!
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
             model = (SrlFgModel) Files.deserialize(modelIn);
             fts = model.getTemplates();
             cs = model.getCs();
+            srlFePrm = model.getSrlFePrm();
         } else {
-            fts = new FactorTemplateList();
+            srlFePrm = getSrlFeatureExtractorPrm();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
+            if (featureSelection) {
+                String name = "train";
+                SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
+                        trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
+                CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
+                
+                InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
+                prm.featureHashMod = featureHashMod;
+                prm.numThreads = threads;
+                prm.numToSelect = 32;
+                InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
+                SrlFeatTemplates sft = ig.getFeatTemplatesForSrl(sents, csPrm);
+                ig.shutdown();
+                srlFePrm.fePrm.soloTemplates = sft.srlSenseTemplates;
+                srlFePrm.fePrm.pairTemplates = sft.srlArgTemplates;
+                
+                log.info("Num sense feature templates: " + sft.srlSenseTemplates.size());
+                log.info("Num arg feature templates: " + sft.srlArgTemplates.size());
+            }
+            fts = new FactorTemplateList();
         }
         
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
             FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
-                    trainMaxSentenceLength, name);
+                    trainMaxSentenceLength, name, srlFePrm);
             
             if (model == null) {
-                model = new SrlFgModel(data, includeUnsupportedFeatures, cs);
+                model = new SrlFgModel(data, includeUnsupportedFeatures, cs, srlFePrm);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -296,7 +329,7 @@ public class SrlRunner {
             fts.stopGrowth();
             String name = "test";
             FgExampleList data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
-                    testMaxSentenceLength, name);
+                    testMaxSentenceLength, name, srlFePrm);
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testType, testPredOut, name);
             eval(name, pair);
@@ -304,21 +337,21 @@ public class SrlRunner {
     }
 
     private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
-            int maxNumSentences, int maxSentenceLength, String name) throws ParseException, IOException {
-        SimpleAnnoSentenceCollection sents = readSentences(cs, dataType, dataFile, goldFile, maxNumSentences,
+            int maxNumSentences, int maxSentenceLength, String name, SrlFeatureExtractorPrm srlFePrm) throws ParseException, IOException {
+        SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, dataType, dataFile, goldFile, maxNumSentences,
                 maxSentenceLength, name);        
-        return getData(fts, cs, name, sents);
+        return getData(fts, cs, name, sents, srlFePrm);
     }
 
     private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents) {
+            SimpleAnnoSentenceCollection sents, SrlFeatureExtractorPrm srlFePrm) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
         }
 
         log.info("Building factor graphs and extracting features.");
-        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm();        
+        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
         FgExampleList data = builder.getData(sents);
         
@@ -340,7 +373,7 @@ public class SrlRunner {
         return data;
     }
 
-    private SimpleAnnoSentenceCollection readSentences(CorpusStatistics cs, DatasetType dataType, File dataFile,
+    private SimpleAnnoSentenceCollection readSentences(boolean useGoldSyntax, DatasetType dataType, File dataFile,
             File goldFile, int maxNumSentences, int maxSentenceLength, String name) throws IOException, ParseException {
         log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
         SimpleAnnoSentenceCollection sents;
@@ -385,7 +418,7 @@ public class SrlRunner {
             // Convert CoNLL sentences to SimpleAnnoSentences.
             sents = new SimpleAnnoSentenceCollection();
             for (CoNLL09Sentence conllSent : conllSents) {
-                sents.add(conllSent.toSimpleAnnoSentence(cs.prm.useGoldSyntax));
+                sents.add(conllSent.toSimpleAnnoSentence(useGoldSyntax));
             }
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
@@ -499,7 +532,7 @@ public class SrlRunner {
 
     /* --------- Factory Methods ---------- */
 
-    private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm() {
+    private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm(SrlFeatureExtractorPrm srlFePrm) {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         // Factor graph structure.
@@ -513,15 +546,7 @@ public class SrlRunner {
         prm.fgPrm.predictSense = predictSense;
         
         // Feature extraction.
-        prm.srlFePrm.fePrm.biasOnly = biasOnly;
-        prm.srlFePrm.fePrm.useSimpleFeats = useSimpleFeats;
-        prm.srlFePrm.fePrm.useNaradFeats = useNaradFeats;
-        prm.srlFePrm.fePrm.useZhaoFeats = useZhaoFeats;
-        prm.srlFePrm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
-        prm.srlFePrm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
-        prm.srlFePrm.fePrm.useTemplates = useTemplates;
-        prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
-        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        prm.srlFePrm = srlFePrm;
         
         // Example construction and storage.
         prm.exPrm.featCountCutoff = featCountCutoff;
@@ -532,6 +557,20 @@ public class SrlRunner {
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
         return prm;
+    }
+    
+    private static SrlFeatureExtractorPrm getSrlFeatureExtractorPrm() {
+        SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
+        srlFePrm.fePrm.biasOnly = biasOnly;
+        srlFePrm.fePrm.useSimpleFeats = useSimpleFeats;
+        srlFePrm.fePrm.useNaradFeats = useNaradFeats;
+        srlFePrm.fePrm.useZhaoFeats = useZhaoFeats;
+        srlFePrm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
+        srlFePrm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
+        srlFePrm.fePrm.useTemplates = useTemplates;
+        srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        return srlFePrm;
     }
 
     private static CorpusStatisticsPrm getCorpusStatisticsPrm() {

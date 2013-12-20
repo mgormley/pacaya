@@ -15,8 +15,8 @@ public class Threads {
 
     private static final int DONE = -1;
 
-    public static void awaitAll(ArrayList<Future<?>> futures) {
-        for (Future<?> f : futures) {
+    public static <T> void awaitAll(List<Future<T>> futures) {
+        for (Future<T> f : futures) {
             // Wait for each one to complete.
             try {
                 f.get();
@@ -25,6 +25,14 @@ public class Threads {
             } catch (ExecutionException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    public static void invokeAndAwaitAll(ExecutorService pool, List<Callable<Object>> tasks) {
+        try {
+            awaitAll(pool.invokeAll(tasks));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -79,6 +87,12 @@ public class Threads {
             Threads.addAllResults(pool, tasks, results);
         }
         return results;
+    }
+
+    public static void runAll(ExecutorService pool, List<Runnable> tasks) {
+        for (Runnable task : tasks) {
+            pool.execute(task);
+        }
     }
 
 }

@@ -45,6 +45,7 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testGetAllUnigramsWithRootParent() {
         extractAllUnigramFeats(-1, 3);
+        extractAllUnigramFeats(3, -1);
     }
     
     private List<String> extractAllUnigramFeats(int pidx, int cidx) {

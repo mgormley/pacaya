@@ -212,6 +212,7 @@ class ParamDefinitions():
             normalizeRoleNames=False,
             l2variance="500.0",
             sgdNumPasses=10,
+            featureSelection=True,
             )
         
         g.defaults += g.adagrad

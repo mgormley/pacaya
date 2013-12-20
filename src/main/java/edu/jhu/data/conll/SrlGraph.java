@@ -135,7 +135,8 @@ public class SrlGraph {
     private List<SrlPred> preds;
     private List<SrlArg> args;
     private List<SrlEdge> edges;
-
+    private SrlEdge[][] es;
+    
     // Predicate array, indexed by position of predicate.
     private SrlPred[] predArr;    
     // Argument array, indexed by position of predicate.
@@ -150,16 +151,12 @@ public class SrlGraph {
         this.edges = new ArrayList<SrlEdge>();
         this.predArr = new SrlPred[n];
         this.argArr = new SrlArg[n];
+        this.es = new SrlEdge[n][n];
     }
     
     public SrlGraph(CoNLL09Sentence sent) {
-        this.n = sent.size();
-        this.preds = new ArrayList<SrlPred>();
-        this.args = new ArrayList<SrlArg>();
-        this.edges = new ArrayList<SrlEdge>();
-        this.predArr = new SrlPred[n];
-        this.argArr = new SrlArg[n];
-        
+        this(sent.size());
+
         // Create a predicate for each row marked with fillpred = Y.
         for (int i = 0; i < sent.size(); i++) {
             CoNLL09Token tok = sent.get(i);
@@ -198,6 +195,7 @@ public class SrlGraph {
     /** Adds the edge. */
     public void addEdge(SrlEdge edge) {
         edges.add(edge);
+        es[edge.pred.position][edge.arg.position] = edge;
         addPred(edge.getPred());
         addArg(edge.getArg());
     }
@@ -248,6 +246,10 @@ public class SrlGraph {
 
     public List<SrlEdge> getEdges() {
         return edges;
+    }
+    
+    public SrlEdge getEdge(int pidx, int aidx) {
+        return es[pidx][aidx];
     }
 
     @Override

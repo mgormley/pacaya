@@ -1,5 +1,6 @@
 package edu.jhu.featurize;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import cern.colt.Arrays;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.train.Prm;
 import edu.jhu.util.collections.Lists;
 import edu.stanford.nlp.util.StringUtils;
 
@@ -245,7 +247,8 @@ public class TemplateLanguage {
     public static final String TEMPLATE_SEP = "+";
     public static final String STRUCTURE_SEP = ".";
 
-    public static abstract class FeatTemplate {
+    public static abstract class FeatTemplate implements Serializable {
+        private static final long serialVersionUID = 1L;
         private String name;
         public FeatTemplate(String name) {
             this.name = name;
@@ -266,6 +269,7 @@ public class TemplateLanguage {
      *     first(t, NOUN, path(p, root)).bc0
      */
     public static class FeatTemplate1 extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
         public Position pos; 
         public PositionModifier mod; 
         public TokProperty prop;
@@ -292,6 +296,7 @@ public class TemplateLanguage {
      * which extract multiple features of a single token.
      */
     public static class FeatTemplate2 extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
         public Position pos;
         public PositionModifier mod; 
         public TokPropList prop; 
@@ -319,6 +324,7 @@ public class TemplateLanguage {
      *    line(p,c).t.noDup
      */
     public static class FeatTemplate3 extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
         public PositionList pl; 
         public TokProperty prop; 
         public EdgeProperty eprop;
@@ -351,6 +357,7 @@ public class TemplateLanguage {
      *    geneology(p,c)
      */
     public static class FeatTemplate4 extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
         public OtherFeat feat;
         /**
          * Constructor. 
@@ -374,6 +381,7 @@ public class TemplateLanguage {
      *     p.t+c.t
      */
     public static class BigramTemplate extends FeatTemplate {
+        private static final long serialVersionUID = 1L;
         public FeatTemplate tpl1;
         public FeatTemplate tpl2;
         public BigramTemplate(FeatTemplate tpl1, FeatTemplate tpl2) {

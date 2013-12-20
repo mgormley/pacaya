@@ -113,6 +113,10 @@ public class FgExampleListBuilder {
             data = store;
         } else if (prm.cacheType == CacheType.NONE) {
             // Do nothing.
+            if (!doingFeatCutoff) {
+                // We still have to populate the FactorTemplateList before stopping growth on it.
+                constructAndDiscardAll(data);
+            }
         } else {
             throw new IllegalStateException("Unsupported cache type: " + prm.cacheType);
         }

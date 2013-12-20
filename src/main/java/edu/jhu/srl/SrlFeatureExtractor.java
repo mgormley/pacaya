@@ -23,6 +23,7 @@ import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
+import edu.jhu.train.Prm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.hash.MurmurHash3;
 
@@ -35,7 +36,8 @@ import edu.jhu.util.hash.MurmurHash3;
  */
 public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
-    public static class SrlFeatureExtractorPrm {
+    public static class SrlFeatureExtractorPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         /** Feature options. */
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */

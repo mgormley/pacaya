@@ -73,10 +73,14 @@ public class TemplateSets {
     }
 
     public static List<FeatTemplate> getBigramFeatureTemplates(List<FeatTemplate> unigrams) {
+        return getBigramFeatureTemplates(unigrams, unigrams);
+    }
+
+    public static List<FeatTemplate> getBigramFeatureTemplates(List<FeatTemplate> unigrams1, List<FeatTemplate> unigrams2) {
         ArrayList<FeatTemplate> bs = new ArrayList<FeatTemplate>();
-        for (int i=0; i<unigrams.size(); i++) {
-            for (int j=i+1; j<unigrams.size(); j++) {
-                bs.add(new BigramTemplate(unigrams.get(i), unigrams.get(j)));
+        for (int i=0; i<unigrams1.size(); i++) {
+            for (int j=i+1; j<unigrams2.size(); j++) {
+                bs.add(new BigramTemplate(unigrams1.get(i), unigrams2.get(j)));
             }
         }
         return bs;
