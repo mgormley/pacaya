@@ -149,16 +149,16 @@ public class FeaturizedTokenPair {
     public String getGeneologicalRelation() {
         if (pidx == aidx) {
             return "self";
-        } else if (pidx == parents[aidx]) {
+        } else if (hasParent(aidx) && pidx == parents[aidx]) {
             return "parent";
-        } else if (pidx == -1) {
-            return "ancestor";    // Short circuit to avoid ArrayIndexOutOfBounds
-        } else if (aidx == -1) {
-            return "descendent";  // Short circuit to avoid ArrayIndexOutOfBounds
-        } else if (parents[pidx] == aidx) {
+        } else if (hasParent(pidx) && parents[pidx] == aidx) {
             return "child";
-        } else if (parents[pidx] == parents[aidx]) {
+        } else if (hasParent(aidx) && hasParent(pidx) && parents[pidx] == parents[aidx]) {
             return "sibling";
+        } else if (pidx == -1) {
+            return "ancestor";     // Short circuit to avoid ArrayIndexOutOfBounds.
+        } else if (aidx == -1) {
+            return "descendent";   // Short circuit to avoid ArrayIndexOutOfBounds.
         } else if (DepTree.isAncestor(pidx, aidx, parents)) {
             return "ancestor";
         } else if (DepTree.isAncestor(aidx, pidx, parents)) {
@@ -166,6 +166,10 @@ public class FeaturizedTokenPair {
         } else {
             return "cousin";
         }
+    }
+    
+    private boolean hasParent(int aidx) {
+        return 0 <= aidx && aidx < parents.length;
     }
 
     public String getRelativePosition() {
