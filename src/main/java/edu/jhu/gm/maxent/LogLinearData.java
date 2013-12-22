@@ -58,10 +58,12 @@ public class LogLinearData {
         }
     }
     
-    private static final Object TEMPLATE_KEY = "loglin";
     private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
-    private ArrayList<LogLinearExample> exList = new ArrayList<LogLinearExample>();
+    private List<LogLinearExample> exList = new ArrayList<LogLinearExample>();
 
+    public LogLinearData() {
+    }
+    
     /**
      * Adds a new log-linear model instance.
      * 
@@ -75,57 +77,19 @@ public class LogLinearData {
             features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
         }
         LogLinearExample ex = new LogLinearExample(weight, label, features);
-        exList.add(ex);
-    }
-    
-    public FgExampleList getData() {
-        FactorTemplateList fts = new FactorTemplateList();
-        List<String> stateNames = getStateNames(exList);
-        {
-            Var v0 = new Var(VarType.PREDICTED, exList.size(), "v0", stateNames);
-            fts.add(new FactorTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
-        }
-        
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        for (final LogLinearExample desc : exList) {
-            for (int i=0; i<desc.getWeight(); i++) {
-                Var v0 = new Var(VarType.PREDICTED, exList.size(), "v0", stateNames);
-                final VarConfig trainConfig = new VarConfig();
-                trainConfig.put(v0, desc.getLabel());
-                
-                FactorGraph fg = new FactorGraph();
-                VarSet vars = new VarSet(v0);
-                ExpFamFactor f0 = new ExpFamFactor(vars, TEMPLATE_KEY);
-                fg.addFactor(f0);
-                ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
-                    @Override
-                    public FeatureVector calcObsFeatureVector(int factorId) {
-                        return desc.getObsFeatures();
-                    }
-                    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                            VarConfig goldConfig, FactorTemplateList fts) {             
-                        // Do nothing.               
-                    }
-                    public void clear() {
-                        // Do nothing.
-                    }
-                };
-                data.add(new FgExample(fg, trainConfig, featExtractor, fts));
-            }
-        }
-        return data;
-    }
-    
-    private static List<String> getStateNames(List<LogLinearExample> exList) {
-        List<String> names = new ArrayList<String>();
-        for (LogLinearExample desc : exList) {
-            names.add(desc.getLabel());
-        }
-        return names;
+        exList .add(ex);
     }
 
     public Alphabet<Feature> getAlphabet() {
         return alphabet;
+    }
+
+    public List<LogLinearExample> getData() {
+        return exList;
+    }
+    
+    public void clear() {
+        exList.clear();
     }
         
 }

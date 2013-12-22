@@ -3,6 +3,7 @@ package edu.jhu.gm.maxent;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -10,6 +11,7 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
+import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.CrfObjective;
@@ -24,15 +26,14 @@ public class LogLinearTdTest {
     @Test
     public void testLogLinearModelTrainDecode() {
         LogLinearData exs = new LogLinearData();
-
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
-        FgExampleList data = exs.getData();
+        List<LogLinearExample> data = exs.getData();
         
         LogLinearTd td = new LogLinearTd();
-        FgModel model = td.train(data);
+        FgModel model = td.train(exs);
         {
             Pair<String,DenseFactor> p = td.decode(model, data.get(0));
             String predLabel = p.get1();
@@ -43,7 +44,7 @@ public class LogLinearTdTest {
                     -4.781808684934612 }, dist.getValues(), 1e-3);
         }
         {
-            Pair<String,DenseFactor> p = td.decode(model, data.get(31));
+            Pair<String,DenseFactor> p = td.decode(model, data.get(1));
             String predLabel = p.get1();
             DenseFactor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
@@ -87,13 +88,16 @@ public class LogLinearTdTest {
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
         
+        LogLinearTd td = new LogLinearTd();        
+        FgExampleList data = td.getData(exs);
+
         double[] params = new double[]{3.0, 2.0, 1.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-        FgModel model = new FgModel(exs.getData(), false);
+        FgModel model = new FgModel(data, false);
         System.out.println(model);
         model.updateModelFromDoubles(params);
         
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, CrfObjectiveTest.getInfFactory(logDomain));
         obj.setPoint(params);
         
         // Test log-likelihood.
@@ -127,12 +131,16 @@ public class LogLinearTdTest {
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(0, "y=B", Lists.getList("circle"));
         double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getData().getTemplates());
+
+        LogLinearTd td = new LogLinearTd();        
+        FgExampleList data = td.getData(exs);
+        
+        FgModel model = new FgModel(data.getTemplates());
         model.updateModelFromDoubles(params);
         
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         infFactory = CrfObjectiveTest.getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
         obj.setPoint(params);        
         
         assertEquals(1, exs.getAlphabet().size());
