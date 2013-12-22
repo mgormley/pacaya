@@ -203,7 +203,6 @@ class ParamDefinitions():
             trainGoldOut="./train-gold.txt",
             testGoldOut="./test-gold.txt",
             modelOut="./model.binary.gz",
-            featureHashMod=-1,
             alwaysIncludeLinkVars=True,
             unaryFactors=True,
             linkVarType="OBSERVED",
@@ -212,6 +211,7 @@ class ParamDefinitions():
             normalizeRoleNames=False,
             l2variance="500.0",
             sgdNumPasses=10,
+            featureHashMod=1000000,
             featureSelection=True,
             )
         
@@ -527,8 +527,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                        testMaxNumSentences=100)
             g.defaults += g.feat_all
             g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
-                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False,
-                              featureHashMod=2**20, featCountCutoff=0)
+                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False)
+                              #featureHashMod=2**20, featCountCutoff=0)
             return self._get_default_pipeline(g, l)
 
         elif self.expname == "srl-all-sup-lat":
