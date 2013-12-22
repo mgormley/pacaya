@@ -211,12 +211,12 @@ class ParamDefinitions():
             normalizeRoleNames=False,
             l2variance="500.0",
             sgdNumPasses=10,
-            featureHashMod=1000000,
+            featureHashMod=-1,
             featureSelection=True,
             )
         
         g.defaults += g.adagrad
-        g.defaults += g.feat_narad
+        g.defaults += g.feat_templates
                 
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
@@ -235,7 +235,6 @@ class ParamDefinitions():
         # Below defines T/F values for features in 
         # this order: 
         # useSimpleFeats, useNaradFeats, useZhaoFeats, useLexicalDepPathFeats        
-        g.feat_all               = self._get_named_feature_set(True, True, True, True, 'all')
         g.feat_simple_narad_zhao = self._get_named_feature_set(True, True, True, False, 'simple_narad_zhao')
         g.feat_simple_narad_dep  = self._get_named_feature_set(True, True, False, True, 'simple_narad_dep')
         g.feat_simple_narad      = self._get_named_feature_set(True, True, False, False, 'simple_narad')
@@ -250,6 +249,13 @@ class ParamDefinitions():
         g.feat_zhao_dep          = self._get_named_feature_set(False, False, True, True, 'zhao_dep')
         g.feat_zhao              = self._get_named_feature_set(False, False, True, False, 'zhao')
         g.feat_dep               = self._get_named_feature_set(False, False, False, True, 'dep')
+        
+        g.feat_templates = SrlExpParams(useTemplates=True, useSimpleFeats=False, useNaradFeats=False, 
+                                        useZhaoFeats=False, useBjorkelundFeats=False, 
+                                        useLexicalDepPathFeats=False)
+        
+        g.feat_all = g.feat_templates
+
     
     def _define_lists_features(self, g, l): 
         l.feature_sets = [ g.feat_all, g.feat_simple_narad_zhao, g.feat_simple_narad_dep, g.feat_simple_narad, 
@@ -369,7 +375,7 @@ class ParamDefinitions():
         for parser_output in parser_outputs:
             # We only want to models where the predicates are given in order to match up
             # with the CoNLL-2009 shared task.
-            for model in [g.model_pg_lat_tree, g.model_pg_obs_tree]:
+            for model in [g.model_pg_obs_tree, g.model_pg_lat_tree]:
                 if model.get("useProjDepTreeFactor") \
                     and not parser_output.get("tagger_parser").find(tp_for_global_factor) != -1:                    
                     # We define the non-latent-tree model for all the input parses,
@@ -523,20 +529,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
-            g.defaults += SrlExpParams(trainMaxNumSentences=100,
+            g.defaults += SrlExpParams(trainMaxNumSentences=1000,
                                        testMaxNumSentences=100)
             g.defaults += g.feat_all
-            g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
-                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False)
-                              #featureHashMod=2**20, featCountCutoff=0)
             return self._get_default_pipeline(g, l)
 
         elif self.expname == "srl-all-sup-lat":
-            # Experiment on all languages with supervised and latent parses.            
+            # Experiment on all languages with supervised and latent parses.
             g.defaults += g.feat_all
-            # Using Bjorkelund unigram feature templates.
-            g.defaults.update(useSimpleFeats=False, useNaradFeats=False, useZhaoFeats=False,
-                              useBjorkelundFeats=False, useTemplates=True, useLexicalDepPathFeats=False)
             exps = []
             for parser_srl in l.all_parse_and_srl_sup_lat:
                 exp = g.defaults + parser_srl

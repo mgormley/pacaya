@@ -298,7 +298,7 @@ public class SrlRunner {
             } else {
                 log.info("Using read model as initial parameters for training.");
             }
-            log.info(String.format("Num features: %d", model.getNumParams()));
+            log.info(String.format("Num model params: %d", model.getNumParams()));
 
             log.info("Training model.");
             CrfTrainerPrm prm = getCrfTrainerPrm();

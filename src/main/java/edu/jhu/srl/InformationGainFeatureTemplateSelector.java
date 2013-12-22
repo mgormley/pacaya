@@ -267,7 +267,7 @@ public class InformationGainFeatureTemplateSelector {
             for (int i=0; i<allTpls.size(); i++) {
                 int t = indices[i];
                 String selected = (i < prm.numToSelect) ? "Y" : "N";
-                writer.write(String.format("%s IG_{%s, %s} = %f\n", selected, valExt.getName(), allTpls.get(t).getName(), ig[t]));
+                writer.write(String.format("%s\t%s\t%s\t%f\n", selected, valExt.getName(), allTpls.get(t).getName(), ig[t]));
             }
             writer.write("\n");
         }
