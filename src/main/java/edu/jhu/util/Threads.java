@@ -72,7 +72,7 @@ public class Threads {
                         // The thread hasn't finished yet.
                     }
                 }
-                i = i+1 % futures.size();
+                i = (i+1) % futures.size();
             }
         } finally {
             // TODO: For some reason this doesn't work correctly. Instead we
@@ -169,5 +169,5 @@ public class Threads {
             System.exit(1);
         }
     }
-
+    
 }
