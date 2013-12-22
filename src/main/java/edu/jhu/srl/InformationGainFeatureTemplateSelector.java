@@ -43,6 +43,8 @@ public class InformationGainFeatureTemplateSelector {
         public int numToSelect = 25;
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
         public int featureHashMod = -1;
+        /** The value of the mod for use in the value hashing trick. If <= 0, feature-hashing will be disabled. */
+        public int valueHashMod = 50;
         /** The output file for information gains of all features. */
         public File outFile = new File("./ig-out.txt");
         /** Number of threads. */
@@ -55,6 +57,7 @@ public class InformationGainFeatureTemplateSelector {
     public InformationGainFeatureTemplateSelector(InformationGainFeatureTemplateSelectorPrm prm) {
        this.prm = prm;
        this.pool = Executors.newFixedThreadPool(prm.numThreads);
+       log.debug("Num threads: " + prm.numThreads);
     }
     
     public static class SrlFeatTemplates {
@@ -95,11 +98,12 @@ public class InformationGainFeatureTemplateSelector {
 
         for (int c = 0; c < valExts.size(); c++) {
             ValExtractor valExt = valExts.get(c);
-            valExt.init(sents);
+            valExt.init(sents, prm.valueHashMod);
             log.info(String.format("Value Extractor: c=%d name=%s numVals=%d", c, valExt.getName(), valExt.getNumVals()));
         }
                 
         // Compute information gain.
+        log.info("Computing information gain for feature templates.");
         double[][] ig = computeInformationGain(allTpls, valExts, sents, cs);
                 
         // Select feature templates.
@@ -128,12 +132,18 @@ public class InformationGainFeatureTemplateSelector {
     private double[][] computeInformationGain(List<FeatTemplate> allTpls, List<ValExtractor> valExts,
             SimpleAnnoSentenceCollection sents, CorpusStatistics cs) {
         double[][] ig = new double[valExts.size()][allTpls.size()];
-        List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
-        for (int t=0; t<allTpls.size(); t++) {
-            //computeInformationGain(t, allTpls, valExts, sents, cs, ig);
-            tasks.add(new IGComputer(t, allTpls, valExts, sents, cs, ig));
+        if (prm.numThreads == 1) { 
+            for (int t=0; t<allTpls.size(); t++) {
+                computeInformationGain(t, allTpls, valExts, sents, cs, ig);
+            }
+        } else {
+            List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
+            for (int t=0; t<allTpls.size(); t++) {
+                //computeInformationGain(t, allTpls, valExts, sents, cs, ig);
+                tasks.add(new IGComputer(t, allTpls, valExts, sents, cs, ig));
+            }
+            Threads.invokeAndAwaitAll(pool, tasks);
         }
-        Threads.invokeAndAwaitAll(pool, tasks);
         return ig;
     }
     
@@ -160,12 +170,8 @@ public class InformationGainFeatureTemplateSelector {
     private void computeInformationGain(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
             SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig) {
         FeatTemplate tpl = allTpls.get(t);
-        if (t % 10 == 0) {
-            log.debug(String.format("Processing feature template %d of %d: %s", t, allTpls.size(), tpl.getName()));
-        }
-        // TODO: parallelize
+
         final IntDoubleDenseVector[][] counts = getCountsArray(valExts);
-        //DoubleArrays.fill(counts, 0.0);
         Alphabet<String> alphabet = new Alphabet<String>();
         for (int i=0; i<sents.size(); i++) {                
             SimpleAnnoSentence sent = sents.get(i);
@@ -187,6 +193,7 @@ public class InformationGainFeatureTemplateSelector {
                         if (prm.featureHashMod > 0) {
                             String data = featName;
                             featIdx = FastMath.mod(MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789), prm.featureHashMod);
+                            featIdx = alphabet.lookupIndex(Integer.toString(featIdx));
                         } else {
                             featIdx = alphabet.lookupIndex(featName);
                         }
@@ -212,6 +219,10 @@ public class InformationGainFeatureTemplateSelector {
             // Compute information gain for this (feature template, value extractor) pair.                
             ig[c][t] = computeInformationGain(counts[c]);
         }
+
+        if (t % 10 == 0) {
+            log.debug(String.format("Processed feature template %d of %d: %s #feats=%d", t, allTpls.size(), tpl.getName(), alphabet.size()));
+        }        
     }
     
     /**
@@ -283,8 +294,9 @@ public class InformationGainFeatureTemplateSelector {
             int numVals = valExt.getNumVals();
             counts[c] = new IntDoubleDenseVector[numVals];
             for (int v=0; v<numVals; v++) {
-                int size = (prm.featureHashMod > 0) ? prm.featureHashMod : 1024;
-                counts[c][v] = new IntDoubleDenseVector(size);
+                // TODO: Remove.
+                //int size = (prm.featureHashMod > 0) ? prm.featureHashMod : 1024;
+                counts[c][v] = new IntDoubleDenseVector();
             }
         }
         return counts;
@@ -295,7 +307,7 @@ public class InformationGainFeatureTemplateSelector {
     }
    
     public interface ValExtractor {
-        public void init(SimpleAnnoSentenceCollection sents);
+        public void init(SimpleAnnoSentenceCollection sents, int valueHashMod);
         public Object getName();
         public int getNumVals();
         public int getValIdx(SimpleAnnoSentence sent, int pidx, int cidx);
@@ -304,9 +316,11 @@ public class InformationGainFeatureTemplateSelector {
     public static abstract class AbtractValExtractor implements ValExtractor {
         
         private Alphabet<Object> valAlphabet = new Alphabet<Object>();
+        private int valueHashMod = -1;
         
         @Override
-        public void init(SimpleAnnoSentenceCollection sents) {
+        public void init(SimpleAnnoSentenceCollection sents, int valueHashMod) {
+            this.valueHashMod = valueHashMod;
             for (int i=0; i<sents.size(); i++) {                
                 SimpleAnnoSentence sent = sents.get(i);
                 for (int pidx=-1; pidx<sent.size(); pidx++) {
@@ -319,11 +333,17 @@ public class InformationGainFeatureTemplateSelector {
         }
         
         public int getValIdx(SimpleAnnoSentence sent, int pidx, int cidx) {
-            Object val = getVal(sent, pidx, cidx);
+            String val = getVal(sent, pidx, cidx);
             if (val == null) {
                 return -1;
             } else {
-                return valAlphabet.lookupIndex(val);
+                String data = val;
+                if (valueHashMod > 0) {
+                    int idx = FastMath.mod(MurmurHash3.murmurhash3_x86_32(data, 0, data.length(), 123456789), valueHashMod);
+                    return valAlphabet.lookupIndex(idx);
+                } else {
+                    return valAlphabet.lookupIndex(val);
+                }
             }
         }
         
@@ -331,7 +351,7 @@ public class InformationGainFeatureTemplateSelector {
             return valAlphabet.size();
         }
 
-        public abstract Object getVal(SimpleAnnoSentence sent, int pidx, int cidx);
+        public abstract String getVal(SimpleAnnoSentence sent, int pidx, int cidx);
 
     }
     
@@ -343,7 +363,7 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public Object getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1 || pidx == -1) {
                 return null;
             }
@@ -365,7 +385,7 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public Object getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1 && pidx != -1) {
                 SrlPred pred = sent.getSrlGraph().getPredAt(pidx);
                 if (pred != null) {
@@ -385,11 +405,11 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public Object getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1) {
                 return null;
             }
-            return sent.getParent(aidx) == pidx;
+            return sent.getParent(aidx) == pidx ? "1" : "0";
         }
         
     }

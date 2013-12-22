@@ -63,10 +63,10 @@ public class Threads {
                         count++;
                         isDone[i] = true;
                     } catch (InterruptedException e) {
-                        shutdownSafelyOrDie(pool);
+                        //shutdownSafelyOrDie(pool);
                         throw new RuntimeException(e);
                     } catch (ExecutionException e) {
-                        shutdownSafelyOrDie(pool);
+                        //shutdownSafelyOrDie(pool);
                         throw new RuntimeException(e);
                     } catch (TimeoutException e) {
                         // The thread hasn't finished yet.
@@ -80,7 +80,7 @@ public class Threads {
             if (count != futures.size()) {
                 for (Future<T> f : futures) {
                     boolean canceled = f.cancel(true);
-                    log.error("Canceled status: " + canceled);
+                    //log.error("Canceled status: " + canceled);
                 }
             }
         }
