@@ -415,12 +415,7 @@ public class CrfObjective implements Function, BatchFunction {
     }
 
     public void shutdown() {
-        pool.shutdown();
-        try {
-            pool.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        Threads.shutdownSafelyOrDie(pool);
     }
     
 }

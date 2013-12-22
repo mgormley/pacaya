@@ -650,27 +650,33 @@ public class SrlRunner {
         return new SrlDecoder(prm);
     }
     
-    public static void main(String[] args) throws IOException {
-        ArgParser parser = new ArgParser(SrlRunner.class);
-        parser.addClass(SrlRunner.class);
+    public static void main(String[] args) {
         try {
-            parser.parseArgs(args);
-        } catch (ParseException e) {
-            log.error(e.getMessage());
-            parser.printUsage();
+            ArgParser parser = new ArgParser(SrlRunner.class);
+            parser.addClass(SrlRunner.class);
+            try {
+                parser.parseArgs(args);
+            } catch (ParseException e) {
+                log.error(e.getMessage());
+                parser.printUsage();
+                System.exit(1);
+            }
+            
+            Prng.seed(seed);
+            
+            SrlRunner pipeline = new SrlRunner();
+            try {
+                pipeline.run();
+            } catch (ParseException e1) {
+                log.error(e1.getMessage());
+                parser.printUsage();
+                System.exit(1);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
             System.exit(1);
         }
-        
-        Prng.seed(seed);
-        
-        SrlRunner pipeline = new SrlRunner();
-        try {
-            pipeline.run();
-        } catch (ParseException e1) {
-            log.error(e1.getMessage());
-            parser.printUsage();
-            System.exit(1);
-        }
+        System.exit(0);
     }
 
 }

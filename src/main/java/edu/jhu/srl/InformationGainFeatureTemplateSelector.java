@@ -291,12 +291,7 @@ public class InformationGainFeatureTemplateSelector {
     }
 
     public void shutdown() {
-        pool.shutdown();
-        try {
-            pool.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        Threads.shutdownSafelyOrDie(pool);
     }
    
     public interface ValExtractor {
