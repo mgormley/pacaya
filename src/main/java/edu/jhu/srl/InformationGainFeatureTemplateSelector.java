@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -26,6 +25,7 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.matrix.DenseDoubleMatrix;
 import edu.jhu.prim.sort.IntDoubleSort;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -104,7 +104,9 @@ public class InformationGainFeatureTemplateSelector {
                 
         // Compute information gain.
         log.info("Computing information gain for feature templates.");
-        double[][] ig = computeInformationGain(allTpls, valExts, sents, cs);
+        Pair<double[][], int[]> pair = computeInformationGain(allTpls, valExts, sents, cs);
+        double[][] ig = pair.get1();
+        int[] featCount = pair.get2();
                 
         // Select feature templates.
         try {
@@ -117,7 +119,7 @@ public class InformationGainFeatureTemplateSelector {
             // For each clique template, select the feature templates with highest information gain.
             List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
             for (int c=0; c<valExts.size(); c++) {            
-                selected.add(filterFeatTemplates(allTpls, valExts.get(c), ig[c], writer));
+                selected.add(filterFeatTemplates(allTpls, valExts.get(c), ig[c], featCount, writer));
             }
             
             if (writer != null) {
@@ -129,29 +131,33 @@ public class InformationGainFeatureTemplateSelector {
         }
     }
 
-    private double[][] computeInformationGain(List<FeatTemplate> allTpls, List<ValExtractor> valExts,
+    private Pair<double[][], int[]> computeInformationGain(List<FeatTemplate> allTpls, List<ValExtractor> valExts,
             SimpleAnnoSentenceCollection sents, CorpusStatistics cs) {
+        // Information gain, indexed by ValExtractor index, and template index.
         double[][] ig = new double[valExts.size()][allTpls.size()];
+        // Feature count for each template.
+        int[] featCount = new int[allTpls.size()];
         if (prm.numThreads == 1) { 
             for (int t=0; t<allTpls.size(); t++) {
-                computeInformationGain(t, allTpls, valExts, sents, cs, ig);
+                computeInformationGain(t, allTpls, valExts, sents, cs, ig, featCount);
             }
         } else {
             List<Callable<Object>> tasks = new ArrayList<Callable<Object>>();
             for (int t=0; t<allTpls.size(); t++) {
-                //computeInformationGain(t, allTpls, valExts, sents, cs, ig);
-                tasks.add(new IGComputer(t, allTpls, valExts, sents, cs, ig));
+                tasks.add(new IGComputer(t, allTpls, valExts, sents, cs, ig, featCount));
             }
             Threads.invokeAndAwaitAll(pool, tasks);
         }
-        return ig;
+        return new Pair<double[][], int[]>(ig, featCount);
     }
     
     private class IGComputer implements Callable<Object> {
         int t; List<FeatTemplate> allTpls; List<ValExtractor> valExts;
         SimpleAnnoSentenceCollection sents; CorpusStatistics cs; double[][] ig;
+        int[] featCount;
         public IGComputer(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-                SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig) {
+                SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, 
+                int[] featCount) {
             super();
             this.t = t;
             this.allTpls = allTpls;
@@ -159,16 +165,17 @@ public class InformationGainFeatureTemplateSelector {
             this.sents = sents;
             this.cs = cs;
             this.ig = ig;
+            this.featCount = featCount;
         }
         @Override
         public Object call() throws Exception {
-            computeInformationGain(t, allTpls, valExts, sents, cs, ig);
+            computeInformationGain(t, allTpls, valExts, sents, cs, ig, featCount);
             return null;
         }
     }
 
     private void computeInformationGain(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-            SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig) {
+            SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, int[] featCount) {
         FeatTemplate tpl = allTpls.get(t);
 
         final IntDoubleDenseVector[][] counts = getCountsArray(valExts);
@@ -219,10 +226,11 @@ public class InformationGainFeatureTemplateSelector {
             // Compute information gain for this (feature template, value extractor) pair.                
             ig[c][t] = computeInformationGain(counts[c]);
         }
-
+        featCount[t] = alphabet.size();
+        
         if (t % 10 == 0) {
             log.debug(String.format("Processed feature template %d of %d: %s #feats=%d", t, allTpls.size(), tpl.getName(), alphabet.size()));
-        }        
+        }
     }
     
     /**
@@ -257,8 +265,9 @@ public class InformationGainFeatureTemplateSelector {
     /**
      * Select prm.numSelect feature templates for the given ValExtractor.
      * Write all information gain values to writer if given.
+     * @param featCount 
      */
-    private List<FeatTemplate> filterFeatTemplates(List<FeatTemplate> allTpls, ValExtractor valExt, double[] ig, Writer writer) throws IOException {            
+    private List<FeatTemplate> filterFeatTemplates(List<FeatTemplate> allTpls, ValExtractor valExt, double[] ig, int[] featCount, Writer writer) throws IOException {            
         int[] indices = IntDoubleSort.getIntIndexArray(ig.length);
         double[] values = DoubleArrays.copyOf(ig);
         IntDoubleSort.sortValuesDesc(values, indices);
@@ -267,7 +276,7 @@ public class InformationGainFeatureTemplateSelector {
             for (int i=0; i<allTpls.size(); i++) {
                 int t = indices[i];
                 String selected = (i < prm.numToSelect) ? "Y" : "N";
-                writer.write(String.format("%s\t%s\t%s\t%f\n", selected, valExt.getName(), allTpls.get(t).getName(), ig[t]));
+                writer.write(String.format("%s\t%s\t%s\t%d\t%f\n", selected, valExt.getName(), allTpls.get(t).getName(), featCount[t], ig[t]));
             }
             writer.write("\n");
         }
