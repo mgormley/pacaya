@@ -197,7 +197,7 @@ class ParamDefinitions():
         g.defaults.set("sgdBatchSize", threads)
         
         g.defaults.update(
-            printModel="./model.txt",                          
+            printModel="./model.txt.gz",                          
             trainPredOut="./train-pred.txt",
             testPredOut="./test-pred.txt",
             trainGoldOut="./train-gold.txt",

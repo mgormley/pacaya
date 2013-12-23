@@ -4,10 +4,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
@@ -18,7 +20,6 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -53,11 +54,7 @@ import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
-import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlArgExtractor;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlSenseExtractor;
-import edu.jhu.srl.InformationGainFeatureTemplateSelector.UnlabeledDepParseExtractor;
-import edu.jhu.srl.InformationGainFeatureTemplateSelector.ValExtractor;
 import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
@@ -67,7 +64,6 @@ import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -318,8 +314,12 @@ public class SrlRunner {
         }
         if (printModel != null) {
             // Print the model to a file.
-            log.info("Printing human readable model to file: " + printModel);
-            Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(printModel), "UTF-8"));
+            log.info("Printing human readable model to file: " + printModel);            
+            OutputStream os = new FileOutputStream(printModel);
+            if (printModel.getName().endsWith(".gz")) {
+                os = new GZIPOutputStream(os);
+            }
+            Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
             model.printModel(writer);
             writer.close();
         }

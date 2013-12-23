@@ -279,20 +279,21 @@ public class FgModel implements Serializable, IFgModel {
             int numConfigs = template.getNumConfigs();
             Alphabet<Feature> alphabet = template.getAlphabet();
             for (int c = 0; c < numConfigs; c++) {
-                //VarConfig vc = vars.getVarConfig(c);
                 for (int k = 0; k < indices[t][c].length; k++) {
                     if (included[t][c][k]) {
                         writer.write(template.getKey().toString());
-                        writer.write("_");
+                        writer.write("\t");
                         writer.write(template.getStateNamesStr(c));
-                        writer.write("_");
+                        writer.write("\t");
                         writer.write(alphabet.lookupObject(k).toString());
                         writer.write("\t");
                         writer.write(String.format("%.13g", params.get(indices[t][c][k])));
                         writer.write("\n");
                     }
                 }
+                writer.write("\n");
             }
+            writer.write("\n");
         }
         writer.flush();
     }
