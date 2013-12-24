@@ -22,14 +22,14 @@ import edu.jhu.util.collections.Lists;
 
 public class TemplateSets {
 
-    private static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
-    private static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
+    public static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
+    public static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
 
-    private static final String naradowskyArgFeatsResource = "/edu/jhu/featurize/naradowsky-arg-feats.txt";
-    private static final String naradowskySenseFeatsResource = "/edu/jhu/featurize/naradowsky-sense-feats.txt";
+    public static final String naradowskyArgFeatsResource = "/edu/jhu/featurize/naradowsky-arg-feats.txt";
+    public static final String naradowskySenseFeatsResource = "/edu/jhu/featurize/naradowsky-sense-feats.txt";
     
-    private static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
-    private static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
+    public static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
+    public static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
     
     private TemplateSets() {
         // Private constructor.

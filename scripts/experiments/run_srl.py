@@ -216,7 +216,7 @@ class ParamDefinitions():
             )
         
         g.defaults += g.adagrad
-        g.defaults += g.feat_templates
+        g.defaults += g.feat_tpl_bjork_ig
                 
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
@@ -229,41 +229,48 @@ class ParamDefinitions():
         g.defaults.set_incl_name("useGoldSyntax", False)
 
     def _define_groups_features(self, g):
-        g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, 'bias_only')
+        g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
         g.feat_bias_only.update(biasOnly=True)
         
         # Below defines T/F values for features in 
         # this order: 
-        # useSimpleFeats, useNaradFeats, useZhaoFeats, useLexicalDepPathFeats        
-        g.feat_simple_narad_zhao = self._get_named_feature_set(True, True, True, False, 'simple_narad_zhao')
-        g.feat_simple_narad_dep  = self._get_named_feature_set(True, True, False, True, 'simple_narad_dep')
-        g.feat_simple_narad      = self._get_named_feature_set(True, True, False, False, 'simple_narad')
-        g.feat_simple_zhao_dep   = self._get_named_feature_set(True, False, True, True, 'simple_zhao_dep')
-        g.feat_simple_zhao       = self._get_named_feature_set(True, False, True, False, 'simple_zhao')
-        g.feat_simple_dep        = self._get_named_feature_set(True, False, False, True, 'simple_dep')
-        g.feat_simple            = self._get_named_feature_set(True, False, False, False, 'simple')
-        g.feat_narad_zhao_dep    = self._get_named_feature_set(False, True, True, True, 'narad_zhao_dep')
-        g.feat_narad_zhao        = self._get_named_feature_set(False, True, True, False, 'narad_zhao')
-        g.feat_narad_dep         = self._get_named_feature_set(False, True, False, True, 'narad_dep')
-        g.feat_narad             = self._get_named_feature_set(False, True, False, False, 'narad')
-        g.feat_zhao_dep          = self._get_named_feature_set(False, False, True, True, 'zhao_dep')
-        g.feat_zhao              = self._get_named_feature_set(False, False, True, False, 'zhao')
-        g.feat_dep               = self._get_named_feature_set(False, False, False, True, 'dep')
+        # useSimpleFeats, useNaradFeats, useZhaoFeats, useLexicalDepPathFeats, useBjorkelundFeats       
+        g.feat_simple_narad_zhao = self._get_named_feature_set(True, True, True, False, False, 'simple_narad_zhao')
+        g.feat_simple_narad_dep  = self._get_named_feature_set(True, True, False, True, False, 'simple_narad_dep')
+        g.feat_simple_narad      = self._get_named_feature_set(True, True, False, False, False, 'simple_narad')
+        g.feat_simple_zhao_dep   = self._get_named_feature_set(True, False, True, True, False, 'simple_zhao_dep')
+        g.feat_simple_zhao       = self._get_named_feature_set(True, False, True, False, False, 'simple_zhao')
+        g.feat_simple_dep        = self._get_named_feature_set(True, False, False, True, False, 'simple_dep')
+        g.feat_simple            = self._get_named_feature_set(True, False, False, False, False, 'simple')
+        g.feat_narad_zhao_dep    = self._get_named_feature_set(False, True, True, True, False, 'narad_zhao_dep')
+        g.feat_narad_zhao        = self._get_named_feature_set(False, True, True, False, False, 'narad_zhao')
+        g.feat_narad_dep         = self._get_named_feature_set(False, True, False, True, False, 'narad_dep')
+        g.feat_narad             = self._get_named_feature_set(False, True, False, False, False, 'narad')
+        g.feat_zhao_dep          = self._get_named_feature_set(False, False, True, True, False, 'zhao_dep')
+        g.feat_zhao              = self._get_named_feature_set(False, False, True, False, False, 'zhao')
+        g.feat_dep               = self._get_named_feature_set(False, False, False, True, False, 'dep')
+        g.feat_bjork             = self._get_named_feature_set(False, False, False, False, True, 'bjork')
         
-        g.feat_templates = SrlExpParams(useTemplates=True, useSimpleFeats=False, useNaradFeats=False, 
-                                        useZhaoFeats=False, useBjorkelundFeats=False, 
-                                        useLexicalDepPathFeats=False)
+        g.feat_tpl_bjork         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/bjorkelund-arg-feats.txt",
+                                                                False, 'tpl_bjork')
+        g.feat_tpl_zhao          = self._get_named_template_set("/edu/jhu/featurize/zhao-en-sense-feats.txt",
+                                                                "/edu/jhu/featurize/zhao-ca-arg-feats.txt",
+                                                                False, 'tpl_zhao')
+        g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/featurize/naradowsky-sense-feats.txt",
+                                                                "/edu/jhu/featurize/naradowsky-arg-feats.txt",
+                                                                False, 'tpl_narad')
+        g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True)
         
-        g.feat_all = g.feat_templates
-
+        g.feat_all = g.feat_tpl_bjork_ig
     
-    def _define_lists_features(self, g, l): 
+    def _define_lists_features(self, g, l):
         l.feature_sets = [ g.feat_all, g.feat_simple_narad_zhao, g.feat_simple_narad_dep, g.feat_simple_narad, 
                            g.feat_simple_zhao_dep, g.feat_simple_zhao, g.feat_simple_dep, g.feat_simple, 
                            g.feat_narad_zhao_dep, g.feat_narad_zhao, g.feat_narad_dep, g.feat_narad, g.feat_zhao_dep, 
-                           g.feat_zhao, g.feat_dep ]
+                           g.feat_zhao, g.feat_dep, g.feat_bjork ]
         
-    def _get_named_feature_set(self, simple, narad, zhao, dep, feature_set_name):
+    def _get_named_feature_set(self, simple, narad, zhao, dep, bjork, feature_set_name):
         feats = SrlExpParams()
         # Add each feature set, excluding these arguments from the experiment name.
         feats.set('useSimpleFeats', simple, incl_name=False, incl_arg=True)
@@ -271,8 +278,21 @@ class ParamDefinitions():
         feats.set('useZhaoFeats', zhao, incl_name=False, incl_arg=True)
         feats.set('useLexicalDepPathFeats', dep, incl_name=False, incl_arg=True)
         # CURRENTLY we do not use the features from (Bjorkelund et al., 2009). 
-        feats.set('useBjorkelundFeats', False, incl_name=False, incl_arg=True)
+        feats.set('useBjorkelundFeats', bjork, incl_name=False, incl_arg=True)
+        feats.set('useTemplates', False, incl_name=False, incl_arg=True)
+        feats.set('featureSelection', False, incl_name=False, incl_arg=True)
         # Give the feature set a name.
+        feats.set('feature_set', feature_set_name, incl_name=True, incl_arg=False)
+        return feats
+    
+    def _get_named_template_set(self, sense, arg, feature_selection, feature_set_name):
+        feats = SrlExpParams(useSimpleFeats=False, useNaradFeats=False, 
+                            useZhaoFeats=False, useBjorkelundFeats=False, 
+                            useLexicalDepPathFeats=False)
+        feats.set('useTemplates', False, incl_name=False, incl_arg=True)
+        feats.set('senseFeatTpls', sense, incl_name=False, incl_arg=True)
+        feats.set('argFeatTpls', arg, incl_name=False, incl_arg=True)
+        feats.set('featureSelection', feature_selection, incl_name=False, incl_arg=True)
         feats.set('feature_set', feature_set_name, incl_name=True, incl_arg=False)
         return feats
     
@@ -529,8 +549,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_default_pipeline(g, l)
         
         elif self.expname == "srl-all":
-            g.defaults += SrlExpParams(trainMaxNumSentences=1000,
-                                       testMaxNumSentences=100)
+            g.defaults += SrlExpParams(trainMaxNumSentences=100,
+                                       testMaxNumSentences=100,
+                                       threads=1)
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l)
 
@@ -637,13 +658,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-feats":
             # Experiment to compare various feature sets.
             exps = []
-            g.defaults.update(trainMaxSentenceLength=10)
-            for feature_set in l.feature_sets:
-                g.defaults += feature_set
-                for parser_srl in l.parse_and_srl:
-                    exp = g.defaults + parser_srl
-                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    exps.append(exp)
+            g.defaults.update(trainMaxSentenceLength=20,
+                              trainMaxNumSentences=1000,
+                              testMaxNumSentences=500)
+            feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, g.feat_narad, g.feat_zhao, g.feat_bjork]
+            for feature_set in feature_sets:
+                # Spanish, observed/supervised dep parse and POS tags.
+                parser_srl = g.model_pg_obs_tree + g.pos_sup
+                exp = g.defaults + parser_srl + feature_set
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":
@@ -772,6 +796,7 @@ if __name__ == "__main__":
     parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
     parser.add_option('-v', '--eval', help="Experiment directory to use as input for eval")
+    parser.add_option('-r', '--remote',  action="store_true", help="Whether to run remotely.")
     (options, args) = parser.parse_args(sys.argv)
     # TODO: Above, we still want to list the experiment names in the usage printout, but we should
     # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.

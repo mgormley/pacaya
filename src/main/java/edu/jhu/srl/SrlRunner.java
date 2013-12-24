@@ -20,6 +20,8 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.featurize.TemplateReader;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -180,6 +182,10 @@ public class SrlRunner {
     public static boolean useLexicalDepPathFeats = false;
     @Opt(hasArg = true, description = "Whether to include pairs of features.")
     public static boolean useTemplates = false;
+    @Opt(hasArg = true, description = "Sense feature templates.")
+    public static String senseFeatTpls = TemplateSets.bjorkelundSenseFeatsResource;
+    @Opt(hasArg = true, description = "Arg feature templates.")
+    public static String argFeatTpls = TemplateSets.bjorkelundArgFeatsResource;
 
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -568,9 +574,35 @@ public class SrlRunner {
         srlFePrm.fePrm.useBjorkelundFeats = useBjorkelundFeats;
         srlFePrm.fePrm.useLexicalDepPathFeats = useLexicalDepPathFeats;
         srlFePrm.fePrm.useTemplates = useTemplates;
-        srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
-        srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        
+        srlFePrm.fePrm.soloTemplates = getFeatTpls(senseFeatTpls);
+        srlFePrm.fePrm.pairTemplates = getFeatTpls(argFeatTpls);
+        
         return srlFePrm;
+    }
+
+    /**
+     * Gets feature templates from multiple files or resources.
+     * @param featTpls A colon separated list of paths to feature template files or resources.
+     * @return The feature templates from all the paths.
+     */
+    private static List<FeatTemplate> getFeatTpls(String featTpls) {
+        TemplateReader tr = new TemplateReader();
+        for (String path : featTpls.split(":")) {
+            try {
+                tr.readFromFile(path);
+            } catch (IOException e) {
+                try {
+                    tr.readFromResource(path);
+                } catch (RuntimeException e2) {
+                    throw new IllegalStateException("Unable to find templates as file or resource: " + path);
+                } catch (IOException e1) {
+                    throw new IllegalStateException("Unable to read templates as file or resource: " + path);
+                }
+            }
+        }
+        List<FeatTemplate> tpls = tr.getTemplates();
+        return tpls;
     }
 
     private static CorpusStatisticsPrm getCorpusStatisticsPrm() {

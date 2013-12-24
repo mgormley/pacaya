@@ -31,4 +31,5 @@ rsync -av $* $REMOTE_EXP/vem-conll_005/ $LOCAL_COPY/vem-conll_005 \
     --include="/*/" \
     --include="*parses.txt" \
     --exclude="*" 
-  
+echo "Adding symbolic link to vem-conll_005"
+ln -s `pwd`/remote_exp/vem-conll_005/ ./exp/vem-conll_005

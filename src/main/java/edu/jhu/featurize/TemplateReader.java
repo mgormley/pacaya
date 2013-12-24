@@ -1,6 +1,8 @@
 package edu.jhu.featurize;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -40,6 +42,10 @@ public class TemplateReader {
     public TemplateReader() {        
     }
 
+    public void readFromFile(String path) throws IOException {
+        read(new FileInputStream(path));
+    }
+    
     public void readFromResource(String resourceName) throws IOException {
         InputStream inputStream = this.getClass().getResourceAsStream(resourceName);
         if (inputStream == null) {
