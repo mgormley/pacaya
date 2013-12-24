@@ -35,7 +35,9 @@ public class TemplateLanguage {
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
-        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED; 
+        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED,
+        //
+        MORPHO1, MORPHO2, MORPHO3;
     }
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
@@ -61,11 +63,14 @@ public class TemplateLanguage {
 
     /** Position List. Mapping from one or two positions to a position list. */
     public enum PositionList {
-        LINE_P_C, CHILDREN_P, NO_FAR_CHILDREN_P, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT,;
+        CHILDREN_P, NO_FAR_CHILDREN_P, CHILDREN_C, NO_FAR_CHILDREN_C,
+        //
+        LINE_P_C, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT;
 
         public boolean isPath() {
             switch (this) {
-            case LINE_P_C: case CHILDREN_P: case NO_FAR_CHILDREN_P: return false;
+            case LINE_P_C: case CHILDREN_P: case NO_FAR_CHILDREN_P: 
+                case CHILDREN_C: case NO_FAR_CHILDREN_C: return false;
             default: return true;
             }
         }
@@ -127,6 +132,10 @@ public class TemplateLanguage {
         desc(TokProperty.UNK, "unk", "Unknown word class", AT.WORD);
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
         desc(TokProperty.CAPITALIZED, "capitalized", "Whether this word starts with a capital letter", AT.WORD);
+
+        desc(TokProperty.MORPHO1, "morpho1", "Morphological feature 1", AT.MORPHO);
+        desc(TokProperty.MORPHO2, "morpho2", "Morphological feature 2", AT.MORPHO);
+        desc(TokProperty.MORPHO3, "morpho3", "Morphological feature 3", AT.MORPHO);
         
         /** Word property list expansion. A mapping from a position to a list of strings. */ 
         desc(TokPropList.EACH_MORPHO, "eachmorpho", "Morphological features", AT.MORPHO);
@@ -152,15 +161,21 @@ public class TemplateLanguage {
         desc(PositionModifier.LNC, "lnc", "Left nearest child", AT.DEP_TREE);
         desc(PositionModifier.RNC, "rnc", "Right nearest child", AT.DEP_TREE);
         //
-        desc(PositionModifier.LOW_SV, "first(pos, VERB, path(w, root))", "Low support Verb", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.LOW_SN, "first(pos, NOUN, path(w, root))", "Low support Noun", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.HIGH_SV, "first(pos, VERB, path(root, w))", "High support Verb", AT.POS, AT.DEP_TREE);
-        desc(PositionModifier.HIGH_SN, "first(pos, NOUN, path(root, w))", "High support Noun", AT.POS, AT.DEP_TREE);
+        //desc(PositionModifier.LOW_SV, "first(pos, VERB, path(w, root))", "Low support Verb", AT.POS, AT.DEP_TREE);
+        //desc(PositionModifier.LOW_SN, "first(pos, NOUN, path(w, root))", "Low support Noun", AT.POS, AT.DEP_TREE);
+        //desc(PositionModifier.HIGH_SV, "first(pos, VERB, path(root, w))", "High support Verb", AT.POS, AT.DEP_TREE);
+        //desc(PositionModifier.HIGH_SN, "first(pos, NOUN, path(root, w))", "High support Noun", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.LOW_SV, "lowsv", "Low support Verb", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.LOW_SN, "lowsn", "Low support Noun", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.HIGH_SV, "highsv", "High support Verb", AT.POS, AT.DEP_TREE);
+        desc(PositionModifier.HIGH_SN, "highsn", "High support Noun", AT.POS, AT.DEP_TREE);
 
         /** Position List. Mapping from one or two positions to a position list. */
         desc(PositionList.LINE_P_C, "line(p,c)", "horizontal path between p and c", AT.WORD);
         desc(PositionList.CHILDREN_P, "children(p)", "Children of p", AT.DEP_TREE);
-        desc(PositionList.NO_FAR_CHILDREN_P, "noFarChildren(p)", "children without the leftmost or rightmost included", AT.DEP_TREE);
+        desc(PositionList.NO_FAR_CHILDREN_P, "noFarChildren(p)", "Children without the leftmost or rightmost included", AT.DEP_TREE);
+        desc(PositionList.CHILDREN_C, "children(c)", "Children of c", AT.DEP_TREE);
+        desc(PositionList.NO_FAR_CHILDREN_C, "noFarChildren(c)", "Children without the leftmost or rightmost included", AT.DEP_TREE);
         desc(PositionList.PATH_P_C, "path(p,c)", "from parent to child", AT.DEP_TREE);
         desc(PositionList.PATH_P_LCA, "path(p,lca(p,c))", "from parent to least-common-ancestor", AT.DEP_TREE);
         desc(PositionList.PATH_C_LCA, "path(c,lca(p,c))", "from child to least-common-ancestor", AT.DEP_TREE);

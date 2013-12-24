@@ -161,9 +161,9 @@ public class TemplateFeatureExtractor {
         String feat;
         Collection<String> vals;
         switch (pl) {
-        case CHILDREN_P: case NO_FAR_CHILDREN_P: case LINE_P_C:
+        case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C:
             if (eprop != null) {
-                throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths.");
+                throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths." + tpl);
             } else if (prop == null) {
                 throw new IllegalStateException("TokProperty must be non-null for position lists.");
             }
@@ -278,14 +278,20 @@ public class TemplateFeatureExtractor {
     }
 
     private ArrayList<Integer> getPositionList(PositionList pl, int pidx, int cidx) {        
-        FeaturizedToken ptok;
+        FeaturizedToken tok;
         switch (pl) {
         case CHILDREN_P: 
-            ptok = getFeatTok(pidx);
-            return ptok.getChildren();
+            tok = getFeatTok(pidx);
+            return tok.getChildren();
         case NO_FAR_CHILDREN_P: 
-            ptok = getFeatTok(pidx);
-            return ptok.getNoFarChildren();
+            tok = getFeatTok(pidx);
+            return tok.getNoFarChildren();
+        case CHILDREN_C: 
+            tok = getFeatTok(cidx);
+            return tok.getChildren();
+        case NO_FAR_CHILDREN_C: 
+            tok = getFeatTok(cidx);
+            return tok.getNoFarChildren();
         case LINE_P_C: 
             FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
             return pair.getLinePath();
@@ -442,6 +448,12 @@ public class TemplateFeatureExtractor {
             return tok.getDeprel();
         case MORPHO:
             return tok.getFeatStr();
+        case MORPHO1:
+            return tok.getFeat6().get(0);
+        case MORPHO2:
+            return tok.getFeat6().get(1);
+        case MORPHO3:
+            return tok.getFeat6().get(2);
         case UNK:
             log.warn("Assuming Spanish when creating UNK feature.");            
             return sig.getSignature(tok.getForm(), idx, "es");

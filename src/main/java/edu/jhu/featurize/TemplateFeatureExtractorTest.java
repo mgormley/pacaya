@@ -141,6 +141,9 @@ public class TemplateFeatureExtractorTest {
         assertEquals("barato", extr.getTokProp(TokProperty.LEMMA, 3));
         assertEquals("a", extr.getTokProp(TokProperty.POS, 3));
         assertEquals("postype=qualificative_gen=m_num=p", extr.getTokProp(TokProperty.MORPHO, 3));
+        assertEquals("postype=qualificative", extr.getTokProp(TokProperty.MORPHO1, 3));
+        assertEquals("gen=m", extr.getTokProp(TokProperty.MORPHO2, 3));
+        assertEquals("num=p", extr.getTokProp(TokProperty.MORPHO3, 3));
         assertEquals("11010", extr.getTokProp(TokProperty.BC0, 3));
         assertEquals("1101011", extr.getTokProp(TokProperty.BC1, 3));
         assertEquals("cpred", extr.getTokProp(TokProperty.DEPREL, 3));
@@ -160,6 +163,9 @@ public class TemplateFeatureExtractorTest {
         assertEquals("BEGIN_NO_LEMMA", extr.getTokProp(TokProperty.LEMMA, -1));
         assertEquals("BEGIN_NO_POS", extr.getTokProp(TokProperty.POS, -1));
         assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO, -1));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO1, -1));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO2, -1));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO3, -1));
         assertEquals("BEGIN", extr.getTokProp(TokProperty.BC0, -1));
         assertEquals("BEGIN_NO_CLUSTER", extr.getTokProp(TokProperty.BC1, -1));
         assertEquals("BEGIN_NO_DEPREL", extr.getTokProp(TokProperty.DEPREL, -1));
@@ -176,6 +182,9 @@ public class TemplateFeatureExtractorTest {
         assertEquals("END_NO_LEMMA", extr.getTokProp(TokProperty.LEMMA, n));
         assertEquals("END_NO_POS", extr.getTokProp(TokProperty.POS, n));
         assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO, n));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO1, -1));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO2, -1));
+        assertEquals("NO_MORPH", extr.getTokProp(TokProperty.MORPHO3, -1));
         assertEquals("END_N", extr.getTokProp(TokProperty.BC0, n));
         assertEquals("END_NO_CLUSTER", extr.getTokProp(TokProperty.BC1, n));
         assertEquals("END_NO_DEPREL", extr.getTokProp(TokProperty.DEPREL, n));
@@ -240,12 +249,18 @@ public class TemplateFeatureExtractorTest {
         // 3 children on the left
         testPositionListsHelper(5, -1, PositionList.CHILDREN_P, "lo_que__", false);
         testPositionListsHelper(5, -1, PositionList.NO_FAR_CHILDREN_P, "que__", false);
+        testPositionListsHelper(-1, 5, PositionList.CHILDREN_C, "lo_que__", false);
+        testPositionListsHelper(-1, 5, PositionList.NO_FAR_CHILDREN_C, "que__", false);
         // 1 left and 2 right
         testPositionListsHelper(1, -1, PositionList.CHILDREN_P, "Eso_hicieron_.", false);
         testPositionListsHelper(1, -1, PositionList.NO_FAR_CHILDREN_P, "hicieron", false);
+        testPositionListsHelper(-1, 1, PositionList.CHILDREN_C, "Eso_hicieron_.", false);
+        testPositionListsHelper(-1, 1, PositionList.NO_FAR_CHILDREN_C, "hicieron", false);
         // No children
         testPositionListsHelper(6, -1, PositionList.CHILDREN_P, "", false);
         testPositionListsHelper(6, -1, PositionList.NO_FAR_CHILDREN_P, "", false);
+        testPositionListsHelper(-1, 6, PositionList.CHILDREN_C, "", false);
+        testPositionListsHelper(-1, 6, PositionList.NO_FAR_CHILDREN_C, "", false);
     }
 
     private void testPositionListsHelper(int pidx, int cidx, PositionList pl, String expectedVal, boolean includeDir) {

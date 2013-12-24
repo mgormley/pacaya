@@ -59,6 +59,23 @@ public class TemplateSetsTest {
         assertEquals(35, numArg);
         assertEquals(6, numSense);
     }    
+    
+
+    @Test
+    public void testGetZhao() {
+        List<FeatTemplate> tpls;
+        
+        tpls = TemplateSets.getZhaoCaArgUnigramFeatureTemplates();
+        int numArg = tpls.size();
+        System.out.println("Number of arg templates: " + numArg);        
+        
+        tpls = TemplateSets.getZhaoEnSenseUnigramFeatureTemplates();
+        int numSense = tpls.size();
+        System.out.println("Number of sense templates: " + numSense);
+
+        assertEquals(66, numArg);
+        assertEquals(12, numSense);
+    }
 
     @Test
     public void testGetCoarseUnigramSet1() {

@@ -28,6 +28,9 @@ public class TemplateSets {
     private static final String naradowskyArgFeatsResource = "/edu/jhu/featurize/naradowsky-arg-feats.txt";
     private static final String naradowskySenseFeatsResource = "/edu/jhu/featurize/naradowsky-sense-feats.txt";
     
+    private static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
+    private static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
+    
     private TemplateSets() {
         // Private constructor.
     }
@@ -85,45 +88,39 @@ public class TemplateSets {
         }
         return bs;
     }
-    
-    public static List<FeatTemplate> getBjorkelundSenseUnigramFeatureTemplates() {
+
+    private static List<FeatTemplate> getFromResource(String resourceName) {
         TemplateReader reader = new TemplateReader();
         try {
-            reader.readFromResource(bjorkelundSenseFeatsResource);
+            reader.readFromResource(resourceName);
             return reader.getTemplates();
         } catch (IOException e) {
             throw new RuntimeException();
         }
+    }
+    
+    public static List<FeatTemplate> getBjorkelundSenseUnigramFeatureTemplates() {
+        return getFromResource(bjorkelundSenseFeatsResource);
     }
     
     public static List<FeatTemplate> getBjorkelundArgUnigramFeatureTemplates() {
-        TemplateReader reader = new TemplateReader();
-        try {
-            reader.readFromResource(bjorkelundArgFeatsResource);
-            return reader.getTemplates();
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
+        return getFromResource(bjorkelundArgFeatsResource);
     }
 
     public static List<FeatTemplate> getNaradowskySenseUnigramFeatureTemplates() {
-        TemplateReader reader = new TemplateReader();
-        try {
-            reader.readFromResource(naradowskySenseFeatsResource);
-            return reader.getTemplates();
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
+        return getFromResource(naradowskySenseFeatsResource);
     }
     
     public static List<FeatTemplate> getNaradowskyArgUnigramFeatureTemplates() {
-        TemplateReader reader = new TemplateReader();
-        try {
-            reader.readFromResource(naradowskyArgFeatsResource);
-            return reader.getTemplates();
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
+        return getFromResource(naradowskyArgFeatsResource);
+    }
+    
+    public static List<FeatTemplate> getZhaoEnSenseUnigramFeatureTemplates() {
+        return getFromResource(zhaoEnSenseFeatsResource);
+    }
+    
+    public static List<FeatTemplate> getZhaoCaArgUnigramFeatureTemplates() {
+        return getFromResource(zhaoCaArgFeatsResource);
     }
     
     public static List<FeatTemplate> getCoarseUnigramSet1() {

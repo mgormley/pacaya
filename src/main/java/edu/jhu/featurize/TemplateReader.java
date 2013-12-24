@@ -31,7 +31,7 @@ import edu.jhu.featurize.TemplateLanguage.TokProperty;
 public class TemplateReader {
 
     private static final Pattern STRUCTURE_SEP_REGEX = Pattern.compile(Pattern.quote(TemplateLanguage.STRUCTURE_SEP));
-    private static final Pattern TEMPLATE_SEP_REGEX = Pattern.compile(Pattern.quote(TemplateLanguage.TEMPLATE_SEP));
+    private static final Pattern TEMPLATE_SEP_REGEX = Pattern.compile("\\s*"+Pattern.quote(TemplateLanguage.TEMPLATE_SEP)+"\\s*");
 
     private static final Pattern comment = Pattern.compile("\\s*#.*");
         
@@ -89,6 +89,10 @@ public class TemplateReader {
             ListModifier lmod = safeGet(descs, ListModifier.class);
             EdgeProperty eprop = safeGet(descs, EdgeProperty.class);
             OtherFeat other = safeGet(descs, OtherFeat.class);
+            
+            if (pos != null && pl != null) {
+                throw new IllegalStateException("Both position and position list cannot be specified: " + line);
+            }
             
             FeatTemplate tpl;
             if (pos != null && prop != null) {
