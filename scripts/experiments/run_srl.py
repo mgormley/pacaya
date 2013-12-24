@@ -660,7 +660,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults.update(trainMaxSentenceLength=20,
                               trainMaxNumSentences=1000,
-                              testMaxNumSentences=500)
+                              testMaxNumSentences=500,
+                              threads=2,
+                              work_mem_megs=5*1024)
             feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, g.feat_narad, g.feat_zhao, g.feat_bjork]
             for feature_set in feature_sets:
                 # Spanish, observed/supervised dep parse and POS tags.
