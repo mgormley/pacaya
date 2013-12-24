@@ -32,18 +32,18 @@ def get_root_dir():
     return root_dir;
 
 def prep_project(name, mvn_command, check_local=True):
-    if check_local:
-        with lcd("~/research/%s" % (name)):
-            local("git push")
-            if "nothing to commit, working directory clean" not in local("git status", capture=True):
-                print "ERROR: prject requires git commit/git push: %s" % name
+    with lcd("~/research/%s" % (name)):
+        local("git push")
+        if "nothing to commit, working directory clean" not in local("git status", capture=True):
+            print "\nERROR: prject requires git commit/git push: %s\n" % name
+            if check_local:
                 sys.exit(1)
     with cd("~/working/%s" % (name)):
         if "Already up-to-date" not in run("git pull"):
             run("mvn %s -DskipTests" % (mvn_command))
 
 def run_srl(name, argv):
-    args = " ".join(argv)
+    args = " ".join(argv[1:])
     with cd("~/working/%s" % (name)):
         with prefix("source setupenv.sh"):
             run("run_srl.py %s" % (args))

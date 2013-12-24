@@ -289,7 +289,7 @@ class ParamDefinitions():
         feats = SrlExpParams(useSimpleFeats=False, useNaradFeats=False, 
                             useZhaoFeats=False, useBjorkelundFeats=False, 
                             useLexicalDepPathFeats=False)
-        feats.set('useTemplates', False, incl_name=False, incl_arg=True)
+        feats.set('useTemplates', True, incl_name=False, incl_arg=True)
         feats.set('senseFeatTpls', sense, incl_name=False, incl_arg=True)
         feats.set('argFeatTpls', arg, incl_name=False, incl_arg=True)
         feats.set('featureSelection', feature_selection, incl_name=False, incl_arg=True)

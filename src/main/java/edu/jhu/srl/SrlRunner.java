@@ -260,7 +260,7 @@ public class SrlRunner {
         } else {
             srlFePrm = getSrlFeatureExtractorPrm();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
-            if (featureSelection) {
+            if (useTemplates && featureSelection) {
                 String name = "train";
                 SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
                         trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
@@ -274,10 +274,11 @@ public class SrlRunner {
                 SrlFeatTemplates sft = ig.getFeatTemplatesForSrl(sents, csPrm);
                 ig.shutdown();
                 srlFePrm.fePrm.soloTemplates = sft.srlSenseTemplates;
-                srlFePrm.fePrm.pairTemplates = sft.srlArgTemplates;
-                
-                log.info("Num sense feature templates: " + sft.srlSenseTemplates.size());
-                log.info("Num arg feature templates: " + sft.srlArgTemplates.size());
+                srlFePrm.fePrm.pairTemplates = sft.srlArgTemplates;                
+            }
+            if (useTemplates) {
+                log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
+                log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
             }
             fts = new FactorTemplateList();
         }
