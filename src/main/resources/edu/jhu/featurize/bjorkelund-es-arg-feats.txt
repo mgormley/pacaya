@@ -1,3 +1,5 @@
+# Bjorklund Spanish features.
+#
 # Create original list: 
 # cat ../other_lib/mate-tools-read-only/srl/featuresets/spa/a*.feats  | awk '{print $1;}' | sort | uniq
 # 
@@ -25,9 +27,9 @@ c.lmc.word + path(p,c).dir.pos
 path(p,c).dir.pos
 path(p,c).dir.pos + c.rns.morpho
 relative(p,c)
-p.morpho + p.lemmaSense
+p.morpho # NOT SUPPORTED: + p.lemmaSense
 p.lemma
-p.lemmaSense
+# NOT SUPPORTED: p.lemmaSense
 c.rmc.morpho
 c.rmc.pos
 c.rns.word

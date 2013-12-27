@@ -595,10 +595,8 @@ public class SrlRunner {
             } catch (IOException e) {
                 try {
                     tr.readFromResource(path);
-                } catch (RuntimeException e2) {
-                    throw new IllegalStateException("Unable to find templates as file or resource: " + path);
                 } catch (IOException e1) {
-                    throw new IllegalStateException("Unable to read templates as file or resource: " + path);
+                    throw new IllegalStateException("Unable to read templates as file or resource: " + path, e1);
                 }
             }
         }

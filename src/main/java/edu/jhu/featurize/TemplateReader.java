@@ -49,7 +49,7 @@ public class TemplateReader {
     public void readFromResource(String resourceName) throws IOException {
         InputStream inputStream = this.getClass().getResourceAsStream(resourceName);
         if (inputStream == null) {
-            throw new RuntimeException("Unable to find resource: " + resourceName);
+            throw new IOException("Unable to find resource: " + resourceName);
         }
         read(inputStream);
     }

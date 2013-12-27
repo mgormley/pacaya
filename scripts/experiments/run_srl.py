@@ -254,6 +254,9 @@ class ParamDefinitions():
         g.feat_tpl_bjork         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
                                                                 "/edu/jhu/featurize/bjorkelund-arg-feats.txt",
                                                                 False, 'tpl_bjork')
+        g.feat_tpl_bjork_es      = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-es-sense-feats.txt",
+                                                                "/edu/jhu/featurize/bjorkelund-es-arg-feats.txt",
+                                                                False, 'tpl_bjork_es')
         g.feat_tpl_zhao          = self._get_named_template_set("/edu/jhu/featurize/zhao-en-sense-feats.txt",
                                                                 "/edu/jhu/featurize/zhao-ca-arg-feats.txt",
                                                                 False, 'tpl_zhao')
@@ -521,6 +524,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-opt",
                     "srl-benchmark",
                     "srl-feats",
+                    "srl-feat-settings",
                     "srl-eval",
                     )
     
@@ -661,6 +665,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         elif self.expname == "srl-feats":
             # Experiment to compare various feature sets.
+            # Test 1: for testing correctness of feature sets.
             exps = []
             g.defaults.update(trainMaxSentenceLength=20,
                               trainMaxNumSentences=1000,
@@ -674,6 +679,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exp = g.defaults + parser_srl + feature_set
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-feat-settings":
+            # Experiment to compare various feature sets.
+            # Test 2: for testing bjork_es feature set and effect of feature hashing / feature count cutoffs.
+            # Doubles a test of the quality of bjorkelund spanish feats.
+            exps = []
+            feature_sets = [g.feat_tpl_bjork_es]
+            for feature_set in feature_sets:
+                for featCountCutoff in [0, 1, 4]:
+                    for featureHashMod in [-1, 500000, 1000000, 10000000]:
+                        # Spanish, observed/supervised dep parse and POS tags.
+                        parser_srl = g.model_pg_obs_tree + g.pos_sup
+                        exp = g.defaults + parser_srl + feature_set + SrlExpParams(featCountCutoff=featCountCutoff, featureHashMod=featureHashMod)
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":
