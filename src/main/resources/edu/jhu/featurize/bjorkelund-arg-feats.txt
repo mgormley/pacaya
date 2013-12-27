@@ -1,6 +1,8 @@
 # Bjorkelund et al. (2009) unigram feature templates for argument identification and classification. 
 #
 
+# Sense << TODO: This requires a change to our model.
+
 # PredWord
 p.word
 # PredPOS
@@ -9,9 +11,6 @@ p.pos
 p.lemma
 # PredDeprel
 p.deprel
-
-# Sense << TODO: This requires a change to our model.
-
 # PredFeats
 p.morpho
 # PredParentWord

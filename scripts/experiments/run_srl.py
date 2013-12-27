@@ -277,7 +277,6 @@ class ParamDefinitions():
         feats.set('useNaradFeats', narad, incl_name=False, incl_arg=True)
         feats.set('useZhaoFeats', zhao, incl_name=False, incl_arg=True)
         feats.set('useLexicalDepPathFeats', dep, incl_name=False, incl_arg=True)
-        # CURRENTLY we do not use the features from (Bjorkelund et al., 2009). 
         feats.set('useBjorkelundFeats', bjork, incl_name=False, incl_arg=True)
         feats.set('useTemplates', False, incl_name=False, incl_arg=True)
         feats.set('featureSelection', False, incl_name=False, incl_arg=True)
@@ -286,9 +285,14 @@ class ParamDefinitions():
         return feats
     
     def _get_named_template_set(self, sense, arg, feature_selection, feature_set_name):
-        feats = SrlExpParams(useSimpleFeats=False, useNaradFeats=False, 
-                            useZhaoFeats=False, useBjorkelundFeats=False, 
-                            useLexicalDepPathFeats=False)
+        feats = SrlExpParams()
+        # Disable all the named feature sets.
+        feats.set('useSimpleFeats', False, incl_name=False, incl_arg=True)
+        feats.set('useNaradFeats', False, incl_name=False, incl_arg=True)
+        feats.set('useZhaoFeats', False, incl_name=False, incl_arg=True)
+        feats.set('useLexicalDepPathFeats', False, incl_name=False, incl_arg=True)
+        feats.set('useBjorkelundFeats', False, incl_name=False, incl_arg=True)
+        # Enable templates.
         feats.set('useTemplates', True, incl_name=False, incl_arg=True)
         feats.set('senseFeatTpls', sense, incl_name=False, incl_arg=True)
         feats.set('argFeatTpls', arg, incl_name=False, incl_arg=True)
