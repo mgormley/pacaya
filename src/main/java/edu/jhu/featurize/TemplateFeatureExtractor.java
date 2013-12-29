@@ -321,12 +321,6 @@ public class TemplateFeatureExtractor {
         if (mod != PositionModifier.IDENTITY && mod != PositionModifier.AFTER1 && mod != PositionModifier.BEFORE1) {
             tok = getFeatTok(idx);
         }
-        switch(mod) {        
-        case LOW_SV: case LOW_SN: case HIGH_SV: case HIGH_SN: 
-            log.warn("Assuming Spanish when creating high/low support feature.");
-            break;
-        default: break;
-        }
         
         switch (mod) {
             // --------------------- Word ---------------------  
