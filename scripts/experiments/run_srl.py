@@ -525,6 +525,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-benchmark",
                     "srl-feats",
                     "srl-feat-settings",
+                    "srl-feat-reg",
                     "srl-eval",
                     )
     
@@ -672,7 +673,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               testMaxNumSentences=500,
                               threads=2,
                               work_mem_megs=5*1024)
-            feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, g.feat_narad, g.feat_zhao, g.feat_bjork]
+            feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
+                            g.feat_narad, g.feat_zhao, g.feat_bjork, 
+                            g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             for feature_set in feature_sets:
                 # Spanish, observed/supervised dep parse and POS tags.
                 parser_srl = g.model_pg_obs_tree + g.pos_sup
@@ -695,6 +698,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp = g.defaults + parser_srl + feature_set + SrlExpParams(featCountCutoff=featCountCutoff, featureHashMod=featureHashMod)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-feat-reg":
+            # Test 3: for comparing regularization weights across feature sets.
+            exps = []
+            g.defaults.update(trainMaxNumSentences=1000,
+                              testMaxNumSentences=500,
+                              threads=1,
+                              work_mem_megs=5*1024)
+            feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork,
+                            g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
+            for feature_set in feature_sets:
+                for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
+                    # Spanish, observed/supervised dep parse and POS tags.
+                    parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance)
+                    exp = g.defaults + parser_srl + feature_set
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":

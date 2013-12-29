@@ -20,6 +20,7 @@ rsync -av $* $REMOTE_EXP/ $LOCAL_COPY \
     --include="/*/" \
     --include="scrape*/" \
     --include="*.csv" \
+    --include="README" \
     --include="results.csv" \
     --include="results.tsv" \
     --include="results.data" \
