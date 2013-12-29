@@ -263,7 +263,7 @@ class ParamDefinitions():
         g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/featurize/naradowsky-sense-feats.txt",
                                                                 "/edu/jhu/featurize/naradowsky-arg-feats.txt",
                                                                 False, 'tpl_narad')
-        g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True)
+        g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig')
         
         g.feat_all = g.feat_tpl_bjork_ig
     
