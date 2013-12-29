@@ -206,7 +206,7 @@ class ParamDefinitions():
             alwaysIncludeLinkVars=True,
             unaryFactors=True,
             linkVarType="OBSERVED",
-            featCountCutoff=4,
+            featCountCutoff=-1,
             predictSense=True,
             normalizeRoleNames=False,
             l2variance="500.0",
@@ -691,7 +691,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             feature_sets = [g.feat_tpl_bjork_es]
             for feature_set in feature_sets:
-                for featCountCutoff in [0, 1, 4]:
+                for featCountCutoff in [0, 2, 4]:
                     for featureHashMod in [-1, 500000, 1000000, 10000000]:
                         # Spanish, observed/supervised dep parse and POS tags.
                         parser_srl = g.model_pg_obs_tree + g.pos_sup

@@ -91,7 +91,7 @@ public class FgExampleListBuilder {
     }
 
     public FgExampleList getInstance(FactorTemplateList fts, FgExampleFactory factory) {
-        boolean doingFeatCutoff = (fts.isGrowing() && prm.featCountCutoff > 0);
+        boolean doingFeatCutoff = (fts.isGrowing() && prm.featCountCutoff > 1);
 
         if (doingFeatCutoff) {
             log.info("Applying feature count cutoff: " + prm.featCountCutoff);
