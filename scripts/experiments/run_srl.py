@@ -680,7 +680,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 # Spanish, observed/supervised dep parse and POS tags.
                 parser_srl = g.model_pg_obs_tree + g.pos_sup
                 exp = g.defaults + parser_srl + feature_set
-                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
@@ -705,7 +705,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults.update(trainMaxNumSentences=1000,
                               testMaxNumSentences=500,
-                              threads=1,
+                              threads=3,
                               work_mem_megs=5*1024)
             feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork,
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
@@ -714,7 +714,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     # Spanish, observed/supervised dep parse and POS tags.
                     parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance)
                     exp = g.defaults + parser_srl + feature_set
-                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
