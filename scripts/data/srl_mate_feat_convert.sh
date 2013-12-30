@@ -24,3 +24,6 @@ createFeats() {
 
 createFeats "spa" "a"
 createFeats "spa" "pd"
+
+createFeats "eng" "a"
+createFeats "eng" "pd"

@@ -680,11 +680,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             g.defaults.set_incl_name('featureSelection', True)
             for feature_set in feature_sets:
-                    # Spanish, observed/supervised dep parse and POS tags.                    
-                    parser_srl = g.model_pg_obs_tree + g.pos_sup
-                    exp = g.defaults + parser_srl + feature_set
-                    #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    exps.append(exp)
+                # Spanish, observed/supervised dep parse and POS tags.                    
+                parser_srl = g.model_pg_obs_tree + g.pos_sup
+                exp = g.defaults + parser_srl + feature_set
+                #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feat-settings":
@@ -708,19 +708,40 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Findings:
             # - Best l2variance for 1000 sentences is 250.
             exps = []
-            g.defaults.update(trainMaxNumSentences=1000,
-                              testMaxNumSentences=500,
-                              threads=6,
-                              work_mem_megs=5*1024)
+            g.defaults.update(testMaxNumSentences=500)
             feature_sets = [g.feat_tpl_zhao, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
-            for trainMaxNumSentences in [500, 1000, 2000, 4000]:
+            for trainMaxNumSentences in [15000]:#[500, 1000, 2000, 4000, 15000]:
                 for feature_set in feature_sets:
                     for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
                         # Spanish, observed/supervised dep parse and POS tags.
                         parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
                         exp = g.defaults + parser_srl + feature_set
+                        if exp.get("trainMaxNumSentences") == 15000:
+                            exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
+                        else:
+                            exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
                         #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-feat-ig":
+            # TODO: Finish this exp.
+            exps = []
+            g.defaults.update(trainMaxNumSentences=1000,
+                              testMaxNumSentences=500,
+                              threads=6,
+                              work_mem_megs=5*1024)
+            feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
+                            g.feat_narad, g.feat_zhao, g.feat_bjork, 
+                            g.feat_tpl_bjork_es]
+            g.set_incl_name('featureSelection', True)
+            for feature_set in feature_sets:
+                for featureSelection in [False, True]:
+                    # Spanish, observed/supervised dep parse and POS tags.                    
+                    parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(featureSelection=featureSelection)
+                    exp = g.defaults + parser_srl + feature_set
+                    #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":
