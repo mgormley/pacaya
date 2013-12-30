@@ -20,6 +20,8 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateLanguage;
+import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateReader;
 import edu.jhu.featurize.TemplateSets;
@@ -66,6 +68,7 @@ import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -357,6 +360,12 @@ public class SrlRunner {
             cs.init(sents);
         }
 
+        if (useTemplates) {
+            SimpleAnnoSentence sent = sents.get(0);
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, srlFePrm.fePrm.soloTemplates);
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, srlFePrm.fePrm.pairTemplates);
+        }
+        
         log.info("Building factor graphs and extracting features.");
         SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
         SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
@@ -588,19 +597,32 @@ public class SrlRunner {
      * @return The feature templates from all the paths.
      */
     private static List<FeatTemplate> getFeatTpls(String featTpls) {
+        List<FeatTemplate> tpls = new ArrayList<FeatTemplate>();
+
         TemplateReader tr = new TemplateReader();
         for (String path : featTpls.split(":")) {
-            try {
-                tr.readFromFile(path);
-            } catch (IOException e) {
+            if (path.equals("coarse")) {
+                List<FeatTemplate> coarseUnigramSet1 = TemplateSets.getCoarseUnigramSet1();
+                if (brownClusters == null) {
+                    // Filter out the Brown cluster features.
+                    log.warn("Filtering out Brown cluster features from coarse set.");
+                    coarseUnigramSet1 = TemplateLanguage.filterOutRequiring(tpls, AT.BROWN);
+                }
+                tpls.addAll(coarseUnigramSet1);
+            } else {
                 try {
-                    tr.readFromResource(path);
-                } catch (IOException e1) {
-                    throw new IllegalStateException("Unable to read templates as file or resource: " + path, e1);
+                    tr.readFromFile(path);
+                } catch (IOException e) {
+                    try {
+                        tr.readFromResource(path);
+                    } catch (IOException e1) {
+                        throw new IllegalStateException("Unable to read templates as file or resource: " + path, e1);
+                    }
                 }
             }
         }
-        List<FeatTemplate> tpls = tr.getTemplates();
+        tpls.addAll(tr.getTemplates());
+        
         return tpls;
     }
 

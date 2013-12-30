@@ -262,8 +262,11 @@ class ParamDefinitions():
                                                                 False, 'tpl_zhao')
         g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/featurize/naradowsky-sense-feats.txt",
                                                                 "/edu/jhu/featurize/naradowsky-arg-feats.txt",
-                                                                False, 'tpl_narad')
+                                                                False, 'tpl_narad')        
         g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig')
+
+        # The coarse set uses the bjorkelund sense features.
+        g.feat_tpl_coarse        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse", False, 'tpl_coarse')
         
         g.feat_all = g.feat_tpl_bjork_ig
     
@@ -668,20 +671,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Experiment to compare various feature sets.
             # Test 1: for testing correctness of feature sets.
             exps = []
-            g.defaults.update(trainMaxSentenceLength=20,
-                              trainMaxNumSentences=1000,
+            g.defaults.update(trainMaxNumSentences=1000,
                               testMaxNumSentences=500,
-                              threads=2,
+                              threads=6,
                               work_mem_megs=5*1024)
-            feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
+            feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
                             g.feat_narad, g.feat_zhao, g.feat_bjork, 
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
+            g.defaults.set_incl_name('featureSelection', True)
             for feature_set in feature_sets:
-                # Spanish, observed/supervised dep parse and POS tags.
-                parser_srl = g.model_pg_obs_tree + g.pos_sup
-                exp = g.defaults + parser_srl + feature_set
-                #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                exps.append(exp)
+                    # Spanish, observed/supervised dep parse and POS tags.                    
+                    parser_srl = g.model_pg_obs_tree + g.pos_sup
+                    exp = g.defaults + parser_srl + feature_set
+                    #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feat-settings":

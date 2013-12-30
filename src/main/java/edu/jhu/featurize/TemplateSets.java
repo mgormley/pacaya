@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -51,15 +52,9 @@ public class TemplateSets {
             for (ListModifier lmod : ListModifier.values()) {
                 for (EdgeProperty eprop : Lists.cons(null, EdgeProperty.values())) {                    
                     for (TokProperty prop : Lists.cons(null, TokProperty.values())) {
-                        // This check is rather messy. It'd be better if we just had separate
-                        // structured templates for extracting TokProperties and EdgeProperties
-                        // and they were always combined by conjunction (+). 
-                        if (prop == null && eprop == null) {
-                            continue;
-                        } else if (!pl.isPath() && (prop == null || eprop != null)) {
-                            continue;
+                        if (isValidFeatTemplate3(pl, prop, eprop, lmod)) {
+                            tpls.add(new FeatTemplate3(pl, prop, eprop, lmod));
                         }
-                        tpls.add(new FeatTemplate3(pl, prop, eprop, lmod));
                     }
                 }
             }
@@ -70,6 +65,18 @@ public class TemplateSets {
         return tpls;
     }
     
+    private static boolean isValidFeatTemplate3(PositionList pl, TokProperty prop, EdgeProperty eprop, ListModifier lmod) {
+        // This check is rather messy. It'd be better if we just had separate
+        // structured templates for extracting TokProperties and EdgeProperties
+        // and they were always combined by conjunction (+). 
+        if (prop == null && eprop == null) {
+            return false;
+        } else if (!pl.isPath() && (prop == null || eprop != null)) {
+            return false;
+        }
+        return true;
+    }
+
     public static List<FeatTemplate> getAllBigramFeatureTemplates() {
         List<FeatTemplate> unigrams = getAllUnigramFeatureTemplates();
         return getBigramFeatureTemplates(unigrams);
@@ -124,9 +131,6 @@ public class TemplateSets {
     }
     
     public static List<FeatTemplate> getCoarseUnigramSet1() {
-
-        //coarse_props = "pos bc0 bc1".split()
-        //list_props = "deprel pos bc0".split() #TODO support dir        
         TokProperty[] coarseTokProps = new TokProperty[] { TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0 };
         PositionList[] simplePosLists = new PositionList[] { PositionList.LINE_P_C, PositionList.CHILDREN_P, PositionList.PATH_P_C };
 
@@ -151,13 +155,16 @@ public class TemplateSets {
         for (PositionList pl : simplePosLists) {
             for (EdgeProperty eprop : Lists.getList(null, EdgeProperty.DIR)) {
                 for (TokProperty prop : coarseTokProps) {
-                    tpls.add(new FeatTemplate3(pl, prop, eprop, lmod));
+                    if (isValidFeatTemplate3(pl, prop, eprop, lmod)) {
+                        tpls.add(new FeatTemplate3(pl, prop, eprop, lmod));
+                    }
                 }
             }
         }
         for (OtherFeat feat : OtherFeat.values()) {
             tpls.add(new FeatTemplate4(feat));
         }
+                
         return tpls;
     }
         
