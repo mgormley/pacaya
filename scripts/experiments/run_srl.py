@@ -709,13 +709,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               testMaxNumSentences=500,
                               threads=6,
                               work_mem_megs=5*1024)
-            #feature_sets = [g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             feature_sets = [g.feat_tpl_zhao, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             for trainMaxNumSentences in [500, 1000, 2000, 4000]:
                 for feature_set in feature_sets:
                     for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
                         # Spanish, observed/supervised dep parse and POS tags.
-                        parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance)
+                        parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
                         exp = g.defaults + parser_srl + feature_set
                         #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
