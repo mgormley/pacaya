@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 
 import cern.colt.Arrays;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.train.Prm;
 import edu.jhu.util.collections.Lists;
 import edu.stanford.nlp.util.StringUtils;
@@ -109,6 +111,22 @@ public class TemplateLanguage {
     public static Description getDescByName(String name) {
         name = Description.normalizeName(name);
         return nameDescMap.get(name);
+    }
+    
+    public static String getNameFromDesc(FeatTemplate tpl) {
+        List<Enum<?>> struc = tpl.getStructure();
+        List<String> name = new ArrayList<String>();
+        for (Enum<?> e : struc) {
+            if (e == null || e == PositionModifier.IDENTITY) {
+                continue;
+            }
+            Description d = enumDescMap.get(e);
+            if (d == null) {
+                throw new IllegalStateException("Enum not found in map: " + e);
+            }
+            name.add(d.name);
+        }
+        return StringUtils.join(name, ".");
     }
     
     private static ArrayList<Description> desc = new ArrayList<Description>();
@@ -264,12 +282,9 @@ public class TemplateLanguage {
 
     public static abstract class FeatTemplate implements Serializable {
         private static final long serialVersionUID = 1L;
-        private String name;
-        public FeatTemplate(String name) {
-            this.name = name;
-        }
+        public FeatTemplate() { }
         public String getName() {
-            return name;
+            return getNameFromDesc(this);
         }
         public abstract List<Enum<?>> getStructure();
         public String toString() {
@@ -295,7 +310,6 @@ public class TemplateLanguage {
          * @param prop Property to extract from the modified position.
          */
         public FeatTemplate1(Position pos, PositionModifier mod, TokProperty prop) {
-            super(StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, STRUCTURE_SEP));
             this.pos = pos;
             this.mod = mod;
             this.prop = prop;
@@ -322,7 +336,6 @@ public class TemplateLanguage {
          * @param prop Property to extract from the modified position.
          */
         public FeatTemplate2(Position pos, PositionModifier mod, TokPropList prop) {
-            super(StringUtils.join(new String[]{pos.name(), mod.name(), prop.name()}, STRUCTURE_SEP));
             this.pos = pos;
             this.mod = mod;
             this.prop = prop;
@@ -352,14 +365,13 @@ public class TemplateLanguage {
          * @param lmod List modifier.
          */
         public FeatTemplate3(PositionList pl, TokProperty prop, EdgeProperty eprop, ListModifier lmod) {
-            super(StringUtils.join(new String[]{pl.name(), safeName(prop), safeName(eprop), lmod.name()}, STRUCTURE_SEP));
             this.pl = pl;
             this.prop = prop;
             this.eprop = eprop;
             this.lmod = lmod;
         }
         public List<Enum<?>> getStructure() {
-            return Lists.getList(pl, prop, eprop, prop);
+            return Lists.getList(pl, prop, eprop, lmod);
         }
         private static String safeName(Enum<?> e) {
             return e == null ? "" : e.name(); 
@@ -379,7 +391,6 @@ public class TemplateLanguage {
          * @param feat The special feature.
          */
         public FeatTemplate4(OtherFeat feat) {
-            super(feat.name());
             this.feat = feat;
         }
         public List<Enum<?>> getStructure() {
@@ -400,7 +411,6 @@ public class TemplateLanguage {
         public FeatTemplate tpl1;
         public FeatTemplate tpl2;
         public BigramTemplate(FeatTemplate tpl1, FeatTemplate tpl2) {
-            super(StringUtils.join(new String[]{tpl1.getName(), tpl2.getName()}, TEMPLATE_SEP));
             this.tpl1 = tpl1;
             this.tpl2 = tpl2;
         }
@@ -409,9 +419,16 @@ public class TemplateLanguage {
             s.addAll(tpl2.getStructure());
             return s;
         }
+        public String getName() {
+            return StringUtils.join(new String[]{tpl1.getName(), tpl2.getName()}, " " + TEMPLATE_SEP + " ");
+        }
     }
     
     /* -------------------- Utilities for Checking Feature Template Sets ---------------- */
+    
+    public static boolean hasRequiredAnnotationTypes(SimpleAnnoSentence sent, List<FeatTemplate> tpls) {
+        return hasRequiredAnnotationTypes(sent, getRequiredAnnotationTypes(tpls));
+    }
     
     public static boolean hasRequiredAnnotationTypes(SimpleAnnoSentence sent, Set<AT> types) {
         for (AT type : types) {
@@ -443,6 +460,23 @@ public class TemplateLanguage {
         }
     }
 
+
+    public static void assertRequiredAnnotationTypes(SimpleAnnoSentence sent, List<FeatTemplate> tpls) {
+        assertRequiredAnnotationTypes(sent, getRequiredAnnotationTypes(tpls));
+    }
+    
+    public static void assertRequiredAnnotationTypes(SimpleAnnoSentence sent, Set<AT> types) {
+        for (AT type : types) {
+            assertRequiredAnnotationType(sent, type);
+        }
+    }
+    
+    public static void assertRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
+        if (!hasRequiredAnnotationType(sent, type)) {
+            throw new IllegalStateException("Missing required annotation type: " + type);
+        }        
+    }
+    
     public static Set<AT> getRequiredAnnotationTypes(List<FeatTemplate> tpls) {
         HashSet<AT> types = new HashSet<AT>();
         for (FeatTemplate tpl : tpls) {
@@ -461,5 +495,15 @@ public class TemplateLanguage {
         for (Description d : desc) {
             System.out.println(d);
         }
+    }
+
+    public static List<FeatTemplate> filterOutRequiring(List<FeatTemplate> tpls, AT type) {
+        ArrayList<FeatTemplate> tpls2 = new ArrayList<FeatTemplate>();
+        for (FeatTemplate tpl : tpls) {
+            if (!TemplateLanguage.getRequiredAnnotationTypes(Lists.getList(tpl)).contains(type)) {
+                tpls2.add(tpl);
+            }
+        }
+        return tpls2;
     }
 }
