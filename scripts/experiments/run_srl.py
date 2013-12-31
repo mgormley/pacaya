@@ -203,6 +203,8 @@ class ParamDefinitions():
             trainGoldOut="./train-gold.txt",
             testGoldOut="./test-gold.txt",
             modelOut="./model.binary.gz",
+            senseFeatTplsOut="./sense-feat-tpls.txt",
+            argFeatTplsOut="./arg-feat-tpls.txt",
             alwaysIncludeLinkVars=True,
             unaryFactors=True,
             linkVarType="OBSERVED",
@@ -738,7 +740,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(trainMaxNumSentences=1000,
                               testMaxNumSentences=500,
                               threads=6,
-                              work_mem_megs=5*1024)
+                              work_mem_megs=5*1024,
+                              featureHashMod=1000000)
             feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
                             g.feat_tpl_bjork_es,
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
@@ -779,7 +782,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                    "trainMaxNumSentences", 
                                    "test", "testType", "testMaxSentenceLength",
                                    "testMaxNumSentences", 
-                                   "modelIn", "modelOut", "printModel", "seed", 
+                                   "modelIn", "modelOut", "printModel", "seed",
+                                   "senseFeatTplsOut", "argFeatTplsOut", 
                                    ]
                 for key in keys_to_remove: 
                     new_params.remove(key)

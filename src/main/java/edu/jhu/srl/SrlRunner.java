@@ -9,7 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -27,6 +27,7 @@ import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateReader;
 import edu.jhu.featurize.TemplateSets;
+import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
@@ -190,6 +191,10 @@ public class SrlRunner {
     public static String senseFeatTpls = TemplateSets.bjorkelundSenseFeatsResource;
     @Opt(hasArg = true, description = "Arg feature templates.")
     public static String argFeatTpls = TemplateSets.bjorkelundArgFeatsResource;
+    @Opt(hasArg = true, description = "Sense feature template output file.")
+    public static File senseFeatTplsOut = null;
+    @Opt(hasArg = true, description = "Arg feature template output file.")
+    public static File argFeatTplsOut = null;
 
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -283,6 +288,12 @@ public class SrlRunner {
             if (useTemplates) {
                 log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
                 log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
+                if (senseFeatTplsOut != null) {
+                    TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
+                }
+                if (argFeatTplsOut != null) {
+                    TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
+                }
             }
             fts = new FactorTemplateList();
         }
@@ -598,7 +609,7 @@ public class SrlRunner {
      * @return The feature templates from all the paths.
      */
     private static List<FeatTemplate> getFeatTpls(String featTpls) {
-        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();
+        Collection<FeatTemplate> tpls = new LinkedHashSet<FeatTemplate>();
 
         TemplateReader tr = new TemplateReader();
         for (String path : featTpls.split(":")) {
