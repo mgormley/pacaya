@@ -164,7 +164,10 @@ public class TemplateSets {
         for (OtherFeat feat : OtherFeat.values()) {
             tpls.add(new FeatTemplate4(feat));
         }
-                
+        
+        // TODO: UNK is currently only supported for English and Spanish, so we filter those feature out.
+        tpls = TemplateLanguage.filterOutFeats(tpls, TokProperty.UNK);
+        
         return tpls;
     }
         

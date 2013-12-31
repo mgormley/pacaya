@@ -506,6 +506,7 @@ public class TemplateLanguage {
         }
     }
 
+    /** Filters out feature templates requiring the given annotation type. */
     public static List<FeatTemplate> filterOutRequiring(List<FeatTemplate> tpls, AT type) {
         ArrayList<FeatTemplate> tpls2 = new ArrayList<FeatTemplate>();
         for (FeatTemplate tpl : tpls) {
@@ -515,4 +516,22 @@ public class TemplateLanguage {
         }
         return tpls2;
     }
+
+    /** Filters out feature templates which contain the specified enum. */
+    public static ArrayList<FeatTemplate> filterOutFeats(ArrayList<FeatTemplate> tpls, Enum<?> enumMatch) {
+        ArrayList<FeatTemplate> tplsNew = new ArrayList<FeatTemplate>();
+        for (FeatTemplate tpl : tpls) {
+            boolean keep = true;
+            for (Enum<?> e : tpl.getStructure()) {
+                if (e == enumMatch) {
+                    keep = false;
+                }
+            }
+            if (keep) {
+                tplsNew.add(tpl);
+            }
+        }
+        return tplsNew;
+    }
+    
 }
