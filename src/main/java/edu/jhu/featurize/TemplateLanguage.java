@@ -290,6 +290,15 @@ public class TemplateLanguage {
         public String toString() {
             return getName();
         }
+        public int hashCode() {
+            return getStructure().hashCode();
+        }
+        public boolean equals(Object o) {
+            if (o instanceof FeatTemplate) {
+                return this.getStructure().equals(((FeatTemplate)o).getStructure());
+            }
+            return false;
+        }
     }
     
     /**

@@ -8,6 +8,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -68,7 +70,6 @@ import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -597,7 +598,7 @@ public class SrlRunner {
      * @return The feature templates from all the paths.
      */
     private static List<FeatTemplate> getFeatTpls(String featTpls) {
-        List<FeatTemplate> tpls = new ArrayList<FeatTemplate>();
+        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();
 
         TemplateReader tr = new TemplateReader();
         for (String path : featTpls.split(":")) {
@@ -606,7 +607,7 @@ public class SrlRunner {
                 if (brownClusters == null) {
                     // Filter out the Brown cluster features.
                     log.warn("Filtering out Brown cluster features from coarse set.");
-                    coarseUnigramSet1 = TemplateLanguage.filterOutRequiring(tpls, AT.BROWN);
+                    coarseUnigramSet1 = TemplateLanguage.filterOutRequiring(coarseUnigramSet1, AT.BROWN);
                 }
                 tpls.addAll(coarseUnigramSet1);
             } else {
@@ -623,7 +624,7 @@ public class SrlRunner {
         }
         tpls.addAll(tr.getTemplates());
         
-        return tpls;
+        return new ArrayList<FeatTemplate>(tpls);
     }
 
     private static CorpusStatisticsPrm getCorpusStatisticsPrm() {

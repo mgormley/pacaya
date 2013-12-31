@@ -276,6 +276,12 @@ class ParamDefinitions():
                            g.feat_narad_zhao_dep, g.feat_narad_zhao, g.feat_narad_dep, g.feat_narad, g.feat_zhao_dep, 
                            g.feat_zhao, g.feat_dep, g.feat_bjork ]
         
+    def combine_feat_tpls(self, tpls1, tpls2):
+        senseFeatTpls = tpls1.get("senseFeatTpls") + ":" + tpls2.get("senseFeatTpls")
+        argFeatTpls = tpls1.get("argFeatTpls") + ":" + tpls2.get("argFeatTpls")
+        feature_set = tpls1.get("feature_set") + "_" + tpls2.get("feature_set")
+        return tpls1 + tpls2 + SrlExpParams(senseFeatTpls=senseFeatTpls, argFeatTpls=argFeatTpls, feature_set=feature_set)
+        
     def _get_named_feature_set(self, simple, narad, zhao, dep, bjork, feature_set_name):
         feats = SrlExpParams()
         # Add each feature set, excluding these arguments from the experiment name.
@@ -529,6 +535,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-feats",
                     "srl-feat-settings",
                     "srl-feat-reg",
+                    "srl-feat-ig",
                     "srl-eval",
                     )
     
@@ -710,7 +717,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults.update(testMaxNumSentences=500)
             feature_sets = [g.feat_tpl_zhao, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
-            for trainMaxNumSentences in [15000]:#[500, 1000, 2000, 4000, 15000]:
+            for trainMaxNumSentences in [500, 1000, 2000, 4000, 15000]:
                 for feature_set in feature_sets:
                     for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
                         # Spanish, observed/supervised dep parse and POS tags.
@@ -718,6 +725,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp = g.defaults + parser_srl + feature_set
                         if exp.get("trainMaxNumSentences") == 15000:
                             exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
+                            exp.remove("testMaxNumSentences")
                         else:
                             exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
                         #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -732,14 +740,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               threads=6,
                               work_mem_megs=5*1024)
             feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
-                            g.feat_narad, g.feat_zhao, g.feat_bjork, 
-                            g.feat_tpl_bjork_es]
-            g.set_incl_name('featureSelection', True)
+                            g.feat_tpl_bjork_es,
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es)]
             for feature_set in feature_sets:
                 for featureSelection in [False, True]:
-                    # Spanish, observed/supervised dep parse and POS tags.                    
-                    parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(featureSelection=featureSelection)
-                    exp = g.defaults + parser_srl + feature_set
+                    # Spanish, observed/supervised dep parse and POS tags.
+                    parser_srl = g.model_pg_obs_tree + g.pos_sup 
+                    exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
+                    exp.set_incl_name('featureSelection', True)
                     #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
