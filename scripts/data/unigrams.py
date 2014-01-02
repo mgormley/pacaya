@@ -35,7 +35,7 @@ def read_word_counts(in_text):
             read_size = text_in.tell()
         #print read_size
         line = line.strip()
-        for word in line.split("\s+"):
+        for word in line.split():
             if len(word) > 0:
                 count = word_count_map.get(word, 0)
                 word_count_map[word] = count + 1
