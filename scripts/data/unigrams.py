@@ -76,8 +76,8 @@ def print_freq_hist(count_map, max_count=5):
     cum = 0
     for count in sorted(freq_hist.keys()):
         freq = freq_hist[count]
-        cum += freq
         cum_freq_hist[count] = total_count - cum 
+        cum += freq
         
     print "Map from count of occurences to cumulative number of types appearing that many times."
     for count,freq in cum_freq_hist.items():
@@ -103,7 +103,8 @@ def unigrams(options):
         for count in sorted(cum_freq_hist.keys()):
             if cum_freq_hist[count] >= term_limit:
                 min_occur = count
-        print "Chose min_occur=%d to retain %d types" % (min_occur, cum_freq_hist[min_occur])
+        if min_occur > 0:
+            print "Chose min_occur=%d to retain %d types" % (min_occur, cum_freq_hist[min_occur])
         
     print "Converting map to list"
     hist = [(freq,term) for term,freq in count_map.items() if freq >= min_occur]
