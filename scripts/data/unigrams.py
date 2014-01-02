@@ -43,7 +43,8 @@ def read_word_counts(in_text):
         if elapsed > 1:
             percent_read = 1.0 * read_size / total_size
             remain = (time.clock() - start0) * 1.0 / percent_read * (1 - percent_read) / 60.0
-            print "Percent read: %f Estimated remaining (min): %f\n" % (percent_read, remain),
+            print "Percent read: %f Estimated remaining (min): %f" % (percent_read, remain)
+            sys.stdout.flush()
             start = time.clock()
     print ""
 
