@@ -1,22 +1,20 @@
 # Syncs the remote results with a local copy of them.
 #
 
-
+RSYNC=(rsync -av -e "ssh external.hltcoe.jhu.edu ssh")
 LOCAL_COPY=./remote_exp
-SERVER=external.hltcoe.jhu.edu
+SERVER=test4
 REMOTE_EXP=$SERVER:/export/common/SCALE13/Text/u/mgormley/active/working--parsing--exp
+#SERVER=external.hltcoe.jhu.edu
 #REMOTE_EXP=~/working/parsing/exp/
 
-SUB_DIR=srl-all-sup-lat_003
-#LOCAL_COPY=$LOCAL_COPY/$SUB_DIR
-#REMOTE_EXP=$REMOTE_EXP/$SUB_DIR
-
+echo "RSYNC=$RSYNC"
 echo "LOCAL_COPY=$LOCAL_COPY"
 echo "REMOTE_EXP=$REMOTE_EXP"
 echo ""
 
 echo "Syncing results..."
-rsync -av $* $REMOTE_EXP/ $LOCAL_COPY \
+"${RSYNC[@]}" $REMOTE_EXP/ $LOCAL_COPY \
     --include="/*/" \
     --include="scrape*/" \
     --include="*.csv" \
@@ -28,9 +26,24 @@ rsync -av $* $REMOTE_EXP/ $LOCAL_COPY \
 echo ""
 
 echo "Syncing grammar induction output..."
-rsync -av $* $REMOTE_EXP/vem-conll_005/ $LOCAL_COPY/vem-conll_005 \
+"${RSYNC[@]}" $REMOTE_EXP/vem-conll_005/ $LOCAL_COPY/vem-conll_005 \
     --include="/*/" \
     --include="*parses.txt" \
     --exclude="*" 
+
+echo "Syncing Brown cluster output..."
+"${RSYNC[@]}" $SERVER:/home/hltcoe/mgormley/working/word_embeddings/bc_out_256/ ./data/bc_out_256 \
+    --include="/*/" \
+    --include="paths.cutoff" \
+    --exclude="*"
+
 echo "Adding symbolic link to vem-conll_005"
 ln -s `pwd`/remote_exp/vem-conll_005/ ./exp/vem-conll_005
+
+
+# ------------------------ Trash ----------------------------------------
+# Normally would include -f to force to background, but instead using eval.
+#eval "ssh -N -L localhost:8910:test4:22 -2 external.hltcoe.jhu.edu &"
+#TUNNELPID=$!
+#echo "Killing ssh tunnel with pid $TUNNELPID"
+#kill $TUNNELPID
