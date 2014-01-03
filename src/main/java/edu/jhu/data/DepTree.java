@@ -264,19 +264,20 @@ public class DepTree implements Iterable<DepTreeNode> {
      */
     public static boolean checkIsProjective(int[] parents) {
         for (int i=0; i<parents.length; i++) {
-            int pari = parents[i] == WallDepTreeNode.WALL_POSITION ? parents.length : parents[i];
+            int pari = (parents[i] == WallDepTreeNode.WALL_POSITION) ? parents.length : parents[i];
             int minI = i < pari ? i : pari;
             int maxI = i > pari ? i : pari;
             for (int j=0; j<parents.length; j++) {
                 if (j == i) {
                     continue;
                 }
+                int parj = (parents[j] == WallDepTreeNode.WALL_POSITION) ? parents.length : parents[j];
                 if (minI < j && j < maxI) {
-                    if (!(minI <= parents[j] && parents[j] <= maxI)) {
+                    if (!(minI <= parj && parj <= maxI)) {
                         return false;
                     }
                 } else {
-                    if (!(parents[j] <= minI || parents[j] >= maxI)) {
+                    if (!(parj <= minI || parj >= maxI)) {
                         return false;
                     }
                 }

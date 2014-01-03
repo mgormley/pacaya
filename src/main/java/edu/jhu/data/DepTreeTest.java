@@ -1,5 +1,6 @@
 package edu.jhu.data;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -12,6 +13,15 @@ import edu.jhu.prim.tuple.Pair;
 
 public class DepTreeTest {
 
+    @Test
+    public void testIsProjective() {
+        assertTrue(DepTree.checkIsProjective(new int[]{ 1, -1, 1 }));
+        assertTrue(DepTree.checkIsProjective(new int[]{ -1, -1, -1 }));
+        
+        assertFalse(DepTree.checkIsProjective(new int[]{ 2, -1, 1, 1 }));
+        assertFalse(DepTree.checkIsProjective(new int[]{ 2, -1, 3, 1 }));
+    }
+    
     @Test
     public void testGetDependencyPath1() {
         int[] parents = new int[]{ 1, -1, 1 };

@@ -194,15 +194,19 @@ public class DmvCkyParser implements DepParser {
     }
     
     /**
-     * Fills in the parents array with the highest probability subtree with
-     * the span (start, end) and the root symbol rootSymbol.
+     * Fills in the parents array with the highest probability subtree with the
+     * span (start, end) and the root symbol rootSymbol.
+     * 
+     * If there was no available parse (e.g. due to constraints), a warning is
+     * printed and the parents array is filled with -1.
      * 
      * @param start The start of the span of the requested tree.
      * @param end The end of the span of the requested tree.
      * @param rootSymbol The symbol of the root of the requested tree.
      * @param chart The parse chart.
      * @param grammar The DMV grammar.
-     * @param parents The output array specifying the parent of each word in the sentence.
+     * @param parents The output array specifying the parent of each word in the
+     *            sentence.
      * @return The head of the span.
      */
     private static int getViterbiTree(int start, int end,
@@ -210,6 +214,11 @@ public class DmvCkyParser implements DepParser {
         ChartCell cell = chart.getCell(start, end);
         BackPointer bp = cell.getBp(rootSymbol);
         
+        if (start == 0 && end == parents.length * 2 && bp == null) {
+            log.warn("Unable to parse sentence");
+            Arrays.fill(parents, -1);
+            return -1;
+        }
         // The backpointer will never be null because we return on lexical rules.
         assert(bp != null);
         
