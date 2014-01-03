@@ -71,6 +71,7 @@
 /data/conll_light/
 /data/tag_maps.tar.gz
 /data/treebank_3_old/
+/data/bc_out_256
 
 java.hprof.txt
 warn.log

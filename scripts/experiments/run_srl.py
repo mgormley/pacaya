@@ -36,10 +36,26 @@ def get_first_that_exists(*paths):
             return path
     raise Exception("ERROR - None of the required paths exist: " + paths)
 
-def require_path_exists(path):
-    if not os.path.exists(path):
-        raise Exception("ERROR - Required path does not exist: " + path)
+def require_path_exists(*paths):
+    for path in paths:
+        if not os.path.exists(path):
+            raise Exception("ERROR - Required path does not exist: " + path)
 
+def safe_join(*parts):
+    for part in parts:
+        if part is None:
+            return None
+    return os.path.join(*parts)
+        
+def combine_pairs(list1, list2):
+        '''Creates a new list of groups by combining each pair of groups in these lists.'''
+        new_list = []
+        for x1 in list1:
+            for x2 in list2:
+                exp = x1 + x2
+                new_list.append(exp)
+        return new_list
+    
 # ---------------------------- Carrier Classes ----------------------------------
 
 class ParamGroups():
@@ -78,6 +94,11 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
+        p.lang_short_names = ["es", "de", "cs", "ca", "en", "zh"]
+
+        p.langs = {}        
+        for lang_short in p.lang_short_names:
+            p.langs[lang_short] = ParamGroups()            
         
         # --- Define paths to data directories. --- 
         conll09_T03_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T03/data/",
@@ -90,29 +111,30 @@ class PathDefinitions():
         
         # --- Gold/Predicted POS tags ---
         # Gold trees: HEAD column. Supervised parser output: PHEAD column.
-        self._set_paths_for_conll09_lang(p, "Spanish", "sp", conll09_T03_dir, require=True)
+        self._set_paths_for_conll09_lang(p, "Spanish", "es", conll09_T03_dir, require=True)
         self._set_paths_for_conll09_lang(p, "German",  "de", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Czech",   "cs", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Catalan", "ca", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "English", "en", conll09_T04_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Chinese", "zh", conll09_T04_dir, require=False)
         
-        p.lang_short_names = ["sp", "de", "cs", "ca", "en", "zh"]
+        self._set_paths_for_conll09_parses(p, "Spanish", "es", parser_prefix, require=False)
+        # TODO: Add the true parser prefix for these languages. 
+        self._set_paths_for_conll09_parses(p, "German",  "de", None, require=False)
+        self._set_paths_for_conll09_parses(p, "Czech",   "cs", None, require=False)
+        self._set_paths_for_conll09_parses(p, "Catalan", "ca", None, require=False)
+        self._set_paths_for_conll09_parses(p, "English", "en", None, require=False)
+        self._set_paths_for_conll09_parses(p, "Chinese", "zh", None, require=False)
         
-        # Semi-supervised parser output: PHEAD column.
-        p.sp_pos_semi_train = parser_prefix + "/dmv_conll09-sp-train_20_True/test-parses.txt"
-        p.sp_pos_semi_dev = parser_prefix + "/dmv_conll09-sp-dev_20_True/test-parses.txt"
-        # Unsupervised parser output: PHEAD column.
-        p.sp_pos_unsup_train = parser_prefix + "/dmv_conll09-sp-train_20_False/test-parses.txt"
-        p.sp_pos_unsup_dev = parser_prefix + "/dmv_conll09-sp-dev_20_False/test-parses.txt"
-        # --- Brown cluster tags ---
-        # Semi-supervised parser output: PHEAD column.
-        p.sp_brown_semi_train = parser_prefix + "/dmv_conll09-sp-brown-train_20_True/test-parses.txt"
-        p.sp_brown_semi_dev = parser_prefix + "/dmv_conll09-sp-brown-dev_20_True/test-parses.txt"
-        # Unsupervised parser output: PHEAD column.
-        p.sp_brown_unsup_train = parser_prefix + "/dmv_conll09-sp-brown-train_20_False/test-parses.txt"
-        p.sp_brown_unsup_dev = parser_prefix + "/dmv_conll09-sp-brown-dev_20_False/test-parses.txt"
-
+        
+        # Brown Clusters.
+        bc_256_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_256",
+                                           self.root_dir + "/data/bc_out_256")
+        for lang_short in p.lang_short_names:
+            pl = p.langs[lang_short]
+            pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
+            pl.bc_1000 = os.path.join(bc_256_dir, "full.txt_%s_1000" % (lang_short), "paths")
+            
         return p
     
     def _set_paths_for_conll09_lang(self, p, lang_long, lang_short, data_dir, require=False):
@@ -127,18 +149,82 @@ class PathDefinitions():
             
         For Spanish, this is equivalent to the following code:
             conll09_sp_dir = os.path.join(conll09_T03_dir, "CoNLL2009-ST-Spanish")        
-            p.sp_pos_gold_train = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
-            p.sp_pos_gold_dev = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
-            p.sp_pos_gold_eval = conll09_sp_dir + "/CoNLL2009-ST-evaluation-Spanish.txt"
+            p.es_pos_gold_train = conll09_sp_dir + "/CoNLL2009-ST-Spanish-train.txt"
+            p.es_pos_gold_dev = conll09_sp_dir + "/CoNLL2009-ST-Spanish-development.txt"
+            p.es_pos_gold_eval = conll09_sp_dir + "/CoNLL2009-ST-evaluation-Spanish.txt"
         '''
         lang_dir = os.path.join(data_dir, "CoNLL2009-ST-" + lang_long)
-        p.set(lang_short + "_pos_gold_train", os.path.join(lang_dir, "CoNLL2009-ST-" + lang_long + "-train.txt"))
-        p.set(lang_short + "_pos_gold_dev",   os.path.join(lang_dir, "CoNLL2009-ST-" + lang_long + "-development.txt"))
-        p.set(lang_short + "_pos_gold_eval",  os.path.join(lang_dir, "CoNLL2009-ST-evaluation-" + lang_long + ".txt"))
+        pos_gold_train = os.path.join(lang_dir, "CoNLL2009-ST-" + lang_long + "-train.txt")
+        pos_gold_dev   = os.path.join(lang_dir, "CoNLL2009-ST-" + lang_long + "-development.txt")
+        pos_gold_eval  = os.path.join(lang_dir, "CoNLL2009-ST-evaluation-" + lang_long + ".txt")
+        # Set with setattr.
+        p.set(lang_short + "_pos_gold_train", pos_gold_train)
+        p.set(lang_short + "_pos_gold_dev",   pos_gold_dev)
+        p.set(lang_short + "_pos_gold_eval",  pos_gold_eval)
+        # Set on dictionary.
+        pl = p.langs[lang_short]
+        pl.pos_gold_train = pos_gold_train
+        pl.pos_gold_dev = pos_gold_dev
+        pl.pos_gold_eval = pos_gold_eval
+        # Require some paths.
         if require:
-            require_path_exists(p.get(lang_short + "_pos_gold_train"))
-            require_path_exists(p.get(lang_short + "_pos_gold_dev"))
-            require_path_exists(p.get(lang_short + "_pos_gold_eval"))
+            require_path_exists(pos_gold_train, pos_gold_dev, pos_gold_eval)
+
+    def _set_paths_for_conll09_parses(self, p, lang_long, lang_short, data_dir, require=False): 
+        if lang_short == "es": lang_short = "sp"       
+        # --- POS tags ---
+        # Semi-supervised parser output: PHEAD column.
+        pos_semi_train = safe_join(data_dir, "dmv_conll09-%s-train_20_True/test-parses.txt" % (lang_short))
+        pos_semi_dev = safe_join(data_dir, "dmv_conll09-%s-dev_20_True/test-parses.txt" % (lang_short))
+        pos_semi_eval = safe_join(data_dir, "dmv_conll09-%s-eval_20_True/test-parses.txt" % (lang_short))
+        # Unsupervised parser output: PHEAD column.
+        pos_unsup_train = safe_join(data_dir, "dmv_conll09-%s-train_20_False/test-parses.txt" % (lang_short))
+        pos_unsup_dev = safe_join(data_dir, "dmv_conll09-%s-dev_20_False/test-parses.txt" % (lang_short))
+        pos_unsup_eval = safe_join(data_dir, "dmv_conll09-%s-eval_20_False/test-parses.txt" % (lang_short))
+        # --- Brown cluster tags ---
+        # Semi-supervised parser output: PHEAD column.
+        brown_semi_train = safe_join(data_dir, "dmv_conll09-%s-train-brown_20_True/test-parses.txt" % (lang_short))
+        brown_semi_dev = safe_join(data_dir, "dmv_conll09-%s-dev-brown_20_True/test-parses.txt" % (lang_short))
+        brown_semi_eval = safe_join(data_dir, "dmv_conll09-%s-eval-brown_20_True/test-parses.txt" % (lang_short))
+        # Unsupervised parser output: PHEAD column.
+        brown_unsup_train = safe_join(data_dir, "dmv_conll09-%s-train-brown_20_False/test-parses.txt" % (lang_short))
+        brown_unsup_dev = safe_join(data_dir, "dmv_conll09-%s-dev-brown_20_False/test-parses.txt" % (lang_short))
+        brown_unsup_eval = safe_join(data_dir, "dmv_conll09-%s-eval-brown_20_False/test-parses.txt" % (lang_short))
+        if lang_short == "sp": lang_short = "es"       
+        # Set with setattr.
+        p.set(lang_short + "_pos_semi_train", pos_semi_train)
+        p.set(lang_short + "_pos_semi_dev",   pos_semi_dev)
+        p.set(lang_short + "_pos_semi_eval",  pos_semi_eval)
+        p.set(lang_short + "_pos_unsup_train", pos_unsup_train)
+        p.set(lang_short + "_pos_unsup_dev",   pos_unsup_dev)
+        p.set(lang_short + "_pos_unsup_eval",  pos_unsup_eval)
+        p.set(lang_short + "_brown_semi_train", brown_semi_train)
+        p.set(lang_short + "_brown_semi_dev",   brown_semi_dev)
+        p.set(lang_short + "_brown_semi_eval",  brown_semi_eval)
+        p.set(lang_short + "_brown_unsup_train", brown_unsup_train)
+        p.set(lang_short + "_brown_unsup_dev",   brown_unsup_dev)
+        p.set(lang_short + "_brown_unsup_eval",  brown_unsup_eval)
+        # Set on dictionary.
+        pl = p.langs[lang_short]
+        pl.pos_semi_train = pos_semi_train
+        pl.pos_semi_dev = pos_semi_dev
+        pl.pos_semi_eval = pos_semi_eval
+        pl.pos_unsup_train = pos_unsup_train
+        pl.pos_unsup_dev = pos_unsup_dev
+        pl.pos_unsup_eval = pos_unsup_eval
+        pl.brown_semi_train = brown_semi_train
+        pl.brown_semi_dev = brown_semi_dev
+        pl.brown_semi_eval = brown_semi_eval
+        pl.brown_unsup_train = brown_unsup_train
+        pl.brown_unsup_dev = brown_unsup_dev
+        pl.brown_unsup_eval = brown_unsup_eval
+        # Require some paths.
+        if require:
+            require_path_exists(pos_semi_train, pos_semi_dev, pos_semi_eval,
+                                pos_unsup_train, pos_unsup_dev, pos_unsup_eval,
+                                brown_semi_train, brown_semi_dev, brown_semi_eval,
+                                brown_unsup_train, brown_unsup_dev, brown_unsup_eval)
+
 
 class ParamDefinitions():
     ''' This class exposes only a single public method (get_param_groups_and_lists),
@@ -156,11 +242,16 @@ class ParamDefinitions():
         self.queue = options.queue
         self.big_machine = (multiprocessing.cpu_count() > 2)
         
-    def get_param_groups_and_lists(self):        
+    def get_param_groups_and_lists_and_paths(self):        
         g = ParamGroups()
         l = ParamGroupLists()
         p = self.path_defs.get_paths()
-
+        g.langs = {} # Language-specific parameter groups. (always reference as "gl")
+        l.langs = {} # Language-specific parameter lists.  (always reference as "ll")
+        for lang_short in p.lang_short_names:            
+            g.langs[lang_short] = ParamGroups()
+            l.langs[lang_short] = ParamGroups()
+        
         # Define all the parameter groups.
         self._define_groups_features(g)
         self._define_groups_optimizer(g)
@@ -176,9 +267,9 @@ class ParamDefinitions():
         self._define_lists_optimizer(g, l)
         self._define_lists_model(g, l)
         self._define_lists_parser_output(g, l, p)
-        self._define_lists_parse_and_srl(g, l)
+        self._define_lists_parse_and_srl(g, l, p)
         
-        return g, l
+        return g, l, p
 
     def _define_groups_defaults(self, g):
         g.defaults = SrlExpParams()
@@ -223,10 +314,12 @@ class ParamDefinitions():
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
         g.defaults.set_incl_arg("language", False)
+        g.defaults.set_incl_arg("eval", False)
         
         # Exclude parameters from the experiment name.
         g.defaults.set_incl_name("train", False)
         g.defaults.set_incl_name("test", False)
+        g.defaults.set_incl_name("eval", False)
         g.defaults.set_incl_name("removeDeprel", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
 
@@ -336,44 +429,26 @@ class ParamDefinitions():
                     g.model_ap_obs_tree, g.model_ap_prd_tree, g.model_ap_lat_tree]
                 
     def _define_groups_parser_output(self, g, p):
-        conll_type = "CONLL_2009"
-
-        # Eval trees: POS only, not Brown.
-        # TODO: Add Brown tagged version.
-        g.pos_eval = self._get_pos_eval(p, "sp")    
-        # --- Gold POS tags ---
-        # Gold trees: HEAD column.
-        g.pos_gold = self._get_pos_gold(p, "sp")    
-        # --- Predicted POS tags ---
-        # Supervised parser output: PHEAD column.
-        g.pos_sup = self._get_pos_sup(p, "sp")
-        # Semi-supervised parser output: PHEAD column.
-        g.pos_semi = SrlExpParams(tagger_parser = 'pos-semi', 
-                                train = p.sp_pos_semi_train, trainType = conll_type,
-                                test = p.sp_pos_semi_dev, testType = conll_type,
-                                removeDeprel = True, useGoldSyntax = False, language = "sp")
-        # Unsupervised parser output: PHEAD column.
-        g.pos_unsup = SrlExpParams(tagger_parser = 'pos-unsup', 
-                                 train = p.sp_pos_unsup_train, trainType = conll_type,
-                                 test = p.sp_pos_unsup_dev, testType = conll_type,
-                                removeDeprel = True, useGoldSyntax = False, language = "sp")
-        # --- Brown cluster tags ---
-        # Semi-supervised parser output: PHEAD column.
-        g.brown_semi = SrlExpParams(tagger_parser = 'brown-semi', 
-                                train = p.sp_brown_semi_train, trainType = conll_type,
-                                test = p.sp_brown_semi_dev, testType = conll_type,
-                                removeDeprel = True, useGoldSyntax = False, language = "sp")
-        # Unsupervised parser output: PHEAD column.
-        g.brown_unsup = SrlExpParams(tagger_parser = 'brown-unsup', 
-                                train = p.sp_brown_unsup_train, trainType = conll_type,
-                                test = p.sp_brown_unsup_dev, testType = conll_type,
-                                removeDeprel = True, useGoldSyntax = False, language = "sp")
-
+        for lang_short in p.lang_short_names:
+            gl = g.langs[lang_short]
+            self._define_groups_parser_output_for_lang(gl, p, lang_short)
+            # Store for lookup in the "language-specific" dictionary.
+    
+    def _define_groups_parser_output_for_lang(self, gl, p, lang_short):
+        gl.pos_gold = self._get_pos_gold(p, lang_short)    
+        gl.pos_sup = self._get_pos_sup(p, lang_short)
+        gl.pos_semi = self._get_pos_semi(p, lang_short)
+        gl.pos_unsup = self._get_pos_unsup(p, lang_short)
+        gl.brown_semi = self._get_brown_semi(p, lang_short)
+        gl.brown_unsup = self._get_brown_unsup(p, lang_short)
+            
+    # ------------------------------ START Parser Outputs ------------------------------
     def _get_pos_gold(self, p, lang_short):
         # Gold trees: HEAD column.
         return SrlExpParams(tagger_parser = 'pos-gold', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_pos_gold_eval"), 
                             removeDeprel = False, useGoldSyntax = True, language = lang_short)
         
     def _get_pos_sup(self, p, lang_short):
@@ -381,39 +456,68 @@ class ParamDefinitions():
         return SrlExpParams(tagger_parser = 'pos-sup', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_pos_gold_eval"),
                             removeDeprel = False, useGoldSyntax = False, language = lang_short)
         
-    def _get_pos_eval(self, p, lang_short):
-        # Eval trees: POS only.
-        return SrlExpParams(tagger_parser = 'pos-eval', 
-                            test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
-                            language = lang_short)
-              
+    def _get_pos_semi(self, p, lang_short):  
+        # Semi-supervised parser output: PHEAD column.        
+        return SrlExpParams(tagger_parser = 'pos-semi', 
+                            train = p.get(lang_short + "_pos_semi_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_semi_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_pos_semi_eval"),
+                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+        
+    def _get_pos_unsup(self, p, lang_short):  
+        # Unsupervised parser output: PHEAD column.
+        return SrlExpParams(tagger_parser = 'pos-unsup', 
+                            train = p.get(lang_short + "_pos_unsup_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_unsup_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_pos_unsup_eval"),
+                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+                
+    def _get_brown_semi(self, p, lang_short):  
+        # --- Brown cluster tags ---
+        # Semi-supervised parser output: PHEAD column.
+        return SrlExpParams(tagger_parser = 'brown-semi', 
+                            train = p.get(lang_short + "_brown_semi_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_semi_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_brown_semi_eval"),
+                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+        
+    def _get_brown_unsup(self, p, lang_short):
+        # Unsupervised parser output: PHEAD column.
+        return SrlExpParams(tagger_parser = 'brown-unsup', 
+                            train = p.get(lang_short + "_brown_unsup_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_unsup_dev"), testType = "CONLL_2009",
+                            eval = p.get(lang_short + "_brown_unsup_eval"),
+                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+    
+    # ------------------------------ END Parser Outputs ------------------------------         
+         
     def _define_lists_parser_output(self, g, l, p):
-        # Spanish only, with various grammar induction parsers.
-        l.parser_outputs = [g.pos_gold, g.pos_sup, g.pos_semi, g.pos_unsup, g.brown_semi, g.brown_unsup]
+        # Single language only, with various grammar induction parsers.        
+        for lang_short in p.lang_short_names:
+            gl = g.langs[lang_short]
+            ll = l.langs[lang_short]
+            ll.parser_outputs = [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]
+            
         # All languages, with CoNLL-09 MSTParser output only.
         l.all_parser_outputs_sup = [self._get_pos_sup(p, lang_short) for lang_short in p.lang_short_names]
-     
-    def _define_lists_parse_and_srl(self, g, l):
-        # Spanish only
-        # We define the non-latent-tree model for all the input parses,
-        # but we only need to define the latent-tree model for one of the input 
-        # datasets.
-        l.parse_and_srl = self._combine_pairs(g, l.parser_outputs, [g.model_pg_obs_tree]) + \
-            self._combine_pairs(g, [g.pos_unsup, g.brown_unsup], [g.model_pg_lat_tree])                         
+    
+    def _define_lists_parse_and_srl(self, g, l, p):
+        # Single language only
+        for lang_short in p.lang_short_names:
+            gl = g.langs[lang_short]
+            ll = l.langs[lang_short]
+            # We define the non-latent-tree model for all the input parses,
+            # but we only need to define the latent-tree model for one of the input 
+            # datasets.
+            ll.parse_and_srl = combine_pairs(ll.parser_outputs, [g.model_pg_obs_tree]) + \
+                combine_pairs([gl.pos_unsup, gl.brown_unsup], [g.model_pg_lat_tree])   
+                              
         # All languages
-        l.all_parse_and_srl_sup_lat = self._combine_pairs(g, l.all_parser_outputs_sup, 
-                                                                    [g.model_pg_obs_tree, g.model_pg_lat_tree])
-        
-    def _combine_pairs(self, g, list1, list2):
-        '''Creates a new list of groups by combining each pair of groups in these lists.'''
-        new_list = []
-        for x1 in list1:
-            for x2 in list2:
-                exp = x1 + x2
-                new_list.append(exp)
-        return new_list
+        l.all_parse_and_srl_sup_lat = combine_pairs(l.all_parser_outputs_sup, 
+                                                          [g.model_pg_obs_tree, g.model_pg_lat_tree])
     
     def get_srl_work_mem_megs(self, exp):
         ''' Gets the (expected) memory limit for the given parameters in exp. '''
@@ -549,23 +653,27 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.prm_defs = ParamDefinitions(options) 
 
     def get_experiments(self):
-        g, l = self.prm_defs.get_param_groups_and_lists()
+        g, l, p = self.prm_defs.get_param_groups_and_lists_and_paths()
+        
+        # Default language-specific groups.
+        gl = g.langs["es"]
+        ll = l.langs["es"]
                 
         if self.expname == "srl-narad-dev20":
             g.defaults += g.feat_narad            
             g.defaults.update(trainMaxSentenceLength=20)
-            return self._get_default_pipeline(g, l)
+            return self._get_default_pipeline(g, l, gl, ll)
         
         elif self.expname == "srl-narad":            
             g.defaults += g.feat_narad
-            return self._get_default_pipeline(g, l)
+            return self._get_default_pipeline(g, l, gl, ll)
         
         elif self.expname == "srl-all":
             g.defaults += SrlExpParams(trainMaxNumSentences=100,
                                        testMaxNumSentences=100,
                                        threads=1)
             g.defaults += g.feat_all
-            return self._get_default_pipeline(g, l)
+            return self._get_default_pipeline(g, l, gl, ll)
 
         elif self.expname == "srl-all-sup-lat":
             # Experiment on all languages with supervised and latent parses.
@@ -581,14 +689,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_all
             g.defaults.set("removeLemma", True, incl_name=False)
             g.defaults.set("removeFeat", True, incl_name=False)
-            return self._get_default_pipeline(g, l)
+            return self._get_default_pipeline(g, l, gl, ll)
         
         elif self.expname == "srl-lat":            
             g.defaults += g.feat_all         
             g.defaults += SrlExpParams(sgdNumPasses=10)
             #g.defaults += SrlExpParams(trainMaxNumSentences=1000, trainMaxSentenceLength=20,
             #                           testMaxNumSentences=100, testMaxSentenceLength=15)
-            exps = self._get_default_experiments(g, l)
+            exps = self._get_default_experiments(g, l, gl, ll)
             exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
             return self._get_pipeline_from_exps(exps)
         
@@ -606,7 +714,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for adaDeltaDecayRate in [0.90, 0.95, 0.99]:
                 for adaDeltaConstantAddend in [-2., -4., -6., -8.]:
                     adaDeltaConstantAddend = math.exp(adaDeltaConstantAddend)
-                    exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings \
+                    exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings \
                             + g.adadelta + SrlExpParams(adaDeltaDecayRate=adaDeltaDecayRate, 
                                                         adaDeltaConstantAddend=adaDeltaConstantAddend)
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -615,21 +723,21 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Best so far is adaGradEta = 0.1
             g.defaults.update(group="tuneAdaGrad")            
             for adaGradEta in [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 10.0, 100.0]:
-                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.adagrad + SrlExpParams(adaGradEta=adaGradEta)
+                exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings + g.adagrad + SrlExpParams(adaGradEta=adaGradEta)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
                 
             # Best so far is sgdInitialLr = 0.1     
             g.defaults.update(group="tuneSGD")
             for sgdInitialLr in [0.001, 0.01, 0.05, 0.1, 0.5, 1.0, 10.0, 100.0]:
-                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.sgd + SrlExpParams(sgdInitialLr=sgdInitialLr)
+                exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings + g.sgd + SrlExpParams(sgdInitialLr=sgdInitialLr)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp) 
                 
             # Best so far is l2variance = 500 
             g.defaults.update(group="tuneL2")
             for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
-                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + g.lbfgs + SrlExpParams(l2variance=l2variance)
+                exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings + g.lbfgs + SrlExpParams(l2variance=l2variance)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
                 
@@ -637,7 +745,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for trainMaxNumSentences in [250, 500, 1000, 2000]:
                 data_settings.update(trainMaxNumSentences=trainMaxNumSentences)
                 for optimizer in l.optimizers:
-                    exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings + optimizer
+                    exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings + optimizer
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
@@ -658,7 +766,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                              ("CACHE", True, 1000000),    # 0.62    2.87
                              ]
             for cacheType, gzipCache, maxEntriesInMemory in cacheSettings:
-                exp = g.defaults + g.model_pg_obs_tree + g.pos_sup + data_settings \
+                exp = g.defaults + g.model_pg_obs_tree + gl.pos_sup + data_settings \
                         + SrlExpParams(cacheType=cacheType, 
                                        gzipCache=gzipCache,
                                        maxEntriesInMemory=maxEntriesInMemory)
@@ -681,7 +789,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.set_incl_name('featureSelection', True)
             for feature_set in feature_sets:
                 # Spanish, observed/supervised dep parse and POS tags.                    
-                parser_srl = g.model_pg_obs_tree + g.pos_sup
+                parser_srl = g.model_pg_obs_tree + gl.pos_sup
                 exp = g.defaults + parser_srl + feature_set
                 #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
@@ -697,7 +805,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for featCountCutoff in [0, 2, 4]:
                     for featureHashMod in [-1, 500000, 1000000, 10000000]:
                         # Spanish, observed/supervised dep parse and POS tags.
-                        parser_srl = g.model_pg_obs_tree + g.pos_sup
+                        parser_srl = g.model_pg_obs_tree + gl.pos_sup
                         exp = g.defaults + parser_srl + feature_set + SrlExpParams(featCountCutoff=featCountCutoff, featureHashMod=featureHashMod)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
@@ -714,7 +822,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for feature_set in feature_sets:
                     for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
                         # Spanish, observed/supervised dep parse and POS tags.
-                        parser_srl = g.model_pg_obs_tree + g.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
+                        parser_srl = g.model_pg_obs_tree + gl.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
                         exp = g.defaults + parser_srl + feature_set
                         if exp.get("trainMaxNumSentences") == 15000:
                             exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
@@ -737,14 +845,17 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             g.feat_tpl_bjork_es,
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es)]
-            for feature_set in feature_sets:
-                for featureSelection in [False, True]:
-                    # Spanish, observed/supervised dep parse and POS tags.
-                    parser_srl = g.model_pg_obs_tree + g.pos_sup 
-                    exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
-                    exp.set_incl_name('featureSelection', True)
-                    #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    exps.append(exp)
+            for lang_short in ["es", "en"]:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                for feature_set in feature_sets:
+                    for featureSelection in [False, True]:
+                        # Spanish, observed/supervised dep parse and POS tags.
+                        parser_srl = g.model_pg_obs_tree + gl.pos_sup 
+                        exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
+                        exp.set_incl_name('featureSelection', True)
+                        #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":
@@ -789,26 +900,27 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 if not os.path.exists(modelIn): continue                
                 # -- compose the parameters
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
-                new_params += g.pos_eval
+                new_params += SrlExpParams(test=old_params.get("eval"), 
+                                           testType=old_params.get("testType"))
                 exps.append(new_params)
             return self._get_pipeline_from_exps(exps)
         
         else:
             raise Exception("Unknown expname: " + str(self.expname))
     
-    def _get_default_experiments(self, g, l):
+    def _get_default_experiments(self, g, l, gl, ll):
         exps = []
         data_settings = SrlExpParams()                    
         for normalizeRoleNames in [True, False]:
             data_settings.update(normalizeRoleNames=normalizeRoleNames)
-            for parser_srl in l.parse_and_srl:
+            for parser_srl in ll.parse_and_srl:
                 exp = g.defaults + data_settings + parser_srl
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
         return exps
     
-    def _get_default_pipeline(self, g, l):
-        exps = self._get_default_experiments(g, l)
+    def _get_default_pipeline(self, g, l, gl, ll):
+        exps = self._get_default_experiments(g, l, gl, ll)
         return self._get_pipeline_from_exps(exps)
     
     def _get_pipeline_from_exps(self, exps):

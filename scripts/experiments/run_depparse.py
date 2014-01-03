@@ -20,6 +20,7 @@ from experiments.core import pipeline
 import re
 import random
 from experiments.core.pipeline import write_script, RootStage, Stage
+from experiments import run_srl
 
 def get_root_dir():
     scripts_dir =  os.path.abspath(sys.path[0])
@@ -217,7 +218,7 @@ class HProfHeapExpParams(DPExpParams):
 class DepParseExpParamsRunner(ExpParamsRunner):
     
     def __init__(self, options):
-        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True)
+        ExpParamsRunner.__init__(self, options.expname, options.queue, print_to_console=True, dry_run=options.dry_run)
         self.root_dir = os.path.abspath(get_root_dir())
         self.fast = options.fast
         self.expname = options.expname
@@ -234,6 +235,9 @@ class DepParseExpParamsRunner(ExpParamsRunner):
     def get_experiments(self):
         all = DPExpParams()
         all.set("expname", self.expname, False, False)
+        all.set("timeoutSeconds", 8*60*60, incl_arg=False, incl_name=False)
+        all.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
+        all.remove("work_mem_megs")
         all.update(formulation="FLOW_PROJ_LPRELAX_FCOBJ",
                    parser="cky",
                    model="dmv",
@@ -267,11 +271,17 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                    maxStoCuts=1000,
                    printModel="./model.txt",
                    bnbTimeoutSeconds=100,
-                   timeoutSeconds=8*60*60, # If we leave this out, CPLEX complains.
                    universalPostCons=False,
                    addBindingCons=False,
                    relaxOnly=False)
         all.set("lambda", 1.0)
+                
+        # Keys to exclude from the args.
+        all.set_incl_arg("dataset", False)
+        # Keys to exclude from the name.
+        all.set_incl_name("train", False)
+        all.set_incl_name("test", False)
+        all.set_incl_name("brownClusters", False)
         
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
@@ -304,7 +314,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         # Set default projection.    
         all = all + all_proj
         
-        # Data sets
+        # PTB Data.
         data_dir = os.path.join(self.root_dir, "data")
         wsj_02 = self.get_data(data_dir, "treebank_3_sym/wsj/02", "PTB")
         wsj_22 = self.get_data(data_dir, "treebank_3/wsj/22", "PTB")
@@ -314,37 +324,32 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         brown_cf = self.get_data(data_dir, "treebank_3/brown/cf", "PTB")
         brown_full = self.get_data(data_dir, "treebank_3/brown", "PTB")
         
-        # CoNLL-2009 Data 
-
-        #conll09_dir = "/export/common/data/corpora/LDC/LDC2012T03/data"
-        #conll09_sp_dir = os.path.join(conll09_dir, "CoNLL2009-ST-Spanish")        
-        conll09_sp_dir = os.path.abspath(os.path.join("data", "conll2009", "CoNLL2009-ST-Spanish"))
-        conll09_sp_dev = self.get_data(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt") + \
-            DPExpParams(dataset="conll09-sp-dev",
+        # CoNLL-2009 Data
+        l = run_srl.ParamGroupLists()
+        g = run_srl.ParamGroups()      
+        p = run_srl.PathDefinitions(options).get_paths() 
+        g.langs = {}
+        for lang_short in p.lang_short_names:
+            g.langs[lang_short] = run_srl.ParamGroups()            
+        for lang_short in p.lang_short_names:
+            setup = DPExpParams(
                         trainType="CONLL_2009",
                         testType="CONLL_2009",
                         trainOut="train-parses.txt",
                         testOut="test-parses.txt")
-        conll09_sp_dev.set("test", os.path.join(conll09_sp_dir, "CoNLL2009-ST-Spanish-development.txt"), False, True)
-        conll09_sp_test = conll09_sp_dev + DPExpParams(dataset="conll09-sp-test")
-        conll09_sp_test.set("test", os.path.join(conll09_sp_dir, "CoNLL2009-ST-evaluation-Spanish.txt"), False, True)
-        conll09_sp_train = conll09_sp_dev + DPExpParams(dataset="conll09-sp-train")
-        conll09_sp_train.set("test", os.path.join(conll09_sp_dir, "CoNLL2009-ST-Spanish-train.txt"), False, True)
-
-        # CoNLL-2009 Data with Brown Clusters instead of POS tags.
-        conll09_sp_brown_dir = os.path.join(data_dir, "conll2009", "CoNLL2009-ST-Spanish-BrownClusters")
-        conll09_sp_brown_dev = self.get_data(conll09_sp_brown_dir, "CoNLL2009-ST-Spanish-train.txt") + \
-            DPExpParams(dataset="conll09-sp-brown-dev",
-                        trainType="CONLL_2009",
-                        testType="CONLL_2009",
-                        trainOut="train-parses.txt",
-                        testOut="test-parses.txt")
-        conll09_sp_brown_dev.set("test", os.path.join(conll09_sp_brown_dir, "CoNLL2009-ST-Spanish-development.txt"), False, True)
-        conll09_sp_brown_test = conll09_sp_brown_dev + DPExpParams(dataset="conll09-sp-brown-test")
-        conll09_sp_brown_test.set("test", os.path.join(conll09_sp_brown_dir, "CoNLL2009-ST-evaluation-Spanish.txt"), False, True)
-        conll09_sp_brown_train = conll09_sp_brown_dev + DPExpParams(dataset="conll09-sp-brown-train")
-        conll09_sp_brown_train.set("test", os.path.join(conll09_sp_brown_dir, "CoNLL2009-ST-Spanish-train.txt"), False, True)
-        
+            pl = p.langs[lang_short]
+            gl = g.langs[lang_short]
+            gl.conll09_train = setup + DPExpParams(dataset="conll09-%s-train" % (lang_short),
+                                                               train=pl.pos_gold_train,
+                                                               test=pl.pos_gold_train)            
+            gl.conll09_dev   = setup + DPExpParams(dataset="conll09-%s-dev" % (lang_short),
+                                                               train=pl.pos_gold_train,
+                                                               test=pl.pos_gold_dev)          
+            gl.conll09_eval  = setup + DPExpParams(dataset="conll09-%s-eval" % (lang_short),
+                                                               train=pl.pos_gold_train,
+                                                               test=pl.pos_gold_eval)
+                
+        # Synthetic Data.
         synth_alt_three = DPExpParams(synthetic="alt-three", trainType="SYNTHETIC")
         synth_alt_three.set("dataset", "alt-three", True, False)
 
@@ -400,6 +405,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)
             return root
+        
         elif self.expname == "vem-wsj":
             root = RootStage()
             setup = wsj
@@ -421,29 +427,37 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)
             return root
+        
         elif self.expname == "vem-conll":
             root = RootStage()
             setup = DPExpParams()
-            # Full length test sentences.
-            setup.update(maxNumSentences=100000000, maxSentenceLengthTest=1000)
-            setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
+            # All train sentences and full-length test sentences.
+            setup.update(maxNumSentences=100000000, maxSentenceLengthTest=100000000)
+            setup.update(algorithm="viterbi", parser="cky", numRestarts=10, iterations=1000, convergenceRatio=0.99999)
             setup.update(usePredictedPosTags=True, modelOut="model.binary.gz")
             setup.update(timeoutSeconds=48*60*60) # if maxSentenceLength > 20: ??
             setup.set("lambda", 1)
             exps = []
             for maxSentenceLength in [10, 20, 30]: # Dropped +inf (i.e. 1000)                    
                 setup.update(maxSentenceLength=maxSentenceLength)
-                for dataset in [conll09_sp_dev, conll09_sp_test, conll09_sp_train, 
-                                conll09_sp_brown_dev, conll09_sp_brown_test, conll09_sp_brown_train]:
-                    for usePredArgSupervision in [True, False]:
-                        # Set the seed explicitly.
-                        exp = all + setup + dataset + DPExpParams(usePredArgSupervision=usePredArgSupervision)
-                        if dataset == conll09_sp_train:
-                            setup.set("work_mem_megs", 64*1024, False, False)
-                        else:
-                            setup.remove("work_mem_megs")
-                        #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
-                        exps.append(exp)
+                for lang_short in p.lang_short_names:
+                    pl = p.langs[lang_short]
+                    gl = g.langs[lang_short]
+                    for dataset in [gl.conll09_train, gl.conll09_dev, gl.conll09_eval]:
+                        for brownClusters in [None, pl.bc_256]:                            
+                            if brownClusters is not None:
+                                bc = DPExpParams(brownClusters=brownClusters, dataset=dataset.get("dataset") + "-brown")
+                            else:
+                                bc = DPExpParams()
+                            for usePredArgSupervision in [True, False]:
+                                # Set the seed explicitly.
+                                exp = all + setup + dataset + bc + DPExpParams(usePredArgSupervision=usePredArgSupervision)
+                                if dataset == gl.conll09_train:
+                                    setup.set("work_mem_megs", 64*1024, False, False)
+                                else:
+                                    setup.remove("work_mem_megs")
+                                #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
+                                exps.append(exp)
             # Drop all but 3 experiments for a fast run.
             if self.fast: exps = exps[:4]
             root.add_dependents(exps)
@@ -452,6 +466,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)
             return root
+        
         elif self.expname == "parse-wsj":
             root = RootStage()
             setup = CkyExpParams(grammar="%s/data/grammars/eng.R0.gr.gz" % (get_root_dir()),
@@ -476,6 +491,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     experiment.remove("reduceTags")
                     root.add_dependent(experiment)
             return root
+        
         elif self.expname == "viterbi-vs-bnb":
             root = RootStage()
             all.update(algorithm="bnb")
@@ -519,6 +535,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "bnb":
             root = RootStage()
             all.update(algorithm="bnb", epsilon=0.01)
@@ -550,6 +567,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "bnb-semi":
             root = RootStage()
             all.update(algorithm="bnb",
@@ -580,6 +598,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "bnb-semi-synth":
             all.update(algorithm="bnb",
                        initBounds="GOLD",
@@ -599,6 +618,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 algo = DPExpParams(varSplit=varSplit, offsetProb=offsetProb, 
                                                    propSupervised=propSupervised, varSelection=varSelection)
                                 experiments.append(all + dataset + mns + algo)
+                                
         elif self.expname == "bnb-depth-test":
             root = RootStage()
             all.update(algorithm="bnb-rand-walk",
@@ -645,6 +665,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "bnb-supervised":
             root = RootStage()
             all.update(algorithm="bnb",
@@ -668,6 +689,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 experiment = all + dataset + DPExpParams(relaxation=relaxation)
                 root.add_dependent(experiment)
             return root
+        
         elif self.expname == "bnb-hprof":
             all.update(algorithm="bnb")
             for dataset in datasets:
@@ -677,6 +699,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         mns = DPExpParams(maxNumSentences=maxNumSentences)
                         for varSelection in ["regret", "rand-uniform", "rand-weighted", "full"]:
                             experiments.append(all + dataset + msl + mns + DPExpParams(varSelection=varSelection) + HProfCpuExpParams())
+                            
         elif self.expname == "bnb-expanding-boxes":
             # Fixed seed
             all.update(algorithm="bnb", seed=112233)
@@ -694,6 +717,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                 for probOfSkipCm in [0.0]: #TODO: frange(0.0, 0.21, 0.05):
                                     algo = DPExpParams(varSelection=varSelection,initBounds=initBounds,offsetProb=offsetProb, probOfSkipCm=probOfSkipCm)
                                     experiments.append(all + dataset + msl + mns + algo)
+                                    
         elif self.expname == "viterbi-bnb":
             root = RootStage()
             # Fixed seed
@@ -728,6 +752,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "node-orders":
             root = RootStage()
             all.update(algorithm="bnb",
@@ -766,6 +791,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape, scrape_stat])
             return root
+        
         elif self.expname == "relax-root-rlt":
             root = RootStage()
             all.update(relaxOnly=True,
@@ -816,6 +842,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 svnco = SvnCommitResults(self.expname)
                 svnco.add_prereqs([scrape])
             return root
+        
         elif self.expname == "relax-percent-pruned":
             for dataset in datasets:
                 for maxSentenceLength in [10]:
@@ -827,6 +854,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for initBounds in ["RANDOM"]:
                                 for offsetProb in frange(10e-13, 1.001,0.05):
                                     experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb, seed=random.getrandbits(63), relaxOnly=True))
+                                    
         elif self.expname == "relax-quality":
             # Fixed seed
             all.update(seed=112233)
@@ -839,6 +867,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             for offsetProb in frange(10e-13, 1.001,0.05):
                                 for probOfSkipCm in frange(0.0, 0.2, 0.05):
                                     experiments.append(all + dataset + msl + mns + DPExpParams(initBounds=initBounds,offsetProb=offsetProb,probOfSkipCm=probOfSkipCm, relaxOnly=True))
+                                    
         elif self.expname == "relax-compare":
             # Fixed seed
             all.update(relaxOnly=True, seed=112233)
@@ -864,6 +893,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                                                             pass
                                                         else:
                                                             experiments.append(all + dataset + msl + mns + p1)
+                                                            
         elif self.expname == "formulations":
             all.update(parser="ilp-corpus")
             for dataset in datasets:
@@ -871,6 +901,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                 for formulation in formulations:
                     ilpform = DPExpParams(formulation=formulation)
                     experiments.append(all + dataset + ilpform)
+                    
         elif self.expname == "corpus-size":
             # For ilp-corpus testing:
             #  all.update(iterations=1)
@@ -894,6 +925,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                         for maxNumSentences in mns_list:
                             mns = DPExpParams(maxNumSentences=maxNumSentences)
                             experiments.append(all + dataset + msl + par + mns)
+                            
         elif self.expname == "deltas":
             for dataset in datasets:
                 for maxSentenceLength in [5,7]:
@@ -966,8 +998,9 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     parser.add_option('-q', '--queue', help="Which SGE queue to use")
     parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
+    parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
     parser.add_option('--test', action="store_true", help="Use test data")
-    parser.add_option('--expname',  help="Experiment name")
+    parser.add_option('-e', '--expname',  help="Experiment name")
     parser.add_option('--data',  help="Dataset to use")
     parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
     (options, args) = parser.parse_args(sys.argv)
