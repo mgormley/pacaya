@@ -46,7 +46,7 @@ def run_srl(name, argv):
     args = " ".join(argv[1:])
     with cd("~/working/%s" % (name)):
         with prefix("source setupenv.sh"):
-            run("run_srl.py %s" % (args))
+            run("%s" % (args))
         
 def remote_srl(argv):
     env.gateway = "%s:%s" % ("external.hltcoe.jhu.edu", "22")
