@@ -335,26 +335,6 @@ class ParamDefinitions():
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
                     g.model_ap_obs_tree, g.model_ap_prd_tree, g.model_ap_lat_tree]
                 
-    def _get_pos_gold(self, p, lang_short):
-        # Gold trees: HEAD column.
-        return SrlExpParams(tagger_parser = 'pos-gold', 
-                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            removeDeprel = False, useGoldSyntax = True, language = lang_short)
-        
-    def _get_pos_sup(self, p, lang_short):
-        # Supervised parser output: PHEAD column.
-        return SrlExpParams(tagger_parser = 'pos-sup', 
-                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            removeDeprel = False, useGoldSyntax = False, language = lang_short)
-        
-    def _get_pos_eval(self, p, lang_short):
-        # Eval trees: POS only.
-        return SrlExpParams(tagger_parser = 'pos-eval', 
-                            test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
-                            language = lang_short)
-              
     def _define_groups_parser_output(self, g, p):
         conll_type = "CONLL_2009"
 
@@ -389,6 +369,26 @@ class ParamDefinitions():
                                 test = p.sp_brown_unsup_dev, testType = conll_type,
                                 removeDeprel = True, useGoldSyntax = False, language = "sp")
 
+    def _get_pos_gold(self, p, lang_short):
+        # Gold trees: HEAD column.
+        return SrlExpParams(tagger_parser = 'pos-gold', 
+                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            removeDeprel = False, useGoldSyntax = True, language = lang_short)
+        
+    def _get_pos_sup(self, p, lang_short):
+        # Supervised parser output: PHEAD column.
+        return SrlExpParams(tagger_parser = 'pos-sup', 
+                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            removeDeprel = False, useGoldSyntax = False, language = lang_short)
+        
+    def _get_pos_eval(self, p, lang_short):
+        # Eval trees: POS only.
+        return SrlExpParams(tagger_parser = 'pos-eval', 
+                            test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
+                            language = lang_short)
+              
     def _define_lists_parser_output(self, g, l, p):
         # Spanish only, with various grammar induction parsers.
         l.parser_outputs = [g.pos_gold, g.pos_sup, g.pos_semi, g.pos_unsup, g.brown_semi, g.brown_unsup]
@@ -397,32 +397,23 @@ class ParamDefinitions():
      
     def _define_lists_parse_and_srl(self, g, l):
         # Spanish only
-        l.parse_and_srl = self._get_lists_parse_and_srl(g, l.parser_outputs, "-unsup")
+        # We define the non-latent-tree model for all the input parses,
+        # but we only need to define the latent-tree model for one of the input 
+        # datasets.
+        l.parse_and_srl = self._combine_pairs(g, l.parser_outputs, [g.model_pg_obs_tree]) + \
+            self._combine_pairs(g, [g.pos_unsup, g.brown_unsup], [g.model_pg_lat_tree])                         
         # All languages
-        l.all_parse_and_srl_sup_lat = self._get_lists_parse_and_srl(g, l.all_parser_outputs_sup, "-sup")
+        l.all_parse_and_srl_sup_lat = self._combine_pairs(g, l.all_parser_outputs_sup, 
+                                                                    [g.model_pg_obs_tree, g.model_pg_lat_tree])
         
-    def _get_lists_parse_and_srl(self, g, parser_outputs, tp_for_global_factor):
-        '''Gets a list of pipelined or joint training approaches to tagging, parsing, and SRL.
-        The parsing is done ahead of time.
-        
-        Dependencies: 
-            _define_lists_parser_output() 
-            _define_lists_model().
-        '''
-        parse_and_srl = []
-        for parser_output in parser_outputs:
-            # We only want to models where the predicates are given in order to match up
-            # with the CoNLL-2009 shared task.
-            for model in [g.model_pg_obs_tree, g.model_pg_lat_tree]:
-                if model.get("useProjDepTreeFactor") \
-                    and not parser_output.get("tagger_parser").find(tp_for_global_factor) != -1:                    
-                    # We define the non-latent-tree model for all the input parses,
-                    # but we only need to define the latent-tree model for one of the input 
-                    # datasets.
-                    continue
-                exp = parser_output + model
-                parse_and_srl.append(exp)
-        return parse_and_srl
+    def _combine_pairs(self, g, list1, list2):
+        '''Creates a new list of groups by combining each pair of groups in these lists.'''
+        new_list = []
+        for x1 in list1:
+            for x2 in list2:
+                exp = x1 + x2
+                new_list.append(exp)
+        return new_list
     
     def get_srl_work_mem_megs(self, exp):
         ''' Gets the (expected) memory limit for the given parameters in exp. '''
