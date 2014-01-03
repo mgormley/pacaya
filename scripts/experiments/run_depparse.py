@@ -144,30 +144,41 @@ class DPExpParams(experiment_runner.JavaExpParams):
         return script
     
     def get_java_args(self):
+        java_args = ""
         # Allot the available memory to the JVM, ILP solver, and ZIMPL
         total_work_mem_megs = self.work_mem_megs
-        if (self.get("parser").startswith("ilp-")):
-            zimpl_mem = int(total_work_mem_megs * 0.5)
-        else:
+        if self.get("parser") == "cky" and self.get("algorithm") == "viterbi":
+            # In this case, CPLEX shouldn't be running.
+            java_mem = total_work_mem_megs
             zimpl_mem = 0
-        java_mem = int((total_work_mem_megs - zimpl_mem) * 0.5)
-        ilp_mem = total_work_mem_megs - java_mem - zimpl_mem
-        # Subtract off some overhead for CPLEX
-        ilp_mem -= 1024
+            ilp_mem = 0
+        else:
+            if (self.get("parser").startswith("ilp-")):
+                zimpl_mem = int(total_work_mem_megs * 0.5)
+            else:
+                zimpl_mem = 0
+            java_mem = int((total_work_mem_megs - zimpl_mem) * 0.5)
+            ilp_mem = total_work_mem_megs - java_mem - zimpl_mem
+            # Subtract off some overhead for CPLEX
+            ilp_mem -= 1024
+            if True: 
+                # Add the paths for CPLEX.
+                #
+                # TODO: revert back to this if-clause after adding real parser for eval: self.get("ilpSolver") == "cplex":  
+                mac_jlp = "/Users/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_darwin"
+                coe_jlp = "/home/hltcoe/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_sles10_4.1"
+                if os.path.exists(mac_jlp): jlp = mac_jlp
+                elif os.path.exists(coe_jlp): jlp = coe_jlp
+                else: raise Exception("Could not find java.library.path for CPLEX")
+                java_args += " -Djava.library.path=%s " % (jlp)
+        
         assert (zimpl_mem + java_mem + ilp_mem <= total_work_mem_megs)
 
-        self.update(ilpWorkMemMegs=ilp_mem)
-        
+        # Store the ILP working memory allotment.
+        self.update(ilpWorkMemMegs=ilp_mem)        
         # Create the JVM args
-        java_args = self._get_java_args(java_mem)  
-        if True: 
-            # HACK: revert back to this if-clause after adding real parser for eval: self.get("ilpSolver") == "cplex":  
-            mac_jlp = "/Users/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_darwin"
-            coe_jlp = "/home/hltcoe/mgormley/installed/IBM/ILOG/CPLEX_Studio125/cplex/bin/x86-64_sles10_4.1"
-            if os.path.exists(mac_jlp): jlp = mac_jlp
-            elif os.path.exists(coe_jlp): jlp = coe_jlp
-            else: raise Exception("Could not find java.library.path for CPLEX")
-            java_args += " -Djava.library.path=%s " % (jlp)
+        java_args += " " + self._get_java_args(java_mem)  
+            
         return java_args
 
 class CkyExpParams(experiment_runner.JavaExpParams):
@@ -282,6 +293,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         all.set_incl_name("train", False)
         all.set_incl_name("test", False)
         all.set_incl_name("brownClusters", False)
+        
         
         dgFixedInterval = DPExpParams(deltaGenerator="fixed-interval",interval=0.01,numPerSide=2)
         dgFactor = DPExpParams(deltaGenerator="factor",factor=1.1,numPerSide=2)
@@ -450,12 +462,13 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                             else:
                                 bc = DPExpParams()
                             for usePredArgSupervision in [True, False]:
-                                # Set the seed explicitly.
-                                exp = all + setup + dataset + bc + DPExpParams(usePredArgSupervision=usePredArgSupervision)
-                                if dataset == gl.conll09_train:
+                                if self.fast: 
+                                    setup.set("work_mem_megs", 1024, False, False)                                    
+                                elif dataset == gl.conll09_train:
                                     setup.set("work_mem_megs", 64*1024, False, False)
                                 else:
-                                    setup.remove("work_mem_megs")
+                                    setup.set("work_mem_megs", 16*1024, False, False)
+                                exp = all + setup + dataset + bc + DPExpParams(usePredArgSupervision=usePredArgSupervision)
                                 #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
                                 exps.append(exp)
             # Drop all but 3 experiments for a fast run.
