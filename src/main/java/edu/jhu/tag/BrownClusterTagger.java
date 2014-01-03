@@ -68,7 +68,7 @@ public class BrownClusterTagger {
         }
     }
 
-    /** Lowercases the input word, and looks up its cluster. */
+    /** Looks up the Brown cluster for this word. */
     public String getCluster(String word) {
         String cluster = map.get(word);
         if (cluster == null) {

@@ -73,8 +73,7 @@ public class DepTreebankLoader {
     }
 
     /**
-     * Read constituency trees from the Penn Treebank and use the Collins head
-     * finding rules to extract dependency trees from them.
+     * Read CoNLL-X dependency trees.
      * 
      * @param trainPath
      */

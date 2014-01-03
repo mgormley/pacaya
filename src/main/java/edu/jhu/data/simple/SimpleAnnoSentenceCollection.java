@@ -72,4 +72,13 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         }
         return trees; 
     }
+    
+    public int getNumTokens() {
+        int numTokens = 0;
+        for (SimpleAnnoSentence sent : this) {
+            numTokens += sent.size();
+        }
+        return numTokens;
+    }
+    
 }
