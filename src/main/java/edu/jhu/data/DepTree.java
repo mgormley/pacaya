@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.tuple.Pair;
@@ -11,6 +13,7 @@ import edu.jhu.util.Alphabet;
 
 public class DepTree implements Iterable<DepTreeNode> {
 
+    private static final Logger log = Logger.getLogger(DepTree.class);
     public static final int EMPTY_POSITION = -2;
     
     protected List<DepTreeNode> nodes = new ArrayList<DepTreeNode>();
@@ -91,7 +94,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
         int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
         if (wallCount != 1) {
-            throw new IllegalStateException("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
+            log.warn("There must be exactly one node with the wall as a parent. wallCount=" + wallCount);
         }
         
         // Check that there are no cyles
