@@ -80,7 +80,7 @@ public class DepTreebankReader {
                     }
                 }
             }
-            log.info("Brown cluster miss rate: " + bct.getMissRate());
+            log.info("Brown cluster hit rate: " + bct.getHitRate());
         }
 
         // Always add the OOV tag to the alphabet.

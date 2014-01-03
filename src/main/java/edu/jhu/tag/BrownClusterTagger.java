@@ -79,8 +79,8 @@ public class BrownClusterTagger {
         return cluster;
     }
     
-    public double getMissRate() {
-        return (double) numMisses / numLookups;
+    public double getHitRate() {
+        return (double) (numLookups - numMisses) / numLookups;
     }
 
     public void addClusters(SimpleAnnoSentenceCollection sents) {

@@ -460,7 +460,7 @@ public class SrlRunner {
             BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
             bct.read(brownClusters);
             bct.addClusters(sents);
-            log.info("Brown cluster miss rate: " + bct.getMissRate());
+            log.info("Brown cluster hit rate: " + bct.getHitRate());
         } else {
             log.warn("No Brown cluster file specified.");            
         }
