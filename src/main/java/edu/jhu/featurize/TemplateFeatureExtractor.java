@@ -2,6 +2,7 @@ package edu.jhu.featurize;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -199,6 +200,18 @@ public class TemplateFeatureExtractor {
         case PATH_GRAMS:
             List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, pidx, cidx);  
             addPathGrams(tpl, path, feats);
+            return;
+        case BTWN_POS:
+            List<Integer> posList = getPositionList(PositionList.LINE_P_C, pidx, cidx);
+            if (posList.size() > 2) {
+                posList = posList.subList(1, posList.size() - 1);
+            } else {
+                posList = Collections.emptyList();
+            }
+            List<String> vals = getTokPropsForList(TokProperty.POS, posList);
+            for (String v : vals) {
+                feats.add(toFeat(tpl.getName(), v));
+            }
             return;
         default:  
             String val = getOtherFeatSingleton(tpl.feat, pidx, cidx);
@@ -423,19 +436,13 @@ public class TemplateFeatureExtractor {
         case CAPITALIZED:
             return tok.isCapatalized() ? "UC" : "LC";
         case CHPRE5:
-            String form = tok.getForm();
-            if (form.length() > 5) {
-                return form.substring(0, Math.min(form.length(), 5));    
-            } else {
-                return null;
-            }
+            return tok.getFormPrefix5();
         case LEMMA:
             return tok.getLemma();
         case POS:
             return tok.getPos();
         case BC0:
-            String cluster = tok.getCluster();
-            return cluster.substring(0, Math.min(cluster.length(), 5));    
+            return tok.getClusterPrefix5();
         case BC1:
             return tok.getCluster();
         case DEPREL:

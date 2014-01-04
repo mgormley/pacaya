@@ -31,6 +31,8 @@ public class TemplateSets {
     
     public static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
     public static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
+
+    public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
     
     private TemplateSets() {
         // Private constructor.
@@ -96,7 +98,7 @@ public class TemplateSets {
         return bs;
     }
 
-    private static List<FeatTemplate> getFromResource(String resourceName) {
+    public static List<FeatTemplate> getFromResource(String resourceName) {
         TemplateReader reader = new TemplateReader();
         try {
             reader.readFromResource(resourceName);

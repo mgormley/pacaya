@@ -315,6 +315,17 @@ public class TemplateFeatureExtractorTest {
         assertEquals(tpl.getName() + "_" + expectedVal, feats.get(0));
     }
     
+    private void testOtherFeaturesHelper2(int pidx, int cidx, OtherFeat f, String... expectedFeats) {
+        FeatTemplate tpl = new FeatTemplate4(f);
+        TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
+        ArrayList<String> feats = new ArrayList<String>();
+        extr.addFeatures(tpl, pidx, cidx, feats);
+        for (Object feat : feats) {
+            System.out.println(feat);
+        }
+        assertEquals(new HashSet<String>(Arrays.asList(expectedFeats)), new HashSet<Object>(feats));
+    }
+    
     @Test
     public void testPathGramsFeature() {      
         FeatTemplate tpl = new FeatTemplate4(OtherFeat.PATH_GRAMS);
@@ -330,6 +341,19 @@ public class TemplateFeatureExtractorTest {
                 "PATH_GRAMS_N_ate_N", "PATH_GRAMS_dog_V_N", "PATH_GRAMS_N_V_N", };
         
         getFeatsAndAssertEquality(tpl, expectedPathGrams);
+    }
+    
+    @Test
+    public void testBtwnPosFeature() {    
+        testOtherFeaturesHelper2(0, 3, OtherFeat.BTWN_POS, "btwn(p,c).pos_d", "btwn(p,c).pos_v");
+        testOtherFeaturesHelper2(3, 0, OtherFeat.BTWN_POS, "btwn(p,c).pos_d", "btwn(p,c).pos_v");
+        testOtherFeaturesHelper2(1, 3, OtherFeat.BTWN_POS, "btwn(p,c).pos_d");
+        testOtherFeaturesHelper2(3, 1, OtherFeat.BTWN_POS, "btwn(p,c).pos_d");
+        testOtherFeaturesHelper2(0, 2, OtherFeat.BTWN_POS, "btwn(p,c).pos_v");
+
+        testOtherFeaturesHelper2(0, 1, OtherFeat.BTWN_POS);
+        testOtherFeaturesHelper2(1, 0, OtherFeat.BTWN_POS);
+        testOtherFeaturesHelper2(1, 1, OtherFeat.BTWN_POS);
     }
     
     @Test

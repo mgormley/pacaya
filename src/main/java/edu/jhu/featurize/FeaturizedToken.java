@@ -44,7 +44,9 @@ public class FeaturizedToken {
     private SimpleAnnoSentence sent;
     private int idx = -1;
     private CorpusStatistics cs;
-    
+
+    private String formPrefix5;    
+    private String clusterPrefix5;    
     private String featStr;
     private List<String> feat;
     private List<String> feat6;
@@ -456,6 +458,30 @@ public class FeaturizedToken {
             return true;
         }
         return false;
+    }
+
+    public String getFormPrefix5() {
+        ensureFormPrefix5();
+        return formPrefix5;        
+    }
+    
+    private void ensureFormPrefix5() {
+        String form = this.getForm();
+        if (form.length() > 5) {
+            formPrefix5 = form.substring(0, Math.min(form.length(), 5));    
+        } else {
+            formPrefix5 = null;
+        }
+    }
+    
+    public String getClusterPrefix5() {
+        ensureClusterPrefix5();
+        return clusterPrefix5;        
+    }
+    
+    private void ensureClusterPrefix5() {
+        String bc = getCluster();
+        clusterPrefix5 = bc.substring(0, Math.min(bc.length(), 5)); 
     }
     
 }

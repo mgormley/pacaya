@@ -77,14 +77,19 @@ public class TemplateReader {
         
         String[] templates = TEMPLATE_SEP_REGEX.split(line);
         for (String t : templates) {
-            String[] structures = STRUCTURE_SEP_REGEX.split(t);
             List<Description> descs = new ArrayList<Description>();
-            for (String s : structures) {
-                Description desc = TemplateLanguage.getDescByName(s);
-                if (desc == null) {
-                    throw new IllegalStateException("Unknown name: " + s);
-                }
+            Description desc = TemplateLanguage.getDescByName(t);
+            if (desc != null) {
                 descs.add(desc);
+            } else {
+                String[] structures = STRUCTURE_SEP_REGEX.split(t);
+                for (String s : structures) {
+                    desc = TemplateLanguage.getDescByName(s);
+                    if (desc == null) {
+                        throw new IllegalStateException("Unknown name: " + s);
+                    }
+                    descs.add(desc);
+                }
             }
                         
             Position pos = safeGet(descs, Position.class);

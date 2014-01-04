@@ -157,7 +157,7 @@ public class FeatureCreationSpeedTest {
     //@Test
     public void testSpeedOfFeatureCreation2() throws UnsupportedEncodingException, FileNotFoundException {
         // Params
-        final int numExamples = 50001;
+        final int numExamples = 100;
         final int numRounds = 1;
 
         //InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
@@ -171,9 +171,15 @@ public class FeatureCreationSpeedTest {
         
         // Run
         System.out.println("Num sents: " + sents.size());
-        List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        
+        //List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         //List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
+        System.out.println("Num tpls: " + tpls.size());
 
+        testFeatExtract2(numRounds, tpls, sents, "en", 3, true);
+        System.exit(0);
+        
         for (int t=0; t<tpls.size(); t++) {
             System.out.println(tpls.get(t));
             testFeatExtract2(numRounds, tpls.subList(t, t+1), sents, "en", 3, true);
@@ -255,6 +261,8 @@ public class FeatureCreationSpeedTest {
         System.out.println("Time to hash: " + hashTimer.totMs());
         System.out.println("Time to lookup: " + lookupTimer.totMs());
         System.out.println("Time total            : " + timer.totMs());
+        System.out.println("Seconds per sentence: " + timer.totSec() / sents.size());
+        System.out.println("Sentences per second: " + sents.size() / timer.totSec());
     }
     
 

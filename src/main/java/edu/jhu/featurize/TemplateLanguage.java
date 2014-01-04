@@ -88,7 +88,7 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN, BTWN_POS
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,
     }
@@ -210,6 +210,7 @@ public class TemplateLanguage {
         desc(OtherFeat.GENEOLOGY, "geneology(p,c)", "geneological relationship between p and c in a syntactic parse: parent, child, ancestor, descendent.", AT.DEP_TREE);
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         desc(OtherFeat.PATH_GRAMS, "1,2,3-grams(path(p,c)).word/pos", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
+        desc(OtherFeat.BTWN_POS, "btwn(p,c).pos", "Each POS tag between p and c", AT.POS);
         desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
         desc(OtherFeat.SENT_LEN, "sentlen", "Sentence length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         // TODO:

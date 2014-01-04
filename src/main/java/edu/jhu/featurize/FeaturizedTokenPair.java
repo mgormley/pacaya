@@ -145,7 +145,7 @@ public class FeaturizedTokenPair {
             }
         }        
     }
-
+    
     public String getGeneologicalRelation() {
         if (pidx == aidx) {
             return "self";
