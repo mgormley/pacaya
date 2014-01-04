@@ -11,13 +11,13 @@ import org.apache.log4j.Logger;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
+import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
 import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
@@ -72,32 +72,46 @@ public class TemplateFeatureExtractor {
             addListFeature((FeatTemplate3) tpl, pidx, cidx, feats);
         } else if (tpl instanceof FeatTemplate4) {
             addOtherFeature((FeatTemplate4) tpl, pidx, cidx, feats);
-        } else if (tpl instanceof BigramTemplate) {
-            addBigramFeature((BigramTemplate) tpl, pidx, cidx, feats);
+        } else if (tpl instanceof JoinTemplate) {
+            addJoinFeature((JoinTemplate) tpl, pidx, cidx, feats);
         } else {
             throw new IllegalStateException("Feature not supported: " + tpl);
         }
     }
         
     /**
-     * For bigram feature templates of the form:
+     * For n-gram feature templates of the form:
      *     p.w+c_{-1}.bc0
      *     p.t+c.t
+     *     p.t+c.t+p.w
      * @param tpl Structured feature template.
      * @param pidx Token to which the parent position refers.
      * @param cidx Token to which the child position refers.
      * @param feats The feature list to which this will be added.
      */
-    public void addBigramFeature(BigramTemplate tpl, int pidx, int cidx, List<String> feats) {
-        ArrayList<String> feats1 = new ArrayList<String>();
-        ArrayList<String> feats2 = new ArrayList<String>();
-        addFeatures(tpl.tpl1, pidx, cidx, feats1);
-        addFeatures(tpl.tpl2, pidx, cidx, feats2);
+    public void addJoinFeature(JoinTemplate joinTpl, int pidx, int cidx, List<String> feats) {
+        ArrayList<String> joined = new ArrayList<String>();
+        addFeatures(joinTpl.tpls[0], pidx, cidx, joined);
+        for (int i=1; i<joinTpl.tpls.length; i++) {
+            ArrayList<String> tmpFeats = new ArrayList<String>();
+            if (joined.size() == 0) {
+                // Short circuit since we'll never create any features.
+                return;
+            }
+            addFeatures(joinTpl.tpls[i], pidx, cidx, tmpFeats);
+            joined = joinIntoBigrams(joined, tmpFeats);
+        }
+        feats.addAll(joined);
+    }
+
+    private ArrayList<String> joinIntoBigrams(ArrayList<String> feats1, ArrayList<String> feats2) {
+        ArrayList<String> joined = new ArrayList<String>();
         for (String f1 : feats1) {
             for (String f2 : feats2) {
-                feats.add(toFeat(f1, f2));
+                joined.add(toFeat(f1, f2));
             }
         }
+        return joined;
     }
 
     /**

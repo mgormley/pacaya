@@ -4,14 +4,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.featurize.TemplateLanguage.AT;
-import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
+import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
 import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
@@ -92,7 +91,7 @@ public class TemplateSets {
         ArrayList<FeatTemplate> bs = new ArrayList<FeatTemplate>();
         for (int i=0; i<unigrams1.size(); i++) {
             for (int j=i+1; j<unigrams2.size(); j++) {
-                bs.add(new BigramTemplate(unigrams1.get(i), unigrams2.get(j)));
+                bs.add(new JoinTemplate(unigrams1.get(i), unigrams2.get(j)));
             }
         }
         return bs;

@@ -12,13 +12,13 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceTest;
-import edu.jhu.featurize.TemplateLanguage.BigramTemplate;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
+import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
 import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
@@ -70,14 +70,14 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testParentPosition() {
         FeatTemplate tpl = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.WORD);
-        String expectedFeat = "PARENT.IDENTITY.WORD_the";
+        String expectedFeat = "p.word_the";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
 
     @Test
     public void testChildPosition() {
         FeatTemplate tpl = new FeatTemplate1(Position.CHILD, PositionModifier.IDENTITY, TokProperty.WORD);
-        String expectedFeat = "CHILD.IDENTITY.WORD_food";
+        String expectedFeat = "c.word_food";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
@@ -116,7 +116,7 @@ public class TemplateFeatureExtractorTest {
             System.out.println(feat);
         }
         assertEquals(feats.size(), 1);
-        assertEquals("PARENT."+mod.name()+".WORD_"+expectedWord, feats.get(0));
+        assertEquals(tpl.getName()+"_"+expectedWord, feats.get(0));
     }
     
     @Test
@@ -130,7 +130,7 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testTokPropListFeature() {
         FeatTemplate tpl = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
-        String[] expected = new String[] { "PARENT.IDENTITY.EACH_MORPHO_feat1", "PARENT.IDENTITY.EACH_MORPHO_feat2" };        
+        String[] expected = new String[] { "p.eachmorpho_feat1", "p.eachmorpho_feat2" };        
         getFeatsAndAssertEquality(tpl, expected);
     }
     
@@ -196,21 +196,21 @@ public class TemplateFeatureExtractorTest {
     @Test
     public void testTokPropertyAndEdgePropertyNulls1() {        
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, TokProperty.DEPREL, EdgeProperty.DIR, ListModifier.SEQ);
-        String expectedFeat = "PATH_P_C.DEPREL.DIR.SEQ_det_UP_subj_UP_v_DOWN_obj";
+        String expectedFeat = "path(p,c).deprel.dir.seq_det_UP_subj_UP_v_DOWN_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
     @Test
     public void testTokPropertyAndEdgePropertyNulls2() {
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, TokProperty.DEPREL, null, ListModifier.SEQ);
-        String expectedFeat = "PATH_P_C.DEPREL..SEQ_det_subj_v_obj";
+        String expectedFeat = "path(p,c).deprel.seq_det_subj_v_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
     
     @Test
     public void testTokPropertyAndEdgePropertyNulls3() {
         FeatTemplate tpl = new FeatTemplate3(PositionList.PATH_P_C, null, EdgeProperty.EDGEREL, ListModifier.SEQ);
-        String expectedFeat = "PATH_P_C..EDGEREL.SEQ_det_subj_obj";
+        String expectedFeat = "path(p,c).edgerel.seq_det_subj_obj";
         getFeatAndAssertEquality(tpl, expectedFeat);
     }
 
@@ -218,17 +218,17 @@ public class TemplateFeatureExtractorTest {
     public void testListModifiers() {
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expectedFeat = "LINE_P_C.POS..SEQ_Det_N_V_N";
+            String expectedFeat = "line(p,c).pos.seq_Det_N_V_N";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.BAG);
-            String expectedFeat = "LINE_P_C.POS..BAG_Det_N_V";
+            String expectedFeat = "line(p,c).pos.bag_Det_N_V";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
         {
             FeatTemplate tpl = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.MORPHO, null, ListModifier.NO_DUP);
-            String expectedFeat = "LINE_P_C.MORPHO..NO_DUP_feat1_feat2_feat";
+            String expectedFeat = "line(p,c).morpho.noDup_feat1_feat2_feat";
             getFeatAndAssertEquality(tpl, expectedFeat);
         }
     }
@@ -330,15 +330,15 @@ public class TemplateFeatureExtractorTest {
     public void testPathGramsFeature() {      
         FeatTemplate tpl = new FeatTemplate4(OtherFeat.PATH_GRAMS);
 
-        String[] expectedPathGrams = new String[] { "PATH_GRAMS_the", "PATH_GRAMS_Det", "PATH_GRAMS_dog",
-                "PATH_GRAMS_N", "PATH_GRAMS_ate", "PATH_GRAMS_V", "PATH_GRAMS_food", "PATH_GRAMS_N",
-                "PATH_GRAMS_the_dog", "PATH_GRAMS_Det_dog", "PATH_GRAMS_the_N", "PATH_GRAMS_Det_N",
-                "PATH_GRAMS_dog_ate", "PATH_GRAMS_N_ate", "PATH_GRAMS_dog_V", "PATH_GRAMS_N_V", "PATH_GRAMS_ate_food",
-                "PATH_GRAMS_V_food", "PATH_GRAMS_ate_N", "PATH_GRAMS_V_N", "PATH_GRAMS_the_dog_ate",
-                "PATH_GRAMS_Det_dog_ate", "PATH_GRAMS_the_N_ate", "PATH_GRAMS_Det_N_ate", "PATH_GRAMS_the_dog_V",
-                "PATH_GRAMS_Det_dog_V", "PATH_GRAMS_the_N_V", "PATH_GRAMS_Det_N_V", "PATH_GRAMS_dog_ate_food",
-                "PATH_GRAMS_N_ate_food", "PATH_GRAMS_dog_V_food", "PATH_GRAMS_N_V_food", "PATH_GRAMS_dog_ate_N",
-                "PATH_GRAMS_N_ate_N", "PATH_GRAMS_dog_V_N", "PATH_GRAMS_N_V_N", };
+        String[] expectedPathGrams = new String[] { "pathGrams_the", "pathGrams_Det", "pathGrams_dog",
+                "pathGrams_N", "pathGrams_ate", "pathGrams_V", "pathGrams_food", "pathGrams_N",
+                "pathGrams_the_dog", "pathGrams_Det_dog", "pathGrams_the_N", "pathGrams_Det_N",
+                "pathGrams_dog_ate", "pathGrams_N_ate", "pathGrams_dog_V", "pathGrams_N_V", "pathGrams_ate_food",
+                "pathGrams_V_food", "pathGrams_ate_N", "pathGrams_V_N", "pathGrams_the_dog_ate",
+                "pathGrams_Det_dog_ate", "pathGrams_the_N_ate", "pathGrams_Det_N_ate", "pathGrams_the_dog_V",
+                "pathGrams_Det_dog_V", "pathGrams_the_N_V", "pathGrams_Det_N_V", "pathGrams_dog_ate_food",
+                "pathGrams_N_ate_food", "pathGrams_dog_V_food", "pathGrams_N_V_food", "pathGrams_dog_ate_N",
+                "pathGrams_N_ate_N", "pathGrams_dog_V_N", "pathGrams_N_V_N", };
         
         getFeatsAndAssertEquality(tpl, expectedPathGrams);
     }
@@ -361,23 +361,39 @@ public class TemplateFeatureExtractorTest {
         {
             // Single feature.
             FeatTemplate tpl1 = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.MORPHO);
-            String expected1 = "PARENT.IDENTITY.MORPHO_feat1_feat2";
+            String expected1 = "p.morpho_feat1_feat2";
             FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expected2 = "LINE_P_C.POS..SEQ_Det_N_V_N";
-            FeatTemplate tpl = new BigramTemplate(tpl1, tpl2);
+            String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+            FeatTemplate tpl = new JoinTemplate(tpl1, tpl2);
             getFeatAndAssertEquality(tpl, expected1 + "_" + expected2);
         }
         {
             // Multiple features.
             FeatTemplate tpl1 = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
-            String[] expected1 = new String[] { "PARENT.IDENTITY.EACH_MORPHO_feat1",
-                    "PARENT.IDENTITY.EACH_MORPHO_feat2" };
+            String[] expected1 = new String[] { "p.eachmorpho_feat1",
+                    "p.eachmorpho_feat2" };
             FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
-            String expected2 = "LINE_P_C.POS..SEQ_Det_N_V_N";
-            FeatTemplate tpl = new BigramTemplate(tpl1, tpl2);
+            String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+            FeatTemplate tpl = new JoinTemplate(tpl1, tpl2);
             String[] expected = new String[] { expected1[0] + "_" + expected2, expected1[1] + "_" + expected2 };
             getFeatsAndAssertEquality(tpl, expected);
         }
+    }
+    
+    @Test
+    public void testTrigramFeature() {   
+        // Multiple features.
+        FeatTemplate tpl1 = new FeatTemplate2(Position.PARENT, PositionModifier.IDENTITY, TokPropList.EACH_MORPHO);
+        String[] expected1 = new String[] { "p.eachmorpho_feat1",
+                "p.eachmorpho_feat2" };
+        FeatTemplate tpl2 = new FeatTemplate3(PositionList.LINE_P_C, TokProperty.POS, null, ListModifier.SEQ);
+        String expected2 = "line(p,c).pos.seq_Det_N_V_N";
+        FeatTemplate tpl3 = new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, TokProperty.MORPHO);
+        String expected3 = "p.morpho_feat1_feat2";
+        FeatTemplate tpl = new JoinTemplate(tpl1, tpl2, tpl3);
+        String[] expected = new String[] { expected1[0] + "_" + expected2 + "_" + expected3, 
+                expected1[1] + "_" + expected2  + "_" + expected3};
+        getFeatsAndAssertEquality(tpl, expected);
     }
     
     // Single feature.

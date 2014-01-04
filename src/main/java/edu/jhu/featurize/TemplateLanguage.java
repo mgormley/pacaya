@@ -138,6 +138,10 @@ public class TemplateLanguage {
     }
     
     static {
+        /** Positions. */
+        desc(Position.PARENT, "p", "Parent");
+        desc(Position.CHILD, "c", "Child");
+        
         /** Word property. A mapping from a position to a string. */
         desc(TokProperty.WORD, "word", "Word", AT.WORD);
         desc(TokProperty.LEMMA, "lemma", "Lemma", AT.LEMMA);
@@ -209,16 +213,12 @@ public class TemplateLanguage {
         desc(OtherFeat.DISTANCE, "distance(p,c)", "Distance binned into greater than: 2, 5, 10, 20, 30, or 40", AT.WORD);
         desc(OtherFeat.GENEOLOGY, "geneology(p,c)", "geneological relationship between p and c in a syntactic parse: parent, child, ancestor, descendent.", AT.DEP_TREE);
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
-        desc(OtherFeat.PATH_GRAMS, "1,2,3-grams(path(p,c)).word/pos", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
+        desc(OtherFeat.PATH_GRAMS, "pathGrams", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
         desc(OtherFeat.BTWN_POS, "btwn(p,c).pos", "Each POS tag between p and c", AT.POS);
         desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
         desc(OtherFeat.SENT_LEN, "sentlen", "Sentence length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         // TODO:
         //desc(OtherFeat.PRED_VOICE_WORD_OR_POS, "p.voice+a.word / p.voice+a.t", "The predicate voice and the  word/POS of the argument.", AT.LABEL_DEP_TREE);
-        
-        /** Positions. */
-        desc(Position.PARENT, "p", "Parent");
-        desc(Position.CHILD, "c", "Child");
         
         for (Description d : desc) {
             // Create the mapping of enums to their descriptions.
@@ -282,10 +282,14 @@ public class TemplateLanguage {
     public static final String STRUCTURE_SEP = ".";
 
     public static abstract class FeatTemplate implements Serializable {
+        protected String name;
         private static final long serialVersionUID = 1L;
         public FeatTemplate() { }
         public String getName() {
-            return getNameFromDesc(this);
+            if (name == null) {
+                name = getNameFromDesc(this);
+            }
+            return name;
         }
         public abstract List<Enum<?>> getStructure();
         public String toString() {
@@ -410,27 +414,41 @@ public class TemplateLanguage {
             return s;
         }
     }
-    
+        
     /**
-     * For bigram feature templates of the form:
-     *     p.w+c_{-1}.bc0
-     *     p.t+c.t
+     * For n-gram feature templates of the form:
+     *     p.w + c_{-1}.bc0
+     *     p.t + c.t
+     *     p.t + c.t + p.w
      */
-    public static class BigramTemplate extends FeatTemplate {
+    public static class JoinTemplate extends FeatTemplate {
         private static final long serialVersionUID = 1L;
-        public FeatTemplate tpl1;
-        public FeatTemplate tpl2;
-        public BigramTemplate(FeatTemplate tpl1, FeatTemplate tpl2) {
-            this.tpl1 = tpl1;
-            this.tpl2 = tpl2;
+        public FeatTemplate[] tpls;
+        public JoinTemplate(FeatTemplate... tpls) {
+            if (tpls.length < 2) {
+                throw new IllegalStateException("JoinTemplates must consist of 2 or more templates: " + Arrays.toString(tpls));
+            }
+            this.tpls = tpls;
         }
         public List<Enum<?>> getStructure() {
-            List<Enum<?>> s = new ArrayList<Enum<?>>(tpl1.getStructure());
-            s.addAll(tpl2.getStructure());
+            List<Enum<?>> s = new ArrayList<Enum<?>>();
+            for (FeatTemplate tpl : tpls) {
+                s.addAll(tpl.getStructure());
+            }
             return s;
         }
         public String getName() {
-            return StringUtils.join(new String[]{tpl1.getName(), tpl2.getName()}, " " + TEMPLATE_SEP + " ");
+            if (name == null) {
+                name = StringUtils.join(toNames(tpls), " " + TEMPLATE_SEP + " ");
+            }
+            return name;
+        }
+        private static String[] toNames(FeatTemplate[] tpls) {
+            String[] names = new String[tpls.length];
+            for (int i=0; i<tpls.length; i++) {
+                names[i] = tpls[i].getName();                
+            }
+            return names;
         }
     }
     
