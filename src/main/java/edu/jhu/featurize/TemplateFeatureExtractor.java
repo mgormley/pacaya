@@ -177,7 +177,7 @@ public class TemplateFeatureExtractor {
         switch (pl) {
         case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C: case BTWN_P_C:
             if (eprop != null) {
-                throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths." + tpl);
+                throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths. Offending template: " + tpl);
             } else if (prop == null) {
                 throw new IllegalStateException("TokProperty must be non-null for position lists.");
             }

@@ -22,8 +22,8 @@ public class TemplateSetsTest {
         int numBigrams = tpls.size();
         System.out.println("Number of bigram templates: " + numBigrams);
         
-        assertEquals(1166, numUnigrams);
-        assertEquals(679195, numBigrams);
+        assertEquals(1467, numUnigrams);
+        assertEquals(1075311, numBigrams);
     }
     
     @Test
@@ -83,7 +83,7 @@ public class TemplateSetsTest {
         tpls = TemplateSets.getCoarseUnigramSet1();
         int numArg = tpls.size();
         System.out.println("Number of templates: " + numArg);
-        assertEquals(126, numArg);
+        assertEquals(125, numArg);
 
         // This tests that names are created correctly.
         for (FeatTemplate tpl : tpls) {

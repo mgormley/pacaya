@@ -71,9 +71,8 @@ public class TemplateLanguage {
 
         public boolean isPath() {
             switch (this) {
-            case LINE_P_C: case CHILDREN_P: case NO_FAR_CHILDREN_P: 
-                case CHILDREN_C: case NO_FAR_CHILDREN_C: return false;
-            default: return true;
+            case PATH_P_C: case PATH_P_LCA: case PATH_C_LCA: case PATH_LCA_ROOT: return true;
+            default: return false;
             }
         }
     }
