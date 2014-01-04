@@ -19,7 +19,7 @@ import edu.jhu.util.Alphabet;
  */
 public class CnfGrammar {
 
-    private static final Logger log = Logger.getLogger(CnfGrammar.class);
+    public static final Logger log = Logger.getLogger(CnfGrammar.class);
     
     private int rootSymbol;
     private ArrayList<Rule> allRules;

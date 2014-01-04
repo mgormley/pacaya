@@ -509,7 +509,7 @@ public class DmvTrainerFactory {
         return new DmvCkyParser(prm);
     }
 
-    private static DmvCkyParserPrm getDmvCkyParserPrm(boolean usePredArgSupervision) {
+    public static DmvCkyParserPrm getDmvCkyParserPrm(boolean usePredArgSupervision) {
         CkyPcfgParserPrm ckyPrm = new CkyPcfgParserPrm();
         ckyPrm.loopOrder = LoopOrder.LEFT_CHILD;
         ckyPrm.parseType = ParseType.VITERBI;

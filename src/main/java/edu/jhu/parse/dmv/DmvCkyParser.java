@@ -119,18 +119,28 @@ public class DmvCkyParser implements DepParser {
      * Gets the maximum-likelihood dependency tree and its log-likelihood.
      */
     public Pair<DepTree, Double> parse(Sentence sentence, DmvModel dmv) {
-        timer.start();
-        DmvCnfGrammar grammar = getDmvGrammar(sentence, dmv);
-        Sentence annoSentence = getAnnotatedSentence(sentence, grammar);
-        Chart chart = parser.parseSentence(annoSentence, grammar.getCnfGrammar());
-        
-        Pair<int[], Double> pair= extractParentsFromChart(chart, grammar);
+        Pair<int[], Double> pair = parseForParents(sentence, dmv);        
         int[] parents = pair.get1();
-        double logProb = pair.get2();
+        double logProb = pair.get2();        
         
+        if (parents[0] == -2) {
+            log.warn("Unable to parse sentence: " + sentence);
+        }
+        
+        timer.start();
         Pair<DepTree,Double> ret = new Pair<DepTree, Double>(new DepTree(sentence, parents, true), logProb);
         timer.stop();        
         return ret;
+    }
+
+    public Pair<int[], Double> parseForParents(Sentence sentence, DmvModel dmv) {
+        timer.start();
+        DmvCnfGrammar grammar = getDmvGrammar(sentence, dmv);
+        Sentence annoSentence = getAnnotatedSentence(sentence, grammar);
+        Chart chart = parser.parseSentence(annoSentence, grammar.getCnfGrammar());        
+        Pair<int[], Double> pair= extractParentsFromChart(chart, grammar);
+        timer.stop();
+        return pair;
     }
 
     /**
@@ -215,9 +225,8 @@ public class DmvCkyParser implements DepParser {
         BackPointer bp = cell.getBp(rootSymbol);
         
         if (start == 0 && end == parents.length * 2 && bp == null) {
-            log.warn("Unable to parse sentence");
-            Arrays.fill(parents, -1);
-            return -1;
+            // This sentence has no parse.
+            return -2;
         }
         // The backpointer will never be null because we return on lexical rules.
         assert(bp != null);
