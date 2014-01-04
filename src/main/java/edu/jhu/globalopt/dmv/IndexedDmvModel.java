@@ -68,6 +68,10 @@ public class IndexedDmvModel implements IndexedCpt {
     private int[][][] sentMaxFreqCms; 
     
     public IndexedDmvModel(DmvTrainCorpus corpus) {
+        this(corpus, false);
+    }
+    
+    public IndexedDmvModel(DmvTrainCorpus corpus, boolean skipMaxFreqAndSentParams) {
         this.corpus = corpus;
         this.alphabet = corpus.getLabelAlphabet();
 
@@ -89,7 +93,23 @@ public class IndexedDmvModel implements IndexedCpt {
                     rhsToC.lookupIndex(new Rhs(DECISION, p, dir, dv));
         rhsToC.stopGrowth();
         log.trace("rhsToC: size=" + rhsToC.size() + " alphabet=" + rhsToC);
+
+        // Count total number of parameters
+        numTotalParams = 0;
+        for (int c = 0; c < getNumConds(); c++) {
+            for (int m = 0; m < getNumParams(c); m++) {
+                numTotalParams++;
+            }
+        }
         
+        if (skipMaxFreqAndSentParams) {
+            // TODO: This is just a switch to avoid the memory consumption of
+            // sentMaxFreqCms which grows very large for large corpora with big 
+            // models.
+            return;
+        }
+        
+        // Create the counts of the maximum number of times each parameter /could/ occur for each sentence.
         sentMaxFreqCms = new int[corpus.size()][][];
         for (int s=0; s<corpus.size(); s++) {
             sentMaxFreqCms[s] = getSentMaxFreqCm(corpus.getSentence(s)); 
@@ -142,14 +162,7 @@ public class IndexedDmvModel implements IndexedCpt {
                 }
             }
         }
-
-        // Count total number of parameters
-        numTotalParams = 0;
-        for (int c = 0; c < getNumConds(); c++) {
-            for (int m = 0; m < getNumParams(c); m++) {
-                numTotalParams++;
-            }
-        }
+        
         // Create the count of total max frequencies for each model parameter in terms of c,m
         // and count the total number of non-zero max frequencies.
         numNZUnsupMaxFreqCms = 0;

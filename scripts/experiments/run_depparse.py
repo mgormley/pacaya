@@ -8,6 +8,7 @@ import tempfile
 import stat
 import shlex
 import subprocess
+import multiprocessing
 from subprocess import Popen
 from optparse import OptionParser
 from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
@@ -149,7 +150,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
         total_work_mem_megs = self.work_mem_megs
         if self.get("parser") == "cky" and self.get("algorithm") == "viterbi":
             # In this case, CPLEX shouldn't be running.
-            java_mem = total_work_mem_megs
+            java_mem = total_work_mem_megs * (16./17.)
             zimpl_mem = 0
             ilp_mem = 0
         else:
@@ -235,6 +236,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
         self.expname = options.expname
         self.data = options.data
         self.hprof = options.hprof
+        self.big_machine = (multiprocessing.cpu_count() > 2)
         if options.test:
             self.get_data = get_test_data
         else:
@@ -445,7 +447,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             setup = DPExpParams()
             # All train sentences and full-length test sentences.
             setup.update(maxNumSentences=100000000, maxSentenceLengthTest=100000000)
-            setup.update(algorithm="viterbi", parser="cky", numRestarts=10, iterations=1000, convergenceRatio=0.99999)
+            setup.update(algorithm="viterbi", parser="cky", numRestarts=0, iterations=1000, convergenceRatio=0.99999)
             setup.update(usePredictedPosTags=True, modelOut="model.binary.gz")
             setup.update(timeoutSeconds=48*60*60) # if maxSentenceLength > 20: ??
             setup.set("lambda", 1)
@@ -456,18 +458,18 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     pl = p.langs[lang_short]
                     gl = g.langs[lang_short]
                     for dataset in [gl.conll09_train, gl.conll09_dev, gl.conll09_eval]:
-                        for brownClusters in [None, pl.bc_256]:                            
+                        for brownClusters in [pl.bc_256, None]:                            
                             if brownClusters is not None:
                                 bc = DPExpParams(brownClusters=brownClusters, dataset=dataset.get("dataset") + "-brown")
                             else:
                                 bc = DPExpParams()
                             for usePredArgSupervision in [True, False]:
-                                if self.fast: 
-                                    setup.set("work_mem_megs", 1024, False, False)                                    
+                                if self.fast or not self.big_machine: 
+                                    setup.set("work_mem_megs", 1.5*1024, False, False)                                    
                                 elif dataset == gl.conll09_train:
-                                    setup.set("work_mem_megs", 64*1024, False, False)
-                                else:
                                     setup.set("work_mem_megs", 16*1024, False, False)
+                                else:
+                                    setup.set("work_mem_megs", 4*1024, False, False)
                                 exp = all + setup + dataset + bc + DPExpParams(usePredArgSupervision=usePredArgSupervision)
                                 #root.add_dependent(exp + universalPostCons + DPExpParams(parser="relaxed"))
                                 exps.append(exp)

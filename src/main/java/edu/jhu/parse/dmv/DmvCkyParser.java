@@ -87,7 +87,7 @@ public class DmvCkyParser implements DepParser {
     public DepTreebank getViterbiParse(DmvTrainCorpus corpus, Model genericModel) {
         // Lazily construct the objective.
         if (dmvObj == null || this.sents != corpus.getSentences()) {
-            this.dmvObj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus));
+            this.dmvObj = new DmvObjective(prm.objPrm, new IndexedDmvModel(corpus, true));
             this.sents = corpus.getSentences();
         }
         DmvModel model = (DmvModel) genericModel;
