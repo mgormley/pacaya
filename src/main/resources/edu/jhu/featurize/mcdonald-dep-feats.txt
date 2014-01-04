@@ -49,7 +49,7 @@ p.word + c.word
 p.pos + c.pos
 
 # In Between POS Features
-p.pos + btwn(p,c).pos + c.pos
+p.pos + btwn(p,c).pos.1gram + c.pos
 
 # Surrounding Word POS Features
 p.pos + p.1.pos + c.-1.pos + c.pos
@@ -83,7 +83,7 @@ relative(p,c) + distance(p,c) + p.word + p.pos + c.pos
 relative(p,c) + distance(p,c) + p.word + p.pos + c.word
 relative(p,c) + distance(p,c) + p.word + c.word
 relative(p,c) + distance(p,c) + p.pos + c.pos
-relative(p,c) + distance(p,c) + p.pos + btwn(p,c).pos + c.pos
+relative(p,c) + distance(p,c) + p.pos + btwn(p,c).pos.1gram + c.pos
 relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.-1.pos + c.pos
 relative(p,c) + distance(p,c) + p.-1.pos + p.pos + c.-1.pos + c.pos
 relative(p,c) + distance(p,c) + p.pos + p.1.pos + c.pos + c.1.pos

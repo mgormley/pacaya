@@ -315,8 +315,7 @@ public class TemplateFeatureExtractorTest {
         assertEquals(tpl.getName() + "_" + expectedVal, feats.get(0));
     }
     
-    private void testOtherFeaturesHelper2(int pidx, int cidx, OtherFeat f, String... expectedFeats) {
-        FeatTemplate tpl = new FeatTemplate4(f);
+    private void testOtherFeaturesHelper2(int pidx, int cidx, FeatTemplate tpl, String... expectedFeats) {
         TemplateFeatureExtractor extr = getCoNLLSentenceExtractor2();        
         ArrayList<String> feats = new ArrayList<String>();
         extr.addFeatures(tpl, pidx, cidx, feats);
@@ -344,16 +343,17 @@ public class TemplateFeatureExtractorTest {
     }
     
     @Test
-    public void testBtwnPosFeature() {    
-        testOtherFeaturesHelper2(0, 3, OtherFeat.BTWN_POS, "btwn(p,c).pos_d", "btwn(p,c).pos_v");
-        testOtherFeaturesHelper2(3, 0, OtherFeat.BTWN_POS, "btwn(p,c).pos_d", "btwn(p,c).pos_v");
-        testOtherFeaturesHelper2(1, 3, OtherFeat.BTWN_POS, "btwn(p,c).pos_d");
-        testOtherFeaturesHelper2(3, 1, OtherFeat.BTWN_POS, "btwn(p,c).pos_d");
-        testOtherFeaturesHelper2(0, 2, OtherFeat.BTWN_POS, "btwn(p,c).pos_v");
+    public void testBtwnPosFeature() {  
+        FeatTemplate btwnPos = new FeatTemplate3(PositionList.BTWN_P_C, TokProperty.POS, null, ListModifier.UNIGRAM);
+        testOtherFeaturesHelper2(0, 3, btwnPos, "btwn(p,c).pos.1gram_d", "btwn(p,c).pos.1gram_v");
+        testOtherFeaturesHelper2(3, 0, btwnPos, "btwn(p,c).pos.1gram_d", "btwn(p,c).pos.1gram_v");
+        testOtherFeaturesHelper2(1, 3, btwnPos, "btwn(p,c).pos.1gram_d");
+        testOtherFeaturesHelper2(3, 1, btwnPos, "btwn(p,c).pos.1gram_d");
+        testOtherFeaturesHelper2(0, 2, btwnPos, "btwn(p,c).pos.1gram_v");
 
-        testOtherFeaturesHelper2(0, 1, OtherFeat.BTWN_POS);
-        testOtherFeaturesHelper2(1, 0, OtherFeat.BTWN_POS);
-        testOtherFeaturesHelper2(1, 1, OtherFeat.BTWN_POS);
+        testOtherFeaturesHelper2(0, 1, btwnPos);
+        testOtherFeaturesHelper2(1, 0, btwnPos);
+        testOtherFeaturesHelper2(1, 1, btwnPos);
     }
     
     @Test

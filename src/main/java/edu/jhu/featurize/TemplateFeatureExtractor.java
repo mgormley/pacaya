@@ -173,10 +173,9 @@ public class TemplateFeatureExtractor {
             throw new IllegalStateException("Feature template extracts nothing. One of prop and eprop must be non-null.");
         }
         
-        String feat;
         Collection<String> vals;
         switch (pl) {
-        case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C:
+        case CHILDREN_P: case NO_FAR_CHILDREN_P: case CHILDREN_C: case NO_FAR_CHILDREN_C: case LINE_P_C: case BTWN_P_C:
             if (eprop != null) {
                 throw new IllegalStateException("EdgeProperty " + eprop + " is only supported on paths." + tpl);
             } else if (prop == null) {
@@ -184,19 +183,29 @@ public class TemplateFeatureExtractor {
             }
             List<Integer> indices = getPositionList(pl, pidx, cidx);
             vals = getTokPropsForList(prop, indices);
-            vals = getModifiedList(lmod, vals);
-            feat = toFeat(tpl.getName(), vals);
-            feats.add(feat);
+            listAndPathHelper(vals, lmod, tpl, feats);
             return;
         case PATH_P_C: case PATH_C_LCA: case PATH_P_LCA: case PATH_LCA_ROOT: 
             List<Pair<Integer, Dir>> path = getPath(pl, pidx, cidx);
             vals = getTokPropsForPath(prop, eprop, path);
-            vals = getModifiedList(lmod, vals);
-            feat = toFeat(tpl.getName(), vals);
-            feats.add(feat);
+            listAndPathHelper(vals, lmod, tpl, feats);
             return;
         default:
             throw new IllegalStateException();
+        }
+    }
+
+    private void listAndPathHelper(Collection<String> vals, ListModifier lmod, FeatTemplate3 tpl, List<String> feats) {
+        String feat;
+        if (lmod == ListModifier.UNIGRAM) {
+            for (String v : vals) {
+                feat = toFeat(tpl.getName(), v);
+                feats.add(feat);
+            }
+        } else {
+            vals = getModifiedList(lmod, vals);
+            feat = toFeat(tpl.getName(), vals);
+            feats.add(feat);
         }
     }
 
@@ -214,18 +223,6 @@ public class TemplateFeatureExtractor {
         case PATH_GRAMS:
             List<Pair<Integer,Dir>> path = getPath(PositionList.PATH_P_C, pidx, cidx);  
             addPathGrams(tpl, path, feats);
-            return;
-        case BTWN_POS:
-            List<Integer> posList = getPositionList(PositionList.LINE_P_C, pidx, cidx);
-            if (posList.size() > 2) {
-                posList = posList.subList(1, posList.size() - 1);
-            } else {
-                posList = Collections.emptyList();
-            }
-            List<String> vals = getTokPropsForList(TokProperty.POS, posList);
-            for (String v : vals) {
-                feats.add(toFeat(tpl.getName(), v));
-            }
             return;
         default:  
             String val = getOtherFeatSingleton(tpl.feat, pidx, cidx);
@@ -304,8 +301,9 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private ArrayList<Integer> getPositionList(PositionList pl, int pidx, int cidx) {        
+    private List<Integer> getPositionList(PositionList pl, int pidx, int cidx) {        
         FeaturizedToken tok;
+        FeaturizedTokenPair pair;
         switch (pl) {
         case CHILDREN_P: 
             tok = getFeatTok(pidx);
@@ -320,8 +318,17 @@ public class TemplateFeatureExtractor {
             tok = getFeatTok(cidx);
             return tok.getNoFarChildren();
         case LINE_P_C: 
-            FeaturizedTokenPair pair = getFeatTokPair(pidx, cidx);
+            pair = getFeatTokPair(pidx, cidx);
             return pair.getLinePath();
+        case BTWN_P_C:
+            pair = getFeatTokPair(pidx, cidx);
+            List<Integer> posList = pair.getLinePath();
+            if (posList.size() > 2) {
+                posList = posList.subList(1, posList.size() - 1);
+            } else {
+                posList = Collections.emptyList();
+            }
+            return posList;
         default:
             throw new IllegalStateException();
         }

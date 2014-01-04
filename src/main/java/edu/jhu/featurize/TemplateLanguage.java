@@ -67,7 +67,7 @@ public class TemplateLanguage {
     public enum PositionList {
         CHILDREN_P, NO_FAR_CHILDREN_P, CHILDREN_C, NO_FAR_CHILDREN_C,
         //
-        LINE_P_C, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT;
+        LINE_P_C, BTWN_P_C, PATH_P_C, PATH_P_LCA, PATH_C_LCA, PATH_LCA_ROOT;
 
         public boolean isPath() {
             switch (this) {
@@ -80,7 +80,7 @@ public class TemplateLanguage {
 
     /** List Modifiers. Mapping of a list of strings to a new list of strings. */
     public enum ListModifier {
-        SEQ, BAG, NO_DUP,
+        SEQ, BAG, NO_DUP, UNIGRAM;
     }
 
     /**
@@ -88,7 +88,7 @@ public class TemplateLanguage {
      * feature.
      */
     public enum OtherFeat {
-        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN, BTWN_POS
+        RELATIVE, DISTANCE, GENEOLOGY, PATH_LEN, CONTINUITY, PATH_GRAMS, SENT_LEN
         // TODO: Not implemented:
         // PRED_VOICE_WORD_OR_POS,
     }
@@ -193,7 +193,8 @@ public class TemplateLanguage {
         desc(PositionModifier.HIGH_SN, "highsn", "High support Noun", AT.POS, AT.DEP_TREE);
 
         /** Position List. Mapping from one or two positions to a position list. */
-        desc(PositionList.LINE_P_C, "line(p,c)", "horizontal path between p and c", AT.WORD);
+        desc(PositionList.LINE_P_C, "line(p,c)", "horizontal path between p and c (inclusive)", AT.WORD);
+        desc(PositionList.BTWN_P_C, "btwn(p,c)", "Horizontal path between p and c (exclusive)", AT.WORD);
         desc(PositionList.CHILDREN_P, "children(p)", "Children of p", AT.DEP_TREE);
         desc(PositionList.NO_FAR_CHILDREN_P, "noFarChildren(p)", "Children without the leftmost or rightmost included", AT.DEP_TREE);
         desc(PositionList.CHILDREN_C, "children(c)", "Children of c", AT.DEP_TREE);
@@ -202,11 +203,12 @@ public class TemplateLanguage {
         desc(PositionList.PATH_P_LCA, "path(p,lca(p,c))", "from parent to least-common-ancestor", AT.DEP_TREE);
         desc(PositionList.PATH_C_LCA, "path(c,lca(p,c))", "from child to least-common-ancestor", AT.DEP_TREE);
         desc(PositionList.PATH_LCA_ROOT, "path(lca(p,c),root)", "from least-common-ancestor to root ", AT.DEP_TREE);
-   
+
         /** List Modifiers. Mapping of a list of strings to a new list of strings. */
         desc(ListModifier.SEQ, "seq", "Identity function.");
         desc(ListModifier.BAG, "bag", "List to set.");
         desc(ListModifier.NO_DUP, "noDup", "Unix “uniq” on original list.");
+        desc(ListModifier.UNIGRAM, "1gram", "Creates a separate feature for each element of the list.");
    
         /** Additional Features. Mapping from parent and child positions to a feature. */
         desc(OtherFeat.RELATIVE, "relative(p,c)", "Relative position of p and c: before, after, on.", AT.WORD);
@@ -214,7 +216,6 @@ public class TemplateLanguage {
         desc(OtherFeat.GENEOLOGY, "geneology(p,c)", "geneological relationship between p and c in a syntactic parse: parent, child, ancestor, descendent.", AT.DEP_TREE);
         desc(OtherFeat.PATH_LEN, "len(path(p,c))", "Path length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         desc(OtherFeat.PATH_GRAMS, "pathGrams", "$1,2,3$-gram path features of words/POS tags", AT.DEP_TREE);
-        desc(OtherFeat.BTWN_POS, "btwn(p,c).pos", "Each POS tag between p and c", AT.POS);
         desc(OtherFeat.CONTINUITY, "continuity(path(p,c))", "The number of non-consecutive token pairs  in a predicate-argument path.", AT.DEP_TREE);
         desc(OtherFeat.SENT_LEN, "sentlen", "Sentence length binned into greater than: 2, 5, 10, 20, 30, or 40", AT.DEP_TREE);
         // TODO:
