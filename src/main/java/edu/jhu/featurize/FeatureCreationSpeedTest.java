@@ -1,13 +1,13 @@
 package edu.jhu.featurize;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -21,6 +21,7 @@ import edu.jhu.prim.tuple.Tuple;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
@@ -155,7 +156,7 @@ public class FeatureCreationSpeedTest {
     }
     
     //@Test
-    public void testSpeedOfFeatureCreation2() throws UnsupportedEncodingException, FileNotFoundException {
+    public void testSpeedOfFeatureCreation2() throws IOException {
         // Params
         final int numExamples = 100;
         final int numRounds = 1;
@@ -169,11 +170,16 @@ public class FeatureCreationSpeedTest {
         }
         SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(conllSents, false);
         
+        // Add Brown clusters
+        BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+        bct.read(new File("./data/bc_out_1000/full.txt_en_1000/bc/paths"));
+        bct.addClusters(sents);
+        
         // Run
         System.out.println("Num sents: " + sents.size());
         
         //List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
-        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.kooBasicDepFeatsResource);
         //List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
         System.out.println("Num tpls: " + tpls.size());
 
@@ -287,7 +293,7 @@ public class FeatureCreationSpeedTest {
     }
     // -----------------------------------------------------
     
-    public static void main(String[] args) throws UnsupportedEncodingException, FileNotFoundException {
+    public static void main(String[] args) throws IOException {
         new FeatureCreationSpeedTest().testSpeedOfFeatureCreation2();
     }
 

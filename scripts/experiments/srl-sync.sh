@@ -1,7 +1,7 @@
 # Syncs the remote results with a local copy of them.
 #
 
-RSYNC=(rsync -av -e "ssh external.hltcoe.jhu.edu ssh")
+RSYNC=(rsync -azv -e "ssh external.hltcoe.jhu.edu ssh")
 LOCAL_COPY=./remote_exp
 SERVER=test4
 REMOTE_EXP=$SERVER:/export/common/SCALE13/Text/u/mgormley/active/working--parsing--exp
@@ -35,6 +35,10 @@ echo "Syncing Brown cluster output..."
 "${RSYNC[@]}" $SERVER:/home/hltcoe/mgormley/working/word_embeddings/bc_out_256/ ./data/bc_out_256 \
     --include="/*/" \
     --include="paths.cutoff" \
+    --exclude="*"
+"${RSYNC[@]}" $SERVER:/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000/ ./data/bc_out_1000 \
+    --include="/**/" \
+    --include="paths" \
     --exclude="*"
 
 echo "Adding symbolic link to vem-conll_005"

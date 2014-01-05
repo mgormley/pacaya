@@ -22,6 +22,7 @@ import edu.jhu.util.collections.Lists;
 
 public class TemplateSets {
 
+    // Semantic Role Labeling feature sets.
     public static final String bjorkelundArgFeatsResource = "/edu/jhu/featurize/bjorkelund-arg-feats.txt";
     public static final String bjorkelundSenseFeatsResource = "/edu/jhu/featurize/bjorkelund-sense-feats.txt";
 
@@ -31,7 +32,9 @@ public class TemplateSets {
     public static final String zhaoCaArgFeatsResource = "/edu/jhu/featurize/zhao-ca-arg-feats.txt";
     public static final String zhaoEnSenseFeatsResource = "/edu/jhu/featurize/zhao-en-sense-feats.txt";
 
+    // Dependency Parsing feature sets.
     public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
+    public static final String kooBasicDepFeatsResource = "/edu/jhu/featurize/koo-basic-dep-feats.txt";
     
     private TemplateSets() {
         // Private constructor.
