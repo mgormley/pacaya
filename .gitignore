@@ -2,6 +2,7 @@
 *~
 .#*
 \#*\#
+~$*
  
 # /
 /other_repos
@@ -73,6 +74,8 @@
 /data/treebank_3_old/
 /data/bc_out_256
 /data/bc_out_1000
+
+results/srl-feat-ig.xlsx
 
 java.hprof.txt
 warn.log
