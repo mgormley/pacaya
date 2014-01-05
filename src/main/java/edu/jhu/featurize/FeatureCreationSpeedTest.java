@@ -179,7 +179,7 @@ public class FeatureCreationSpeedTest {
         System.out.println("Num sents: " + sents.size());
         
         //List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
-        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.kooBasicDepFeatsResource);
+        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.kooHybridDepFeatsResource);
         //List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
         System.out.println("Num tpls: " + tpls.size());
 

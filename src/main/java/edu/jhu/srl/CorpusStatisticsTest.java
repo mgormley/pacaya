@@ -23,9 +23,10 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 public class CorpusStatisticsTest {
     
     String expectedCsToString = "CorpusStatistics [\n"
-            + "     knownWords=[de],\n"
-            + "     knownUnks=[UNK-LC-s, UNK, UNK-LC],\n"
-            + "     knownPostags=[f, v, d, s, r, p, a, n, z],\n"
+            + "     knownWords=[de, ., ,],\n"
+            + "     topNWords=[de],\n"
+            + "     knownUnks=[UNK-LC-s, UNK-CAPS, UNK, UNK-LC],\n"
+            + "     knownPostags=[f, v, d, s, c, r, p, a, n, z],\n"
             + "     linkStateNames=[True, False],\n"
             + "     roleStateNames=[argUNK, arg2, arg1, arg0, _, argm],\n"
             + "     maxSentLength=30]";
@@ -36,7 +37,8 @@ public class CorpusStatisticsTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        List<CoNLL09Sentence> sents = cr.readSents(2);
+        csPrm.topN = 1;
+        List<CoNLL09Sentence> sents = cr.readSents(4);
         SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
         for (CoNLL09Sentence sent : sents) {
             sent.normalizeRoleNames();

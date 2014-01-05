@@ -37,7 +37,7 @@ public class TemplateLanguage {
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
-        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED,
+        WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
         //
         MORPHO1, MORPHO2, MORPHO3;
     }
@@ -153,7 +153,8 @@ public class TemplateLanguage {
         desc(TokProperty.UNK, "unk", "Unknown word class", AT.WORD);
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
         desc(TokProperty.CAPITALIZED, "capitalized", "Whether this word starts with a capital letter", AT.WORD);
-
+        desc(TokProperty.WORD_TOP_N, "wordTopN", "Word if it's in the top N", AT.WORD);
+        
         desc(TokProperty.MORPHO1, "morpho1", "Morphological feature 1", AT.MORPHO);
         desc(TokProperty.MORPHO2, "morpho2", "Morphological feature 2", AT.MORPHO);
         desc(TokProperty.MORPHO3, "morpho3", "Morphological feature 3", AT.MORPHO);

@@ -1,6 +1,45 @@
-# The Basic Features from Koo et al. (2008), which include the McDonald et al. (2005) feature set.
-# This does not include the "hybrid" or topN word features.
+# The Features from Koo et al. (2008), which include the McDonald et al. (2005) feature set.
+# This includes the hybrid features along with the topN words feature.
+
+#------ Hybrid Koo et al. (2008) features. ------
+
+# TODO: Hybrid of pos and bc0.
+
+# Hybrid of bc0 and wordTopN features.
+# cat mcdonald | grep -P "word|pos" | sed -e "s/pos/bc0/g" -e "s/word/wordTopN/g" | grep bc0 | grep wordTopN
 #
+p.wordTopN + p.bc0
+c.wordTopN + c.bc0
+p.wordTopN + p.bc0 + c.wordTopN + c.bc0
+p.bc0 + c.wordTopN + c.bc0
+p.wordTopN + c.wordTopN + c.bc0
+p.wordTopN + p.bc0 + c.bc0
+p.wordTopN + p.bc0 + c.wordTopN
+relative(p,c) + distance(p,c) + p.wordTopN + p.bc0
+relative(p,c) + distance(p,c) + c.wordTopN + c.bc0
+relative(p,c) + distance(p,c) + p.wordTopN + p.bc0 + c.wordTopN + c.bc0
+relative(p,c) + distance(p,c) + p.bc0 + c.wordTopN + c.bc0
+relative(p,c) + distance(p,c) + p.wordTopN + c.wordTopN + c.bc0
+relative(p,c) + distance(p,c) + p.wordTopN + p.bc0 + c.bc0
+relative(p,c) + distance(p,c) + p.wordTopN + p.bc0 + c.wordTopN
+
+# Hybrid of bc1 and pos features.
+# cat mcdonald | grep -P "word|pos" | grep -v "chpre5" | sed -e "s/word/bc1/g" | grep bc1 | grep pos
+#
+p.bc1 + p.pos
+c.bc1 + c.pos
+p.bc1 + p.pos + c.bc1 + c.pos
+p.pos + c.bc1 + c.pos
+p.bc1 + c.bc1 + c.pos
+p.bc1 + p.pos + c.pos
+p.bc1 + p.pos + c.bc1
+relative(p,c) + distance(p,c) + p.bc1 + p.pos
+relative(p,c) + distance(p,c) + c.bc1 + c.pos
+relative(p,c) + distance(p,c) + p.bc1 + p.pos + c.bc1 + c.pos
+relative(p,c) + distance(p,c) + p.pos + c.bc1 + c.pos
+relative(p,c) + distance(p,c) + p.bc1 + c.bc1 + c.pos
+relative(p,c) + distance(p,c) + p.bc1 + p.pos + c.pos
+relative(p,c) + distance(p,c) + p.bc1 + p.pos + c.bc1
 
 #------ Basic Koo et al. (2008) features. ------
 
@@ -49,7 +88,7 @@ relative(p,c) + distance(p,c) + p.bc0 + c.-1.bc0 + c.bc0
 relative(p,c) + distance(p,c) + p.bc0 + c.bc0 + c.1.bc0
 relative(p,c) + distance(p,c) + p.bc0 + p.1.bc0 + c.bc0
 
-# ------ McDonald et al. (2005) --------
+# ------ McDonald et al. (2005) Features -------
 
 # Basic Unigram Features
 p.word + p.pos

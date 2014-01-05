@@ -35,6 +35,7 @@ public class TemplateSets {
     // Dependency Parsing feature sets.
     public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
     public static final String kooBasicDepFeatsResource = "/edu/jhu/featurize/koo-basic-dep-feats.txt";
+    public static final String kooHybridDepFeatsResource = "/edu/jhu/featurize/koo-hybrid-dep-feats.txt";
     
     private TemplateSets() {
         // Private constructor.

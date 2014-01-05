@@ -2,6 +2,7 @@ package edu.jhu.srl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import edu.jhu.data.Label;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.prim.tuple.ComparablePair;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 
@@ -38,11 +41,10 @@ public class CorpusStatistics implements Serializable {
         // TODO: Remove useGoldSyntax since it's no longer used in CorpusStatistics.
         public boolean useGoldSyntax = false;
         public String language = "es";
-        /**
-         * Cutoff for OOV words. (This is actually used in CorpusStatistics, but
-         * we'll just put it here for now.)
-         */
+        /** Cutoff for OOV words. */
         public int cutoff = 3;
+        /** Cutoff for topN words. */ 
+        public int topN = 800;
         /**
          * Whether to normalize and clean words.
          */
@@ -60,6 +62,8 @@ public class CorpusStatistics implements Serializable {
     public Set<String> knownUnks = new HashSet<String>();
     public Set<String> knownPostags = new HashSet<String>();
 
+    public Set<String> topNWords = new HashSet<String>();
+    
     public List<String> linkStateNames;
     public List<String> roleStateNames;
     // Mapping from predicate form to the set of predicate senses.
@@ -136,6 +140,8 @@ public class CorpusStatistics implements Serializable {
         knownWords = getUnigramsAboveThreshold(words, prm.cutoff);
         knownUnks = getUnigramsAboveThreshold(unks, prm.cutoff);
                     
+        topNWords = getTopNUnigrams(words, prm.topN, prm.cutoff);
+        
         this.linkStateNames = new ArrayList<String>(knownLinks);
         this.roleStateNames =  new ArrayList<String>(knownRoles);
         for (Entry<String,Set<String>> entry : predSenseSetMap.entrySet()) {
@@ -173,10 +179,30 @@ public class CorpusStatistics implements Serializable {
         return knownHash;
     }
 
+    private static Set<String> getTopNUnigrams(Map<String, MutableInt> map, int topN, int cutoff) {
+        List<ComparablePair<Integer, String>> pairs = new ArrayList<ComparablePair<Integer, String>>(map.size());
+        for (Entry<String, MutableInt> entry : map.entrySet()) {
+            int count = entry.getValue().value;
+            if (count > cutoff) {
+                pairs.add(new ComparablePair<Integer, String>(count, entry.getKey()));
+            }
+        }
+        Collections.sort(pairs, Collections.reverseOrder());
+        HashSet<String> set = new HashSet<String>();
+        for (Pair<Integer,String> p : pairs.subList(0, Math.min(pairs.size(), topN))) {
+            set.add(p.get2());
+        }
+        return set;
+    }
+    
     @Override
     public String toString() {
-        return "CorpusStatistics [\n     knownWords=" + knownWords + ",\n     knownUnks=" + knownUnks
-                + ",\n     knownPostags=" + knownPostags + ",\n     linkStateNames=" + linkStateNames
+        return "CorpusStatistics [" 
+                + "\n     knownWords=" + knownWords 
+                + ",\n     topNWords=" + topNWords
+                + ",\n     knownUnks=" + knownUnks
+                + ",\n     knownPostags=" + knownPostags 
+                + ",\n     linkStateNames=" + linkStateNames
                 + ",\n     roleStateNames=" + roleStateNames 
                 + ",\n     maxSentLength=" + maxSentLength + "]";
     }

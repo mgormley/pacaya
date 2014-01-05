@@ -39,6 +39,7 @@ public class TemplateFeatureExtractor {
 
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
 
+    private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private final FeaturizedSentence fSent; 
 
@@ -47,11 +48,13 @@ public class TemplateFeatureExtractor {
      * share work across different feature extractors.
      */
     public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {
+        this.cs = cs;
         this.sig = cs.sig;
         this.fSent = fSent;
     }
     
     public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
+        this.cs = cs;
         this.sig = cs.sig;
         this.fSent = new FeaturizedSentence(sent, cs);
     }
@@ -448,6 +451,7 @@ public class TemplateFeatureExtractor {
     // package private for testing.
     String getTokProp(TokProperty prop, int idx) {
         FeaturizedToken tok = getFeatTok(idx);
+        String form;
         switch (prop) {
         case WORD:
             return tok.getForm();
@@ -456,14 +460,27 @@ public class TemplateFeatureExtractor {
             return tok.getForm().toLowerCase();
         case CAPITALIZED:
             return tok.isCapatalized() ? "UC" : "LC";
+        case WORD_TOP_N:
+            form = tok.getForm();
+            if (cs.topNWords.contains(form)) {
+                return form;
+            } else {
+                return null;
+            }
         case CHPRE5:
-            return tok.getFormPrefix5();
+            form = tok.getForm();
+            if (form.length() > 5) {
+                return form.substring(0, Math.min(form.length(), 5));    
+            } else {
+                return null;
+            }
         case LEMMA:
             return tok.getLemma();
         case POS:
             return tok.getPos();
         case BC0:
-            return tok.getClusterPrefix5();
+            String bc = tok.getCluster();
+            return bc.substring(0, Math.min(bc.length(), 5));
         case BC1:
             return tok.getCluster();
         case DEPREL:
