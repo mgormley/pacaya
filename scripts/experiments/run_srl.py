@@ -869,7 +869,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 for feature_set in feature_sets:
-                    for featureSelection in [False, True]:
+                    for featureSelection in [True, False]:
                         # Spanish, observed/supervised dep parse and POS tags.
                         parser_srl = g.model_pg_obs_tree + gl.pos_sup 
                         exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
