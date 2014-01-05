@@ -61,23 +61,23 @@ public class InformationGainFeatureTemplateSelector {
     }
     
     public static class SrlFeatTemplates {
-        public List<FeatTemplate> srlSenseTemplates;
-        public List<FeatTemplate> srlArgTemplates;
-        public List<FeatTemplate> depParseTemplates;
-        public SrlFeatTemplates(List<FeatTemplate> srlSenseTemplates, List<FeatTemplate> srlArgTemplates,
-                List<FeatTemplate> depParseTemplates) {
-            this.srlSenseTemplates = srlSenseTemplates;
-            this.srlArgTemplates = srlArgTemplates;
-            this.depParseTemplates = depParseTemplates;
+        public List<FeatTemplate> srlSense;
+        public List<FeatTemplate> srlArg;
+        public List<FeatTemplate> depParse;
+        public SrlFeatTemplates(List<FeatTemplate> srlSense, List<FeatTemplate> srlArg,
+                List<FeatTemplate> depParse) {
+            this.srlSense = srlSense;
+            this.srlArg = srlArg;
+            this.depParse = depParse;
         }
     }
     
     public SrlFeatTemplates getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, 
-            CorpusStatisticsPrm csPrm) {
-        List<ValExtractor> valExts = (List) Lists.getList(new SrlArgExtractor(), new SrlSenseExtractor(), new UnlabeledDepParseExtractor());
-        List<FeatTemplate> srlSense = getFeatTemplatesForSrl(sents, csPrm, TemplateSets.getBjorkelundSenseUnigramFeatureTemplates(), new SrlSenseExtractor());
-        List<FeatTemplate> srlArg = getFeatTemplatesForSrl(sents, csPrm, TemplateSets.getBjorkelundArgUnigramFeatureTemplates(), new SrlArgExtractor());
-        return new SrlFeatTemplates(srlSense, srlArg, null);
+            CorpusStatisticsPrm csPrm, SrlFeatTemplates sft) {
+        List<FeatTemplate> srlSense = getFeatTemplatesForSrl(sents, csPrm, sft.srlSense, new SrlSenseExtractor());
+        List<FeatTemplate> srlArg = getFeatTemplatesForSrl(sents, csPrm, sft.srlArg, new SrlArgExtractor());
+        // Note we do NOT do feature selection on the dependency parsing templates. 
+        return new SrlFeatTemplates(srlSense, srlArg, sft.depParse);
     }
     
     private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,

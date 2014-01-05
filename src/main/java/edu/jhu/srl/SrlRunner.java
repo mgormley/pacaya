@@ -258,7 +258,7 @@ public class SrlRunner {
         SrlFgModel model = null;
         FactorTemplateList fts;
         CorpusStatistics cs;
-        SrlFeatureExtractorPrm srlFePrm; // TODO: USE THIS!!!!
+        SrlFeatureExtractorPrm srlFePrm;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
@@ -279,11 +279,12 @@ public class SrlRunner {
                 prm.featureHashMod = featureHashMod;
                 prm.numThreads = threads;
                 prm.numToSelect = 32;
+                SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
-                SrlFeatTemplates sft = ig.getFeatTemplatesForSrl(sents, csPrm);
+                sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
                 ig.shutdown();
-                srlFePrm.fePrm.soloTemplates = sft.srlSenseTemplates;
-                srlFePrm.fePrm.pairTemplates = sft.srlArgTemplates;                
+                srlFePrm.fePrm.soloTemplates = sft.srlSense;
+                srlFePrm.fePrm.pairTemplates = sft.srlArg;
             }
             if (useTemplates) {
                 log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());

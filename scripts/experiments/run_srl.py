@@ -357,7 +357,16 @@ class ParamDefinitions():
                                                                 False, 'tpl_zhao')
         g.feat_tpl_narad         = self._get_named_template_set("/edu/jhu/featurize/naradowsky-sense-feats.txt",
                                                                 "/edu/jhu/featurize/naradowsky-arg-feats.txt",
-                                                                False, 'tpl_narad')        
+                                                                False, 'tpl_narad')
+        g.feat_mcdonald          = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/mcdonald-dep-feats.txt",
+                                                                False, 'tpl_mcdonald')
+        g.feat_koo_basic         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/koo-basic-dep-feats.txt",
+                                                                False, 'tpl_koo_basic')
+        g.feat_koo_hybrid        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/koo-hybrid-dep-feats.txt",
+                                                                False, 'tpl_koo_hybrid')
         g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig')
 
         # The coarse set uses the bjorkelund sense features.
@@ -785,6 +794,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               work_mem_megs=5*1024)
             feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
                             g.feat_narad, g.feat_zhao, g.feat_bjork, 
+                            g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             g.defaults.set_incl_name('featureSelection', True)
             for feature_set in feature_sets:
@@ -843,6 +853,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               featureHashMod=1000000)
             feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
                             g.feat_tpl_bjork_es,
+                            g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es)]
             for lang_short in ["es", "en"]:
