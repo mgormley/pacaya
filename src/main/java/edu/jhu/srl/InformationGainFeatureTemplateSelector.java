@@ -85,9 +85,9 @@ public class InformationGainFeatureTemplateSelector {
     
     private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
             List<FeatTemplate> unigrams, ValExtractor valExt) {
-        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm).get(0);        
+        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, 45).get(0);        
         List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
-        bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), sents, csPrm).get(0);
+        bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), sents, csPrm, prm.numToSelect).get(0);
         // Add ALL unigrams and the selected bigrams.
         List<FeatTemplate> all = new ArrayList<FeatTemplate>();
         all.addAll(unigrams);
@@ -95,9 +95,15 @@ public class InformationGainFeatureTemplateSelector {
         return all;
     }
 
+
+//    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, SimpleAnnoSentenceCollection sents, 
+//            CorpusStatisticsPrm csPrm) {  
+//        return selectFeatureTemplates(allTpls, valExts, sents, csPrm, prm.numToSelect);
+//    }
+    
     public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, SimpleAnnoSentenceCollection sents, 
-            CorpusStatisticsPrm csPrm) {      
-        if (allTpls.size() <= prm.numToSelect) {
+            CorpusStatisticsPrm csPrm, int numToSelect) {      
+        if (allTpls.size() <= numToSelect) {
             List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
             for (int c=0; c<valExts.size(); c++) {            
                 selected.add(allTpls);
@@ -132,7 +138,7 @@ public class InformationGainFeatureTemplateSelector {
             // For each clique template, select the feature templates with highest information gain.
             List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
             for (int c=0; c<valExts.size(); c++) {            
-                selected.add(filterFeatTemplates(allTpls, valExts.get(c), ig[c], featCount, writer));
+                selected.add(filterFeatTemplates(allTpls, valExts.get(c), ig[c], featCount, writer, numToSelect));
             }
             
             if (writer != null) {
@@ -283,7 +289,7 @@ public class InformationGainFeatureTemplateSelector {
      * Write all information gain values to writer if given.
      * @param featCount 
      */
-    private List<FeatTemplate> filterFeatTemplates(List<FeatTemplate> allTpls, ValExtractor valExt, double[] ig, int[] featCount, Writer writer) throws IOException {            
+    private List<FeatTemplate> filterFeatTemplates(List<FeatTemplate> allTpls, ValExtractor valExt, double[] ig, int[] featCount, Writer writer, int numToSelect) throws IOException {            
         int[] indices = IntDoubleSort.getIntIndexArray(ig.length);
         double[] values = DoubleArrays.copyOf(ig);
         IntDoubleSort.sortValuesDesc(values, indices);
@@ -291,7 +297,7 @@ public class InformationGainFeatureTemplateSelector {
         if (writer != null) {
             for (int i=0; i<allTpls.size(); i++) {
                 int t = indices[i];
-                String selected = (i < prm.numToSelect) ? "Y" : "N";
+                String selected = (i < numToSelect) ? "Y" : "N";
                 writer.write(String.format("%s\t%s\t%s\t%d\t%f\n", selected, valExt.getName(), allTpls.get(t).getName(), featCount[t], ig[t]));
             }
             writer.write("\n");

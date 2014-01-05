@@ -278,7 +278,7 @@ public class SrlRunner {
                 InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
                 prm.featureHashMod = featureHashMod;
                 prm.numThreads = threads;
-                prm.numToSelect = 32;
+                prm.numToSelect = 100;
                 SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
                 sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
