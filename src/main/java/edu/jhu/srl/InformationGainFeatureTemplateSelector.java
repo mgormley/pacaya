@@ -87,10 +87,11 @@ public class InformationGainFeatureTemplateSelector {
     
     private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
             List<FeatTemplate> unigrams, ValExtractor valExt) {
-        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, 45).get(0);        
-        assert selUnigrams.size() <= 45 : "selUnigrams.size(): " + selUnigrams.size();
+        int numUni = 45;
+        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);        
+        assert selUnigrams.size() <= numUni : "selUnigrams.size(): " + selUnigrams.size();
         List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
-        assert bigrams.size() <= 45.*44./2.0;
+        assert bigrams.size() <= numUni*(numUni-1.0)/2.0;
         bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), sents, csPrm, prm.numToSelect).get(0);
         // Add ALL unigrams and the selected bigrams.
         List<FeatTemplate> all = new ArrayList<FeatTemplate>();
