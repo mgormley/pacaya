@@ -132,6 +132,7 @@ class PathDefinitions():
                                            self.root_dir + "/data/bc_out_256")
         bc_1000_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000",
                                             self.root_dir + "/data/bc_out_1000")
+        p.bc_tiny = os.path.join(bc_1000_dir, "paths.tiny")
         for lang_short in p.lang_short_names:
             pl = p.langs[lang_short]
             pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
@@ -457,7 +458,10 @@ class ParamDefinitions():
         # TODO: This sets the Brown clusters. MOVE THIS!!
         pl = p.langs[lang_short]
         for x in [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]:
-            x.update(brownClusters=pl.bc_1000)
+            if self.fast:
+                x.update(brownClusters=p.bc_tiny)
+            else:
+                x.update(brownClusters=pl.bc_1000)
             
     # ------------------------------ START Parser Outputs ------------------------------
     def _get_pos_gold(self, p, lang_short):

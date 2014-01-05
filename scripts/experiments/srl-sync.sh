@@ -40,6 +40,7 @@ echo "Syncing Brown cluster output..."
     --include="/**/" \
     --include="paths" \
     --exclude="*"
+head -n 10 data/bc_out_1000/full.txt_*/bc/paths | grep -P "^0" > data/bc_out_1000/paths.tiny
 
 echo "Adding symbolic link to vem-conll_005"
 ln -s `pwd`/remote_exp/vem-conll_005/ ./exp/vem-conll_005
