@@ -619,14 +619,21 @@ public class SrlRunner {
 
         TemplateReader tr = new TemplateReader();
         for (String path : featTpls.split(":")) {
-            if (path.equals("coarse")) {
-                List<FeatTemplate> coarseUnigramSet1 = TemplateSets.getCoarseUnigramSet1();
+            if (path.equals("coarse1") || path.equals("coarse2")) {
+                List<FeatTemplate> coarseUnigramSet;
+                if (path.equals("coarse1")) { 
+                    coarseUnigramSet = TemplateSets.getCoarseUnigramSet1();
+                } else if (path.equals("coarse2")) {
+                    coarseUnigramSet = TemplateSets.getCoarseUnigramSet2();
+                } else {
+                    throw new IllegalStateException();
+                }
                 if (brownClusters == null) {
                     // Filter out the Brown cluster features.
                     log.warn("Filtering out Brown cluster features from coarse set.");
-                    coarseUnigramSet1 = TemplateLanguage.filterOutRequiring(coarseUnigramSet1, AT.BROWN);
+                    coarseUnigramSet = TemplateLanguage.filterOutRequiring(coarseUnigramSet, AT.BROWN);
                 }
-                tpls.addAll(coarseUnigramSet1);
+                tpls.addAll(coarseUnigramSet);
             } else {
                 try {
                     tr.readFromFile(path);

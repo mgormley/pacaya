@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 
 public class TemplateSetsTest {
@@ -78,17 +79,32 @@ public class TemplateSetsTest {
     }
 
     @Test
-    public void testGetCoarseUnigramSet1() {
+    public void testGetCoarseUnigramSets() {
         List<FeatTemplate> tpls;        
-        tpls = TemplateSets.getCoarseUnigramSet1();
-        int numArg = tpls.size();
-        System.out.println("Number of templates: " + numArg);
-        assertEquals(125, numArg);
+        {
+            tpls = TemplateSets.getCoarseUnigramSet1();
+            int numArg = tpls.size();
+            System.out.println("Number of templates: " + numArg);
+            assertEquals(127, numArg);
+        }
+        {
+            tpls = TemplateSets.getCoarseUnigramSet2();
+            int numArg = tpls.size();
+            System.out.println("Number of templates: " + numArg);
+            assertEquals(213, numArg);
+        }
 
         // This tests that names are created correctly.
         for (FeatTemplate tpl : tpls) {
             System.out.println(tpl);
         }
+
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
+        }
+        
     }
 
 }

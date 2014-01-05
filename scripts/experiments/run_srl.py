@@ -371,10 +371,17 @@ class ParamDefinitions():
         g.feat_koo_hybrid        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
                                                                 "/edu/jhu/featurize/koo-hybrid-dep-feats.txt",
                                                                 False, 'tpl_koo_hybrid')
+        g.feat_lluis             = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/lluis-arg-feats.txt",
+                                                                False, 'tpl_lluis')
+        g.feat_lluis_koo         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/lluis-koo-arg-feats.txt",
+                                                                False, 'tpl_lluis_koo')
         g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig')
 
         # The coarse set uses the bjorkelund sense features.
-        g.feat_tpl_coarse        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse", False, 'tpl_coarse')
+        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
+        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
         
         g.feat_all = g.feat_tpl_bjork_ig
     
@@ -804,7 +811,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               testMaxNumSentences=500,
                               threads=6,
                               work_mem_megs=5*1024)
-            feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
+            feature_sets = [g.feat_tpl_coarse1, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
                             g.feat_narad, g.feat_zhao, g.feat_bjork, 
                             g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
@@ -863,23 +870,32 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               threads=6,
                               work_mem_megs=5*1024,
                               featureHashMod=1000000)
-            feature_sets = [g.feat_tpl_coarse, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
-                            g.feat_tpl_bjork_es,
-                            g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
-                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
-                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es),
-                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_koo_hybrid),]
+            feature_sets = [
+                            #g.feat_tpl_coarse1, 
+                            g.feat_tpl_coarse2, 
+                            g.feat_lluis_koo,                            
+                            #g.feat_tpl_bjork, 
+                            #g.feat_tpl_zhao,
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse2, g.feat_tpl_zhao),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse2, g.feat_lluis_koo),
+                            #g.feat_lluis, 
+                            #g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork_es,
+                            #g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
+                            #self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_tpl_zhao),
+                            #self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_tpl_bjork_es),
+                            #self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_koo_hybrid),
+                            ]
             for lang_short in ["es", "en"]:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 for feature_set in feature_sets:
                     for featureSelection in [True, False]:
-                        # Spanish, observed/supervised dep parse and POS tags.
-                        parser_srl = g.model_pg_obs_tree + gl.pos_sup 
-                        exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
-                        exp.set_incl_name('featureSelection', True)
-                        #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                        exps.append(exp)
+                        for model in [g.model_pg_obs_tree]: #TODO: , g.model_pg_lat_tree]:
+                            parser_srl = model + gl.pos_sup 
+                            exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
+                            exp.set_incl_name('featureSelection', True)
+                            #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-eval":
