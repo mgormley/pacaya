@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,6 +55,7 @@ public class InformationGainFeatureTemplateSelector {
     
     private InformationGainFeatureTemplateSelectorPrm prm;
     private ExecutorService pool;
+    private Set<FeatTemplate> tplsWithNoFeats = new HashSet<FeatTemplate>();
 
     public InformationGainFeatureTemplateSelector(InformationGainFeatureTemplateSelectorPrm prm) {
        this.prm = prm;
@@ -82,8 +85,10 @@ public class InformationGainFeatureTemplateSelector {
     
     private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
             List<FeatTemplate> unigrams, ValExtractor valExt) {
-        List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(unigrams);
+        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm).get(0);        
+        List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
         bigrams = selectFeatureTemplates(bigrams, Lists.getList(valExt), sents, csPrm).get(0);
+        // Add ALL unigrams and the selected bigrams.
         List<FeatTemplate> all = new ArrayList<FeatTemplate>();
         all.addAll(unigrams);
         all.addAll(bigrams);
@@ -92,6 +97,14 @@ public class InformationGainFeatureTemplateSelector {
 
     public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, SimpleAnnoSentenceCollection sents, 
             CorpusStatisticsPrm csPrm) {      
+        if (allTpls.size() <= prm.numToSelect) {
+            List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
+            for (int c=0; c<valExts.size(); c++) {            
+                selected.add(allTpls);
+            }
+            return selected;
+        }
+        
         // Initialize.
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
@@ -191,7 +204,10 @@ public class InformationGainFeatureTemplateSelector {
                     List<String> feats = new ArrayList<String>();
                     featExt.addFeatures(Lists.getList(tpl), pidx, cidx, feats);
                     if (feats.size() == 0) {
-                        log.warn("No features extractor for template: " + tpl.getName());
+                        if (!tplsWithNoFeats.contains(tpl)) {
+                            log.warn("No features extracted for template: " + tpl.getName());
+                            tplsWithNoFeats.add(tpl);
+                        }
                     }
                     FeatureVector fv = new FeatureVector();
                     for (int j=0; j<feats.size(); j++) {                                
@@ -283,7 +299,7 @@ public class InformationGainFeatureTemplateSelector {
         
         // Select feature templates.
         List<FeatTemplate> selected = new ArrayList<FeatTemplate>();
-        for (int t=0; t<prm.numToSelect; t++) {
+        for (int t=0; t<Math.min(prm.numToSelect, indices.length); t++) {
             selected.add(allTpls.get(indices[t]));
         }
         return selected;

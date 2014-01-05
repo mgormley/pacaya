@@ -130,10 +130,12 @@ class PathDefinitions():
         # Brown Clusters.
         bc_256_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_256",
                                            self.root_dir + "/data/bc_out_256")
+        bc_1000_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000",
+                                            self.root_dir + "/data/bc_out_1000")
         for lang_short in p.lang_short_names:
             pl = p.langs[lang_short]
             pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
-            pl.bc_1000 = os.path.join(bc_256_dir, "full.txt_%s_1000" % (lang_short), "paths")
+            pl.bc_1000 = os.path.join(bc_1000_dir, "full.txt_%s_1000" % (lang_short), "bc", "paths")
             
         return p
     
@@ -322,6 +324,7 @@ class ParamDefinitions():
         g.defaults.set_incl_name("eval", False)
         g.defaults.set_incl_name("removeDeprel", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
+        g.defaults.set_incl_name("brownClusters", False)
 
     def _define_groups_features(self, g):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
@@ -450,6 +453,11 @@ class ParamDefinitions():
         gl.pos_unsup = self._get_pos_unsup(p, lang_short)
         gl.brown_semi = self._get_brown_semi(p, lang_short)
         gl.brown_unsup = self._get_brown_unsup(p, lang_short)
+        
+        # TODO: This sets the Brown clusters. MOVE THIS!!
+        pl = p.langs[lang_short]
+        for x in [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]:
+            x.update(brownClusters=pl.bc_1000)
             
     # ------------------------------ START Parser Outputs ------------------------------
     def _get_pos_gold(self, p, lang_short):
@@ -511,7 +519,7 @@ class ParamDefinitions():
             ll.parser_outputs = [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]
             
         # All languages, with CoNLL-09 MSTParser output only.
-        l.all_parser_outputs_sup = [self._get_pos_sup(p, lang_short) for lang_short in p.lang_short_names]
+        l.all_parser_outputs_sup = [g.langs[lang_short].pos_sup for lang_short in p.lang_short_names]
     
     def _define_lists_parse_and_srl(self, g, l, p):
         # Single language only
@@ -855,7 +863,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             g.feat_tpl_bjork_es,
                             g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
                             self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_zhao),
-                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es)]
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_tpl_bjork_es),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse, g.feat_koo_hybrid),]
             for lang_short in ["es", "en"]:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
