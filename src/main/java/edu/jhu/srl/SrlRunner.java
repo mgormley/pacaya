@@ -67,6 +67,7 @@ import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.tag.BrownClusterTagger;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
@@ -279,6 +280,7 @@ public class SrlRunner {
                 prm.featureHashMod = featureHashMod;
                 prm.numThreads = threads;
                 prm.numToSelect = 100;
+                prm.maxNumSentences = 1000;
                 SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
                 sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
@@ -458,7 +460,10 @@ public class SrlRunner {
 
         if (brownClusters != null) {
             log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+            BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
+            prm.maxTagLength = Integer.MAX_VALUE;
+            prm.language = language;
+            BrownClusterTagger bct = new BrownClusterTagger(prm);
             bct.read(brownClusters);
             bct.addClusters(sents);
             log.info("Brown cluster hit rate: " + bct.getHitRate());

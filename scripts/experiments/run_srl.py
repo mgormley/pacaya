@@ -670,7 +670,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.expname = options.expname
         self.hprof = options.hprof   
         self.eval = options.eval
-        
+        self.big_machine = (multiprocessing.cpu_count() > 2)
         self.prm_defs = ParamDefinitions(options) 
 
     def get_experiments(self):
@@ -963,6 +963,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
+            if isinstance(stage, SrlExpParams) and not self.big_machine:
+                stage.update(work_mem_megs=2000, threads=1)
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")

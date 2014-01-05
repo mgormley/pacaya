@@ -25,28 +25,28 @@ import edu.jhu.util.Alphabet;
  */
 public class BrownClusterTagger {
 
+    public static class BrownClusterTaggerPrm {
+        /** Maximum length for Brown cluster tag. */
+        public int maxTagLength = Integer.MAX_VALUE;
+        /**
+         * Language (2-character code). If specified, the tagger will employ
+         * language specific logic for UNKs.
+         */
+        public String language;        
+    }
+    
     private static final String OOV_CLUSTER = "UNK";
-
     private static final Pattern tab = Pattern.compile("\t");
     
     /** Map from words to tags. */
     private HashMap<String,String> map;
-    /** Maximum length for Brown cluster tag. */
-    private int maxTagLength;
-    /** Alphabet to use when constructing sentences. */
-    private Alphabet<Label> alphabet;
-    
+    private BrownClusterTaggerPrm prm;
     // Internal counting for miss rate.
     private int numLookups = 0;
     private int numMisses = 0;
     
-    public BrownClusterTagger(int maxTagLength) {
-        this(null, maxTagLength);
-    }
-        
-    public BrownClusterTagger(Alphabet<Label> alphabet, int maxTagLength) {
-        this.alphabet = alphabet;
-        this.maxTagLength = maxTagLength;
+    public BrownClusterTagger(BrownClusterTaggerPrm prm) {
+        this.prm = prm;
         map = new HashMap<String,String>();
     }
     
@@ -63,7 +63,7 @@ public class BrownClusterTagger {
             String[] splits = tab.split(line);
             String cluster = splits[0];
             String word = splits[1];
-            String cutCluster = cluster.substring(0, Math.min(cluster.length(), maxTagLength));
+            String cutCluster = cluster.substring(0, Math.min(cluster.length(), prm.maxTagLength));
             map.put(word.intern(), cutCluster.intern());
         }
     }
@@ -71,12 +71,43 @@ public class BrownClusterTagger {
     /** Looks up the Brown cluster for this word. */
     public String getCluster(String word) {
         String cluster = map.get(word);
+        if (cluster == null && prm.language != null) {
+            cluster = tryGetSubwordCluster(word);
+        }
         if (cluster == null) {
             cluster = OOV_CLUSTER;
             numMisses++;
         }
         numLookups++;
         return cluster;
+    }
+
+    private String tryGetSubwordCluster(String word) {
+        String[] subwords = null;
+        if ("es".equals(prm.language) || "ca".equals(prm.language)) {
+            if (word.contains("_")) {
+                subwords = word.split("_");
+            }
+        } else if ("zh".equals(prm.language)) {
+            if (word.length() > 1) {
+                subwords = new String[word.length()];
+                for (int i=0; i<subwords.length; i++) {
+                    subwords[i] = Character.toString(word.charAt(i));
+                }
+            }
+        }
+
+        if (subwords != null) {
+            for (String subword : subwords) {
+                String cluster = map.get(subword);
+                if (cluster != null) {
+                    // Note: by adding "SW" as a prefix, we coarsen the cutoff
+                    // version of these clusters.
+                    return "SW" + cluster;
+                }
+            }
+        }
+        return null;
     }
     
     public double getHitRate() {
@@ -97,15 +128,17 @@ public class BrownClusterTagger {
         sent.setClusters(clusters);
     }
     
-    public SentenceCollection getTagged(SentenceCollection sents) {
+    @Deprecated
+    public SentenceCollection getTagged(SentenceCollection sents, Alphabet<Label> alphabet) {
         SentenceCollection newSents = new SentenceCollection(alphabet);
         for (Sentence s : sents) {
-            newSents.add(getTagged(s));
+            newSents.add(getTagged(s, alphabet));
         }
         return newSents;
     }
     
-    public Sentence getTagged(Sentence sent) {
+    @Deprecated
+    public Sentence getTagged(Sentence sent, Alphabet<Label> alphabet) {
         int[] labelIds = new int[sent.size()];
         int i=0; 
         for (Label l : sent) {

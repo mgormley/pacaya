@@ -1,6 +1,7 @@
 package edu.jhu.data.simple;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import edu.jhu.data.DepTree;
@@ -16,6 +17,14 @@ import edu.jhu.util.Alphabet;
 public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> {
 
     private static final long serialVersionUID = -6867088670574667680L;
+
+    public SimpleAnnoSentenceCollection() {
+        super();
+    }
+    
+    public SimpleAnnoSentenceCollection(Collection<SimpleAnnoSentence> list) {
+        super(list);
+    }
 
     public static SimpleAnnoSentenceCollection getSingleton(SimpleAnnoSentence sent) {
         SimpleAnnoSentenceCollection col = new  SimpleAnnoSentenceCollection();
@@ -79,6 +88,10 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
             numTokens += sent.size();
         }
         return numTokens;
+    }
+
+    public SimpleAnnoSentenceCollection subList(int start, int end) {
+        return new SimpleAnnoSentenceCollection(super.subList(start, end));
     }
     
 }

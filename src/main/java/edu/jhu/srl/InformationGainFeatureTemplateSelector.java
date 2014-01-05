@@ -51,6 +51,8 @@ public class InformationGainFeatureTemplateSelector {
         public File outFile = new File("./ig-out.txt");
         /** Number of threads. */
         public int numThreads = 1;
+        /** Maximum number of sentences over which to evaluate information gain. */
+        public int maxNumSentences = Integer.MAX_VALUE;
     }
     
     private InformationGainFeatureTemplateSelectorPrm prm;
@@ -111,6 +113,12 @@ public class InformationGainFeatureTemplateSelector {
                 selected.add(allTpls);
             }
             return selected;
+        }
+
+        // Subselect the sentences.
+        if (prm.maxNumSentences < sents.size()) {
+            log.info("Using only the first "+prm.maxNumSentences+" sentences for information gain calculations.");
+            sents = sents.subList(0, prm.maxNumSentences);
         }
         
         // Initialize.

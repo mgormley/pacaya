@@ -9,6 +9,7 @@ import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.FileMapTagReducer;
 import edu.jhu.tag.OovTagReducer;
 import edu.jhu.tag.Ptb45To17TagReducer;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.Opt;
 
@@ -70,7 +71,9 @@ public class DepTreebankReader {
         
         if (brownClusters != null) {
             log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(maxTagLength);
+            BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
+            prm.maxTagLength = maxTagLength;
+            BrownClusterTagger bct = new BrownClusterTagger(prm);
             bct.read(brownClusters);
             for (DepTree tree : trainTreebank) {
                 for (DepTreeNode node : tree) {

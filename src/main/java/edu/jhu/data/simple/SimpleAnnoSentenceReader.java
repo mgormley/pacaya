@@ -19,6 +19,7 @@ import edu.jhu.data.conll.CoNLLXDirReader;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.srl.SrlRunner.DatasetType;
 import edu.jhu.tag.BrownClusterTagger;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 
 /** 
  * TODO: This class is only partly implemented.
@@ -26,7 +27,8 @@ import edu.jhu.tag.BrownClusterTagger;
 public class SimpleAnnoSentenceReader {
 
     public static class SimpleAnnoSentenceReaderPrm {
-        public boolean useGoldSyntax = false; 
+        public BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
+        public boolean useGoldSyntax = false;
         //public DatasetType dataType = null; 
         public int maxNumSentences = Integer.MAX_VALUE; 
         public int maxSentenceLength = Integer.MAX_VALUE; 
@@ -78,7 +80,7 @@ public class SimpleAnnoSentenceReader {
 
         if (prm.brownClusters != null) {
             log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+            BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
             bct.read(prm.brownClusters);
             bct.addClusters(sents);
             log.info("Brown cluster hit rate: " + bct.getHitRate());
@@ -157,7 +159,7 @@ public class SimpleAnnoSentenceReader {
 
         if (prm.brownClusters != null) {
             log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+            BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
             bct.read(prm.brownClusters);
             bct.addClusters(sents);
             log.info("Brown cluster hit rate: " + bct.getHitRate());

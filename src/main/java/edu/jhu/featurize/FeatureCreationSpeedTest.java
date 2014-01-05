@@ -22,6 +22,7 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.tag.BrownClusterTagger;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Timer;
 import edu.jhu.util.hash.MurmurHash3;
@@ -171,7 +172,7 @@ public class FeatureCreationSpeedTest {
         SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(conllSents, false);
         
         // Add Brown clusters
-        BrownClusterTagger bct = new BrownClusterTagger(Integer.MAX_VALUE);
+        BrownClusterTagger bct = new BrownClusterTagger(new BrownClusterTaggerPrm());
         bct.read(new File("./data/bc_out_1000/full.txt_en_1000/bc/paths"));
         bct.addClusters(sents);
         

@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.Label;
 import edu.jhu.tag.BrownClusterTagger;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -36,9 +37,10 @@ public class CoNLL09BrownTagger {
             System.exit(1);
         }
 
-        Alphabet<Label> alphabet = new Alphabet<Label>();
         log.info("Reading brown clusters from " + brownClusters);
-        BrownClusterTagger tagger = new BrownClusterTagger(alphabet, maxTagLength);
+        BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
+        prm.maxTagLength = maxTagLength;
+        BrownClusterTagger tagger = new BrownClusterTagger(prm);
         tagger.read(brownClusters);
         log.info("Tagging CoNLL data...");
         CoNLL09FileReader reader = new CoNLL09FileReader(new File(train));
