@@ -36,9 +36,9 @@ c.morpho
 # ArgDeprel
 c.deprel
 # DeprelPath
-path(p,c).dir.deprel
+path(p,c).dir.deprel.seq
 # POSPath
-path(p,c).dir.pos
+path(p,c).dir.pos.seq
 # Position
 relative(p,c)
 # LeftWord

@@ -17,15 +17,15 @@ c.word
 c.word + children(p).deprel.bag
 c.word + c.rmc.word
 children(p).deprel.bag
-children(p).deprel.seq + path(p,c).dir.deprel
-path(p,c).dir.deprel
-path(p,c).dir.deprel + relative(p,c)
+children(p).deprel.seq + path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq + relative(p,c)
 c.lmc.morpho
 c.lns.word
 c.lmc.word
-c.lmc.word + path(p,c).dir.pos
-path(p,c).dir.pos
-path(p,c).dir.pos + c.rns.morpho
+c.lmc.word + path(p,c).dir.pos.seq
+path(p,c).dir.pos.seq
+path(p,c).dir.pos.seq + c.rns.morpho
 relative(p,c)
 p.morpho # NOT SUPPORTED: + p.lemmaSense
 p.lemma
