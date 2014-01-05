@@ -460,6 +460,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
                     for dataset in [gl.conll09_train, gl.conll09_dev, gl.conll09_eval]:
                         for brownClusters in [pl.bc_256, None]:                            
                             if brownClusters is not None:
+                                if self.fast: brownClusters = p.bc_tiny
                                 bc = DPExpParams(brownClusters=brownClusters, dataset=dataset.get("dataset") + "-brown")
                             else:
                                 bc = DPExpParams()
