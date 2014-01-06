@@ -303,7 +303,7 @@ class ParamDefinitions():
             featCountCutoff=-1,
             predictSense=True,
             normalizeRoleNames=False,
-            l2variance="500.0",
+            l2variance="10000.0",
             sgdNumPasses=10,
             featureHashMod=-1,
             featureSelection=True,
@@ -903,22 +903,26 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Test 3: for comparing regularization weights across feature sets.
             # Findings:
             # - Best l2variance for 1000 sentences is 250.
+            # - Best l2variance (observed) for 15000 sentences is 10000 (haven't tried higher).
             exps = []
-            g.defaults.update(testMaxNumSentences=500)
-            feature_sets = [g.feat_tpl_zhao, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
-            for trainMaxNumSentences in [500, 1000, 2000, 4000, 15000]:
+            #g.defaults.update(testMaxNumSentences=500)
+            feature_sets = [g.feat_tpl_coarse1] # g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
+            for trainMaxNumSentences in [15000]: #[500, 1000, 2000, 4000, 15000]:
                 for feature_set in feature_sets:
-                    for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000., 100000]:
-                        # Spanish, observed/supervised dep parse and POS tags.
-                        parser_srl = g.model_pg_obs_tree + gl.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
-                        exp = g.defaults + parser_srl + feature_set
-                        if exp.get("trainMaxNumSentences") == 15000:
-                            exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
-                            exp.remove("testMaxNumSentences")
-                        else:
-                            exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
-                        #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                        exps.append(exp)
+                    for l2variance in [1000, 5000, 10000, 50000, 100000]: #[0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000., 100000]:
+                        for sgdNumPasses in [4,8,10,12,14]:
+                            # Spanish, observed/supervised dep parse and POS tags.
+                            parser_srl = g.model_pg_obs_tree + gl.pos_sup + SrlExpParams(l2variance=l2variance, 
+                                                                                         trainMaxNumSentences=trainMaxNumSentences,
+                                                                                         sgdNumPasses=sgdNumPasses)
+                            exp = g.defaults + parser_srl + feature_set
+                            if exp.get("trainMaxNumSentences") == 15000:
+                                exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
+                                exp.remove("testMaxNumSentences")
+                            else:
+                                exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
+                            #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feat-ig":
@@ -927,7 +931,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               testMaxNumSentences=500,
                               threads=6,
                               work_mem_megs=5*1024,
-                              featureHashMod=1000000)
+                              featureHashMod=1000000,
+                              l2variance="500.0")
             feature_sets = [
                             g.feat_tpl_coarse1, 
                             g.feat_tpl_coarse2, 
