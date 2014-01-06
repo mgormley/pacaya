@@ -477,7 +477,7 @@ class DepParseExpParamsRunner(ExpParamsRunner):
             # Drop all but 3 experiments for a fast run.
             if self.fast: exps = exps[:4]
             root.add_dependents(exps)
-            scrape = ScrapeDP(tsv_file="results.data")
+            scrape = ScrapeDP(csv_file="results.csv", tsv_file="results.data")
             scrape.add_prereqs(root.dependents)
             svnco = SvnCommitResults(self.expname)
             svnco.add_prereq(scrape)

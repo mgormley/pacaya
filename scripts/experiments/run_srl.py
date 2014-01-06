@@ -100,17 +100,12 @@ class PathDefinitions():
         for lang_short in p.lang_short_names:
             p.langs[lang_short] = ParamGroups()            
         
-        # --- Define paths to data directories. --- 
+        # CoNLL'09 Shared Task datasets.
         conll09_T03_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T03/data/",
                                                 self.root_dir + "/data/conll2009/LDC2012T03/data")
         conll09_T04_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2012T04/data/",
                                                 self.root_dir + "/data/conll2009/LDC2012T04/data")
         
-        parser_prefix = self.root_dir + "/exp/vem-conll_005"
-        require_path_exists(parser_prefix)
-        
-        # --- Gold/Predicted POS tags ---
-        # Gold trees: HEAD column. Supervised parser output: PHEAD column.
         self._set_paths_for_conll09_lang(p, "Spanish", "es", conll09_T03_dir, require=True)
         self._set_paths_for_conll09_lang(p, "German",  "de", conll09_T03_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Czech",   "cs", conll09_T03_dir, require=False)
@@ -118,13 +113,16 @@ class PathDefinitions():
         self._set_paths_for_conll09_lang(p, "English", "en", conll09_T04_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Chinese", "zh", conll09_T04_dir, require=False)
         
+        # Grammar Induction Output.
+        parser_prefix = self.root_dir + "/exp/vem-conll_006"
+        require_path_exists(parser_prefix)
+        
         self._set_paths_for_conll09_parses(p, "Spanish", "es", parser_prefix, require=False)
-        # TODO: Add the true parser prefix for these languages. 
-        self._set_paths_for_conll09_parses(p, "German",  "de", None, require=False)
-        self._set_paths_for_conll09_parses(p, "Czech",   "cs", None, require=False)
-        self._set_paths_for_conll09_parses(p, "Catalan", "ca", None, require=False)
-        self._set_paths_for_conll09_parses(p, "English", "en", None, require=False)
-        self._set_paths_for_conll09_parses(p, "Chinese", "zh", None, require=False)
+        self._set_paths_for_conll09_parses(p, "German",  "de", parser_prefix, require=False)
+        self._set_paths_for_conll09_parses(p, "Czech",   "cs", parser_prefix, require=False)
+        self._set_paths_for_conll09_parses(p, "Catalan", "ca", parser_prefix, require=False)
+        self._set_paths_for_conll09_parses(p, "English", "en", parser_prefix, require=False)
+        self._set_paths_for_conll09_parses(p, "Chinese", "zh", parser_prefix, require=False)
         
         
         # Brown Clusters.
@@ -325,7 +323,8 @@ class ParamDefinitions():
         g.defaults.set_incl_name("eval", False)
         g.defaults.set_incl_name("removeDeprel", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
-        g.defaults.set_incl_name("brownClusters", False)
+        g.defaults.set_incl_name("brownClusters", False)        
+        g.defaults.set_incl_name('removeAts', False)
 
     def _define_groups_features(self, g):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
@@ -383,7 +382,7 @@ class ParamDefinitions():
         g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
         g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
         
-        g.feat_all = g.feat_tpl_bjork_ig
+        g.feat_all = g.feat_tpl_coarse1
     
     def _define_lists_features(self, g, l):
         l.feature_sets = [ g.feat_all, g.feat_simple_narad_zhao, g.feat_simple_narad_dep, g.feat_simple_narad, 
@@ -437,11 +436,11 @@ class ParamDefinitions():
         l.optimizers = [g.sgd, g.adagrad, g.adadelta, g.lbfgs]    
     
     def _define_groups_model(self, g):
-        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT")
-        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED")
+        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,LABEL_DEP_TREE")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,LABEL_DEP_TREE")
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
-        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT")
-        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED")
+        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,LABEL_DEP_TREE")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,LABEL_DEP_TREE")
         g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
 
     def _define_lists_model(self, g, l):
@@ -654,7 +653,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all",
                     "srl-all-nosup",
                     "srl-all-sup-lat",
-                    "srl-lat",
+                    "srl-conll09",
+                    "srl-subtraction",
+                    "srl-learncurve-sem",
+                    "srl-learncurve-syn",
                     "srl-opt",
                     "srl-benchmark",
                     "srl-feats",
@@ -713,20 +715,77 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
 
+        elif self.expname == "srl-conll09":    
+            # Experiment on CoNLL'2009 Shared Task.
+            # Evaluates gold, supervised, semi-supervised, and unsupervised syntax in a pipelined model,
+            # and marginalized syntax in a joint model.
+            # We only include grammar induction run on brown clusters.
+            exps = []
+            g.defaults += g.feat_all     
+            #g.defaults.update(predictSense=True)
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                  combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                for parser_srl in parser_srl_list:
+                    for featureSelection in [True, False]: # TODO: Remove.
+                        if featureSelection and lang_short not in ["es", "en"]:
+                            continue
+                        exp = g.defaults + parser_srl + SrlExpParams(featureSelection=featureSelection)
+                        exp.set_incl_name('featureSelection', True)
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exps.append(exp)
+            #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]        
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-subtraction":            
+            exps = []
+            g.defaults += g.feat_all     
+            #g.defaults.update(predictSense=False)
+            g.defaults.set_incl_name('removeAts', True)
+            removeAtsList = ["DEP_TREE,LABEL_DEP_TREE", "MORPHO", "POS", "LEMMA"]
+            parser_srl = gl.pos_sup + g.model_pg_lat_tree
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                for i in range(len(removeAtsList)):
+                    removeAts = ",".join(removeAtsList[:i+1])
+                    exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-learncurve-sem": 
+            # Learning curve experiment to evaluate the quality of SRL
+            # with no other supervision, when different quantities of training
+            # sentences are given.
+            cl_map = {"ca":13200, "cs":38727, "de":36020, "en":39279, "es":14329, "zh":22277}
+            exps = []
+            g.defaults += g.feat_all
+            g.defaults.update(predictSense=False)
+            g.defaults.set_incl_name('removeAts', True)
+            g.defaults.update(removeAts="DEP_TREE,LABEL_DEP_TREE,MORPHO,POS,LEMMA")
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                parser_srl = gl.pos_sup + g.model_pg_lat_tree
+                for trainMaxNumSentences in [1000, 2000, 4000, 8000, 16000, 32000, 64000]:
+                    if trainMaxNumSentences/2 >= cl_map[lang_short]:
+                        break
+                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumSentences=trainMaxNumSentences)
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-learncurve-syn":            
+            return None        
+        
         elif self.expname == "srl-all-nosup":
             g.defaults += g.feat_all
             g.defaults.set("removeLemma", True, incl_name=False)
             g.defaults.set("removeFeat", True, incl_name=False)
             return self._get_default_pipeline(g, l, gl, ll)
-        
-        elif self.expname == "srl-lat":            
-            g.defaults += g.feat_all         
-            g.defaults += SrlExpParams(sgdNumPasses=10)
-            #g.defaults += SrlExpParams(trainMaxNumSentences=1000, trainMaxSentenceLength=20,
-            #                           testMaxNumSentences=100, testMaxSentenceLength=15)
-            exps = self._get_default_experiments(g, l, gl, ll)
-            exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
-            return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-opt":
             # Experiment to do grid search over parameters for optimization.
@@ -849,7 +908,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             feature_sets = [g.feat_tpl_zhao, g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             for trainMaxNumSentences in [500, 1000, 2000, 4000, 15000]:
                 for feature_set in feature_sets:
-                    for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000.]:
+                    for l2variance in [0.01, 0.1, 1., 10., 100., 250., 500., 750., 1000., 10000., 100000]:
                         # Spanish, observed/supervised dep parse and POS tags.
                         parser_srl = g.model_pg_obs_tree + gl.pos_sup + SrlExpParams(l2variance=l2variance, trainMaxNumSentences=trainMaxNumSentences)
                         exp = g.defaults + parser_srl + feature_set
@@ -860,6 +919,42 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
                         #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-feat-ig":
+            exps = []
+            g.defaults.update(trainMaxNumSentences=1000,
+                              testMaxNumSentences=500,
+                              threads=6,
+                              work_mem_megs=5*1024,
+                              featureHashMod=1000000)
+            feature_sets = [
+                            g.feat_tpl_coarse1, 
+                            g.feat_tpl_coarse2, 
+                            g.feat_lluis_koo,
+                            g.feat_tpl_bjork, 
+                            g.feat_lluis, 
+                            g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork_es,
+                            # Dependency parsing
+                            g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
+                            # Combos
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse2, g.feat_tpl_zhao),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse2, g.feat_lluis_koo),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_tpl_zhao),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_tpl_bjork_es),
+                            self.prm_defs.combine_feat_tpls(g.feat_tpl_coarse1, g.feat_koo_hybrid),
+                            ]
+            for lang_short in ["es", "en"]:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                for feature_set in feature_sets:
+                    for featureSelection in [True, False]:
+                        for model in [g.model_pg_lat_tree]: #TODO: , g.model_pg_obs_tree]:
+                            parser_srl = model + gl.pos_sup 
+                            exp = g.defaults + parser_srl + feature_set + SrlExpParams(featureSelection=featureSelection)
+                            exp.set_incl_name('featureSelection', True)
+                            #exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                            exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-feat-ig":

@@ -63,7 +63,7 @@ class DPScraper(Scraper):
         numWords = to_int(get_following_literal(stdout_lines, "Number of train tokens: ", -1))
         exp.update(numWords = numWords)
 
-        if "relaxOnly" in exp.keys():
+        if exp.get("relaxOnly") == True:
             exp.update(relaxTime = get_following_literal(stdout_lines, "relaxTime(ms): ", -1))
             exp.update(relaxBound = get_following_literal(stdout_lines, "relaxBound: ", -1))
             exp.update(relative = get_following_literal(stdout_lines, "relative: ", -1))
