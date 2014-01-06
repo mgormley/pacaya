@@ -94,13 +94,14 @@ public class DmvCkyParser implements DepParser {
         DepTreebank treebank = new DepTreebank(model.getTagAlphabet());
 
         parseWeight = 0.0;
-
+     
         for (int s = 0; s < corpus.size(); s++) {
             if (corpus.isLabeled(s)) {
                 treebank.add(corpus.getTree(s));
             } else {
                 Pair<DepTree, Double> pair = parse(corpus.getSentence(s), model);
                 treebank.add(pair.get1());
+                log.trace("Average seconds per sentence: " + timer.avgSec());
             }
         }
         log.debug("Average seconds per sentence: " + timer.avgSec());
