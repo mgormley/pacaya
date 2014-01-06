@@ -655,8 +655,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-sup-lat",
                     "srl-conll09",
                     "srl-subtraction",
-                    "srl-learncurve-sem",
-                    "srl-learncurve-syn",
+                    "srl-lc-sem",
+                    "srl-lc-syn",
                     "srl-opt",
                     "srl-benchmark",
                     "srl-feats",
@@ -756,7 +756,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        elif self.expname == "srl-learncurve-sem": 
+        elif self.expname == "srl-lc-sem": 
             # Learning curve experiment to evaluate the quality of SRL
             # with no other supervision, when different quantities of training
             # sentences are given.
@@ -778,7 +778,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        elif self.expname == "srl-learncurve-syn":            
+        elif self.expname == "srl-lc-syn":            
             return None        
         
         elif self.expname == "srl-all-nosup":
