@@ -745,10 +745,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
             #g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,LABEL_DEP_TREE", "MORPHO", "POS", "LEMMA"]
-            parser_srl = gl.pos_sup + g.model_pg_lat_tree
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
+                parser_srl = gl.pos_sup + g.model_pg_lat_tree
                 for i in range(len(removeAtsList)):
                     removeAts = ",".join(removeAtsList[:i+1])
                     exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
