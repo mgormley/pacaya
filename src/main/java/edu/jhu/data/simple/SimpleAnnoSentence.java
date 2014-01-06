@@ -353,7 +353,7 @@ public class SimpleAnnoSentence {
         case POS: this.posTags = null; break;
         case MORPHO: this.feats = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
-        case LABEL_DEP_TREE: this.parents = null; this.deprels = null; break;
+        case DEPREL: this.deprels = null; break;
         case SRL: this.srlGraph = null; break;
         default: throw new RuntimeException("not implemented for " + at);
         }

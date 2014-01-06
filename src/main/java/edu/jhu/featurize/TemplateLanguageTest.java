@@ -23,12 +23,12 @@ public class TemplateLanguageTest {
         Set<AT> types = TemplateLanguage.getRequiredAnnotationTypes(tpls);
         
         assertFalse(TemplateLanguage.hasRequiredAnnotationTypes(sent, types));
-        assertTrue(TemplateLanguage.hasRequiredAnnotationType(sent, AT.LABEL_DEP_TREE));
+        assertTrue(TemplateLanguage.hasRequiredAnnotationType(sent, AT.DEPREL));
         assertFalse(TemplateLanguage.hasRequiredAnnotationType(sent, AT.BROWN));
         
         TemplateFeatureExtractorTest.addFakeBrownClusters(sent);        
         assertTrue(TemplateLanguage.hasRequiredAnnotationTypes(sent, types));
-        assertTrue(TemplateLanguage.hasRequiredAnnotationType(sent, AT.LABEL_DEP_TREE));
+        assertTrue(TemplateLanguage.hasRequiredAnnotationType(sent, AT.DEPREL));
         assertTrue(TemplateLanguage.hasRequiredAnnotationType(sent, AT.BROWN));
     }
 

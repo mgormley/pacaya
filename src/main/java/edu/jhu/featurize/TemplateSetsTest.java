@@ -79,7 +79,7 @@ public class TemplateSetsTest {
     }
 
     @Test
-    public void testGetCoarseUnigramSets() {
+    public void testGetCoarseUnigramSet1() {
         List<FeatTemplate> tpls;        
         {
             tpls = TemplateSets.getCoarseUnigramSet1();
@@ -87,6 +87,20 @@ public class TemplateSetsTest {
             System.out.println("Number of templates: " + numArg);
             assertEquals(127, numArg);
         }
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
+        }
+
+        // This tests that names are created correctly.
+        for (FeatTemplate tpl : tpls) {
+            System.out.println(tpl);
+        }
+    }
+    
+    public void testGetCoarseUnigramSet2() {    
+        List<FeatTemplate> tpls;        
         {
             tpls = TemplateSets.getCoarseUnigramSet2();
             int numArg = tpls.size();
@@ -94,15 +108,15 @@ public class TemplateSetsTest {
             assertEquals(213, numArg);
         }
 
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
+        }
+
         // This tests that names are created correctly.
         for (FeatTemplate tpl : tpls) {
             System.out.println(tpl);
-        }
-
-        // Remove each level of supervision.
-        for (AT at : new AT[] { AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
-            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
-            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
         }
         
     }

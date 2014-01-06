@@ -104,7 +104,7 @@ public class TemplateLanguage {
      * be present in order to utilize each structure.
      */
     public enum AT {
-        WORD, LEMMA, POS, BROWN, MORPHO, DEP_TREE, LABEL_DEP_TREE, SRL;
+        WORD, LEMMA, POS, BROWN, MORPHO, DEP_TREE, DEPREL, SRL;
     }
         
     public static Description getDescByName(String name) {
@@ -148,7 +148,7 @@ public class TemplateLanguage {
         desc(TokProperty.BC0, "bc0", "Coarse-grained Brown cluster", AT.BROWN);
         desc(TokProperty.BC1, "bc1", "Fine-grained Brown cluster", AT.BROWN);
         desc(TokProperty.MORPHO, "morpho", "Morphological features", AT.MORPHO);
-        desc(TokProperty.DEPREL, "deprel", "Dependency relation to head", AT.LABEL_DEP_TREE);
+        desc(TokProperty.DEPREL, "deprel", "Dependency relation to head", AT.DEPREL);
         desc(TokProperty.LC, "lc", "Lower-cased word", AT.WORD);
         desc(TokProperty.UNK, "unk", "Unknown word class", AT.WORD);
         desc(TokProperty.CHPRE5, "chpre5", "5-character prefix of a word", AT.WORD);
@@ -480,7 +480,7 @@ public class TemplateLanguage {
             return sent.getClusters() != null;
         case DEP_TREE:
             return sent.getParents() != null;
-        case LABEL_DEP_TREE:
+        case DEPREL:
             return sent.getParents() != null && sent.getDeprels() != null;
         case MORPHO:
             return sent.getFeats() != null;

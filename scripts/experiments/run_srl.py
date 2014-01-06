@@ -436,11 +436,11 @@ class ParamDefinitions():
         l.optimizers = [g.sgd, g.adagrad, g.adadelta, g.lbfgs]    
     
     def _define_groups_model(self, g):
-        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,LABEL_DEP_TREE")
-        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,LABEL_DEP_TREE")
+        g.model_pg_lat_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
+        g.model_pg_prd_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,DEPREL")
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
-        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,LABEL_DEP_TREE")
-        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,LABEL_DEP_TREE")
+        g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
+        g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", removeAts="DEP_TREE,DEPREL")
         g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
 
     def _define_lists_model(self, g, l):
@@ -744,7 +744,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_all     
             #g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            removeAtsList = ["DEP_TREE,LABEL_DEP_TREE", "MORPHO", "POS", "LEMMA"]
+            removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
@@ -765,7 +765,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_all
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            g.defaults.update(removeAts="DEP_TREE,LABEL_DEP_TREE,MORPHO,POS,LEMMA")
+            g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
