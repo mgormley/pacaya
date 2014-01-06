@@ -275,6 +275,7 @@ public class SrlRunner {
             // TODO: use atList here.
         } else {
             srlFePrm = getSrlFeatureExtractorPrm();
+            removeAts(srlFePrm);
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
             if (useTemplates && featureSelection) {
                 String name = "train";
@@ -293,12 +294,9 @@ public class SrlRunner {
                 ig.shutdown();
                 srlFePrm.fePrm.soloTemplates = sft.srlSense;
                 srlFePrm.fePrm.pairTemplates = sft.srlArg;
+                removeAts(srlFePrm); // TODO: This probably isn't necessary, but just in case.
             }
             if (useTemplates) {
-                for (AT at : getRemoveAts()) {
-                    srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
-                    srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
-                }
                 log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
                 log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
                 if (senseFeatTplsOut != null) {
@@ -368,6 +366,13 @@ public class SrlRunner {
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testType, testPredOut, name);
             eval(name, pair);
+        }
+    }
+
+    private void removeAts(SrlFeatureExtractorPrm srlFePrm) {
+        for (AT at : getRemoveAts()) {
+            srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
+            srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
         }
     }
 
