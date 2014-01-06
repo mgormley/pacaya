@@ -7,6 +7,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
@@ -336,6 +337,26 @@ public class SimpleAnnoSentence {
     /** Sets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
     public void setSourceSent(Object sourceSent) {
         this.sourceSent = sourceSent;
+    }
+
+    public void removeAts(List<AT> removeAts) {
+        for (AT at : removeAts) {
+            removeAt(at);
+        }
+    }
+
+    private void removeAt(AT at) {
+        switch (at) {
+        case WORD: this.words = null; break;
+        case BROWN: this.clusters = null; break;
+        case LEMMA: this.lemmas = null; break;
+        case POS: this.posTags = null; break;
+        case MORPHO: this.feats = null; break;
+        case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
+        case LABEL_DEP_TREE: this.parents = null; this.deprels = null; break;
+        case SRL: this.srlGraph = null; break;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
     }
     
 }

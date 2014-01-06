@@ -8,7 +8,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -214,6 +216,8 @@ public class SrlRunner {
     public static boolean removeLemma = false;
     @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
     public static boolean removeFeat = false;
+    @Opt(hasArg = true, description = "Comma separated list of annotation types for restricting features/data.")
+    public static String removeAts = null;
 
     // Options for caching.
     @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
@@ -267,6 +271,8 @@ public class SrlRunner {
             fts = model.getTemplates();
             cs = model.getCs();
             srlFePrm = model.getSrlFePrm();
+            
+            // TODO: use atList here.
         } else {
             srlFePrm = getSrlFeatureExtractorPrm();
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
@@ -289,6 +295,10 @@ public class SrlRunner {
                 srlFePrm.fePrm.pairTemplates = sft.srlArg;
             }
             if (useTemplates) {
+                for (AT at : getRemoveAts()) {
+                    srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
+                    srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
+                }
                 log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
                 log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
                 if (senseFeatTplsOut != null) {
@@ -454,10 +464,8 @@ public class SrlRunner {
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }
-        
-        log.info("Num " + name + " sentences: " + sents.size());   
-        log.info("Num " + name + " tokens: " + numTokens);
 
+        // Brown clusters.
         if (brownClusters != null) {
             log.info("Adding Brown clusters.");
             BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
@@ -470,6 +478,25 @@ public class SrlRunner {
         } else {
             log.warn("No Brown cluster file specified.");            
         }
+
+        // TODO: This must only be done on
+        // the "input" sentences, not the "gold" sentences against which we
+        // train and evaluate.
+        //
+        //        // Additional removal of supervision. 
+        //        if (useTemplates) {
+        //            List<AT> removeAts = getRemoveAts();            
+        //            if (removeAts.size() > 0) {
+        //                log.info("Removing annotation types: " + removeAts);
+        //                for (SimpleAnnoSentence sent : sents) {
+        //                    sent.removeAts(removeAts);
+        //                }
+        //            }
+        //        }
+        
+        log.info("Num " + name + " sentences: " + sents.size());   
+        log.info("Num " + name + " tokens: " + numTokens);
+
         return sents;
     }
 
@@ -566,6 +593,18 @@ public class SrlRunner {
 
     /* --------- Factory Methods ---------- */
 
+    private static List<AT> getRemoveAts() {
+        if (removeAts == null) {
+            return Collections.emptyList();
+        }        
+        String[] splits = removeAts.split(",");
+        ArrayList<AT> ats = new ArrayList<AT>();
+        for (String s : splits) {
+            ats.add(AT.valueOf(s));
+        }
+        return ats;
+    }
+    
     private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm(SrlFeatureExtractorPrm srlFePrm) {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
