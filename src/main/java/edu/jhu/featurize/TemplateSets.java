@@ -140,31 +140,45 @@ public class TemplateSets {
         TokPropList[] coarseTokPropList = new TokPropList[]{ };
         PositionList[] simplePosLists = new PositionList[] { PositionList.LINE_P_C, PositionList.CHILDREN_P, PositionList.PATH_P_C };
         ListModifier[] listModifiers = new ListModifier[]{ ListModifier.SEQ };
-        return coarseUnigramSetCreator(coarseTokProps, coarseTokPropList, simplePosLists, listModifiers);
+
+        OtherFeat[] otherFeats = OtherFeat.values();
+        PositionModifier[] positionModifiers = PositionModifier.values();
+        Position[] positions = Position.values();
+        TokProperty[] fineTokProps = TokProperty.values();
+        TokPropList[] fineTokPropLists = TokPropList.values();
+
+        return coarseUnigramSetCreator(coarseTokProps, coarseTokPropList, simplePosLists, listModifiers, otherFeats, positionModifiers,
+                positions, fineTokProps, fineTokPropLists);
     }
     
     public static List<FeatTemplate> getCoarseUnigramSet2() {
-        TokProperty[] coarseTokProps = new TokProperty[] { TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0, TokProperty.BC1, TokProperty.WORD_TOP_N };
-        TokPropList[] coarseTokPropList = new TokPropList[]{ TokPropList.EACH_MORPHO };
+        TokProperty[] coarseTokProps = new TokProperty[] { TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0}; //, TokProperty.BC1, TokProperty.WORD_TOP_N };
+        TokPropList[] coarseTokPropList = new TokPropList[]{ };
         PositionList[] simplePosLists = new PositionList[] { PositionList.LINE_P_C, PositionList.CHILDREN_P, PositionList.PATH_P_C };
         ListModifier[] listModifiers = new ListModifier[]{ ListModifier.SEQ };
-        return coarseUnigramSetCreator(coarseTokProps, coarseTokPropList, simplePosLists, listModifiers);
-    }
-    
-    private static List<FeatTemplate> coarseUnigramSetCreator(TokProperty[] coarseTokProps,
-            TokPropList[] coarseTokPropList, PositionList[] simplePosLists, ListModifier[] listModifiers) {
+
+        TokProperty[] fineTokProps = new TokProperty[] {  TokProperty.BC1, TokProperty.WORD, TokProperty.LEMMA, TokProperty.CAPITALIZED, TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0 };
+        TokPropList[] fineTokPropLists = new TokPropList[]{ TokPropList.EACH_MORPHO };
+        
         OtherFeat[] otherFeats = OtherFeat.values();
         PositionModifier[] positionModifiers = PositionModifier.values();
         Position[] positions = Position.values();
 
+        return coarseUnigramSetCreator(coarseTokProps, coarseTokPropList, simplePosLists, listModifiers, otherFeats, positionModifiers,
+                positions, fineTokProps, fineTokPropLists);
+    }
+
+    private static List<FeatTemplate> coarseUnigramSetCreator(TokProperty[] coarseTokProps, TokPropList[] coarseTokPropList,
+            PositionList[] simplePosLists, ListModifier[] listModifiers, OtherFeat[] otherFeats,
+            PositionModifier[] positionModifiers, Position[] positions, TokProperty[] fineTokProps, TokPropList[] fineTokPropLists) {
         ArrayList<FeatTemplate> tpls = new ArrayList<FeatTemplate>();
         for (Position pos : positions) {
             for (PositionModifier mod : positionModifiers) {
                 if (mod == PositionModifier.IDENTITY) {
-                    for (TokProperty prop : TokProperty.values()) {
+                    for (TokProperty prop : fineTokProps) {
                         tpls.add(new FeatTemplate1(pos, mod, prop));
                     }
-                    for (TokPropList prop : TokPropList.values()) {
+                    for (TokPropList prop : fineTokPropLists) {
                         tpls.add(new FeatTemplate2(pos, mod, prop));
                     }
                 } else {
