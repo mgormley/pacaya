@@ -76,6 +76,7 @@
 /data/bc_out_1000
 
 results/srl-feat-ig.xlsx
+results/vem-conll-006.xlsx
 
 java.hprof.txt
 warn.log
