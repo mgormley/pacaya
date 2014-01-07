@@ -36,7 +36,7 @@ class SrlScraper(Scraper):
     
     def get_column_order(self, exp_list):
         hs = ""
-        hs += "exp_dir tagger_parser trainMaxNumSentences trainMaxSentenceLength "
+        hs += "elapsed tagger_parser trainMaxNumSentences trainMaxSentenceLength "
         hs += " roleStructure linkVarType feature_set "
         hs += " optimizer l2variance initialLr "
         order = hs.split()
@@ -49,7 +49,7 @@ class SrlScraper(Scraper):
                             order.append("-".join([tt+"-no-sense", lu, fpr]))
                         else:
                             order.append("-".join([tt, lu, fpr]))
-        return order        
+        return order
     
     def scrape_exp(self, exp, exp_dir, stdout_file):
         if not os.path.exists(stdout_file):
