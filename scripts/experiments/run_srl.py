@@ -663,6 +663,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-subtraction",
                     "srl-lc-sem",
                     "srl-lc-syn",
+                    "srl-mem",
                     "srl-opt",
                     "srl-benchmark",
                     "srl-feats",
@@ -805,6 +806,23 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
                 
+        elif self.expname == "srl-mem":
+            exps = []
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
+            g.defaults.update(trainMaxNumSentences=100)
+            g.defaults.set_incl_name('threads', True)
+            g.defaults.set_incl_name('work_mem_megs', True)
+            g.defaults.set_incl_arg('ts', False)
+            g.defaults.set_incl_arg('wmm', False)
+            gl = g.langs['en']
+            for heap_gigs in [0.25,0.5,1,1.5,2]:
+                for threads in [1,2,3,4,5]:
+                    work_mem_megs = heap_gigs*1000 + (512 + 128) # We will subtract this off for overhead / PermGen.
+                    exp = g.defaults + gl.pos_sup + g.model_pg_lat_tree 
+                    exp += SrlExpParams(threads=threads, work_mem_megs=work_mem_megs, ts=threads, wmm=heap_gigs*1000)
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "srl-all-nosup":
             g.defaults += g.feat_all
             g.defaults.set("removeLemma", True, incl_name=False)
@@ -1116,7 +1134,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
             if isinstance(stage, SrlExpParams) and not self.big_machine:
-                stage.update(work_mem_megs=2000, threads=1)
+                stage.update(work_mem_megs=2000, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")
