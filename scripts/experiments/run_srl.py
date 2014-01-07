@@ -280,13 +280,13 @@ class ParamDefinitions():
         g.defaults.set("work_mem_megs", 1.5*1024, incl_arg=False, incl_name=False)
         g.defaults.update(seed=random.getrandbits(63))
         if self.queue:
-            threads = 20
+            threads = 15
         elif self.big_machine:
             threads = 2
         else:
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
-        g.defaults.set("sgdBatchSize", threads)
+        g.defaults.set("sgdBatchSize", 20)
         
         g.defaults.update(
             printModel="./model.txt.gz",                          
@@ -304,9 +304,11 @@ class ParamDefinitions():
             predictSense=True,
             normalizeRoleNames=False,
             l2variance="10000.0",
-            sgdNumPasses=10,
-            featureHashMod=-1,
+            sgdNumPasses=5,
+            featureHashMod=1000000,
             featureSelection=True,
+            numFeatsToSelect=32,
+            numSentsForFeatSelect=1000,
             )
         
         g.defaults += g.adagrad
@@ -315,12 +317,12 @@ class ParamDefinitions():
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
         g.defaults.set_incl_arg("language", False)
-        g.defaults.set_incl_arg("eval", False)
+        g.defaults.set_incl_arg("dev", False)
         
         # Exclude parameters from the experiment name.
         g.defaults.set_incl_name("train", False)
         g.defaults.set_incl_name("test", False)
-        g.defaults.set_incl_name("eval", False)
+        g.defaults.set_incl_name("dev", False)
         g.defaults.set_incl_name("removeDeprel", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
         g.defaults.set_incl_name("brownClusters", False)        
@@ -475,32 +477,32 @@ class ParamDefinitions():
         # Gold trees: HEAD column.
         return SrlExpParams(tagger_parser = 'pos-gold', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_pos_gold_eval"), 
+                            dev = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_eval"), 
                             removeDeprel = False, useGoldSyntax = True, language = lang_short)
         
     def _get_pos_sup(self, p, lang_short):
         # Supervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'pos-sup', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_pos_gold_eval"),
+                            dev = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_eval"),
                             removeDeprel = False, useGoldSyntax = False, language = lang_short)
         
     def _get_pos_semi(self, p, lang_short):  
         # Semi-supervised parser output: PHEAD column.        
         return SrlExpParams(tagger_parser = 'pos-semi', 
                             train = p.get(lang_short + "_pos_semi_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_semi_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_pos_semi_eval"),
+                            dev = p.get(lang_short + "_pos_semi_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_semi_eval"),
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
         
     def _get_pos_unsup(self, p, lang_short):  
         # Unsupervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'pos-unsup', 
                             train = p.get(lang_short + "_pos_unsup_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_unsup_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_pos_unsup_eval"),
+                            dev = p.get(lang_short + "_pos_unsup_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_unsup_eval"),
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
                 
     def _get_brown_semi(self, p, lang_short):  
@@ -508,16 +510,16 @@ class ParamDefinitions():
         # Semi-supervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'brown-semi', 
                             train = p.get(lang_short + "_brown_semi_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_brown_semi_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_brown_semi_eval"),
+                            dev = p.get(lang_short + "_brown_semi_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_semi_eval"),
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
         
     def _get_brown_unsup(self, p, lang_short):
         # Unsupervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'brown-unsup', 
                             train = p.get(lang_short + "_brown_unsup_train"), trainType = "CONLL_2009",
-                            test = p.get(lang_short + "_brown_unsup_dev"), testType = "CONLL_2009",
-                            eval = p.get(lang_short + "_brown_unsup_eval"),
+                            dev = p.get(lang_short + "_brown_unsup_dev"), testType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_unsup_eval"),
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
     
     # ------------------------------ END Parser Outputs ------------------------------         
@@ -567,9 +569,9 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*1024
             else:
                 if exp.get("useProjDepTreeFactor"):
-                    base_work_mem_megs = 50 * 1024
+                    base_work_mem_megs = 20 * 1000
                 else:
-                    base_work_mem_megs = 50 * 1024
+                    base_work_mem_megs = 20 * 1000
         else:
             base_work_mem_megs = 1.5 * 1024
         return base_work_mem_megs    
@@ -725,28 +727,25 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_all     
-            #g.defaults.update(predictSense=True)
+            g.defaults += g.feat_all
+            g.defaults.update(predictSense=True)
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
-                                  combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                # parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                #                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
                 for parser_srl in parser_srl_list:
-                    for featureSelection in [True, False]: # TODO: Remove.
-                        if featureSelection and lang_short not in ["es", "en"]:
-                            continue
-                        exp = g.defaults + parser_srl + SrlExpParams(featureSelection=featureSelection)
-                        exp.set_incl_name('featureSelection', True)
-                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                        exps.append(exp)
+                    exp = g.defaults + parser_srl
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]        
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-subtraction":            
             exps = []
-            g.defaults += g.feat_all     
-            #g.defaults.update(predictSense=False)
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
+            g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
             for lang_short in p.lang_short_names:
@@ -766,11 +765,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # sentences are given.
             cl_map = {"ca":13200, "cs":38727, "de":36020, "en":39279, "es":14329, "zh":22277}
             exps = []
-            g.defaults += g.feat_all
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
-            for lang_short in p.lang_short_names:
+            for lang_short in ['ca', 'de']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
@@ -790,7 +789,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             #
             cl_map = {"ca":13200, "cs":38727, "de":36020, "en":39279, "es":14329, "zh":22277}
             exps = []
-            g.defaults += g.feat_all
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
