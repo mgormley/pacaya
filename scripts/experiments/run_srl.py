@@ -1063,8 +1063,16 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 # -- compose the parameters
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
                 new_params.set("oldName", name, incl_name=True, incl_arg=False)
-                new_params += SrlExpParams(test=old_params.get("eval"), 
-                                           testType=old_params.get("testType"))
+                evalGroup = old_params.get("eval")
+                if evalGroup is None and old_params.get("expname") == "srl-all-sup-lat":      
+                    # For backwards compatibility.
+                    lang_short = old_params.get("language")
+                    if lang_short == "sp": lang_short = "es"                              
+                    evalGroup = g.langs[lang_short].pos_sup.get("eval")
+                new_params.update(test=evalGroup, 
+                                  testType=old_params.get("testType"))
+                # Reduce to these get on the grid quickly.                                           
+                new_params.update(threads=6, work_mem_megs=7*1024)
                 exps.append(new_params)
             return self._get_pipeline_from_exps(exps)
         

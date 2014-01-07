@@ -66,6 +66,16 @@ public class ArgParserTest {
             Assert.assertEquals(3e10, doubleVal, 1e-13);
         }
         {
+            String[] args = "--intVal 3e+06 --doubleVal=1E+06".split(" ");
+
+            ArgParser parser = new ArgParser();
+            parser.addClass(ArgParserTest.class);
+            parser.parseArgs(args);
+
+            Assert.assertEquals(3000000, intVal);
+            Assert.assertEquals(1e6, doubleVal, 1e-13);
+        }
+        {
             String[] args = "--strVal=4 --fileVal=4/4".split(" ");
 
             ArgParser parser = new ArgParser();

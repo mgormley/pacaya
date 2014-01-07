@@ -19,6 +19,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
 
+import edu.jhu.prim.util.SafeCast;
+
 /**
  * Command line argument parser.
  * 
@@ -176,7 +178,7 @@ public class ArgParser {
         } else if (type.equals(Float.TYPE)) {
             field.setFloat(null, Float.parseFloat(value));
         } else if (type.equals(Integer.TYPE)) {
-            field.setInt(null, Integer.parseInt(value));
+            field.setInt(null, safeStrToInt(value));
         } else if (type.equals(Long.TYPE)) {
             field.setLong(null, Long.parseLong(value));
         } else if (type.equals(Short.TYPE)) {
@@ -198,4 +200,16 @@ public class ArgParser {
         }
         return value.charAt(0);
     }
+
+
+    private static final Pattern sciInt = Pattern.compile("^\\d+\\.?[e|E][+-]?\\d+$");
+    /** Correctly casts 1e+06 to 1000000. */
+    public static int safeStrToInt(String str) {
+        if (sciInt.matcher(str).find()) {
+            return SafeCast.safeDoubleToInt(Double.parseDouble(str.toUpperCase()));
+        } else {
+            return Integer.parseInt(str);
+        }
+    }
+    
 }
