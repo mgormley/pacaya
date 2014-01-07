@@ -590,6 +590,9 @@ class SrlExpParams(experiment_runner.JavaExpParams):
     def create_experiment_script(self, exp_dir):
         script = "\n"
         #script += 'echo "CLASSPATH=$CLASSPATH"\n'
+        if self.get("oldJar"): # TODO: remove this after backwards compat not needed.
+            script += 'CLASSPATH=%s:$CLASSPATH\n' % (self.get("oldJar"))
+            script += 'echo "CLASSPATH=$CLASSPATH"\n'
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
@@ -1038,8 +1041,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for key in old_params.keys():
                     old_params_for_record.set("old:"+key, old_params.get(key), False, False)
                 old_params_for_record.set("old:tagger_parser", old_params.get("tagger_parser"), incl_name=True, incl_arg=False)
-                # Create experiment
-                new_params = g.defaults + old_params_for_record + old_params + SrlExpParams()
+                # Create experiment (used to include g.defaults)
+                new_params = old_params_for_record + old_params + SrlExpParams()
                 # -- remove irrelevant params
                 keys_to_remove = [ "train", "trainType", "trainPredOut",
                                    "trainGoldOut", "trainMaxSentenceLength",
@@ -1069,10 +1072,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     lang_short = old_params.get("language")
                     if lang_short == "sp": lang_short = "es"                              
                     evalGroup = g.langs[lang_short].pos_sup.get("eval")
+                    # TODO: Hack for backwards compat.
+                    new_params.update(featureHashMod='1000000')
                 new_params.update(test=evalGroup, 
                                   testType=old_params.get("testType"))
                 # Reduce to these get on the grid quickly.                                           
                 new_params.update(threads=6, work_mem_megs=7*1024)
+                new_params.set('oldJar', os.path.join(train_exp_dir, "jar-with-deps.jar"), False, False)
                 exps.append(new_params)
             return self._get_pipeline_from_exps(exps)
         
