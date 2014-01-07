@@ -779,8 +779,29 @@ class SrlExpParamsRunner(ExpParamsRunner):
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-lc-syn":            
-            return None        
-        
+            # Learning curve experiment to evaluate the quality of high-resource SRL
+            # where the amount of syntactic supervision is varied.
+            # Note that this is a joint model, not a pipelined version, so it provides a spectrum 
+            # of training settings between the marginalized model and the full joint model.
+            #
+            cl_map = {"ca":13200, "cs":38727, "de":36020, "en":39279, "es":14329, "zh":22277}
+            exps = []
+            g.defaults += g.feat_all
+            g.defaults.update(predictSense=False)
+            g.defaults.set_incl_name('removeAts', True)
+            g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                parser_srl = gl.pos_sup + g.model_pg_prd_tree
+                for trainMaxNumDepParses in [1000, 2000, 4000, 8000, 16000, 32000, 64000]:
+                    if trainMaxNumDepParses/2 >= cl_map[lang_short]:
+                        break
+                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumDepParses=trainMaxNumDepParses)
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+                
         elif self.expname == "srl-all-nosup":
             g.defaults += g.feat_all
             g.defaults.set("removeLemma", True, incl_name=False)
