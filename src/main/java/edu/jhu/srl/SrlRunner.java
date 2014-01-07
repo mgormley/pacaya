@@ -165,9 +165,15 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Whether to predict predicate sense.")
     public static boolean predictSense = false;
 
-    // Options for SRL feature extraction.
+    // Options for SRL feature selection.
     @Opt(hasArg = true, description = "Whether to do feature selection.")
     public static boolean featureSelection = true;
+    @Opt(hasArg = true, description = "The number of feature bigrams to form.")
+    public static int numFeatsToSelect = 32;
+    @Opt(hasArg = true, description = "The max number of sentences to use for feature selection")
+    public static int numSentsForFeatSelect = 1000;    
+    
+    // Options for SRL feature extraction.
     @Opt(hasArg = true, description = "Cutoff for OOV words.")
     public static int cutoff = 3;
     @Opt(hasArg = true, description = "For preprocessing: Minimum feature count for caching.")
@@ -286,8 +292,8 @@ public class SrlRunner {
                 InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
                 prm.featureHashMod = featureHashMod;
                 prm.numThreads = threads;
-                prm.numToSelect = 100;
-                prm.maxNumSentences = 1000;
+                prm.numToSelect = numFeatsToSelect;
+                prm.maxNumSentences = numSentsForFeatSelect;
                 SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
                 sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);

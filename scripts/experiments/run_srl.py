@@ -376,13 +376,14 @@ class ParamDefinitions():
         g.feat_lluis_koo         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
                                                                 "/edu/jhu/featurize/lluis-koo-arg-feats.txt",
                                                                 False, 'tpl_lluis_koo')
-        g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig')
+        g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig', 
+                                                                   numFeatsToSelect=32, numSentsForFeatSelect=1000)
 
         # The coarse set uses the bjorkelund sense features.
         g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
         g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
         
-        g.feat_all = g.feat_tpl_coarse1
+        g.feat_all = g.feat_tpl_bjork_ig
     
     def _define_lists_features(self, g, l):
         l.feature_sets = [ g.feat_all, g.feat_simple_narad_zhao, g.feat_simple_narad_dep, g.feat_simple_narad, 
@@ -1061,6 +1062,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 if not os.path.exists(modelIn): continue                
                 # -- compose the parameters
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
+                new_params.set("oldName", name, incl_name=True, incl_arg=False)
                 new_params += SrlExpParams(test=old_params.get("eval"), 
                                            testType=old_params.get("testType"))
                 exps.append(new_params)
