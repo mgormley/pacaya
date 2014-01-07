@@ -53,6 +53,8 @@ public class InformationGainFeatureTemplateSelector {
         public int numThreads = 1;
         /** Maximum number of sentences over which to evaluate information gain. */
         public int maxNumSentences = Integer.MAX_VALUE;
+        /** Whether to do feature selection for sense features. */
+        public boolean selectSense = true;
     }
     
     private InformationGainFeatureTemplateSelectorPrm prm;
@@ -79,7 +81,7 @@ public class InformationGainFeatureTemplateSelector {
     
     public SrlFeatTemplates getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, 
             CorpusStatisticsPrm csPrm, SrlFeatTemplates sft) {
-        List<FeatTemplate> srlSense = getFeatTemplatesForSrl(sents, csPrm, sft.srlSense, new SrlSenseExtractor());
+        List<FeatTemplate> srlSense = prm.selectSense ? getFeatTemplatesForSrl(sents, csPrm, sft.srlSense, new SrlSenseExtractor()) : sft.srlSense;
         List<FeatTemplate> srlArg = getFeatTemplatesForSrl(sents, csPrm, sft.srlArg, new SrlArgExtractor());
         // Note we do NOT do feature selection on the dependency parsing templates. 
         return new SrlFeatTemplates(srlSense, srlArg, sft.depParse);

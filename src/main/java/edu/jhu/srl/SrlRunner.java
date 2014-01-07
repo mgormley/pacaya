@@ -294,6 +294,7 @@ public class SrlRunner {
                 prm.numThreads = threads;
                 prm.numToSelect = numFeatsToSelect;
                 prm.maxNumSentences = numSentsForFeatSelect;
+                prm.selectSense = predictSense;
                 SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
                 InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
                 sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);

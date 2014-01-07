@@ -141,11 +141,11 @@ public class TemplateSets {
         PositionList[] simplePosLists = new PositionList[] { PositionList.LINE_P_C, PositionList.CHILDREN_P, PositionList.PATH_P_C };
         ListModifier[] listModifiers = new ListModifier[]{ ListModifier.SEQ };
 
+        TokProperty[] fineTokProps = TokProperty.values();
+        TokPropList[] fineTokPropLists = TokPropList.values();
         OtherFeat[] otherFeats = OtherFeat.values();
         PositionModifier[] positionModifiers = PositionModifier.values();
         Position[] positions = Position.values();
-        TokProperty[] fineTokProps = TokProperty.values();
-        TokPropList[] fineTokPropLists = TokPropList.values();
 
         return coarseUnigramSetCreator(coarseTokProps, coarseTokPropList, simplePosLists, listModifiers, otherFeats, positionModifiers,
                 positions, fineTokProps, fineTokPropLists);
@@ -156,8 +156,8 @@ public class TemplateSets {
         TokPropList[] coarseTokPropList = new TokPropList[]{ };
         PositionList[] simplePosLists = new PositionList[] { PositionList.LINE_P_C, PositionList.CHILDREN_P, PositionList.PATH_P_C };
         ListModifier[] listModifiers = new ListModifier[]{ ListModifier.SEQ };
-
-        TokProperty[] fineTokProps = new TokProperty[] {  TokProperty.BC1, TokProperty.WORD, TokProperty.LEMMA, TokProperty.CAPITALIZED, TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0 };
+        
+        TokProperty[] fineTokProps = new TokProperty[] {  TokProperty.BC1, TokProperty.WORD, TokProperty.LEMMA, TokProperty.CHPRE5, TokProperty.CAPITALIZED, TokProperty.POS, TokProperty.DEPREL, TokProperty.BC0 };
         TokPropList[] fineTokPropLists = new TokPropList[]{ TokPropList.EACH_MORPHO };
         
         OtherFeat[] otherFeats = OtherFeat.values();
