@@ -30,6 +30,10 @@ echo "Syncing grammar induction output..."
     --include="/*/" \
     --include="*parses.txt" \
     --exclude="*" 
+"${RSYNC[@]}" $REMOTE_EXP/vem-conll_006/ $LOCAL_COPY/vem-conll_006 \
+    --include="/*20*/" \
+    --include="*parses.txt" \
+    --exclude="*" 
 
 echo "Syncing Brown cluster output..."
 "${RSYNC[@]}" $SERVER:/home/hltcoe/mgormley/working/word_embeddings/bc_out_256/ ./data/bc_out_256 \
@@ -42,8 +46,9 @@ echo "Syncing Brown cluster output..."
     --exclude="*"
 head -n 10 data/bc_out_1000/full.txt_*/bc/paths | grep -P "^0" > data/bc_out_1000/paths.tiny
 
-echo "Adding symbolic link to vem-conll_005"
+echo "Adding symbolic link to vem-conll_00{5,6}"
 ln -s `pwd`/remote_exp/vem-conll_005/ ./exp/vem-conll_005
+ln -s `pwd`/remote_exp/vem-conll_006/ ./exp/vem-conll_006
 
 
 # ------------------------ Trash ----------------------------------------

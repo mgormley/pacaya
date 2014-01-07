@@ -172,7 +172,7 @@ class PathDefinitions():
             require_path_exists(pos_gold_train, pos_gold_dev, pos_gold_eval)
 
     def _set_paths_for_conll09_parses(self, p, lang_long, lang_short, data_dir, require=False): 
-        if lang_short == "es": lang_short = "sp"       
+        #if lang_short == "es": lang_short = "sp"       
         # --- POS tags ---
         # Semi-supervised parser output: PHEAD column.
         pos_semi_train = safe_join(data_dir, "dmv_conll09-%s-train_20_True/test-parses.txt" % (lang_short))
@@ -728,7 +728,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # We only include grammar induction run on brown clusters.
             exps = []
             g.defaults += g.feat_all
-            g.defaults.update(predictSense=True)
+            g.defaults.update(predictSense=True, removeAts="BROWN")
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
