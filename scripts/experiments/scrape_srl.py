@@ -35,16 +35,19 @@ class SrlScraper(Scraper):
         return SrlExpParams()
     
     def get_column_order(self, exp_list):
-        hs = ""
-        hs += "elapsed tagger_parser trainMaxNumSentences trainMaxSentenceLength "
-        hs += " roleStructure linkVarType feature_set "
-        hs += " optimizer l2variance initialLr "
-        order = hs.split()
+        order = []
+        
+        #        hs = ""
+        #        hs += "elapsed tagger_parser trainMaxNumSentences trainMaxSentenceLength "
+        #        hs += " roleStructure linkVarType feature_set "
+        #        hs += " optimizer l2variance initialLr "
+        #        order += hs.split()
+        
         # Add the columns from the evaluation. 
-        for ns in [False, True]:
+        for tt in ["test", "train"]:
             for lu in ["Labeled", "Unlabeled"]:
-                for fpr in ["attachment-score", "F1", "precision", "recall"]:
-                    for tt in ["train", "test"]:
+                for fpr in ["F1", "precision", "recall", "attachment-score"]:
+                    for ns in [False, True]:
                         if ns:
                             order.append("-".join([tt+"-no-sense", lu, fpr]))
                         else:
