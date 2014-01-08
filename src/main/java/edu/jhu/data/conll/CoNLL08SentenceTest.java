@@ -62,8 +62,8 @@ public class CoNLL08SentenceTest {
 
     @Test
     public void testAllTagsWithPreds() throws IOException {
-        //InputStream inputStream = new FileInputStream("data/LDC/LDC2009T12/data/train/train.closed");
-        String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/test.wsj.GOLD.simplified.conll08";
+        String f = "data/LDC/LDC2009T12/data/train/train.closed";
+        //String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/test.wsj.GOLD.simplified.conll08";
         InputStream inputStream = new FileInputStream(f);
         CoNLL08FileReader cr = new CoNLL08FileReader(inputStream);
         HashSet<String> set = new HashSet<String>();
@@ -74,10 +74,9 @@ public class CoNLL08SentenceTest {
                 if (t.getPred() != null && !t.getPred().equals("_")) {
                     // Is pred
                     String gpos = t.getPpos();
-                    if (gpos == null || (!gpos.startsWith("V") && !gpos.startsWith("N"))) {
-
+                    //if (gpos == null || (!gpos.startsWith("V") && !gpos.startsWith("N"))) {
                         //System.out.println(t);
-                    }
+                    //}
                     set.add(gpos);
                     Maps.increment(count, gpos, 1);
                 }
