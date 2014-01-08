@@ -62,12 +62,17 @@ public class CoNLL08SentenceTest {
 
     @Test
     public void testAllTagsWithPreds() throws IOException {
-        //String f = "data/LDC/LDC2009T12/data/train/train.closed";
-        String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/test.wsj.GOLD.simplified.conll08";
+        String f = "data/LDC/LDC2009T12/data/train/train.closed";
+        //String f = "data/LDC/LDC2009T12/data/test.wsj/test.wsj.closed.GOLD";
+        //String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/test.wsj.GOLD.simplified.conll08";
+        //String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/train.GOLD.simplified.conll08";
+        //
+        //String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/lth/test.wsj.conll";
         InputStream inputStream = new FileInputStream(f);
         CoNLL08FileReader cr = new CoNLL08FileReader(inputStream);
         HashSet<String> set = new HashSet<String>();
         HashMap<String,Integer> count = new HashMap<String,Integer>();
+        int numPreds = 0;
         for (CoNLL08Sentence sent : cr) {
             for (int i=0; i<sent.size(); i++) {
                 CoNLL08Token t = sent.get(i);
@@ -80,6 +85,7 @@ public class CoNLL08SentenceTest {
                         System.out.println(sent);
                     set.add(gpos);
                     Maps.increment(count, gpos, 1);
+                    numPreds++;
                 }
             }
             //sent.removeNominalPreds();
@@ -89,6 +95,7 @@ public class CoNLL08SentenceTest {
         
         System.out.println(set);
         System.out.println(count);
+        System.out.println("Num preds: " + numPreds);
     }
     
     public CoNLL08Sentence getSent() {

@@ -120,6 +120,10 @@ class PathDefinitions():
         p.c08_pos_gold_dev = os.path.join(conll08_dir, "devel", "devel.closed")
         p.c08_pos_gold_test_wsj = os.path.join(conll08_dir, "test.wsj", "test.wsj.closed.GOLD")
         p.c08_pos_gold_test_brown = os.path.join(conll08_dir, "test.brown", "test.brown.closed.GOLD")
+        # Versions without nominal predicates.
+        p.c08_pos_gold_train_simplified = os.path.join(self.root_dir, "data", "conll2008", "train.GOLD.simplified.conll08")
+        p.c08_pos_gold_test_wsj_simplified = os.path.join(self.root_dir, "data", "conll2008", "test.wsj.GOLD.simplified.conll08")
+        # Missing sentences.
         p.c08_pos_gold_test_wsj_missing = os.path.join(self.root_dir, "data", "conll2008", "test.wsj.missing.conll")
         
         # Grammar Induction Output.
@@ -760,16 +764,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         elif self.expname == "srl-conll08":
             exps = []
-            g.defaults += g.feat_all
+            #g.defaults += g.feat_all
             g.defaults.update(predictSense=False)
-            pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
-                            train = p.c08_pos_gold_train, trainType = "CONLL_2008",
-                            dev = p.c08_pos_gold_test_wsj_missing, devType = "CONLL_2008",
-                            test = p.c08_pos_gold_test_wsj, testType = "CONLL_2008",
-                            removeDeprel = False, useGoldSyntax = False, language = 'en')
-            exp = g.defaults + pos_sup + g.model_pg_lat_tree 
-            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-            exps.append(exp)
+            # Eval only. TODO
+            g.defaults.set_incl_arg("trainName", False)
+            # Train and test.
+            for train in [SrlExpParams(train=p.c08_pos_gold_train_simplified, trainName="trainSimplified"), 
+                          SrlExpParams(train=p.c08_pos_gold_train, trainName="trainOrig")]:
+                for feats in [g.feat_all, g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)]:
+                    pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
+                                    trainType = "CONLL_2008",
+                                    dev = p.c08_pos_gold_test_wsj_missing, devType = "CONLL_2008",
+                                    test = p.c08_pos_gold_test_wsj_simplified, testType = "CONLL_2008",
+                                    removeDeprel = False, useGoldSyntax = False, language = 'en')
+                    exp = g.defaults + feats + pos_sup + g.model_pg_lat_tree + train 
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-subtraction":            
