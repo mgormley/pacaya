@@ -1131,12 +1131,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 # -- compose the parameters
                 new_params.set("modelIn", modelIn, incl_name=False, incl_arg=True)
                 new_params.set("oldName", name, incl_name=True, incl_arg=False)
-                evalGroup = old_params.get("eval")
+                evalGroup = old_params.get("eval") # For several revisions we stored the test file in eval.
                 if evalGroup is None and old_params.get("expname") == "srl-all-sup-lat":      
                     # For backwards compatibility.
                     lang_short = old_params.get("language")
                     if lang_short == "sp": lang_short = "es"                              
-                    evalGroup = g.langs[lang_short].pos_sup.get("eval")
+                    evalGroup = g.langs[lang_short].pos_sup.get("test")
                     # TODO: Hack for backwards compat with srl-all-sup-lat_004.
                     #        new_params.update(featureHashMod='1000000')
                 new_params.update(test=evalGroup, 
