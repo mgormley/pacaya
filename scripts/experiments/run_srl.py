@@ -1137,8 +1137,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     lang_short = old_params.get("language")
                     if lang_short == "sp": lang_short = "es"                              
                     evalGroup = g.langs[lang_short].pos_sup.get("eval")
-                    # TODO: Hack for backwards compat.
-                    new_params.update(featureHashMod='1000000')
+                    # TODO: Hack for backwards compat with srl-all-sup-lat_004.
+                    #        new_params.update(featureHashMod='1000000')
                 new_params.update(test=evalGroup, 
                                   testType=old_params.get("testType"))
                 # Reduce to these get on the grid quickly.                                           
