@@ -768,6 +768,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             test = p.c08_pos_gold_test_wsj, testType = "CONLL_2008",
                             removeDeprel = False, useGoldSyntax = False, language = 'en')
             exp = g.defaults + pos_sup + g.model_pg_lat_tree 
+            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
             exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         

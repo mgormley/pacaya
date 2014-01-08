@@ -18,7 +18,8 @@ import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 
 /**
- * One sentence from a CoNLL-2009 formatted file.
+ * One sentence from a CoNLL-2008 formatted file.
+ * @author mgormley
  * @author mmitchell
  */
 public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
