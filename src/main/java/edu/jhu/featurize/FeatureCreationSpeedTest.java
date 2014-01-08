@@ -159,7 +159,7 @@ public class FeatureCreationSpeedTest {
     //@Test
     public void testSpeedOfFeatureCreation2() throws IOException {
         // Params
-        final int numExamples = 100;
+        final int numExamples = 10;
         final int numRounds = 1;
 
         //InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
@@ -180,8 +180,8 @@ public class FeatureCreationSpeedTest {
         System.out.println("Num sents: " + sents.size());
         
         //List<FeatTemplate> tpls = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
-        List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.kooHybridDepFeatsResource);
-        //List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
+        //List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.kooHybridDepFeatsResource);
+        List<FeatTemplate> tpls = TemplateSets.getCoarseUnigramSet1();
         System.out.println("Num tpls: " + tpls.size());
 
         testFeatExtract2(numRounds, tpls, sents, "en", 3, true);

@@ -191,6 +191,45 @@ public class SrlGraph {
             }
         }
     }
+    
+
+    public SrlGraph(CoNLL08Sentence sent) {
+        this(sent.size());
+
+        // Create a predicate for each row marked with fillpred = Y.
+        for (int i = 0; i < sent.size(); i++) {
+            CoNLL08Token tok = sent.get(i);
+            if (tok.getPred() != null) {
+                addPred(new SrlPred(i, tok.getPred()));
+            }
+        }
+        
+        // For each token, check whether it is an argument. If so, add all
+        // the edges between that argument and its predicates.         
+        for (int j = 0; j < sent.size(); j++) {
+            CoNLL08Token tok = sent.get(j);
+            List<String> apreds = tok.getApreds();
+            // Create an argument for this position, we will only add it if
+            // it is actually annotated as an argument.
+            SrlArg arg = new SrlArg(j);
+            boolean argAdded = false;
+            assert apreds.size() == preds.size();
+            for (int i = 0; i < apreds.size(); i++) {
+                String apred = apreds.get(i);
+                if (apred != null && !"_".equals(apred)) {
+                    SrlPred pred = preds.get(i);
+                    // Add the edge.
+                    SrlEdge edge = new SrlEdge(pred, arg, apred);
+                    addEdge(edge);
+                    if (!argAdded) {
+                        // Add the argument.
+                        addArg(arg);
+                        argAdded = true;
+                    }
+                }
+            }
+        }
+    }
 
     /** Adds the edge. */
     public void addEdge(SrlEdge edge) {

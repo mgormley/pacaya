@@ -1,0 +1,118 @@
+1	No	no	RB	RB	No	no	DT	4	DEP	_
+2	,	,	,	,	,	,	,	4	P	_
+3	it	it	PRP	PRP	it	it	PRP	4	SBJ	_
+4	was	be	VBD	VBD	was	be	VBD	0	ROOT	_
+5	n't	not	RB	RB	n't	not	RB	4	ADV	_
+6	Black	black	NNP	NNP	Black	black	NNP	7	NAME	_
+7	Monday	monday	NNP	NNP	Monday	monday	NNP	4	PRD	_
+8	.	.	.	.	.	.	.	4	P	_
+
+1	But	but	CC	CC	But	but	CC	33	DEP	_	_	_	_	_	_
+2	while	while	IN	IN	while	while	IN	33	ADV	_	_	_	AM-ADV	_	_
+3	the	the	DT	DT	the	the	DT	7	NMOD	_	_	_	_	_	_
+4	New	new	NNP	NNP	New	new	NNP	5	NAME	_	_	_	_	_	_
+5	York	york	NNP	NNP	York	york	NNP	7	NAME	_	_	_	_	_	_
+6	Stock	stock	NNP	NNP	Stock	stock	NNP	7	NAME	_	_	_	_	_	_
+7	Exchange	exchange	NNP	NNP	Exchange	exchange	NNP	8	SBJ	_	A1	_	_	_	_
+8	did	do	VBD	VBD	did	do	VBD	2	SUB	_	_	_	_	_	_
+9	n't	not	RB	RB	n't	not	RB	8	ADV	_	AM-NEG	_	_	_	_
+10	fall	fall	VB	VB	fall	fall	VB	8	VC	fall.01	_	_	_	_	_
+11	apart	apart	RB	RB	apart	apart	RB	10	ADV	_	A4	_	_	_	_
+12	Friday	friday	NNP	NNP	Friday	friday	NNP	10	TMP	_	AM-TMP	_	_	_	_
+13	as	as	IN	IN	as	as	IN	10	TMP	_	AM-TMP	_	_	_	_
+14	the	the	DT	DT	the	the	DT	18	NMOD	_	_	_	_	_	_
+15	Dow	dow	NNP	NNP	Dow	dow	NNP	16	NAME	_	_	_	_	_	_
+16	Jones	jones	NNP	NNP	Jones	jones	NNP	18	NAME	_	_	_	_	_	_
+17	Industrial	industrial	NNP	NNP	Industrial	industrial	NNP	18	NAME	_	_	_	_	_	_
+18	Average	average	NNP	NNP	Average	average	NNP	19	SBJ	_	_	A1	_	_	_
+19	plunged	plunge	VBD	VBD	plunged	plunge	VBD	13	SUB	plunge.01	_	_	_	_	_
+20	190.58	190.58	CD	CD	190.58	190.58	CD	21	NMOD	_	_	_	_	_	_
+21	points	point	NNS	NNS	points	point	NNS	19	EXT	_	_	A2	_	_	_
+22	--	--	:	:	--	--	:	23	P	_	_	_	_	_	_
+23	most	most	JJS	JJS	most	most	RBS	21	NMOD	_	_	_	_	_	_
+24	of	of	IN	IN	of	of	IN	23	NMOD	_	_	_	_	_	_
+25	it	it	PRP	PRP	it	it	PRP	24	PMOD	_	_	_	_	_	_
+26	in	in	IN	IN	in	in	IN	23	TMP	_	_	_	_	_	_
+27	the	the	DT	DT	the	the	DT	29	NMOD	_	_	_	_	_	_
+28	final	final	JJ	JJ	final	final	JJ	29	NMOD	_	_	_	_	_	_
+29	hour	hour	NN	NN	hour	hour	NN	26	PMOD	_	_	_	_	_	_
+30	--	--	:	:	--	--	:	23	P	_	_	_	_	_	_
+31	it	it	PRP	PRP	it	it	PRP	33	SBJ	_	_	_	A0	A1	_
+32	barely	barely	RB	RB	barely	barely	RB	33	ADV	_	_	_	AM-ADV	_	_
+33	managed	manage	VBD	VBD	managed	manage	VBD	0	ROOT	manage.02	_	_	_	_	_
+34	to	to	TO	TO	to	to	TO	33	OPRD	_	_	_	A1	_	_
+35	stay	stay	VB	VB	stay	stay	VB	34	IM	stay.01	_	_	_	_	_
+36	this	this	DT	DT	this	this	DT	37	NMOD	_	_	_	_	_	_
+37	side	side	NN	NN	side	side	NN	35	LOC-PRD	side.01	_	_	_	A3	_
+38	of	of	IN	IN	of	of	IN	37	NMOD	_	_	_	_	_	A1
+39	chaos	chaos	NN	NN	chaos	chaos	NN	38	PMOD	_	_	_	_	_	_
+40	.	.	.	.	.	.	.	33	P	_	_	_	_	_	_
+
+1	Some	some	DT	DT	Some	some	DT	4	NMOD	_	_	_	_	_	_	_	_	_	_
+2	``	``	``	``	``	``	``	4	P	_	_	_	_	_	_	_	_	_	_
+3	circuit	circuit	NN	NN	circuit	circuit	NN	4	NMOD	_	A1	_	_	_	_	_	_	_	_
+4	breakers	breakers	NNS	NNS	breakers	breakers	NNS	12	SBJ	breaker.01	A0	A1	_	A1	_	_	A0	_	_
+5	''	''	''	''	''	''	''	4	P	_	_	_	_	_	_	_	_	_	_
+6	installed	instal	VBN	VBN	installed	instal	VBN	4	APPO	install.01	_	_	_	_	_	_	_	_	_
+7	after	after	IN	IN	after	after	IN	6	TMP	_	_	AM-TMP	_	_	_	_	_	_	_
+8	the	the	DT	DT	the	the	DT	11	NMOD	_	_	_	_	_	_	_	_	_	_
+9	October	october	NNP	NNP	October	october	NNP	10	NMOD	_	_	_	_	_	_	_	_	_	_
+10	1987	1987	CD	CD	1987	1987	CD	11	NMOD	_	_	_	AM-TMP	_	_	_	_	_	_
+11	crash	crash	NN	NN	crash	crash	NN	7	PMOD	crash.01	_	_	_	_	_	_	_	_	_
+12	failed	fail	VBD	VBD	failed	fail	VBD	18	OBJ	fail.01	_	_	_	_	_	A1	_	_	_
+13	their	their	PRP$	PRP$	their	their	PRP$	15	NMOD	_	_	_	_	_	A0	_	_	_	_
+14	first	first	JJ	JJ	first	first	JJ	15	NMOD	_	_	_	_	_	_	_	_	_	_
+15	test	test	NN	NN	test	test	NN	12	OBJ	test.01	_	_	_	A2	_	_	_	_	_
+16	,	,	,	,	,	,	,	18	P	_	_	_	_	_	_	_	_	_	_
+17	traders	trader	NNS	NNS	traders	trader	NNS	18	SBJ	_	_	_	_	_	_	A0	_	_	_
+18	say	say	VBP	VBP	say	say	VBP	0	ROOT	say.01	_	_	_	_	_	_	_	_	_
+19	,	,	,	,	,	,	,	18	P	_	_	_	_	_	_	_	_	_	_
+20	unable	unable	JJ	JJ	unable	unable	JJ	12	ADV	_	_	_	_	AM-PRD	_	_	_	_	_
+21	to	to	TO	TO	to	to	TO	20	AMOD	_	_	_	_	_	_	_	_	_	_
+22	cool	cool	VB	VB	cool	cool	VB	21	IM	cool.01	_	_	_	_	_	_	_	_	_
+23	the	the	DT	DT	the	the	DT	25	NMOD	_	_	_	_	_	_	_	_	_	_
+24	selling	selling	NN	NN	selling	selling	NN	25	NMOD	selling.01	_	_	_	_	_	_	_	_	A0
+25	panic	panic	NN	NN	panic	panic	NN	22	OBJ	panic.01	_	_	_	_	_	_	A1	SU	_
+26	in	in	IN	IN	in	in	IN	25	LOC	_	_	_	_	_	_	_	_	A1	AM-LOC
+27	both	both	DT	DT	both	both	DT	28	NMOD	_	_	_	_	_	_	_	_	_	_
+28	stocks	stocks	NNS	NNS	stocks	stocks	NNS	26	PMOD	_	_	_	_	_	_	_	_	_	_
+29	and	and	CC	CC	and	and	CC	28	COORD	_	_	_	_	_	_	_	_	_	_
+30	futures	future	NNS	NNS	futures	future	NNS	29	CONJ	_	_	_	_	_	_	_	_	_	_
+31	.	.	.	.	.	.	.	12	P	_	_	_	_	_	_	_	_	_	_
+
+1	The	the	DT	DT	The	the	DT	5	NMOD	_	_	_	_	_	_	_
+2	49	49	CD	CD	49	49	CD	5	NMOD	_	_	_	_	_	_	_
+3	stock	stock	NN	NN	stock	stock	NN	4	NMOD	_	A1	_	_	_	_	_
+4	specialist	specialist	NN	NN	specialist	specialist	NN	5	NMOD	specialist.01	A0	_	_	_	_	_
+5	firms	firm	NNS	NNS	firms	firm	NNS	29	SBJ	_	_	_	_	_	A0	A1
+6	on	on	IN	IN	on	on	IN	5	LOC	_	_	_	_	_	_	_
+7	the	the	DT	DT	the	the	DT	10	NMOD	_	_	_	_	_	_	_
+8	Big	big	NNP	NNP	Big	big	NNP	9	NAME	_	_	_	_	_	_	_
+9	Board	board	NNP	NNP	Board	board	NNP	10	NMOD	_	_	A1	_	_	_	_
+10	floor	floor	NN	NN	floor	floor	NN	6	PMOD	floor.01	_	_	_	_	_	_
+11	--	--	:	:	--	--	:	5	P	_	_	_	_	_	_	_
+12	the	the	DT	DT	the	the	DT	13	NMOD	_	_	_	_	_	_	_
+13	buyers	buyer	NNS	NNS	buyers	buyer	NNS	5	APPO	_	_	_	A1	_	_	_
+14	and	and	CC	CC	and	and	CC	13	COORD	_	_	_	_	_	_	_
+15	sellers	sellers	NNS	NNS	sellers	sellers	NNS	14	CONJ	_	_	_	_	_	_	_
+16	of	of	IN	IN	of	of	IN	13	NMOD	_	_	_	_	_	_	_
+17	last	last	JJ	JJ	last	last	JJ	18	NMOD	_	_	_	_	_	_	_
+18	resort	resort	NN	NN	resort	resort	NN	16	PMOD	_	_	_	_	_	_	_
+19	who	who	WP	WP	who	who	WP	20	SBJ	_	_	_	R-A1	_	_	_
+20	were	be	VBD	VBD	were	be	VBD	13	NMOD	_	_	_	_	_	_	_
+21	criticized	criticize	VBN	VBN	criticized	criticize	VBN	20	VC	criticize.01	_	_	_	_	_	_
+22	after	after	IN	IN	after	after	IN	21	TMP	_	_	_	AM-TMP	_	_	_
+23	the	the	DT	DT	the	the	DT	25	NMOD	_	_	_	_	_	_	_
+24	1987	1987	CD	CD	1987	1987	CD	25	NMOD	_	_	_	_	AM-TMP	_	_
+25	crash	crash	NN	NN	crash	crash	NN	22	PMOD	crash.01	_	_	_	_	_	_
+26	--	--	:	:	--	--	:	5	P	_	_	_	_	_	_	_
+27	once	once	RB	RB	once	once	RB	29	TMP	_	_	_	_	_	AM-TMP	_
+28	again	again	RB	RB	again	again	RB	27	AMOD	_	_	_	_	_	_	_
+29	could	could	MD	MD	could	could	MD	0	ROOT	_	_	_	_	_	AM-MOD	_
+30	n't	not	RB	RB	n't	not	RB	29	ADV	_	_	_	_	_	AM-NEG	_
+31	handle	handle	VB	VB	handle	handle	VB	29	VC	handle.01	_	_	_	_	_	SU
+32	the	the	DT	DT	the	the	DT	34	NMOD	_	_	_	_	_	_	_
+33	selling	selling	NN	NN	selling	selling	NN	34	NMOD	_	_	_	_	_	_	A2
+34	pressure	pressure	NN	NN	pressure	pressure	NN	31	OBJ	pressure.01	_	_	_	_	A1	_
+35	.	.	.	.	.	.	.	29	P	_	_	_	_	_	_	_
+
