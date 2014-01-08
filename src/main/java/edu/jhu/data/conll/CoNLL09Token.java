@@ -46,29 +46,29 @@ public class CoNLL09Token {
     private String form;
     /** 3    LEMMA   Gold lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
     private String lemma;
-    /** 3    PLEMMA   Predicted lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
+    /** 4    PLEMMA   Predicted lemma or stem (depending on particular data set) of word form, or an underscore if not available. */
     private String plemma;
     /** 5    POS  Gold part-of-speech tag. */
     private String pos;
-    /** 5    PPOS  Predicted part-of-speech tag. */
+    /** 6    PPOS  Predicted part-of-speech tag. */
     private String ppos;
-    /** 6    FEAT   Gold unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (|), or an underscore if not available. */
+    /** 7    FEAT   Gold unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (|), or an underscore if not available. */
     private List<String> feat; 
-    /** 6    PFEAT   Predicted unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (|), or an underscore if not available. */
+    /** 8    PFEAT   Predicted unordered set of syntactic and/or morphological features (depending on the particular language), separated by a vertical bar (|), or an underscore if not available. */
     private List<String> pfeat; 
-    /** 7    HEAD    Gold head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero. */
+    /** 9    HEAD    Gold head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero. */
     private int head;
-    /** 7    PHEAD    Predicted head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero. */
+    /** 10    PHEAD    Predicted head of the current token, which is either a value of ID or zero ('0'). Note that depending on the original treebank annotation, there may be multiple tokens with an ID of zero. */
     private int phead;
-    /** 8    DEPREL  Gold dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
+    /** 11    DEPREL  Gold dependency relation to the HEAD. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
     private String deprel;
-    /** 10   PDEPREL     Predicted dependency relation to the PHEAD, or an underscore if not available. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
+    /** 12   PDEPREL     Predicted dependency relation to the PHEAD, or an underscore if not available. The set of dependency relations depends on the particular language. Note that depending on the original treebank annotation, the dependency relation may be meaningfull or simply 'ROOT'. */
     private String pdeprel;
-    /** 10   FILLPRED    Contains Y for lines where PRED is/should be filled. */
+    /** 13   FILLPRED    Contains Y for lines where PRED is/should be filled. */
     private boolean fillpred;
-    /** 10   PRED     Rolesets of the semantic predicates in this sentence. */
+    /** 14   PRED     Rolesets of the semantic predicates in this sentence. */
     private String pred;
-    /** 10   APREDs     Columns with argument labels for the each semantic predicate following textual order, i.e., the first column corresponds to the first predicate in PRED, the second column to the second predicate, etc.*/
+    /** 15   APREDs     Columns with argument labels for the each semantic predicate following textual order, i.e., the first column corresponds to the first predicate in PRED, the second column to the second predicate, etc.*/
     private List<String> apreds;
     
     public CoNLL09Token(String line) {

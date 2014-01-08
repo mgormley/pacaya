@@ -113,6 +113,15 @@ class PathDefinitions():
         self._set_paths_for_conll09_lang(p, "English", "en", conll09_T04_dir, require=False)
         self._set_paths_for_conll09_lang(p, "Chinese", "zh", conll09_T04_dir, require=False)
         
+        # CoNLL'08 Shared Task dataset
+        conll08_dir = get_first_that_exists("/export/common/data/corpora/LDC/LDC2009T12/data/",
+                                                self.root_dir + "/data/LDC/LDC2009T12/data")
+        p.c08_pos_gold_train = os.path.join(conll08_dir, "train", "train.closed")
+        p.c08_pos_gold_dev = os.path.join(conll08_dir, "devel", "devel.closed")
+        p.c08_pos_gold_test_wsj = os.path.join(conll08_dir, "test.wsj", "test.wsj.closed.GOLD")
+        p.c08_pos_gold_test_brown = os.path.join(conll08_dir, "test.brown", "test.brown.closed.GOLD")
+        p.c08_pos_gold_test_wsj_missing = os.path.join(self.root_dir, "data", "conll2008", "test.wsj.missing.conll")
+        
         # Grammar Induction Output.
         parser_prefix = self.root_dir + "/exp/vem-conll_006"
         require_path_exists(parser_prefix)
@@ -291,8 +300,10 @@ class ParamDefinitions():
         g.defaults.update(
             printModel="./model.txt.gz",                          
             trainPredOut="./train-pred.txt",
+            devPredOut="./dev-pred.txt",
             testPredOut="./test-pred.txt",
             trainGoldOut="./train-gold.txt",
+            devGoldOut="./dev-gold.txt",
             testGoldOut="./test-gold.txt",
             modelOut="./model.binary.gz",
             senseFeatTplsOut="./sense-feat-tpls.txt",
@@ -317,12 +328,11 @@ class ParamDefinitions():
         # Exclude parameters from the command line arguments.
         g.defaults.set_incl_arg("tagger_parser", False)
         g.defaults.set_incl_arg("language", False)
-        g.defaults.set_incl_arg("dev", False)
         
         # Exclude parameters from the experiment name.
         g.defaults.set_incl_name("train", False)
-        g.defaults.set_incl_name("test", False)
         g.defaults.set_incl_name("dev", False)
+        g.defaults.set_incl_name("test", False)        
         g.defaults.set_incl_name("removeDeprel", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
         g.defaults.set_incl_name("brownClusters", False)        
@@ -477,32 +487,32 @@ class ParamDefinitions():
         # Gold trees: HEAD column.
         return SrlExpParams(tagger_parser = 'pos-gold', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_eval"), 
+                            dev = p.get(lang_short + "_pos_gold_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
                             removeDeprel = False, useGoldSyntax = True, language = lang_short)
         
     def _get_pos_sup(self, p, lang_short):
         # Supervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'pos-sup', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_pos_gold_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_gold_eval"),
+                            dev = p.get(lang_short + "_pos_gold_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
                             removeDeprel = False, useGoldSyntax = False, language = lang_short)
         
     def _get_pos_semi(self, p, lang_short):  
         # Semi-supervised parser output: PHEAD column.        
         return SrlExpParams(tagger_parser = 'pos-semi', 
                             train = p.get(lang_short + "_pos_semi_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_pos_semi_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_semi_eval"),
+                            dev = p.get(lang_short + "_pos_semi_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_semi_eval"), testType = "CONLL_2009",
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
         
     def _get_pos_unsup(self, p, lang_short):  
         # Unsupervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'pos-unsup', 
                             train = p.get(lang_short + "_pos_unsup_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_pos_unsup_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_pos_unsup_eval"),
+                            dev = p.get(lang_short + "_pos_unsup_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_pos_unsup_eval"), testType = "CONLL_2009",
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
                 
     def _get_brown_semi(self, p, lang_short):  
@@ -510,16 +520,16 @@ class ParamDefinitions():
         # Semi-supervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'brown-semi', 
                             train = p.get(lang_short + "_brown_semi_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_brown_semi_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_brown_semi_eval"),
+                            dev = p.get(lang_short + "_brown_semi_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_semi_eval"), testType = "CONLL_2009",
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
         
     def _get_brown_unsup(self, p, lang_short):
         # Unsupervised parser output: PHEAD column.
         return SrlExpParams(tagger_parser = 'brown-unsup', 
                             train = p.get(lang_short + "_brown_unsup_train"), trainType = "CONLL_2009",
-                            dev = p.get(lang_short + "_brown_unsup_dev"), testType = "CONLL_2009",
-                            test = p.get(lang_short + "_brown_unsup_eval"),
+                            dev = p.get(lang_short + "_brown_unsup_dev"), devType = "CONLL_2009",
+                            test = p.get(lang_short + "_brown_unsup_eval"), testType = "CONLL_2009",
                             removeDeprel = True, useGoldSyntax = False, language = lang_short)
     
     # ------------------------------ END Parser Outputs ------------------------------         
@@ -601,6 +611,9 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         if self.get("train"): 
             script += self.get_eval_script("train", True)
             script += self.get_eval_script("train", False)
+        if self.get("dev"):  
+            script += self.get_eval_script("dev", True)
+            script += self.get_eval_script("dev", False)
         if self.get("test"):  
             script += self.get_eval_script("test", True)
             script += self.get_eval_script("test", False)
@@ -660,6 +673,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-nosup",
                     "srl-all-sup-lat",
                     "srl-conll09",
+                    "srl-conll08",
                     "srl-subtraction",
                     "srl-lc-sem",
                     "srl-lc-syn",
@@ -707,7 +721,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         
         elif self.expname == "srl-all":
             g.defaults += SrlExpParams(trainMaxNumSentences=100,
-                                       testMaxNumSentences=100,
+                                       devMaxNumSentences=100,
+                                       testMaxNumSentences=0,
                                        threads=1)
             g.defaults += g.feat_all
             return self._get_default_pipeline(g, l, gl, ll)
@@ -743,9 +758,22 @@ class SrlExpParamsRunner(ExpParamsRunner):
             #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]        
             return self._get_pipeline_from_exps(exps)
         
+        elif self.expname == "srl-conll08":
+            exps = []
+            g.defaults += g.feat_all
+            g.defaults.update(predictSense=False)
+            pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
+                            train = p.c08_pos_gold_train, trainType = "CONLL_2008",
+                            dev = p.c08_pos_gold_test_wsj_missing, devType = "CONLL_2008",
+                            test = p.c08_pos_gold_test_wsj, testType = "CONLL_2008",
+                            removeDeprel = False, useGoldSyntax = False, language = 'en')
+            exp = g.defaults + pos_sup + g.model_pg_lat_tree 
+            exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "srl-subtraction":            
             exps = []
-            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
@@ -766,7 +794,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # sentences are given.
             cl_map = {"ca":13200, "cs":38727, "de":36020, "en":39279, "es":14329, "zh":22277}
             exps = []
-            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
@@ -805,7 +833,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-                
+        
         elif self.expname == "srl-mem":
             exps = []
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=False)
@@ -836,7 +864,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults.set_incl_arg("group", False)
             data_settings = SrlExpParams(trainMaxNumSentences=1000,
-                                         testMaxNumSentences=500)
+                                         devMaxNumSentences=500,
+                                         testMaxNumSentences=0)
             
             # Best so far...
             g.defaults.update(group="tuneAdaDelta")            
@@ -885,6 +914,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # All experiments here use the PREDS_GIVEN, observed tree model, on supervised parser output.
             exps = []
             data_settings = SrlExpParams(trainMaxNumSentences=500,
+                                         devMaxNumSentences=1,
                                          testMaxNumSentences=1)
             g.defaults.update(sgdNumPasses=1)            
             cacheSettings = [           # Number of sents: 100      500 
@@ -900,6 +930,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                        gzipCache=gzipCache,
                                        maxEntriesInMemory=maxEntriesInMemory)
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exp.remove("dev")
                 exp.remove("test")
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
@@ -909,7 +940,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Test 1: for testing correctness of feature sets.
             exps = []
             g.defaults.update(trainMaxNumSentences=1000,
-                              testMaxNumSentences=500,
+                              devMaxNumSentences=500,
+                              testMaxNumSentences=0,
                               threads=6,
                               work_mem_megs=5*1024)
             feature_sets = [g.feat_tpl_coarse1, g.feat_tpl_narad, g.feat_tpl_zhao, g.feat_tpl_bjork, 
@@ -960,6 +992,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             exp = g.defaults + parser_srl + feature_set
                             if exp.get("trainMaxNumSentences") == 15000:
                                 exp += SrlExpParams(threads=20, work_mem_megs=50*1024)
+                                exp.remove("devMaxNumSentences")
                                 exp.remove("testMaxNumSentences")
                             else:
                                 exp += SrlExpParams(threads=6, work_mem_megs=5*1024)                              
@@ -970,7 +1003,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         elif self.expname == "srl-feat-ig":
             exps = []
             g.defaults.update(trainMaxNumSentences=1000,
-                              testMaxNumSentences=500,
+                              devMaxNumSentences=500,
+                              testMaxNumSentences=0,
                               threads=6,
                               work_mem_megs=5*1024,
                               featureHashMod=1000000,
@@ -1008,7 +1042,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # TODO: Finish this exp.
             exps = []
             g.defaults.update(trainMaxNumSentences=1000,
-                              testMaxNumSentences=500,
+                              devMaxNumSentences=500,
+                              testMaxNumSentences=0,
                               threads=6,
                               work_mem_megs=5*1024,
                               featureHashMod=1000000)
@@ -1064,6 +1099,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 keys_to_remove = [ "train", "trainType", "trainPredOut",
                                    "trainGoldOut", "trainMaxSentenceLength",
                                    "trainMaxNumSentences", 
+                                   "dev", "devType", "devMaxSentenceLength",
+                                   "devMaxNumSentences", 
                                    "test", "testType", "testMaxSentenceLength",
                                    "testMaxNumSentences", 
                                    "modelIn", "modelOut", "printModel", "seed",
@@ -1167,6 +1204,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         stage.update(maxLbfgsIterations=3,
                      trainMaxSentenceLength=7,
                      trainMaxNumSentences=3,
+                     devMaxSentenceLength=11,
+                     devMaxNumSentences=3,
                      testMaxSentenceLength=7,
                      testMaxNumSentences=3,
                      work_mem_megs=2000,

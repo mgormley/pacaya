@@ -3,10 +3,17 @@ package edu.jhu.data.conll;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
+
+import edu.jhu.util.collections.Maps;
 
 public class CoNLL08SentenceTest {
 
@@ -24,9 +31,64 @@ public class CoNLL08SentenceTest {
         assertFalse(sent1.equals(sent2));
         
         SrlGraph srlGraph = sent1.getSrlGraph();
-        sent2.setPredApredFromSrlGraph(srlGraph, true);
+        sent2.setColsFromSrlGraph(srlGraph);
         
         assertEquals(sent1, sent2);
+    }
+    
+
+    public static final String conll2008Example= "/edu/jhu/data/conll/conll-08-example.conll";
+    
+    @Test
+    public void testToC09() throws IOException {
+        InputStream inputStream = this.getClass().getResourceAsStream(conll2008Example);
+        CoNLL08FileReader cr = new CoNLL08FileReader(inputStream);
+        for (CoNLL08Sentence sent : cr) {
+            System.out.println(sent.toCoNLL09Sent(true));
+        }
+        cr.close();
+    }
+    
+    @Test
+    public void testRemoveNominal() throws IOException {
+        InputStream inputStream = this.getClass().getResourceAsStream(conll2008Example);
+        CoNLL08FileReader cr = new CoNLL08FileReader(inputStream);
+        for (CoNLL08Sentence sent : cr) {
+            sent.removeNominalPreds();
+            System.out.println(sent);
+        }
+        cr.close();
+    }
+
+    @Test
+    public void testAllTagsWithPreds() throws IOException {
+        //InputStream inputStream = new FileInputStream("data/LDC/LDC2009T12/data/train/train.closed");
+        String f = "/Users/mgormley/research/other_lib/srl/conll05_to_08/gold/test.wsj.GOLD.simplified.conll08";
+        InputStream inputStream = new FileInputStream(f);
+        CoNLL08FileReader cr = new CoNLL08FileReader(inputStream);
+        HashSet<String> set = new HashSet<String>();
+        HashMap<String,Integer> count = new HashMap<String,Integer>();
+        for (CoNLL08Sentence sent : cr) {
+            for (int i=0; i<sent.size(); i++) {
+                CoNLL08Token t = sent.get(i);
+                if (t.getPred() != null && !t.getPred().equals("_")) {
+                    // Is pred
+                    String gpos = t.getPpos();
+                    if (gpos == null || (!gpos.startsWith("V") && !gpos.startsWith("N"))) {
+
+                        //System.out.println(t);
+                    }
+                    set.add(gpos);
+                    Maps.increment(count, gpos, 1);
+                }
+            }
+            //sent.removeNominalPreds();
+            //System.out.println(sent);
+        }
+        cr.close();
+        
+        System.out.println(set);
+        System.out.println(count);
     }
     
     public CoNLL08Sentence getSent() {

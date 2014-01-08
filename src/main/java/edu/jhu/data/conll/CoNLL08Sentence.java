@@ -159,12 +159,8 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
     public SrlGraph getSrlGraph() {
         return new SrlGraph(this);
     }
-
-    public void setPredApredFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds) {
-        setColsFromSrlGraph(srlGraph, warnMismatchedPreds, false);
-    }
     
-    public void setColsFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds, boolean setFillPred) {
+    public void setColsFromSrlGraph(SrlGraph srlGraph) {
         int numPreds = srlGraph.getNumPreds();
         // Set the FILLPRED and PRED column.
         for (int i=0; i<size(); i++) {
@@ -304,6 +300,32 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         return s;
     }
 
+    public CoNLL09Sentence toCoNLL09Sent(boolean useSplitForms) {
+        return toCoNLL09Sent(this, useSplitForms);
+    }
+
+    public static CoNLL09Sentence toCoNLL09Sent(CoNLL08Sentence c08, boolean useSplitForms) {
+        List<CoNLL09Token> toks9 = new ArrayList<CoNLL09Token>(c08.size());
+        for (int i=0; i<c08.size(); i++) {
+            CoNLL08Token tok8 = c08.get(i);
+            int id = tok8.getId();
+            String form = useSplitForms ? tok8.getSplitForm() : tok8.getForm();
+            String plemma = useSplitForms ? tok8.getSplitLemma() : tok8.getLemma();
+            String pos = tok8.getGpos();
+            String ppos = useSplitForms ? tok8.getSplitPpos() : tok8.getPpos();
+            int head = tok8.getHead();
+            String deprel = tok8.getDeprel();
+            boolean fillpred = !(tok8.getPred() == null || tok8.getPred().equals("_"));
+            String pred = tok8.getPred();
+            List<String> apreds = tok8.getApreds();
+            // The gold lemma, feats, pfeats, and pdeprel are all null. phead is just -2.
+            CoNLL09Token tok9 = new CoNLL09Token(id, form, null, plemma, pos, ppos, null, null, head, -2, deprel, null, fillpred, pred, apreds);
+            toks9.add(tok9);
+        }
+        CoNLL09Sentence c09 = new CoNLL09Sentence(toks9);
+        return c09;
+    }
+    
     /**
      * Creates a new CoNLL08Sentence with both columns set for each field
      * (i.e. LEMMA and SPLIT_LEMMA are both set from the values on the
@@ -331,7 +353,7 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         CoNLL08Sentence updatedSentence = new CoNLL08Sentence(toks);
         
         // Update SRL columns from the SRL graph.
-        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph(), false, true);
+        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
         
         return updatedSentence;
     }
@@ -342,6 +364,17 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
             sents.add(sent.toSimpleAnnoSentence(useGoldSyntax, useSplitForms));
         }
         return sents;
+    }
+
+    public void removeNominalPreds() {
+        SrlGraph srl = this.getSrlGraph();
+        SrlGraph srlNew = new SrlGraph(this.size());
+        for (SrlEdge e : srl.getEdges()) {
+            if (this.get(e.getPred().getPosition()).getGpos().startsWith("V")) {
+                srlNew.addEdge(e);
+            }
+        }
+        this.setColsFromSrlGraph(srlNew);
     }
 
 }

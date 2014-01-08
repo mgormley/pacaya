@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -18,6 +17,9 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.conll.CoNLL08FileReader;
+import edu.jhu.data.conll.CoNLL08Sentence;
+import edu.jhu.data.conll.CoNLL08Writer;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
@@ -83,7 +85,7 @@ import edu.jhu.util.files.Files;
  */
 public class SrlRunner {
 
-    public static enum DatasetType { ERMA, CONLL_2009 };
+    public static enum DatasetType { ERMA, CONLL_2009, CONLL_2008 };
 
     public static enum InitParams { UNIFORM, RANDOM };
     
@@ -112,6 +114,20 @@ public class SrlRunner {
     public static int trainMaxSentenceLength = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
     public static int trainMaxNumSentences = Integer.MAX_VALUE; 
+    
+    // Options for dev data
+    @Opt(hasArg = true, description = "Testing data input file or directory.")
+    public static File dev = null;
+    @Opt(hasArg = true, description = "Type of dev data.")
+    public static DatasetType devType = DatasetType.CONLL_2009;
+    @Opt(hasArg = true, description = "Testing data predictions output file.")
+    public static File devPredOut = null;
+    @Opt(hasArg = true, description = "Testing data gold output file.")
+    public static File devGoldOut = null;
+    @Opt(hasArg = true, description = "Maximum sentence length for dev.")
+    public static int devMaxSentenceLength = Integer.MAX_VALUE;
+    @Opt(hasArg = true, description = "Maximum number of sentences to include in dev.")
+    public static int devMaxNumSentences = Integer.MAX_VALUE; 
     
     // Options for test data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
@@ -364,6 +380,18 @@ public class SrlRunner {
             writer.close();
         }
 
+
+        if (dev != null && devType != null) {
+            // Test the model on dev data.
+            fts.stopGrowth();
+            String name = "dev";
+            FgExampleList data = getData(fts, cs, devType, dev, devGoldOut, devMaxNumSentences,
+                    devMaxSentenceLength, name, srlFePrm);
+            // Decode and evaluate the dev data.
+            VarConfigPair pair = decode(model, data, devType, devPredOut, name);
+            eval(name, pair);
+        }
+        
         if (test != null && testType != null) {
             // Test the model on test data.
             fts.stopGrowth();
@@ -433,44 +461,74 @@ public class SrlRunner {
         int numTokens = 0;
         
         // Read the data and (optionally) write it to the gold file.
-        if (dataType == DatasetType.CONLL_2009) {
-            List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
-            CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
-            for (CoNLL09Sentence sent : reader) {
-                if (conllSents.size() >= maxNumSentences) {
-                    break;
-                }
-                if (sent.size() <= maxSentenceLength) {
-                    sent.intern();
-                    conllSents.add(sent);
-                    numTokens += sent.size();
-                }
-            }
-            reader.close();     
-
+        if (dataType == DatasetType.CONLL_2009 || dataType == DatasetType.CONLL_2008) {
             if (normalizeRoleNames) {
                 log.info("Normalizing role names");
-                for (CoNLL09Sentence conllSent : conllSents) {
-                    conllSent.normalizeRoleNames();
-                }
             }
             
-            if (goldFile != null) {
-                log.info("Writing gold data to file: " + goldFile);
-                CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-                for (CoNLL09Sentence sent : conllSents) {
-                    cw.write(sent);
+            List<CoNLL09Sentence> conll09Sents = new ArrayList<CoNLL09Sentence>();
+            if (dataType == DatasetType.CONLL_2009) {
+                CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
+                for (CoNLL09Sentence sent : reader) {
+                    if (conll09Sents.size() >= maxNumSentences) {
+                        break;
+                    }
+                    if (sent.size() <= maxSentenceLength) {
+                        if (normalizeRoleNames) {
+                            sent.normalizeRoleNames();
+                        }
+                        sent.intern();
+                        conll09Sents.add(sent);
+                        numTokens += sent.size();
+                    }
                 }
-                cw.close();
+                reader.close();
+                
+                if (goldFile != null) {
+                    log.info("Writing gold data to file: " + goldFile);
+                    CoNLL09Writer cw = new CoNLL09Writer(goldFile);
+                    for (CoNLL09Sentence sent : conll09Sents) {
+                        cw.write(sent);
+                    }
+                    cw.close();
+                }
+            } else if (dataType == DatasetType.CONLL_2008) {
+                List<CoNLL08Sentence> conll08Sents = new ArrayList<CoNLL08Sentence>();
+                CoNLL08FileReader reader = new CoNLL08FileReader(dataFile);
+                for (CoNLL08Sentence sent : reader) {
+                    if (conll09Sents.size() >= maxNumSentences) {
+                        break;
+                    }
+                    if (sent.size() <= maxSentenceLength) {
+                        if (normalizeRoleNames) {
+                            sent.normalizeRoleNames();
+                        }
+                        // TODO: sent.removeNominalPreds();
+                        sent.intern();
+                        conll08Sents.add(sent);
+                        conll09Sents.add(sent.toCoNLL09Sent(true));
+                        numTokens += sent.size();
+                    }
+                }
+                reader.close();
+
+                if (goldFile != null) {
+                    log.info("Writing gold data to file: " + goldFile);
+                    CoNLL08Writer cw = new CoNLL08Writer(goldFile);
+                    for (CoNLL08Sentence sent : conll08Sents) {
+                        cw.write(sent);
+                    }
+                    cw.close();
+                }
             }
 
             // Data munging -- this must be done after we write the gold sentences to a file.
-            reduceSupervision(conllSents);
+            reduceSupervision(conll09Sents);
                         
             // TODO: We should clearly differentiate between the gold sentences and the input sentence.
             // Convert CoNLL sentences to SimpleAnnoSentences.
             sents = new SimpleAnnoSentenceCollection();
-            for (CoNLL09Sentence conllSent : conllSents) {
+            for (CoNLL09Sentence conllSent : conll09Sents) {
                 sents.add(conllSent.toSimpleAnnoSentence(useGoldSyntax));
             }
         } else {
@@ -590,6 +648,13 @@ public class SrlRunner {
                 CoNLL09Writer cw = new CoNLL09Writer(predOut);
                 for (SimpleAnnoSentence sent : predSents) {
                     CoNLL09Sentence conllSent = CoNLL09Sentence.fromSimpleAnnoSentence(sent);
+                    cw.write(conllSent);
+                }
+                cw.close();
+            } else if (dataType == DatasetType.CONLL_2008) {
+                CoNLL08Writer cw = new CoNLL08Writer(predOut);
+                for (SimpleAnnoSentence sent : predSents) {
+                    CoNLL08Sentence conllSent = CoNLL08Sentence.fromSimpleAnnoSentence(sent);
                     cw.write(conllSent);
                 }
                 cw.close();
