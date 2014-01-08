@@ -3,6 +3,9 @@ package edu.jhu.util.cli;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -189,6 +192,13 @@ public class ArgParser {
             field.set(field, value);
         } else if (type.equals(File.class)) {
             field.set(field, new File(value));
+        } else if (type.equals(Date.class)) {
+            DateFormat df = new SimpleDateFormat("MM-dd-yy.hh:mma");
+            try {
+                field.set(field, df.parse(value));
+            } catch (java.text.ParseException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             throw new RuntimeException("Field type not supported: " + type.getName());
         }

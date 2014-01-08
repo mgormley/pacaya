@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -272,6 +273,8 @@ public class SrlRunner {
     public static double adaDeltaDecayRate = 0.95;
     @Opt(hasArg=true, description="The constant addend for AdaDelta.")
     public static double adaDeltaConstantAddend = Math.pow(Math.E, -6.);
+    @Opt(hasArg=true, description="Stop training by this date/time.")
+    public static Date stopTrainingBy = null;
 
     public SrlRunner() {
     }
@@ -279,6 +282,11 @@ public class SrlRunner {
     public void run() throws ParseException, IOException {  
         if (logDomain) {
             FastMath.useLogAddTable = true;
+        }
+        if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
+            log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
+            log.warn("Ignoring stopTrainingBy by setting it to null.");
+            stopTrainingBy = null;
         }
         
         // Get a model.
@@ -821,6 +829,7 @@ public class SrlRunner {
         prm.initialLr = sgdInitialLr;
         prm.withReplacement = sgdWithRepl;
         prm.lambda = 1.0 / l2variance;
+        prm.stopBy = stopTrainingBy;
         return prm;
     }
 

@@ -1,6 +1,9 @@
 package edu.jhu.util.cli;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.cli.ParseException;
 import org.junit.Assert;
@@ -38,6 +41,9 @@ public class ArgParserTest {
     
     @Opt(hasArg = true, description = "my enumVal")
     public static MockEnum enumVal = MockEnum.OPT1;
+    
+    @Opt(hasArg=true, description="Stop training by this date/time.")
+    public static Date stopBy = null;
     
     @BeforeClass
     public static void setUp() {
@@ -93,6 +99,28 @@ public class ArgParserTest {
             parser.parseArgs(args);
 
             Assert.assertEquals(MockEnum.OPT2, enumVal);
+        }
+    }
+    
+    @Test
+    public void testDate() throws ParseException, java.text.ParseException {
+        {
+            String[] args = "--stopBy=01-10-14.06:00PM".split(" ");
+
+            ArgParser parser = new ArgParser();
+            parser.addClass(ArgParserTest.class);
+            parser.parseArgs(args);
+
+            Assert.assertEquals("Fri Jan 10 18:00:00 EST 2014", stopBy.toString());
+        }
+        {
+            String[] args = "--stopBy=01-10-14.06:22AM".split(" ");
+
+            ArgParser parser = new ArgParser();
+            parser.addClass(ArgParserTest.class);
+            parser.parseArgs(args);
+
+            Assert.assertEquals("Fri Jan 10 06:22:00 EST 2014", stopBy.toString());
         }
     }
 

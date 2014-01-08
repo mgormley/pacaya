@@ -1,6 +1,7 @@
 package edu.jhu.optimize;
 
 import java.util.Arrays;
+import java.util.Date;
 
 import org.apache.log4j.Logger;
 
@@ -42,6 +43,8 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         public int batchSize = 15;
         /** Whether batches should be sampled with replacement. */
         public boolean withReplacement = false;
+        /** Date by which to stop. */
+        public Date stopBy = null;
         public SGDPrm() { } 
         public SGDPrm(double initialLr, int numPasses, int batchSize) {
             this.initialLr = initialLr;
@@ -115,6 +118,10 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
     private boolean optimize(BatchFunction function, double[] point, final boolean maximize) {
         init(function);
         
+        if (prm.stopBy != null) {
+            log.debug("Max time alloted (hr): " + (prm.stopBy.getTime() - new Date().getTime()) / 1000. / 3600.);  
+        }
+        
         assert (function.getNumDimensions() == point.length);
         double[] gradient = new double[point.length];
         
@@ -168,6 +175,15 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             if ((int) Math.floor(passCountFrac) > passCount) {
                 // Another full pass through the data has been completed.
                 passCount++;
+            }
+            
+            if (prm.stopBy != null) {
+                Date now = new Date();
+                if (now.after(prm.stopBy)) {
+                    log.info(String.format("Current time is after stop-by time. now=%s, stopBy=%s", now.toString(), prm.stopBy.toString()));
+                    log.info("Stopping training early.");
+                    break;
+                }
             }
         }
         

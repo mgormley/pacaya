@@ -324,6 +324,7 @@ class ParamDefinitions():
             featureSelection=True,
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
+            stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
             )
         
         g.defaults += g.adagrad
@@ -747,21 +748,23 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_all
-            g.defaults.update(predictSense=True, removeAts="BROWN")
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True) #v2: g.feat_all
+            g.defaults.update(predictSense=True)
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                # parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
-                #                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
-                parser_srl_list = combine_pairs([gl.pos_gold, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
+                # v1: parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                #                   
+                # v2: parser_srl_list = combine_pairs([gl.pos_gold, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree])
+                # v3:
+                parser_srl_list = combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]        
             return self._get_pipeline_from_exps(exps)
-        
+                        
         elif self.expname == "srl-conll08":
             exps = []
             #g.defaults += g.feat_all
@@ -950,7 +953,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Experiment to compare various feature sets.
             # Test 1: for testing correctness of feature sets.
             exps = []
-            g.defaults.update(trainMaxNumSentences=1000,
+            g.defaults.update(trainMaxNumSentences=100,
                               devMaxNumSentences=500,
                               testMaxNumSentences=0,
                               threads=6,
@@ -960,6 +963,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             g.feat_mcdonald, g.feat_koo_basic, g.feat_koo_hybrid,
                             g.feat_tpl_bjork_es, g.feat_tpl_bjork_ig]
             g.defaults.set_incl_name('featureSelection', True)
+            g.defaults.update(featureSelection=False)
             for feature_set in feature_sets:
                 # Spanish, observed/supervised dep parse and POS tags.                    
                 parser_srl = g.model_pg_obs_tree + gl.pos_sup
