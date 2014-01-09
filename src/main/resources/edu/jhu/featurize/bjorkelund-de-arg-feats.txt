@@ -1,0 +1,38 @@
+# Features selected as in Bjorkelund et al. (2009) for 'arg' language 'de'
+c.deprel
+c.deprel + children(p).pos.bag
+c.deprel + path(p,c).dir.pos.seq
+# c.deprel + p.lemmaSense ### NOT SUPPORTED
+c.morpho
+c.morpho + c.lmc.pos
+# c.morpho + p.lemmaSense ### NOT SUPPORTED
+c.pos
+# c.pos + p.lemmaSense ### NOT SUPPORTED
+c.pos + c.rns.pos
+c.word
+c.word + p.lemma
+# c.word + p.lemmaSense ### NOT SUPPORTED
+children(p).deprel.bag
+children(p).deprel.bag + path(p,c).dir.pos.seq
+children(p).pos.bag + p.deprel
+path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq + p.head.word
+c.lmc.morpho
+c.lmc.morpho + p.head.pos
+c.lns.morpho
+c.lns.pos
+c.lns.pos + c.rns.pos
+c.lmc.word
+# c.lmc.word + p.lemmaSense ### NOT SUPPORTED
+path(p,c).dir.pos.seq
+# relative(p,c) + p.lemmaSense ### NOT SUPPORTED
+p.morpho
+p.lemma
+# p.lemmaSense ### NOT SUPPORTED
+# p.lemmaSense + c.rns.pos ### NOT SUPPORTED
+p.pos
+p.pos + p.head.word
+p.head.pos
+c.rmc.pos + c.rns.pos
+c.rns.pos
+c.rns.word

@@ -1,0 +1,33 @@
+# Features selected as in Bjorkelund et al. (2009) for 'arg' language 'zh'
+
+c.deprel
+c.deprel + relative(p,c)
+c.deprel + c.rmc.pos
+c.pos
+c.pos + p.lemma
+# c.pos + p.lemmaSense ### NOT SUPPORTED
+c.word
+c.word + relative(p,c)
+children(p).deprel.bag
+children(p).deprel.bag + path(p,c).dir.pos.seq
+children(p).pos.bag
+children(p).deprel.seq
+path(p,c).dir.deprel.seq
+path(p,c).dir.deprel.seq + c.lns.pos
+path(p,c).dir.deprel.seq + relative(p,c)
+c.lmc.pos
+c.lns.pos
+c.lns.word
+c.lmc.word
+path(p,c).dir.pos.seq
+relative(p,c)
+# relative(p,c) + p.lemmaSense ### NOT SUPPORTED
+p.lemma
+# p.lemmaSense ### NOT SUPPORTED
+p.pos
+p.head.word
+p.word
+c.rmc.pos
+c.rmc.pos + c.rns.pos
+c.rns.word
+c.rmc.word

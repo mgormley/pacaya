@@ -267,7 +267,7 @@ class ParamDefinitions():
             l.langs[lang_short] = ParamGroups()
         
         # Define all the parameter groups.
-        self._define_groups_features(g)
+        self._define_groups_features(g, p)
         self._define_groups_optimizer(g)
         self._define_groups_model(g)
         self._define_groups_parser_output(g, p)
@@ -343,7 +343,7 @@ class ParamDefinitions():
         g.defaults.set_incl_name("brownClusters", False)        
         g.defaults.set_incl_name('removeAts', False)
 
-    def _define_groups_features(self, g):
+    def _define_groups_features(self, g, p):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
         g.feat_bias_only.update(biasOnly=True)
         
@@ -395,6 +395,13 @@ class ParamDefinitions():
                                                                 False, 'tpl_lluis_koo')
         g.feat_tpl_bjork_ig      = g.feat_tpl_bjork + SrlExpParams(featureSelection=True, feature_set='tpl_bjork_ig', 
                                                                    numFeatsToSelect=32, numSentsForFeatSelect=1000)
+
+        # Language specific feature sets from Bjorkelund et al. (2009).
+        for lang_short in p.lang_short_names:
+            gl = g.langs[lang_short]
+            gl.feat_tpl_bjork_ls = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-%s-sense-feats.txt" % (lang_short),
+                                                                "/edu/jhu/featurize/bjorkelund-%s-arg-feats.txt" % (lang_short),
+                                                                False, 'tpl_bjork_ls_%s' % (lang_short))
 
         # The coarse set uses the bjorkelund sense features.
         g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
@@ -678,6 +685,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-nosup",
                     "srl-all-sup-lat",
                     "srl-conll09",
+                    "srl-conll09-bjork",
+                    "srl-conll09-coarse",
                     "srl-conll08",
                     "srl-subtraction",
                     "srl-lc-sem",
@@ -748,23 +757,55 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True) #v2: g.feat_all
+            g.defaults += g.feat_all
             g.defaults.update(predictSense=True)
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                # v1: parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
-                #                   
-                # v2: parser_srl_list = combine_pairs([gl.pos_gold, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree])
-                # v3:
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                for parser_srl in parser_srl_list:
+                    exp = g.defaults + parser_srl
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+
+        elif self.expname == "srl-conll09-bjork":    
+            # This experiment is identical to srl-conll09 except that
+            # it uses the Bjork features and a subset of the languages.
+            exps = []
+            g.defaults += g.feat_all
+            g.defaults.update(predictSense=True, featureSelection=False)
+            for lang_short in ['es', 'de', 'en', 'zh']:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                # SKIPPING: gl.brown_semi, gl.brown_unsup
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup], [g.model_pg_obs_tree]) + \
+                                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                for parser_srl in parser_srl_list:
+                    exp = g.defaults + parser_srl + gl.feat_tpl_bjork_ls
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+                 
+        elif self.expname == "srl-conll09-coarse":    
+            # Experiment on CoNLL'2009 Shared Task.
+            # Evaluates gold, supervised, semi-supervised, and unsupervised syntax in a pipelined model,
+            # and marginalized syntax in a joint model.
+            # We only include grammar induction run on brown clusters.
+            exps = []
+            g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
+            g.defaults.update(predictSense=True)
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
                 parser_srl_list = combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
-            #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]        
             return self._get_pipeline_from_exps(exps)
-                        
+       
         elif self.expname == "srl-conll08":
             exps = []
             #g.defaults += g.feat_all
