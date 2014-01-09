@@ -686,6 +686,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all-sup-lat",
                     "srl-conll09",
                     "srl-conll09-bjork",
+                    "srl-conll09-zhao",
                     "srl-conll09-coarse",
                     "srl-conll08",
                     "srl-subtraction",
@@ -787,6 +788,23 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-conll09-zhao":    
+            # This experiment is identical to srl-conll09 except that
+            # it uses the Bjork features and a subset of the languages.
+            exps = []
+            g.defaults += g.feat_tpl_zhao
+            g.defaults.update(predictSense=True, featureSelection=False)
+            for lang_short in p.lang_short_names:
+                gl = g.langs[lang_short]
+                ll = l.langs[lang_short]
+                # SKIPPING: gl.brown_semi, gl.brown_unsup,  gl.pos_sup for OBS and LAT.
+                parser_srl_list = combine_pairs([gl.pos_gold], [g.model_pg_obs_tree])
+                for parser_srl in parser_srl_list:
+                    exp = g.defaults + parser_srl
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
                  
         elif self.expname == "srl-conll09-coarse":    
             # Experiment on CoNLL'2009 Shared Task.
@@ -799,7 +817,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                  combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
