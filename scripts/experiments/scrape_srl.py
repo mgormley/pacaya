@@ -95,7 +95,8 @@ class SrlScraper(Scraper):
         exp.set(data_name + "-Unlabeled-F1",        get_group1(lines, "Unlabeled F1:" + num_regex))
         exp.set(data_name + "-Unlabeled-precision", get_group1(lines, "Unlabeled precision:" + num_regex))
         exp.set(data_name + "-Unlabeled-recall",    get_group1(lines, "Unlabeled recall:" + num_regex))
-            
+        exp.set(data_name + "-Num-Gold-Sem-Edges",    get_group1(lines, "Labeled recall:.*\/ \((.+)\)"))
+
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
 
