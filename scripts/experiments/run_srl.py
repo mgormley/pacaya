@@ -781,7 +781,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # SKIPPING: gl.brown_semi, gl.brown_unsup
-                parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree])
+                parser_srl_list = combine_pairs([gl.brown_semi], [g.model_pg_obs_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl + gl.feat_tpl_bjork_ls
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -798,7 +798,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # SKIPPING: gl.brown_semi, gl.brown_unsup,  gl.pos_sup for OBS and LAT.
-                parser_srl_list = combine_pairs([gl.pos_gold], [g.model_pg_obs_tree])
+                parser_srl_list = combine_pairs([gl.brown_semi], [g.model_pg_obs_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -816,8 +816,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
-                                  combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -831,8 +830,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Eval only. TODO
             g.defaults.set_incl_arg("trainName", False)
             # Train and test.
-            for train in [SrlExpParams(train=p.c08_pos_gold_train_simplified, trainName="trainSimplified"), 
-                          SrlExpParams(train=p.c08_pos_gold_train, trainName="trainOrig")]:
+            for train in [SrlExpParams(train=p.c08_pos_gold_train_simplified, trainName="trainSimplified")]:
                 for feats in [g.feat_all, g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)]:
                     pos_sup = SrlExpParams(tagger_parser = 'pos-sup', 
                                     trainType = "CONLL_2008",
@@ -870,11 +868,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
             for lang_short in ['ca', 'de']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl = gl.pos_sup + g.model_pg_lat_tree
+                #parser_srl = gl.pos_sup + g.model_pg_lat_tree + SrlExpParams(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
+                parser_srl = gl.brown_semi + g.model_pg_obs_tree + SrlExpParams(removeAts="DEPREL,MORPHO,POS,LEMMA")
                 for trainMaxNumSentences in [1000, 2000, 4000, 8000, 16000, 32000, 64000]:
                     if trainMaxNumSentences/2 >= cl_map[lang_short]:
                         break
