@@ -94,7 +94,7 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
-        p.lang_short_names = ["es", "de", "cs", "ca", "en", "zh"]
+        p.lang_short_names = ["ca", "cs", "es", "de", "en", "zh"]
 
         p.langs = {}        
         for lang_short in p.lang_short_names:
@@ -794,11 +794,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_tpl_zhao
             g.defaults.update(predictSense=True, featureSelection=False)
-            for lang_short in p.lang_short_names:
+            for lang_short in ['ca']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # SKIPPING: gl.brown_semi, gl.brown_unsup,  gl.pos_sup for OBS and LAT.
-                parser_srl_list = combine_pairs([gl.brown_semi], [g.model_pg_obs_tree])
+                parser_srl_list = combine_pairs([gl.pos_sup], [g.model_pg_obs_tree]) + \
+                                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
