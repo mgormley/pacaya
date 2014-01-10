@@ -781,8 +781,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # SKIPPING: gl.brown_semi, gl.brown_unsup
-                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup], [g.model_pg_obs_tree]) + \
-                                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl + gl.feat_tpl_bjork_ls
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
