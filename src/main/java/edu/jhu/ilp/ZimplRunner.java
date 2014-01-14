@@ -16,7 +16,7 @@ public class ZimplRunner {
     private static final Pattern tabRegex = Pattern.compile("\\s+");
     private static final String zimplBinary;
     static {
-        File zb = new File("/Users/mgormley/research/parsing/bin/zimpl-3.1.0.darwin.x86.gnu.opt");
+        File zb = new File("/Users/mgormley/installed/zimpl-3.1.0/bin/zimpl-3.1.0.darwin.x86.gnu.opt");
         if (zb.exists()) {
             zimplBinary = zb.getAbsolutePath();
         } else {

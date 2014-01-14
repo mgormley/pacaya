@@ -2,8 +2,8 @@ package edu.jhu.parse.dmv;
 
 import static edu.jhu.induce.model.dmv.SimpleStaticDmvModel.TW_A;
 import static edu.jhu.induce.model.dmv.SimpleStaticDmvModel.TW_B;
-import static edu.jhu.parse.ilp.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,8 +20,8 @@ import edu.jhu.data.Label;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.eval.DependencyParserEvaluator;
 import edu.jhu.globalopt.dmv.DmvObjective;
-import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.induce.model.Model;
 import edu.jhu.induce.model.dmv.DmvDepTreeGenerator;
 import edu.jhu.induce.model.dmv.DmvModel;
@@ -32,7 +32,6 @@ import edu.jhu.induce.model.dmv.UniformDmvModelFactory;
 import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
-import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
@@ -88,12 +87,10 @@ public class DmvCkyParserTest {
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
-        // flow projective parsing (only for comparison)
-        DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
-        
-        for (int i=0; i<flowTrees.size(); i++) {
-            assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
-        }
+
+        assertEquals(1, dpTrees.size());
+        System.out.println(Arrays.toString(dpTrees.get(0).getParents()));
+        assertArrayEquals(new int[]{1, -1}, dpTrees.get(0).getParents());
     }
 
     @Test
@@ -105,12 +102,10 @@ public class DmvCkyParserTest {
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
-        // flow projective parsing (only for comparison)
-        DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
         
-        for (int i=0; i<flowTrees.size(); i++) {
-            assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
-        }
+        assertEquals(1, dpTrees.size());
+        System.out.println(Arrays.toString(dpTrees.get(0).getParents()));
+        assertArrayEquals(new int[]{-1, 2, 0}, dpTrees.get(0).getParents());
     }
     
     @Test
@@ -123,12 +118,10 @@ public class DmvCkyParserTest {
 
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
-        // flow projective parsing (only for comparison)
-        DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
-        
-        for (int i=0; i<flowTrees.size(); i++) {
-            assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
-        }
+
+        assertEquals(1, dpTrees.size());
+        System.out.println(Arrays.toString(dpTrees.get(0).getParents()));
+        assertArrayEquals(new int[]{-1, 5, 1, 4, 1, 0, 5, 6}, dpTrees.get(0).getParents());
     }
 
     @Test
@@ -144,12 +137,10 @@ public class DmvCkyParserTest {
         
         // dynamic programming parsing
         DepTreebank dpTrees = getDpParses(model, sentences, expectedParseWeight);
-        // flow projective parsing (only for comparison)
-        DepTreebank flowTrees = getIlpParses(model, sentences, IlpFormulation.FLOW_PROJ, expectedParseWeight);
-        
-        for (int i=0; i<flowTrees.size(); i++) {
-            assertArrayEquals(flowTrees.get(i).getParents(), dpTrees.get(i).getParents());
-        }
+
+        assertEquals(1, dpTrees.size());
+        System.out.println(Arrays.toString(dpTrees.get(0).getParents()));
+        assertArrayEquals(new int[]{-1, 5, 3, 5, 5, 0, 0, 6, 0, 8, 8, 10}, dpTrees.get(0).getParents());
     }
     
     @Test
