@@ -2,6 +2,8 @@ package edu.jhu.featurize;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
@@ -133,6 +135,27 @@ public class TemplateSets {
     
     public static List<FeatTemplate> getZhaoCaArgUnigramFeatureTemplates() {
         return getFromResource(zhaoCaArgFeatsResource);
+    }
+    
+    public static List<FeatTemplate> getCustomArgSet1() {
+        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();        
+        tpls.addAll(TemplateSets.getCoarseUnigramSet1());
+        tpls.addAll(TemplateSets.getBjorkelundArgUnigramFeatureTemplates());
+        tpls.addAll(TemplateSets.getZhaoCaArgUnigramFeatureTemplates());
+        tpls.addAll(TemplateSets.getNaradowskyArgUnigramFeatureTemplates());
+        return new ArrayList<FeatTemplate>(tpls);
+    }
+
+    public static List<FeatTemplate> getCustomSenseSet1() {
+        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();        
+        tpls.addAll(TemplateSets.getCoarseUnigramSet1());
+        for (TokProperty prop : TokProperty.values()) {
+            tpls.add(new FeatTemplate1(Position.PARENT, PositionModifier.IDENTITY, prop));
+        }
+        tpls.addAll(TemplateSets.getBjorkelundSenseUnigramFeatureTemplates());
+        tpls.addAll(TemplateSets.getZhaoEnSenseUnigramFeatureTemplates());
+        tpls.addAll(TemplateSets.getNaradowskySenseUnigramFeatureTemplates());
+        return TemplateLanguage.filterOutFeats(new ArrayList<FeatTemplate>(tpls), TokProperty.UNK);
     }
     
     public static List<FeatTemplate> getCoarseUnigramSet1() {

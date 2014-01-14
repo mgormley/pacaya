@@ -406,7 +406,9 @@ class ParamDefinitions():
         # The coarse set uses the bjorkelund sense features.
         g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
         g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
-        
+        g.feat_tpl_custom1        = self._get_named_template_set("/edu/jhu/featurize/custom1-sense-feats.txt",
+                                                                "/edu/jhu/featurize/custom1-arg-feats.txt",
+                                                                False, 'tpl_custom1')
         g.feat_all = g.feat_tpl_bjork_ig
     
     def _define_lists_features(self, g, l):
@@ -758,17 +760,25 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_all
-            g.defaults.update(predictSense=True)
-            for lang_short in p.lang_short_names:
-                gl = g.langs[lang_short]
-                ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
-                                   combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
-                for parser_srl in parser_srl_list:
-                    exp = g.defaults + parser_srl
-                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    exps.append(exp)
+            g.defaults += g.feat_tpl_custom1
+            g.defaults.set_incl_name('removeAts', True)
+            g.defaults.update(predictSense=True, biasOnly=True)
+            for removeBrown in [True, False]:
+                for lang_short in p.lang_short_names:
+                    gl = g.langs[lang_short]
+                    ll = l.langs[lang_short]
+                    parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                       combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
+                    for parser_srl in parser_srl_list:
+                        exp = g.defaults + parser_srl
+                        if removeBrown:
+                            if exp.get("removeAts"):
+                                exp += SrlExpParams(removeAts=",".join([exp.get("removeAts"), "BROWN"]))
+                            else:
+                                exp += SrlExpParams(removeAts="BROWN")
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exps.append(exp)
+            #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
             return self._get_pipeline_from_exps(exps)
 
         elif self.expname == "srl-conll09-bjork":    
@@ -1244,7 +1254,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
             if isinstance(stage, SrlExpParams) and not self.big_machine:
-                stage.update(work_mem_megs=2000, threads=1) 
+                stage.update(work_mem_megs=1500, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")

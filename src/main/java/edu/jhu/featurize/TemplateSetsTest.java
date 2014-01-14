@@ -2,6 +2,9 @@ package edu.jhu.featurize;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
@@ -120,6 +123,47 @@ public class TemplateSetsTest {
             System.out.println(tpl);
         }
         
+    }
+    
+    @Test
+    public void testGetCustomArgSet1() {
+        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();        
+        {
+            tpls.addAll(TemplateSets.getCustomArgSet1());
+            int numArg = tpls.size();
+            System.out.println("Number of templates: " + numArg);
+        }
+        // This tests that names are created correctly.
+        for (FeatTemplate tpl : tpls) {
+            System.out.println(tpl);
+        }
+        System.out.println();
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(new ArrayList<FeatTemplate>(tpls), at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
+        }
+    }
+    
+    @Test
+    public void testGetCustomSenseSet1() {
+        Collection<FeatTemplate> tpls = new HashSet<FeatTemplate>();        
+        {
+            tpls.addAll(TemplateSets.getCustomSenseSet1());
+            int numArg = tpls.size();
+            System.out.println("Number of templates: " + numArg);
+        }
+
+        // This tests that names are created correctly.
+        for (FeatTemplate tpl : tpls) {
+            System.out.println(tpl);
+        }
+        System.out.println();
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(new ArrayList<FeatTemplate>(tpls), at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
+        }
     }
 
 }
