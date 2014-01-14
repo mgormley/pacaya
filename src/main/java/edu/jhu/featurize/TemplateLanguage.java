@@ -2,6 +2,7 @@ package edu.jhu.featurize;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +13,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import cern.colt.Arrays;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.util.collections.Lists;
 
