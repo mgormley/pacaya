@@ -1,7 +1,6 @@
 package edu.jhu.parse.cky;
 
 import edu.jhu.data.Sentence;
-import edu.jhu.induce.train.Prm;
 import edu.jhu.parse.cky.chart.Chart;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.cky.chart.Chart.ParseType;

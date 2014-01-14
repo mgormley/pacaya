@@ -18,13 +18,13 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.induce.train.Prm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
+import edu.jhu.util.Prm;
 import edu.jhu.util.hash.MurmurHash3;
 
 /**

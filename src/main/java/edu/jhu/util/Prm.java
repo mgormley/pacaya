@@ -1,4 +1,4 @@
-package edu.jhu.induce.train;
+package edu.jhu.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

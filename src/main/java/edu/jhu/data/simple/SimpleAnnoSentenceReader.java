@@ -8,16 +8,9 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTree;
-import edu.jhu.data.DepTreebank;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
-import edu.jhu.data.conll.CoNLLXDepTree;
-import edu.jhu.data.conll.CoNLLXDirReader;
-import edu.jhu.data.conll.CoNLLXSentence;
-import edu.jhu.data.deptree.DepTreebankReader;
-import edu.jhu.srl.SrlRunner.DatasetType;
 import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 

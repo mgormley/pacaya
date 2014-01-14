@@ -4,7 +4,6 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXToken;
-import edu.jhu.data.deptree.DepTreebankReader;
 import edu.jhu.util.Alphabet;
 
 
@@ -32,10 +31,10 @@ public class Sentence extends LabelSequence<Label> {
         }
     }
 
-    public Sentence(CoNLL09Sentence sent, Alphabet<Label> alphabet) {
+    public Sentence(CoNLL09Sentence sent, Alphabet<Label> alphabet, boolean usePredictedPosTags) {
         this(alphabet);
         for (CoNLL09Token token : sent) {
-            if (DepTreebankReader.usePredictedPosTags) {
+            if (usePredictedPosTags) {
                 add(new TaggedWord(token.getForm(), token.getPpos()));
             } else {
                 add(new TaggedWord(token.getForm(), token.getPos()));

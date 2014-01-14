@@ -1,7 +1,7 @@
 package edu.jhu.data.conll;
 
 /**
- * Language and corpus specific constants.
+ * CoNLL-2009 Shared Task dataset: Language and corpus specific constants.
  * 
  * @author mgormley
  */
