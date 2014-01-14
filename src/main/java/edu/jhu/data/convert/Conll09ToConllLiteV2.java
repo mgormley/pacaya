@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
@@ -20,7 +21,6 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Converts CoNLL-2009 format to CoNLL Lite (with a few extra columns).

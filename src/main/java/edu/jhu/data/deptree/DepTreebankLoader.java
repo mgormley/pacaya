@@ -1,17 +1,20 @@
-package edu.jhu.data;
+package edu.jhu.data.deptree;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.PtbDepTree.HeadFinderException;
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.TreeFilter;
 import edu.jhu.data.conll.CoNLL09DepTree;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLLXDepTree;
 import edu.jhu.data.conll.CoNLLXDirReader;
 import edu.jhu.data.conll.CoNLLXSentence;
+import edu.jhu.data.deptree.PtbDepTree.HeadFinderException;
 import edu.stanford.nlp.ling.CategoryWordTag;
 import edu.stanford.nlp.trees.DiskTreebank;
 import edu.stanford.nlp.trees.Tree;

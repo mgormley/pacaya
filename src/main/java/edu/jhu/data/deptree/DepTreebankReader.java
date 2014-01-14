@@ -1,10 +1,16 @@
-package edu.jhu.data;
+package edu.jhu.data.deptree;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.DepTree;
+import edu.jhu.data.DepTreeNode;
+import edu.jhu.data.DepTreebank;
+import edu.jhu.data.Label;
+import edu.jhu.data.TaggedWord;
+import edu.jhu.data.VerbTreeFilter;
 import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.FileMapTagReducer;
 import edu.jhu.tag.OovTagReducer;

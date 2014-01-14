@@ -4,6 +4,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXToken;
+import edu.jhu.data.deptree.DepTreebankReader;
 import edu.jhu.util.Alphabet;
 
 

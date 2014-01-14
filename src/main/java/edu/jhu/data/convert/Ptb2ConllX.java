@@ -8,12 +8,12 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
-import edu.jhu.data.DepTreebankReader;
-import edu.jhu.data.DepTreebankReader.DatasetType;
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXWriter;
+import edu.jhu.data.deptree.DepTreebankReader;
+import edu.jhu.data.deptree.DepTreebankReader.DatasetType;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;

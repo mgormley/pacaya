@@ -4,13 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.LanguageConstants;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Cache of features for a single word in a sentence, this permits indexing into

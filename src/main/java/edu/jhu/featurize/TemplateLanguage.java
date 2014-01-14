@@ -9,15 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import cern.colt.Arrays;
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.featurize.TemplateLanguage.AT;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.induce.train.Prm;
 import edu.jhu.util.collections.Lists;
-import edu.stanford.nlp.util.StringUtils;
 
 /**
  * Defines a 'little language' for structured feature templates.

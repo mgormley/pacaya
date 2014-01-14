@@ -7,15 +7,15 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepTreebank;
-import edu.jhu.data.DepTreebankReader;
 import edu.jhu.data.Label;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.DepTreebankReader.DatasetType;
 import edu.jhu.data.conll.CoNLL09DepTree;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.convert.Ptb2ConllX;
+import edu.jhu.data.deptree.DepTreebankReader;
+import edu.jhu.data.deptree.DepTreebankReader.DatasetType;
 import edu.jhu.induce.model.Model;
 import edu.jhu.parse.dep.DepParser;
 import edu.jhu.util.Alphabet;

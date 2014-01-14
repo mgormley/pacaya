@@ -1,4 +1,4 @@
-package edu.jhu.data;
+package edu.jhu.data.deptree;
 
 import edu.stanford.nlp.ling.CoreAnnotations.IndexAnnotation;
 import edu.stanford.nlp.ling.Label;

@@ -1,4 +1,4 @@
-package edu.jhu.data;
+package edu.jhu.data.deptree;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import edu.jhu.data.DepTree;
+import edu.jhu.data.NonprojDepTreeNode;
+import edu.jhu.data.WallDepTreeNode;
 import edu.stanford.nlp.ling.HasTag;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.trees.CollinsHeadFinder;
