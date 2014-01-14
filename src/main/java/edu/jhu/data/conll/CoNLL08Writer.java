@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
@@ -24,6 +25,11 @@ public class CoNLL08Writer {
     public CoNLL08Writer(File path) throws IOException {
         this(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path), "UTF-8")));
     }
+
+    public CoNLL08Writer(OutputStream os) throws IOException {
+        this(new BufferedWriter(new OutputStreamWriter(os, "UTF-8")));
+    }
+    
     public CoNLL08Writer(Writer writer) throws IOException {
         this.writer = writer;
         this.count = 0;
