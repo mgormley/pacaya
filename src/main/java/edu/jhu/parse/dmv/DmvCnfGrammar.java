@@ -6,7 +6,7 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModel;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.Rule;

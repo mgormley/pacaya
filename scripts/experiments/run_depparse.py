@@ -140,7 +140,7 @@ class DPExpParams(experiment_runner.JavaExpParams):
     def create_experiment_script(self, exp_dir):
         script = ""
         script += "echo 'CLASSPATH=$CLASSPATH'\n"
-        cmd = "java " + self.get_java_args() + " edu.jhu.train.dmv.DepParserRunner  %s \n" % (self.get_args())
+        cmd = "java " + self.get_java_args() + " edu.jhu.induce.train.dmv.DepParserRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         return script
     

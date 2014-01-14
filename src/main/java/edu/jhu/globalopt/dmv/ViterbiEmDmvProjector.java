@@ -14,15 +14,15 @@ import edu.jhu.globalopt.Solution;
 import edu.jhu.globalopt.cpt.Projections.ProjectionsPrm.ProjectionType;
 import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorFactory;
 import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.model.dmv.CopyingDmvModelFactory;
-import edu.jhu.model.dmv.DmvMStep;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.CopyingDmvModelFactory;
+import edu.jhu.induce.model.dmv.DmvMStep;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.dmv.DmvTrainCorpus;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 
 public class ViterbiEmDmvProjector implements DmvProjector {

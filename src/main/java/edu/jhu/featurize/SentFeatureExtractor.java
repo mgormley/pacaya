@@ -11,9 +11,9 @@ import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.induce.train.Prm;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
-import edu.jhu.train.Prm;
 
 /**
  * Feature extraction from the observations on a particular sentence.

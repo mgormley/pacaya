@@ -1,7 +1,7 @@
 package edu.jhu.parse.dmv;
 
-import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_A;
-import static edu.jhu.model.dmv.SimpleStaticDmvModel.TW_B;
+import static edu.jhu.induce.model.dmv.SimpleStaticDmvModel.TW_A;
+import static edu.jhu.induce.model.dmv.SimpleStaticDmvModel.TW_B;
 import static edu.jhu.parse.ilp.IlpDepParserTest.getIlpParses;
 import static org.junit.Assert.assertArrayEquals;
 
@@ -22,18 +22,18 @@ import edu.jhu.eval.DependencyParserEvaluator;
 import edu.jhu.globalopt.dmv.DmvObjective;
 import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.model.Model;
-import edu.jhu.model.dmv.DmvDepTreeGenerator;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.model.dmv.SimpleStaticDmvModel;
-import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.model.dmv.DmvDepTreeGenerator;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.model.dmv.SimpleStaticDmvModel;
+import edu.jhu.induce.model.dmv.UniformDmvModelFactory;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.cky.chart.Chart.ChartCellType;
 import edu.jhu.parse.dmv.DmvCkyParser.DmvCkyParserPrm;
 import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;

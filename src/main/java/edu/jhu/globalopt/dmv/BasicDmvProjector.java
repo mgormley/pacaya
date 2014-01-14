@@ -11,9 +11,9 @@ import edu.jhu.globalopt.cpt.CptBounds;
 import edu.jhu.globalopt.cpt.Projections;
 import edu.jhu.globalopt.cpt.Projections.ProjectionsPrm;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 
 public class BasicDmvProjector implements DmvProjector {
 

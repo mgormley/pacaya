@@ -4,7 +4,7 @@ import edu.jhu.data.DepTreebank;
 import edu.jhu.globalopt.Relaxation;
 import edu.jhu.globalopt.cpt.CptBounds;
 import edu.jhu.globalopt.cpt.CptBoundsDeltaList;
-import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 
 public interface DmvRelaxation extends Relaxation {
 

@@ -7,14 +7,14 @@ import org.junit.Test;
 
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.globalopt.dmv.BasicDmvProjector.DmvProjectorPrm;
-import edu.jhu.model.Model;
-import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.ilp.IlpFormulation;
 import edu.jhu.parse.relax.LpDmvRelaxedParser;
 import edu.jhu.parse.relax.LpDmvRelaxedParser.LpDmvRelaxedParserPrm;
 import edu.jhu.parse.relax.LpDmvRelaxedParserTest;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 public class BasicDmvProjectorTest {

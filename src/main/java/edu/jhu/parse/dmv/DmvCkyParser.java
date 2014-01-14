@@ -14,8 +14,9 @@ import edu.jhu.data.conll.ValidParentsSentence;
 import edu.jhu.globalopt.dmv.DmvObjective;
 import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.model.Model;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.cky.CkyPcfgParser;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
@@ -26,7 +27,6 @@ import edu.jhu.parse.cky.chart.ChartCell;
 import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvRule.DmvRuleType;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 
 /**

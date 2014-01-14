@@ -8,11 +8,11 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import edu.jhu.globalopt.dmv.RelaxedDepTreebank;
-import edu.jhu.model.Model;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParseLpBuilderPrm;
 import edu.jhu.parse.relax.DmvParseLpBuilder.DmvParsingProgram;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.cplex.CplexPrm;
 import edu.jhu.util.cplex.CplexUtils;
 

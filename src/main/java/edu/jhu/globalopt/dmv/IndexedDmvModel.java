@@ -10,11 +10,11 @@ import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.globalopt.cpt.IndexedCpt;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvSentParamCache;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvSentParamCache;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.prim.tuple.IntTuple;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Alphabet;
 
 public class IndexedDmvModel implements IndexedCpt {

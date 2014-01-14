@@ -4,18 +4,18 @@ import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepTreebank;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.model.dmv.RandomDmvModelFactory;
-import edu.jhu.model.dmv.SupervisedDmvModelFactory;
-import edu.jhu.model.dmv.UniformDmvModelFactory;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.model.dmv.SupervisedDmvModelFactory;
+import edu.jhu.induce.model.dmv.UniformDmvModelFactory;
+import edu.jhu.induce.train.SemiSupervisedCorpus;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.DmvTrainerFactory;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
-import edu.jhu.train.SemiSupervisedCorpus;
-import edu.jhu.train.dmv.DmvTrainCorpus;
-import edu.jhu.train.dmv.DmvTrainerFactory;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 
 public class DmvSolFactory {
 

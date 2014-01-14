@@ -10,12 +10,12 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.Word;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.train.dmv.DmvTrainerFactory;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.dmv.DmvTrainerFactory;
 import edu.jhu.util.Alphabet;
 
 /**

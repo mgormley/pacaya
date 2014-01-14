@@ -2,7 +2,7 @@ package edu.jhu.parse.dep;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.Sentence;
-import edu.jhu.model.Model;
+import edu.jhu.induce.model.Model;
 
 public interface DepSentenceParser {
 

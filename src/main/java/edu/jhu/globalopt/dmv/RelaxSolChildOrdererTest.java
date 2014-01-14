@@ -20,7 +20,7 @@ import edu.jhu.globalopt.cpt.VariableSplitter;
 import edu.jhu.globalopt.cpt.CptBoundsDelta.Type;
 import edu.jhu.globalopt.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.globalopt.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
-import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 

@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepTreebank;
 import edu.jhu.globalopt.dmv.IndexedDmvModel.Rhs;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModel;
 import edu.jhu.prim.Primitives;
 
 public class DmvObjective {

@@ -2,8 +2,8 @@ package edu.jhu.parse.dep;
 
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.model.Model;
-import edu.jhu.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 
 public interface DepParser {
 

@@ -16,17 +16,17 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.data.Word;
 import edu.jhu.globalopt.dmv.DmvDantzigWolfeRelaxation.DmvDwRelaxPrm;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.model.dmv.DmvSentParamCache;
-import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.DmvSentParamCache;
+import edu.jhu.induce.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer;
+import edu.jhu.induce.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.parse.dep.DepParser;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.train.dmv.DmvTrainCorpus;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer;
-import edu.jhu.train.dmv.DmvViterbiEMTrainer.DmvViterbiEMTrainerPrm;
 import edu.jhu.util.Prng;
 
 

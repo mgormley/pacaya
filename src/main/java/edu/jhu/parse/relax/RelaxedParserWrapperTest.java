@@ -6,11 +6,11 @@ import org.junit.Test;
 
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.model.Model;
-import edu.jhu.model.dmv.DmvModelFactory;
-import edu.jhu.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.model.Model;
+import edu.jhu.induce.model.dmv.DmvModelFactory;
+import edu.jhu.induce.model.dmv.RandomDmvModelFactory;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.relax.RelaxedParserWrapper.RelaxedDepParserWrapperPrm;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Prng;
 
 

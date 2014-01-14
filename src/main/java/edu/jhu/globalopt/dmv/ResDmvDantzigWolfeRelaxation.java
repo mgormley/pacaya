@@ -24,14 +24,14 @@ import edu.jhu.globalopt.cpt.Projections;
 import edu.jhu.globalopt.cpt.CptBoundsDelta.Lu;
 import edu.jhu.globalopt.cpt.CptBoundsDelta.Type;
 import edu.jhu.globalopt.cpt.Projections.ProjectionsPrm;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 
 /**

@@ -8,7 +8,7 @@ import edu.jhu.data.SentenceCollection;
 import edu.jhu.ilp.CopyingMstFileUpdater;
 import edu.jhu.ilp.IlpSolverFactory;
 import edu.jhu.ilp.ZimplSolver;
-import edu.jhu.model.Model;
+import edu.jhu.induce.model.Model;
 import edu.jhu.parse.dep.DepParser;
 
 public class InitializedIlpDepParserWithDeltas extends IlpDepParserWithDeltas implements DepParser {

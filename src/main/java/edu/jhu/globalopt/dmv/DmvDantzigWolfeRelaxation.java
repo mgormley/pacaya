@@ -34,13 +34,13 @@ import edu.jhu.globalopt.cpt.CptBoundsDelta.Type;
 import edu.jhu.globalopt.cpt.LpSumToOneBuilder.CutCountComputer;
 import edu.jhu.globalopt.cpt.LpSumToOneBuilder.LpStoBuilderPrm;
 import edu.jhu.globalopt.dmv.DmvObjective.DmvObjectivePrm;
-import edu.jhu.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.parse.dmv.DmvCkyParser;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.list.DoubleArrayList;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.Timer;
 import edu.jhu.util.cplex.CplexPrm;
 

@@ -15,7 +15,7 @@ import cern.colt.Arrays;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.train.Prm;
+import edu.jhu.induce.train.Prm;
 import edu.jhu.util.collections.Lists;
 import edu.stanford.nlp.util.StringUtils;
 

@@ -16,7 +16,7 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.convert.Ptb2ConllX;
-import edu.jhu.model.Model;
+import edu.jhu.induce.model.Model;
 import edu.jhu.parse.dep.DepParser;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;

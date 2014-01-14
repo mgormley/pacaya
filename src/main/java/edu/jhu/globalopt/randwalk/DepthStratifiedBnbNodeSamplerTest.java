@@ -15,10 +15,10 @@ import edu.jhu.globalopt.cpt.VariableSplitter;
 import edu.jhu.globalopt.cpt.MidpointVarSplitter.MidpointChoice;
 import edu.jhu.globalopt.dmv.DmvRltRelaxation.DmvRltRelaxPrm;
 import edu.jhu.globalopt.randwalk.DepthStratifiedBnbNodeSampler.DepthStratifiedBnbSamplerPrm;
-import edu.jhu.train.dmv.BnBDmvTrainer;
-import edu.jhu.train.dmv.BnBDmvTrainerTest;
-import edu.jhu.train.dmv.DmvTrainCorpus;
-import edu.jhu.train.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
+import edu.jhu.induce.train.dmv.BnBDmvTrainer;
+import edu.jhu.induce.train.dmv.BnBDmvTrainerTest;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
+import edu.jhu.induce.train.dmv.BnBDmvTrainer.BnBDmvTrainerPrm;
 
 
 public class DepthStratifiedBnbNodeSamplerTest {

@@ -20,11 +20,11 @@ import edu.jhu.globalopt.cpt.CptBounds;
 import edu.jhu.globalopt.cpt.CptBoundsDelta.Type;
 import edu.jhu.globalopt.dmv.IndexedDmvModel;
 import edu.jhu.globalopt.dmv.ShinyEdges;
+import edu.jhu.induce.model.dmv.DmvModel;
+import edu.jhu.induce.model.dmv.DmvSentParamCache;
+import edu.jhu.induce.train.dmv.DmvTrainCorpus;
 import edu.jhu.lp.IloRangeLpRows;
-import edu.jhu.model.dmv.DmvModel;
-import edu.jhu.model.dmv.DmvSentParamCache;
 import edu.jhu.parse.ilp.IlpFormulation;
-import edu.jhu.train.dmv.DmvTrainCorpus;
 import edu.jhu.util.cplex.CplexUtils;
 
 public class DmvParseLpBuilder {
