@@ -52,10 +52,10 @@ def remote_srl(argv):
     env.gateway = "%s:%s" % ("external.hltcoe.jhu.edu", "22")
     env.host_string = "%s:%s" % ("test4", "22")
     run("uname -a")
-    prep_project("prim", "install", True)
+    prep_project("prim", "install", True)    
     #prep_project("erma", "install", True)
-    prep_project("parsing", "compile", False)
-    run_srl("parsing", argv)
+    prep_project("pacaya", "compile", False)
+    run_srl("pacaya", argv)
     
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"

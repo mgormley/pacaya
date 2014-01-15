@@ -4,83 +4,18 @@
 \#*\#
 ~$*
  
-# /
-/other_repos
-/bin
-/classes
+# Specific directories
 /target
-/tests
 /exp
 /remote_exp
-/other/dantzig_wolfe/VRP
+/data
+
+# Specific files
 .project
 .classpath
 .pydevproject
 .settings
-
-# /lib/
-/lib/cplex.jar
-/lib/gurobi.jar
-/lib/*/
-/lib/*.tgz
-/lib/*.tar.gz
-/lib/*.zip
-
-# /papers/**/
-/papers/**/*.synctex.gz
-/papers/**/*.bbl
-/papers/**/*.blg
-/papers/**/*.aux
-/papers/**/*.rel
-/papers/**/*.log
-/papers/**/*.toc
-/papers/**/*.out
-/papers/**/*.snm
-/papers/**/*.nav
-/papers/**/.Rhistory
-/papers/**/.DS_Store
-/papers/**/_region_.*
-/papers/**/_region_.tex
-/papers/**/_region_.pdf
-
-# Final versions.
-/papers/coe_2013_presentation/giie-coe-2013.pdf
-/papers/dep_parse_notes/dep-parse.pdf
-/papers/emnlp_2012/dw-emnlp-2012.pdf
-/papers/masc_2012/dw-masc-2012.pdf
-/papers/masc_2012_poster/latex_scratch/dw-masc-12-scratch.pdf
-/papers/nips_2012/dw-emnlp-2012.pdf
-/papers/nips_2012/dw-nips-2012.pdf
-/papers/masc_2013/srl-masc-2013.pdf
-/papers/masc_2013/mrf-parser-masc-2013.pdf
-/papers/masc_2013_poster/latex_scratch/mrf-parser-scratch-onecol.pdf
-/papers/masc_2013_poster/latex_scratch/mrf-parser-scratch.pdf
-/papers/tacl_2013/srl-tacl-2013.pdf
-
-# /scripts/plot/
-/scripts/plot/.Rhistory
-
-# /src/ (for src/com/ibm/cplex)
-/src/main/java/com
-
-# /data
-/data/Web2.0Dataset/
-/data/grammars/
-/data/treebank_3/
-/data/treebank_3_sym/
-/data/Web2.0Dataset.tar.zip
-/data/conll2009/
-/data/conllx/
-/data/conll_light/
-/data/tag_maps.tar.gz
-/data/treebank_3_old/
-/data/bc_out_256
-/data/bc_out_1000
-/data/LDC
-
-results/srl-feat-ig.xlsx
-results/vem-conll-006.xlsx
-
 java.hprof.txt
 warn.log
 tmp
+/scripts/plot/.Rhistory
