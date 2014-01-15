@@ -13,7 +13,7 @@ import edu.jhu.util.JUnitUtils;
 
 public class AdaDeltaTest {
 
-    @Test
+    //TODO: @Test
     public void testActualBatchFunction() {
         fail("Not yet implemented");
     }

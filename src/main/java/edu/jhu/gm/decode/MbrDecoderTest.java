@@ -38,10 +38,10 @@ public class MbrDecoderTest {
         fts.stopGrowth();
         
         // Set the param for "N" to 0.5.
-        model.add(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE")), 0.5);
+        model.add(0, 0, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)), 0.5);
         //model.getParams()[0] = 0.5;
         // Set the param for "V" to 1.0.
-        model.add(0, 1, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE")), 1.0);
+        model.add(0, 1, fts.get(0).getAlphabet().lookupIndex(new Feature("BIAS_FEATURE", true)), 1.0);
         //model.getParams()[1] = 1.0;
         System.out.println(model);
         

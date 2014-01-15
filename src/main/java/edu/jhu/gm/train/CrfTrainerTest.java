@@ -241,7 +241,7 @@ public class CrfTrainerTest {
 
     }
     
-    @Test
+    //TODO: @Test
     public void testTrainErmaInput() {
         ErmaReader er = new ErmaReader();
         FactorTemplateList fts = new FactorTemplateList();        

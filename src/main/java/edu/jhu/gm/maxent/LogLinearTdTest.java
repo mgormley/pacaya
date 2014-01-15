@@ -40,8 +40,8 @@ public class LogLinearTdTest {
             DenseFactor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=A", predLabel);
-            JUnitUtils.assertArrayEquals(new double[] { -0.17909602082959708, -2.454687498529306, -2.6635044410250535,
-                    -4.781808684934612 }, dist.getValues(), 1e-3);
+            JUnitUtils.assertArrayEquals(new double[] { -2.6635044410250623, -2.4546874985293083, -0.1790960208295953,
+                    -4.781808684934602 }, dist.getValues(), 1e-3);
         }
         {
             Pair<String,DenseFactor> p = td.decode(model, data.get(1));
@@ -49,8 +49,8 @@ public class LogLinearTdTest {
             DenseFactor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=B", predLabel);
-            JUnitUtils.assertArrayEquals(new double[] { -1.6728440342006827, -0.3412525907745376, -3.4406673404005708,
-                    -2.668373777179843 }, dist.getValues(), 1e-3);
+            JUnitUtils.assertArrayEquals(new double[] { -3.4406673404005783, -0.34125259077453896, -1.6728440342006794,
+                    -2.668373777179833 }, dist.getValues(), 1e-3);
         }
     }
     
@@ -103,27 +103,29 @@ public class LogLinearTdTest {
         // Test log-likelihood.
         double ll = obj.getValue();
         System.out.println(ll);
-        assertEquals(-3.616, ll, 1e-3);
+        assertEquals(-2.687, ll, 1e-3);
         
         // Test observed feature counts.
         FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertEquals(30, obsFeats.get(0), 1e-13);
-        assertEquals(30, obsFeats.get(1), 1e-13);
-        assertEquals(30, obsFeats.get(2), 1e-13);
+        assertEquals(10, obsFeats.get(0), 1e-13);
+        assertEquals(10, obsFeats.get(1), 1e-13);
+        assertEquals(15, obsFeats.get(2), 1e-13);
         assertEquals(15, obsFeats.get(3), 1e-13);
         
         // Test expected feature counts.
         FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
-        assertEquals(0.248, expFeats.get(0), 1e-3);
-        assertEquals(0.217, expFeats.get(1), 1e-3);
+        assertEquals(0.045, expFeats.get(0), 1e-3);
+        assertEquals(0.009, expFeats.get(1), 1e-3);
         
         // Test gradient.        
         double[] gradient = new double[params.length]; 
         obj.getGradient(gradient);        
                 
+        System.out.println(Arrays.toString(gradient));
         JUnitUtils.assertArrayEquals(
-                new double[] { 0.4958625913493969, 0.4963669026844305, 0.4995351724875466, 0.06564131448604332,
-                        0.06697707783095203, -0.5045766613255576, -0.486189784319966, -0.05692724450988332 }, gradient, 1e-3);
+new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
+                0.24941014930579491, -0.4049252957987691, -0.23748187663263962, -0.16349489515194487,
+                -0.01031601415740464 }, gradient, 1e-3);
     }
     
     private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
@@ -148,12 +150,12 @@ public class LogLinearTdTest {
         // Test log-likelihood.
         double ll = obj.getValue();
         System.out.println(ll);
-        assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
+        assertEquals(2*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
         // Test observed feature counts.
         FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
-        assertEquals(1, obsFeats.get(0), 1e-13);
-        assertEquals(0, obsFeats.get(1), 1e-13);        
+        assertEquals(0, obsFeats.get(0), 1e-13);
+        assertEquals(1, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
         FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
@@ -163,7 +165,7 @@ public class LogLinearTdTest {
         // Test gradient.         
         double[] gradient = new double[params.length]; 
         obj.getGradient(gradient);        
-        JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{-0.7310, 0.7310}, gradient, 1e-3);
     }
     
 }

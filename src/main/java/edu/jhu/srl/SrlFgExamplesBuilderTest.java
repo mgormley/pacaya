@@ -17,6 +17,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -132,29 +133,30 @@ public class SrlFgExamplesBuilderTest {
         prm.srlFePrm.fePrm.useZhaoFeats = false;
         prm.srlFePrm.fePrm.useSimpleFeats = false;
         prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
+        prm.srlFePrm.fePrm.useNaradFeats = false;
+        prm.srlFePrm.fePrm.useTemplates = true;
+        prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
+        
         {
             FactorTemplateList fts = new FactorTemplateList();
             prm.exPrm.featCountCutoff = 0;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExampleList data = builder.getData(simpleSents);            
-            // Used to be:  assertEquals(13388, fts.getNumObsFeats());
-            assertEquals(13313, fts.getNumObsFeats());
+            assertEquals(1237, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
-            // Used to be:  assertEquals(26308, model.getNumParams());
-            assertEquals(26168, model.getNumParams());
+            assertEquals(2451, model.getNumParams());
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
             prm.exPrm.featCountCutoff = 5;
             SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
             FgExampleList data = builder.getData(simpleSents);
-            // Used to be:  assertEquals(2729, fts.getNumObsFeats());
-            assertEquals(2749, fts.getNumObsFeats());
+            assertEquals(313, fts.getNumObsFeats());
             FgModel model = new FgModel(data, false);
-            // Used to be:  assertEquals(6108, model.getNumParams());
-            assertEquals(6113, model.getNumParams());
+            assertEquals(715, model.getNumParams());
         }
     }
 

@@ -1,6 +1,7 @@
 package edu.jhu.featurize;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,8 +27,8 @@ public class TemplateSetsTest {
         int numBigrams = tpls.size();
         System.out.println("Number of bigram templates: " + numBigrams);
         
-        assertEquals(1467, numUnigrams);
-        assertEquals(1075311, numBigrams);
+        assertTrue(1567 <= numUnigrams);
+        assertTrue(1226961 <= numBigrams);
     }
     
     @Test
@@ -60,7 +61,7 @@ public class TemplateSetsTest {
         int numSense = tpls.size();
         System.out.println("Number of sense templates: " + numSense);
 
-        assertEquals(18, numArg);
+        assertEquals(19, numArg);
         assertEquals(5, numSense);
     }    
     

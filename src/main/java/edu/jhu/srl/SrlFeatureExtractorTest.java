@@ -112,7 +112,7 @@ public class SrlFeatureExtractorTest {
         // For useNaradFeats=true: 
         // Correct number of obs feats 358, and seeing 358 after bad commit.
         // Correct number is 972, but seeing 932 after bad commit.
-        assertEquals(983, model.getNumParams());
+        assertEquals(604, model.getNumParams());
     }
     
     @Test
@@ -203,7 +203,7 @@ public class SrlFeatureExtractorTest {
         }
         
         System.out.println(fts);
-        assertEquals(10, fts.getNumObsFeats());
+        assertEquals(11, fts.getNumObsFeats());
     }
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {

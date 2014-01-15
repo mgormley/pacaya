@@ -199,8 +199,8 @@ public class DenseFactorTest {
         
         f1.add(f2);                
         System.out.println("f1+f2:" + f1);
-        
-        JUnitUtils.assertArrayEquals(new double[]{3.0, 3.0, 4.0, 5.0, 6.0, 6.0, 3.0, 3.0, 4.0, 5.0, 8.0, 8.0}, f1.getValues(), 1e-13);                
+                
+        JUnitUtils.assertArrayEquals(new double[]{3.0, 3.0, 3.0, 3.0, 7.0, 8.0, 4.0, 5.0, 3.0, 3.0, 8.0, 8.0}, f1.getValues(), 1e-13);                
     }
 
 }

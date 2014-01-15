@@ -13,7 +13,7 @@ import edu.jhu.util.JUnitUtils;
 
 public class SGDTest {
 
-    @Test
+    //TODO: @Test
     public void testActualBatchFunction() {
         fail("Not yet implemented");
     }

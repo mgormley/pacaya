@@ -36,7 +36,7 @@ public class ZhaoFeatureExtractorSpeedTest {
         CoNLL09FileReader reader = new CoNLL09FileReader(train);
         Timer timer = new Timer();
         timer.start();
-        for (int n = 0; n < 49; n++) {
+        for (int n = 0; n < 4; n++) {
             CoNLL09Sentence sent = reader.next();
             SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
             log.info("Initializing sentence...");

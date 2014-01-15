@@ -35,7 +35,7 @@ public class ErmaReaderTest {
     public static final String ERMA_TOY_TEST_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.test.data.ff";
     public static final String ERMA_TOY_FEATURE_FILE = ERMA_TUTORIAL_DIR + "/toy.template.ff";
     
-    @Test
+    // TODO: @Test
     public void testErmaReader() {
         // Read the ERMA files to get ERMA objects.
         SimpleErmaReader ser = new SimpleErmaReader();

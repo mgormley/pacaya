@@ -58,8 +58,9 @@ public class VarConfigTest {
         config.put(w0, 1);
         config.put(w1, 4);
         config.put(w2, 0);
-        
-        assertEquals(1+4*2+0*5, config.getConfigIndex());
+
+        // Vars are now sorted by numStates first. Then later by name.
+        assertEquals(1 + 0*2 + 4*6, config.getConfigIndex());
     }
     
     @Test
@@ -96,13 +97,13 @@ public class VarConfigTest {
         config.put(w2, 0);
 
         HashSet<Integer> set = new HashSet<Integer>();
-        for (int c = 0; c < 3; c++) {
-            config.put(w2, c);
-            for (int b = 0; b < 5; b++) {
-                config.put(w1, b);
+        for (int b = 0; b < 5; b++) {
+            config.put(w1, b);
+            for (int c = 0; c < 3; c++) {
+                config.put(w2, c);
                 for (int a = 0; a < 2; a++) {
                     config.put(w0, a);
-                    int configIndex = a * 1 + b * 2 + c * 10;
+                    int configIndex = a * 1 + c * 2 + b * 6;
                     assertEquals(configIndex, config.getConfigIndex());
                     System.out.println(configIndex);
                     set.add(configIndex);

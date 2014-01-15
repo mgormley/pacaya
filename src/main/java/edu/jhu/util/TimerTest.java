@@ -7,7 +7,7 @@ import org.junit.Test;
 
 public class TimerTest {
 
-    private static final double ERROR_IN_MS = 4;
+    private static final double ERROR_IN_MS = 10;
     private static final double ERROR_IN_SEC = ERROR_IN_MS / 1000.0;
 
     @Test

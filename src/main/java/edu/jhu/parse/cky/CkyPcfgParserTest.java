@@ -97,7 +97,7 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(-11.0, logProb, 1e-13);
     }
     
-    @Test
+    //TODO: Remove reliance on hard-coded paths: @Test
     public void testLargeGrammar() throws IOException {
         LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
         ChartCellType cellType = ChartCellType.FULL;
@@ -121,7 +121,7 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(-46.24, logProb, 1e-2);
     }
     
-    @Test
+    //TODO: Remove reliance on hard-coded paths: @Test
     public void testConrailOnR0() throws IOException {
         LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
         ChartCellType cellType = ChartCellType.FULL;
