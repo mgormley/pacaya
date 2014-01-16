@@ -146,54 +146,39 @@ public class CrfObjective implements Function, BatchFunction {
         
     private double getMarginalLogLikelihoodForExample(int i) {
         FgExample ex = data.get(i);
-        FactorTemplateList fts = data.getTemplates();
         
         // Run inference to compute Z(y,x) by summing over the latent variables w.
         FgInferencer infLat = getInfLat(ex);
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();
-
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
-
-        // "Multiply" in all the fully clamped factors. These are the
-        // factors which do not include any latent variables. 
-        for (int a=0; a<fgLat.getNumFactors(); a++) {
-            Factor f = fgLat.getFactor(a);
-            if (f.getVars().size() == 0) {
-                if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxPred(a);
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    numerator += model.dot(fts.getTemplateId(f), goldConfig, fv);
-                } else {
-                    throw new UnsupportedFactorTypeException(f);
-                }
-            }
-        }
         infLat.clear();
         
         // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
         FgInferencer infLatPred = getInfLatPred(ex);
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();
-
-        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());
-
-        // "Multiply" in all the fully clamped factors. These are the
-        // factors which do not include any latent or predicted variables.
-        // This is a bit of an edge case, but we do it anyway.
+        double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
+        infLatPred.clear();
+        
+        // "Multiply" in all the fully clamped factors to the numerator and denominator. 
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
-            if (f.getVars().size() == 0) {
-                if (f instanceof ExpFamFactor) {
-                    int goldConfig = ex.getGoldConfigIdxPred(a);
-                    FeatureVector fv = ex.getObservationFeatures(a);
-                    denominator += model.dot(fts.getTemplateId(f), goldConfig, fv);
-                } else {
-                    throw new UnsupportedFactorTypeException(f);
+
+            if (fgLat.getFactor(a).getVars().size() == 0) {
+                // These are the factors which do not include any latent variables. 
+                int goldConfig = ex.getGoldConfigIdxPred(a);
+                numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                        : FastMath.log(f.getUnormalizedScore(goldConfig));
+
+                if (fgLatPred.getFactor(a).getVars().size() == 0) {
+                    // These are the factors which do not include any latent or predicted variables.
+                    // This is a bit of an edge case, but we do it anyway.
+                    denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                            : FastMath.log(f.getUnormalizedScore(goldConfig));
                 }
             }
         }
-        infLatPred.clear();
         
         double ll = numerator - denominator;
 
@@ -305,54 +290,7 @@ public class CrfObjective implements Function, BatchFunction {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
-            if (f instanceof GlobalFactor) {
-                // Special case for global factors.
-                continue;
-            } else if (f instanceof ExpFamFactor) {            
-                DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
-                
-                int numConfigs = factorMarginal.getVars().calcNumConfigs();
-                if (numConfigs == 0) {
-                    // If there are no variables in this factor, we still need to get the cached features.
-                    // Update the gradient for each feature.
-                    FeatureVector fv = ex.getObservationFeatures(factorId);
-                    int config = ex.getGoldConfigIdxPred(factorId);
-                    // TODO: this iterator is slow.
-                    for (IntDoubleEntry entry : fv) {
-                        gradient.addIfParamExists(fts.getTemplateId(f), config, entry.index(), multiplier * entry.get());
-                    }
-                } else {
-                    IntIter iter = null;
-                    if (fg == ex.getFgLat()) {
-                        // If this is the numerator then we must clamp the predicted
-                        // variables to determine the correct set of model
-                        // parameters.
-                        VarConfig predVc = ex.getGoldConfigPred(factorId);
-                        iter = IndexForVc.getConfigIter(ex.getFgLatPred().getFactor(factorId).getVars(), predVc);
-                    }
-                    
-                    for (int c=0; c<numConfigs; c++) {       
-                        // Get the probability of the c'th configuration for this factor.
-                        double prob = factorMarginal.getValue(c);
-                        if (inferencer.isLogDomain()) {
-                            prob = FastMath.exp(prob);
-                        }
-                        // Get the feature counts when they are clamped to the c'th configuration for this factor.
-                        FeatureVector fv = ex.getObservationFeatures(factorId);
-    
-                        // The configuration of all the latent/predicted variables,
-                        // where the predicted variables (might) have been clamped.
-                        int config = (iter != null) ? iter.next() : c;
-
-                        // Scale the feature counts by the marginal probability of the c'th configuration.
-                        // Update the gradient for each feature.
-                        gradient.addIfParamExists(fts.getTemplateId(f), config, fv, multiplier * prob);
-                    }
-                    assert(iter == null || !iter.hasNext());
-                }
-            } else {
-                throw new UnsupportedFactorTypeException(f);
-            }
+            f.addExpectedFeatureCounts(gradient, multiplier, inferencer, factorId);
         }
     }
 

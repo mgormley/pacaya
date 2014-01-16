@@ -38,7 +38,7 @@ public class IndexForVc extends IndexFor {
      * @param config Clamped assignment.
      * @return Iterator.
      */
-    public static IntIter getConfigIter(VarSet indexVars, VarConfig config) {
+    public static IndexForVc getConfigIter(VarSet indexVars, VarConfig config) {
         int fixedConfigContrib = getConfigIndex(indexVars, config);
         VarSet forVars = new VarSet(indexVars);
         forVars.removeAll(config.getVars());

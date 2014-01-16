@@ -1,6 +1,9 @@
 package edu.jhu.gm.maxent;
 
 import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
@@ -14,27 +17,27 @@ public class LogLinearEDsTest {
 
     // TODO: The following 4 tests require support for features of x and y.
     // Currently, we only support features of x conjoined with the values of y.
-    //TODO: @Test
+    @Test
     public void testLogLinearModelShapesLogProbs() {
         // Test with inference in the log-domain.
         boolean logDomain = true;        
         testLogLinearModelShapesHelper(logDomain);
     }
     
-    //TODO: @Test
+    @Test
     public void testLogLinearModelShapesProbs() {
         // Test with inference in the prob-domain.
         boolean logDomain = false;        
         testLogLinearModelShapesHelper(logDomain);
     }
     
-    //TODO: @Test
+    @Test
     public void testLogLinearModelShapesOneExampleLogProbs() {
         boolean logDomain = true;
         testLogLinearModelShapesOneExampleHelper(logDomain);
     }
 
-    //TODO: @Test
+    @Test
     public void testLogLinearModelShapesOneExampleProbs() {
         boolean logDomain = false;
         testLogLinearModelShapesOneExampleHelper(logDomain);

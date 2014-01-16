@@ -113,4 +113,11 @@ public class IndexFor implements IntIter {
         return( _index >= 0 );
     }
     
+    /**
+     * For each variable in forVars, the current state.
+     */
+    public int[] getState() {
+        return Arrays.copyOf(_state, _state.length);
+    }
+    
 }

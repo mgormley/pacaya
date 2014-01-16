@@ -103,6 +103,30 @@ public class IndexForVcTest {
         assertEquals(3, configs.length);
         Assert.assertArrayEquals(new int[]{25, 27, 29}, configs);
     }
+    
+
+    @Test
+    public void testGetState() {
+        Var v0 = getVar(0, 2);
+        Var v1 = getVar(1, 3);
+        Var v2 = getVar(2, 5);
+
+        VarSet vars1 = new VarSet();
+        vars1.add(v0);
+        vars1.add(v1);
+        vars1.add(v2);
+
+        VarConfig vc2 = new VarConfig();
+        vc2.put(v2, 2);
+        
+        IndexForVc iter = IndexForVc.getConfigIter(vars1, vc2);
+        
+        // TODO: This doesn't actually test anything.
+        while (iter.hasNext()) {
+            System.out.println(Arrays.toString(iter.getState()));
+            iter.next();
+        }
+    }
 
     public static Var getVar(int id, int numStates) {
         ArrayList<String> stateNames = new ArrayList<String>();

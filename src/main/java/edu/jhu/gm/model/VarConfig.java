@@ -14,6 +14,7 @@ import java.util.HashMap;
 public class VarConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    // TODO: Internally, we should store an int[] not a HashMap.
     private HashMap<Var,Integer> config;
     private VarSet vars;
     

@@ -119,23 +119,36 @@ public class DenseFactor implements Serializable {
         unclmpVars.removeAll(clmpVars); 
 
         DenseFactor clmp = new DenseFactor(unclmpVars);
-        IntIter iter = unclmpVars.getConfigIter(this.vars);
+        IntIter iter = IndexForVc.getConfigIter(this.vars, clmpVarConfig);
         
-        int numEqual = 0;
         if (clmp.values.length > 0) {
-            int numConfigs = vars.calcNumConfigs();
-            for (int c=0; c<numConfigs; c++) {
-                VarConfig curClmpSubset = this.vars.getVarConfig(c).getSubset(clmpVars);
-                assert curClmpSubset.size() == clmpVarConfig.size();
-                int uc = iter.next();
-                if (clmpVarConfig.equals(curClmpSubset)) {
-                    clmp.values[uc] = this.values[c];
-                    numEqual++;
-                }
+            for (int c=0; c<clmp.values.length; c++) {
+                int config = iter.next();
+                clmp.values[c] = this.values[config];
             }
         }
-        assert numEqual == unclmpVars.calcNumConfigs() : "numEqual=" + numEqual;
         return clmp;
+        
+        // TODO: Remove after it has been tested.
+        //
+        // This was the old way, but it was unnecessarily slow.
+        //
+        //        IntIter iter = unclmpVars.getConfigIter(this.vars);        
+        //        int numEqual = 0;
+        //        if (clmp.values.length > 0) {
+        //            int numConfigs = vars.calcNumConfigs();
+        //            for (int c=0; c<numConfigs; c++) {
+        //                VarConfig curClmpSubset = this.vars.getVarConfig(c).getSubset(clmpVars);
+        //                assert curClmpSubset.size() == clmpVarConfig.size();
+        //                int uc = iter.next();
+        //                if (clmpVarConfig.equals(curClmpSubset)) {
+        //                    clmp.values[uc] = this.values[c];
+        //                    numEqual++;
+        //                }
+        //            }
+        //        }
+        //        assert numEqual == unclmpVars.calcNumConfigs() : "numEqual=" + numEqual;
+        //        return clmp;
     }
     
     /** Gets the variables associated with this factor. */

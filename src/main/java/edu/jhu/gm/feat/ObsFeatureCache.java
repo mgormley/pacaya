@@ -72,7 +72,8 @@ public class ObsFeatureCache implements ObsFeatureExtractor, Serializable {
 
     @Override
     public void clear() {
-        featExtractor = null;
+        // Don't clear the cached features since that would defeat the point.
+        // TODO: Consider removing the clear() method.
     }
     
 }

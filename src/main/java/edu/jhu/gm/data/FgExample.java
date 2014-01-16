@@ -74,7 +74,11 @@ public class FgExample implements Serializable {
                         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
-        fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));        
+        if (observedVars.size() > 0) {
+            fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));
+        } else {
+            fgLatPred = fg;
+        }
         
         // Get a copy of the factor graph where the observed and predicted variables are clamped.
         List<Var> predictedVars = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED);
@@ -92,13 +96,11 @@ public class FgExample implements Serializable {
         
         fgClampTimer.stop();
 
+        // Cache the features in order to ensure we correctly populate the FeatureTemplateList.
         featCacheTimer.start();
-
         this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
         this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
-        cacheObsFeats();
-        this.featExtractor.clear();
-        
+        this.featExtractor.clear();        
         featCacheTimer.stop();
     }
 
@@ -126,26 +128,6 @@ public class FgExample implements Serializable {
                 throw new IllegalStateException("Vars missing from train configuration for factor: " + a);
             }
         }
-    }
-
-    private void cacheObsFeats() {
-        getFvs(fg, featExtractor);
-    }
-    
-    /** Gets the observation feature vector for each factor. */
-    private static List<FeatureVector> getFvs(FactorGraph fg, ObsFeatureExtractor featExtractor) {
-        List<FeatureVector> fvs = new ArrayList<FeatureVector>(fg.getNumFactors());        
-        for (int a=0; a<fg.getNumFactors(); a++) {
-            Factor f = fg.getFactor(a);
-            if (f instanceof GlobalFactor) {
-                fvs.add(null);                
-            } else if (f instanceof ExpFamFactor) {
-                fvs.add(featExtractor.calcObsFeatureVector(a));
-            } else {
-                throw new UnsupportedFactorTypeException(f);
-            }
-        }
-        return fvs;
     }
     
     /**
@@ -189,42 +171,7 @@ public class FgExample implements Serializable {
     private FactorGraph getUpdatedFactorGraph(FactorGraph fg, FgModel model, boolean logDomain) {
         for (int a=0; a < fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
-            if (f instanceof GlobalFactor) {
-                // Currently, global factors do not support features, and
-                // therefore have no model parameters.
-                continue;
-            } else if (f instanceof ExpFamFactor) {
-                
-                IntIter iter = null;
-                if (fg == this.getFgLat()) {
-                    // If this is the numerator then we must clamp the predicted
-                    // variables to determine the correct set of model
-                    // parameters.
-                    VarConfig predVc = this.getGoldConfigPred(a);
-                    iter = IndexForVc.getConfigIter(this.getFgLatPred().getFactor(a).getVars(), predVc);
-                }
-                
-                DenseFactor factor = (DenseFactor) f;
-                int numConfigs = factor.getVars().calcNumConfigs();
-                for (int c=0; c<numConfigs; c++) {
-    
-                    // The configuration of all the latent/predicted variables,
-                    // where the predicted variables (might) have been clamped.
-                    int config = (iter != null) ? iter.next() : c;
-                    
-                    FeatureVector fv = getObservationFeatures(a);
-                    double dot = model.dot(model.getTemplates().getTemplateId(f), config, fv);
-                    if (logDomain) {
-                        // Set to log of the factor's value.
-                        factor.setValue(c, dot);
-                    } else {
-                        factor.setValue(c, FastMath.exp(dot));
-                    }
-                }
-
-            } else {
-                throw new UnsupportedFactorTypeException(f);        
-            }        
+            f.updateFromModel(model, logDomain);
         }
         return fg;
     }

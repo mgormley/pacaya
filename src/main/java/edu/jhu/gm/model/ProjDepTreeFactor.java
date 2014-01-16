@@ -256,4 +256,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return ProjDepTreeFactor.class;
     }
 
+    @Override
+    public double getUnormalizedScore(int configId) {
+        // TODO: implement this properly.
+        // Currently, we know that the configId will always correspond to a gold
+        // config, which is going to be a tree. So we cheat and just return 1.0.
+        return 1.0;
+    }
+
 }

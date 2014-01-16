@@ -76,12 +76,15 @@ public class FactorTemplateList implements Serializable {
     public void update(FactorGraph fg) {
         for (Factor f : fg.getFactors()) {
             if (f instanceof GlobalFactor) {
+                // We don't want to expand out our model representation to
+                // index over the (potentially exponential) number of configurations 
+                // represented by a global factor.
                 continue;
             } else if (f instanceof ExpFamFactor) {
                 lookupTemplateId(f);
             } else {
                 throw new UnsupportedFactorTypeException(f);
-            }            
+            }
         }
     }
 

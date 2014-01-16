@@ -6,11 +6,11 @@ import java.util.List;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
@@ -24,7 +24,6 @@ import edu.jhu.util.Alphabet;
  * A factor for FgExamples constructed from LogLinearExDesc objects.
  * @author mgormley
  */
-@Deprecated
 public class LogLinearEDs {
 
     /**
@@ -76,7 +75,7 @@ public class LogLinearEDs {
     
     public FgExampleList getData() {
         FactorTemplateList fts = new FactorTemplateList();
-        Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
+        final Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
         fts.add(new FactorTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
         
         FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
@@ -88,26 +87,38 @@ public class LogLinearEDs {
                 
                 FactorGraph fg = new FactorGraph();
                 v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                ExpFamFactor f0 = new ExpFamFactor(new VarSet(v0), TEMPLATE_KEY);
+                final VarSet varSet = new VarSet(v0);
+                ExpFamFactor f0 = new ExpFamFactor(varSet, TEMPLATE_KEY);
                 fg.addFactor(f0);
-                ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
+                // This FeatureExtractor was restored from commit [31ea8a7] which followed a commit
+                // with description "Updating code to cache only observed features 
+                // and implicitly construct features with the predicted variables."
+                FeatureExtractor featExtractor = new FeatureExtractor() {
                     @Override
-                    public FeatureVector calcObsFeatureVector(int factorId) {
-                        // TODO: This doesn't do the right thing...we
-                        // actually want features of the predicted state,
-                        // which isn't possible to set when only looking at
-                        // the observations.
-                        // Instead we need to be aware of the VarConfig of the predicted vars.
-                        return desc.getFeatures();
-                    }
-                    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                            VarConfig goldConfig, FactorTemplateList fts) {             
-                        // Do nothing.               
-                    }
-                    public void clear() {
-                        // Do nothing.
+                    public FeatureVector calcFeatureVector(int factorId, int configId) {
+                        VarConfig varConfig = varSet.getVarConfig(configId);
+                        return descList.get(varConfig.getState(v0)).getFeatures();
                     }
                 };
+                // TODO: Remove this.
+                //                ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
+                //                    @Override
+                //                    public FeatureVector calcObsFeatureVector(int factorId) {
+                //                        // TODO: This doesn't do the right thing...we
+                //                        // actually want features of the predicted state,
+                //                        // which isn't possible to set when only looking at
+                //                        // the observations.
+                //                        // Instead we need to be aware of the VarConfig of the predicted vars.
+                //                        return desc.getFeatures();
+                //                    }
+                //                    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
+                //                            VarConfig goldConfig, FactorTemplateList fts) {             
+                //                        // Do nothing.               
+                //                    }
+                //                    public void clear() {
+                //                        // Do nothing.
+                //                    }
+                //                };
                 data.add(new FgExample(fg, trainConfig, featExtractor, fts));
             }
             state++;
