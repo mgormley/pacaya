@@ -180,7 +180,8 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             }
             return sb.toString();
         } else {
-            return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
+            throw new RuntimeException("This is probably a bug. We should only be considering OBSERVED variables.");
+            //return Integer.toString(goldConfig.getConfigIndexOfSubset(f.getVars()));
         }
     }
 

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -14,20 +13,12 @@ import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
-import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.IFgModel;
-import edu.jhu.gm.model.IndexForVc;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.util.IntIter;
 import edu.jhu.optimize.BatchFunction;
 import edu.jhu.optimize.Function;
-import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Threads;

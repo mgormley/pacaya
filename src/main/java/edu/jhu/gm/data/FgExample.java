@@ -50,11 +50,14 @@ public class FgExample implements Serializable {
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
-    /** Feature extractor on the observation variables only (i.e. the values of the observation functions). */
-    private ObsFeatureExtractor featExtractor;
 
     public Timer fgClampTimer = new Timer(); 
     public Timer featCacheTimer = new Timer(); 
+    
+    @Deprecated
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FactorTemplateList fts) {
+        
+    }
     
     /**
      * Constructs a train or test example for a Factor Graph.
@@ -65,7 +68,7 @@ public class FgExample implements Serializable {
      * @param featExtractor Feature extractor on the observations only (i.e. the
      *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FactorTemplateList fts) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig, FactorTemplateList fts) {
         checkGoldConfig(fg, goldConfig);
         this.fg = fg;
         this.goldConfig = goldConfig;
@@ -98,9 +101,7 @@ public class FgExample implements Serializable {
 
         // Cache the features in order to ensure we correctly populate the FeatureTemplateList.
         featCacheTimer.start();
-        this.featExtractor = new ObsFeatureCache(fgLatPred, fe);
-        this.featExtractor.init(fg, fgLat, fgLatPred, goldConfig, fts);
-        this.featExtractor.clear();        
+        // TODO: is there a way to cache the features at this point. Or should we?
         featCacheTimer.stop();
     }
 

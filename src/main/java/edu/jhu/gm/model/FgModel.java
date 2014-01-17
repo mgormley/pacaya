@@ -37,7 +37,7 @@ public class FgModel implements Serializable, IFgModel {
     /** The number of model parameters. */
     private int numParams;
     
-    private FgModel(int numParams) {
+    public FgModel(int numParams) {
         this.numParams = numParams;
         this.params = new IntDoubleDenseVector(numParams);
         for (int i=0; i<numParams; i++) {
