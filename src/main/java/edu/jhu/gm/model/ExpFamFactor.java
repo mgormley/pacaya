@@ -43,7 +43,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
         DenseFactor df = super.getClamped(clmpVarConfig);
         return new ClampedExpFamFactor(df, templateKey, clmpVarConfig, this);
     }
-    
+
+    protected abstract FeatureVector getFeatures(int config);
+        
     /** Gets the unnormalized numerator value contributed by this factor. */
     public double getUnormalizedScore(int configId) {
         return super.getUnormalizedScore(configId);
@@ -62,22 +64,24 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
         
         ExpFamFactor f = this;
         int numConfigs = f.getVars().calcNumConfigs();
-        for (int c=0; c<numConfigs; c++) {
-
-            // The configuration of all the latent/predicted variables,
-            // where the predicted variables (might) have been clamped.
-            int config = (iter != null) ? iter.next() : c;
-            
-            FeatureVector fv = getFeatures(config);
-            double dot = model.dot(fv);
-            if (logDomain) {
-                // Set to log of the factor's value.
-                f.setValue(c, dot);
-            } else {
-                f.setValue(c, FastMath.exp(dot));
+        if (numConfigs > 0) {            
+            for (int c=0; c<numConfigs; c++) {
+    
+                // The configuration of all the latent/predicted variables,
+                // where the predicted variables (might) have been clamped.
+                int config = (iter != null) ? iter.next() : c;
+                
+                FeatureVector fv = getFeatures(config);
+                double dot = model.dot(fv);
+                if (logDomain) {
+                    // Set to log of the factor's value.
+                    f.setValue(c, dot);
+                } else {
+                    f.setValue(c, FastMath.exp(dot));
+                }
             }
+            assert(iter == null || !iter.hasNext());
         }
-        assert(iter == null || !iter.hasNext());
     }
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
@@ -114,9 +118,6 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
             assert(iter == null || !iter.hasNext());
         }
     }
-
-    protected abstract FeatureVector getFeatures(int config);
-    
     
     private static class ClampedExpFamFactor extends ExpFamFactor {
         
