@@ -11,12 +11,13 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.gm.train.CrfObjectiveTest;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 
 public class LogLinearEDsTest {
 
-    // TODO: The following 4 tests require support for features of x and y.
-    // Currently, we only support features of x conjoined with the values of y.
+    // The following 4 tests require support for features of x and y.
+    
     @Test
     public void testLogLinearModelShapesLogProbs() {
         // Test with inference in the log-domain.
@@ -30,7 +31,19 @@ public class LogLinearEDsTest {
         boolean logDomain = false;        
         testLogLinearModelShapesHelper(logDomain);
     }
-    
+
+    @Test
+    public void testLogLinearModelShapesTwoExamplesLogProbs() {
+        boolean logDomain = true;
+        testLogLinearModelShapesTwoExamplesHelper(logDomain);
+    }
+
+    @Test
+    public void testLogLinearModelShapesTwoExamplesProbs() {
+        boolean logDomain = false;
+        testLogLinearModelShapesTwoExamplesHelper(logDomain);
+    }
+
     @Test
     public void testLogLinearModelShapesOneExampleLogProbs() {
         boolean logDomain = true;
@@ -51,17 +64,17 @@ public class LogLinearEDsTest {
         exs.addEx(5);
 
         double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getData().getTemplates());
+        FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
         // Test log-likelihood.
         CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
         obj.setPoint(params);
         
-        // Test log-likelihood.
+        // Test average log-likelihood.
         double ll = obj.getValue();
         System.out.println(ll);
-        assertEquals(-95.531, ll, 1e-3);
+        assertEquals(-95.531 / (30.+15.+10.+5.), ll, 1e-3);
         
         // Test observed feature counts.
         FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
@@ -76,7 +89,47 @@ public class LogLinearEDsTest {
         // Test gradient.        
         double[] gradient = new double[params.length]; 
         obj.getGradient(gradient);        
-        JUnitUtils.assertArrayEquals(new double[]{-12.154447609345993, -12.847824678672943}, gradient, 1e-3);
+        double[] expectedGradient = new double[]{-12.154447609345993, -12.847824678672943};
+        DoubleArrays.scale(expectedGradient, 1.0 / (30.+15.+10.+5.));
+        JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
+    }
+
+    private void testLogLinearModelShapesTwoExamplesHelper(boolean logDomain) {
+        LogLinearEDs exs = new LogLinearEDs();
+        exs.addEx(1, "circle");
+        exs.addEx(1, "solid");
+        double[] params = new double[]{3.0, 2.0};
+        FgModel model = new FgModel(2);
+        model.updateModelFromDoubles(params);
+        
+        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
+        infFactory = CrfObjectiveTest.getInfFactory(logDomain);
+        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
+        obj.setPoint(params);        
+        
+        assertEquals(2, exs.getAlphabet().size());
+
+        // Test average log-likelihood.
+        double ll = obj.getValue();        
+        System.out.println(ll + " " + Math.exp(ll));
+        assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
+        
+        // Test observed feature counts.
+        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        assertEquals(1, obsFeats.get(0), 1e-13);
+        assertEquals(1, obsFeats.get(1), 1e-13);        
+        
+        // Test expected feature counts.
+        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        assertEquals(1.4621, expFeats.get(0), 1e-3);
+        assertEquals(0.5378, expFeats.get(1), 1e-3);
+        
+        // Test gradient.         
+        double[] gradient = new double[params.length]; 
+        obj.getGradient(gradient);        
+        double[] expectedGradient = new double[]{1.0 - 1.4621, 1.0 - 0.5378};
+        DoubleArrays.scale(expectedGradient, 1.0/2.0);
+        JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
     
     private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
@@ -84,7 +137,7 @@ public class LogLinearEDsTest {
         exs.addEx(1, "circle");
         exs.addEx(0, "solid");
         double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(exs.getData().getTemplates());
+        FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
         FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
