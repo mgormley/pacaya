@@ -31,13 +31,14 @@ public class IncrIntIter implements IntIter {
         if (!hasNext()) {
             throw new IllegalStateException();
         }
-        cur = cur + incr;
-        return cur;
+        int tmp = cur;
+        cur += incr;
+        return tmp;
     }
 
     @Override
     public boolean hasNext() {
-        return cur + incr < end;
+        return cur < end;
     }
 
     @Override
