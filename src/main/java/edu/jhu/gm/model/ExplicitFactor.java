@@ -1,6 +1,5 @@
 package edu.jhu.gm.model;
 
-import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.FgInferencer;
 
 
@@ -12,44 +11,24 @@ import edu.jhu.gm.inf.FgInferencer;
 public class ExplicitFactor extends DenseFactor implements Factor {
 
     private static final long serialVersionUID = 1L;
-
-    // The unique key identifying the template for this factor.
-    protected Object templateKey;
-    // The ID of the template for this factor -- which is only ever set by the
-    // FeatureTemplateList.
-    private int templateId = -1;
-        
-    public ExplicitFactor(VarSet vars, Object templateKey) {
+    
+    private int id = -1;
+    
+    public ExplicitFactor(VarSet vars) {
         super(vars);
-        this.templateKey = templateKey;
     }
     
     public ExplicitFactor(ExplicitFactor other) {
         super(other);
-        this.templateKey = other.templateKey;               
     }
     
-    public ExplicitFactor(DenseFactor other, Object templateId) {
+    public ExplicitFactor(DenseFactor other) {
         super(other);
-        this.templateKey = templateId;               
     }
 
     public ExplicitFactor getClamped(VarConfig clmpVarConfig) {
         DenseFactor df = super.getClamped(clmpVarConfig);
-        return new ExplicitFactor(df, templateKey);
-    }
-
-    @Override
-    public Object getTemplateKey() {
-        return templateKey;
-    }
-    
-    public int getTemplateId() {
-        return templateId;
-    }
-    
-    public void setTemplateId(int templateId) {
-        this.templateId = templateId;
+        return new ExplicitFactor(df);
     }
     
     public void updateFromModel(FgModel model, boolean logDomain) {
@@ -62,6 +41,16 @@ public class ExplicitFactor extends DenseFactor implements Factor {
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No op since this type of factor doesn't have any features.
+    }
+
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(int id) {
+        this.id = id;
     }
 
 }

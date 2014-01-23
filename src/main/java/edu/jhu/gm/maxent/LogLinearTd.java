@@ -170,7 +170,7 @@ public class LogLinearTd {
                 // Do nothing.               
             }
         };
-        //obsFe = new ObsFeatureCache(obsFe);
+        obsFe = new ObsFeatureCache(obsFe);
         ExpFamFactor f0 = new ObsFeExpFamFactor(vars, TEMPLATE_KEY, ofc, obsFe);
         fg.addFactor(f0);
         return new FgExample(fg, trainConfig, obsFe, fts);

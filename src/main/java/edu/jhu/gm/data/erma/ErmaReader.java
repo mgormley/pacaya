@@ -210,7 +210,7 @@ public class ErmaReader {
                 
                 // TODO: Get a feature template here.
                 Object templateKey = "INCORRECT_TEMPLATE_KEY";
-                fac = new ExpFamFactor(Ivars, templateKey);
+                fac = new ExpFamFactor(Ivars);
                 facs.put(key,fac);
                 //ArrayList<set<feature* > > feat_r_vec;
                 

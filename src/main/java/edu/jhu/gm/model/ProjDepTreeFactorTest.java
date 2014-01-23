@@ -13,7 +13,6 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.collections.Lists;
 
 public class ProjDepTreeFactorTest {
@@ -48,11 +47,11 @@ public class ProjDepTreeFactorTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -131,11 +130,11 @@ public class ProjDepTreeFactorTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -152,7 +151,7 @@ public class ProjDepTreeFactorTest {
                 
         // Add an extra variable over which we will marginalize.        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
-        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar, childVars[0][1]), SrlFactorTemplate.LINK_ROLE_BINARY);
+        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 3);
         roleFac.setValue(2, 5);
@@ -224,11 +223,11 @@ public class ProjDepTreeFactorTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY);
+                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -244,7 +243,7 @@ public class ProjDepTreeFactorTest {
         fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
-        ExpFamFactor roleLinkFac = new ExpFamFactor(new VarSet(childVars[1][0], roleVar), SrlFactorTemplate.LINK_ROLE_BINARY);
+        ExpFamFactor roleLinkFac = new ExpFamFactor(new VarSet(childVars[1][0], roleVar));
         roleLinkFac.setValue(0, 1);
         roleLinkFac.setValue(1, 1);
         roleLinkFac.setValue(2, 1);
@@ -254,7 +253,7 @@ public class ProjDepTreeFactorTest {
             roleLinkFac.convertRealToLog();
         }
         fg.addFactor(roleLinkFac);
-        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar), SrlFactorTemplate.ROLE_UNARY);
+        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar));
         roleFac.set(1.0);
         if (logDomain) {
             roleFac.convertRealToLog();

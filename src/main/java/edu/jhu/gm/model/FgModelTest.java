@@ -210,7 +210,7 @@ public class FgModelTest {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();
-        fg.addFactor(new ExpFamFactor(new VarSet(v1, v2), "key2"));
+        fg.addFactor(new ExpFamFactor(new VarSet(v1, v2)));
         
         VarConfig vc = new VarConfig();
         vc.put(v1, state1);

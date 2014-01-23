@@ -257,9 +257,15 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
      * @param var The factor to add.
      * @return The node for this factor.
      */
-    public FgNode addFactor(Factor factor) {
+    public FgNode addFactor(Factor factor) {        
         FgNode fnode = nodeMap.get(factor);
         if (fnode == null) {
+            int id = factors.size();
+            if (factor.getId() != -1 && factor.getId() != id) {
+                throw new IllegalStateException("Factor id already set, but incorrect: " + id);
+            }
+            factor.setId(id);
+            
             // Factor was not yet in the factor graph.
             //
             // Add the factor.

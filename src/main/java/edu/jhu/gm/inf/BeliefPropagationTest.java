@@ -26,7 +26,7 @@ public class BeliefPropagationTest {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "tran"); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -85,9 +85,9 @@ public class BeliefPropagationTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
         
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit");; 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit");; 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2), "emit");; 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0));; 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1));; 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2));; 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);

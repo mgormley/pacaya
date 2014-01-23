@@ -24,8 +24,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     protected IntIter iter;
     protected int clmpConfigId = -1;
 
-    public ExpFamFactor(VarSet vars, Object templateKey) {
-        super(vars, templateKey);
+    public ExpFamFactor(VarSet vars) {
+        super(vars);
         this.iter = new IncrIntIter(getVars().calcNumConfigs());
     }
     
@@ -34,8 +34,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         this.iter = new IncrIntIter(getVars().calcNumConfigs());
     }
     
-    public ExpFamFactor(DenseFactor other, Object templateId) {
-        super(other, templateId);
+    public ExpFamFactor(DenseFactor other) {
+        super(other);
         this.iter = new IncrIntIter(getVars().calcNumConfigs());
     }
 
@@ -116,7 +116,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
         DenseFactor df = super.getClamped(clmpVarConfig);
-        return new ClampedExpFamFactor(df, templateKey, clmpVarConfig, this);
+        return new ClampedExpFamFactor(df, clmpVarConfig, this);
     }
     
     protected static class ClampedExpFamFactor extends ExpFamFactor {
@@ -125,8 +125,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         private ExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedExpFamFactor(DenseFactor other, Object templateKey, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
-            super(other, templateKey);
+        public ClampedExpFamFactor(DenseFactor other, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
+            super(other);
             this.unclmpFactor = unclmpFactor;
             VarSet unclmpVarSet = unclmpFactor.getVars();
             if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {

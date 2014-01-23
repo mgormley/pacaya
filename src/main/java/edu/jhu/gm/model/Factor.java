@@ -40,17 +40,7 @@ public interface Factor extends Serializable {
      */
     void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
 
-    // TODO: Move these methods out to ObsFeExpFamFactor.
-    /** Gets an object which uniquely identifies the feature template for this factor. */
-    Object getTemplateKey();
-    
-    /** Gets the template ID or -1 if not set. */
-    int getTemplateId();
-    
-    /** Sets the template ID. */
-    void setTemplateId(int templateId);
-    
-    //int getId();
-    //int setId(int id);    
+    int getId();
+    void setId(int id);    
     
 }

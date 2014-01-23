@@ -15,8 +15,10 @@ import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.ObsFeatureCarrier;
+import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
@@ -43,17 +45,31 @@ public class ObsFeatureConjoiner implements Serializable {
      * 
      * @author mgormley
      */
-    public static abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatureCarrier {
+    public static abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
     
         private static final long serialVersionUID = 1L;
         private ObsFeatureConjoiner ofc;
+
+        // The unique key identifying the template for this factor.
+        protected Object templateKey;
+        // The ID of the template for this factor -- which is only ever set by the
+        // FeatureTemplateList.
+        private int templateId = -1;
         
         public ObsCjExpFamFactor(VarSet vars, Object templateKey, ObsFeatureConjoiner ofc) {
-            super(vars, templateKey);
+            super(vars);
             this.ofc = ofc;
+            this.templateKey = templateKey;
             // TODO: setTemplateId(ofc.getTemplates().getTemplateId(this));
         }
         
+        public ObsCjExpFamFactor(DenseFactor other, Object templateKey, ObsFeatureConjoiner ofc) {
+            super(other);
+            this.ofc = ofc;
+            this.templateKey = templateKey;
+            // TODO: setTemplateId(ofc.getTemplates().getTemplateId(this));
+        }
+
         @Override
         public abstract FeatureVector getObsFeatures();
         
@@ -62,7 +78,7 @@ public class ObsFeatureConjoiner implements Serializable {
             if (!ofc.isInitialized()) {
                 throw new IllegalStateException("ObsFeatureConjoiner not initialized");
             }
-            Factor factor = this;
+            ObsCjExpFamFactor factor = this;
             final int ft = factor.getTemplateId();
             FeatureVector obsFv = ((ObsFeatureCarrier) factor).getObsFeatures();
             final FeatureVector fv = new FeatureVector(obsFv.size());
@@ -84,7 +100,7 @@ public class ObsFeatureConjoiner implements Serializable {
             return new ClampedObsCjExpFamFactor(df, templateKey, clmpVarConfig, this);
         }
         
-        static class ClampedObsCjExpFamFactor extends ClampedExpFamFactor implements ObsFeatureCarrier {
+        static class ClampedObsCjExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
             
             private static final long serialVersionUID = 1L;
             // The unclamped factor from which this one was derived
@@ -92,8 +108,28 @@ public class ObsFeatureConjoiner implements Serializable {
             
             // Used only to create clamped factors.
             public ClampedObsCjExpFamFactor(DenseFactor other, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
-                super(other, templateKey, clmpVarConfig, unclmpFactor);
-                this.unclmpFactor = unclmpFactor;                
+                super(other, templateKey, unclmpFactor.ofc);
+                this.unclmpFactor = unclmpFactor;  
+                VarSet unclmpVarSet = unclmpFactor.getVars();
+                if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
+                    // Only store the unclampedVarSet if it does not contain OBSERVED variables.
+                    // This corresponds to only storing the VarSet if this is a factor graph 
+                    // containing only latent variables.
+                    //
+                    // TODO: Switch this to an option.
+                    //
+                    // If this is the numerator then we must clamp the predicted
+                    // variables to determine the correct set of model
+                    // parameters.
+                    iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
+                    clmpConfigId = clmpVarConfig.getConfigIndex();
+                }
+            }
+
+            @Override
+            public FeatureVector getFeatures(int config) {
+                // Pass through to the unclamped factor.
+                return unclmpFactor.getFeatures(config);
             }
 
             @Override
@@ -103,10 +139,25 @@ public class ObsFeatureConjoiner implements Serializable {
             }
             
         }
+
+        @Override
+        public Object getTemplateKey() {
+            return templateKey;
+        }
+        
+        @Override
+        public int getTemplateId() {
+            return templateId;
+        }
+        
+        @Override
+        public void setTemplateId(int templateId) {
+            this.templateId = templateId;
+        }
         
     }
     
-    public static class ObsFeExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier {
+    public static class ObsFeExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
         
         private static final long serialVersionUID = 1L;
         private ObsFeatureExtractor obsFe;
@@ -238,8 +289,8 @@ public class ObsFeatureConjoiner implements Serializable {
             FgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
-                if (f instanceof ObsFeatureCarrier) {
-                    int t = templates.getTemplateId(f);
+                if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
+                    int t = templates.getTemplateId((TemplateFactor) f);
                     if (t != -1) {
                         FeatureVector fv = ((ObsFeatureCarrier) f).getObsFeatures();                            
                         if (f.getVars().size() == 0) {

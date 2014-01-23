@@ -14,8 +14,8 @@ public class FeExpFamFactor extends ExpFamFactor {
     private static final long serialVersionUID = 1L;
     private FeatureExtractor fe;
     
-    public FeExpFamFactor(VarSet vars, Object templateKey, FeatureExtractor fe) {
-        super(vars, templateKey);
+    public FeExpFamFactor(VarSet vars, FeatureExtractor fe) {
+        super(vars);
         this.fe = fe;
     }
 

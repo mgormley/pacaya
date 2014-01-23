@@ -97,10 +97,10 @@ public class LogLinearEDs {
                     public void init(FgExample ex) {
                     }
                 };
-                //TODO: fe = new FeatureCache(fe);
-                ExpFamFactor f0 = new FeExpFamFactor(varSet, TEMPLATE_KEY, fe);
+                fe = new FeatureCache(fe);
+                ExpFamFactor f0 = new FeExpFamFactor(varSet, fe);
                 fg.addFactor(f0);
-                data.add(new FgExample(fg, trainConfig));
+                data.add(new FgExample(fg, trainConfig, fe));
             }
             state++;
         }

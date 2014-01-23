@@ -252,11 +252,6 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     @Override
-    public Object getTemplateKey() {
-        return ProjDepTreeFactor.class;
-    }
-
-    @Override
     public double getUnormalizedScore(int configId) {
         // TODO: implement this properly.
         // Currently, we know that the configId will always correspond to a gold

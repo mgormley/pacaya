@@ -34,13 +34,13 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2), "emit"); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0)); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1)); 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2)); 
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
-        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1)); 
+        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2)); 
         
         fg.addFactor(emit0);
         assertEquals(1, fg.getConnectedComponents().size());
@@ -99,9 +99,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", null);
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1), "emit"); 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2), "emit"); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0)); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1)); 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -111,8 +111,8 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
-        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1)); 
+        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);
@@ -175,9 +175,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0, w0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1, w1), "emit"); 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2, w2), "emit"); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0, w0)); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1, w1)); 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2, w2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -187,8 +187,8 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
-        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1)); 
+        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);
@@ -244,9 +244,9 @@ public class FactorGraphTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
 
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(z0, w0), "emit"); 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(z1, w1), "emit"); 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(z2, w2), "emit"); 
+        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(z0, w0)); 
+        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(z1, w1)); 
+        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(z2, w2)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -256,9 +256,9 @@ public class FactorGraphTest {
         emit2.setValue(1, 0.5);
         
         // Latent emission factors. 
-        ExpFamFactor emitL0 = new ExpFamFactor(new VarSet(t0, z0), "latent-emit"); 
-        ExpFamFactor emitL1 = new ExpFamFactor(new VarSet(t1, z1), "latent-emit"); 
-        ExpFamFactor emitL2 = new ExpFamFactor(new VarSet(t2, z2), "latent-emit"); 
+        ExpFamFactor emitL0 = new ExpFamFactor(new VarSet(t0, z0)); 
+        ExpFamFactor emitL1 = new ExpFamFactor(new VarSet(t1, z1)); 
+        ExpFamFactor emitL2 = new ExpFamFactor(new VarSet(t2, z2)); 
 
         emitL0.setValue(0, 1.1);
         emitL0.setValue(1, 1.9);
@@ -268,8 +268,8 @@ public class FactorGraphTest {
         emitL2.setValue(1, 1.5);
         
         // Transition factors.
-        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1), "tran"); 
-        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2), "tran"); 
+        ExpFamFactor tran0 = new ExpFamFactor(new VarSet(t0, t1)); 
+        ExpFamFactor tran1 = new ExpFamFactor(new VarSet(t1, t2)); 
         
         tran0.set(1);
         tran0.setValue(0, 0.2);

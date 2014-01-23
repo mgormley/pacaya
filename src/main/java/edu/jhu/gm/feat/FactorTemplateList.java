@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 
@@ -73,17 +73,17 @@ public class FactorTemplateList implements Serializable {
 
     public void update(FactorGraph fg) {
         for (Factor f : fg.getFactors()) {
-            if (f instanceof ObsFeExpFamFactor) {
-                lookupTemplateId(f);
+            if (f instanceof TemplateFactor) {
+                lookupTemplateId((TemplateFactor) f);
             }
         }
     }
 
-    private FactorTemplate lookupTemplate(Factor f) {
+    private FactorTemplate lookupTemplate(TemplateFactor f) {
         return fts.get(getTemplateId(f));
     }
     
-    private int lookupTemplateId(Factor f) {
+    private int lookupTemplateId(TemplateFactor f) {
         int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
         if (index >= fts.size()) {
             // Add the template.
@@ -104,11 +104,11 @@ public class FactorTemplateList implements Serializable {
         return index;
     }
 
-    public FactorTemplate getTemplate(Factor f) {
+    public FactorTemplate getTemplate(TemplateFactor f) {
         return fts.get(getTemplateId(f));
     }
     
-    public int getTemplateId(Factor f) {
+    public int getTemplateId(TemplateFactor f) {
         // Try to get the cached id, and only lookup the id in the hash map if it's not there.
         if (f.getTemplateId() != -1) {
             return f.getTemplateId();
