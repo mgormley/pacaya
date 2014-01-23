@@ -11,8 +11,8 @@ public class SrlFgModel extends FgModel {
     private SrlFeatureExtractorPrm srlFePrm;
     private ObsFeatureConjoiner ofc;
     
-    public SrlFgModel(int numParams, CorpusStatistics cs, ObsFeatureConjoiner ofc, SrlFeatureExtractorPrm srlFePrm) {
-        super(numParams);
+    public SrlFgModel(CorpusStatistics cs, ObsFeatureConjoiner ofc, SrlFeatureExtractorPrm srlFePrm) {
+        super(ofc.getNumParams());
         this.cs = cs;
         this.ofc = ofc;
         this.srlFePrm = srlFePrm;

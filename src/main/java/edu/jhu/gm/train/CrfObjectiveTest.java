@@ -15,6 +15,8 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -65,11 +67,13 @@ public class CrfObjectiveTest {
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.srlFePrm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
+        ofc.init(data);
         
         System.out.println("Num features: " + fts.getNumObsFeats());
-        FgModel model = new FgModel(fts);
+        FgModel model = new FgModel(ofc.getNumParams());
 
         boolean logDomain = false;
         FgInferencerFactory infFactory = getInfFactory(logDomain);        

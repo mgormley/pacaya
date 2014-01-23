@@ -45,13 +45,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    ExpFamFactor f;
+                    ExplicitFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]));
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -128,13 +128,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    ExpFamFactor f;
+                    ExplicitFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]));
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -151,7 +151,7 @@ public class ProjDepTreeFactorTest {
                 
         // Add an extra variable over which we will marginalize.        
         Var roleVar = new Var(VarType.PREDICTED, 2, "Role_0_1", Lists.getList("arg0", "_"));
-        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar, childVars[0][1]));
+        ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar, childVars[0][1]));
         roleFac.setValue(0, 2);
         roleFac.setValue(1, 3);
         roleFac.setValue(2, 5);
@@ -221,13 +221,13 @@ public class ProjDepTreeFactorTest {
         for (int i=-1; i<n; i++) {
             for (int j=0; j<n; j++) {
                 if (i != j) {
-                    ExpFamFactor f;
+                    ExplicitFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]));
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
                         f.setValue(LinkVar.TRUE, root[j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
                         f.setValue(LinkVar.TRUE, child[i][j]);
                         f.setValue(LinkVar.FALSE, 1.0);
                     }
@@ -243,7 +243,7 @@ public class ProjDepTreeFactorTest {
         fg.addFactor(treeFac);
                 
         // Add an extra variable over which we will marginalize.        
-        ExpFamFactor roleLinkFac = new ExpFamFactor(new VarSet(childVars[1][0], roleVar));
+        ExplicitFactor roleLinkFac = new ExplicitFactor(new VarSet(childVars[1][0], roleVar));
         roleLinkFac.setValue(0, 1);
         roleLinkFac.setValue(1, 1);
         roleLinkFac.setValue(2, 1);
@@ -253,7 +253,7 @@ public class ProjDepTreeFactorTest {
             roleLinkFac.convertRealToLog();
         }
         fg.addFactor(roleLinkFac);
-        ExpFamFactor roleFac = new ExpFamFactor(new VarSet(roleVar));
+        ExplicitFactor roleFac = new ExplicitFactor(new VarSet(roleVar));
         roleFac.set(1.0);
         if (logDomain) {
             roleFac.convertRealToLog();

@@ -10,19 +10,15 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.IndexForVc;
 import edu.jhu.gm.model.ObsFeatureCarrier;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
+import edu.jhu.prim.vector.IntIntDenseVector;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
 
@@ -33,146 +29,6 @@ import edu.jhu.util.Prm;
  * @author mgormley
  */
 public class ObsFeatureConjoiner implements Serializable {
-
-    /**
-     * An exponential family factor which takes an ObsFeatureExtractor at
-     * construction time and uses it to extract "observation features" which are
-     * subsequently conjoined with an indicator on the predicted variables to
-     * form the final features.
-     * 
-     * This class requires access to the internally stored indexing of
-     * ObsFeatureConjoiner.
-     * 
-     * @author mgormley
-     */
-    public static abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
-    
-        private static final long serialVersionUID = 1L;
-        private ObsFeatureConjoiner ofc;
-
-        // The unique key identifying the template for this factor.
-        protected Object templateKey;
-        // The ID of the template for this factor -- which is only ever set by the
-        // FeatureTemplateList.
-        private int templateId = -1;
-        
-        public ObsCjExpFamFactor(VarSet vars, Object templateKey, ObsFeatureConjoiner ofc) {
-            super(vars);
-            this.ofc = ofc;
-            this.templateKey = templateKey;
-            // TODO: setTemplateId(ofc.getTemplates().getTemplateId(this));
-        }
-        
-        public ObsCjExpFamFactor(DenseFactor other, Object templateKey, ObsFeatureConjoiner ofc) {
-            super(other);
-            this.ofc = ofc;
-            this.templateKey = templateKey;
-            // TODO: setTemplateId(ofc.getTemplates().getTemplateId(this));
-        }
-
-        @Override
-        public abstract FeatureVector getObsFeatures();
-        
-        @Override
-        public FeatureVector getFeatures(final int config) {
-            if (!ofc.isInitialized()) {
-                throw new IllegalStateException("ObsFeatureConjoiner not initialized");
-            }
-            ObsCjExpFamFactor factor = this;
-            final int ft = factor.getTemplateId();
-            FeatureVector obsFv = ((ObsFeatureCarrier) factor).getObsFeatures();
-            final FeatureVector fv = new FeatureVector(obsFv.size());
-            obsFv.apply(new FnIntDoubleToDouble() {            
-                @Override
-                public double call(int feat, double val) {
-                    if (ofc.included[ft][config][feat]) {
-                        fv.add(ofc.indices[ft][config][feat], val);
-                    }
-                    return val;
-                }
-            });
-            return fv;
-        }
-
-        @Override
-        public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-            DenseFactor df = super.getClamped(clmpVarConfig);
-            return new ClampedObsCjExpFamFactor(df, templateKey, clmpVarConfig, this);
-        }
-        
-        static class ClampedObsCjExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
-            
-            private static final long serialVersionUID = 1L;
-            // The unclamped factor from which this one was derived
-            private ObsCjExpFamFactor unclmpFactor;
-            
-            // Used only to create clamped factors.
-            public ClampedObsCjExpFamFactor(DenseFactor other, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
-                super(other, templateKey, unclmpFactor.ofc);
-                this.unclmpFactor = unclmpFactor;  
-                VarSet unclmpVarSet = unclmpFactor.getVars();
-                if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
-                    // Only store the unclampedVarSet if it does not contain OBSERVED variables.
-                    // This corresponds to only storing the VarSet if this is a factor graph 
-                    // containing only latent variables.
-                    //
-                    // TODO: Switch this to an option.
-                    //
-                    // If this is the numerator then we must clamp the predicted
-                    // variables to determine the correct set of model
-                    // parameters.
-                    iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
-                    clmpConfigId = clmpVarConfig.getConfigIndex();
-                }
-            }
-
-            @Override
-            public FeatureVector getFeatures(int config) {
-                // Pass through to the unclamped factor.
-                return unclmpFactor.getFeatures(config);
-            }
-
-            @Override
-            public FeatureVector getObsFeatures() {
-                // Pass through to the unclamped factor.
-                return unclmpFactor.getObsFeatures();
-            }
-            
-        }
-
-        @Override
-        public Object getTemplateKey() {
-            return templateKey;
-        }
-        
-        @Override
-        public int getTemplateId() {
-            return templateId;
-        }
-        
-        @Override
-        public void setTemplateId(int templateId) {
-            this.templateId = templateId;
-        }
-        
-    }
-    
-    public static class ObsFeExpFamFactor extends ObsCjExpFamFactor implements ObsFeatureCarrier, TemplateFactor {
-        
-        private static final long serialVersionUID = 1L;
-        private ObsFeatureExtractor obsFe;
-        
-        public ObsFeExpFamFactor(VarSet vars, Object templateKey, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
-            super(vars, templateKey, ofc);
-            this.obsFe = obsFe;
-        }
-        
-        @Override
-        public FeatureVector getObsFeatures() {
-            return this.obsFe.calcObsFeatureVector(this);
-        }
-        
-    }
 
     public static class ObsFeatureConjoinerPrm extends Prm {
         private static final long serialVersionUID = 1L;
@@ -193,12 +49,12 @@ public class ObsFeatureConjoiner implements Serializable {
      * The model parameters indices. Indexed by feature template index, variable
      * assignment config index, and observation function feature index.
      */
-    private int[][][] indices;
+    int[][][] indices;
     /**
      * Whether or not the correspondingly indexed model parameter is included in
      * this model.
      */
-    private boolean[][][] included;
+    boolean[][][] included;
     /** The number of feature templates. */
     private int numTemplates;
     /** The number of parameters in the model. */
@@ -210,19 +66,42 @@ public class ObsFeatureConjoiner implements Serializable {
     
     private ObsFeatureConjoinerPrm prm;
     
-    public ObsFeatureConjoiner(ObsFeatureConjoinerPrm prm) {
+    public ObsFeatureConjoiner(ObsFeatureConjoinerPrm prm, FactorTemplateList fts) {
         this.prm = prm;
         initialized = false;
+        this.templates = fts;
     }
         
-    public void init(FactorTemplateList templates) {
-        init(null, templates);
+    public void init() {
+        if (!prm.includeUnsupportedFeatures) {
+            log.warn("Enabling includeUnsupportedFeatures");
+            prm.includeUnsupportedFeatures = true;
+        }
+        if (prm.featCountCutoff >= 1) {
+            log.warn("Disabling featCountCutoff");
+            prm.featCountCutoff = -1;
+        }
+        init(null);
     }
         
-    public void init(FgExampleList data, FactorTemplateList templates) {
-        this.templates = templates;
+    public void init(FgExampleList data) {
         numTemplates = templates.size();
+           
+        // Ensure the FactorTemplateList is initialized, and maybe count features along the way.
+        if (!prm.includeUnsupportedFeatures) {
+            prm.featCountCutoff = Math.max(prm.featCountCutoff, 1);
+        }
+        IntIntDenseVector[][] counts = null;
+        if (prm.featCountCutoff >= 1) {
+            log.info("Applying feature count cutoff: " + prm.featCountCutoff);
+            counts = countFeatures(data, templates);
+        } else if (templates.isGrowing() && data != null) {
+            log.info("Growing feature template list by iterating over examples");
+            countFeatures(data, templates);
+            templates.stopGrowth();
+        }
         
+        // Apply a feature count cutoff.
         this.included = new boolean[numTemplates][][];
         for (int t=0; t<numTemplates; t++) {
             FactorTemplate template = templates.get(t);
@@ -230,16 +109,10 @@ public class ObsFeatureConjoiner implements Serializable {
             int numFeats = template.getAlphabet().size();
             included[t] = new boolean[numConfigs][numFeats];
         }
-        
-        // Apply a feature count cutoff.
-        if (!prm.includeUnsupportedFeatures) {
-            prm.featCountCutoff = Math.max(prm.featCountCutoff, 1);
-        }
         BoolArrays.fill(included, true);
-        if (prm.featCountCutoff >= 1) {
-            log.info("Applying feature count cutoff: " + prm.featCountCutoff);
-            int[][][] counts = countFeatures(data, templates);
+        if (counts != null) {
             excludeByFeatCount(counts);
+            counts = null;
         }
       
         // Always include the bias features.
@@ -277,14 +150,17 @@ public class ObsFeatureConjoiner implements Serializable {
     /**
      * Counts the number of times each feature appears in the gold training data.
      */
-    private int[][][] countFeatures(FgExampleList data, FactorTemplateList templates) {
-        int[][][] counts = new int[numTemplates][][];
+    private IntIntDenseVector[][] countFeatures(FgExampleList data, FactorTemplateList templates) {
+        IntIntDenseVector[][] counts = new IntIntDenseVector[numTemplates][];
         for (int t=0; t<numTemplates; t++) {
             FactorTemplate template = templates.get(t);
             int numConfigs = template.getNumConfigs();
             int numFeats = template.getAlphabet().size();
-            counts[t] = new int[numConfigs][numFeats];
-        }        
+            counts[t] = new IntIntDenseVector[numConfigs];
+            for (int c=0; c<numConfigs; c++) {
+                counts[t][c] = new IntIntDenseVector(numFeats);
+            }
+        }
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
@@ -296,7 +172,7 @@ public class ObsFeatureConjoiner implements Serializable {
                         if (f.getVars().size() == 0) {
                             int predConfig = ex.getGoldConfigIdxPred(a);
                             for (IntDoubleEntry entry : fv) {
-                                counts[t][predConfig][entry.index()]++;
+                                counts[t][predConfig].add(entry.index(), 1);
                             }
                         } else {
                             // We must clamp the predicted variables and loop over the latent ones.
@@ -309,7 +185,7 @@ public class ObsFeatureConjoiner implements Serializable {
                                 // where the predicted variables have been clamped.
                                 int config = iter.next();
                                 for (IntDoubleEntry entry : fv) {
-                                    counts[t][config][entry.index()]++;
+                                    counts[t][config].add(entry.index(), 1);
                                 }
                             }
                         }
@@ -324,11 +200,11 @@ public class ObsFeatureConjoiner implements Serializable {
      * Exclude those features which do not pass the feature count cutoff
      * threshold (bias features will be kept separately).
      */
-    private void excludeByFeatCount(int[][][] counts) {
+    private void excludeByFeatCount(IntIntDenseVector[][] counts) {
         for (int t=0; t<included.length; t++) {
             for (int c = 0; c < included[t].length; c++) {
                 for (int k = 0; k < included[t][c].length; k++) {
-                    boolean exclude = (counts[t][c][k] < prm.featCountCutoff);
+                    boolean exclude = (counts[t][c].get(k) < prm.featCountCutoff);
                     if (exclude) {
                         included[t][c][k] = false;
                     }
@@ -395,6 +271,10 @@ public class ObsFeatureConjoiner implements Serializable {
     
     public boolean isInitialized() {
         return initialized;
+    }
+
+    public int getFeatIndex(int t, int c, int feat) {
+        return indices[t][c][feat];
     }
             
 }

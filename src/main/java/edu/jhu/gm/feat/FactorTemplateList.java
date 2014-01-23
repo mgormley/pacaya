@@ -79,10 +79,21 @@ public class FactorTemplateList implements Serializable {
         }
     }
 
-    private FactorTemplate lookupTemplate(TemplateFactor f) {
+    public FactorTemplate getTemplate(TemplateFactor f) {
         return fts.get(getTemplateId(f));
     }
     
+    public int getTemplateId(TemplateFactor f) {
+        // Try to get the cached id, and only lookup the id in the hash map if it's not there.
+        if (f.getTemplateId() != -1) {
+            return f.getTemplateId();
+        } else {
+            int id = getTemplateIdByKey(f.getTemplateKey());
+            f.setTemplateId(id);
+            return id;
+        }
+    }
+
     private int lookupTemplateId(TemplateFactor f) {
         int index = templateKeyAlphabet.lookupIndex(f.getTemplateKey());
         if (index >= fts.size()) {
@@ -104,27 +115,11 @@ public class FactorTemplateList implements Serializable {
         return index;
     }
 
-    public FactorTemplate getTemplate(TemplateFactor f) {
-        return fts.get(getTemplateId(f));
-    }
-    
-    public int getTemplateId(TemplateFactor f) {
-        // Try to get the cached id, and only lookup the id in the hash map if it's not there.
-        if (f.getTemplateId() != -1) {
-            return f.getTemplateId();
-        } else {
-            int id = getTemplateIdByKey(f.getTemplateKey());
-            f.setTemplateId(id);
-            return id;
-        }
-    }
-
     public FactorTemplate getTemplateByKey(Object templateKey) {
         return fts.get(getTemplateIdByKey(templateKey));
     }
 
     public int getTemplateIdByKey(Object templateKey) {
-        // TODO: This might be too slow.
         return templateKeyAlphabet.lookupIndex(templateKey);
     }
 

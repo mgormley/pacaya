@@ -3,7 +3,6 @@ package edu.jhu.gm.feat;
 import java.io.Serializable;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 

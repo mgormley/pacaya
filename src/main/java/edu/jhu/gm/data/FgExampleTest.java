@@ -12,6 +12,8 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.CorpusStatistics;
@@ -50,8 +52,10 @@ public class FgExampleTest {
 
         prm.srlFePrm.fePrm.biasOnly = true;
         
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
+        ofc.init(data);
         
         FgExample ex = data.get(0);
         

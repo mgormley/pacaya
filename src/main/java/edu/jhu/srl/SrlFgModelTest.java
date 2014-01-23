@@ -13,8 +13,12 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.gm.model.FgModelTest;
+import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 
 public class SrlFgModelTest {
 
@@ -28,8 +32,12 @@ public class SrlFgModelTest {
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(sents);
             
+            FactorTemplateList fts = ObsFeatureConjoinerTest.getFtl();
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+            ofc.init();
+            
             // Just test that no exception is thrown.
-            SrlFgModel model = new SrlFgModel(FgModelTest.getFtl(), cs);
+            SrlFgModel model = new SrlFgModel(cs, ofc, new SrlFeatureExtractorPrm());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);

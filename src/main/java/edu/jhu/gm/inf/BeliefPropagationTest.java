@@ -10,7 +10,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
@@ -26,7 +26,7 @@ public class BeliefPropagationTest {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0)); 
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);
@@ -85,9 +85,9 @@ public class BeliefPropagationTest {
         Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
         
         // Emission factors. 
-        ExpFamFactor emit0 = new ExpFamFactor(new VarSet(t0));; 
-        ExpFamFactor emit1 = new ExpFamFactor(new VarSet(t1));; 
-        ExpFamFactor emit2 = new ExpFamFactor(new VarSet(t2));; 
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0));; 
+        ExplicitFactor emit1 = new ExplicitFactor(new VarSet(t1));; 
+        ExplicitFactor emit2 = new ExplicitFactor(new VarSet(t2));; 
 
         emit0.setValue(0, 0.1);
         emit0.setValue(1, 0.9);

@@ -312,7 +312,7 @@ public class SrlRunner {
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
             featureSelection(cs, srlFePrm);
             fts = new FactorTemplateList();
-            ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm());
+            ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm(), fts);
         }
         
         if (trainType != null && train != null) {
@@ -322,7 +322,7 @@ public class SrlRunner {
                     trainMaxSentenceLength, name, srlFePrm);
             
             if (model == null) {
-                model = new SrlFgModel(ofc.getNumParams(), cs, ofc, srlFePrm);
+                model = new SrlFgModel(cs, ofc, srlFePrm);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -469,7 +469,7 @@ public class SrlRunner {
         
         if (!ofc.isInitialized()) {
             log.info("Initializing the observation function conjoiner.");
-            ofc.init(data, fts);
+            ofc.init(data);
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));

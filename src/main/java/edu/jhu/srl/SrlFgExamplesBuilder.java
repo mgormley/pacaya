@@ -1,7 +1,6 @@
 package edu.jhu.srl;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -13,7 +12,6 @@ import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExampleFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
@@ -97,7 +95,7 @@ public class SrlFgExamplesBuilder {
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
             
             // Create the example.
-            FgExample ex = new FgExample(sfg, trainConfig);
+            FgExample ex = new FgExample(sfg, trainConfig, obsFe, fts);
             
             return ex;
         }

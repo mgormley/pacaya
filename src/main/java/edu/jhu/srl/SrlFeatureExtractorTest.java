@@ -4,8 +4,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -15,13 +17,18 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
@@ -56,9 +63,9 @@ public class SrlFeatureExtractorTest {
         prm.fePrm.biasOnly = true;
         prm.featureHashMod = -1; // Disable feature hashing.
         SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sents.get(0), cs);
-        featExt.init(sfg, null, null, new VarConfig(), fts);
+        featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
-            featExt.calcObsFeatureVector(a);
+            featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));
         }
         
         System.out.println(fts);
@@ -97,13 +104,14 @@ public class SrlFeatureExtractorTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.linkVarType = VarType.OBSERVED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-                
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
+        ofc.init(data);
         
-        FgModel model = new FgModel(data, false);
         System.out.println("Num tokens: " + sents.get(0).size());
-        System.out.println(model);
+        System.out.println(ofc);
         
         // If we included all features we would get: 6*2 + 2 + 6
         // For biasOnly=true: 
@@ -112,7 +120,7 @@ public class SrlFeatureExtractorTest {
         // For useNaradFeats=true: 
         // Correct number of obs feats 358, and seeing 358 after bad commit.
         // Correct number is 972, but seeing 932 after bad commit.
-        assertEquals(604, model.getNumParams());
+        assertEquals(604, ofc.getNumParams());
     }
     
     @Test
@@ -149,20 +157,20 @@ public class SrlFeatureExtractorTest {
         prm.fgPrm.linkVarType = VarType.OBSERVED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
         
-        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
+        ofc.init(data);
         
-        FgModel model = new FgModel(data, false);
         System.out.println("Num tokens: " + sents.get(0).size());
-        System.out.println(model);
+        System.out.println(ofc);
         // If we included all features we would get: 6*2 + 2 + 6
         // For biasOnly=true: 
         // assertEquals(17, model.getAlphabet().size());
         
         // For useNaradFeats=true: 
         // Correct number is 72, and seeing 72 after bad commit.
-        assertEquals(84, model.getNumParams());
+        assertEquals(84, ofc.getNumParams());
     }
     
     @Test
@@ -197,19 +205,25 @@ public class SrlFeatureExtractorTest {
         prm.fePrm = fePrm;
         prm.featureHashMod = 10; // Enable feature hashing
         SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, simpleSents.get(0), cs);
-        featExt.init(sfg, null, null, new VarConfig(), fts);
+        featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
-            featExt.calcObsFeatureVector(a);    
+            featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));
         }
         
         System.out.println(fts);
         assertEquals(11, fts.getNumObsFeats());
     }
+    
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
+        // --- These won't even be used in these tests ---
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        // ---        
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null);
+        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc);
     }
 
 }

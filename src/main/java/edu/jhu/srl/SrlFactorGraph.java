@@ -8,8 +8,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;

@@ -1,7 +1,5 @@
 package edu.jhu.gm.train;
 
-import static org.junit.Assert.fail;
-
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
@@ -12,10 +10,12 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaReaderTest;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
@@ -23,8 +23,8 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.maxent.LogLinearEDs;
 import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FactorGraphTest;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
@@ -36,6 +36,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
@@ -54,16 +55,16 @@ public class CrfTrainerTest {
 
         private FactorTemplateList fts;
 
-        public SimpleVCFeatureExtractor(FactorGraph fg, VarConfig goldConfig, FactorTemplateList fts) {
+        public SimpleVCFeatureExtractor(FactorTemplateList fts) {
             super();
             this.fts = fts;
         }
         
         // Just concatenates all the state names together (in-order).
         @Override
-        public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
+        public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig) {
             FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(fg.getFactor(factorId)).getAlphabet();
+            Alphabet<Feature> alphabet = fts.getTemplate(factor).getAlphabet();
 
             if (varConfig.size() > 0) {
                 String[] strs = new String[varConfig.getVars().size()];
@@ -85,8 +86,7 @@ public class CrfTrainerTest {
         }
     }
 
-    // TODO: @Test 
-    // Add this test back when we support features of x and y.
+    @Test 
     public void testLogLinearModelShapes() {
         LogLinearEDs exs = new LogLinearEDs();
         exs.addEx(30, "circle", "solid");
@@ -94,19 +94,24 @@ public class CrfTrainerTest {
         exs.addEx(10, "solid");
         exs.addEx(5);
 
-        FgExampleList data = exs.getData();
         double[] params = new double[]{3.0, 2.0};
-        FgModel model = new FgModel(data.getTemplates());
+        FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
         
         model = train(model, exs.getData());
         
-        JUnitUtils.assertArrayEquals(new double[]{1.098, 0.693}, FgModelTest.getParams(model), 1e-3);
+        JUnitUtils.assertArrayEquals(new double[]{1.093, 0.693}, FgModelTest.getParams(model), 1e-3);
     }
     
     @Test
     public void testTrainNoLatentVars() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVars(true);
+        FactorTemplateList fts = new FactorTemplateList();        
+        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
+        prm.includeUnsupportedFeatures = true;
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
+
+        FgAndVars fgv = getLinearChainFgWithVars(true, ofc, obsFe);
 
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
@@ -116,12 +121,11 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
         
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
-        FgModel model = new FgModel(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        data.add(new FgExample(fgv.fg, trainConfig, obsFe, fts));
+        ofc.init(data);
+        FgModel model = new FgModel(ofc.getNumParams());
 
         model = train(model, data);
         
@@ -143,19 +147,16 @@ public class CrfTrainerTest {
         //        assertEquals(0.65, getParam(model, "tran", "N:V"), 1e-2);
         //        assertEquals(1.66, getParam(model, "tran", "V:V"), 1e-2);
     }
-    
-    private double getParam(FgModel model, Object templateKey, String name) {
-        FactorTemplate ft = model.getTemplates().getTemplateByKey(templateKey);
-        int feat = ft.getAlphabet().lookupIndex(new Feature(name));
-        fail("Somehow we need access to the configId if we want to use this method.");
-        return 0.0;
-        //return model.get
-        //return model.getParams()[model.getAlphabet().lookupIndex(new Feature(name))];
-    }
 
     @Test
     public void testTrainWithLatentVars() {
-        FgAndVars fgv = FactorGraphTest.getLinearChainFgWithVarsLatent(true);
+        FactorTemplateList fts = new FactorTemplateList();        
+        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
+        prm.includeUnsupportedFeatures = true;
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
+        
+        FgAndVars fgv = getLinearChainFgWithVarsLatent(true, ofc, obsFe);
 
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
@@ -165,12 +166,10 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fgv.fg, trainConfig, fts);
-        
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        data.add(new FgExample(fgv.fg, trainConfig, featExtractor, fts));
-        FgModel model = new FgModel(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        data.add(new FgExample(fgv.fg, trainConfig, obsFe, fts));
+        ofc.init(data);
+        FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);
         
@@ -186,6 +185,10 @@ public class CrfTrainerTest {
 
     @Test
     public void testTrainWithGlobalFactor() {
+        FactorTemplateList fts = new FactorTemplateList();  
+        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        
         final int n = 3;
         FactorGraph fg = new FactorGraph();
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.LATENT);
@@ -201,16 +204,16 @@ public class CrfTrainerTest {
                 if (i != j) {
                     ExpFamFactor f;
                     if (i == -1) {
-                        f = new ExpFamFactor(new VarSet(rootVars[j]));
+                        f = new ObsFeExpFamFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         //trainConfig.put(rootVars[j], 0);
                     } else {
-                        f = new ExpFamFactor(new VarSet(childVars[i][j]));
+                        f = new ObsFeExpFamFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY, ofc, obsFe);
                         fg.addFactor(f);
 
                         childRoles[i][j] = new Var(VarType.PREDICTED, 3, "Role"+i+"_"+j, Lists.getList("A1", "A2", "A3"));
-                        fg.addFactor(new ExpFamFactor(new VarSet(childRoles[i][j])));
+                        fg.addFactor(new ObsFeExpFamFactor(new VarSet(childRoles[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
                         
                         //trainConfig.put(childVars[i][j], 0);
                         trainConfig.put(childRoles[i][j], "A1");
@@ -222,14 +225,12 @@ public class CrfTrainerTest {
         //trainConfig.put(rootVars[0], 1);
         //trainConfig.put(childVars[0][1], 1);
         trainConfig.put(childRoles[0][1], "A2");
-        trainConfig.put(childRoles[1][0], "A2");
-
-        FactorTemplateList fts = new FactorTemplateList();        
-        ObsFeatureExtractor featExtractor = new SimpleVCFeatureExtractor(fg, trainConfig, fts);
+        trainConfig.put(childRoles[1][0], "A2");   
         
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        data.add(new FgExample(fg, trainConfig, featExtractor, fts));
-        FgModel model = new FgModel(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        data.add(new FgExample(fg, trainConfig, obsFe, fts));
+        ofc.init(data);
+        FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
         model = train(model, data);
         
@@ -240,13 +241,14 @@ public class CrfTrainerTest {
 
     }
     
+    // This is slow and relies on hard-coded paths.
     //TODO: @Test
     public void testTrainErmaInput() {
         ErmaReader er = new ErmaReader();
-        FactorTemplateList fts = new FactorTemplateList();        
-        FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, fts);
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FgExampleList data = er.read(ErmaReaderTest.ERMA_TOY_FEATURE_FILE, ErmaReaderTest.ERMA_TOY_TRAIN_DATA_FILE, alphabet);
         
-        FgModel model = new FgModel(fts);
+        FgModel model = new FgModel(alphabet.size());
         model = train(model, data);
         
         // ERMA achieves the following log-likelihood: 0.5802548014360731.
@@ -277,4 +279,154 @@ public class CrfTrainerTest {
         return model;
     }
 
+    public static FgAndVars getLinearChainFgWithVars(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+
+        FactorGraph fg = new FactorGraph();
+
+        // Create three words.
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
+        
+        // Create three tags.
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+
+        // Emission factors. 
+        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(t0, w0), "emit", ofc, obsFe); 
+        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(t1, w1), "emit", ofc, obsFe); 
+        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(t2, w2), "emit", ofc, obsFe); 
+
+        emit0.setValue(0, 0.1);
+        emit0.setValue(1, 0.9);
+        emit1.setValue(0, 0.3);
+        emit1.setValue(1, 0.7);
+        emit2.setValue(0, 0.5);
+        emit2.setValue(1, 0.5);
+        
+        // Transition factors.
+        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
+        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
+        
+        tran0.set(1);
+        tran0.setValue(0, 0.2);
+        tran0.setValue(1, 0.3);
+        tran0.setValue(2, 0.4);
+        tran0.setValue(3, 0.5);
+        tran1.set(1);
+        tran1.setValue(0, 1.2);
+        tran1.setValue(1, 1.3);
+        tran1.setValue(2, 1.4);
+        tran1.setValue(3, 1.5);
+                
+        fg.addFactor(emit0);
+        fg.addFactor(emit1);
+        fg.addFactor(emit2);
+        fg.addFactor(tran0);
+        fg.addFactor(tran1);
+        
+        if (logDomain) {
+            for (Factor f : fg.getFactors()) {
+                ((ExpFamFactor)f).convertRealToLog();
+            }
+        }
+
+        FgAndVars fgv = new FgAndVars();
+        fgv.fg = fg;
+        fgv.w0 = w0;
+        fgv.w1 = w1;
+        fgv.w2 = w2;
+        fgv.t0 = t0;
+        fgv.t1 = t1;
+        fgv.t2 = t2;
+        return fgv;
+    }
+    
+    public static FgAndVars getLinearChainFgWithVarsLatent(boolean logDomain, ObsFeatureConjoiner ofc, ObsFeatureExtractor obsFe) {
+
+        FactorGraph fg = new FactorGraph();
+
+        // Create three words.
+        Var w0 = new Var(VarType.OBSERVED, 2, "w0", Lists.getList("man", "dog"));
+        Var w1 = new Var(VarType.OBSERVED, 2, "w1", Lists.getList("run", "jump"));
+        Var w2 = new Var(VarType.OBSERVED, 2, "w2", Lists.getList("fence", "bucket"));
+
+        // Create latent classes.
+        Var z0 = new Var(VarType.LATENT, 2, "z0", Lists.getList("C1", "C2"));
+        Var z1 = new Var(VarType.LATENT, 2, "z1", Lists.getList("C1", "C2"));
+        Var z2 = new Var(VarType.LATENT, 2, "z2", Lists.getList("C1", "C2"));
+        
+        // Create three tags.
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", Lists.getList("N", "V"));
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", Lists.getList("N", "V"));
+        Var t2 = new Var(VarType.PREDICTED, 2, "t2", Lists.getList("N", "V"));
+
+        // Emission factors. 
+        ObsFeExpFamFactor emit0 = new ObsFeExpFamFactor(new VarSet(z0, w0), "emit", ofc, obsFe); 
+        ObsFeExpFamFactor emit1 = new ObsFeExpFamFactor(new VarSet(z1, w1), "emit", ofc, obsFe); 
+        ObsFeExpFamFactor emit2 = new ObsFeExpFamFactor(new VarSet(z2, w2), "emit", ofc, obsFe); 
+
+        emit0.setValue(0, 0.1);
+        emit0.setValue(1, 0.9);
+        emit1.setValue(0, 0.3);
+        emit1.setValue(1, 0.7);
+        emit2.setValue(0, 0.5);
+        emit2.setValue(1, 0.5);
+        
+        // Latent emission factors. 
+        ObsFeExpFamFactor emitL0 = new ObsFeExpFamFactor(new VarSet(t0, z0), "latent-emit", ofc, obsFe); 
+        ObsFeExpFamFactor emitL1 = new ObsFeExpFamFactor(new VarSet(t1, z1), "latent-emit", ofc, obsFe); 
+        ObsFeExpFamFactor emitL2 = new ObsFeExpFamFactor(new VarSet(t2, z2), "latent-emit", ofc, obsFe); 
+
+        emitL0.setValue(0, 1.1);
+        emitL0.setValue(1, 1.9);
+        emitL1.setValue(0, 1.3);
+        emitL1.setValue(1, 1.7);
+        emitL2.setValue(0, 1.5);
+        emitL2.setValue(1, 1.5);
+        
+        // Transition factors.
+        ObsFeExpFamFactor tran0 = new ObsFeExpFamFactor(new VarSet(t0, t1), "tran", ofc, obsFe); 
+        ObsFeExpFamFactor tran1 = new ObsFeExpFamFactor(new VarSet(t1, t2), "tran", ofc, obsFe); 
+        
+        tran0.set(1);
+        tran0.setValue(0, 0.2);
+        tran0.setValue(1, 0.3);
+        tran0.setValue(2, 0.4);
+        tran0.setValue(3, 0.5);
+        tran1.set(1);
+        tran1.setValue(0, 1.2);
+        tran1.setValue(1, 1.3);
+        tran1.setValue(2, 1.4);
+        tran1.setValue(3, 1.5);
+                
+        fg.addFactor(emit0);
+        fg.addFactor(emit1);
+        fg.addFactor(emit2);
+        fg.addFactor(emitL0);
+        fg.addFactor(emitL1);
+        fg.addFactor(emitL2);
+        fg.addFactor(tran0);
+        fg.addFactor(tran1);
+
+        if (logDomain) {
+            for (Factor f : fg.getFactors()) {
+                ((ExpFamFactor)f).convertRealToLog();
+            }
+        }
+        
+        FgAndVars fgv = new FgAndVars();
+        fgv.fg = fg;
+        fgv.w0 = w0;
+        fgv.w1 = w1;
+        fgv.w2 = w2;
+        fgv.z0 = z0;
+        fgv.z1 = z1;
+        fgv.z2 = z2;
+        fgv.t0 = t0;
+        fgv.t1 = t1;
+        fgv.t2 = t2;
+        return fgv;
+    }
 }

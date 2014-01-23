@@ -11,7 +11,7 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
@@ -64,6 +64,12 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     @Override
     public void init(FgExample ex, FactorTemplateList fts) {
         this.goldConfig = ex.getGoldConfig();
+        this.fts = fts;
+    }
+
+    // For testing only.
+    void init(VarConfig goldConfig, FactorTemplateList fts) {
+        this.goldConfig = goldConfig;
         this.fts = fts;
     }
     

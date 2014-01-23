@@ -21,6 +21,8 @@ import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -64,9 +66,11 @@ public class SrlFgExamplesBuilderTest {
         
         prm.fgPrm.useProjDepTreeFactor = true;
         prm.srlFePrm.fePrm.biasOnly = true;
-        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
+        ofc.init(data);
         
 //        System.out.println("Num features: " + alphabet.size());
 //        FgModel model = new FgModel(alphabet);
@@ -93,8 +97,11 @@ public class SrlFgExamplesBuilderTest {
         //prm.includeUnsupportedFeatures = 
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
+        ofc.init(data);
         FgExample ex = data.get(0);
         //assertEquals(1, obsAlphabet.size());
         //assertEquals(6*2 + 2 + 6, fts.size());
@@ -142,21 +149,50 @@ public class SrlFgExamplesBuilderTest {
         
         {
             FactorTemplateList fts = new FactorTemplateList();
-            prm.exPrm.featCountCutoff = 0;
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
-            FgExampleList data = builder.getData(simpleSents);            
+            ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
+            ofcPrm.featCountCutoff = 0;            
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            FgExampleList data = builder.getData(simpleSents);
+            ofc.init(data);                   
             assertEquals(1237, fts.getNumObsFeats());
-            FgModel model = new FgModel(data, false);
-            assertEquals(2451, model.getNumParams());
+            assertEquals(2451, ofc.getNumParams());
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
-            prm.exPrm.featCountCutoff = 5;
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+            ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
+            ofcPrm.includeUnsupportedFeatures = true;
+            ofcPrm.featCountCutoff = 1;   
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
-            assertEquals(313, fts.getNumObsFeats());
-            FgModel model = new FgModel(data, false);
-            assertEquals(715, model.getNumParams());
+            ofc.init(data);
+            assertEquals(2451, ofc.getNumParams());            
+        }
+        {
+            FactorTemplateList fts = new FactorTemplateList();
+            ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
+            ofcPrm.includeUnsupportedFeatures = true;
+            ofcPrm.featCountCutoff = -1;   
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            FgExampleList data = builder.getData(simpleSents);
+            ofc.init(data);
+            assertEquals(3834, ofc.getNumParams());            
+        }
+        {
+            FactorTemplateList fts = new FactorTemplateList();
+            ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
+            ofcPrm.featCountCutoff = 5;            
+            ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
+            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            FgExampleList data = builder.getData(simpleSents);
+            ofc.init(data);
+            assertEquals(604, ofc.getNumParams());
+            // These are the old counts from when we used to filter based on the counting versions of 
+            // FeatureTemplateList.
+            //assertEquals(313, fts.getNumObsFeats());
+            //assertEquals(715, ofc.getNumParams());
         }
     }
 
@@ -184,8 +220,11 @@ public class SrlFgExamplesBuilderTest {
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.alwaysIncludeLinkVars = true;
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
+        ofc.init(data);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -222,8 +261,11 @@ public class SrlFgExamplesBuilderTest {
         prm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.predictSense = true;
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
+        ofc.init(data);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();

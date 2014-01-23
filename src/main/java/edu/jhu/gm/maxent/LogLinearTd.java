@@ -16,9 +16,9 @@ import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
@@ -131,7 +131,7 @@ public class LogLinearTd {
             ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
             // TODO: Make this an option. Unit tests expect it to be false.
             ofcPrm.includeUnsupportedFeatures = prm.includeUnsupportedFeatures;
-            ofc = new ObsFeatureConjoiner(ofcPrm);
+            ofc = new ObsFeatureConjoiner(ofcPrm, fts);
         }
         
         
@@ -144,7 +144,7 @@ public class LogLinearTd {
         }
         
         if (!ofc.isInitialized()) {
-            ofc.init(data, fts);
+            ofc.init(data);
         }
         return data;
     }

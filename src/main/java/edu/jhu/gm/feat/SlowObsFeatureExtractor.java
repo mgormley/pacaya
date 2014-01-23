@@ -1,7 +1,6 @@
 package edu.jhu.gm.feat;
 
 import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;

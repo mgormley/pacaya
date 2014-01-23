@@ -12,11 +12,16 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
@@ -198,6 +203,11 @@ public class SrlFactorGraphTest {
     }
 
     private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
+        // --- These won't even be used in these tests ---
+        FactorTemplateList fts = new FactorTemplateList();
+        ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        // ---                                         ---
         Map<String,List<String>> psMap = new HashMap<String,List<String>>() {
 
             @Override
@@ -208,7 +218,7 @@ public class SrlFactorGraphTest {
         };
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap);
+        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc);
     }
     
 }

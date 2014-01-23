@@ -51,7 +51,7 @@ public class FgExample implements Serializable {
         this(fg, goldConfig);        
         // Initialize the observation function.
         obsFe.init(this, fts);
-        // Only initialize template keys for the latent/predicted variable factor graph.
+        // Update the factor templates.
         fts.update(this.getFgLatPred());
     }
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {

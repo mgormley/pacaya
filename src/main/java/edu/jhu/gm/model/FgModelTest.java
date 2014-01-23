@@ -11,9 +11,9 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
@@ -31,9 +31,8 @@ public class FgModelTest {
     @Test
     public void testIsSerializable() throws IOException {
         try {
-            FactorTemplateList fts = getFtl();
             // Just test that no exception is thrown.
-            FgModel model = new FgModel(fts);
+            FgModel model = new FgModel(10);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);
@@ -43,20 +42,13 @@ public class FgModelTest {
             fail("FgModel is not serializable: " + e.getMessage());
         }
     }
-
-    @Test
-    public void testNumParams() {
-        FactorTemplateList fts = getFtl();
-        FgModel model = new FgModel(fts);
-        assertEquals((3*2)*2 + 2*1, model.getNumParams());
-    }
     
     @Test
     public void testApply() {
-        FactorTemplateList fts = getFtl();
-        FgModel model = new FgModel(fts);
+        int numParams = (3*2)*2 + 2*1;
+        FgModel model = new FgModel(numParams);
         
-        assertEquals(3*2*2+2*1, model.getNumParams());
+        assertEquals(numParams, model.getNumParams());
         
         final MutableInt x = new MutableInt(0);
         model.apply(new LambdaUnaryOpDouble() {
@@ -67,7 +59,7 @@ public class FgModelTest {
             }
         });
         
-        assertEquals(3*2*2+2*1, x.get());
+        assertEquals(numParams, x.get());
         
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
@@ -79,8 +71,8 @@ public class FgModelTest {
 
     @Test
     public void testFillAndZero() {
-        FactorTemplateList fts = getFtl();
-        FgModel model = new FgModel(fts);
+        int numParams = (3*2)*2 + 2*1;
+        FgModel model = new FgModel(numParams);
         model.fill(1.0);
 
         model.apply(new LambdaUnaryOpDouble() {
@@ -102,9 +94,9 @@ public class FgModelTest {
     @Test
     public void testSetRandomStandardNormal() {
         Prng.seed(1l);
-        
-        FactorTemplateList fts = getFtl();
-        FgModel model = new FgModel(fts);
+
+        int numParams = (3*2)*2 + 2*1;
+        FgModel model = new FgModel(numParams);
         model.setRandomStandardNormal();
 
         double[] params = new double[model.getNumParams()];
@@ -115,8 +107,8 @@ public class FgModelTest {
 
     @Test
     public void testUpdateDoublesAndModel() {
-        FactorTemplateList fts = getFtl();
-        FgModel model = new FgModel(fts);
+        int numParams = (3*2)*2 + 2*1;
+        FgModel model = new FgModel(numParams);
         final MutableInt x = new MutableInt(0);
         model.apply(new LambdaUnaryOpDouble() {
             public double call(double v) {
@@ -144,103 +136,6 @@ public class FgModelTest {
 
     }
 
-    @Test
-    public void testExcludeUnsupportedFeaturesWithLatentVars() {
-        boolean useLat = true;
-        FactorTemplateList fts = getFtl(useLat);
-        
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        data.add(getExForFts("1a", "2a", fts, useLat));
-        data.add(getExForFts("1a", "2c", fts, useLat));
-        data.add(getExForFts("1b", "2b", fts, useLat));
-        data.add(getExForFts("1b", "2c", fts, useLat));
-        
-        FgModel model1 = new FgModel(data, true);        
-        System.out.println("\n"+model1);
-        assertEquals(20, model1.getNumParams());
-        
-        FgModel model2 = new FgModel(data, false);        
-        System.out.println("\n"+model2);
-        // 6 bias features, and 6 other features.
-        assertEquals(6+6, model2.getNumParams());
-    }
-    
-    @Test
-    public void testExcludeUnsupportedFeatures() {
-        boolean useLat = false;
-        FactorTemplateList fts = getFtl(useLat);
-        
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
-        data.add(getExForFts("1a", "2a", fts, useLat));
-        data.add(getExForFts("1a", "2c", fts, useLat));
-        data.add(getExForFts("1b", "2b", fts, useLat));
-        data.add(getExForFts("1b", "2c", fts, useLat));
-        
-        FgModel model1 = new FgModel(data, true);        
-        System.out.println("\n"+model1);
-        assertEquals(20, model1.getNumParams());
-        
-        FgModel model2 = new FgModel(data, false);        
-        System.out.println("\n"+model2);
-        // 6 bias features, and 4 other features.
-        assertEquals(6+4, model2.getNumParams());
-    }
-
-    public static class MockFeatureExtractor extends SlowObsFeatureExtractor {
-
-        public MockFeatureExtractor() {
-            super();
-        }
-        
-        @Override
-        public FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig) {
-            FeatureVector fv = new FeatureVector();
-            Alphabet<Feature> alphabet = fts.getTemplate(fg.getFactor(factorId)).getAlphabet();
-
-            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
-            fv.set(featIdx, 1.0);
-            featIdx = alphabet.lookupIndex(new Feature("feat2a"));
-            fv.set(featIdx, 1.0);
-            
-            return fv;
-        }
-    }
-    
-    private FgExample getExForFts(String state1, String state2, FactorTemplateList fts, boolean useLat) {
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
-        FactorGraph fg = new FactorGraph();
-        fg.addFactor(new ExpFamFactor(new VarSet(v1, v2)));
-        
-        VarConfig vc = new VarConfig();
-        vc.put(v1, state1);
-        vc.put(v2, state2);
-        
-        return new FgExample(fg, vc, new MockFeatureExtractor(), fts);
-    }
-
-    public static FactorTemplateList getFtl() {
-        return getFtl(false);
-    }
-    
-    public static FactorTemplateList getFtl(boolean useLat) {
-        FactorTemplateList fts = new FactorTemplateList();
-        Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
-        Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
-        {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            alphabet.lookupIndex(new Feature("feat1"));
-            fts.add(new FactorTemplate(new VarSet(v1), alphabet, "key1"));
-        }
-        {
-            Alphabet<Feature> alphabet = new Alphabet<Feature>();
-            alphabet.lookupIndex(new Feature("feat2a"));
-            alphabet.lookupIndex(new Feature("feat2b"));
-            fts.add(new FactorTemplate(new VarSet(v1, v2), alphabet, "key2"));
-        }
-        return fts;
-    }
-        
     public static double[] getParams(FgModel model) {
         double[] params = new double[model.getNumParams()];
         model.updateDoublesFromModel(params);
