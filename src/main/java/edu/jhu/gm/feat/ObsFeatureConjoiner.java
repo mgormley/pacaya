@@ -98,8 +98,8 @@ public class ObsFeatureConjoiner implements Serializable {
         } else if (templates.isGrowing() && data != null) {
             log.info("Growing feature template list by iterating over examples");
             countFeatures(data, templates);
-            templates.stopGrowth();
         }
+        templates.stopGrowth();
         
         // Apply a feature count cutoff.
         this.included = new boolean[numTemplates][][];

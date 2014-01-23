@@ -459,12 +459,10 @@ public class SrlRunner {
         
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
-        if (prm.fgPrm.predictSense) {
-            fts.startGrowth();
+        if (prm.fgPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
-            fts.stopGrowth();
         }
         
         if (!ofc.isInitialized()) {
