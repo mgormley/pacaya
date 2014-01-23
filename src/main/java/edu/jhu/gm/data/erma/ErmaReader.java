@@ -19,11 +19,11 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
 import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -40,15 +40,25 @@ import featParser.FeatureFileParser;
 public class ErmaReader {
 
     private static final Logger log = Logger.getLogger(ErmaReader.class);
+    private boolean includeUnsupportedFeatures;
+
+    /**
+     * Constructs an ERMA reader, including all the unsupported features (ERMA's default).
+     */
+    public ErmaReader() {
+        this(true);
+    }
     
     /**
      * Constructs an ERMA reader.
+     * @param includeUnsupportedFeatures Whether to include the "unsupported" features in the model.
      */
-    public ErmaReader() {
+    public ErmaReader(boolean includeUnsupportedFeatures) {
+        this.includeUnsupportedFeatures = includeUnsupportedFeatures;
     }
     
-    public FgExampleList read(File featureTemplate, File dataFile, FactorTemplateList fts) {
-        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), fts);
+    public FgExampleList read(File featureTemplate, File dataFile, Alphabet<Feature> alphabet) {
+        return read(featureTemplate.getAbsolutePath(), dataFile.getAbsolutePath(), alphabet);
     }
     
     /**
@@ -61,7 +71,7 @@ public class ErmaReader {
      * @param alphabet The alphabet used to create the FgExamples.
      * @return The new FgExamples.
      */
-    public FgExampleList read(String featureTemplate, String dataFile, FactorTemplateList fts) {
+    public FgExampleList read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
         FeatureFile ff;
         log.info("Reading features from " + featureTemplate);
         try {
@@ -72,13 +82,22 @@ public class ErmaReader {
         }
 
         log.info("Reading and converting data from " + dataFile);  
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
         try {
             // This will convert each DataSample to an FgExample and add it to data.
-            ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data);
+            ConvertingDataParser dp = new ConvertingDataParser(dataFile, ff, data, alphabet);
             dp.parseFile();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+
+        if (includeUnsupportedFeatures) {
+            log.info("Including unsupported features in the model.");
+            for (data.Feature feat : ff.getFeatures()) {
+                alphabet.lookupIndex(new Feature(feat.getName()));
+            }
+        } else {
+            log.info("Excluding unsupported features from the model.");
         }
         
         return data;
@@ -94,15 +113,17 @@ public class ErmaReader {
     private static class ConvertingDataParser extends DataParser {
         
         private FgExampleStore data;
+        private Alphabet<Feature> alphabet;
         
-        public ConvertingDataParser(String filename, FeatureFile ff, FgExampleStore data) throws FileNotFoundException {
+        public ConvertingDataParser(String filename, FeatureFile ff, FgExampleStore data, Alphabet<Feature> alphabet) throws FileNotFoundException {
             super(filename, ff);
             this.data = data;
+            this.alphabet = alphabet;
         }
         
         @Override
         protected void addDataSample(DataSample s) {
-            data.add(toFgExample(s, this.features, data.getTemplates()));
+            data.add(toFgExample(s, this.features, alphabet));
         }
         
     }
@@ -165,7 +186,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, FactorTemplateList fts){
+    private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
@@ -179,6 +200,9 @@ public class ErmaReader {
         HashMap<String,Var> newVars=new HashMap<String, Var>();
         int next = 0;
         ArrayList<FeatureInstance> featureInstances = s.getFeatureInstances();
+        
+        // MRF: Create an "empty" feature extractor which is populated with the features below.
+        SimpleLookupFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor();
         for(int j=0; j<featureInstances.size(); j++){
             FeatureInstance fi = featureInstances.get(j);
             
@@ -208,9 +232,7 @@ public class ErmaReader {
                 }
                 // MRG: ERMA's way was: fac = new Factor(next++,Ivars, 1.0);
                 
-                // TODO: Get a feature template here.
-                Object templateKey = "INCORRECT_TEMPLATE_KEY";
-                fac = new ExpFamFactor(Ivars);
+                fac = new FeExpFamFactor(Ivars, featExtractor);
                 facs.put(key,fac);
                 //ArrayList<set<feature* > > feat_r_vec;
                 
@@ -271,14 +293,7 @@ public class ErmaReader {
                 
                 // MRG: ERMA WAY: featRef.get(state).put(feat,featRef.get(state).containsKey(feat)?featRef.get(state).get(feat)+fi.getWeight():fi.getWeight());
                 
-                // MRG: Convert the ERMA feature to our feature and lookup its index.
-                
-                
-                // TODO: Get the correct alphabet.
-                Object templateKey = "INCORRECT_TEMPLATE_KEY";
-                Alphabet<Feature> alphabet = fts.getTemplateByKey(templateKey).getAlphabet();                
-                
-                
+                // MRG: Convert the ERMA feature to our feature and lookup its index.                               
                 int featIdx = alphabet.lookupIndex(new Feature(feat.getName()));           
                 FeatureVector featureVector = featRef.get(state);
                 // Add the feature weight for this feature to the feature vector.
@@ -312,9 +327,9 @@ public class ErmaReader {
         }
         
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
-        ObsFeatureExtractor featExtractor = new SimpleLookupFeatureExtractor(feature_ref_vec);
+        featExtractor.setFeatureRefVec(feature_ref_vec);
         
-        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor, fts);
+        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;
@@ -351,33 +366,28 @@ public class ErmaReader {
             return VarType.PREDICTED;
         } else {
             throw new RuntimeException("Missing visibility type");
-        }
+        } 
     }
     
-    private static class SimpleLookupFeatureExtractor implements ObsFeatureExtractor, Serializable {
+    private static class SimpleLookupFeatureExtractor implements FeatureExtractor, Serializable {
         
         private static final long serialVersionUID = 1L;
         private ArrayList<ArrayList<FeatureVector>> feature_ref_vec;
 
-        public SimpleLookupFeatureExtractor(
-                ArrayList<ArrayList<FeatureVector>> feature_ref_vec) {
+        public SimpleLookupFeatureExtractor() {
+        }
+        
+        public void setFeatureRefVec(ArrayList<ArrayList<FeatureVector>> feature_ref_vec) {
             this.feature_ref_vec = feature_ref_vec;
         }
 
         @Override
-        public FeatureVector calcObsFeatureVector(int factorId) {
-            throw new RuntimeException("not implemented");
-            //return feature_ref_vec.get(factorId);
+        public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
+            return feature_ref_vec.get(factor.getId()).get(configId);
         }
 
         @Override
-        public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
-                FactorTemplateList fts) {
-            // Do nothing.
-        }
-
-        @Override
-        public void clear() {
+        public void init(FgExample ex) {
             // Do nothing.
         }
     }

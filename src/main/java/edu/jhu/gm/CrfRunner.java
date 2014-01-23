@@ -23,6 +23,7 @@ import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
 import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -35,6 +36,7 @@ import edu.jhu.optimize.L2;
 import edu.jhu.optimize.MalletLBFGS;
 import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
@@ -107,23 +109,24 @@ public class CrfRunner {
         
         // Get a model.
         FgModel model = null;
-        FactorTemplateList templates;
+        Alphabet<Feature> alphabet;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
             model = (FgModel) Files.deserialize(modelIn);
-            templates = model.getTemplates();
+            alphabet = null;// model.getTemplates();
+            throw new RuntimeException("Alphabet was not serialized");
         } else {
-            templates = new FactorTemplateList();
+            alphabet = new Alphabet<Feature>();
         }
         
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            FgExampleList data = getData(templates, trainType, train, name);
+            FgExampleList data = getData(alphabet, trainType, train, name);
             
             if (model == null) {
-                model = new FgModel(data, includeUnsupportedFeatures);
+                model = new FgModel(alphabet.size());
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -161,9 +164,9 @@ public class CrfRunner {
 
         if (test != null && testType != null) {
             // Test the model on test data.
-            templates.stopGrowth();
+            alphabet.stopGrowth();
             String name = "test";
-            FgExampleList data = getData(templates, testType, test, name);
+            FgExampleList data = getData(alphabet, testType, test, name);
 
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testPredOut, name);
@@ -171,19 +174,19 @@ public class CrfRunner {
         }
     }
 
-    private FgExampleList getData(FactorTemplateList templates, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
+    private FgExampleList getData(Alphabet<Feature> alphabet, DatasetType dataType, File dataFile, String name) throws ParseException, IOException {
         FgExampleList data;
         if (dataType == DatasetType.ERMA){
             ErmaReader er = new ErmaReader();
-            data = er.read(featureFileIn, dataFile, templates);        
+            data = er.read(featureFileIn, dataFile, alphabet);        
         } else {
             throw new ParseException("Unsupported data type: " + dataType);
         }
         
         log.info(String.format("Num examples in %s: %d", name, data.size()));
-        log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
-        log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num observation features: %d", templates.getNumObsFeats()));
+        //log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        //log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        log.info(String.format("Num features: %d", alphabet.size()));
         return data;
     }
 

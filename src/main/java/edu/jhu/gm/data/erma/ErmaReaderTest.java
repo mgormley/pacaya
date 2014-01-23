@@ -19,12 +19,12 @@ import data.VariableSet;
 import dataParser.DataParser;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.util.Alphabet;
 import featParser.FeatureFileParser;
 
 public class ErmaReaderTest {
@@ -35,7 +35,9 @@ public class ErmaReaderTest {
     public static final String ERMA_TOY_TEST_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.test.data.ff";
     public static final String ERMA_TOY_FEATURE_FILE = ERMA_TUTORIAL_DIR + "/toy.template.ff";
     
-    // TODO: @Test
+    // TODO: This test is slow and has hard-coded paths above.
+    // Fix this then enable this test. 
+    // @Test
     public void testErmaReader() {
         // Read the ERMA files to get ERMA objects.
         SimpleErmaReader ser = new SimpleErmaReader();
@@ -46,8 +48,8 @@ public class ErmaReaderTest {
         
         // Read the ERMA files to get our objects.
         ErmaReader er = new ErmaReader();
-        FactorTemplateList fts = new FactorTemplateList();
-        FgExampleList data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, fts);
+        Alphabet<Feature> alphabet = new Alphabet<Feature>();
+        FgExampleList data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
 
         // Just test that we can construct these without error.
         assertEquals(samples.size(), data.size());
@@ -103,11 +105,10 @@ public class ErmaReaderTest {
         }
         
         boolean includeUnsupportedFeatures = true;
-        FgModel model = new FgModel(data, includeUnsupportedFeatures);
         if (includeUnsupportedFeatures) {
-            assertEquals(ermaAllFeatNames.size(), model.getNumParams());
+            assertEquals(ermaAllFeatNames.size(), alphabet.size());
         } else {
-            assertEquals(ermaObsFeatNames.size(), model.getNumParams());
+            assertEquals(ermaObsFeatNames.size(), alphabet.size());
         }
     }
     
