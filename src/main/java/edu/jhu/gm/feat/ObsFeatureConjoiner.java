@@ -85,21 +85,13 @@ public class ObsFeatureConjoiner implements Serializable {
     }
         
     public void init(FgExampleList data) {
-        numTemplates = templates.size();
-           
         // Ensure the FactorTemplateList is initialized, and maybe count features along the way.
-        if (!prm.includeUnsupportedFeatures) {
-            prm.featCountCutoff = Math.max(prm.featCountCutoff, 1);
-        }
-        IntIntDenseVector[][] counts = null;
-        if (prm.featCountCutoff >= 1) {
-            log.info("Applying feature count cutoff: " + prm.featCountCutoff);
-            counts = countFeatures(data, templates);
-        } else if (templates.isGrowing() && data != null) {
+        if (templates.isGrowing() && data != null) {
             log.info("Growing feature template list by iterating over examples");
-            countFeatures(data, templates);
-        }
-        templates.stopGrowth();
+            extractAllObsFeats(data, templates);
+            templates.stopGrowth();
+        }        
+        numTemplates = templates.size();
         
         // Apply a feature count cutoff.
         this.included = new boolean[numTemplates][][];
@@ -109,11 +101,16 @@ public class ObsFeatureConjoiner implements Serializable {
             int numFeats = template.getAlphabet().size();
             included[t] = new boolean[numConfigs][numFeats];
         }
-        BoolArrays.fill(included, true);
-        if (counts != null) {
-            excludeByFeatCount(counts);
-            counts = null;
+        BoolArrays.fill(included, true);        
+        if (!prm.includeUnsupportedFeatures) {
+            prm.featCountCutoff = Math.max(prm.featCountCutoff, 1);
         }
+        if (prm.featCountCutoff >= 1) {
+            log.info("Applying feature count cutoff: " + prm.featCountCutoff);
+            IntIntDenseVector[][] counts = countFeatures(data, templates);
+            excludeByFeatCount(counts);
+        }
+        
       
         // Always include the bias features.
         for (int t=0; t<included.length; t++) {
@@ -145,6 +142,24 @@ public class ObsFeatureConjoiner implements Serializable {
         }
         
         initialized = true;
+    }
+
+    /**
+     * Loops through all examples to create the features, thereby ensuring that the FTS are initialized.
+     */
+    private void extractAllObsFeats(FgExampleList data, FactorTemplateList templates) {
+        for (int i=0; i<data.size(); i++) {
+            FgExample ex = data.get(i);
+            for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
+                Factor f = ex.getFgLat().getFactor(a);
+                if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {
+                    int t = templates.getTemplateId((TemplateFactor) f);
+                    if (t != -1) {
+                        ((ObsFeatureCarrier) f).getObsFeatures();                                      
+                    }
+                }
+            }
+        }
     }
     
     /**

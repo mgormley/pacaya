@@ -52,7 +52,9 @@ public class FgExample implements Serializable {
         // Initialize the observation function.
         obsFe.init(this, fts);
         // Update the factor templates.
-        fts.update(this.getFgLatPred());
+        fts.lookupTemplateIds(this.getFgLatPred());
+        fts.getTemplateIds(this.getFgLat());
+        fts.getTemplateIds(this.getOriginalFactorGraph());
     }
     public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
         this(fg, goldConfig);        
