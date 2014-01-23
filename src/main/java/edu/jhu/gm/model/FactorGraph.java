@@ -184,9 +184,9 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
     /** The variables in this factor graph. */
     private ArrayList<Var> vars;
     /**
-     * Map from {@link Factor} and {@link Var} objects to their respective nodes.
+     * Map from {@link Var} objects to their respective nodes.
      */
-    private HashMap<Object,FgNode> nodeMap;
+    private HashMap<Var,FgNode> varToNodeMap;
     /**
      * Internal list of factor nodes allowing for fast lookups of nodes. It is
      * always true that factors.get(i) corresponds to the node
@@ -203,7 +203,7 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         super();
         factors = new ArrayList<Factor>();
         vars = new ArrayList<Var>();
-        nodeMap = new HashMap<Object,FgNode>();
+        varToNodeMap = new HashMap<Var,FgNode>();
         factorNodes = new ArrayList<FgNode>();
         varNodes = new ArrayList<FgNode>();
     }
@@ -227,11 +227,11 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
     }
     
     public FgNode getNode(Var var) {
-        return nodeMap.get(var);
+        return varToNodeMap.get(var);
     }
 
     public FgNode getNode(Factor factor) {
-        return nodeMap.get(factor);
+        return getFactorNode(factor.getId());
     }
 
     public FgNode getVarNode(int varId) {
@@ -257,22 +257,27 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
      * @param var The factor to add.
      * @return The node for this factor.
      */
-    public FgNode addFactor(Factor factor) {        
-        FgNode fnode = nodeMap.get(factor);
-        if (fnode == null) {
-            int id = factors.size();
-            if (factor.getId() != -1 && factor.getId() != id) {
-                throw new IllegalStateException("Factor id already set, but incorrect: " + id);
+    public FgNode addFactor(Factor factor) {
+        int id = factor.getId();
+        boolean alreadyAdded = (0 <= id && id < factors.size());
+        FgNode fnode;
+        if (alreadyAdded) {
+            if (factors.get(id) != factor) {
+                throw new IllegalStateException("Factor id already set, but factor not yet added.");
             }
-            factor.setId(id);
-            
+            fnode = factorNodes.get(id);
+        } else {            
             // Factor was not yet in the factor graph.
             //
+            // Check and set the id.
+            if (id != -1 && id != factors.size()) {
+                throw new IllegalStateException("Factor id already set, but incorrect: " + id);
+            }
+            factor.setId(factors.size());
             // Add the factor.
             fnode = new FgNode(factor);
             factors.add(factor);
             factorNodes.add(fnode);
-            nodeMap.put(factor, fnode);
             super.add(fnode);
             
             // Add each variable...
@@ -300,13 +305,13 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
      * @return The node for this variable.
      */
     public FgNode addVar(Var var) {
-        FgNode vnode = nodeMap.get(var);
+        FgNode vnode = varToNodeMap.get(var);
         if (vnode == null) {
             // Variable was not yet in the factor graph, so add it.
             vnode = new FgNode(var);
             vars.add(var);
             varNodes.add(vnode);
-            nodeMap.put(var, vnode);
+            varToNodeMap.put(var, vnode);
             super.add(vnode);
         }
         return vnode;
