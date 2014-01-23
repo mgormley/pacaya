@@ -86,7 +86,7 @@ public class FgModel implements Serializable, IFgModel {
         int[] fvInd = fv.getInternalIndices();
         double[] fvVal = fv.getInternalValues();
         for (int i=0; i<fvInd.length; i++) {
-            params.add(fvInd[i], multiplier * fvVal[i]);
+            add(fvInd[i], multiplier * fvVal[i]);
         }
     }
     

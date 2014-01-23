@@ -7,12 +7,12 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.featurize.SentFeatureExtractorCache;
+import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -49,27 +49,27 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
     
     private SrlFeatureExtractorPrm prm;
-    private SrlFactorGraph sfg;
     private FactorTemplateList fts;
     private VarConfig goldConfig;
-    private SentFeatureExtractorCache sentFeatExt;
+    private SentFeatureExtractor sentFeatExt;
         
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
-        this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
+        // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
+        // SRL and dependency parsing use the same feature set, it's probably not worth the memory burden.
+        //this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
+        this.sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
     }
 
     @Override
-    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig,
-            FactorTemplateList fts) {
-        this.sfg = (SrlFactorGraph) fg;
-        this.goldConfig = goldConfig;
+    public void init(FgExample ex, FactorTemplateList fts) {
+        this.goldConfig = ex.getGoldConfig();
         this.fts = fts;
     }
     
     @Override
-    public FeatureVector calcObsFeatureVector(int factorId) {
-        SrlFactor f = (SrlFactor) sfg.getFactor(factorId);
+    public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
+        SrlFactor f = (SrlFactor) factor;
         SrlFactorTemplate ft = f.getFactorType();
         VarSet vars = f.getVars();
         
@@ -95,11 +95,11 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // As of 12/18/13, this breaks backwards compatibility with SOME of
             // the features in SentFeatureExtractor including useNarad and
             // useSimple.
-            obsFeats = sentFeatExt.fastGetObsFeats(parent, child);
+            obsFeats = sentFeatExt.createFeatureSet(parent, child);
         } else if (ft == SrlFactorTemplate.SENSE_UNARY) {
             SenseVar var = (SenseVar) vars.iterator().next();
             int parent = var.getParent();
-            obsFeats = sentFeatExt.fastGetObsFeats(parent);
+            obsFeats = sentFeatExt.createFeatureSet(parent);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }
@@ -195,11 +195,6 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             hash += 31 * hash + fname.charAt(i);
         }
         return hash;
-    }
-
-    @Override
-    public void clear() {
-        sentFeatExt.clear();
     }
     
 }

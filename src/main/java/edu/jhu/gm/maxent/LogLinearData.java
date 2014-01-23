@@ -77,7 +77,7 @@ public class LogLinearData {
             features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
         }
         LogLinearExample ex = new LogLinearExample(weight, label, features);
-        exList .add(ex);
+        exList.add(ex);
     }
 
     public Alphabet<Feature> getAlphabet() {

@@ -43,6 +43,8 @@ import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
@@ -291,6 +293,7 @@ public class SrlRunner {
         
         // Get a model.
         SrlFgModel model = null;
+        ObsFeatureConjoiner ofc;
         FactorTemplateList fts;
         CorpusStatistics cs;
         SrlFeatureExtractorPrm srlFePrm;
@@ -298,56 +301,28 @@ public class SrlRunner {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
             model = (SrlFgModel) Files.deserialize(modelIn);
-            fts = model.getTemplates();
+            ofc = model.getOfc();
+            fts = ofc.getTemplates();
             cs = model.getCs();
-            srlFePrm = model.getSrlFePrm();
-            
+            srlFePrm = model.getSrlFePrm();            
             // TODO: use atList here.
         } else {
             srlFePrm = getSrlFeatureExtractorPrm();
             removeAts(srlFePrm);
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
-            if (useTemplates && featureSelection) {
-                String name = "train";
-                SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
-                        trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
-                CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
-                
-                InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
-                prm.featureHashMod = featureHashMod;
-                prm.numThreads = threads;
-                prm.numToSelect = numFeatsToSelect;
-                prm.maxNumSentences = numSentsForFeatSelect;
-                prm.selectSense = predictSense;
-                SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
-                InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
-                sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
-                ig.shutdown();
-                srlFePrm.fePrm.soloTemplates = sft.srlSense;
-                srlFePrm.fePrm.pairTemplates = sft.srlArg;
-                removeAts(srlFePrm); // TODO: This probably isn't necessary, but just in case.
-            }
-            if (useTemplates) {
-                log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
-                log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
-                if (senseFeatTplsOut != null) {
-                    TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
-                }
-                if (argFeatTplsOut != null) {
-                    TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
-                }
-            }
+            featureSelection(cs, srlFePrm);
             fts = new FactorTemplateList();
+            ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm());
         }
         
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            FgExampleList data = getData(fts, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
+            FgExampleList data = getData(ofc, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name, srlFePrm);
             
             if (model == null) {
-                model = new SrlFgModel(data, includeUnsupportedFeatures, cs, srlFePrm);
+                model = new SrlFgModel(ofc.getNumParams(), cs, ofc, srlFePrm);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -393,7 +368,7 @@ public class SrlRunner {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            FgExampleList data = getData(fts, cs, devType, dev, devGoldOut, devMaxNumSentences,
+            FgExampleList data = getData(ofc, cs, devType, dev, devGoldOut, devMaxNumSentences,
                     devMaxSentenceLength, name, srlFePrm);
             // Decode and evaluate the dev data.
             VarConfigPair pair = decode(model, data, devType, devPredOut, name);
@@ -404,11 +379,48 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            FgExampleList data = getData(fts, cs, testType, test, testGoldOut, testMaxNumSentences,
+            FgExampleList data = getData(ofc, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name, srlFePrm);
             // Decode and evaluate the test data.
             VarConfigPair pair = decode(model, data, testType, testPredOut, name);
             eval(name, pair);
+        }
+    }
+
+    /**
+     * Do feature selection and update srlFePrm with the chosen feature templates.
+     */
+    private void featureSelection(CorpusStatistics cs, SrlFeatureExtractorPrm srlFePrm) throws IOException,
+            ParseException {
+        if (useTemplates && featureSelection) {
+            String name = "train";
+            SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
+                    trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
+            CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
+            
+            InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
+            prm.featureHashMod = featureHashMod;
+            prm.numThreads = threads;
+            prm.numToSelect = numFeatsToSelect;
+            prm.maxNumSentences = numSentsForFeatSelect;
+            prm.selectSense = predictSense;
+            SrlFeatTemplates sft = new SrlFeatTemplates(srlFePrm.fePrm.soloTemplates, srlFePrm.fePrm.pairTemplates, null);
+            InformationGainFeatureTemplateSelector ig = new InformationGainFeatureTemplateSelector(prm);
+            sft = ig.getFeatTemplatesForSrl(sents, csPrm, sft);
+            ig.shutdown();
+            srlFePrm.fePrm.soloTemplates = sft.srlSense;
+            srlFePrm.fePrm.pairTemplates = sft.srlArg;
+            removeAts(srlFePrm); // TODO: This probably isn't necessary, but just in case.
+        }
+        if (useTemplates) {
+            log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
+            log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
+            if (senseFeatTplsOut != null) {
+                TemplateWriter.write(senseFeatTplsOut, srlFePrm.fePrm.soloTemplates);
+            }
+            if (argFeatTplsOut != null) {
+                TemplateWriter.write(argFeatTplsOut, srlFePrm.fePrm.pairTemplates);
+            }
         }
     }
 
@@ -419,20 +431,21 @@ public class SrlRunner {
         }
     }
 
-    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
+    private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name, SrlFeatureExtractorPrm srlFePrm) throws ParseException, IOException {
         SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, dataType, dataFile, goldFile, maxNumSentences,
                 maxSentenceLength, name);        
-        return getData(fts, cs, name, sents, srlFePrm);
+        return getData(ofc, cs, name, sents, srlFePrm);
     }
 
-    private FgExampleList getData(FactorTemplateList fts, CorpusStatistics cs, String name,
+    private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
             SimpleAnnoSentenceCollection sents, SrlFeatureExtractorPrm srlFePrm) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
         }
-
+        FactorTemplateList fts = ofc.getTemplates();
+        
         if (useTemplates) {
             SimpleAnnoSentence sent = sents.get(0);
             TemplateLanguage.assertRequiredAnnotationTypes(sent, srlFePrm.fePrm.soloTemplates);
@@ -441,7 +454,7 @@ public class SrlRunner {
         
         log.info("Building factor graphs and extracting features.");
         SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, fts, cs);
+        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         
         // Special case: we somehow need to be able to create test examples
@@ -454,11 +467,16 @@ public class SrlRunner {
             fts.stopGrowth();
         }
         
+        if (!ofc.isInitialized()) {
+            log.info("Initializing the observation function conjoiner.");
+            ofc.init(data, fts);
+        }
+        
         log.info(String.format("Num examples in %s: %d", name, data.size()));
         // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
         // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num factor/clique templates: %d", data.getTemplates().size()));
-        log.info(String.format("Num observation function features: %d", data.getTemplates().getNumObsFeats()));
+        log.info(String.format("Num factor/clique templates: %d", fts.size()));
+        log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
 
@@ -707,13 +725,19 @@ public class SrlRunner {
         prm.srlFePrm = srlFePrm;
         
         // Example construction and storage.
-        prm.exPrm.featCountCutoff = featCountCutoff;
         prm.exPrm.cacheType = cacheType;
         prm.exPrm.gzipped = gzipCache;
         prm.exPrm.maxEntriesInMemory = maxEntriesInMemory;
         
         // SRL Feature Extraction.
         prm.srlFePrm.featureHashMod = featureHashMod;
+        return prm;
+    }
+    
+    private static ObsFeatureConjoinerPrm getObsFeatureConjoinerPrm() {
+        ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
+        prm.featCountCutoff = featCountCutoff;
+        prm.includeUnsupportedFeatures = includeUnsupportedFeatures;
         return prm;
     }
     

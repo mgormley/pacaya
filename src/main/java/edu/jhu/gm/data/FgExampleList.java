@@ -1,6 +1,5 @@
 package edu.jhu.gm.data;
 
-import edu.jhu.gm.feat.FactorTemplateList;
 
 
 /**
@@ -17,16 +16,9 @@ public interface FgExampleList extends Iterable<FgExample> {
     /** Gets the number of examples. */
     public int size();
 
-    /** Gets the feature templates for these examples. */
-    public FactorTemplateList getTemplates();
-
     @Deprecated
     public void setSourceSentences(Object sents);
     @Deprecated
     public Object getSourceSentences();
-    @Deprecated
-    public int getNumFactors();
-    @Deprecated
-    public int getNumVars();
     
 }

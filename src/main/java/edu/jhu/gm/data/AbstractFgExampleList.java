@@ -18,11 +18,8 @@ public abstract class AbstractFgExampleList implements FgExampleList {
      * CoNLL2009 sentences from which these examples were generated.
      */
     private Object sourceSents;
-    protected FactorTemplateList fts;
 
-    public AbstractFgExampleList(FactorTemplateList fts) {
-        this.fts = fts;
-    }
+    public AbstractFgExampleList() { }
 
     /** Gets the i'th example. */
     public abstract FgExample get(int i);
@@ -36,10 +33,6 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     
     public Object getSourceSentences() {
         return sourceSents;
-    }
-
-    public FactorTemplateList getTemplates() {
-        return fts;
     }
     
     // -------- Methods which require iteration through the entire collection ------------

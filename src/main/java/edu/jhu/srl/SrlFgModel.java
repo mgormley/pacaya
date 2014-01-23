@@ -1,7 +1,6 @@
 package edu.jhu.srl;
 
-import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 
@@ -10,16 +9,13 @@ public class SrlFgModel extends FgModel {
     private static final long serialVersionUID = 5827437917567173421L;
     private CorpusStatistics cs;
     private SrlFeatureExtractorPrm srlFePrm;
+    private ObsFeatureConjoiner ofc;
     
-    public SrlFgModel(FgExampleList data, boolean includeUnsupportedFeatures, CorpusStatistics cs, SrlFeatureExtractorPrm srlFePrm) {
-        super(data, includeUnsupportedFeatures);
+    public SrlFgModel(int numParams, CorpusStatistics cs, ObsFeatureConjoiner ofc, SrlFeatureExtractorPrm srlFePrm) {
+        super(numParams);
         this.cs = cs;
+        this.ofc = ofc;
         this.srlFePrm = srlFePrm;
-    }
-    
-    public SrlFgModel(FactorTemplateList fts, CorpusStatistics cs) {
-        super(fts);
-        this.cs = cs;
     }
 
     public CorpusStatistics getCs() {
@@ -28,6 +24,10 @@ public class SrlFgModel extends FgModel {
 
     public SrlFeatureExtractorPrm getSrlFePrm() {
         return srlFePrm;
+    }
+    
+    public ObsFeatureConjoiner getOfc() {
+        return ofc;
     }
     
 }

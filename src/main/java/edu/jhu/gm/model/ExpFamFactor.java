@@ -15,7 +15,7 @@ import edu.jhu.prim.util.math.FastMath;
  * 
  * @author mgormley
  */
-public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
+public abstract class ExpFamFactor extends ExplicitFactor implements Factor, FeatureCarrier {
     
     private static final long serialVersionUID = 1L;
         
@@ -39,12 +39,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
         this.iter = new IncrIntIter(getVars().calcNumConfigs());
     }
 
-    public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
-        DenseFactor df = super.getClamped(clmpVarConfig);
-        return new ClampedExpFamFactor(df, templateKey, clmpVarConfig, this);
-    }
-
-    protected abstract FeatureVector getFeatures(int config);
+    public abstract FeatureVector getFeatures(int config);
         
     /** Gets the unnormalized numerator value contributed by this factor. */
     public double getUnormalizedScore(int configId) {
@@ -118,8 +113,13 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
             assert(iter == null || !iter.hasNext());
         }
     }
+
+    public ExpFamFactor getClamped(VarConfig clmpVarConfig) {
+        DenseFactor df = super.getClamped(clmpVarConfig);
+        return new ClampedExpFamFactor(df, templateKey, clmpVarConfig, this);
+    }
     
-    private static class ClampedExpFamFactor extends ExpFamFactor {
+    protected static class ClampedExpFamFactor extends ExpFamFactor {
         
         // The unclamped factor from which this one was derived
         private ExpFamFactor unclmpFactor;
@@ -145,7 +145,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor {
         }
 
         @Override
-        protected FeatureVector getFeatures(int config) {
+        public FeatureVector getFeatures(int config) {
             // Pass through to the unclamped factor.
             return unclmpFactor.getFeatures(config);
         }

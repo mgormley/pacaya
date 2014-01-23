@@ -5,7 +5,6 @@ import java.util.Map;
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.commons.collections.map.ReferenceMap;
 
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.util.cache.GzipMap;
 
 /**
@@ -26,19 +25,17 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
     /**
      * Constructor with a cache that uses SoftReferences.
      */
-    public FgExampleCache(FactorTemplateList fts, FgExampleList exampleFactory) {
-        this(fts, exampleFactory, -1, false);
+    public FgExampleCache(FgExampleList exampleFactory) {
+        this(exampleFactory, -1, false);
     }
 
     /**
      * Constructor with LRU cache.
-     * 
      * @param maxEntriesInMemory The maximum number of entries to keep in the
      *            in-memory cache or -1 to use a SoftReference cache.
      */
     @SuppressWarnings("unchecked")
-    public FgExampleCache(FactorTemplateList fts, FgExampleList exampleFactory, int maxEntriesInMemory, boolean gzipOnSerialize) {
-        super(fts);
+    public FgExampleCache(FgExampleList exampleFactory, int maxEntriesInMemory, boolean gzipOnSerialize) {
         this.exampleFactory = exampleFactory;
         @SuppressWarnings("rawtypes")
         Map tmp;

@@ -15,15 +15,6 @@ public interface Factor extends Serializable {
 
     /** Gets the variables associated with this factor. */
     VarSet getVars();
-    
-    /** Gets an object which uniquely identifies the feature template for this factor. */
-    Object getTemplateKey();
-    
-    /** Gets the template ID or -1 if not set. */
-    int getTemplateId();
-    
-    /** Sets the template ID. */
-    void setTemplateId(int templateId);
 
     /**
      * If this factor depends on the model, this method wil updates this
@@ -48,5 +39,18 @@ public interface Factor extends Serializable {
      * @param factorId The id of this factor within the inferencer.
      */
     void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId);
+
+    // TODO: Move these methods out to ObsFeExpFamFactor.
+    /** Gets an object which uniquely identifies the feature template for this factor. */
+    Object getTemplateKey();
+    
+    /** Gets the template ID or -1 if not set. */
+    int getTemplateId();
+    
+    /** Sets the template ID. */
+    void setTemplateId(int templateId);
+    
+    //int getId();
+    //int setId(int id);    
     
 }

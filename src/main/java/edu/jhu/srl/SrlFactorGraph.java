@@ -8,7 +8,9 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
@@ -89,14 +91,14 @@ public class SrlFactorGraph extends FactorGraph {
      * An SRL factor, which includes its type (i.e. template).
      * @author mgormley
      */
-    public static class SrlFactor extends ExpFamFactor {
+    public static class SrlFactor extends ObsFeExpFamFactor {
 
         private static final long serialVersionUID = 1L;
 
         SrlFactorTemplate type;
         
-        public SrlFactor(VarSet vars, SrlFactorTemplate type) {
-            super(vars, type);
+        public SrlFactor(VarSet vars, SrlFactorTemplate type, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
+            super(vars, type, cj, obsFe);
             this.type = type;
         }
         
@@ -114,10 +116,10 @@ public class SrlFactorGraph extends FactorGraph {
          * @param type The type.
          * @param templateKey The template key.
          */
-        public SrlFactor(VarSet vars, SrlFactorTemplate type, Object templateKey) {
-            super(vars, templateKey);
+        public SrlFactor(VarSet vars, SrlFactorTemplate type, Object templateKey, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
+            super(vars, templateKey, cj, obsFe);
             this.type = type;
-        }        
+        }
         
         public SrlFactorTemplate getFactorType() {
             return type;
@@ -189,12 +191,12 @@ public class SrlFactorGraph extends FactorGraph {
     // The sentence length.
     private final int n;                
 
-    public SrlFactorGraph(SrlFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs) {
-        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap);
+    public SrlFactorGraph(SrlFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
+        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap, obsFe, ofc);
     }
 
     public SrlFactorGraph(SrlFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
-            List<String> roleStateNames, Map<String,List<String>> psMap) {
+            List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
         this.prm = prm;
         this.n = words.size();
 
@@ -286,27 +288,27 @@ public class SrlFactorGraph extends FactorGraph {
                 if (psMap.get(lemmas.get(i)) == null) {
                     templateKey = TEMPLATE_KEY_FOR_UNKNOWN_SENSE;
                 }
-                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey));
+                addFactor(new SrlFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
             }
             // Add the role/link factors.
             for (int j = 0; j < n; j++) {
                 if (i == -1) {
                     // Add unary factors on child Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY));
+                        addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                 } else {
                     // Add unary factors on Roles.
                     if (prm.unaryFactors && roleVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
                     }
                     // Add unary factors on child Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY));
+                        addFactor(new SrlFactor(new VarSet(childVars[i][j]), SrlFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                     // Add binary factors between Roles and Links.
                     if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE_BINARY));
+                        addFactor(new SrlFactor(new VarSet(roleVars[i][j], childVars[i][j]), SrlFactorTemplate.LINK_ROLE_BINARY, ofc, obsFe));
                     }
                 }
             }

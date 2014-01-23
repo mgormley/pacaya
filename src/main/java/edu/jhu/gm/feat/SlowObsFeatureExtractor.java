@@ -1,5 +1,7 @@
 package edu.jhu.gm.feat;
 
+import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -20,22 +22,18 @@ public abstract class SlowObsFeatureExtractor implements ObsFeatureExtractor {
 
     public SlowObsFeatureExtractor() {    }
     
-    public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred, VarConfig goldConfig, FactorTemplateList fts) {
-        this.fg = fg;
-        this.goldConfig = goldConfig;
+    @Override
+    public void init(FgExample ex, FactorTemplateList fts) {
+        this.fg = ex.getOriginalFactorGraph();
+        this.goldConfig = ex.getGoldConfig();
         this.fts = fts;
     }
     
     @Override
-    public FeatureVector calcObsFeatureVector(int factorId) {
-        VarSet vars = fg.getFactor(factorId).getVars();
-        return calcObsFeatureVector(factorId, goldConfig.getSubset(VarSet.getVarsOfType(vars, VarType.OBSERVED)));
+    public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
+        VarSet vars = factor.getVars();
+        return calcObsFeatureVector(factor, goldConfig.getSubset(VarSet.getVarsOfType(vars, VarType.OBSERVED)));
     }
     
-    @Override
-    public void clear() {
-        // Do nothing.
-    }
-    
-    public abstract FeatureVector calcObsFeatureVector(int factorId, VarConfig varConfig);
+    public abstract FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor, VarConfig varConfig);
 }

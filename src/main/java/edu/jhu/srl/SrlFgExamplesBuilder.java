@@ -1,6 +1,7 @@
 package edu.jhu.srl;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -10,14 +11,15 @@ import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.featurize.SentFeatureExtractor;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleFactory;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.ObsFeatureCache;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
@@ -27,7 +29,6 @@ import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.util.Timer;
 
 /**
  * Factory for SRL FgExamples.
@@ -45,20 +46,22 @@ public class SrlFgExamplesBuilder {
     
     private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
 
-    private FactorTemplateList fts;
+    private ObsFeatureConjoiner ofc;
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
+    private FactorTemplateList fts;
 
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, FactorTemplateList fts, CorpusStatistics cs) {
+    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
         this.prm = prm;
-        this.fts = fts;
+        this.ofc = ofc;
         this.cs = cs;
+        this.fts = ofc.getTemplates();
         //this.sents = sents;
     }
 
     public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
         FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
-        FgExampleList data = builder.getInstance(fts, new SrlFgExampleFactory(sents));
+        FgExampleList data = builder.getInstance(new SrlFgExampleFactory(sents, ofc));
         data.setSourceSentences(sents);
         return data;
     }
@@ -66,15 +69,17 @@ public class SrlFgExamplesBuilder {
     /** 
      * This class is read-only and thread-safe.
      */
-    private class SrlFgExampleFactory implements FgExampleFactory {
+    private class SrlFgExampleFactory extends AbstractFgExampleList implements FgExampleList {
 
         private SimpleAnnoSentenceCollection sents;
-
-        public SrlFgExampleFactory(SimpleAnnoSentenceCollection sents) {
+        private ObsFeatureConjoiner ofc;
+        
+        public SrlFgExampleFactory(SimpleAnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
             this.sents = sents;
+            this.ofc = ofc;
         }
         
-        public FgExample get(int i, FactorTemplateList fts) {
+        public FgExample get(int i) {
             SimpleAnnoSentence sent = sents.get(i);
             
             // Precompute a few things.
@@ -82,22 +87,25 @@ public class SrlFgExamplesBuilder {
             
             Set<Integer> knownPreds = getKnownPreds(srlGraph);
             
+            // Create a feature extractor for this example.
+            ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
+            obsFe = new ObsFeatureCache(obsFe);
+            
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs);        
+            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs, obsFe, ofc);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
-    
-            // Create a feature extractor for this example.
-            ObsFeatureExtractor featExtractor = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
             
-            // Create the example solely to count the features.
-            FgExample ex = new FgExample(sfg, trainConfig, featExtractor, fts);
+            // Create the example.
+            FgExample ex = new FgExample(sfg, trainConfig);
+            
             return ex;
         }
         
         public int size() {
             return sents.size();
         }
+
     }
     
     private static Set<Integer> getKnownPreds(SrlGraph srlGraph) {

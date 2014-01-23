@@ -16,6 +16,10 @@ import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
+import edu.jhu.gm.feat.ObsFeatureCache;
+import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -44,8 +48,14 @@ public class LogLinearTd {
 
     private static final Logger log = Logger.getLogger(LogLinearTd.class);
 
-    public LogLinearTd() {
-        
+    public static class LogLinearTdPrm {
+        public boolean includeUnsupportedFeatures = true;
+    }
+    
+    private LogLinearTdPrm prm;
+    
+    public LogLinearTd(LogLinearTdPrm prm) {
+        this.prm = prm;
     }
     
     private static final Object TEMPLATE_KEY = "loglin";
@@ -53,6 +63,7 @@ public class LogLinearTd {
     private Alphabet<Feature> alphabet = null;
     private FactorTemplateList fts = null;
     private List<String> stateNames = null;
+    private ObsFeatureConjoiner ofc;
     
     /**
      * Trains a log-linear model.
@@ -74,8 +85,7 @@ public class LogLinearTd {
         prm.infFactory = bpPrm;        
         prm.regularizer = new L2(100);
         
-        boolean includeUnsupportedFeatures = false;
-        FgModel model = new FgModel(data, includeUnsupportedFeatures);
+        FgModel model = new FgModel(ofc.getNumParams());
         CrfTrainer trainer = new CrfTrainer(prm);
         trainer.train(model, data);
         return model;
@@ -118,15 +128,23 @@ public class LogLinearTd {
                 Var v0 = getVar();
                 fts.add(new FactorTemplate(new VarSet(v0), alphabet, TEMPLATE_KEY));
             }
-            //fts.stopGrowth();
+            ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
+            // TODO: Make this an option. Unit tests expect it to be false.
+            ofcPrm.includeUnsupportedFeatures = prm.includeUnsupportedFeatures;
+            ofc = new ObsFeatureConjoiner(ofcPrm);
         }
         
-        FgExampleMemoryStore data = new FgExampleMemoryStore(fts);
+        
+        FgExampleMemoryStore data = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
             for (int i=0; i<desc.getWeight(); i++) {
                 FgExample ex = getFgExample(desc);
                 data.add(ex);
             }
+        }
+        
+        if (!ofc.isInitialized()) {
+            ofc.init(data, fts);
         }
         return data;
     }
@@ -142,22 +160,20 @@ public class LogLinearTd {
         
         FactorGraph fg = new FactorGraph();
         VarSet vars = new VarSet(v0);
-        ExpFamFactor f0 = new ExpFamFactor(vars, TEMPLATE_KEY);
-        fg.addFactor(f0);
-        ObsFeatureExtractor featExtractor = new ObsFeatureExtractor() {
+        ObsFeatureExtractor obsFe = new ObsFeatureExtractor() {
             @Override
-            public FeatureVector calcObsFeatureVector(int factorId) {
+            public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
                 return desc.getObsFeatures();
             }
-            public void init(FactorGraph fg, FactorGraph fgLat, FactorGraph fgLatPred,
-                    VarConfig goldConfig, FactorTemplateList fts) {             
+            @Override
+            public void init(FgExample ex, FactorTemplateList fts) {             
                 // Do nothing.               
             }
-            public void clear() {
-                // Do nothing.
-            }
         };
-        return new FgExample(fg, trainConfig, featExtractor, fts);
+        //obsFe = new ObsFeatureCache(obsFe);
+        ExpFamFactor f0 = new ObsFeExpFamFactor(vars, TEMPLATE_KEY, ofc, obsFe);
+        fg.addFactor(f0);
+        return new FgExample(fg, trainConfig, obsFe, fts);
     }
 
     private Var getVar() {
@@ -181,4 +197,7 @@ public class LogLinearTd {
         return bpPrm;
     }
         
+    public ObsFeatureConjoiner getOfc() {
+        return ofc;
+    }
 }

@@ -1,29 +1,20 @@
 package edu.jhu.gm.data;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureCache;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.DenseFactor;
-import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.GlobalFactor;
-import edu.jhu.gm.model.IndexForVc;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.util.IntIter;
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 
 /**
@@ -54,9 +45,21 @@ public class FgExample implements Serializable {
     public Timer fgClampTimer = new Timer(); 
     public Timer featCacheTimer = new Timer(); 
     
-    @Deprecated
-    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor fe, FactorTemplateList fts) {
-        
+    // TODO: Figure out how to remove these "initializing" constructors.
+    // TODO: Maybe convert to factor methods.
+    public FgExample(FactorGraph fg, VarConfig goldConfig, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
+        this(fg, goldConfig);        
+        // Initialize the observation function.
+        obsFe.init(this, fts);
+        // TODO: Remove
+        fts.update(this.getOriginalFactorGraph());
+        fts.update(this.getFgLat());
+        fts.update(this.getFgLatPred());
+    }    
+    public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe) {
+        this(fg, goldConfig);        
+        // Initialize the feature extractor.
+        fe.init(this);        
     }
     
     /**
@@ -68,7 +71,7 @@ public class FgExample implements Serializable {
      * @param featExtractor Feature extractor on the observations only (i.e. the
      *            observation function).
      */
-    public FgExample(FactorGraph fg, VarConfig goldConfig, FactorTemplateList fts) {
+    public FgExample(FactorGraph fg, VarConfig goldConfig) {
         checkGoldConfig(fg, goldConfig);
         this.fg = fg;
         this.goldConfig = goldConfig;
@@ -92,10 +95,6 @@ public class FgExample implements Serializable {
 
         assert (fg.getNumFactors() == fgLatPred.getNumFactors());
         assert (fg.getNumFactors() == fgLat.getNumFactors());
-
-        // Add any new feature templates ensuring that they have the right
-        // number number of variable configurations.
-        fts.update(fgLatPred);
         
         fgClampTimer.stop();
 
@@ -177,11 +176,6 @@ public class FgExample implements Serializable {
         return fg;
     }
 
-    /** Gets the observation features for the given factor. */
-    public FeatureVector getObservationFeatures(int factorId) {
-        return featExtractor.calcObsFeatureVector(factorId);
-    }
-
     public boolean hasLatentVars() {
         return hasLatentVars;
     }
@@ -198,13 +192,13 @@ public class FgExample implements Serializable {
 
     /** Gets the gold configuration of the predicted variables ONLY for the given factor. */ 
     public VarConfig getGoldConfigPred(int factorId) {
-        VarSet vars = fgLatPred.getFactor(factorId).getVars();
+        VarSet vars = fg.getFactor(factorId).getVars();
         return goldConfig.getIntersection(VarSet.getVarsOfType(vars, VarType.PREDICTED));
     }
     
     /** Gets the gold configuration index of the predicted variables for the given factor. */
     public int getGoldConfigIdxPred(int factorId) {
-        VarSet vars = VarSet.getVarsOfType(fgLatPred.getFactor(factorId).getVars(), VarType.PREDICTED);
+        VarSet vars = VarSet.getVarsOfType(fg.getFactor(factorId).getVars(), VarType.PREDICTED);
         return goldConfig.getConfigIndexOfSubset(vars);
     }
 

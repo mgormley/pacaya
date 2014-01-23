@@ -4,11 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.model.ExpFamFactor;
+import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.GlobalFactor;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.CountingAlphabet;
 
@@ -75,15 +73,8 @@ public class FactorTemplateList implements Serializable {
 
     public void update(FactorGraph fg) {
         for (Factor f : fg.getFactors()) {
-            if (f instanceof GlobalFactor) {
-                // We don't want to expand out our model representation to
-                // index over the (potentially exponential) number of configurations 
-                // represented by a global factor.
-                continue;
-            } else if (f instanceof ExpFamFactor) {
+            if (f instanceof ObsFeExpFamFactor) {
                 lookupTemplateId(f);
-            } else {
-                throw new UnsupportedFactorTypeException(f);
             }
         }
     }
@@ -109,6 +100,7 @@ public class FactorTemplateList implements Serializable {
                     "Expected %d variable assignments, but factor has %d. key = %s.", fts.get(index).getNumConfigs(), f
                             .getVars().calcNumConfigs(), f.getTemplateKey()));
         }
+        f.setTemplateId(index);
         return index;
     }
 

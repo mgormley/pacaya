@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -255,14 +254,14 @@ public class CrfObjective implements Function, BatchFunction {
         FgInferencer infLat = getInfLat(ex);
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
         infLat.run();
-        addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, gradient);
+        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, gradient);
         infLat.clear();
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
         FgInferencer infLatPred = getInfLatPred(ex);
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();
-        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), -1.0, gradient);
+        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0, gradient);
         infLatPred.clear();
     }
 
@@ -270,14 +269,13 @@ public class CrfObjective implements Function, BatchFunction {
      * Computes the expected feature counts for a factor graph, and adds them to the gradient after scaling them.
      * @param ex 
      * @param inferencer The inferencer for a clamped factor graph, which has already been run.
-     * @param fts TODO
      * @param multiplier The value which the expected features will be multiplied by.
      * @param gradient The OUTPUT gradient vector to which the scaled expected features will be added.
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, FactorTemplateList fts,
-            double multiplier, IFgModel gradient) {
+    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, double multiplier,
+            IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
             Factor f = fg.getFactor(factorId);
@@ -295,7 +293,7 @@ public class CrfObjective implements Function, BatchFunction {
             FgInferencer infLat = getInfLat(ex);
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
-            addExpectedFeatureCounts(fgLat, ex, infLat, data.getTemplates(), 1.0, feats);
+            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, feats);
         }
         double[] f = new double[numParams];
         feats.updateDoublesFromModel(f);
@@ -312,7 +310,7 @@ public class CrfObjective implements Function, BatchFunction {
             FgInferencer infLatPred = getInfLatPred(ex);
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, data.getTemplates(), 1.0, feats);
+            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0, feats);
         }
         double[] f = new double[numParams];
         feats.updateDoublesFromModel(f);

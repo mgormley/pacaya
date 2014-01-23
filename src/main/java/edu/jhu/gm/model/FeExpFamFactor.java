@@ -20,7 +20,7 @@ public class FeExpFamFactor extends ExpFamFactor {
     }
 
     @Override
-    protected FeatureVector getFeatures(int configId) {
+    public FeatureVector getFeatures(int configId) {
         return fe.calcFeatureVector(this, configId);
     }
     
