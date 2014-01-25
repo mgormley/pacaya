@@ -67,9 +67,6 @@ public class FgExample implements Serializable {
      * 
      * @param fg The factor graph.
      * @param goldConfig The gold assignment to the variables.
-     * @param fts TODO
-     * @param featExtractor Feature extractor on the observations only (i.e. the
-     *            observation function).
      */
     public FgExample(FactorGraph fg, VarConfig goldConfig) {
         checkGoldConfig(fg, goldConfig);
