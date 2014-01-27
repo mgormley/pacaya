@@ -181,6 +181,11 @@ public class SmallSet<E extends Comparable<E>> implements Set<E>, Serializable {
         return changed;
         
     }
+    
+    /** Gets the i'th element of this set. */
+    public E get(int i) {
+        return list.get(i);
+    }
 
     /** @inheritDoc */
     @Override

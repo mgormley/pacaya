@@ -71,10 +71,18 @@ public class FactorTemplateList implements Serializable {
         }
     }
 
-    public void update(FactorGraph fg) {
+    public void lookupTemplateIds(FactorGraph fg) {
         for (Factor f : fg.getFactors()) {
             if (f instanceof TemplateFactor) {
                 lookupTemplateId((TemplateFactor) f);
+            }
+        }
+    }
+    
+    public void getTemplateIds(FactorGraph fg) {
+        for (Factor f : fg.getFactors()) {
+            if (f instanceof TemplateFactor) {
+                getTemplateId((TemplateFactor) f);
             }
         }
     }

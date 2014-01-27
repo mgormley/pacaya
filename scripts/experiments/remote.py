@@ -16,7 +16,6 @@ from experiments.core.util import get_all_following, get_following, get_time, ge
     to_str, to_int, get_group1, head, get_match
 from experiments.core.scrape import Scraper
 from experiments.core.util import tail
-from experiments import scrape_statuses
 import shlex
 from experiments.core import scrape
 
