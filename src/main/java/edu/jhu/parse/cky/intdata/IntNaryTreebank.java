@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky.data;
+package edu.jhu.parse.cky.intdata;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,17 +10,20 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-public class NaryTreebank extends ArrayList<NaryTree> {
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
+
+public class IntNaryTreebank extends ArrayList<IntNaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
 
     /**
      * Reads a list of trees in Penn Treebank format.
      */
-    public static NaryTreebank readTreesInPtbFormat(Reader reader) throws IOException {
-        NaryTreebank trees = new NaryTreebank();
+    public static IntNaryTreebank readTreesInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+        IntNaryTreebank trees = new IntNaryTreebank();
         while (true) {
-            NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
+            IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
             if (tree != null) {
                 trees.add(tree);
             }
@@ -38,7 +41,7 @@ public class NaryTreebank extends ArrayList<NaryTree> {
      */
     public void writeTreesInPtbFormat(File outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
-        for (NaryTree tree : this) {
+        for (IntNaryTree tree : this) {
             writer.write(tree.getAsPennTreebankString());
             writer.write("\n\n");
         }
@@ -52,7 +55,7 @@ public class NaryTreebank extends ArrayList<NaryTree> {
      */
     public void writeTreesInOneLineFormat(File outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
-        for (NaryTree tree : this) {
+        for (IntNaryTree tree : this) {
             writer.write(tree.getAsOneLineString());
             writer.write("\n");
         }
@@ -61,20 +64,27 @@ public class NaryTreebank extends ArrayList<NaryTree> {
 
     public void writeSentencesInOneLineFormat(String outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
-        for (NaryTree tree : this) {
-            List<String> sent = tree.getWords();
+        for (IntNaryTree tree : this) {
+            List<Label> sent = tree.getSentence().getLabels();
             writer.write(StringUtils.join(sent.toArray(), " "));
             writer.write("\n");
         }
         writer.close(); 
     } 
 
-    public BinaryTreebank leftBinarize() {
-        BinaryTreebank binaryTrees = new BinaryTreebank();
-        for (NaryTree tree : this) {
-            binaryTrees.add(tree.leftBinarize());
+    public IntBinaryTreebank leftBinarize(Alphabet<Label> ntAlphabet) {
+        IntBinaryTreebank binaryTrees = new IntBinaryTreebank();
+        for (IntNaryTree tree : this) {
+            binaryTrees.add(tree.leftBinarize(ntAlphabet));
         }
         return binaryTrees;
+    }
+
+    public void resetAlphabets(Alphabet<Label> lexAlphabet,
+            Alphabet<Label> ntAlphabet) {
+        for (IntNaryTree tree : this) {
+            tree.resetAlphabets(lexAlphabet, ntAlphabet);
+        }
     }
 
 }

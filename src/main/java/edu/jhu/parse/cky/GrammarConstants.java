@@ -4,25 +4,23 @@ import java.util.regex.Pattern;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
 import edu.jhu.data.Label;
-import edu.jhu.data.Tag;
-import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
 
 public class GrammarConstants {
     
-    private static final Tag NULL_ELEMENT_TAG = new Tag("-NONE-");
+    private static final String NULL_ELEMENT_TAG = "-NONE-";
     private static int unknownLevel = 5;
     
     public static boolean isBinarized(String symbolStr) {
         return symbolStr.charAt(0) == '@';
     }
     
-    public static Tag getBinarizedTag(Tag tag) {
-        return new Tag("@" + tag.getTag());
+    public static String getBinarizedTag(String tag) {
+        return "@" + tag;
     }
 
     // Hard-coded to PTB null element.
-    public static Tag getNullElement() {
+    public static String getNullElementTag() {
         return NULL_ELEMENT_TAG;
     }
 
@@ -32,31 +30,25 @@ public class GrammarConstants {
      * optional trace following, at the end of a string.
      */
     private static final Pattern functionTag = Pattern.compile("(-[A-Z]+)+(?=([-=][\\d]+)?$)");
-    public static Tag removeFunctionTag(Tag tag) {
-        String pStr = tag.getLabel();
-        pStr = functionTag.matcher(pStr).replaceAll("");
-        return new Tag(pStr);
+    public static String removeFunctionTag(String tag) {
+        return functionTag.matcher(tag).replaceAll("");
     }
     
     private static final Pattern trace = Pattern.compile("[-=][\\d]+$");
-    public static Tag removeTrace(Tag tag) {
-        String pStr = tag.getLabel();
-        pStr = trace.matcher(pStr).replaceAll("");
-        return new Tag(pStr);
+    public static String removeTagTrace(String tag) {
+        return trace.matcher(tag).replaceAll("");
     }
 
     // Hard-coded to Berkeley grammar refinement format.
     private static final Pattern refine = Pattern.compile("_\\d+$");
-    public static Tag removeRefinements(Tag tag) {
-        String pStr = tag.getLabel();
-        pStr = refine.matcher(pStr).replaceAll("");
-        return new Tag(pStr);
+    public static String removeTagRefinements(String tag) {
+        return refine.matcher(tag).replaceAll("");
     }
 
     // Hard-coded to Berkeley OOV signatures.
-    public static Word getSignature(Word word, int loc, Alphabet<Label> lexAlphabet) {
+    public static String getSignature(String word, int loc, Alphabet<Label> lexAlphabet) {
         BerkeleySignatureBuilder bsb = new BerkeleySignatureBuilder(lexAlphabet);
-        Word signature = bsb.getSignature(word, loc, unknownLevel);
+        String signature = bsb.getSignature(word, loc, unknownLevel);
         return signature;
     }
     

@@ -13,7 +13,6 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
@@ -23,8 +22,8 @@ import edu.jhu.parse.cky.chart.Chart.ParseType;
 import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.parse.cky.data.BinaryTreebank;
 import edu.jhu.parse.cky.data.NaryTree;
-import edu.jhu.parse.cky.data.NaryTreebank;
 import edu.jhu.parse.cky.data.NaryTree.NaryTreeNodeFilter;
+import edu.jhu.parse.cky.data.NaryTreebank;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
@@ -79,12 +78,7 @@ public class RunCkyParser {
         log.info("# Lexical types in grammar: " + grammar.getNumLexicalTypes());
         
         log.info("Reading trees from file: " + train);
-        Alphabet<Label> lexAlphabet = new Alphabet<Label>();
-        Alphabet<Label> ntAlphabet = new Alphabet<Label>();
-        NaryTreebank naryTrees = readPtbTrees(lexAlphabet, ntAlphabet);
-
-        log.info("Nonterminal alphabet size: " + ntAlphabet.size());
-        log.info("Lexical alphabet size: " + lexAlphabet.size());
+        NaryTreebank naryTrees = readPtbTrees();
         
         log.info("Removing null elements");
         removeNullElements(naryTrees);
@@ -107,9 +101,6 @@ public class RunCkyParser {
             naryTrees.writeSentencesInOneLineFormat(treeFile + ".sent");
         }
 
-        // Reset the lexical alphabet (only) to the grammar's alphabets.
-        naryTrees.resetAlphabets(grammar.getLexAlphabet(), ntAlphabet);
-                
         log.info("Parsing " + naryTrees.size() + " trees");
         BinaryTreebank binaryParses = new BinaryTreebank();
         Timer timer = new Timer();
@@ -120,7 +111,7 @@ public class RunCkyParser {
         prm.parseType = ParseType.VITERBI;
         CkyPcfgParser parser = new CkyPcfgParser(prm);
         for (NaryTree tree : naryTrees) {            
-            Sentence sent = tree.getSentence();
+            Sentence sent = tree.getSentence(grammar.getLexAlphabet());
             timer.start();
             Chart chart = parser.parseSentence(sent, grammar);
             timer.stop();
@@ -132,16 +123,13 @@ public class RunCkyParser {
             binaryParses.add(parse);
             log.debug("Avg seconds per parse: " + timer.avgSec());
         }
-        
-        // Reset alphabets to the growable ones before we remove the nonterminal refinements.
-        binaryParses.resetAlphabets(lexAlphabet, ntAlphabet);
 
         // Remove non-terminal refinements (e.g. NP_10 should be NP).
         log.info("Removing nonterminal refinements");        
         removeRefinements(binaryParses);
         
         log.info("Collapsing binary parses back into n-ary parses");
-        NaryTreebank naryParses = binaryParses.collapseToNary(ntAlphabet);
+        NaryTreebank naryParses = binaryParses.collapseToNary();
 
         if (parseFile != null) {
             log.info("Writing parses to file: " + parseFile);
@@ -159,10 +147,10 @@ public class RunCkyParser {
             @Override
             public void call(BinaryTree node) {
                 if (!node.isLexical()) {
-                    Tag pStr = (Tag) node.getSymbolLabel();
+                    String tag = node.getSymbol();
                     // Remove the function tags.
-                    pStr = GrammarConstants.removeRefinements(pStr);
-                    node.setSymbolLabel(pStr);
+                    tag = GrammarConstants.removeTagRefinements(tag);
+                    node.setSymbol(tag);
                 }
             }
         };
@@ -180,12 +168,12 @@ public class RunCkyParser {
             @Override
             public void call(NaryTree node) {
                 if (node.isLexical()) {
-                    Word word = (Word) node.getSymbolLabel();
-                    if (grammar.isUnknownWord(word)) {
+                    String word = node.getSymbol();
+                    if (grammar.isUnknownWord(new Word(word))) {
                         // Replace unknown words with their signature.
                         word = GrammarConstants.getSignature(word, node.getStart(), emptySet);
                     }
-                    node.setSymbolLabel(word);
+                    node.setSymbol(word);
                 }
             }
         };
@@ -201,12 +189,12 @@ public class RunCkyParser {
             @Override
             public void call(NaryTree node) {
                 if (!node.isLexical()) {
-                    Tag pStr = (Tag) node.getSymbolLabel();
+                    String tag = node.getSymbol();
                     // Remove the function tags.
-                    pStr = GrammarConstants.removeFunctionTag(pStr);
+                    tag = GrammarConstants.removeFunctionTag(tag);
                     // Remove the traces.
-                    pStr = GrammarConstants.removeTrace(pStr);
-                    node.setSymbolLabel(pStr);
+                    tag = GrammarConstants.removeTagTrace(tag);
+                    node.setSymbol(tag);
                 }
             }
         };
@@ -226,7 +214,7 @@ public class RunCkyParser {
         NaryTreeNodeFilter nullElementFilter = new NaryTreeNodeFilter() {
             @Override
             public boolean accept(NaryTree node) {
-                if (node.getSymbolLabel().equals(GrammarConstants.getNullElement())) {
+                if (node.getSymbol().equals(GrammarConstants.getNullElementTag())) {
                     return false;
                 } else if (!node.isLexical() && node.isLeaf()) {
                     return false;
@@ -241,16 +229,15 @@ public class RunCkyParser {
         }
     }
 
-    private NaryTreebank readPtbTrees(Alphabet<Label> lexAlphabet,
-            Alphabet<Label> ntAlphabet) throws FileNotFoundException,
+    private NaryTreebank readPtbTrees() throws FileNotFoundException,
             IOException {
         NaryTreebank naryTrees = new NaryTreebank();
         List<File> mrgFiles = Files.getMatchingFiles(train, ".*\\.mrg");
         for (File mrgFile : mrgFiles) {
             BufferedReader reader = new BufferedReader(new FileReader(mrgFile));
-            NaryTreebank tmpTrees = NaryTreebank.readTreesInPtbFormat(lexAlphabet, ntAlphabet, reader);
+            NaryTreebank tmpTrees = NaryTreebank.readTreesInPtbFormat(reader);
             for (NaryTree tree : tmpTrees) {
-                if (tree.getSentenceIds().length <= maxSentenceLength) {
+                if (tree.getWords().size() <= maxSentenceLength) {
                     naryTrees.add(tree);
                 }
                 if (naryTrees.size() >= maxNumSentences) {

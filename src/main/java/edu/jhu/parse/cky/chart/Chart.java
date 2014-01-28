@@ -154,7 +154,8 @@ public class Chart {
         BinaryTree leftChild;
         BinaryTree rightChild;
         if (bp.r.isLexical()) {
-            leftChild = new BinaryTree(bp.r.getLeftChild(), start, end, null, null, true, grammar.getLexAlphabet());
+            String lcSymbolStr = grammar.getLexAlphabet().lookupObject(bp.r.getLeftChild()).getLabel();
+            leftChild = new BinaryTree(lcSymbolStr, start, end, null, null, true);
             rightChild = null;
         } else if (bp.r.isUnary()) {
             leftChild = getViterbiTree(start, bp.mid, bp.r.getLeftChild());
@@ -164,7 +165,8 @@ public class Chart {
             rightChild = getViterbiTree(bp.mid, end, bp.r.getRightChild());
         }
         
-        return new BinaryTree(rootSymbol, start, end, leftChild, rightChild, false, grammar.getNtAlphabet());
+        String rootSymbolStr = grammar.getNtAlphabet().lookupObject(rootSymbol).getLabel();
+        return new BinaryTree(rootSymbolStr, start, end, leftChild, rightChild, false);
     }
 
     public ChartCell getCell(int start, int end) {

@@ -1,4 +1,4 @@
-package edu.jhu.parse.cky.data;
+package edu.jhu.parse.cky.intdata;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -6,14 +6,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class BinaryTreebank extends ArrayList<BinaryTree> {
+import edu.jhu.data.Label;
+import edu.jhu.util.Alphabet;
+
+public class IntBinaryTreebank extends ArrayList<IntBinaryTree> {
 
     private static final long serialVersionUID = -8440401929408530783L;
 
-    public NaryTreebank collapseToNary() {
-        NaryTreebank naryTrees = new NaryTreebank();
-        for (BinaryTree tree : this) {
-            naryTrees.add(tree.collapseToNary());
+    public IntNaryTreebank collapseToNary(Alphabet<Label> ntAlphabet) {
+        IntNaryTreebank naryTrees = new IntNaryTreebank();
+        for (IntBinaryTree tree : this) {
+            naryTrees.add(tree.collapseToNary(ntAlphabet));
         }
         return naryTrees;
     } 
@@ -25,7 +28,7 @@ public class BinaryTreebank extends ArrayList<BinaryTree> {
      */
     public void writeTreesInPtbFormat(File outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
-        for (BinaryTree tree : this) {
+        for (IntBinaryTree tree : this) {
             writer.write(tree.getAsPennTreebankString());
             writer.write("\n\n");
         }
@@ -39,11 +42,18 @@ public class BinaryTreebank extends ArrayList<BinaryTree> {
      */
     public void writeTreesInOneLineFormat(File outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
-        for (BinaryTree tree : this) {
+        for (IntBinaryTree tree : this) {
             writer.write(tree.getAsOneLineString());
             writer.write("\n");
         }
         writer.close();        
     }
+
+    public void resetAlphabets(Alphabet<Label> lexAlphabet,
+            Alphabet<Label> ntAlphabet) {
+        for (IntBinaryTree tree : this) {
+            tree.resetAlphabets(lexAlphabet, ntAlphabet);
+        }
+    } 
 
 }

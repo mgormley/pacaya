@@ -97,6 +97,46 @@ public class CkyPcfgParserTest {
         Assert.assertEquals(-11.0, logProb, 1e-13);
     }
     
+    @Test
+    public void testMockScorer() throws IOException {
+        LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
+        ChartCellType cellType =  ChartCellType.FULL;
+        // time flies like an arrow.
+        CnfGrammarReader builder = new CnfGrammarReader();
+        builder.loadFromResource(CnfGrammarReaderTest.timeFliesGrammarResource);
+        
+        CnfGrammar grammar = builder.getGrammar(loopOrder);                
+
+        String sentStr = "time flies like an arrow";
+        SentenceCollection sentences = new SentenceCollection(grammar.getLexAlphabet());
+        sentences.addSentenceFromString(sentStr);
+        Sentence sentence = sentences.get(0);
+        CkyPcfgParserPrm prm = new CkyPcfgParserPrm();
+        prm.loopOrder = loopOrder;
+        prm.cellType = cellType;
+        prm.cacheChart = true;
+        prm.scorer = new Scorer() {
+            @Override
+            public double score(Rule r, int start, int mid, int end) {
+                // Return the score as the rule score minus 1.
+                return r.getScore() - 1;
+            }
+        };
+        Chart chart = new CkyPcfgParser(prm).parseSentence(sentence, grammar);
+        Pair<BinaryTree, Double> pair = chart.getViterbiParse();
+        BinaryTree tree = pair.get1();
+        double logProb = pair.get2();
+        
+        System.out.println(logProb);
+        System.out.println(tree);
+        System.out.println(tree.getAsPennTreebankString());
+        String goldTree = "((S (NP (N time)) (VP (V flies) (PP (IN like) (NP (DT an) (N arrow))))))";
+        String treeStr = tree.getAsPennTreebankString().replaceAll("\\s+", " ");
+        Assert.assertEquals(goldTree, treeStr);
+        // -11.0 comes from the rules, and -10.0 from subtracting off 1.0 per rule.
+        Assert.assertEquals(-11.0 - 10.0, logProb, 1e-13);
+    }
+    
     //TODO: Remove reliance on hard-coded paths: @Test
     public void testLargeGrammar() throws IOException {
         LoopOrder loopOrder = LoopOrder.LEFT_CHILD;
