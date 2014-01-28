@@ -57,13 +57,14 @@ public class CrfObjectiveTest {
 	@Test
 	public void logLikelihoodBelowZero() {
 		
+		System.out.println("[logLikelihoodBelowZero] starting...");
 		FactorGraph fg = new FactorGraph();
 		List<String> xNames = new ArrayList<String>() {{ add("hot"); add("cold"); }};
 		List<Var> x = new ArrayList<Var>();
 		int chainLen = 5;
 		for(int i=0; i<chainLen; i++) {
 			// variable
-			Var xi = new Var(VarType.PREDICTED, 2, "x"+i, xNames);
+			Var xi = new Var(VarType.PREDICTED, xNames.size(), "x"+i, xNames);
 			fg.addVar(xi);
 			x.add(xi);
 			// factor
@@ -71,11 +72,15 @@ public class CrfObjectiveTest {
 			DenseFactor df = new DenseFactor(new VarSet(xi), v);
 			df.setValue(0, 1d);
 			Factor f = new ExplicitFactor(df);
+			assertEquals(df.getSum(), 1d + v, 1e-8);
 			fg.addFactor(f);
 		}
 		
 		// find out what the log-likelihood is
 		CrfTrainer.CrfTrainerPrm trainerPrm = new CrfTrainer.CrfTrainerPrm();
+		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+		bpPrm.logDomain = false;
+		trainerPrm.infFactory = bpPrm;
 		FgExampleMemoryStore exs = new FgExampleMemoryStore();
 		
 		// first, create a few instances of this factor graph
@@ -93,6 +98,7 @@ public class CrfObjectiveTest {
 		double objVal = objective.getValue();
 		System.out.println("objVal = " + objVal);
 		assertTrue(objVal < 0d);
+		System.out.println("[logLikelihoodBelowZero] done");
 	}
     
 	
