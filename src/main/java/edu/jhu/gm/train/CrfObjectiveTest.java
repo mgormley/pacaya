@@ -59,6 +59,7 @@ public class CrfObjectiveTest {
 	public void logLikelihoodBelowZeroBPProbDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.logDomain = false;
+		bpPrm.schedule = BpScheduleType.TREE_LIKE;
 		logLikelihoodBelowZero(bpPrm);
 	}
 	
@@ -96,10 +97,10 @@ public class CrfObjectiveTest {
 			DenseFactor df = new DenseFactor(new VarSet(xi), v);
 			df.setValue(0, infFactory.isLogDomain()
 					? 1d
-					: 1d - v);
+					: 2d + v);
 			Factor f = new ExplicitFactor(df);
-			if(!infFactory.isLogDomain())
-				assertEquals(1d, df.getSum(), 1e-8);
+//			if(!infFactory.isLogDomain())
+//				assertEquals(1d, df.getSum(), 1e-8);
 			fg.addFactor(f);
 		}
 		
