@@ -2,9 +2,11 @@ package edu.jhu.gm.train;
 
 import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -13,8 +15,8 @@ import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation;
@@ -23,14 +25,18 @@ import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BfsBpSchedule;
-import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.model.DenseFactor;
+import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
@@ -38,11 +44,64 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFgExamplesBuilder;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
 
 public class CrfObjectiveTest {
+	
+	/**
+	 * log probabilities should be less than 0...
+	 * make a chain of binary variables with one factor one each.
+	 * more complicated models are not needed, just want to show
+	 * that LL comes out >0.
+	 */
+	@Test
+	public void logLikelihoodBelowZero() {
+		
+		System.out.println("[logLikelihoodBelowZero] starting...");
+		FactorGraph fg = new FactorGraph();
+		List<String> xNames = new ArrayList<String>() {{ add("hot"); add("cold"); }};
+		List<Var> x = new ArrayList<Var>();
+		int chainLen = 5;
+		for(int i=0; i<chainLen; i++) {
+			// variable
+			Var xi = new Var(VarType.PREDICTED, xNames.size(), "x"+i, xNames);
+			fg.addVar(xi);
+			x.add(xi);
+			// factor
+			double v = Math.sqrt(i + 1);
+			DenseFactor df = new DenseFactor(new VarSet(xi), v);
+			df.setValue(0, 1d);
+			Factor f = new ExplicitFactor(df);
+			assertEquals(df.getSum(), 1d + v, 1e-8);
+			fg.addFactor(f);
+		}
+		
+		// find out what the log-likelihood is
+		CrfTrainer.CrfTrainerPrm trainerPrm = new CrfTrainer.CrfTrainerPrm();
+		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+		bpPrm.logDomain = false;
+		trainerPrm.infFactory = bpPrm;
+		FgExampleMemoryStore exs = new FgExampleMemoryStore();
+		
+		// first, create a few instances of this factor graph
+		Random rand = new Random();
+		for(int i=0; i<10; i++) {
+			VarConfig gold = new VarConfig();
+			for(int j=0; j<chainLen; j++)
+				gold.put(x.get(j), rand.nextInt(xNames.size()));
+			FgExample e = new FgExample(fg, gold);
+			exs.add(e);
+		}
+		
+		FgModel model = new FgModel(1);	// model is not important, have only DenseFactors
+		CrfObjective objective = new CrfObjective(trainerPrm.crfObjPrm, model, exs, trainerPrm.infFactory);
+		double objVal = objective.getValue();
+		System.out.println("objVal = " + objVal);
+		assertTrue(objVal < 0d);
+		System.out.println("[logLikelihoodBelowZero] done");
+	}
     
+	
     @Test
     public void testSrlLogLikelihood() throws Exception {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();

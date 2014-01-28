@@ -256,7 +256,7 @@ public class DenseFactor implements Serializable {
     /**
      * Applies the binary operator to factors f1 and f2.
      * 
-     * This method will opt to be destructive on f1 (returing it instead of a
+     * This method will opt to be destructive on f1 (returning it instead of a
      * new factor) if time/space can be saved by doing so.
      * 
      * Note: destructive if necessary.
