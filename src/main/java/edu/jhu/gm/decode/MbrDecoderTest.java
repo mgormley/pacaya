@@ -13,7 +13,6 @@ import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
-import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -28,14 +27,23 @@ import edu.jhu.util.collections.Lists;
 public class MbrDecoderTest {
 
     @Test
-    public void testAccuracy() {
+    public void testAccuracyLogDomain() {
+    	testAccuracy(true);
+    }
+    
+    @Test
+    public void testAccuracyProbDomain() {
+    	testAccuracy(false);
+    }
+    
+    public void testAccuracy(boolean useLogDomain) {
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
         
-        FactorGraph fg = getThreeConnectedComponentsFactorGraph(true, ofc, obsFe);
+        FactorGraph fg = getThreeConnectedComponentsFactorGraph(useLogDomain, ofc, obsFe);
         MbrDecoder decoder = new MbrDecoder(new MbrDecoderPrm());
         
         // Make a dummy train config.
