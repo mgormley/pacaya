@@ -2,7 +2,9 @@ package edu.jhu.gm.inf;
 
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -16,6 +18,7 @@ import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 
 /**
@@ -380,30 +383,106 @@ public class BeliefPropagation implements FgInferencer {
 
     /** @inheritDoc */
     @Override
-    public double getPartition() {
-        // The factor graph's overall partition function is the product of the
-        // partition functions for each connected component. 
-        double partition = prm.logDomain ? 0.0 : 1.0;
-        for (FgNode node : fg.getConnectedComponents()) {
-            if (!node.isVar()) {
-                if (node.getOutEdges().size() == 0) {
-                    // This is an empty factor that makes no contribution to the partition function.
-                    continue;
+    public double getPartition() {        
+        if (prm.schedule == BpScheduleType.TREE_LIKE && prm.normalizeMessages == false) {
+            // Special case which only works on non-loopy graphs with the two pass schedule and 
+            // no renormalization of messages.
+            // 
+            // The factor graph's overall partition function is the product of the
+            // partition functions for each connected component. 
+            double partition = prm.logDomain ? 0.0 : 1.0;
+            for (FgNode node : fg.getConnectedComponents()) {
+                if (!node.isVar()) {
+                    if (node.getOutEdges().size() == 0) {
+                        // This is an empty factor that makes no contribution to the partition function.
+                        continue;
+                    } else {
+                        // Get a variable node in this connected component.
+                        node = node.getOutEdges().get(0).getChild();
+                        assert(node.isVar());
+                    }
+                }
+                
+                double nodePartition = getPartitionFunctionAtVarNode(node);
+                if (prm.logDomain) {
+                    partition += nodePartition;
                 } else {
-                    // Get a variable node in this connected component.
-                    node = node.getOutEdges().get(0).getChild();
-                    assert(node.isVar());
+                    partition *= nodePartition;   
                 }
             }
-            
-            double nodePartition = getPartitionFunctionAtVarNode(node);
-            if (prm.logDomain) {
-                partition += nodePartition;
+            return partition;
+        }
+        
+        if (!prm.logDomain) {
+            return Math.exp(-getBetheFreeEnergy());
+        } else {
+            return - getBetheFreeEnergy();
+        }
+    }
+    
+    /**
+     * Computes the Bethe free energy of the factor graph. For acyclic graphs,
+     * this is equal to -log(Z) where Z is the exact partition function. For 
+     * loopy graphs it can be used as an approximation.
+     */
+    private double getBetheFreeEnergy() {
+        // 
+        // G_{Bethe} = \sum_a \sum_{x_a} - b(x_a) ln \chi(x_a)
+        //              + \sum_a \sum_{x_a} b(x_a) ln b(x_a)
+        //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
+        //           = \sum_a \sum_{x_a} - b(x_a) ln (\chi(x_a) / b(x_a))
+        //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
+        //
+        //     where n_i is the number of neighbors of the variable x_i,
+        //     b(x_a) and b(x_i) are normalized distributions and x_a is 
+        //     the set of variables participating in factor a. 
+        //
+        
+        double bethe = 0.0;
+        Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
+        for (int a=0; a<fg.getFactors().size(); a++) {
+            Factor f = fg.getFactors().get(a);
+            if (f instanceof ExplicitFactor) {
+                int numConfigs = f.getVars().calcNumConfigs();
+                DenseFactor beliefs = getMarginalsForFactorId(a);
+                for (int c=0; c<numConfigs; c++) {                
+                    double chi_c = ((ExplicitFactor) f).getValue(c);
+                    // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
+                    if (beliefs.getValue(c) != 0) { 
+                        if (prm.logDomain) {
+                            bethe += FastMath.exp(beliefs.getValue(c)) * (beliefs.getValue(c) - chi_c);
+                        } else {
+                            bethe += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c) / chi_c);
+                        }
+                    }
+                }
             } else {
-                partition *= nodePartition;   
+                // TODO: we need to support GlobalFactors here. Until that is done, this computation will be incorrect for 
+                // factor graphs with global factors.
+                // bethe += ((GlobalFactor) f).getBetheFreeEnergy();
+                ignoredClasses.add(f.getClass());
             }
         }
-        return partition;
+        for (int i=0; i<fg.getVars().size(); i++) {
+            Var v = fg.getVars().get(i);
+            int numNeighbors = fg.getVarNode(i).getOutEdges().size();
+            DenseFactor beliefs = getMarginalsForVarId(i);
+            double sum = 0.0;
+            for (int c=0; c<v.getNumStates(); c++) {
+                if (prm.logDomain) {
+                    sum += FastMath.exp(beliefs.getValue(c)) * beliefs.getValue(c);
+                } else {
+                    sum += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c));
+                }
+            }
+            bethe -= (numNeighbors - 1) * sum;
+        }
+        
+        for (Class<?> clazz : ignoredClasses) {
+            log.warn("Ignoring factor for Bethe free energy computation: " + clazz);            
+        }
+        
+        return bethe;
     }
 
     /**
@@ -426,7 +505,7 @@ public class BeliefPropagation implements FgInferencer {
             return prod.getSum();
         }
     }
-
+        
     @Override
     public boolean isLogDomain() {
         return prm.logDomain;

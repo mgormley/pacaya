@@ -22,18 +22,68 @@ import edu.jhu.util.collections.Lists;
 public class BeliefPropagationTest {
     
     @Test
-    public void testOnOneVar() {
+    public void testOnOneVarProb() {
+        boolean logDomain = false;
+        testOneVarHelper(logDomain);
+    }
+    
+    @Test
+    public void testOnOneVarLogProb() {
+        boolean logDomain = true;
+        testOneVarHelper(logDomain);
+    }
+
+    private void testOneVarHelper(boolean logDomain) {
         FactorGraph fg = new FactorGraph();
         Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
 
         ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
 
-        emit0.setValue(0, 0.1);
-        emit0.setValue(1, 0.9);
+        emit0.setValue(0, 1.1);
+        emit0.setValue(1, 1.9);
 
         fg.addFactor(emit0);
         
-        boolean logDomain = true;
+        if (logDomain) {
+            for (Factor f : fg.getFactors()) {
+                ((DenseFactor)f).convertRealToLog();
+            }
+        }
+        
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+
+        assertEqualMarginals(fg, bf, bp);
+    }
+    
+    @Test
+    public void testTwoVarsProb() {
+        boolean logDomain = false;
+
+        FactorGraph fg = new FactorGraph();
+        Var t0 = new Var(VarType.PREDICTED, 2, "t0", null);
+        Var t1 = new Var(VarType.PREDICTED, 2, "t1", null);
+
+        ExplicitFactor emit0 = new ExplicitFactor(new VarSet(t0)); 
+        emit0.setValue(0, 1.1);
+        emit0.setValue(1, 1.9);
+
+        ExplicitFactor tran0 = new ExplicitFactor(new VarSet(t0, t1)); 
+        tran0.set(1);
+        tran0.setValue(0, 2.2);
+        tran0.setValue(1, 2.3);
+        tran0.setValue(2, 2.4);
+        tran0.setValue(3, 2.5);
+        
+        fg.addFactor(emit0);
+        fg.addFactor(tran0);
+        
         if (logDomain) {
             for (Factor f : fg.getFactors()) {
                 ((DenseFactor)f).convertRealToLog();
