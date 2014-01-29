@@ -40,7 +40,7 @@ public class Timer implements Serializable {
         start();
     }
 
-    private long elapsedSinceLastStart() {
+    public long elapsedSinceLastStart() {
         return System.currentTimeMillis() - startTime;
     }
 
