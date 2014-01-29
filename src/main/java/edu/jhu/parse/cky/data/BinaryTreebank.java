@@ -46,4 +46,11 @@ public class BinaryTreebank extends ArrayList<BinaryTree> {
         writer.close();        
     }
 
+    /** Intern all the strings. */
+    public void intern() {
+        for (BinaryTree tree : this) {
+            tree.intern();
+        }
+    }
+    
 }

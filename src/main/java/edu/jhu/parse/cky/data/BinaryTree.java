@@ -267,6 +267,17 @@ public class BinaryTree {
         }
         
     }
+    
+    /** Intern all the strings. */
+    public void intern() {
+        symbol = symbol.intern();
+        if (leftChild != null) {
+            leftChild.intern();
+        }
+        if (rightChild != null) {
+            rightChild.intern();
+        }
+    }
 
     public NaryTree collapseToNary() {        
         ArrayList<NaryTree> children = null;

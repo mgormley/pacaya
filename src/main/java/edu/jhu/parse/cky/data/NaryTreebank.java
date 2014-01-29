@@ -22,6 +22,7 @@ public class NaryTreebank extends ArrayList<NaryTree> {
         while (true) {
             NaryTree tree = NaryTree.readTreeInPtbFormat(reader);
             if (tree != null) {
+                tree.intern();
                 trees.add(tree);
             }
             if (tree == null) {
@@ -77,4 +78,11 @@ public class NaryTreebank extends ArrayList<NaryTree> {
         return binaryTrees;
     }
 
+    /** Intern all the strings. */
+    public void intern() {
+        for (NaryTree tree : this) {
+            tree.intern();
+        }
+    }
+    
 }

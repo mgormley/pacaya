@@ -95,6 +95,8 @@ public class RunCkyParser {
         log.info("Converting OOVs to Berkeley OOV-class signatures used in the grammar.");
         useSignaturesForUnknownWords(naryTrees, grammar);
 
+        naryTrees.intern();
+        
         if (treeFile != null) {
             log.info("Writing (munged) trees to file: " + treeFile);
             naryTrees.writeTreesInOneLineFormat(treeFile);
@@ -119,6 +121,8 @@ public class RunCkyParser {
             BinaryTree parse = pair.get1();
             if (parse == null) {
                 log.warn("Unable to parse sentence: " + sent);
+            } else {
+                parse.intern();
             }
             binaryParses.add(parse);
             log.debug("Avg seconds per parse: " + timer.avgSec());

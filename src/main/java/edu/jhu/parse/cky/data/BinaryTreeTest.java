@@ -70,8 +70,7 @@ public class BinaryTreeTest {
         System.out.println(newNaryTreeStr);
         newNaryTreeStr = canonicalizeTreeString(newNaryTreeStr);
         origNaryTreeStr = canonicalizeTreeString(origNaryTreeStr);
-        assertEquals(origNaryTreeStr, newNaryTreeStr);
-        
+        assertEquals(origNaryTreeStr, newNaryTreeStr);        
     }
     
     private static String canonicalizeTreeString(String newTreeStr) {

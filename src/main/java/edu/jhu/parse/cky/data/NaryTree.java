@@ -8,7 +8,6 @@ import java.util.List;
 
 import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Tag;
 import edu.jhu.data.Word;
 import edu.jhu.parse.cky.GrammarConstants;
 import edu.jhu.prim.util.Lambda.LambdaOne;
@@ -263,7 +262,7 @@ public class NaryTree {
         }
         postOrderTraversal(new UpdateStartEnd());
     }
-    
+        
     // TODO: remove.          
 //    public void removeNullElements() {
 //        final int nullElement = ntAlphabet.lookupIndex("-NONE-");
@@ -431,6 +430,17 @@ public class NaryTree {
         }
         
     }
+
+    /** Intern all the strings. */
+    public void intern() {
+        symbol = symbol.intern();
+        if (children != null) {
+            for (NaryTree node : children) {
+                node.intern();
+            }
+        }
+    }
+
     public boolean isLexical() {
         return isLexical;
     }
