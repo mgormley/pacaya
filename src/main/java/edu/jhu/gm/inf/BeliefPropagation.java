@@ -459,7 +459,7 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 // TODO: we need to support GlobalFactors here. Until that is done, this computation will be incorrect for 
                 // factor graphs with global factors.
-                // bethe += ((GlobalFactor) f).getBetheFreeEnergy();
+                // bethe += ((GlobalFactor) f).getExpectedLogBelief();
                 ignoredClasses.add(f.getClass());
             }
         }
@@ -479,7 +479,8 @@ public class BeliefPropagation implements FgInferencer {
         }
         
         for (Class<?> clazz : ignoredClasses) {
-            log.warn("Ignoring factor for Bethe free energy computation: " + clazz);            
+            log.warn("Bethe free energy value is INVALID. Returning NaN instead. Ignoring factor for Bethe free energy computation: " + clazz);
+            return Double.NaN;
         }
         
         return bethe;
