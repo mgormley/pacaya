@@ -65,6 +65,7 @@ import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
@@ -314,12 +315,15 @@ public class SrlRunner {
             fts = new FactorTemplateList();
             ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm(), fts);
         }
-        
+
+        Pair<FgExampleList, SimpleAnnoSentenceCollection> dPair;
         if (trainType != null && train != null) {
             String name = "train";
             // Train a model.
-            FgExampleList data = getData(ofc, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
+            dPair = getData(ofc, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
                     trainMaxSentenceLength, name, srlFePrm);
+            FgExampleList data = dPair.get1();
+            SimpleAnnoSentenceCollection goldSents = dPair.get2();
             
             if (model == null) {
                 model = new SrlFgModel(cs, ofc, srlFePrm);
@@ -342,8 +346,8 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            VarConfigPair pair = decode(model, data, trainType, trainPredOut, name);        
-            eval(name, pair);
+            VarConfigPair vcPair = decode(model, data, goldSents, trainType, trainPredOut, name);        
+            eval(name, vcPair);
         }
                 
         if (modelOut != null) {
@@ -363,27 +367,30 @@ public class SrlRunner {
             writer.close();
         }
 
-
         if (dev != null && devType != null) {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            FgExampleList data = getData(ofc, cs, devType, dev, devGoldOut, devMaxNumSentences,
+            dPair = getData(ofc, cs, devType, dev, devGoldOut, devMaxNumSentences,
                     devMaxSentenceLength, name, srlFePrm);
+            FgExampleList data = dPair.get1();
+            SimpleAnnoSentenceCollection goldSents = dPair.get2();
             // Decode and evaluate the dev data.
-            VarConfigPair pair = decode(model, data, devType, devPredOut, name);
-            eval(name, pair);
+            VarConfigPair vcPair = decode(model, data, goldSents, devType, devPredOut, name);
+            eval(name, vcPair);
         }
         
         if (test != null && testType != null) {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            FgExampleList data = getData(ofc, cs, testType, test, testGoldOut, testMaxNumSentences,
+            dPair = getData(ofc, cs, testType, test, testGoldOut, testMaxNumSentences,
                     testMaxSentenceLength, name, srlFePrm);
+            FgExampleList data = dPair.get1();
+            SimpleAnnoSentenceCollection goldSents = dPair.get2();
             // Decode and evaluate the test data.
-            VarConfigPair pair = decode(model, data, testType, testPredOut, name);
-            eval(name, pair);
+            VarConfigPair vcPair = decode(model, data, goldSents, testType, testPredOut, name);
+            eval(name, vcPair);
         }
     }
 
@@ -431,11 +438,12 @@ public class SrlRunner {
         }
     }
 
-    private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
+    private Pair<FgExampleList, SimpleAnnoSentenceCollection> getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
             int maxNumSentences, int maxSentenceLength, String name, SrlFeatureExtractorPrm srlFePrm) throws ParseException, IOException {
         SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, dataType, dataFile, goldFile, maxNumSentences,
                 maxSentenceLength, name);        
-        return getData(ofc, cs, name, sents, srlFePrm);
+        FgExampleList data = getData(ofc, cs, name, sents, srlFePrm);
+        return new Pair<FgExampleList, SimpleAnnoSentenceCollection>(data, sents);
     }
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
@@ -632,10 +640,9 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
     
-    private VarConfigPair decode(FgModel model, FgExampleList data, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    private VarConfigPair decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection goldSents, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
-        
-        SimpleAnnoSentenceCollection goldSents = (SimpleAnnoSentenceCollection) data.getSourceSentences();
+
         // Predicted sentences
         SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
         List<VarConfig> predVcs = new ArrayList<VarConfig>();

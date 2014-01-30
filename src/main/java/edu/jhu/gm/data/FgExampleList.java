@@ -15,10 +15,5 @@ public interface FgExampleList extends Iterable<FgExample> {
     
     /** Gets the number of examples. */
     public int size();
-
-    @Deprecated
-    public void setSourceSentences(Object sents);
-    @Deprecated
-    public Object getSourceSentences();
     
 }

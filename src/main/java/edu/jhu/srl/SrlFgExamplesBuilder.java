@@ -60,7 +60,6 @@ public class SrlFgExamplesBuilder {
     public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
         FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
         FgExampleList data = builder.getInstance(new SrlFgExampleFactory(sents, ofc));
-        data.setSourceSentences(sents);
         return data;
     }
     

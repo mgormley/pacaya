@@ -13,12 +13,6 @@ import edu.jhu.gm.feat.FactorTemplateList;
  */
 public abstract class AbstractFgExampleList implements FgExampleList {
         
-    /**
-     * This is a hack to carry around the source sentences. For example, the
-     * CoNLL2009 sentences from which these examples were generated.
-     */
-    private Object sourceSents;
-
     public AbstractFgExampleList() { }
 
     /** Gets the i'th example. */
@@ -26,14 +20,6 @@ public abstract class AbstractFgExampleList implements FgExampleList {
     
     /** Gets the number of examples. */
     public abstract int size();
-
-    public void setSourceSentences(Object sents) {
-        this.sourceSents = sents;
-    }
-    
-    public Object getSourceSentences() {
-        return sourceSents;
-    }
     
     // -------- Methods which require iteration through the entire collection ------------
     //
