@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.Label;
-import edu.jhu.data.Word;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.util.Alphabet;
 
@@ -33,11 +31,11 @@ public class CnfGrammar {
     private Rule[][] brwlc;
     private Rule[][] brwrc;
     
-    private Alphabet<Label> lexAlphabet;
-    private Alphabet<Label> ntAlphabet;
+    private Alphabet<String> lexAlphabet;
+    private Alphabet<String> ntAlphabet;
     
     @SuppressWarnings("unchecked")
-    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, LoopOrder loopOrder) {
+    public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, LoopOrder loopOrder) {
         this.rootSymbol = rootSymbol;
         this.lexAlphabet = lexAlphabet;
         this.ntAlphabet = ntAlphabet;
@@ -154,11 +152,11 @@ public class CnfGrammar {
         return brwrc[rightChildNt];
     }
     
-    public Alphabet<Label> getLexAlphabet() {
+    public Alphabet<String> getLexAlphabet() {
         return lexAlphabet;
     }
 
-    public Alphabet<Label> getNtAlphabet() {
+    public Alphabet<String> getNtAlphabet() {
         return ntAlphabet;
     }
 
@@ -189,7 +187,7 @@ public class CnfGrammar {
         return rootSymbol;
     }
 
-    public boolean isUnknownWord(Word word) {
+    public boolean isUnknownWord(String word) {
         if (lexAlphabet.lookupIndex(word) < 0) {
             return true;
         }

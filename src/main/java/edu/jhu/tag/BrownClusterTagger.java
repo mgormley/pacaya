@@ -10,11 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.TaggedWord;
-import edu.jhu.data.Word;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.util.Alphabet;
@@ -129,7 +126,7 @@ public class BrownClusterTagger {
     }
     
     @Deprecated
-    public SentenceCollection getTagged(SentenceCollection sents, Alphabet<Label> alphabet) {
+    public SentenceCollection getTagged(SentenceCollection sents, Alphabet<String> alphabet) {
         SentenceCollection newSents = new SentenceCollection(alphabet);
         for (Sentence s : sents) {
             newSents.add(getTagged(s, alphabet));
@@ -138,21 +135,12 @@ public class BrownClusterTagger {
     }
     
     @Deprecated
-    public Sentence getTagged(Sentence sent, Alphabet<Label> alphabet) {
+    public Sentence getTagged(Sentence sent, Alphabet<String> alphabet) {
         int[] labelIds = new int[sent.size()];
         int i=0; 
-        for (Label l : sent) {
-            String word;
-            if (l instanceof Word) {
-                word = ((Word)l).getLabel();
-            } else if (l instanceof TaggedWord) {
-                word = ((TaggedWord)l).getWord();
-            } else {
-                throw new RuntimeException("Unable to tag labels of type: " + l.getClass());
-            }
-
+        for (String word : sent) {
             String cluster = getCluster(word);
-            labelIds[i] = alphabet.lookupIndex(new TaggedWord(word, cluster));
+            labelIds[i] = alphabet.lookupIndex(cluster);
             i++;
         }
         return new Sentence(alphabet, labelIds);        

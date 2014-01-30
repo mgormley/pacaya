@@ -3,10 +3,7 @@ package edu.jhu.parse.cky.intdata;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Tag;
-import edu.jhu.data.Word;
 import edu.jhu.parse.cky.GrammarConstants;
 import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
@@ -26,10 +23,10 @@ public class IntBinaryTree {
     private IntBinaryTree rightChild;
     private boolean isLexical;
     
-    private Alphabet<Label> alphabet;
+    private Alphabet<String> alphabet;
     
     public IntBinaryTree(int symbol, int start, int end, IntBinaryTree leftChildNode,
-            IntBinaryTree rightChildNode, boolean isLexical, Alphabet<Label> alphabet) {
+            IntBinaryTree rightChildNode, boolean isLexical, Alphabet<String> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -160,29 +157,28 @@ public class IntBinaryTree {
         return rightChild;
     }
 
-    public Alphabet<Label> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
     
     /** This method does an alphabet lookup and is slow. */
     private String getSymbolStr() {
-        return alphabet.lookupObject(symbol).getLabel();
+        return alphabet.lookupObject(symbol);
     }
     
     /** This method does an alphabet lookup and is slow. */
-    public Label getSymbolLabel() {
+    public String getSymbolLabel() {
         return alphabet.lookupObject(symbol);
     }
 
     private void setSymbolStr(String symbolStr) {
-        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
-        this.symbol = alphabet.lookupIndex(l);
+        this.symbol = alphabet.lookupIndex(symbolStr);
         if (this.symbol == -1) {
             throw new IllegalArgumentException("Invalid symbol string: " + symbolStr + " " + symbol);
         }
     }
 
-    public void setSymbolLabel(Label label) {
+    public void setSymbolLabel(String label) {
         this.symbol = alphabet.lookupIndex(label);
         if (this.symbol < 0) {
             throw new IllegalArgumentException(
@@ -233,7 +229,7 @@ public class IntBinaryTree {
 
     public Sentence getSentence() {
         ArrayList<IntBinaryTree> leaves = getLeaves();
-        ArrayList<Label> labels = new ArrayList<Label>(leaves.size());
+        ArrayList<String> labels = new ArrayList<String>(leaves.size());
         for (int i = 0; i < leaves.size(); i++) {
             labels.add(leaves.get(i).getSymbolLabel());
         }
@@ -276,8 +272,8 @@ public class IntBinaryTree {
         
     }
 
-    public IntNaryTree collapseToNary(Alphabet<Label> ntAlphabet) {
-        Alphabet<Label> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public IntNaryTree collapseToNary(Alphabet<String> ntAlphabet) {
+        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
         int symbol = alphabet.lookupIndex(getSymbolLabel());
         
@@ -294,7 +290,7 @@ public class IntBinaryTree {
     }
 
     private static void addToQueue(LinkedList<IntNaryTree> queue, IntBinaryTree child,
-            Alphabet<Label> ntAlphabet) {
+            Alphabet<String> ntAlphabet) {
         if (child == null) {
             return;
         }
@@ -307,11 +303,11 @@ public class IntBinaryTree {
         }
     }
 
-    public void resetAlphabets(final Alphabet<Label> lexAlphabet,
-            final Alphabet<Label> ntAlphabet) {
+    public void resetAlphabets(final Alphabet<String> lexAlphabet,
+            final Alphabet<String> ntAlphabet) {
         preOrderTraversal(new LambdaOne<IntBinaryTree>() {
             public void call(IntBinaryTree node) {
-                Label label = node.getSymbolLabel();
+                String label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
                 node.setSymbolLabel(label);
             }

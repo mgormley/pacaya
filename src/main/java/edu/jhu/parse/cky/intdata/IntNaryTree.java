@@ -5,10 +5,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Tag;
-import edu.jhu.data.Word;
 import edu.jhu.parse.cky.GrammarConstants;
 import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
@@ -30,10 +27,10 @@ public class IntNaryTree {
     private ArrayList<IntNaryTree> children;
     private boolean isLexical;
     
-    private Alphabet<Label> alphabet;
+    private Alphabet<String> alphabet;
     
     public IntNaryTree(int symbol, int start, int end, ArrayList<IntNaryTree> children,
-            boolean isLexical, Alphabet<Label> alphabet) {
+            boolean isLexical, Alphabet<String> alphabet) {
         this.symbol = symbol;
         this.start = start;
         this.end = end;
@@ -113,7 +110,7 @@ public class IntNaryTree {
     }
 
     public static ArrayList<IntNaryTree> readTreesInPtbFormat(
-            Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+            Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ArrayList<IntNaryTree> trees = new ArrayList<IntNaryTree>();
         while (true) {
             IntNaryTree tree = readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -133,7 +130,7 @@ public class IntNaryTree {
      * outer set of parentheses. The returned tree will have initialized the
      * start/end fields.
      */
-    public static IntNaryTree readTreeInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+    public static IntNaryTree readTreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         Files.readUntilCharacter(reader, '(');
         IntNaryTree root = IntNaryTree.readSubtreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
         Files.readUntilCharacter(reader, ')');
@@ -158,7 +155,7 @@ public class IntNaryTree {
      * @return
      * @throws IOException
      */
-    private static IntNaryTree readSubtreeInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+    private static IntNaryTree readSubtreeInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         ReaderState state = ReaderState.START;
         StringBuilder symbolSb = new StringBuilder();
         ArrayList<IntNaryTree> children = null;
@@ -207,9 +204,9 @@ public class IntNaryTree {
         
         int start = NOT_INITIALIZED;
         int end = NOT_INITIALIZED;
-        Alphabet<Label> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
+        Alphabet<String> alphabet = (isLexical ? lexAlphabet : ntAlphabet);
         String symbolStr = symbolSb.toString();
-        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
+        String l = isLexical ? symbolStr : symbolStr;
         int symbol = alphabet.lookupIndex(l);
         if (symbol == -1) {
             throw new IllegalStateException("Unknown "
@@ -338,7 +335,7 @@ public class IntNaryTree {
 
     public Sentence getSentence() {
         ArrayList<IntNaryTree> leaves = getLeaves();
-        ArrayList<Label> labels = new ArrayList<Label>(leaves.size());
+        ArrayList<String> labels = new ArrayList<String>(leaves.size());
         for (int i = 0; i < leaves.size(); i++) {
             labels.add(leaves.get(i).getSymbolLabel());
         }
@@ -353,8 +350,8 @@ public class IntNaryTree {
      * 
      * @param ntAlphabet The alphabet to use for the non-lexical nodes. 
      */
-    public IntBinaryTree leftBinarize(Alphabet<Label> ntAlphabet) {
-        Alphabet<Label> alphabet = isLexical ? this.alphabet : ntAlphabet;
+    public IntBinaryTree leftBinarize(Alphabet<String> ntAlphabet) {
+        Alphabet<String> alphabet = isLexical ? this.alphabet : ntAlphabet;
         // Reset the symbol id according to the new alphabet.
         int symbol = alphabet.lookupIndex(getSymbolLabel());
 
@@ -371,8 +368,8 @@ public class IntNaryTree {
             rightChild = children.get(1).leftBinarize(ntAlphabet);
         } else {
             // Define the label of the new parent node as in the Berkeley grammar.
-            int xbarParent = alphabet.lookupIndex(new Tag(GrammarConstants
-                    .getBinarizedTag(getSymbolStr())));
+            int xbarParent = alphabet.lookupIndex(GrammarConstants
+                    .getBinarizedTag(getSymbolStr()));
             
             LinkedList<IntNaryTree> queue = new LinkedList<IntNaryTree>(children);
             // Start by binarizing the left-most child, and store as L.
@@ -429,29 +426,29 @@ public class IntNaryTree {
         return isLexical;
     }
 
-    public Alphabet<Label> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
     
     /** This method does an alphabet lookup and is slow. */
     private String getSymbolStr() {
-        return alphabet.lookupObject(symbol).getLabel();
+        return alphabet.lookupObject(symbol);
     }
     
     /** This method does an alphabet lookup and is slow. */
-    public Label getSymbolLabel() {
+    public String getSymbolLabel() {
         return alphabet.lookupObject(symbol);
     }
 
     private void setSymbolStr(String symbolStr) {
-        Label l = isLexical ? new Word(symbolStr) : new Tag(symbolStr);
+        String l = isLexical ? symbolStr : symbolStr;
         this.symbol = alphabet.lookupIndex(l);
         if (this.symbol < 0) {
             throw new IllegalArgumentException("Symbol is not in alphabet. symbolStr=" + symbolStr + " id=" + symbol);
         }
     }
     
-    public void setSymbolLabel(Label label) {
+    public void setSymbolLabel(String label) {
         this.symbol = alphabet.lookupIndex(label);
         if (this.symbol < 0) {
             throw new IllegalArgumentException("Symbol is not in alphabet. label=" + label + " id=" + symbol);
@@ -465,11 +462,11 @@ public class IntNaryTree {
         this.symbol = symbol;
     }
 
-    public void resetAlphabets(final Alphabet<Label> lexAlphabet,
-            final Alphabet<Label> ntAlphabet) {
+    public void resetAlphabets(final Alphabet<String> lexAlphabet,
+            final Alphabet<String> ntAlphabet) {
         preOrderTraversal(new LambdaOne<IntNaryTree>() {
             public void call(IntNaryTree node) {
-                Label label = node.getSymbolLabel();
+                String label = node.getSymbolLabel();
                 node.alphabet = node.isLexical ? lexAlphabet : ntAlphabet;
                 node.setSymbolLabel(label);
             }

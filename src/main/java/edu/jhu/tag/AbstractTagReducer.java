@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreeNode;
 import edu.jhu.data.DepTreebank;
-import edu.jhu.data.TaggedWord;
 
 public abstract class AbstractTagReducer {
 
@@ -33,15 +32,13 @@ public abstract class AbstractTagReducer {
     }
 
     private void reduceTags(DepTree tree) {
-        for (DepTreeNode node : tree) {
-            if (node.getLabel() instanceof TaggedWord) {
-                TaggedWord tw = (TaggedWord) node.getLabel();
-                String newTag = reduceTag(tw.getTag());
-                if (newTag != null) {
-                    tw.setTag(newTag);
-                } else {
-                    unknownTags.add(tw.getTag());
-                }
+        for (DepTreeNode node : tree) {            
+            String oldTag = node.getLabel();
+            String newTag = reduceTag(oldTag);
+            if (newTag != null) {
+                node.setLabel(newTag);
+            } else {
+                unknownTags.add(oldTag);
             }
         }
     }

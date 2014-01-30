@@ -6,12 +6,8 @@ import java.util.List;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
-import edu.jhu.data.Label;
-import edu.jhu.data.Lemma;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.Tag;
-import edu.jhu.data.Word;
 import edu.jhu.util.Alphabet;
 
 public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> {
@@ -32,48 +28,48 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         return col;
     }
 
-    public SentenceCollection getWordsAsSentenceCollection(Alphabet<Label> alphabet) {
+    public SentenceCollection getWordsAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
         for (SimpleAnnoSentence sent : this) {
-            List<Label> labels = new ArrayList<Label>();
+            List<String> labels = new ArrayList<String>();
             for (String w : sent.getWords()) {
-                labels.add(new Word(w));
+                labels.add(w);
             }
             sents.add(new Sentence(alphabet, labels));
         }
         return sents;
     }
     
-    public SentenceCollection getLemmasAsSentenceCollection(Alphabet<Label> alphabet) {
+    public SentenceCollection getLemmasAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
         for (SimpleAnnoSentence sent : this) {
-            List<Label> labels = new ArrayList<Label>();
+            List<String> labels = new ArrayList<String>();
             for (String l : sent.getLemmas()) {
-                labels.add(new Lemma(l));
+                labels.add(l);
             }
             sents.add(new Sentence(alphabet, labels));
         }
         return sents;
     }
     
-    public SentenceCollection getPosTagsAsSentenceCollection(Alphabet<Label> alphabet) {
+    public SentenceCollection getPosTagsAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
         for (SimpleAnnoSentence sent : this) {
-            List<Label> labels = new ArrayList<Label>();
+            List<String> labels = new ArrayList<String>();
             for (String t : sent.getPosTags()) {
-                labels.add(new Tag(t));
+                labels.add(t);
             }
             sents.add(new Sentence(alphabet, labels));
         }
         return sents;
     }
     
-    public DepTreebank getPosTagsAndParentsAsDepTreebank(Alphabet<Label> alphabet) {
+    public DepTreebank getPosTagsAndParentsAsDepTreebank(Alphabet<String> alphabet) {
         DepTreebank trees = new DepTreebank(alphabet);
         for (SimpleAnnoSentence sent : this) {
-            List<Label> labels = new ArrayList<Label>();
+            List<String> labels = new ArrayList<String>();
             for (String t : sent.getPosTags()) {
-                labels.add(new Tag(t));
+                labels.add(t);
             }
             Sentence sentence = new Sentence(alphabet, labels);
             boolean isProjective = DepTree.checkIsProjective(sent.getParents());

@@ -36,7 +36,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         this.parents = parents;
         nodes.add(new WallDepTreeNode());
         for (int i=0; i<sentence.size(); i++) {
-            Label label = sentence.get(i);
+            String label = sentence.get(i);
             nodes.add(new NonprojDepTreeNode(label, i));
         }
         // Add parent/child links to DepTreeNodes
@@ -144,7 +144,7 @@ public class DepTree implements Iterable<DepTreeNode> {
         return parents.length;
     }
 
-    public Sentence getSentence(Alphabet<Label> alphabet) {
+    public Sentence getSentence(Alphabet<String> alphabet) {
         return new Sentence(alphabet, this);
     }
 

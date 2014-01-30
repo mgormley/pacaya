@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
 public class IntNaryTreebank extends ArrayList<IntNaryTree> {
@@ -20,7 +19,7 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
     /**
      * Reads a list of trees in Penn Treebank format.
      */
-    public static IntNaryTreebank readTreesInPtbFormat(Alphabet<Label> lexAlphabet, Alphabet<Label> ntAlphabet, Reader reader) throws IOException {
+    public static IntNaryTreebank readTreesInPtbFormat(Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, Reader reader) throws IOException {
         IntNaryTreebank trees = new IntNaryTreebank();
         while (true) {
             IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(lexAlphabet, ntAlphabet, reader);
@@ -65,14 +64,14 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
     public void writeSentencesInOneLineFormat(String outFile) throws IOException {
         BufferedWriter writer = new BufferedWriter(new FileWriter(outFile));
         for (IntNaryTree tree : this) {
-            List<Label> sent = tree.getSentence().getLabels();
+            List<String> sent = tree.getSentence().getLabels();
             writer.write(StringUtils.join(sent.toArray(), " "));
             writer.write("\n");
         }
         writer.close(); 
     } 
 
-    public IntBinaryTreebank leftBinarize(Alphabet<Label> ntAlphabet) {
+    public IntBinaryTreebank leftBinarize(Alphabet<String> ntAlphabet) {
         IntBinaryTreebank binaryTrees = new IntBinaryTreebank();
         for (IntNaryTree tree : this) {
             binaryTrees.add(tree.leftBinarize(ntAlphabet));
@@ -80,8 +79,8 @@ public class IntNaryTreebank extends ArrayList<IntNaryTree> {
         return binaryTrees;
     }
 
-    public void resetAlphabets(Alphabet<Label> lexAlphabet,
-            Alphabet<Label> ntAlphabet) {
+    public void resetAlphabets(Alphabet<String> lexAlphabet,
+            Alphabet<String> ntAlphabet) {
         for (IntNaryTree tree : this) {
             tree.resetAlphabets(lexAlphabet, ntAlphabet);
         }

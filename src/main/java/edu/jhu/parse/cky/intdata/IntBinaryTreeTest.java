@@ -7,7 +7,6 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
 public class IntBinaryTreeTest {
@@ -22,7 +21,7 @@ public class IntBinaryTreeTest {
                             "(NP-TMP (NNP Nov.) (CD 29) ))))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntBinaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader).leftBinarize(alphabet);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -55,7 +54,7 @@ public class IntBinaryTreeTest {
         
         // First just build (and check) the binary tree.
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntNaryTree naryTree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
         IntBinaryTree binaryTree = naryTree.leftBinarize(alphabet);

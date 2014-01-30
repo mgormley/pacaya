@@ -10,7 +10,7 @@ import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.Alphabet;
 
 
-public class LabelSequence<X extends Label> implements Iterable<X>, Serializable {
+public class LabelSequence<X> implements Iterable<X>, Serializable {
 
     private static final long serialVersionUID = 1L;
     private ArrayList<X> labels;

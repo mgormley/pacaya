@@ -7,7 +7,6 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
 public class IntNaryTreeTest {
@@ -22,7 +21,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )) ))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -44,7 +43,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -66,7 +65,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntNaryTree tree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         String newTreeStr = tree.getAsPennTreebankString();
         
@@ -99,7 +98,7 @@ public class IntNaryTreeTest {
                     "(NP-TMP (NNP Nov.) (CD 29) )))\n";
         
         StringReader reader = new StringReader(origNaryTreeStr);
-        Alphabet<Label> alphabet = new Alphabet<Label>();
+        Alphabet<String> alphabet = new Alphabet<String>();
         IntNaryTree naryTree = IntNaryTree.readTreeInPtbFormat(alphabet, alphabet, reader);
         assertEquals(20, alphabet.size());
         IntBinaryTree binaryTree = naryTree.leftBinarize(alphabet);

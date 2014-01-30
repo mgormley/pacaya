@@ -3,7 +3,6 @@ package edu.jhu.parse.cky;
 import java.util.regex.Pattern;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.BerkeleySignatureBuilder;
-import edu.jhu.data.Label;
 import edu.jhu.util.Alphabet;
 
 public class GrammarConstants {
@@ -46,7 +45,7 @@ public class GrammarConstants {
     }
 
     // Hard-coded to Berkeley OOV signatures.
-    public static String getSignature(String word, int loc, Alphabet<Label> lexAlphabet) {
+    public static String getSignature(String word, int loc, Alphabet<String> lexAlphabet) {
         BerkeleySignatureBuilder bsb = new BerkeleySignatureBuilder(lexAlphabet);
         String signature = bsb.getSignature(word, loc, unknownLevel);
         return signature;

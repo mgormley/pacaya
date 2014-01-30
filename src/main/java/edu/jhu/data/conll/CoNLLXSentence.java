@@ -3,9 +3,7 @@ package edu.jhu.data.conll;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.TaggedWord;
 
 /**
  * One sentence from a CoNLL-X formatted file.
@@ -21,12 +19,13 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         }
     }
 
+    @Deprecated
     public CoNLLXSentence(Sentence sent, int[] heads) {
         tokens = new ArrayList<CoNLLXToken>();
         for (int i=0; i<sent.size(); i++) {
-            Label label = sent.get(i);
-            TaggedWord tw = (TaggedWord) label;
-            tokens.add(new CoNLLXToken(i+1, tw.getWord(), tw.getWord(), tw.getTag(), tw.getTag(), null, heads[i], "NO_LABEL", null, null));
+            String label = sent.get(i);
+            // TODO: Here we just add the label as the tag and word.
+            tokens.add(new CoNLLXToken(i+1, label, label, label, label, null, heads[i], "NO_LABEL", null, null));
         }
     }
 

@@ -15,7 +15,7 @@ import edu.jhu.util.collections.Lists;
 /**
  * Simple representation of a single sentence with many annotations.
  * 
- * This representation only uses strings, without Label objects or Alphabet objects.
+ * This representation only uses strings, without String objects or Alphabet objects.
  * 
  * @author mgormley
  * @author mmitchell
@@ -39,7 +39,11 @@ public class SimpleAnnoSentence {
      */
     private int[] parents;
     private SrlGraph srlGraph;
+        
     // TODO: add constituency parse as NaryTree<String>
+    // TODO: add NER
+    // TODO: add Relations (e.g. ACE relations)
+    // TODO: add Token offsets.
     
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
     private Object sourceSent;

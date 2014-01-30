@@ -11,9 +11,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Word;
 import edu.jhu.parse.cky.CkyPcfgParser.CkyPcfgParserPrm;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.chart.Chart;
@@ -168,12 +166,12 @@ public class RunCkyParser {
     private void useSignaturesForUnknownWords(NaryTreebank naryTrees,
             final CnfGrammar grammar) {
         LambdaOne<NaryTree> ftRemover = new LambdaOne<NaryTree>() {
-            private final Alphabet<Label> emptySet = Alphabet.getEmptyStoppedAlphabet();
+            private final Alphabet<String> emptySet = Alphabet.getEmptyStoppedAlphabet();
             @Override
             public void call(NaryTree node) {
                 if (node.isLexical()) {
                     String word = node.getSymbol();
-                    if (grammar.isUnknownWord(new Word(word))) {
+                    if (grammar.isUnknownWord(word)) {
                         // Replace unknown words with their signature.
                         word = GrammarConstants.getSignature(word, node.getStart(), emptySet);
                     }

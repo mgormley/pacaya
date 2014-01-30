@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import edu.jhu.data.Label;
 import edu.jhu.data.Sentence;
-import edu.jhu.data.Word;
 import edu.jhu.parse.cky.GrammarConstants;
 import edu.jhu.prim.util.Lambda.LambdaOne;
 import edu.jhu.util.Alphabet;
@@ -208,11 +206,11 @@ public class BinaryTree {
         return sent;
     }
 
-    public Sentence getSentence(Alphabet<Label> lexAlphabet) {
+    public Sentence getSentence(Alphabet<String> lexAlphabet) {
         ArrayList<BinaryTree> leaves = getLexicalLeaves();
-        ArrayList<Label> labels = new ArrayList<Label>(leaves.size());
+        ArrayList<String> labels = new ArrayList<String>(leaves.size());
         for (int i = 0; i < leaves.size(); i++) {
-            labels.add(new Word(leaves.get(i).symbol));
+            labels.add(leaves.get(i).symbol);
         }
         return new Sentence(lexAlphabet, labels);
     }
