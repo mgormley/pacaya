@@ -8,9 +8,10 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
-import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.gm.train.CrfObjectiveTest;
+import edu.jhu.optimize.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 
@@ -68,7 +69,8 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);
         
         // Test average log-likelihood.
@@ -77,12 +79,12 @@ public class LogLinearEDsTest {
         assertEquals(-95.531 / (30.+15.+10.+5.), ll, 1e-3);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(45, obsFeats.get(0), 1e-13);
         assertEquals(40, obsFeats.get(1), 1e-13);
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(57.15444760934599, expFeats.get(0), 1e-3);
         assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
@@ -102,9 +104,9 @@ public class LogLinearEDsTest {
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        infFactory = CrfObjectiveTest.getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
+        //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
+        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);        
         
         assertEquals(2, exs.getAlphabet().size());
@@ -115,12 +117,12 @@ public class LogLinearEDsTest {
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(1, obsFeats.get(0), 1e-13);
         assertEquals(1, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(1.4621, expFeats.get(0), 1e-3);
         assertEquals(0.5378, expFeats.get(1), 1e-3);
         
@@ -140,9 +142,9 @@ public class LogLinearEDsTest {
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
         
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        infFactory = CrfObjectiveTest.getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, exs.getData(), infFactory);
+        //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
+        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);        
         
         assertEquals(2, exs.getAlphabet().size());
@@ -153,12 +155,12 @@ public class LogLinearEDsTest {
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(1, obsFeats.get(0), 1e-13);
         assertEquals(0, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(0.7310, expFeats.get(0), 1e-3);
         assertEquals(0.2689, expFeats.get(1), 1e-3);
         

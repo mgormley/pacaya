@@ -1,7 +1,8 @@
 package edu.jhu.gm.train;
 
 import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,12 +33,11 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
+import edu.jhu.optimize.Function;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -123,7 +123,7 @@ public class CrfObjectiveTest {
 		}
 		
 		FgModel model = new FgModel(1);	// model is not important, have only Explicit/DenseFactors
-		CrfObjective objective = new CrfObjective(trainerPrm.crfObjPrm, model, exs, trainerPrm.infFactory);
+		Function objective = getCrfObj(model, exs, infFactory);
 		double objVal = objective.getValue();
 		System.out.println("objVal = " + objVal);
 		assertTrue(objVal < 0d);
@@ -203,10 +203,16 @@ public class CrfObjectiveTest {
             assertEquals(2*3, logDomain ? FastMath.exp(partition) : partition, 1e-3);
         }
         
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
-        obj.setPoint(FgModelTest.getParams(model));
+        Function obj = getCrfObj(model, data, infFactory);
+        //CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
+        //obj.setPoint(FgModelTest.getParams(model));
         double ll = obj.getValue();        
         assertEquals(2./6., FastMath.exp(ll), 1e-13);
+    }
+
+    private Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+        CrfObjective exObj = new CrfObjective(data, infFactory);
+        return new AvgBatchObjective(exObj, model, 1);
     }
 
     public static FgInferencerFactory getInfFactory(boolean logDomain) {

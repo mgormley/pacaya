@@ -105,14 +105,8 @@ public class FgModel implements Serializable, IFgModel {
         this.params.add(other.params);
     }
     
-    public double dot(FeatureVector fv) {        
-        double dot = 0.0;
-        int[] fvInd = fv.getInternalIndices();
-        double[] fvVal = fv.getInternalValues();
-        for (int i=0; i<fvInd.length; i++) {
-            dot += fvVal[i] * params.get(fvInd[i]);
-        }
-        return dot;
+    public double dot(FeatureVector fv) {     
+        return params.dot(fv);
     }
     
     public int getNumParams() {

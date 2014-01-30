@@ -841,7 +841,7 @@ public class SrlRunner {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
         prm.regularizer = new L2(l2variance);
-        prm.crfObjPrm.numThreads = threads;
+        prm.numThreads = threads;
         return prm;
     }
 

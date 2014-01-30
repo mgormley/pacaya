@@ -9,15 +9,14 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
-import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
 import edu.jhu.gm.maxent.LogLinearTd.LogLinearTdPrm;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
-import edu.jhu.gm.train.CrfObjective.CrfObjectivePrm;
 import edu.jhu.gm.train.CrfObjectiveTest;
+import edu.jhu.optimize.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
@@ -116,7 +115,8 @@ public class LogLinearTdTest {
         System.out.println(td.getOfc().toString());
         
         // Test log-likelihood.
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, CrfObjectiveTest.getInfFactory(logDomain));
+        CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);
         
         // Test log-likelihood.
@@ -125,14 +125,14 @@ public class LogLinearTdTest {
         //assertEquals(-2.687, ll, 1e-3);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(10, obsFeats.get(0), 1e-13);
         assertEquals(10, obsFeats.get(1), 1e-13);
         assertEquals(15, obsFeats.get(2), 1e-13);
         assertEquals(15, obsFeats.get(3), 1e-13);
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(0.045, expFeats.get(0), 1e-3);
         assertEquals(0.009, expFeats.get(1), 1e-3);
         
@@ -161,9 +161,8 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
         
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        infFactory = CrfObjectiveTest.getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
+        CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);        
         
         assertEquals(1, exs.getAlphabet().size());
@@ -174,12 +173,12 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(1, obsFeats.get(0), 1e-13);
         assertEquals(1, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(1.4621, expFeats.get(1), 1e-3);
         assertEquals(0.5378, expFeats.get(0), 1e-3);
         
@@ -204,10 +203,9 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         
         FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
-        
-        FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        infFactory = CrfObjectiveTest.getInfFactory(logDomain);
-        CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
+
+        CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
+        Function obj = new AvgBatchObjective(exObj, model, 1);
         obj.setPoint(params);        
         
         assertEquals(1, exs.getAlphabet().size());
@@ -218,12 +216,12 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
         // Test observed feature counts.
-        FeatureVector obsFeats = obj.getObservedFeatureCounts(params);
+        FeatureVector obsFeats = exObj.getObservedFeatureCounts(model, params);
         assertEquals(0, obsFeats.get(0), 1e-13);
         assertEquals(1, obsFeats.get(1), 1e-13);        
         
         // Test expected feature counts.
-        FeatureVector expFeats = obj.getExpectedFeatureCounts(params);
+        FeatureVector expFeats = exObj.getExpectedFeatureCounts(model, params);
         assertEquals(0.2689, expFeats.get(0), 1e-3);
         assertEquals(0.7310, expFeats.get(1), 1e-3);
         
