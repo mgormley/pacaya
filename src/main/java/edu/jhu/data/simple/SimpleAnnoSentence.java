@@ -8,6 +8,8 @@ import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.parse.cky.data.BinaryTree;
+import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
@@ -39,8 +41,9 @@ public class SimpleAnnoSentence {
      */
     private int[] parents;
     private SrlGraph srlGraph;
-        
-    // TODO: add constituency parse as NaryTree<String>
+    /** Constituency parse. */    
+    private BinaryTree binaryTree;
+
     // TODO: add NER
     // TODO: add Relations (e.g. ACE relations)
     // TODO: add Token offsets.
@@ -54,7 +57,7 @@ public class SimpleAnnoSentence {
 
     /**
      * Fairly deep copy constructor. Everything is deeply copied except for the
-     * source sentence and the SRL graph, and the features.
+     * source sentence and the SRL graph, the features, and the constituency parse.
      */
     public SimpleAnnoSentence(SimpleAnnoSentence other) {
         this.words = Lists.copyOf(other.words);
@@ -68,6 +71,8 @@ public class SimpleAnnoSentence {
         this.feats = Lists.copyOf(other.feats);
         // TODO: this should be a deep copy.
         this.srlGraph = other.srlGraph;
+        // TODO: this should be a deep copy.
+        this.binaryTree = other.binaryTree;
     }
     
     /** Gets the i'th word as a String. */
@@ -333,6 +338,14 @@ public class SimpleAnnoSentence {
         this.feats = feats;
     }
     
+    public BinaryTree getBinaryTree() {
+        return binaryTree;
+    }
+
+    public void setBinaryTree(BinaryTree binaryTree) {
+        this.binaryTree = binaryTree;
+    }
+    
     /** Gets the original object (e.g. CoNLL09Sentence) used to create this sentence. */
     public Object getSourceSent() {
         return sourceSent;
@@ -359,6 +372,7 @@ public class SimpleAnnoSentence {
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
         case SRL: this.srlGraph = null; break;
+        case BINARY_TREE: this.binaryTree = null; break;
         default: throw new RuntimeException("not implemented for " + at);
         }
     }
