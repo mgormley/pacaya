@@ -20,6 +20,123 @@ import edu.jhu.util.collections.Lists;
 
 
 public class BeliefPropagationTest {
+	
+	@Test
+	public void canHandleProbHardFactors() {
+	
+		boolean logDomain = false;
+		
+		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
+		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
+		
+		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
+		df.setValue(0, 0d);
+		df.setValue(1, 1d);
+		df.setValue(2, 0d);
+		df.setValue(3, 1d);
+		ExplicitFactor xor = new ExplicitFactor(df);
+		
+		FactorGraph fg = new FactorGraph();
+		fg.addVar(x0);
+		fg.addVar(x1);
+		fg.addFactor(xor);
+		
+		// should have uniform mass
+		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        assertEqualMarginals(fg, bf, bp);
+		DenseFactor x0_marg = bp.getMarginals(x0);
+		assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+		assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+		DenseFactor x1_marg = bp.getMarginals(x1);
+		assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+		assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
+		
+		
+		// check again once we've added some unary factors on x0 and x1
+		df = new DenseFactor(new VarSet(x0));
+		df.setValue(0, 3d);
+		df.setValue(1, 2d);
+		ExplicitFactor f0 = new ExplicitFactor(df);
+		fg.addFactor(f0);
+		
+		df = new DenseFactor(new VarSet(x0));
+		df.setValue(0, 5d);
+		df.setValue(1, 1d);
+		ExplicitFactor f1 = new ExplicitFactor(df);
+		fg.addFactor(f1);
+		
+		bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        bp = new BeliefPropagation(fg, prm);
+        bp.run();
+		assertEqualMarginals(fg, bf, bp);
+	}
+	
+	@Test
+	public void canHandleLogHardFactors() {
+		
+		boolean logDomain = true;
+		
+		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
+		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
+		
+		// add a hard xor factor
+		// this shouldn't move the marginals away from uniform
+		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
+		df.setValue(0, Double.NEGATIVE_INFINITY);
+		df.setValue(1, 0d);
+		df.setValue(2, Double.NEGATIVE_INFINITY);
+		df.setValue(3, 0d);
+		ExplicitFactor xor = new ExplicitFactor(df);
+		
+		FactorGraph fg = new FactorGraph();
+		fg.addVar(x0);
+		fg.addVar(x1);
+		fg.addFactor(xor);
+		
+		// should have uniform mass
+		BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        assertEqualMarginals(fg, bf, bp);
+		DenseFactor x0_marg = bp.getMarginals(x0);
+		assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
+		assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
+		DenseFactor x1_marg = bp.getMarginals(x1);
+		assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
+		assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
+		
+		
+		// check again once we've added some unary factors on x0 and x1
+		df = new DenseFactor(new VarSet(x0));
+		df.setValue(0, -2d);
+		df.setValue(1, -3d);
+		ExplicitFactor f0 = new ExplicitFactor(df);
+		fg.addFactor(f0);
+		
+		df = new DenseFactor(new VarSet(x0));
+		df.setValue(0, -1d);
+		df.setValue(1, -5d);
+		ExplicitFactor f1 = new ExplicitFactor(df);
+		fg.addFactor(f1);
+		
+		bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        bp = new BeliefPropagation(fg, prm);
+        bp.run();
+		assertEqualMarginals(fg, bf, bp);
+	}
+	
     
     @Test
     public void testOnOneVarProb() {
