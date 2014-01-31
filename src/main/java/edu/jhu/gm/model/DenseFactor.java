@@ -369,4 +369,8 @@ public class DenseFactor implements Serializable {
         return DoubleArrays.argmax(values);
     }    
     
+    public int size() {
+        return values.length;
+    }
+    
 }

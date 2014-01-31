@@ -248,6 +248,10 @@ public class BeliefPropagation implements FgInferencer {
             }
         }
         
+        for (int c=0; c<msg.size(); c++) {
+            assert !Double.isNaN(msg.getValue(c));
+        }
+        
         // Set the final message in case we created a new object.
         msgs[edgeId].newMessage = msg;
     }
@@ -410,6 +414,7 @@ public class BeliefPropagation implements FgInferencer {
                     partition *= nodePartition;   
                 }
             }
+            assert !Double.isNaN(partition);
             return partition;
         }
         
@@ -438,6 +443,8 @@ public class BeliefPropagation implements FgInferencer {
         //     the set of variables participating in factor a. 
         //
         
+        double semiringZero = prm.logDomain ? Double.NEGATIVE_INFINITY : 0.0;
+        
         double bethe = 0.0;
         Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
@@ -448,7 +455,7 @@ public class BeliefPropagation implements FgInferencer {
                 for (int c=0; c<numConfigs; c++) {                
                     double chi_c = ((ExplicitFactor) f).getValue(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
-                    if (beliefs.getValue(c) != 0) { 
+                    if (beliefs.getValue(c) != semiringZero) { 
                         if (prm.logDomain) {
                             bethe += FastMath.exp(beliefs.getValue(c)) * (beliefs.getValue(c) - chi_c);
                         } else {
@@ -469,10 +476,12 @@ public class BeliefPropagation implements FgInferencer {
             DenseFactor beliefs = getMarginalsForVarId(i);
             double sum = 0.0;
             for (int c=0; c<v.getNumStates(); c++) {
-                if (prm.logDomain) {
-                    sum += FastMath.exp(beliefs.getValue(c)) * beliefs.getValue(c);
-                } else {
-                    sum += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c));
+                if (beliefs.getValue(c) != semiringZero) { 
+                    if (prm.logDomain) {
+                        sum += FastMath.exp(beliefs.getValue(c)) * beliefs.getValue(c);
+                    } else {
+                        sum += beliefs.getValue(c) * FastMath.log(beliefs.getValue(c));
+                    }
                 }
             }
             bethe -= (numNeighbors - 1) * sum;
@@ -483,6 +492,7 @@ public class BeliefPropagation implements FgInferencer {
             return Double.NaN;
         }
         
+        assert !Double.isNaN(bethe);        
         return bethe;
     }
 
