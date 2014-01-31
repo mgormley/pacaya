@@ -1,8 +1,9 @@
 package edu.jhu.gm.inf;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -15,6 +16,7 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.collections.Lists;
 
@@ -29,10 +31,15 @@ public class BeliefPropagationTest {
 		Var x1 = new Var(VarType.PREDICTED, 2, "x1", null);
 		
 		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
-		df.setValue(0, 0d);
-		df.setValue(1, 1d);
-		df.setValue(2, 0d);
-		df.setValue(3, 1d);
+		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
+			VarConfig vCfg = df.getVars().getVarConfig(cfg);
+			int v0 = vCfg.getState(x0);
+			int v1 = vCfg.getState(x1);
+			if(v0 != v1)
+				df.setValue(cfg, Double.NEGATIVE_INFINITY);
+			else
+				df.setValue(cfg, 0d);
+		}
 		ExplicitFactor xor = new ExplicitFactor(df);
 		
 		FactorGraph fg = new FactorGraph();
@@ -50,13 +57,12 @@ public class BeliefPropagationTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-        // TODO: These assertions seem to be incorrect. Remove if that's correct. 
-        //		DenseFactor x0_marg = bp.getMarginals(x0);
-        //		assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
-        //		assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
-        //		DenseFactor x1_marg = bp.getMarginals(x1);
-        //		assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
-        //		assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
+        DenseFactor x0_marg = bp.getMarginals(x0);
+        assertEquals(0.5d, x0_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x0_marg.getValue(1), 1e-6);
+        DenseFactor x1_marg = bp.getMarginals(x1);
+        assertEquals(0.5d, x1_marg.getValue(0), 1e-6);
+        assertEquals(0.5d, x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
 		df = new DenseFactor(new VarSet(x0));
@@ -88,10 +94,15 @@ public class BeliefPropagationTest {
 		// add a hard xor factor
 		// this shouldn't move the marginals away from uniform
 		DenseFactor df = new DenseFactor(new VarSet(x0, x1));
-		df.setValue(0, Double.NEGATIVE_INFINITY);
-		df.setValue(1, 0d);
-		df.setValue(2, Double.NEGATIVE_INFINITY);
-		df.setValue(3, 0d);
+		for(int cfg=0; cfg < df.getVars().calcNumConfigs(); cfg++) {
+			VarConfig vCfg = df.getVars().getVarConfig(cfg);
+			int v0 = vCfg.getState(x0);
+			int v1 = vCfg.getState(x1);
+			if(v0 != v1)
+				df.setValue(cfg, Double.NEGATIVE_INFINITY);
+			else
+				df.setValue(cfg, 0d);
+		}
 		ExplicitFactor xor = new ExplicitFactor(df);
 		
 		FactorGraph fg = new FactorGraph();
@@ -109,13 +120,12 @@ public class BeliefPropagationTest {
         bp.run();
         assertEqualMarginals(fg, bf, bp);
         
-        // TODO: These assertions seem to be incorrect. Remove if that's correct. 
-        //		DenseFactor x0_marg = bp.getMarginals(x0);
-        //		assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
-        //		assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
-        //		DenseFactor x1_marg = bp.getMarginals(x1);
-        //		assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
-        //		assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
+    	DenseFactor x0_marg = bp.getMarginals(x0);
+        assertEquals(Math.log(0.5d), x0_marg.getValue(0), 1e-6);
+        assertEquals(Math.log(0.5d), x0_marg.getValue(1), 1e-6);
+        DenseFactor x1_marg = bp.getMarginals(x1);
+        assertEquals(Math.log(0.5d), x1_marg.getValue(0), 1e-6);
+        assertEquals(Math.log(0.5d), x1_marg.getValue(1), 1e-6);
 				
 		// check again once we've added some unary factors on x0 and x1
 		df = new DenseFactor(new VarSet(x0));
@@ -355,16 +365,36 @@ public class BeliefPropagationTest {
             DenseFactor bfm = bf.getMarginals(var);
             DenseFactor bpm = bp.getMarginals(var);
             if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            	assertEqualDenseFactorsWithInfsAndNoNans(bfm, bpm, tolerance, false, var.getName());
+                //assertEquals(bfm, bpm);
             }
         }
         for (Factor f : fg.getFactors()) {
             DenseFactor bfm = bf.getMarginals(f);
             DenseFactor bpm = bp.getMarginals(f);
             if (!bfm.equals(bpm, tolerance)) {
-                assertEquals(bfm, bpm);
+            	assertEqualDenseFactorsWithInfsAndNoNans(bfm, bpm, tolerance, true, f.toString());
+                //assertEquals(bfm, bpm);
             }
         }
         assertEquals(bf.getPartition(), bp.getPartition(), tolerance);
+    }
+    
+    /**
+     * the equals method in DenseFactor seems to choke when infinities are present
+     */
+    private void assertEqualDenseFactorsWithInfsAndNoNans(DenseFactor a, DenseFactor b, double tolerance, boolean allowNaNs, String description) {
+    	double[] av = a.getValues();
+    	double[] bv = b.getValues();
+    	assertEquals(av.length, bv.length);
+    	for(int i=0; i<av.length; i++) {
+    		if(!allowNaNs)
+    			assertTrue(description + ": a=" + Arrays.toString(av) + ", b=" + Arrays.toString(bv),
+    					!Double.isNaN(av[i]) && !Double.isNaN(bv[i]));
+    		if(Double.isInfinite(av[i]) || Double.isInfinite(bv[i]))
+    			assertTrue(av[i] == bv[i]);
+    		else
+    			assertTrue(String.format("expected=%f actual=%f i=%d", av[i], bv[i], i), Math.abs(av[i] - bv[i]) < tolerance);
+    	}
     }
 }
