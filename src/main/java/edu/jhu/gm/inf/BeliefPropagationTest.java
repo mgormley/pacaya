@@ -36,9 +36,9 @@ public class BeliefPropagationTest {
 			int v0 = vCfg.getState(x0);
 			int v1 = vCfg.getState(x1);
 			if(v0 != v1)
-				df.setValue(cfg, Double.NEGATIVE_INFINITY);
-			else
 				df.setValue(cfg, 0d);
+			else
+				df.setValue(cfg, 1d);
 		}
 		ExplicitFactor xor = new ExplicitFactor(df);
 		
@@ -365,36 +365,17 @@ public class BeliefPropagationTest {
             DenseFactor bfm = bf.getMarginals(var);
             DenseFactor bpm = bp.getMarginals(var);
             if (!bfm.equals(bpm, tolerance)) {
-            	assertEqualDenseFactorsWithInfsAndNoNans(bfm, bpm, tolerance, false, var.getName());
-                //assertEquals(bfm, bpm);
+                assertEquals(bfm, bpm);
             }
         }
         for (Factor f : fg.getFactors()) {
             DenseFactor bfm = bf.getMarginals(f);
             DenseFactor bpm = bp.getMarginals(f);
             if (!bfm.equals(bpm, tolerance)) {
-            	assertEqualDenseFactorsWithInfsAndNoNans(bfm, bpm, tolerance, true, f.toString());
-                //assertEquals(bfm, bpm);
+                assertEquals(bfm, bpm);
             }
         }
         assertEquals(bf.getPartition(), bp.getPartition(), tolerance);
     }
     
-    /**
-     * the equals method in DenseFactor seems to choke when infinities are present
-     */
-    private void assertEqualDenseFactorsWithInfsAndNoNans(DenseFactor a, DenseFactor b, double tolerance, boolean allowNaNs, String description) {
-    	double[] av = a.getValues();
-    	double[] bv = b.getValues();
-    	assertEquals(av.length, bv.length);
-    	for(int i=0; i<av.length; i++) {
-    		if(!allowNaNs)
-    			assertTrue(description + ": a=" + Arrays.toString(av) + ", b=" + Arrays.toString(bv),
-    					!Double.isNaN(av[i]) && !Double.isNaN(bv[i]));
-    		if(Double.isInfinite(av[i]) || Double.isInfinite(bv[i]))
-    			assertTrue(av[i] == bv[i]);
-    		else
-    			assertTrue(String.format("expected=%f actual=%f i=%d", av[i], bv[i], i), Math.abs(av[i] - bv[i]) < tolerance);
-    	}
-    }
 }
