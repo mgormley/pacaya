@@ -13,6 +13,7 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.prim.tuple.Pair;
@@ -223,7 +224,7 @@ public class FeatureCreationSpeedTest {
                         for (int arg=0; arg<sent.size(); arg++) {
                             extTimer.start();
                             List<String> feats = new ArrayList<String>();
-                            ext.addFeatures(tpls, pred, arg, feats);
+                            ext.addFeatures(tpls, LocalObservations.newPidxCidx(pred, arg), feats);
                             extTimer.stop();
                             
                             numPairs++;

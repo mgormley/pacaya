@@ -1,10 +1,5 @@
 package edu.jhu.gm.train;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
@@ -17,12 +12,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.Function;
-import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.util.Threads;
-import edu.jhu.util.Threads.TaskFactory;
 
 public class CrfObjective implements ExampleObjective {
     

@@ -21,6 +21,7 @@ import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateFeatureExtractor;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.feat.FeatureVector;
@@ -221,7 +222,7 @@ public class InformationGainFeatureTemplateSelector {
                     
                     // Feature Extraction.
                     List<String> feats = new ArrayList<String>();
-                    featExt.addFeatures(Lists.getList(tpl), pidx, cidx, feats);
+                    featExt.addFeatures(Lists.getList(tpl), LocalObservations.newPidxCidx(pidx, cidx), feats);
                     if (feats.size() == 0) {
                         if (!tplsWithNoFeats.contains(tpl)) {
                             log.warn("No features extracted for template: " + tpl.getName());

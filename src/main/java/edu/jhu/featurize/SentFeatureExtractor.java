@@ -10,6 +10,7 @@ import java.util.Set;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
@@ -171,12 +172,11 @@ public class SentFeatureExtractor {
     }
 
     private void addTemplateSoloFeatures(int idx, ArrayList<String> feats) {
-        // TODO: Check that we are NOT using the -1 index here.
-        ext.addFeatures(prm.soloTemplates, idx, -1, feats);
+        ext.addFeatures(prm.soloTemplates, LocalObservations.newPidx(idx), feats);
     }
 
     private void addTemplatePairFeatures(int pidx, int aidx, ArrayList<String> feats) {
-        ext.addFeatures(prm.pairTemplates, pidx, aidx, feats);        
+        ext.addFeatures(prm.pairTemplates, LocalObservations.newPidxCidx(pidx, aidx), feats);        
     }
     
     // ---------- Meg's "Simple" features. ---------- 
