@@ -3,6 +3,7 @@ package edu.jhu.gm.data.erma;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,26 +31,27 @@ import featParser.FeatureFileParser;
 public class ErmaReaderTest {
 
     // TODO: remove dependence on hard-coded paths.
-    private static final String ERMA_TUTORIAL_DIR = "/Users/mgormley/research/erma/tmp/tutorial";
+    private static final String ERMA_TUTORIAL_DIR = "/edu/jhu/gm/data/erma";
     public static final String ERMA_TOY_TRAIN_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.train.data.ff";
-    public static final String ERMA_TOY_TEST_DATA_FILE = ERMA_TUTORIAL_DIR + "/toy.test.data.ff";
     public static final String ERMA_TOY_FEATURE_FILE = ERMA_TUTORIAL_DIR + "/toy.template.ff";
     
     // TODO: This test is slow and has hard-coded paths above.
     // Fix this then enable this test. 
-    // @Test
+    @Test
     public void testErmaReader() {
         // Read the ERMA files to get ERMA objects.
         SimpleErmaReader ser = new SimpleErmaReader();
-        ser.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE);
+        ser.read(SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_FEATURE_FILE), 
+                 SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_TRAIN_DATA_FILE));
         List<DataSample> samples = ser.getDataSamples();
         FeatureFile ff = ser.getFeatureFile();
-        System.out.println(ff);
+        //System.out.println(ff);
         
         // Read the ERMA files to get our objects.
         ErmaReader er = new ErmaReader();
         Alphabet<Feature> alphabet = new Alphabet<Feature>();
-        FgExampleList data = er.read(ERMA_TOY_FEATURE_FILE, ERMA_TOY_TRAIN_DATA_FILE, alphabet);
+        FgExampleList data = er.read(SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_FEATURE_FILE), 
+                                     SimpleErmaReader.class.getResourceAsStream(ERMA_TOY_TRAIN_DATA_FILE), alphabet);
 
         // Just test that we can construct these without error.
         assertEquals(samples.size(), data.size());
@@ -164,6 +166,26 @@ public class ErmaReaderTest {
             }
         }
 
+        public void read(InputStream featureTemplate, InputStream dataFile) {
+            FeatureFileParser fp;
+            log.info("Reading features from " + featureTemplate);
+            try {
+                fp = FeatureFileParser.createParser(featureTemplate);
+                ff = fp.parseFile();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            log.info("Reading data from " + dataFile);
+            DataParser dp;
+            try {
+                dp = DataParser.createParser(dataFile, ff);
+                samples = dp.parseFile();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        
         /**
          * Gets the feature templates read from the feature file.
          * 

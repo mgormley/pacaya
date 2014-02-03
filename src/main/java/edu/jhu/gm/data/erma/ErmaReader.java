@@ -1,7 +1,9 @@
 package edu.jhu.gm.data.erma;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,8 +74,18 @@ public class ErmaReader {
      * @return The new FgExamples.
      */
     public FgExampleList read(String featureTemplate, String dataFile, Alphabet<Feature> alphabet) {
+        log.info("Feature template file: " + featureTemplate);
+        log.info("Data file: " + dataFile);  
+        try {
+            return read(new FileInputStream(featureTemplate), new FileInputStream(dataFile), alphabet);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    public FgExampleList read(InputStream featureTemplate, InputStream dataFile, Alphabet<Feature> alphabet) {
         FeatureFile ff;
-        log.info("Reading features from " + featureTemplate);
+        log.info("Reading features");
         try {
             FeatureFileParser fp = FeatureFileParser.createParser(featureTemplate);
             ff = fp.parseFile();
@@ -81,7 +93,7 @@ public class ErmaReader {
             throw new RuntimeException(e);
         }
 
-        log.info("Reading and converting data from " + dataFile);  
+        log.info("Reading and converting data");  
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         try {
             // This will convert each DataSample to an FgExample and add it to data.
@@ -115,8 +127,8 @@ public class ErmaReader {
         private FgExampleStore data;
         private Alphabet<Feature> alphabet;
         
-        public ConvertingDataParser(String filename, FeatureFile ff, FgExampleStore data, Alphabet<Feature> alphabet) throws FileNotFoundException {
-            super(filename, ff);
+        public ConvertingDataParser(InputStream is, FeatureFile ff, FgExampleStore data, Alphabet<Feature> alphabet) throws FileNotFoundException {
+            super(is, ff);
             this.data = data;
             this.alphabet = alphabet;
         }
