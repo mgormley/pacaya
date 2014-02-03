@@ -65,7 +65,6 @@ public class TemplateSetsTest {
         assertEquals(5, numSense);
     }    
     
-
     @Test
     public void testGetZhao() {
         List<FeatTemplate> tpls;
@@ -165,6 +164,15 @@ public class TemplateSetsTest {
             tpls = TemplateLanguage.filterOutRequiring(new ArrayList<FeatTemplate>(tpls), at);
             System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
         }
+    }
+    
+    @Test
+    public void testGetFinkel08() {
+        List<FeatTemplate> tpls;        
+        tpls = TemplateSets.getFromResource(TemplateSets.finkel08FeatsResource);
+        int num = tpls.size();
+        System.out.println("Number of templates: " + num);        
+        assertEquals(30, num);
     }
 
 }

@@ -2,7 +2,6 @@ package edu.jhu.featurize;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +13,7 @@ import java.util.regex.Pattern;
 import edu.jhu.featurize.TemplateLanguage.Description;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
@@ -24,11 +24,14 @@ import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateLanguage.Position;
 import edu.jhu.featurize.TemplateLanguage.PositionList;
 import edu.jhu.featurize.TemplateLanguage.PositionModifier;
+import edu.jhu.featurize.TemplateLanguage.RulePiece;
+import edu.jhu.featurize.TemplateLanguage.SymbolProperty;
 import edu.jhu.featurize.TemplateLanguage.TokPropList;
 import edu.jhu.featurize.TemplateLanguage.TokProperty;
 
 /**
  * Reader for the template little language.
+ * 
  * @author mgormley
  */
 public class TemplateReader {
@@ -106,6 +109,8 @@ public class TemplateReader {
             }
         }
                     
+        // Get all of the individual pieces by looking each up by its string name
+        // in {@link TemplateLanguage#getDescByName}.
         Position pos = safeGet(descs, Position.class);
         PositionList pl = safeGet(descs, PositionList.class);
         TokProperty prop = safeGet(descs, TokProperty.class);
@@ -113,12 +118,15 @@ public class TemplateReader {
         PositionModifier mod =safeGet(descs, PositionModifier.class);
         ListModifier lmod = safeGet(descs, ListModifier.class);
         EdgeProperty eprop = safeGet(descs, EdgeProperty.class);
+        RulePiece rpiece = safeGet(descs, RulePiece.class);
+        SymbolProperty rprop = safeGet(descs, SymbolProperty.class);
         OtherFeat other = safeGet(descs, OtherFeat.class);
-        
+                
         if (pos != null && pl != null) {
             throw new IllegalStateException("Both position and position list cannot be specified: " + t);
         }
         
+        // Try to create a template from the available pieces.
         FeatTemplate tpl;
         if (pos != null && prop != null) {
             mod = (mod == null) ? PositionModifier.IDENTITY : mod;  
@@ -129,8 +137,10 @@ public class TemplateReader {
         } else if (pl != null) {
             lmod = (lmod == null) ? ListModifier.SEQ : lmod;  
             tpl = new FeatTemplate3(pl, prop, eprop, lmod);
+        } else if (rpiece != null && rprop != null) {                
+            tpl = new FeatTemplate4(rpiece, rprop);
         } else if (other != null) {
-            tpl = new FeatTemplate4(other);
+            tpl = new FeatTemplate0(other);
         } else {
             throw new IllegalStateException("Invalid template: " + t);
         }

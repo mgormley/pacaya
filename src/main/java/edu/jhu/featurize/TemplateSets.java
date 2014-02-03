@@ -11,7 +11,7 @@ import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate1;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate2;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate3;
-import edu.jhu.featurize.TemplateLanguage.FeatTemplate4;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
 import edu.jhu.featurize.TemplateLanguage.JoinTemplate;
 import edu.jhu.featurize.TemplateLanguage.ListModifier;
 import edu.jhu.featurize.TemplateLanguage.OtherFeat;
@@ -38,6 +38,9 @@ public class TemplateSets {
     public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
     public static final String kooBasicDepFeatsResource = "/edu/jhu/featurize/koo-basic-dep-feats.txt";
     public static final String kooHybridDepFeatsResource = "/edu/jhu/featurize/koo-hybrid-dep-feats.txt";
+    
+    // Constituency Parsing feature sets
+    public static final String finkel08FeatsResource = "/edu/jhu/featurize/finkel08-parse-feats.txt";
     
     private TemplateSets() {
         // Private constructor.
@@ -67,7 +70,7 @@ public class TemplateSets {
             }
         }     
         for (OtherFeat feat : OtherFeat.values()) {
-            tpls.add(new FeatTemplate4(feat));
+            tpls.add(new FeatTemplate0(feat));
         }
         return tpls;
     }
@@ -227,7 +230,7 @@ public class TemplateSets {
         }
 
         for (OtherFeat feat : otherFeats) {
-            tpls.add(new FeatTemplate4(feat));
+            tpls.add(new FeatTemplate0(feat));
         }
         
         // TODO: UNK is currently only supported for English and Spanish, so we filter those feature out.
