@@ -1,6 +1,5 @@
 package edu.jhu.gm.model;
 
-import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var.VarType;
@@ -47,7 +46,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     }
 
     /**
-     * If this factor depends on the model, this method wil updates this
+     * If this factor depends on the model, this method will updates this
      * factor's internal representation accordingly.
      * 
      * @param model The model.
@@ -66,17 +65,27 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 // where the predicted variables (might) have been clamped.
                 int config = (iter != null) ? iter.next() : c;
                 
-                FeatureVector fv = getFeatures(config);
-                double dot = model.dot(fv);
-                if (logDomain) {
-                    // Set to log of the factor's value.
-                    f.setValue(c, dot);
-                } else {
-                    f.setValue(c, FastMath.exp(dot));
-                }
+                double dot = getDotProd(config, model, logDomain);
+                f.setValue(c, dot);
             }
             assert(iter == null || !iter.hasNext());
         }
+    }
+    
+    /**
+     * Provide the dot product of the features and model weights for this configuration
+     * (make sure to exp that value if !logDomain).
+     * 
+     * Note that this method can be overridden for an efficient product of an ExpFamFactor
+     * and a hard factor (that rules out some configurations). Just return 0/-infinity
+     * here before extracting features for configurations that are eliminated by the
+     * hard factor. 
+     */
+    public double getDotProd(int config, FgModel model, boolean logDomain) {
+    	 FeatureVector fv = getFeatures(config);
+         double dot = model.dot(fv);
+         if (logDomain) return dot;
+         else return FastMath.exp(dot);
     }
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
@@ -121,7 +130,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     
     protected static class ClampedExpFamFactor extends ExpFamFactor {
         
-        // The unclamped factor from which this one was derived
+        private static final long serialVersionUID = 1L;
+		
+		// The unclamped factor from which this one was derived
         private ExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
