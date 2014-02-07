@@ -199,61 +199,64 @@ public class BeliefPropagation implements FgInferencer {
             globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
             // The messages have been set, so just return.
             return;
-        } else if (!edge.isVarToFactor() && !(factor instanceof ExplicitFactor)) {
-            throw new UnsupportedFactorTypeException(factor);
-        }
-
-        
-        DenseFactor msg = msgs[edgeId].newMessage;
-        
-        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-        msg.set(prm.logDomain ? 0.0 : 1.0);
-        
-        if (edge.isVarToFactor()) {
-            // Message from variable v* to factor f*.
-            //
-            // Compute the product of all messages recieved by v* except for the
-            // one from f*.
-            getProductOfMessages(edge.getParent(), msg, edge.getChild());
         } else {
-            // Message from factor f* to variable v*.
-            //
-            // Compute the product of all messages received by f* (each
-            // of which will have a different domain) with the factor f* itself.
-            // Exclude the message going out to the variable, v*.
-                
-            // TODO: we could cache this prod factor in the EdgeContent for this
-            // edge if creating it is slow.
-            DenseFactor prod = new DenseFactor(factor.getVars());
-            // Set the initial values of the product to those of the sending factor.
-            prod.set((DenseFactor) factor);
-            getProductOfMessages(edge.getParent(), prod, edge.getChild());
-
-            // Marginalize over all the assignments to variables for f*, except
-            // for v*.
-            if (prm.logDomain) { 
-                msg = prod.getLogMarginal(new VarSet(var), false);
+            // Since this is not a global factor, we send messages in the normal way, which
+            // in the case of a factor to variable message requires enumerating all possible
+            // variable configurations.
+            DenseFactor msg = msgs[edgeId].newMessage;
+            
+            // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+            msg.set(prm.logDomain ? 0.0 : 1.0);
+            
+            if (edge.isVarToFactor()) {
+                // Message from variable v* to factor f*.
+                //
+                // Compute the product of all messages recieved by v* except for the
+                // one from f*.
+                getProductOfMessages(edge.getParent(), msg, edge.getChild());
             } else {
-                msg = prod.getMarginal(new VarSet(var), false);
+                // Message from factor f* to variable v*.
+                //
+                // Compute the product of all messages received by f* (each
+                // of which will have a different domain) with the factor f* itself.
+                // Exclude the message going out to the variable, v*.
+                    
+                // TODO: we could cache this prod factor in the EdgeContent for this
+                // edge if creating it is slow.
+                DenseFactor prod = new DenseFactor(factor.getVars());
+                // Set the initial values of the product to those of the sending factor.
+                int numConfigs = prod.getVars().calcNumConfigs();
+                for (int c = 0; c < numConfigs; c++) {
+                    prod.setValue(c, factor.getUnormalizedScore(c));
+                }
+                getProductOfMessages(edge.getParent(), prod, edge.getChild());
+    
+                // Marginalize over all the assignments to variables for f*, except
+                // for v*.
+                if (prm.logDomain) { 
+                    msg = prod.getLogMarginal(new VarSet(var), false);
+                } else {
+                    msg = prod.getMarginal(new VarSet(var), false);
+                }
             }
-        }
-        
-        assert (msg.getVars().equals(new VarSet(var)));
-        
-        if (prm.normalizeMessages) {
-            if (prm.logDomain) { 
-                msg.logNormalize();
-            } else {
-                msg.normalize();
+            
+            assert (msg.getVars().equals(new VarSet(var)));
+            
+            if (prm.normalizeMessages) {
+                if (prm.logDomain) { 
+                    msg.logNormalize();
+                } else {
+                    msg.normalize();
+                }
             }
+            
+            for (int c=0; c<msg.size(); c++) {
+                assert !Double.isNaN(msg.getValue(c));
+            }
+            
+            // Set the final message in case we created a new object.
+            msgs[edgeId].newMessage = msg;
         }
-        
-        for (int c=0; c<msg.size(); c++) {
-            assert !Double.isNaN(msg.getValue(c));
-        }
-        
-        // Set the final message in case we created a new object.
-        msgs[edgeId].newMessage = msg;
     }
 
     /**
