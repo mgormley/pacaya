@@ -17,7 +17,7 @@ public interface Factor extends Serializable {
     VarSet getVars();
 
     /**
-     * If this factor depends on the model, this method wil updates this
+     * If this factor depends on the model, this method will updates this
      * factor's internal representation accordingly.
      * 
      * @param model The model.

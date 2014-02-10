@@ -154,6 +154,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 clmpConfigId = clmpVarConfig.getConfigIndex();
             }
         }
+        
+        @Override
+        public double getDotProd(int config, FgModel model, boolean logDomain) {
+        	return unclmpFactor.getDotProd(config, model, logDomain);
+        }
 
         @Override
         public FeatureVector getFeatures(int config) {
