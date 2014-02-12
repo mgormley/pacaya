@@ -174,7 +174,7 @@ public class BeliefPropagation implements FgInferencer {
         }
         timer.stop();
     }
-        
+    
     public void clear() {
         Arrays.fill(msgs, null);
     }
@@ -315,7 +315,7 @@ public class BeliefPropagation implements FgInferencer {
      */
     private void sendMessage(FgEdge edge) {
         int edgeId = edge.getId();
-
+       
         Messages ec = msgs[edgeId];
         // Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
