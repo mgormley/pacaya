@@ -45,6 +45,7 @@ public class BeliefPropagation implements FgInferencer {
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;
+        
         public BeliefPropagationPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
@@ -114,7 +115,7 @@ public class BeliefPropagation implements FgInferencer {
     private final Messages[] msgs;
     private BpSchedule sched;
     private List<FgEdge> order;
-    
+
     public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
         this.fg = fg;
@@ -184,7 +185,7 @@ public class BeliefPropagation implements FgInferencer {
      * @param edge The directed edge for which the message should be created.
      * @param iter The iteration number.
      */
-    private void createMessage(FgEdge edge, int iter) {
+    protected void createMessage(FgEdge edge, int iter) {
         int edgeId = edge.getId();
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
@@ -200,7 +201,7 @@ public class BeliefPropagation implements FgInferencer {
             // The messages have been set, so just return.
             return;
         } else {
-            // Since this is not a global factor, we send messages in the normal way, which
+        	// Since this is not a global factor, we send messages in the normal way, which
             // in the case of a factor to variable message requires enumerating all possible
             // variable configurations.
             DenseFactor msg = msgs[edgeId].newMessage;
@@ -211,7 +212,7 @@ public class BeliefPropagation implements FgInferencer {
             if (edge.isVarToFactor()) {
                 // Message from variable v* to factor f*.
                 //
-                // Compute the product of all messages recieved by v* except for the
+                // Compute the product of all messages received by v* except for the
                 // one from f*.
                 getProductOfMessages(edge.getParent(), msg, edge.getChild());
             } else {
@@ -220,17 +221,17 @@ public class BeliefPropagation implements FgInferencer {
                 // Compute the product of all messages received by f* (each
                 // of which will have a different domain) with the factor f* itself.
                 // Exclude the message going out to the variable, v*.
-                    
+                
                 // TODO: we could cache this prod factor in the EdgeContent for this
                 // edge if creating it is slow.
-                DenseFactor prod = new DenseFactor(factor.getVars());
-                // Set the initial values of the product to those of the sending factor.
-                int numConfigs = prod.getVars().calcNumConfigs();
-                for (int c = 0; c < numConfigs; c++) {
-                    prod.setValue(c, factor.getUnormalizedScore(c));
-                }
-                getProductOfMessages(edge.getParent(), prod, edge.getChild());
-    
+            	DenseFactor prod = new DenseFactor(factor.getVars());
+            	// Set the initial values of the product to those of the sending factor.
+            	int numConfigs = prod.getVars().calcNumConfigs();
+            	for (int c = 0; c < numConfigs; c++) {
+            		prod.setValue(c, factor.getUnormalizedScore(c));
+            	}
+            	getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            	
                 // Marginalize over all the assignments to variables for f*, except
                 // for v*.
                 if (prm.logDomain) { 
@@ -277,7 +278,7 @@ public class BeliefPropagation implements FgInferencer {
      *            non-null, any message sent from exclNode to node will be
      *            excluded from the product.
      */
-    private void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
+    protected void getProductOfMessages(FgNode node, DenseFactor prod, FgNode exclNode) {
         for (FgEdge nbEdge : node.getInEdges()) {
             if (nbEdge.getParent() == exclNode) {
                 // Don't include the receiving variable.
@@ -297,7 +298,7 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     /** Gets the product of messages (as in getProductOfMessages()) and then normalizes. */
-    private void getProductOfMessagesNormalized(FgNode node, DenseFactor prod, FgNode exclNode) {
+    protected void getProductOfMessagesNormalized(FgNode node, DenseFactor prod, FgNode exclNode) {
         getProductOfMessages(node, prod, exclNode);
         if (prm.logDomain) { 
             prod.logNormalize();
@@ -313,7 +314,7 @@ public class BeliefPropagation implements FgInferencer {
      * 
      * @param edge The edge over which the message should be sent.
      */
-    private void sendMessage(FgEdge edge) {
+    protected void sendMessage(FgEdge edge) {
         int edgeId = edge.getId();
        
         Messages ec = msgs[edgeId];
@@ -337,14 +338,14 @@ public class BeliefPropagation implements FgInferencer {
         throw new RuntimeException("not implemented");
     }
 
-    private DenseFactor getMarginals(Var var, FgNode node) {
+    protected DenseFactor getMarginals(Var var, FgNode node) {
         DenseFactor prod = new DenseFactor(new VarSet(var), prm.logDomain ? 0.0 : 1.0);
         // Compute the product of all messages sent to this variable.
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
     }
 
-    private DenseFactor getMarginals(Factor factor, FgNode node) {
+    protected DenseFactor getMarginals(Factor factor, FgNode node) {
         if (!(factor instanceof ExplicitFactor)) {
             throw new UnsupportedFactorTypeException(factor, "Getting marginals of a global factor is not supported."
                     + " This would require exponential space to store the resulting factor.");
@@ -433,7 +434,7 @@ public class BeliefPropagation implements FgInferencer {
      * this is equal to -log(Z) where Z is the exact partition function. For 
      * loopy graphs it can be used as an approximation.
      */
-    private double getBetheFreeEnergy() {
+    protected double getBetheFreeEnergy() {
         // 
         // G_{Bethe} = \sum_a \sum_{x_a} - b(x_a) ln \chi(x_a)
         //              + \sum_a \sum_{x_a} b(x_a) ln b(x_a)

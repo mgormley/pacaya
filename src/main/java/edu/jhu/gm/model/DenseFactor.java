@@ -283,7 +283,8 @@ public class DenseFactor implements Serializable {
         } else if (f1.vars.isSuperset(f2.vars)) {
             // Special case where f1 is a superset of f2.
             IntIter iter2 = f2.vars.getConfigIter(f1.vars);
-            for (int c = 0; c < f1.vars.calcNumConfigs(); c++) {
+            int n = f1.vars.calcNumConfigs();
+            for (int c = 0; c < n; c++) {
                 f1.values[c] = op.call(f1.values[c], f2.values[iter2.next()]);
             }
             assert(!iter2.hasNext());
@@ -294,7 +295,8 @@ public class DenseFactor implements Serializable {
             DenseFactor out = new DenseFactor(union);
             IntIter iter1 = f1.vars.getConfigIter(union);
             IntIter iter2 = f2.vars.getConfigIter(union);
-            for (int c = 0; c < out.vars.calcNumConfigs(); c++) {
+            int n = out.vars.calcNumConfigs();
+            for (int c = 0; c < n; c++) {
                 out.values[c] = op.call(f1.values[iter1.next()], f2.values[iter2.next()]);
             }
             assert(!iter1.hasNext());
