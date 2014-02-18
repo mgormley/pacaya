@@ -115,6 +115,14 @@ public class TemplateFeatureExtractor {
             pi.rule = rule;
             return pi;
         }
+        public static LocalObservations newRuleStartMidEnd(Rule r, int start, int mid, int end) {
+            LocalObservations pi = new LocalObservations();
+            pi.rule = r;
+            pi.rStartIdx = start;
+            pi.rMidIdx = mid;
+            pi.rEndIdx = end;
+            return pi;
+        }
     }
     
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
