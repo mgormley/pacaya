@@ -127,7 +127,7 @@ public class TemplateFeatureExtractor {
      * This constructor is preferred as it allows the FeaturizedSentence to
      * share work across different feature extractors.
      */
-    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {
+    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {        
         this.cs = cs;
         this.sig = cs.sig;
         this.fSent = fSent;
@@ -135,7 +135,11 @@ public class TemplateFeatureExtractor {
     
     public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.cs = cs;
-        this.sig = cs.sig;
+        if (cs != null) {
+            this.sig = cs.sig;
+        } else {
+            this.sig = null;
+        }
         this.fSent = new FeaturizedSentence(sent, cs);
     }
             
