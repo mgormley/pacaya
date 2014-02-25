@@ -46,6 +46,8 @@ public class BeliefPropagation implements FgInferencer {
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;
         
+        public boolean cacheFactorBeliefs = true;
+        
         public BeliefPropagationPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
@@ -115,12 +117,15 @@ public class BeliefPropagation implements FgInferencer {
     private final Messages[] msgs;
     private BpSchedule sched;
     private List<FgEdge> order;
+    
+    private DenseFactor[] factorBeliefCache;
 
     public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
         this.fg = fg;
         this.msgs = new Messages[fg.getNumEdges()];
-
+        this.factorBeliefCache = new DenseFactor[fg.getNumFactors()];
+        
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
             // Cache the order if this is a sequential update.
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
@@ -132,6 +137,13 @@ public class BeliefPropagation implements FgInferencer {
             }
             order = sched.getOrder();
         }
+    }
+    
+    /**
+     * For debugging. Remove later.
+     */
+    public Messages[] getMessages() {
+    	return msgs;
     }
     
     /** @inheritDoc */
@@ -151,6 +163,25 @@ public class BeliefPropagation implements FgInferencer {
                 ((GlobalFactor)factor).reset();
             }
         }
+        // Initialize factor beliefs
+        for(FgNode node : fg.getNodes()) {
+        	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
+            	Factor f = node.getFactor();        		
+        		DenseFactor fBel = new DenseFactor(f.getVars());
+            	int c = f.getVars().calcNumConfigs();
+            	for(int i=0; i<c; i++)
+            		fBel.setValue(i, f.getUnormalizedScore(i));
+            	
+            	for(FgEdge v2f : node.getInEdges()) {
+            		DenseFactor vBel = msgs[v2f.getId()].message;
+            		if(prm.logDomain) fBel.add(vBel);
+            		else fBel.prod(vBel);
+            	}
+            	
+            	factorBeliefCache[f.getId()] = fBel;
+        	}
+        }
+        
         
         // Message passing.
         for (int iter=0; iter < prm.maxIterations; iter++) {
@@ -176,9 +207,11 @@ public class BeliefPropagation implements FgInferencer {
         timer.stop();
     }
     
+    
     public void clear() {
         Arrays.fill(msgs, null);
     }
+
     
     /**
      * Creates a message and stores it in the "pending message" slot for this edge.
@@ -186,7 +219,8 @@ public class BeliefPropagation implements FgInferencer {
      * @param iter The iteration number.
      */
     protected void createMessage(FgEdge edge, int iter) {
-        int edgeId = edge.getId();
+
+    	int edgeId = edge.getId();
         Var var = edge.getVar();
         Factor factor = edge.getFactor();
         
@@ -221,16 +255,28 @@ public class BeliefPropagation implements FgInferencer {
                 // Compute the product of all messages received by f* (each
                 // of which will have a different domain) with the factor f* itself.
                 // Exclude the message going out to the variable, v*.
-                
-                // TODO: we could cache this prod factor in the EdgeContent for this
-                // edge if creating it is slow.
-            	DenseFactor prod = new DenseFactor(factor.getVars());
-            	// Set the initial values of the product to those of the sending factor.
-            	int numConfigs = prod.getVars().calcNumConfigs();
-            	for (int c = 0; c < numConfigs; c++) {
-            		prod.setValue(c, factor.getUnormalizedScore(c));
+                DenseFactor prod;
+            	if(prm.cacheFactorBeliefs && !(factor instanceof GlobalFactor)) {
+            		// we are computing f->v, which is the product of a bunch of factor values and v->f messages
+            		// we can cache this product and remove the v->f message that would have been excluded from the product
+            		DenseFactor remove = msgs[edge.getOpposing().getId()].message;
+            		DenseFactor from = factorBeliefCache[factor.getId()];
+            		prod = new DenseFactor(from);
+            		if(prm.logDomain) prod.subBP(remove);
+            		else prod.divBP(remove);
+            		
+            		assert !prod.containsBadValues(prm.logDomain) : "prod from cached beliefs = " + prod;
             	}
-            	getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            	else {	// fall back on normal way of computing messages without caching
+            		prod = new DenseFactor(factor.getVars());
+                	// Set the initial values of the product to those of the sending factor.
+                	int numConfigs = prod.getVars().calcNumConfigs();
+                	for (int c = 0; c < numConfigs; c++) {
+                		prod.setValue(c, factor.getUnormalizedScore(c));
+                	}
+                	getProductOfMessages(edge.getParent(), prod, edge.getChild());
+            	}
+
             	
                 // Marginalize over all the assignments to variables for f*, except
                 // for v*.
@@ -250,10 +296,8 @@ public class BeliefPropagation implements FgInferencer {
                     msg.normalize();
                 }
             }
-            
-            for (int c=0; c<msg.size(); c++) {
-                assert !Double.isNaN(msg.getValue(c));
-            }
+            // normalize and logNormalize already check for NaN
+            else assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;
             
             // Set the final message in case we created a new object.
             msgs[edgeId].newMessage = msg;
@@ -294,6 +338,7 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 prod.prod(nbMsg);
             }
+            assert !prod.containsBadValues(prm.logDomain) : "prod = " + prod;
         }
     }
 
@@ -323,6 +368,20 @@ public class BeliefPropagation implements FgInferencer {
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
+        
+        // update factor beliefs
+        if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
+        	Factor f = edge.getFactor();
+        	DenseFactor update = factorBeliefCache[f.getId()];
+        	if(prm.isLogDomain()) {
+        		update.subBP(oldMessage);
+        		update.add(ec.message);
+        	}
+        	else {
+        		update.divBP(oldMessage);
+        		update.prod(ec.message);
+        	}
+        }
         
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);

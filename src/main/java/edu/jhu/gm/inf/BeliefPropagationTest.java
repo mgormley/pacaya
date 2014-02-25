@@ -24,6 +24,11 @@ public class BeliefPropagationTest {
 	
 	@Test
 	public void testCanHandleProbHardFactors() {
+		testCanHandleProbHardFactorsHelper(true);
+		testCanHandleProbHardFactorsHelper(false);
+	}
+	
+	public void testCanHandleProbHardFactorsHelper(boolean cacheFactorBeliefs) {
 		boolean logDomain = false;
 		
 		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
@@ -52,6 +57,7 @@ public class BeliefPropagationTest {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
+        prm.cacheFactorBeliefs = cacheFactorBeliefs;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         assertEqualMarginals(fg, bf, bp);
@@ -85,6 +91,11 @@ public class BeliefPropagationTest {
 	
 	@Test
 	public void testCanHandleLogHardFactors() {
+		testCanHandleLogHardFactorsHelper(true);
+		testCanHandleLogHardFactorsHelper(false);
+	}
+	
+	public void testCanHandleLogHardFactorsHelper(boolean cacheFactorBeliefs) {
 		boolean logDomain = true;
 		
 		Var x0 = new Var(VarType.PREDICTED, 2, "x0", null);
@@ -115,6 +126,7 @@ public class BeliefPropagationTest {
         BeliefPropagationPrm prm = new BeliefPropagationPrm();
         prm.maxIterations = 10;
         prm.logDomain = logDomain;
+        prm.cacheFactorBeliefs = cacheFactorBeliefs;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         assertEqualMarginals(fg, bf, bp);

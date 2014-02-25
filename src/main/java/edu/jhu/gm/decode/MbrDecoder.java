@@ -49,8 +49,9 @@ public class MbrDecoder {
      * 
      * @param model The input model.
      * @param ex The input data.
+     * @return the FgInferencer that was used.
      */
-    public void decode(FgModel model, FgExample ex) {
+    public FgInferencer decode(FgModel model, FgExample ex) {
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<DenseFactor>();
         varMargMap = new HashMap<Var,Double>();
@@ -79,6 +80,7 @@ public class MbrDecoder {
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
+        return inf;
     }
     
     /** Gets the MBR variable configuration for the example that was decoded. */

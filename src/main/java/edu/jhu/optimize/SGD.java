@@ -158,13 +158,12 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 assert !Double.isNaN(point[i]);
                 if (gradient[i] != 0.0) {
                     avgLr += lr;
-                    avgStep += lr * gradient[i];
+                    avgStep += (maximize ? 1d : -1d) * lr * gradient[i];
                     numNonZeros++;
                 }
             }
             avgLr /= (double) numNonZeros;
             avgStep /= (double) numNonZeros;
-            if(!maximize) avgStep = -avgStep;
             
             // If a full pass through the data has been completed...
             passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
