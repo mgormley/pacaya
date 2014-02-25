@@ -242,6 +242,26 @@ public class DenseFactor implements Serializable {
     }
     
     /**
+     * this /= f
+     * indices matching 0 /= 0 are set to 0.
+     */
+    public void divBP(DenseFactor f) {
+    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleDivBP());
+        this.vars = newFactor.vars;
+        this.values = newFactor.values;
+    }
+    
+    /**
+     * this -= f
+     * indices matching (-Infinity) -= (-Infinity) are set to 0.
+     */
+    public void subBP(DenseFactor f) {
+    	DenseFactor newFactor = applyBinOp(this, f, new Lambda.DoubleSubtractBP());
+        this.vars = newFactor.vars;
+        this.values = newFactor.values;
+    }
+    
+    /**
      * Log-adds a factor to this one.
      * 
      * This is analogous to factor addition, except that the logAdd operator
@@ -342,6 +362,16 @@ public class DenseFactor implements Serializable {
     /** For testing only. */
     public double[] getValues() {
         return values;
+    }
+    
+    public boolean containsBadValues(boolean logDomain) {
+    	for(int i=0; i<values.length; i++) {
+    		if(Double.isNaN(values[i]))
+    			return true;
+    		if(!logDomain && (values[i] < 0d || Double.isInfinite(values[i])))
+    			return true;
+    	}
+    	return false;
     }
     
     /* Note that Factors do not implement the standard hashCode() or equals() methods. */
