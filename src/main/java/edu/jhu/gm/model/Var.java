@@ -1,10 +1,7 @@
 package edu.jhu.gm.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
-
-import edu.jhu.util.collections.Lists;
 
 /**
  * A discrete variable in a factor graph.

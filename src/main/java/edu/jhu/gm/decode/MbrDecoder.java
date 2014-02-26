@@ -100,4 +100,16 @@ public class MbrDecoder {
         return margs;
     }
 
+    /**
+     * Convenience wrapper around getVarMarginals().
+     * Does not memoize, so use sparingly.
+     */
+    public Map<Var, DenseFactor> getVarMarginalsIndexed() {
+    	Map<Var, DenseFactor> m = new HashMap<Var, DenseFactor>();
+    	for(DenseFactor df : margs) {
+    		assert df.getVars().size() == 1;
+    		m.put(df.getVars().get(0), df);
+    	}
+    	return m;
+    }
 }

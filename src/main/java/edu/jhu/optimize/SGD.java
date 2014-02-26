@@ -146,6 +146,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
             
             // Take a step in the direction of the gradient.
             double avgLr = 0.0;
+            double avgStep = 0d;
             int numNonZeros = 0;
             for (int i=0; i<point.length; i++) {
                 double lr = getLearningRate(iterCount, i);
@@ -157,10 +158,13 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 assert !Double.isNaN(point[i]);
                 if (gradient[i] != 0.0) {
                     avgLr += lr;
+                    avgStep += lr * gradient[i];
                     numNonZeros++;
                 }
             }
             avgLr /= (double) numNonZeros;
+            avgStep /= (double) numNonZeros;
+            if(!maximize) avgStep = -avgStep;
             
             // If a full pass through the data has been completed...
             passCountFrac = (double) iterCount * prm.batchSize / function.getNumExamples();
@@ -170,6 +174,7 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
                 value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
                 log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
                 log.debug("Average learning rate: " + avgLr);
+                log.debug("Average step size: " + avgStep);
                 log.debug(String.format("Average time per pass (min): %f", timer.totSec() / 60.0 / passCountFrac));
             }
             if ((int) Math.floor(passCountFrac) > passCount) {

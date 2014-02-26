@@ -79,7 +79,10 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * Note that this method can be overridden for an efficient product of an ExpFamFactor
      * and a hard factor (that rules out some configurations). Just return 0/-infinity
      * here before extracting features for configurations that are eliminated by the
-     * hard factor. 
+     * hard factor. If you do this, the corresponding (by config) implementation of
+     * getFeatures should return an empty vector. This is needed because addExpectedFeatureCounts
+     * expects to be able to call getFeatures, regardless of whether or not getDotProd has
+     * ruled it out as having any mass.
      */
     public double getDotProd(int config, FgModel model, boolean logDomain) {
     	 FeatureVector fv = getFeatures(config);
@@ -153,6 +156,11 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 iter = IndexForVc.getConfigIter(unclmpVarSet, clmpVarConfig);
                 clmpConfigId = clmpVarConfig.getConfigIndex();
             }
+        }
+        
+        @Override
+        public double getDotProd(int config, FgModel model, boolean logDomain) {
+        	return unclmpFactor.getDotProd(config, model, logDomain);
         }
 
         @Override
