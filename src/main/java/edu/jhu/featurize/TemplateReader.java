@@ -161,4 +161,14 @@ public class TemplateReader {
         return tpls;
     }
     
+    public static FeatTemplate lineToFeatTemplate(String line) {
+        TemplateReader tr = new TemplateReader();
+        tr.readLine(line);
+        if (tr.getTemplates().size() > 0) {
+            return tr.getTemplates().get(0);
+        } else {
+            return null;
+        }
+    }
+    
 }
