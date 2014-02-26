@@ -115,6 +115,14 @@ public class TemplateFeatureExtractor {
             pi.rule = rule;
             return pi;
         }
+        public static LocalObservations newRuleStartMidEnd(Rule r, int start, int mid, int end) {
+            LocalObservations pi = new LocalObservations();
+            pi.rule = r;
+            pi.rStartIdx = start;
+            pi.rMidIdx = mid;
+            pi.rEndIdx = end;
+            return pi;
+        }
     }
     
     private static final Logger log = Logger.getLogger(TemplateFeatureExtractor.class);
@@ -127,7 +135,7 @@ public class TemplateFeatureExtractor {
      * This constructor is preferred as it allows the FeaturizedSentence to
      * share work across different feature extractors.
      */
-    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {
+    public TemplateFeatureExtractor(FeaturizedSentence fSent, CorpusStatistics cs) {        
         this.cs = cs;
         this.sig = cs.sig;
         this.fSent = fSent;
@@ -135,7 +143,11 @@ public class TemplateFeatureExtractor {
     
     public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.cs = cs;
-        this.sig = cs.sig;
+        if (cs != null) {
+            this.sig = cs.sig;
+        } else {
+            this.sig = null;
+        }
         this.fSent = new FeaturizedSentence(sent, cs);
     }
             
