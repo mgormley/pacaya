@@ -61,6 +61,8 @@ public class SimpleAnnoSentenceReader {
     }
     
     public void loadSents(File dataFile, DatasetType type) throws IOException {
+        log.info("Reading " + prm.name + " data of type " + type + " from " + dataFile);
+
         if (prm.normalizeRoleNames) {
             if (type == DatasetType.CONLL_2008 || type == DatasetType.CONLL_2009) {
                 log.info("Normalizing role names");
@@ -84,7 +86,7 @@ public class SimpleAnnoSentenceReader {
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());
 
-        if (prm.brownClusters != null) {
+        if (prm.brownClusters != null) {            
             log.info("Adding Brown clusters.");
             BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
             bct.read(prm.brownClusters);
