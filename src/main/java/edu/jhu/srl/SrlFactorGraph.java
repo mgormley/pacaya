@@ -293,7 +293,7 @@ public class SrlFactorGraph extends FactorGraph {
             // Add the role/link factors.
             for (int j = 0; j < n; j++) {
                 if (i == -1) {
-                    // Add unary factors on child Links
+                    // Add unary factors on root Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
                         addFactor(new SrlFactor(new VarSet(rootVars[j]), SrlFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }

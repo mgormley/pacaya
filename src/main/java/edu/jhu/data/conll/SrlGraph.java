@@ -314,5 +314,6 @@ public class SrlGraph {
 
     public int getNumArgs() {
         return args.size();
-    }    
+    }
+
 }

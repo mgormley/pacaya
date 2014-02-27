@@ -131,7 +131,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         for (int j=0; j<n; j++) {
             String name = String.format("Link_%d_%d", WallDepTreeNode.WALL_POSITION, j);
             vars.add(new LinkVar(type, name, WallDepTreeNode.WALL_POSITION, j));
-        }        
+        }
         return vars;
     }
     

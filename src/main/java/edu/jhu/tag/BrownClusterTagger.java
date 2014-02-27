@@ -29,7 +29,7 @@ public class BrownClusterTagger {
          * Language (2-character code). If specified, the tagger will employ
          * language specific logic for UNKs.
          */
-        public String language;        
+        public String language;
     }
     
     private static final String OOV_CLUSTER = "UNK";

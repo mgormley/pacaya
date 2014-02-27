@@ -108,8 +108,6 @@ public class SrlRunner {
     public static File train = null;
     @Opt(hasArg = true, description = "Type of training data.")
     public static DatasetType trainType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "ERMA feature file.")
-    public static File featureFileIn = null;
     @Opt(hasArg = true, description = "Training data predictions output file.")
     public static File trainPredOut = null;
     @Opt(hasArg = true, description = "Training data gold output file.")
@@ -147,7 +145,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
     public static int testMaxNumSentences = Integer.MAX_VALUE; 
 
-    // Options for train/test data
+    // Options for train/dev/test data
     @Opt(hasArg = true, description = "Brown cluster file")
     public static File brownClusters = null;    
     
@@ -349,7 +347,7 @@ public class SrlRunner {
             VarConfigPair vcPair = decode(model, data, goldSents, trainType, trainPredOut, name);        
             eval(name, vcPair);
         }
-                
+          
         if (modelOut != null) {
             // Write the model to a file.
             log.info("Serializing model to file: " + modelOut);
