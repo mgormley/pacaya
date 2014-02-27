@@ -12,13 +12,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import edu.jhu.data.simple.CloseableIterable;
+
 /**
  * Reads a single file in CoNLL-2009 format.
  * 
  * @author mgormley
  *
  */
-public class ConllLiteFileReader implements Iterable<ConllLiteSentence>, Iterator<ConllLiteSentence> {
+public class ConllLiteFileReader implements CloseableIterable<ConllLiteSentence>, Iterator<ConllLiteSentence> {
 
     private static final Pattern commentLine = Pattern.compile("^\\s*#");
 

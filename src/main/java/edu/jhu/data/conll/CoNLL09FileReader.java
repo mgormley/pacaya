@@ -11,13 +11,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.jhu.data.simple.CloseableIterable;
+
 /**
  * Reads a single file in CoNLL-2009 format.
  * 
  * @author mgormley
  *
  */
-public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<CoNLL09Sentence> {
+public class CoNLL09FileReader implements CloseableIterable<CoNLL09Sentence>, Iterator<CoNLL09Sentence> {
 
     private CoNLL09Sentence sentence;
     private BufferedReader reader;
@@ -58,7 +60,7 @@ public class CoNLL09FileReader implements Iterable<CoNLL09Sentence>, Iterator<Co
     }
 
     @Override
-    public boolean hasNext() {
+    public boolean hasNext() {        
         return sentence != null;
     }
 

@@ -377,4 +377,21 @@ public class SimpleAnnoSentence {
         }
     }
     
+    public void intern() {
+        Lists.intern(words);
+        Lists.intern(lemmas);
+        Lists.intern(posTags);
+        Lists.intern(clusters);
+        if (feats != null) {
+            for (int i=0; i<feats.size(); i++) {
+                Lists.intern(feats.get(i));
+            }
+        }
+        Lists.intern(deprels);        
+        if (binaryTree != null) {
+            binaryTree.intern();
+        }
+        // TODO: this.srlGraph.intern();
+    }
+    
 }

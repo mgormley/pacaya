@@ -76,6 +76,20 @@ public class Lists {
         }
         return newList;
     }
+    
+    /** Interns a list of strings in place. */
+    public static void intern(List<String> list) {
+        if (list == null) {
+            return;
+        }
+        for (int i=0; i<list.size(); i++) {
+            String interned = list.get(i);
+            if (interned != null) {
+                interned = interned.intern();
+            }
+            list.set(i, interned);
+        }
+    }
 
     public static <T> Iterable<T> asIterable(final Iterator<T> iterator) {
         return new Iterable<T>() {

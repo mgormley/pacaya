@@ -2,40 +2,45 @@ package edu.jhu.data.simple;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.conll.CoNLL08FileReader;
+import edu.jhu.data.conll.CoNLL08Sentence;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Writer;
+import edu.jhu.data.conll.CoNLLXFileReader;
+import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 
-/** 
- * TODO: This class is only partly implemented.
+/**
+ * Generic reader of SimpleAnnoSentence objects from many different corpora. 
+ * 
  */
 public class SimpleAnnoSentenceReader {
 
     public static class SimpleAnnoSentenceReaderPrm {
         public BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
         public boolean useGoldSyntax = false;
-        //public DatasetType dataType = null; 
         public int maxNumSentences = Integer.MAX_VALUE; 
         public int maxSentenceLength = Integer.MAX_VALUE; 
         public SentFilter filter = null;
-        public File brownClusters = null;
-        /** Whether to normalize role names in SRL data (e.g. CoNLL-2009). */
-        public boolean normalizeRoleNames = false;
+        public File brownClusters = null;        
+        public String name = "";
         
-        //TODO: Maybe remove parameters below this line.
-        public File goldFile;  
-        public String name;
+        // Parameters specific to data set type.
+        /** CoNLL-2009 / CoNLL-2008: Whether to normalize role names in SRL data. */
+        public boolean normalizeRoleNames = false;
+        /** CoNLL-2008: Whether to use split word forms. */
+        public boolean useSplitForms = true;
+        /** CoNLL-X: whether to use the P(rojective)HEAD column for parents. */
+        public boolean useCoNLLXPhead = false;
+        /** CoNLL-X: whether to use coarse POS tags. */
+        public boolean useCpostags = false;
     }
     
-    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2009 };
+    public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009 };
     
     public interface SASReader extends Iterable<SimpleAnnoSentence> {
         public void close();        
@@ -56,12 +61,20 @@ public class SimpleAnnoSentenceReader {
     }
     
     public void loadSents(File dataFile, DatasetType type) throws IOException {
-        SASReader reader = null;
+        if (prm.normalizeRoleNames) {
+            if (type == DatasetType.CONLL_2008 || type == DatasetType.CONLL_2009) {
+                log.info("Normalizing role names");
+            }
+        }
+        
+        CloseableIterable<SimpleAnnoSentence> reader = null;
         if (type == DatasetType.CONLL_2009) {
-            //reader = new CoNLL092SimpleAnno(new CoNLL09FileReader(dataFile));
+            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(dataFile), new CoNLL092SimpleAnno());
+        } else if (type == DatasetType.CONLL_2008) {
+            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(dataFile), new CoNLL082SimpleAnno());
         } else if (type == DatasetType.CONLL_X) {
-            //reader = new CoNLLX2SimpleAnno(new CoNLLXFileReader(dataFile));
-        } else if (type == DatasetType.PTB) {
+            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(dataFile), new CoNLLX2SimpleAnno());
+        //} else if (type == DatasetType.PTB) {
             //reader = new Ptb2SimpleAnno(new PtbFileReader(dataFile));
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
@@ -80,7 +93,7 @@ public class SimpleAnnoSentenceReader {
         } else {
             log.warn("No Brown cluster file specified.");            
         }
-                
+        
         reader.close();
     }
     
@@ -91,75 +104,44 @@ public class SimpleAnnoSentenceReader {
             }
             if (sent.size() <= prm.maxSentenceLength) {
                 if (prm.filter == null || prm.filter.accept(sent)) {
+                    sent.intern();
                     sents.add(sent);
                 }
             }
         }
     }
     
-    // TODO: Remove this method.
-    @Deprecated
-    private SimpleAnnoSentenceCollection readSentences(boolean useGoldSyntax, DatasetType dataType, File dataFile,
-            File goldFile, int maxNumSentences, int maxSentenceLength, String name) throws IOException, ParseException {
-        log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        SimpleAnnoSentenceCollection sents;
-        int numTokens = 0;
-        
-        // Read the data and (optionally) write it to the gold file.
-        if (dataType == DatasetType.CONLL_2009) {
-            List<CoNLL09Sentence> conllSents = new ArrayList<CoNLL09Sentence>();
-            CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
-            for (CoNLL09Sentence sent : reader) {
-                if (conllSents.size() >= maxNumSentences) {
-                    break;
-                }
-                if (sent.size() <= maxSentenceLength) {
-                    sent.intern();
-                    conllSents.add(sent);
-                    numTokens += sent.size();
-                }
-            }
-            reader.close();     
+    public class CoNLL092SimpleAnno implements Converter<CoNLL09Sentence, SimpleAnnoSentence> {
 
+        @Override
+        public SimpleAnnoSentence convert(CoNLL09Sentence x) {
             if (prm.normalizeRoleNames) {
-                log.info("Normalizing role names");
-                for (CoNLL09Sentence conllSent : conllSents) {
-                    conllSent.normalizeRoleNames();
-                }
+                x.normalizeRoleNames();
             }
-            
-            if (prm.goldFile != null) {
-                log.info("Writing gold data to file: " + goldFile);
-                CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-                for (CoNLL09Sentence sent : conllSents) {
-                    cw.write(sent);
-                }
-                cw.close();
+            return x.toSimpleAnnoSentence(prm.useGoldSyntax);
+        }        
+        
+    }
+    
+    public class CoNLL082SimpleAnno implements Converter<CoNLL08Sentence, SimpleAnnoSentence> {
+
+        @Override
+        public SimpleAnnoSentence convert(CoNLL08Sentence x) {
+            if (prm.normalizeRoleNames) {
+                x.normalizeRoleNames();
             }
-                        
-            // TODO: We should clearly differentiate between the gold sentences and the input sentence.
-            // Convert CoNLL sentences to SimpleAnnoSentences.
-            sents = new SimpleAnnoSentenceCollection();
-            for (CoNLL09Sentence conllSent : conllSents) {
-                sents.add(conllSent.toSimpleAnnoSentence(useGoldSyntax));
-            }
-        } else {
-            throw new ParseException("Unsupported data type: " + dataType);
+            return x.toSimpleAnnoSentence(prm.useGoldSyntax, prm.useSplitForms );
         }
         
-        log.info("Num " + name + " sentences: " + sents.size());   
-        log.info("Num " + name + " tokens: " + numTokens);
+    }
+    
+    public class CoNLLX2SimpleAnno implements Converter<CoNLLXSentence, SimpleAnnoSentence> {
 
-        if (prm.brownClusters != null) {
-            log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
-            bct.read(prm.brownClusters);
-            bct.addClusters(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
+        @Override
+        public SimpleAnnoSentence convert(CoNLLXSentence x) {
+            return x.toSimpleAnnoSentence(prm.useCoNLLXPhead, prm.useCpostags);
         }
-        return sents;
+        
     }
     
 }

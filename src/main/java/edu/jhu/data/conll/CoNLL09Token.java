@@ -151,12 +151,12 @@ public class CoNLL09Token {
         if (plemma != null) { plemma = plemma.intern(); }
         if (pos != null) { pos = pos.intern(); }
         if (ppos != null) { ppos = ppos.intern(); }
-        if (feat != null) { feat = Lists.getInternedList(feat); }
-        if (pfeat != null) { pfeat = Lists.getInternedList(pfeat); }
+        if (feat != null) { Lists.intern(feat); }
+        if (pfeat != null) { Lists.intern(pfeat); }
         if (deprel != null) { deprel = deprel.intern(); }
         if (pdeprel != null) { pdeprel = pdeprel.intern(); }
         if (pred != null) { pred = pred.intern(); }
-        if (apreds != null) { apreds = Lists.getInternedList(apreds); }
+        if (apreds != null) { Lists.intern(apreds); }
     }
 
     /**

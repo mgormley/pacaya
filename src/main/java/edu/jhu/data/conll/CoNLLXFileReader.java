@@ -10,13 +10,15 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import edu.jhu.data.simple.CloseableIterable;
+
 /**
  * Reads a single file in CoNLL-X format.
  * 
  * @author mgormley
  *
  */
-public class CoNLLXFileReader implements Iterable<CoNLLXSentence>, Iterator<CoNLLXSentence> {
+public class CoNLLXFileReader implements CloseableIterable<CoNLLXSentence>, Iterator<CoNLLXSentence> {
 
     private CoNLLXSentence sentence;
     private BufferedReader reader;
@@ -66,6 +68,7 @@ public class CoNLLXFileReader implements Iterable<CoNLLXSentence>, Iterator<CoNL
         try {
             CoNLLXSentence curSent = sentence;
             sentence = readCoNLLXSentence(reader);
+            if (curSent != null) { curSent.intern(); }
             return curSent;
         } catch (IOException e) {
             throw new RuntimeException(e);
