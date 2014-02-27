@@ -466,33 +466,30 @@ public class TemplateFeatureExtractor {
         }
     }
 
-    private List<Integer> getPositionList(PositionList pl, LocalObservations local) {      
-        int pidx = local.getPidx();
-        int cidx = local.getCidx();
-        
+    private List<Integer> getPositionList(PositionList pl, LocalObservations local) {              
         FeaturizedToken tok;
         FeaturizedTokenPair pair;
         switch (pl) {
         case CHILDREN_P: 
-            tok = getFeatTok(pidx);
+            tok = getFeatTok(local.getPidx());
             return tok.getChildren();
         case NO_FAR_CHILDREN_P: 
-            tok = getFeatTok(pidx);
+            tok = getFeatTok(local.getPidx());
             return tok.getNoFarChildren();
         case CHILDREN_C: 
-            tok = getFeatTok(cidx);
+            tok = getFeatTok(local.getCidx());
             return tok.getChildren();
         case NO_FAR_CHILDREN_C: 
-            tok = getFeatTok(cidx);
+            tok = getFeatTok(local.getCidx());
             return tok.getNoFarChildren();
         case LINE_P_C: 
-            pair = getFeatTokPair(pidx, cidx);
+            pair = getFeatTokPair(local.getPidx(), local.getCidx());
             return pair.getLinePath();
         case LINE_RI_RK: 
             pair = getFeatTokPair(local.getRStartIdx(), local.getREndIdx());
             return pair.getLinePath();
         case BTWN_P_C:
-            pair = getFeatTokPair(pidx, cidx);
+            pair = getFeatTokPair(local.getPidx(), local.getCidx());
             List<Integer> posList = pair.getLinePath();
             if (posList.size() > 2) {
                 posList = posList.subList(1, posList.size() - 1);
