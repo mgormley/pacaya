@@ -325,6 +325,7 @@ class ParamDefinitions():
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
             stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
+            predAts="SRL",
             )
         
         g.defaults += g.adagrad
@@ -337,11 +338,11 @@ class ParamDefinitions():
         # Exclude parameters from the experiment name.
         g.defaults.set_incl_name("train", False)
         g.defaults.set_incl_name("dev", False)
-        g.defaults.set_incl_name("test", False)        
-        g.defaults.set_incl_name("removeDeprel", False)
+        g.defaults.set_incl_name("test", False)
         g.defaults.set_incl_name("useGoldSyntax", False)
         g.defaults.set_incl_name("brownClusters", False)        
         g.defaults.set_incl_name('removeAts', False)
+        g.defaults.set_incl_name('predAts', False)
 
     def _define_groups_features(self, g, p):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
@@ -503,7 +504,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_pos_gold_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
-                            removeDeprel = False, useGoldSyntax = True, language = lang_short)
+                            useGoldSyntax = True, language = lang_short)
         
     def _get_pos_sup(self, p, lang_short):
         # Supervised parser output: PHEAD column.
@@ -511,7 +512,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_pos_gold_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_gold_eval"), testType = "CONLL_2009",
-                            removeDeprel = False, useGoldSyntax = False, language = lang_short)
+                            useGoldSyntax = False, language = lang_short)
         
     def _get_pos_semi(self, p, lang_short):  
         # Semi-supervised parser output: PHEAD column.        
@@ -519,7 +520,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_pos_semi_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_pos_semi_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_semi_eval"), testType = "CONLL_2009",
-                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+                            removeAts = "DEPREL", useGoldSyntax = False, language = lang_short)
         
     def _get_pos_unsup(self, p, lang_short):  
         # Unsupervised parser output: PHEAD column.
@@ -527,7 +528,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_pos_unsup_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_pos_unsup_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_pos_unsup_eval"), testType = "CONLL_2009",
-                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+                            removeAts = "DEPREL", useGoldSyntax = False, language = lang_short)
                 
     def _get_brown_semi(self, p, lang_short):  
         # --- Brown cluster tags ---
@@ -536,7 +537,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_brown_semi_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_brown_semi_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_brown_semi_eval"), testType = "CONLL_2009",
-                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+                            removeAts = "DEPREL", useGoldSyntax = False, language = lang_short)
         
     def _get_brown_unsup(self, p, lang_short):
         # Unsupervised parser output: PHEAD column.
@@ -544,7 +545,7 @@ class ParamDefinitions():
                             train = p.get(lang_short + "_brown_unsup_train"), trainType = "CONLL_2009",
                             dev = p.get(lang_short + "_brown_unsup_dev"), devType = "CONLL_2009",
                             test = p.get(lang_short + "_brown_unsup_eval"), testType = "CONLL_2009",
-                            removeDeprel = True, useGoldSyntax = False, language = lang_short)
+                            removeAts = "DEPREL", useGoldSyntax = False, language = lang_short)
     
     # ------------------------------ END Parser Outputs ------------------------------         
          
@@ -847,7 +848,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                     trainType = "CONLL_2008",
                                     dev = p.c08_pos_gold_test_wsj_missing, devType = "CONLL_2008",
                                     test = p.c08_pos_gold_test_wsj_simplified, testType = "CONLL_2008",
-                                    removeDeprel = False, useGoldSyntax = False, language = 'en')
+                                    useGoldSyntax = False, language = 'en')
                     exp = g.defaults + feats + pos_sup + g.model_pg_lat_tree + train 
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
@@ -932,12 +933,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp += SrlExpParams(threads=threads, work_mem_megs=work_mem_megs, ts=threads, wmm=heap_gigs*1000)
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-        
-        elif self.expname == "srl-all-nosup":
-            g.defaults += g.feat_all
-            g.defaults.set("removeLemma", True, incl_name=False)
-            g.defaults.set("removeFeat", True, incl_name=False)
-            return self._get_default_pipeline(g, l, gl, ll)
         
         elif self.expname == "srl-opt":
             # Experiment to do grid search over parameters for optimization.

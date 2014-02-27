@@ -11,6 +11,7 @@ import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
 import edu.jhu.data.simple.SimpleAnnoSentenceWriter.SimpleAnnoSentenceWriterPrm;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Lists;
 
 public class CorpusHandler {
 
@@ -71,6 +72,8 @@ public class CorpusHandler {
     public static boolean normalizeRoleNames = false;    
     @Opt(hasArg = true, description = "Comma separated list of annotation types for restricting features/data.")
     public static String removeAts = null;
+    @Opt(hasArg = true, description = "Comma separated list of annotation types for predicted annotations.")
+    public static String predAts = null;
     
     ////// TODO: use these options... /////
     // @Opt(hasArg=true, description="Whether to normalize and clean words.")
@@ -85,6 +88,10 @@ public class CorpusHandler {
     private SimpleAnnoSentenceCollection testInputSents;
 
     // -------------------- Train data --------------------------
+    
+    public boolean hasTrain() {
+        return train != null && trainType != null;
+    }
     
     public SimpleAnnoSentenceCollection getTrainGold() throws IOException {
         if (trainGoldSents == null) {
@@ -135,11 +142,15 @@ public class CorpusHandler {
         }
         
         // Cache input train data.
-        trainInputSents = trainGoldSents.getWithAtsRemoved(getRemoveAts());
+        trainInputSents = trainGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
     }
 
     // -------------------- Dev data --------------------------
 
+    public boolean hasDev() {
+        return dev != null && devType != null;
+    }
+    
     public SimpleAnnoSentenceCollection getDevGold() throws IOException {
         if (devGoldSents == null) {
             loadDev();
@@ -189,11 +200,15 @@ public class CorpusHandler {
         }
         
         // Cache input dev data.
-        devInputSents = devGoldSents.getWithAtsRemoved(getRemoveAts());
+        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
     }
     
     // -------------------- Test data --------------------------
 
+    public boolean hasTest() {
+        return test != null && testType != null;
+    }
+    
     public SimpleAnnoSentenceCollection getTestGold() throws IOException {
         if (testGoldSents == null) {
             loadTest();
@@ -243,7 +258,7 @@ public class CorpusHandler {
         }
         
         // Cache input test data.
-        testInputSents = testGoldSents.getWithAtsRemoved(getRemoveAts());
+        testInputSents = testGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
     }
 
     
@@ -257,12 +272,11 @@ public class CorpusHandler {
         return prm;
     }
     
-
-    private static List<AT> getRemoveAts() {
-        if (removeAts == null) {
+    public static List<AT> getAts(String atsStr) {
+        if (atsStr == null) {
             return Collections.emptyList();
-        }        
-        String[] splits = removeAts.split(",");
+        }       
+        String[] splits = atsStr.split(",");
         ArrayList<AT> ats = new ArrayList<AT>();
         for (String s : splits) {
             ats.add(AT.valueOf(s));

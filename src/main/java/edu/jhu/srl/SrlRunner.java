@@ -18,13 +18,12 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.CoNLL08FileReader;
 import edu.jhu.data.conll.CoNLL08Sentence;
 import edu.jhu.data.conll.CoNLL08Writer;
-import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateLanguage;
@@ -74,8 +73,6 @@ import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
-import edu.jhu.tag.BrownClusterTagger;
-import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
@@ -102,52 +99,6 @@ public class SrlRunner {
     public static long seed = Prng.DEFAULT_SEED;
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
-    
-    // Options for train data
-    @Opt(hasArg = true, description = "Training data input file or directory.")
-    public static File train = null;
-    @Opt(hasArg = true, description = "Type of training data.")
-    public static DatasetType trainType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "Training data predictions output file.")
-    public static File trainPredOut = null;
-    @Opt(hasArg = true, description = "Training data gold output file.")
-    public static File trainGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for train.")
-    public static int trainMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
-    public static int trainMaxNumSentences = Integer.MAX_VALUE; 
-    
-    // Options for dev data
-    @Opt(hasArg = true, description = "Testing data input file or directory.")
-    public static File dev = null;
-    @Opt(hasArg = true, description = "Type of dev data.")
-    public static DatasetType devType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "Testing data predictions output file.")
-    public static File devPredOut = null;
-    @Opt(hasArg = true, description = "Testing data gold output file.")
-    public static File devGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for dev.")
-    public static int devMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in dev.")
-    public static int devMaxNumSentences = Integer.MAX_VALUE; 
-    
-    // Options for test data
-    @Opt(hasArg = true, description = "Testing data input file or directory.")
-    public static File test = null;
-    @Opt(hasArg = true, description = "Type of testing data.")
-    public static DatasetType testType = DatasetType.CONLL_2009;
-    @Opt(hasArg = true, description = "Testing data predictions output file.")
-    public static File testPredOut = null;
-    @Opt(hasArg = true, description = "Testing data gold output file.")
-    public static File testGoldOut = null;
-    @Opt(hasArg = true, description = "Maximum sentence length for test.")
-    public static int testMaxSentenceLength = Integer.MAX_VALUE;
-    @Opt(hasArg = true, description = "Maximum number of sentences to include in test.")
-    public static int testMaxNumSentences = Integer.MAX_VALUE; 
-
-    // Options for train/dev/test data
-    @Opt(hasArg = true, description = "Brown cluster file")
-    public static File brownClusters = null;    
     
     // Options for model IO
     @Opt(hasArg = true, description = "File from which we should read a serialized model.")
@@ -222,26 +173,11 @@ public class SrlRunner {
     public static File senseFeatTplsOut = null;
     @Opt(hasArg = true, description = "Arg feature template output file.")
     public static File argFeatTplsOut = null;
-
-    // Options for SRL data munging.
-    @Opt(hasArg = true, description = "SRL language.")
-    public static String language = "es";
     
     // Options for data munging.
-    @Opt(hasArg = true, description = "Whether to use gold POS tags.")
-    public static boolean useGoldSyntax = false;    
+    @Deprecated
     @Opt(hasArg=true, description="Whether to normalize and clean words.")
     public static boolean normalizeWords = false;
-    @Opt(hasArg=true, description="Whether to normalize the role names (i.e. lowercase and remove themes).")
-    public static boolean normalizeRoleNames = false;
-    @Opt(hasArg = true, description = "Whether to remove the deprel and pdeprel columns from CoNLL-2009 data.")
-    public static boolean removeDeprel = false;
-    @Opt(hasArg = true, description = "Whether to remove the lemma and plemma columns from CoNLL-2009 data.")
-    public static boolean removeLemma = false;
-    @Opt(hasArg = true, description = "Whether to remove the feat and pfeat columns from CoNLL-2009 data.")
-    public static boolean removeFeat = false;
-    @Opt(hasArg = true, description = "Comma separated list of annotation types for restricting features/data.")
-    public static String removeAts = null;
 
     // Options for caching.
     @Opt(hasArg = true, description = "The type of cache/store to use for training/testing instances.")
@@ -290,6 +226,9 @@ public class SrlRunner {
             stopTrainingBy = null;
         }
         
+        // Initialize the data reader/writer.
+        CorpusHandler corpus = new CorpusHandler();
+        
         // Get a model.
         SrlFgModel model = null;
         ObsFeatureConjoiner ofc;
@@ -309,19 +248,16 @@ public class SrlRunner {
             srlFePrm = getSrlFeatureExtractorPrm();
             removeAts(srlFePrm);
             cs = new CorpusStatistics(getCorpusStatisticsPrm());
-            featureSelection(cs, srlFePrm);
+            featureSelection(corpus.getTrainGold(), cs, srlFePrm);
             fts = new FactorTemplateList();
             ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm(), fts);
         }
 
-        Pair<FgExampleList, SimpleAnnoSentenceCollection> dPair;
-        if (trainType != null && train != null) {
+        if (corpus.hasTrain()) {
             String name = "train";
             // Train a model.
-            dPair = getData(ofc, cs, trainType, train, trainGoldOut, trainMaxNumSentences,
-                    trainMaxSentenceLength, name, srlFePrm);
-            FgExampleList data = dPair.get1();
-            SimpleAnnoSentenceCollection goldSents = dPair.get2();
+            SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
+            FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             
             if (model == null) {
                 model = new SrlFgModel(cs, ofc, srlFePrm);
@@ -344,8 +280,8 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            VarConfigPair vcPair = decode(model, data, goldSents, trainType, trainPredOut, name);        
-            eval(name, vcPair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            corpus.writeTrainPreds(predSents);
         }
           
         if (modelOut != null) {
@@ -365,42 +301,35 @@ public class SrlRunner {
             writer.close();
         }
 
-        if (dev != null && devType != null) {
+        if (corpus.hasDev()) {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            dPair = getData(ofc, cs, devType, dev, devGoldOut, devMaxNumSentences,
-                    devMaxSentenceLength, name, srlFePrm);
-            FgExampleList data = dPair.get1();
-            SimpleAnnoSentenceCollection goldSents = dPair.get2();
+            SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
+            FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             // Decode and evaluate the dev data.
-            VarConfigPair vcPair = decode(model, data, goldSents, devType, devPredOut, name);
-            eval(name, vcPair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            corpus.writeDevPreds(predSents);
         }
         
-        if (test != null && testType != null) {
+        if (corpus.hasTest()) {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            dPair = getData(ofc, cs, testType, test, testGoldOut, testMaxNumSentences,
-                    testMaxSentenceLength, name, srlFePrm);
-            FgExampleList data = dPair.get1();
-            SimpleAnnoSentenceCollection goldSents = dPair.get2();
+            SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
+            FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             // Decode and evaluate the test data.
-            VarConfigPair vcPair = decode(model, data, goldSents, testType, testPredOut, name);
-            eval(name, vcPair);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            corpus.writeTestPreds(predSents);
         }
     }
 
     /**
      * Do feature selection and update srlFePrm with the chosen feature templates.
      */
-    private void featureSelection(CorpusStatistics cs, SrlFeatureExtractorPrm srlFePrm) throws IOException,
+    private void featureSelection(SimpleAnnoSentenceCollection sents, CorpusStatistics cs, SrlFeatureExtractorPrm srlFePrm) throws IOException,
             ParseException {
         if (useTemplates && featureSelection) {
-            String name = "train";
-            SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, trainType, train,
-                    trainGoldOut, trainMaxNumSentences, trainMaxSentenceLength, name);
             CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
             
             InformationGainFeatureTemplateSelectorPrm prm = new InformationGainFeatureTemplateSelectorPrm();
@@ -430,18 +359,10 @@ public class SrlRunner {
     }
 
     private void removeAts(SrlFeatureExtractorPrm srlFePrm) {
-        for (AT at : getRemoveAts()) {
+        for (AT at : CorpusHandler.getAts(CorpusHandler.removeAts)) {
             srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
             srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
         }
-    }
-
-    private Pair<FgExampleList, SimpleAnnoSentenceCollection> getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, DatasetType dataType, File dataFile, File goldFile,
-            int maxNumSentences, int maxSentenceLength, String name, SrlFeatureExtractorPrm srlFePrm) throws ParseException, IOException {
-        SimpleAnnoSentenceCollection sents = readSentences(cs.prm.useGoldSyntax, dataType, dataFile, goldFile, maxNumSentences,
-                maxSentenceLength, name);        
-        FgExampleList data = getData(ofc, cs, name, sents, srlFePrm);
-        return new Pair<FgExampleList, SimpleAnnoSentenceCollection>(data, sents);
     }
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
@@ -483,154 +404,6 @@ public class SrlRunner {
         log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
-
-    private SimpleAnnoSentenceCollection readSentences(boolean useGoldSyntax, DatasetType dataType, File dataFile,
-            File goldFile, int maxNumSentences, int maxSentenceLength, String name) throws IOException, ParseException {
-        log.info("Reading " + name + " data of type " + dataType + " from " + dataFile);
-        SimpleAnnoSentenceCollection sents;
-        int numTokens = 0;
-        
-        // Read the data and (optionally) write it to the gold file.
-        if (dataType == DatasetType.CONLL_2009 || dataType == DatasetType.CONLL_2008) {
-            if (normalizeRoleNames) {
-                log.info("Normalizing role names");
-            }
-            
-            List<CoNLL09Sentence> conll09Sents = new ArrayList<CoNLL09Sentence>();
-            if (dataType == DatasetType.CONLL_2009) {
-                CoNLL09FileReader reader = new CoNLL09FileReader(dataFile);
-                for (CoNLL09Sentence sent : reader) {
-                    if (conll09Sents.size() >= maxNumSentences) {
-                        break;
-                    }
-                    if (sent.size() <= maxSentenceLength) {
-                        if (normalizeRoleNames) {
-                            sent.normalizeRoleNames();
-                        }
-                        sent.intern();
-                        conll09Sents.add(sent);
-                        numTokens += sent.size();
-                    }
-                }
-                reader.close();
-                
-                if (goldFile != null) {
-                    log.info("Writing gold data to file: " + goldFile);
-                    CoNLL09Writer cw = new CoNLL09Writer(goldFile);
-                    for (CoNLL09Sentence sent : conll09Sents) {
-                        cw.write(sent);
-                    }
-                    cw.close();
-                }
-            } else if (dataType == DatasetType.CONLL_2008) {
-                List<CoNLL08Sentence> conll08Sents = new ArrayList<CoNLL08Sentence>();
-                CoNLL08FileReader reader = new CoNLL08FileReader(dataFile);
-                for (CoNLL08Sentence sent : reader) {
-                    if (conll09Sents.size() >= maxNumSentences) {
-                        break;
-                    }
-                    if (sent.size() <= maxSentenceLength) {
-                        if (normalizeRoleNames) {
-                            sent.normalizeRoleNames();
-                        }
-                        // TODO: sent.removeNominalPreds();
-                        sent.intern();
-                        conll08Sents.add(sent);
-                        conll09Sents.add(sent.toCoNLL09Sent(true));
-                        numTokens += sent.size();
-                    }
-                }
-                reader.close();
-
-                if (goldFile != null) {
-                    log.info("Writing gold data to file: " + goldFile);
-                    CoNLL08Writer cw = new CoNLL08Writer(goldFile);
-                    for (CoNLL08Sentence sent : conll08Sents) {
-                        cw.write(sent);
-                    }
-                    cw.close();
-                }
-            }
-
-            // Data munging -- this must be done after we write the gold sentences to a file.
-            reduceSupervision(conll09Sents);
-                        
-            // TODO: We should clearly differentiate between the gold sentences and the input sentence.
-            // Convert CoNLL sentences to SimpleAnnoSentences.
-            sents = new SimpleAnnoSentenceCollection();
-            for (CoNLL09Sentence conllSent : conll09Sents) {
-                sents.add(conllSent.toSimpleAnnoSentence(useGoldSyntax));
-            }
-        } else {
-            throw new ParseException("Unsupported data type: " + dataType);
-        }
-
-        // Brown clusters.
-        if (brownClusters != null) {
-            log.info("Adding Brown clusters.");
-            BrownClusterTaggerPrm prm = new BrownClusterTaggerPrm();
-            prm.maxTagLength = Integer.MAX_VALUE;
-            prm.language = language;
-            BrownClusterTagger bct = new BrownClusterTagger(prm);
-            bct.read(brownClusters);
-            bct.addClusters(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
-        }
-
-        // TODO: This must only be done on
-        // the "input" sentences, not the "gold" sentences against which we
-        // train and evaluate.
-        //
-        //        // Additional removal of supervision. 
-        //        if (useTemplates) {
-        //            List<AT> removeAts = getRemoveAts();            
-        //            if (removeAts.size() > 0) {
-        //                log.info("Removing annotation types: " + removeAts);
-        //                for (SimpleAnnoSentence sent : sents) {
-        //                    sent.removeAts(removeAts);
-        //                }
-        //            }
-        //        }
-        
-        log.info("Num " + name + " sentences: " + sents.size());   
-        log.info("Num " + name + " tokens: " + numTokens);
-
-        return sents;
-    }
-
-    /** Remove various aspects of supervision from the data. */
-    private void reduceSupervision(List<CoNLL09Sentence> conllSents) {
-        if (useProjDepTreeFactor) {
-            // TODO: This should be a removeHead option, which is usually
-            // set to true whenever we have latent syntax.
-            log.info("Removing all dependency trees from the CoNLL data");
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeHeadAndPhead();
-                conllSent.removeDeprealAndPdeprel();
-            }
-        } else if (removeDeprel) {
-            log.info("Removing syntactic dependency labels from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeDeprealAndPdeprel();
-            }
-        } 
-        
-        if (removeLemma) {
-            log.info("Removing lemmas from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeLemmaAndPlemma();
-            }
-        }
-        
-        if (removeFeat) {
-            log.info("Removing morphological features from the CoNLL data");  
-            for (CoNLL09Sentence conllSent : conllSents) {
-                conllSent.removeFeatAndPfeat();
-            }
-        }
-    }
     
     private void eval(String name, VarConfigPair pair) {
         AccuracyEvaluator accEval = new AccuracyEvaluator();
@@ -638,7 +411,8 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
     
-    private VarConfigPair decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection goldSents, DatasetType dataType, File predOut, String name) throws IOException, ParseException {
+    // TODO: This should take the input sentences and add predictions.
+    private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection goldSents, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
 
         // Predicted sentences
@@ -670,46 +444,16 @@ public class SrlRunner {
             // Get the gold variable assignment.
             goldVcs.add(ex.getGoldConfig());
         }
+           
+        // Simple accuracy check of factor graph variables.
+        eval(name, new VarConfigPair(goldVcs, predVcs));
         
-        if (predOut != null) {
-            log.info("Writing predictions for " + name + " data of type " + dataType + " to " + predOut);
-            if (dataType == DatasetType.CONLL_2009) {
-                CoNLL09Writer cw = new CoNLL09Writer(predOut);
-                for (SimpleAnnoSentence sent : predSents) {
-                    CoNLL09Sentence conllSent = CoNLL09Sentence.fromSimpleAnnoSentence(sent);
-                    cw.write(conllSent);
-                }
-                cw.close();
-            } else if (dataType == DatasetType.CONLL_2008) {
-                CoNLL08Writer cw = new CoNLL08Writer(predOut);
-                for (SimpleAnnoSentence sent : predSents) {
-                    CoNLL08Sentence conllSent = CoNLL08Sentence.fromSimpleAnnoSentence(sent);
-                    cw.write(conllSent);
-                }
-                cw.close();
-            } else {
-                throw new ParseException("Unsupported data type: " + dataType);
-            }
-        }
-        
-        return new VarConfigPair(goldVcs, predVcs);
+        return predSents;
     }
 
     
 
     /* --------- Factory Methods ---------- */
-
-    private static List<AT> getRemoveAts() {
-        if (removeAts == null) {
-            return Collections.emptyList();
-        }        
-        String[] splits = removeAts.split(",");
-        ArrayList<AT> ats = new ArrayList<AT>();
-        for (String s : splits) {
-            ats.add(AT.valueOf(s));
-        }
-        return ats;
-    }
     
     private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm(SrlFeatureExtractorPrm srlFePrm) {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
@@ -779,7 +523,7 @@ public class SrlRunner {
                 } else {
                     throw new IllegalStateException();
                 }
-                if (brownClusters == null) {
+                if (CorpusHandler.brownClusters == null) {
                     // Filter out the Brown cluster features.
                     log.warn("Filtering out Brown cluster features from coarse set.");
                     coarseUnigramSet = TemplateLanguage.filterOutRequiring(coarseUnigramSet, AT.BROWN);
@@ -805,8 +549,8 @@ public class SrlRunner {
     private static CorpusStatisticsPrm getCorpusStatisticsPrm() {
         CorpusStatisticsPrm prm = new CorpusStatisticsPrm();
         prm.cutoff = cutoff;
-        prm.language = language;
-        prm.useGoldSyntax = useGoldSyntax;
+        prm.language = CorpusHandler.language;
+        prm.useGoldSyntax = CorpusHandler.useGoldSyntax;
         prm.normalizeWords = normalizeWords;
         return prm;
     }
@@ -884,6 +628,7 @@ public class SrlRunner {
         try {
             ArgParser parser = new ArgParser(SrlRunner.class);
             parser.addClass(SrlRunner.class);
+            parser.addClass(CorpusHandler.class);
             try {
                 parser.parseArgs(args);
             } catch (ParseException e) {

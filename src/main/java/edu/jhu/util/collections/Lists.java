@@ -2,11 +2,8 @@ package edu.jhu.util.collections;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 
 public class Lists {
 
@@ -62,6 +59,13 @@ public class Lists {
         List<T> list = new ArrayList<T>(Arrays.asList(values));
         list.add(val);
         return list;
+    }
+
+    public static <T> List<T> union(List<T> ats1, List<T> ats2) {
+        ArrayList<T> newList = new ArrayList<T>(ats1.size() + ats2.size());
+        newList.addAll(ats1);
+        newList.addAll(ats2);
+        return newList;
     }
 
     public static <T> ArrayList<T> copyOf(List<T> list) {
