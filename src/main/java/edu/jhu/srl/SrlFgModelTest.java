@@ -15,8 +15,8 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
+import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 

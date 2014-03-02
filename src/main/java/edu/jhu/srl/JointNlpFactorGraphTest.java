@@ -22,30 +22,28 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactor;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.collections.Lists;
 
 /**
- * Unit tests for {@link SrlFactorGraph}.
+ * Unit tests for {@link JointNlpFactorGraph}.
  * @author mgormley
  */
-public class SrlFactorGraphTest {
+public class JointNlpFactorGraphTest {
 
     @Test
     public void testNSquaredModel() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.ALL_PAIRS;
-        prm.linkVarType = VarType.LATENT;
-        prm.makeUnknownPredRolesLatent = false;
-        prm.allowPredArgSelfLoops = false;
-        prm.useProjDepTreeFactor = false;
-        prm.alwaysIncludeLinkVars = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.ALL_PAIRS;
+        prm.dpPrm.linkVarType = VarType.LATENT;
+        prm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.srlPrm.allowPredArgSelfLoops = false;
+        prm.dpPrm.useProjDepTreeFactor = false;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
         
         LinkVar link = sfg.getLinkVar(1, 2);
         assertNotNull(link);
@@ -70,14 +68,13 @@ public class SrlFactorGraphTest {
 
     @Test
     public void testPredsGiven() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.linkVarType = VarType.LATENT;
-        prm.makeUnknownPredRolesLatent = false;
-        prm.allowPredArgSelfLoops = false;
-        prm.useProjDepTreeFactor = false;
-        prm.alwaysIncludeLinkVars = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.dpPrm.linkVarType = VarType.LATENT;
+        prm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.srlPrm.allowPredArgSelfLoops = false;
+        prm.dpPrm.useProjDepTreeFactor = false;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
         
         LinkVar link = sfg.getLinkVar(-1, 2);
         assertNotNull(link);
@@ -100,14 +97,13 @@ public class SrlFactorGraphTest {
     
     @Test
     public void testRoleSelfLoops() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.ALL_PAIRS;
-        prm.linkVarType = VarType.LATENT;
-        prm.makeUnknownPredRolesLatent = false;
-        prm.allowPredArgSelfLoops = true;
-        prm.useProjDepTreeFactor = false;
-        prm.alwaysIncludeLinkVars = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.ALL_PAIRS;
+        prm.dpPrm.linkVarType = VarType.LATENT;
+        prm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.srlPrm.allowPredArgSelfLoops = true;
+        prm.dpPrm.useProjDepTreeFactor = false;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
 
         assertNotNull(sfg.getRoleVar(1, 1));
         assertNotNull(sfg.getRoleVar(2, 2));
@@ -121,14 +117,13 @@ public class SrlFactorGraphTest {
     
     @Test
     public void testLinksPredictedRolesLatent() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.ALL_PAIRS;
-        prm.linkVarType = VarType.PREDICTED;
-        prm.makeUnknownPredRolesLatent = true;
-        prm.allowPredArgSelfLoops = false;
-        prm.useProjDepTreeFactor = false;
-        prm.alwaysIncludeLinkVars = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.ALL_PAIRS;
+        prm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.srlPrm.makeUnknownPredRolesLatent = true;
+        prm.srlPrm.allowPredArgSelfLoops = false;
+        prm.dpPrm.useProjDepTreeFactor = false;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
         
         List<Var> vars = sfg.getVars();
         assertEquals(2, VarSet.getVarsOfType(vars, VarType.LATENT).size());
@@ -139,13 +134,13 @@ public class SrlFactorGraphTest {
 
     @Test
     public void testUseProjDepTreeFactor() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.ALL_PAIRS;
-        prm.linkVarType = VarType.LATENT;
-        prm.makeUnknownPredRolesLatent = false;
-        prm.allowPredArgSelfLoops = false;
-        prm.useProjDepTreeFactor = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.ALL_PAIRS;
+        prm.dpPrm.linkVarType = VarType.LATENT;
+        prm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.srlPrm.allowPredArgSelfLoops = false;
+        prm.dpPrm.useProjDepTreeFactor = true;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
         
         LinkVar link = sfg.getLinkVar(1, 2);
         assertNotNull(link);
@@ -170,10 +165,10 @@ public class SrlFactorGraphTest {
 
     @Test
     public void testPredictSense() {
-        SrlFactorGraphPrm prm = new SrlFactorGraphPrm();
-        prm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.predictSense = true;
-        SrlFactorGraph sfg = getSrlFg(prm);
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.srlPrm.predictSense = true;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
         
         // Assertions about the Sense variables.
         assertNotNull(sfg.getSenseVar(0));
@@ -192,7 +187,7 @@ public class SrlFactorGraphTest {
         // Assertions about the Sense factors.
         int numSenseFactors = 0;
         for (Factor f : sfg.getFactors()) {
-            SrlFactor srlf = (SrlFactor) f;
+            TypedFactor srlf = (TypedFactor) f;
             if (srlf.getFactorType() == SrlFactorTemplate.SENSE_UNARY) {
                 assertEquals(1, srlf.getVars().size());
                 assertTrue(srlf.getVars().iterator().next() instanceof SenseVar);
@@ -202,7 +197,7 @@ public class SrlFactorGraphTest {
         assertEquals(2, numSenseFactors);
     }
 
-    private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
+    private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
@@ -218,7 +213,7 @@ public class SrlFactorGraphTest {
         };
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc);
+        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc);
     }
     
 }

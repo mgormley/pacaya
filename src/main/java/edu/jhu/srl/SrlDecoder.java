@@ -49,7 +49,7 @@ public class SrlDecoder {
     public void decode(FgModel model, FgExample ex) {
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
-        SrlFactorGraph srlFg = (SrlFactorGraph) ex.getOriginalFactorGraph();
+        JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();
         int n = srlFg.getSentenceLength();
         mbrVarConfig = mbrDecoder.getMbrVarConfig();
 

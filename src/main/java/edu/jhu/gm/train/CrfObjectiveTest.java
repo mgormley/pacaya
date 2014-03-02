@@ -41,9 +41,9 @@ import edu.jhu.optimize.Function;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExamplesBuilder;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.collections.Lists;
 
 public class CrfObjectiveTest {
@@ -150,13 +150,13 @@ public class CrfObjectiveTest {
         
         FactorTemplateList fts = new FactorTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.fgPrm.makeUnknownPredRolesLatent = false;
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.useProjDepTreeFactor = true;
+        prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         prm.srlFePrm.fePrm.biasOnly = true;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         ofc.init(data);
         

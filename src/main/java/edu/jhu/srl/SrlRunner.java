@@ -9,7 +9,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -18,10 +17,6 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.CoNLL08Sentence;
-import edu.jhu.data.conll.CoNLL08Writer;
-import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
@@ -64,7 +59,6 @@ import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.optimize.Maximizer;
 import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
-import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
@@ -72,11 +66,12 @@ import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
 import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
+import edu.jhu.util.collections.Lists;
 import edu.jhu.util.files.Files;
 
 /**
@@ -116,23 +111,25 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
 
+    // Options for dependency parse factor graph structure.
+    @Opt(hasArg = true, description = "The type of the link variables.")
+    public static VarType linkVarType = VarType.LATENT;
+    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
+    public static boolean useProjDepTreeFactor = false;
+    
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "The structure of the Role variables.")
     public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
     public static boolean makeUnknownPredRolesLatent = true;
-    @Opt(hasArg = true, description = "The type of the link variables.")
-    public static VarType linkVarType = VarType.LATENT;
-    @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
-    public static boolean useProjDepTreeFactor = false;
     @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
     public static boolean allowPredArgSelfLoops = false;
-    @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
-    public static boolean unaryFactors = false;
-    @Opt(hasArg = true, description = "Whether to always include Link variables. For testing only.")
-    public static boolean alwaysIncludeLinkVars = false;
     @Opt(hasArg = true, description = "Whether to predict predicate sense.")
     public static boolean predictSense = false;
+
+    // Options for joint factor graph structure.
+    @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
+    public static boolean unaryFactors = false;
 
     // Options for SRL feature selection.
     @Opt(hasArg = true, description = "Whether to do feature selection.")
@@ -359,7 +356,7 @@ public class SrlRunner {
     }
 
     private void removeAts(SrlFeatureExtractorPrm srlFePrm) {
-        for (AT at : CorpusHandler.getAts(CorpusHandler.removeAts)) {
+        for (AT at : Lists.union(CorpusHandler.getAts(CorpusHandler.removeAts), CorpusHandler.getAts(CorpusHandler.predAts))) {
             srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
             srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
         }
@@ -381,12 +378,12 @@ public class SrlRunner {
         
         log.info("Building factor graphs and extracting features.");
         SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         
         // Special case: we somehow need to be able to create test examples
         // where we've never seen the predicate.
-        if (prm.fgPrm.predictSense && fts.isGrowing()) {
+        if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
             // TODO: This should have a bias feature.
             Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
             fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
@@ -444,7 +441,7 @@ public class SrlRunner {
             // Get the gold variable assignment.
             goldVcs.add(ex.getGoldConfig());
         }
-           
+        
         // Simple accuracy check of factor graph variables.
         eval(name, new VarConfigPair(goldVcs, predVcs));
         
@@ -459,14 +456,14 @@ public class SrlRunner {
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
         // Factor graph structure.
-        prm.fgPrm.linkVarType = linkVarType;
-        prm.fgPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
-        prm.fgPrm.roleStructure = roleStructure;
-        prm.fgPrm.useProjDepTreeFactor = useProjDepTreeFactor;
-        prm.fgPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
-        prm.fgPrm.unaryFactors = unaryFactors;
-        prm.fgPrm.alwaysIncludeLinkVars = alwaysIncludeLinkVars;
-        prm.fgPrm.predictSense = predictSense;
+        prm.fgPrm.dpPrm.linkVarType = linkVarType;
+        prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
+        prm.fgPrm.srlPrm.roleStructure = roleStructure;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
+        prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.srlPrm.predictSense = predictSense;
         
         // Feature extraction.
         prm.srlFePrm = srlFePrm;

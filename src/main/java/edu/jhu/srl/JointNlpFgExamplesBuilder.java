@@ -23,33 +23,33 @@ import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 
 /**
- * Factory for SRL FgExamples.
+ * Factory for NLP FgExamples.
  * 
  * @author mgormley
  * @author mmitchell
  */
-public class SrlFgExamplesBuilder {
+public class JointNlpFgExamplesBuilder {
 
     public static class SrlFgExampleBuilderPrm {
-        public SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
+        public JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
         public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
         public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
     }
     
-    private static final Logger log = Logger.getLogger(SrlFgExamplesBuilder.class);
+    private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
 
     private ObsFeatureConjoiner ofc;
     private SrlFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
     private FactorTemplateList fts;
 
-    public SrlFgExamplesBuilder(SrlFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
+    public JointNlpFgExamplesBuilder(SrlFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
         this.prm = prm;
         this.ofc = ofc;
         this.cs = cs;
@@ -89,7 +89,7 @@ public class SrlFgExamplesBuilder {
             obsFe = new ObsFeatureCache(obsFe);
             
             // Construct the factor graph.
-            SrlFactorGraph sfg = new SrlFactorGraph(prm.fgPrm, sent, knownPreds, cs, obsFe, ofc);        
+            JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, knownPreds, cs, obsFe, ofc);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, srlGraph, sfg);
             
@@ -114,7 +114,7 @@ public class SrlFgExamplesBuilder {
         return knownPreds;
     }
 
-    private static VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, SrlFactorGraph sfg) {
+    private static VarConfig getTrainAssignment(SimpleAnnoSentence sent, SrlGraph srlGraph, JointNlpFactorGraph sfg) {
         VarConfig vc = new VarConfig();
 
         // LINK VARS

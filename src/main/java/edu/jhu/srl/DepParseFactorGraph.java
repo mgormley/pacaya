@@ -2,29 +2,26 @@ package edu.jhu.srl;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
-import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 
 /**
- * A factor graph for syntactic dependency parsing.
+ * A factor graph builder for syntactic dependency parsing.
  * 
  * @author mgormley
  * @author mmitchell
  */
-public class DepParseFactorGraph extends FactorGraph {
+public class DepParseFactorGraph implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -49,54 +46,10 @@ public class DepParseFactorGraph extends FactorGraph {
         
         /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
         public boolean unaryFactors = true;
-        
-        /** Whether to always include Link variables. For testing only. */
-        public boolean alwaysIncludeLinkVars = false;
     }
     
     public enum DepParseFactorTemplate {
-        LINK_ROLE_BINARY,
         LINK_UNARY,
-    }
-    
-    /**
-     * A dependency parsing factor, which includes its type (i.e. template).
-     * @author mgormley
-     */
-    public static class DepParseFactor extends ObsFeExpFamFactor {
-
-        private static final long serialVersionUID = 1L;
-
-        DepParseFactorTemplate type;
-        
-        public DepParseFactor(VarSet vars, DepParseFactorTemplate type, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
-            super(vars, type, cj, obsFe);
-            this.type = type;
-        }
-        
-        /**
-         * Constructs an SrlFactor.
-         * 
-         * This constructor allows us to differentiate between the "type" of
-         * factor (e.g. SENSE_UNARY) and its "templateKey" (e.g.
-         * SENSE_UNARY_satisfacer.a1). Using Sense factors as an example, this
-         * way we can use the type to determine which type of features should be
-         * extracted, and the templateKey to determine which independent
-         * classifier should be used.
-         * 
-         * @param vars The variables.
-         * @param type The type.
-         * @param templateKey The template key.
-         */
-        public DepParseFactor(VarSet vars, DepParseFactorTemplate type, Object templateKey, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
-            super(vars, templateKey, cj, obsFe);
-            this.type = type;
-        }
-        
-        public DepParseFactorTemplate getFactorType() {
-            return type;
-        }
-        
     }
     
     // Parameters for constructing the factor graph.
@@ -108,15 +61,24 @@ public class DepParseFactorGraph extends FactorGraph {
     private LinkVar[][] childVars;
     
     // The sentence length.
-    private final int n;                
+    private int n;
 
-    public DepParseFactorGraph(DepParseFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
-        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap, obsFe, ofc);
+    public DepParseFactorGraph(DepParseFactorGraphPrm prm) {        
+        this.prm = prm;
     }
 
-    public DepParseFactorGraph(DepParseFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
-            List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
-        this.prm = prm;
+    /**
+     * Adds factors and variables to the given factor graph.
+     */
+    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+            ObsFeatureConjoiner ofc, FactorGraph fg) {
+        build(sent.getWords(), obsFe, ofc, fg);
+    }
+
+    /**
+     * Adds factors and variables to the given factor graph.
+     */
+    public void build(List<String> words, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
         this.n = words.size();
         
         // Create the Link variables.
@@ -126,9 +88,9 @@ public class DepParseFactorGraph extends FactorGraph {
             rootVars = treeFactor.getRootVars();
             childVars = treeFactor.getChildVars();
             // Add the global factor.
-            this.addFactor(treeFactor);
-        } else if (prm.linkVarType == VarType.OBSERVED || prm.alwaysIncludeLinkVars) {
-            log.trace("Adding observed Link variables, without the global factor.");
+            fg.addFactor(treeFactor);
+        } else {
+            log.trace("Adding Link variables, without the global factor.");
             rootVars = new LinkVar[n];
             childVars = new LinkVar[n][n];
             for (int i = -1; i < n; i++) {
@@ -142,13 +104,6 @@ public class DepParseFactorGraph extends FactorGraph {
                     }
                 }
             }
-        } else {
-            rootVars = new LinkVar[n];
-            childVars = new LinkVar[n][n];
-            log.trace("Not adding any Link variables.");
-            // IMPORTANT NOTE: Here we OVERRIDE prm.unaryFactors to make sure
-            // that the Role variables have /some/ factor to participate in.
-            prm.unaryFactors = true;
         }
         
         // Add the factors.
@@ -158,12 +113,12 @@ public class DepParseFactorGraph extends FactorGraph {
                 if (i == -1) {
                     // Add unary factors on root Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        this.addFactor(new DepParseFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new TypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                 } else {
                     // Add unary factors on child Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        this.addFactor(new DepParseFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new TypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                 }
             }
@@ -200,6 +155,10 @@ public class DepParseFactorGraph extends FactorGraph {
 
     public int getSentenceLength() {
         return n;
+    }
+
+    public LinkVar[][] getChildVars() {
+        return childVars;
     }
     
 }

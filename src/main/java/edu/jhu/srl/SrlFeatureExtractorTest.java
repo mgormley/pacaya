@@ -4,10 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -17,23 +15,22 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
-import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -44,9 +41,8 @@ public class SrlFeatureExtractorTest {
 
     @Test
     public void testCorrectNumFeatures() throws Exception {
-        SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
-        fgPrm.alwaysIncludeLinkVars = true;
-        SrlFactorGraph sfg = getSrlFg(fgPrm);
+        JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
+        JointNlpFactorGraph sfg = getSrlFg(fgPrm);
 
         FactorTemplateList fts = new FactorTemplateList();
         
@@ -101,12 +97,11 @@ public class SrlFeatureExtractorTest {
         
         prm.srlFePrm.featureHashMod = -1;
         
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.linkVarType = VarType.OBSERVED;
-        prm.fgPrm.alwaysIncludeLinkVars = true;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         ofc.init(data);
         
@@ -153,12 +148,11 @@ public class SrlFeatureExtractorTest {
         
         prm.srlFePrm.featureHashMod = -1;
         
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.linkVarType = VarType.OBSERVED;
-        prm.fgPrm.alwaysIncludeLinkVars = true;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
         ofc.init(data);
         
@@ -175,8 +169,8 @@ public class SrlFeatureExtractorTest {
     
     @Test
     public void testCorrectNumFeaturesWithFeatureHashing() throws Exception {
-        SrlFactorGraphPrm fgPrm = new SrlFactorGraphPrm();
-        SrlFactorGraph sfg = getSrlFg(fgPrm);
+        JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
+        JointNlpFactorGraph sfg = getSrlFg(fgPrm);
 
         FactorTemplateList fts = new FactorTemplateList();        
 
@@ -197,13 +191,16 @@ public class SrlFeatureExtractorTest {
         fts.lookupTemplateIds(sfg);
         
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
-        fePrm.useNaradFeats = true;
+        fePrm.useNaradFeats = false;
         fePrm.useSimpleFeats = false;
         fePrm.useZhaoFeats = false;
         fePrm.useLexicalDepPathFeats = false;
+        fePrm.useTemplates = true;
+        fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
+        fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
         SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.fePrm = fePrm;
-        prm.featureHashMod = 10; // Enable feature hashing
+        prm.featureHashMod = 2; // Enable feature hashing
         SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, simpleSents.get(0), cs);
         featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
@@ -211,11 +208,12 @@ public class SrlFeatureExtractorTest {
         }
         
         System.out.println(fts);
-        assertEquals(11, fts.getNumObsFeats());
+        // We should include some bias features as well.
+        assertEquals(9, fts.getNumObsFeats());
     }
     
 
-    private static SrlFactorGraph getSrlFg(SrlFactorGraphPrm prm) {
+    private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
@@ -223,7 +221,7 @@ public class SrlFeatureExtractorTest {
         // ---        
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new SrlFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc);
+        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc);
     }
 
 }

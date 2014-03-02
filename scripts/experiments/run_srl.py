@@ -312,7 +312,6 @@ class ParamDefinitions():
             modelOut="./model.binary.gz",
             senseFeatTplsOut="./sense-feat-tpls.txt",
             argFeatTplsOut="./arg-feat-tpls.txt",
-            alwaysIncludeLinkVars=True,
             unaryFactors=True,
             linkVarType="OBSERVED",
             featCountCutoff=-1,

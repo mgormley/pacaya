@@ -18,9 +18,9 @@ import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExamplesBuilder;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 import edu.jhu.util.collections.Lists;
 
 public class FgExampleTest {
@@ -46,14 +46,14 @@ public class FgExampleTest {
         FactorTemplateList fts = new FactorTemplateList();
         SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
         
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.useProjDepTreeFactor = true;
-        prm.fgPrm.linkVarType = VarType.LATENT;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        prm.fgPrm.dpPrm.linkVarType = VarType.LATENT;
 
         prm.srlFePrm.fePrm.biasOnly = true;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         ofc.init(data);
         
