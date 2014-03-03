@@ -94,10 +94,11 @@ class PathDefinitions():
     
     def get_paths(self):
         p = Paths()
-        p.lang_short_names = ["ca", "cs", "es", "de", "en", "zh"]
+        p.c09_lang_short_names = ["ca", "cs", "es", "de", "en", "zh"] 
+        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
 
         p.langs = {}        
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:
             p.langs[lang_short] = ParamGroups()            
         
         # CoNLL'09 Shared Task datasets.
@@ -126,6 +127,26 @@ class PathDefinitions():
         # Missing sentences.
         p.c08_pos_gold_test_wsj_missing = os.path.join(self.root_dir, "data", "conll2008", "test.wsj.missing.conll")
         
+        
+        # CoNLL-X Shared Task datasets.
+        # Languages: arabic, bulgarian, czech, danish, dutch, german, portuguese, slovene, spanish, swedish, turkish.
+        # Missing: japanese, chinese.
+        # TODO: Fix language codes.
+        conllx_dir = get_first_that_exists("/home/hltcoe/mgormley/corpora/CoNLL-X",
+                                           self.root_dir + "/data/conllx/CoNLL-X")
+        self._set_paths_for_conllx_lang(p, "Arabic",     "ar", "PADT", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Bulgarian",  "bg", "bultreebank", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Czech",      "cs", "pdt", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Danish",     "da", "ddt", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Dutch",      "nl", "alpino", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "German",     "de", "tiger", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Portuguese", "pt", "bosque", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Slovene",    "sl", "sdt", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Spanish",    "es", "cast3lb", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Swedish",    "sv", "talbanken05", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=True)    
+        self._set_paths_for_conllx_lang(p, "English",    "en", "ptb", conllx_dir, require=True)
+        
         # Grammar Induction Output.
         parser_prefix = self.root_dir + "/exp/vem-conll_006"
         require_path_exists(parser_prefix)
@@ -136,15 +157,14 @@ class PathDefinitions():
         self._set_paths_for_conll09_parses(p, "Catalan", "ca", parser_prefix, require=False)
         self._set_paths_for_conll09_parses(p, "English", "en", parser_prefix, require=False)
         self._set_paths_for_conll09_parses(p, "Chinese", "zh", parser_prefix, require=False)
-        
-        
+                
         # Brown Clusters.
         bc_256_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_256",
                                            self.root_dir + "/data/bc_out_256")
         bc_1000_dir = get_first_that_exists("/home/hltcoe/mgormley/working/word_embeddings/bc_out_1000",
                                             self.root_dir + "/data/bc_out_1000")
         p.bc_tiny = os.path.join(bc_1000_dir, "paths.tiny")
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names:
             pl = p.langs[lang_short]
             pl.bc_256 = os.path.join(bc_256_dir, "full.txt_%s_256" % (lang_short), "paths.cutoff")
             pl.bc_1000 = os.path.join(bc_1000_dir, "full.txt_%s_1000" % (lang_short), "bc", "paths")
@@ -152,12 +172,13 @@ class PathDefinitions():
         return p
     
     def _set_paths_for_conll09_lang(self, p, lang_long, lang_short, data_dir, require=False):
-        ''' Creates attributes on this object for the paths to the CoNLL-2009 data files.
+        ''' Creates attributes on this object for the paths to the CoNLL-2009 data files. Also
+        adds them to the language specific dictionary p.langs[lang_short].
          
         Parameters:
             p - The path object on which to set the attributes.
             lang_long - The long form of the language name (e.g. Spanish)
-            lang_short - The language code (e.g. sp)
+            lang_short - The language code (e.g. es)
             data_dir - The CoNLL-2009 data directory (e.g. /export/common/data/corpora/LDC/LDC2012T03/data/)
             require - Whether to require these files to exist.
             
@@ -183,7 +204,39 @@ class PathDefinitions():
         # Require some paths.
         if require:
             require_path_exists(pos_gold_train, pos_gold_dev, pos_gold_eval)
-
+        
+    def _set_paths_for_conllx_lang(self, p, lang_long, lang_short, treebank, data_dir, require=False):
+        ''' Creates attributes on this object for the paths to the CoNLL-X data files. Also
+        adds them to the language specific dictionary p.langs[lang_short].
+         
+        Parameters:
+            p - The path object on which to set the attributes.
+            lang_long - The long form of the language name (e.g. Spanish)
+            lang_short - The language code (e.g. es)
+            treebank - The name of the treebank (e.g. cast3lb)
+            data_dir - The CoNLL-X data directory (e.g. ./data/conllx/CoNLL-X)
+            require - Whether to require these files to exist.
+        '''
+        lang_low = lang_long.lower() 
+        # Example: ./CoNLL-X/train/data/arabic/PADT/train/arabic_PADT_train.conll
+        train = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_train.conll")
+        # Example: ./CoNLL-X/test/data/arabic/PADT/test/arabic_PADT_test.conll
+        test = os.path.join(data_dir, "test", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test.conll")
+        # Example: ./CoNLL-X/test_blind/data/czech/pdt/test/czech_pdt_test_blind.conll
+        test_blind  = os.path.join(data_dir, "test_blind", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test_blind.conll")
+        # Set with setattr.
+        p.set(lang_short + "_cx_train", train)
+        p.set(lang_short + "_cx_test",   test)
+        p.set(lang_short + "_cx_test_blind",  test_blind)
+        # Set on dictionary.
+        pl = p.langs[lang_short]
+        pl.cx_train = train
+        pl.cx_test = test
+        pl.cx_test_blind = test_blind
+        # Require some paths.
+        if require:
+            require_path_exists(train, test, test_blind)
+            
     def _set_paths_for_conll09_parses(self, p, lang_long, lang_short, data_dir, require=False): 
         #if lang_short == "es": lang_short = "sp"       
         # --- POS tags ---
@@ -262,7 +315,7 @@ class ParamDefinitions():
         p = self.path_defs.get_paths()
         g.langs = {} # Language-specific parameter groups. (always reference as "gl")
         l.langs = {} # Language-specific parameter lists.  (always reference as "ll")
-        for lang_short in p.lang_short_names:            
+        for lang_short in p.c09_lang_short_names:            
             g.langs[lang_short] = ParamGroups()
             l.langs[lang_short] = ParamGroups()
         
@@ -399,7 +452,7 @@ class ParamDefinitions():
                                                                    numFeatsToSelect=32, numSentsForFeatSelect=1000)
 
         # Language specific feature sets from Bjorkelund et al. (2009).
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names:
             gl = g.langs[lang_short]
             gl.feat_tpl_bjork_ls = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-%s-sense-feats.txt" % (lang_short),
                                                                 "/edu/jhu/featurize/bjorkelund-%s-arg-feats.txt" % (lang_short),
@@ -477,7 +530,7 @@ class ParamDefinitions():
                     g.model_ap_obs_tree, g.model_ap_prd_tree, g.model_ap_lat_tree]
                 
     def _define_groups_parser_output(self, g, p):
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names:
             gl = g.langs[lang_short]
             self._define_groups_parser_output_for_lang(gl, p, lang_short)
             # Store for lookup in the "language-specific" dictionary.
@@ -552,17 +605,17 @@ class ParamDefinitions():
          
     def _define_lists_parser_output(self, g, l, p):
         # Single language only, with various grammar induction parsers.        
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names:
             gl = g.langs[lang_short]
             ll = l.langs[lang_short]
             ll.parser_outputs = [gl.pos_gold, gl.pos_sup, gl.pos_semi, gl.pos_unsup, gl.brown_semi, gl.brown_unsup]
             
         # All languages, with CoNLL-09 MSTParser output only.
-        l.all_parser_outputs_sup = [g.langs[lang_short].pos_sup for lang_short in p.lang_short_names]
+        l.all_parser_outputs_sup = [g.langs[lang_short].pos_sup for lang_short in p.c09_lang_short_names]
     
     def _define_lists_parse_and_srl(self, g, l, p):
         # Single language only
-        for lang_short in p.lang_short_names:
+        for lang_short in p.c09_lang_short_names:
             gl = g.langs[lang_short]
             ll = l.langs[lang_short]
             # We define the non-latent-tree model for all the input parses,
@@ -624,19 +677,26 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         cmd = "java " + self.get_java_args() + " edu.jhu.srl.SrlRunner  %s \n" % (self.get_args())
         script += fancify_cmd(cmd)
         
-        if self.get("train"): 
-            script += self.get_eval_script("train", True)
-            script += self.get_eval_script("train", False)
-        if self.get("dev"):  
-            script += self.get_eval_script("dev", True)
-            script += self.get_eval_script("dev", False)
-        if self.get("test"):  
-            script += self.get_eval_script("test", True)
-            script += self.get_eval_script("test", False)
+        if self.get("train") and self.get("trainType") == "CONLL_2009":
+            script += self.get_eval09_script("train", True)
+            script += self.get_eval09_script("train", False)
+        if self.get("dev") and self.get("devType") == "CONLL_2009":
+            script += self.get_eval09_script("dev", True)
+            script += self.get_eval09_script("dev", False)
+        if self.get("test") and self.get("testType") == "CONLL_2009":
+            script += self.get_eval09_script("test", True)
+            script += self.get_eval09_script("test", False)
+                        
+        if self.get("train") and self.get("trainType") == "CONLL_X":
+            script += self.get_eval07_script("train")
+        if self.get("dev") and self.get("devType") == "CONLL_X":
+            script += self.get_eval07_script("dev")
+        if self.get("test") and self.get("testType") == "CONLL_X":
+            script += self.get_eval07_script("test")
         
         return script
     
-    def get_eval_script(self, data_name, predict_sense):    
+    def get_eval09_script(self, data_name, predict_sense):    
         script = "\n"
         script += 'echo "Evaluating %s with predict_sense=%r"\n' % (data_name, predict_sense)
         eval_args = "" 
@@ -648,8 +708,17 @@ class SrlExpParams(experiment_runner.JavaExpParams):
             eval_out = data_name + "-no-sense" + "-eval.out"
             script += "perl %s/scripts/eval/eval09-no_sense.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
         script += 'grep --after-context 5 "SYNTACTIC SCORES:" %s\n' % (eval_out)
-        script += 'grep --after-context 11 "SEMANTIC SCORES:" %s\n' % (eval_out)
-        
+        script += 'grep --after-context 11 "SEMANTIC SCORES:" %s\n' % (eval_out)        
+        return script
+    
+    def get_eval07_script(self, data_name):    
+        script = "\n"
+        script += 'echo "Evaluating %s"\n' % (data_name)
+        eval_args = "" 
+        eval_args += " -g " + self.get(data_name + "GoldOut") + " -s " + self.get(data_name + "PredOut")
+        eval_out = data_name + "-eval.out"
+        script += "perl %s/scripts/eval/eval07.pl %s &> %s\n" % (self.root_dir, eval_args, eval_out)
+        script += 'grep --after-context 3 "Labeled   attachment score:" %s\n' % (eval_out)        
         return script
     
     def get_java_args(self):
@@ -683,7 +752,8 @@ class ScrapeSrl(experiment_runner.PythonExpParams):
 class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
-    known_exps = ( "srl-narad-dev20",
+    known_exps = (  "dp-conllx",
+                    "srl-narad-dev20",
                     "srl-narad",
                     "srl-all",
                     "srl-all-nosup",
@@ -729,7 +799,27 @@ class SrlExpParamsRunner(ExpParamsRunner):
         gl = g.langs["es"]
         ll = l.langs["es"]
                 
-        if self.expname == "srl-narad-dev20":
+        if self.expname == "dp-conllx":
+            # CoNLL-X experiments.
+            exps = []
+            g.defaults += g.feat_mcdonald
+            g.defaults.update(includeSrl=False, featureSelection=False,
+                              useGoldSyntax=True, sgdNumPasses=5,
+                              trainMaxNumSentences=3,
+                              testMaxNumSentences=3)
+            # TODO: don't include features if edge is NOT present.
+            for lang_short in p.cx_lang_short_names:
+                pl = p.langs[lang_short]
+                # Define a first-order parser
+                parser = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
+                data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
+                                    test=pl.cx_test, testType="CONLL_X", language=lang_short)
+                exp = g.defaults + data + parser
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-narad-dev20":
             g.defaults += g.feat_narad            
             g.defaults.update(trainMaxSentenceLength=20)
             return self._get_default_pipeline(g, l, gl, ll)
@@ -766,7 +856,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(predictSense=True, biasOnly=True)
             for removeBrown in [True, False]:
-                for lang_short in p.lang_short_names:
+                for lang_short in p.c09_lang_short_names:
                     gl = g.langs[lang_short]
                     ll = l.langs[lang_short]
                     parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
@@ -806,7 +896,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_tpl_zhao
             g.defaults.update(predictSense=True, featureSelection=False)
-            for lang_short in ['ca']: #p.lang_short_names:
+            for lang_short in ['ca']: #p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # SKIPPING: gl.brown_semi, gl.brown_unsup,  gl.pos_sup for OBS and LAT.
@@ -826,7 +916,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=True)
-            for lang_short in p.lang_short_names:
+            for lang_short in p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
@@ -861,7 +951,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
-            for lang_short in p.lang_short_names:
+            for lang_short in p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
@@ -881,7 +971,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            for lang_short in ['ca', 'de']: #p.lang_short_names:
+            for lang_short in ['ca', 'de']: #p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 #parser_srl = gl.pos_sup + g.model_pg_lat_tree + SrlExpParams(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
@@ -906,7 +996,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
-            for lang_short in p.lang_short_names:
+            for lang_short in p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 parser_srl = gl.pos_sup + g.model_pg_prd_tree
