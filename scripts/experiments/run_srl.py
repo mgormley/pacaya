@@ -34,7 +34,7 @@ def get_first_that_exists(*paths):
     for path in paths:
         if os.path.exists(path):
             return path
-    raise Exception("ERROR - None of the required paths exist: " + paths)
+    raise Exception("ERROR - None of the required paths exist: " + str(paths))
 
 def require_path_exists(*paths):
     for path in paths:
