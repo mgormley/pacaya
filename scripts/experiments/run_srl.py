@@ -323,8 +323,10 @@ class ParamDefinitions():
             featureSelection=True,
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
-            stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
+            #stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
             predAts="SRL",
+            includeSrl=True,
+            includeDp=True
             )
         
         g.defaults += g.adagrad

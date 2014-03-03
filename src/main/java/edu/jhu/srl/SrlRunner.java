@@ -112,12 +112,16 @@ public class SrlRunner {
     public static boolean logDomain = true;
 
     // Options for dependency parse factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model the dependency parses.")
+    public static boolean includeDp = true;
     @Opt(hasArg = true, description = "The type of the link variables.")
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
     public static boolean useProjDepTreeFactor = false;
     
     // Options for SRL factor graph structure.
+    @Opt(hasArg = true, description = "Whether to model SRL.")
+    public static boolean includeSrl = true;
     @Opt(hasArg = true, description = "The structure of the Role variables.")
     public static RoleStructure roleStructure = RoleStructure.PREDS_GIVEN;
     @Opt(hasArg = true, description = "Whether Role variables with unknown predicates should be latent.")
@@ -466,8 +470,8 @@ public class SrlRunner {
         prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
         prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
         prm.fgPrm.srlPrm.predictSense = predictSense;
-        prm.fgPrm.includeDp = true;
-        prm.fgPrm.includeSrl = false;
+        prm.fgPrm.includeDp = includeDp;
+        prm.fgPrm.includeSrl = includeSrl;
         
         // Feature extraction.
         prm.srlFePrm = srlFePrm;
