@@ -215,7 +215,7 @@ public class CoNLLXToken {
         writer.write(sep);
         writer.write(String.format("%-7s", deprel));
         writer.write(sep);
-        writer.write(String.format("%-2d", intToUnderscoreString(phead, -1)));
+        writer.write(String.format("%-2s", intToUnderscoreString(phead, -1)));
         writer.write(sep);
         writer.write(String.format("%s", toUnderscoreString(pdeprel)));
     }
