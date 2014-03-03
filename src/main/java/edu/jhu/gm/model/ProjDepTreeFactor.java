@@ -245,10 +245,16 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     
     @Override
     public Factor getClamped(VarConfig clmpVarConfig) {
-        if (clmpVarConfig.size() > 0) {
+        if (clmpVarConfig.size() == 0) {
+            // None clamped.
+            return this;
+        } else if (clmpVarConfig.size() == vars.size()) {
+            // All clamped.
+            return new ProjDepTreeFactor(0, VarType.OBSERVED);
+        } else {
+            // Some clamped.
             throw new IllegalStateException("Unable to clamp these variables.");
         }
-        return this;
     }
 
     @Override
