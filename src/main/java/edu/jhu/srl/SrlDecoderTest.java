@@ -46,32 +46,4 @@ public class SrlDecoderTest {
         assertEquals("true", g.getArgAt(2).getEdges().get(1).getLabel());
     }
     
-    @Test
-    public void testGetParents() {
-        int n = 3;
-        List<DenseFactor> margs = new ArrayList<DenseFactor>();
-        List<Var> vars = new ArrayList<Var>();
-        for (int p=-1; p<n; p++) {
-            for (int c=0; c<n; c++) {
-                LinkVar v = new LinkVar(VarType.PREDICTED, LinkVar.getDefaultName(p, c), p, c);
-                DenseFactor f = new DenseFactor(new VarSet(v));
-                if ((p == -1 && c == 1) || 
-                        (p == 1 && c == 0) || 
-                        (p == 1 && c == 2)) {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.7));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.3));
-                } else {
-                    f.setValue(LinkVar.TRUE, FastMath.log(0.3));
-                    f.setValue(LinkVar.FALSE, FastMath.log(0.7));
-                }
-                margs.add(f);
-                vars.add(v);
-            }
-        }
-        
-        int[] parents = SrlDecoder.getParents(margs, vars, n);
-        System.out.println(Arrays.toString(parents));
-        Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
-    }
-
 }

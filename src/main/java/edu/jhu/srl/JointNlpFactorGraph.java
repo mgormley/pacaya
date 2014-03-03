@@ -58,8 +58,8 @@ public class JointNlpFactorGraph extends FactorGraph {
     private DepParseFactorGraph dp;  
     private SrlFactorGraph srl;
 
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
-        this(prm, sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap, obsFe, ofc);
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
+        this(prm, sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc);
     }
     
     public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
@@ -75,9 +75,9 @@ public class JointNlpFactorGraph extends FactorGraph {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+    public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
     }
 
     /**
@@ -96,15 +96,17 @@ public class JointNlpFactorGraph extends FactorGraph {
             srl.build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fg);
         }
         
-        // Add the joint factors.
-        LinkVar[][] childVars = dp.getChildVars();
-        RoleVar[][] roleVars = srl.getRoleVars();
-        for (int i = -1; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (i != -1) {
-                    // Add binary factors between Roles and Links.
-                    if (roleVars[i][j] != null && childVars[i][j] != null) {
-                        addFactor(new TypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, obsFe));
+        if (prm.includeDp && prm.includeSrl) {
+            // Add the joint factors.
+            LinkVar[][] childVars = dp.getChildVars();
+            RoleVar[][] roleVars = srl.getRoleVars();
+            for (int i = -1; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (i != -1) {
+                        // Add binary factors between Roles and Links.
+                        if (roleVars[i][j] != null && childVars[i][j] != null) {
+                            addFactor(new TypedFactor(new VarSet(roleVars[i][j], childVars[i][j]), JointFactorTemplate.LINK_ROLE_BINARY, ofc, obsFe));
+                        }
                     }
                 }
             }
@@ -123,6 +125,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * @return The link variable or null if it doesn't exist.
      */
     public LinkVar getLinkVar(int parent, int child) {
+        if (dp == null) { return null; }
         return dp.getLinkVar(parent, child);
     }
 
@@ -133,6 +136,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * @return The role variable or null if it doesn't exist.
      */
     public RoleVar getRoleVar(int i, int j) {
+        if (srl == null) { return null; }
         return srl.getRoleVar(i, j);
     }
     
@@ -142,6 +146,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * @return The sense variable or null if it doesn't exist.
      */
     public SenseVar getSenseVar(int i) {
+        if (srl == null) { return null; }
         return srl.getSenseVar(i);
     }
 

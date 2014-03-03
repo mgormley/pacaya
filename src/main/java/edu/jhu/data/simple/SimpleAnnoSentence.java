@@ -1,12 +1,15 @@
 package edu.jhu.data.simple;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.parse.cky.data.NaryTree;
@@ -267,6 +270,19 @@ public class SimpleAnnoSentence {
     public List<Pair<Integer, Dir>> getDependencyPath(int start, int end) {
         return DepTree.getDependencyPath(start, end, parents);
     }
+        
+    // TODO: Return an IntHashSet after supporting iteration.
+    public Set<Integer> getKnownPreds() {
+        if (srlGraph == null) {
+            return null;
+        }
+        Set<Integer> knownPreds = new HashSet<Integer>();
+        // All the "Y"s
+        for (SrlPred pred : srlGraph.getPreds()) {
+            knownPreds.add(pred.getPosition());
+        }
+        return knownPreds;
+    }
 
     public Integer size() {
         return words.size();
@@ -362,7 +378,7 @@ public class SimpleAnnoSentence {
         }
     }
 
-    private void removeAt(AT at) {
+    public void removeAt(AT at) {
         switch (at) {
         case WORD: this.words = null; break;
         case BROWN: this.clusters = null; break;
@@ -373,6 +389,21 @@ public class SimpleAnnoSentence {
         case DEPREL: this.deprels = null; break;
         case SRL: this.srlGraph = null; break;
         case BINARY_TREE: this.binaryTree = null; break;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
+    
+    public boolean hasAt(AT at) {
+        switch (at) {
+        case WORD: return this.words != null;
+        case BROWN: return this.clusters != null;
+        case LEMMA: return this.lemmas != null;
+        case POS: return this.posTags != null;
+        case MORPHO: return this.feats != null;
+        case DEP_TREE: return this.parents != null;
+        case DEPREL: return this.deprels != null;
+        case SRL: return this.srlGraph != null;
+        case BINARY_TREE: return this.binaryTree != null;
         default: throw new RuntimeException("not implemented for " + at);
         }
     }

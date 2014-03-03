@@ -276,15 +276,16 @@ public class JointNlpFgExamplesBuilderTest {
    
     
     /**
-     * Decodes the parents defined by a variable assignment for a single
+     * Extracts the parents as defined by a variable assignment for a single
      * sentence.
+     * 
+     * NOTE: This should NOT be used for decoding since a proper decoder will
+     * enforce the tree constraint.
      * 
      * @param n The sentence length.
      * @param vc The variable assignment.
      * @return The parents array.
      */
-    // TODO: Maybe use this somewhere? Probably not... we should really decode
-    // using MBR decoding over the link marginals.
     private static int[] getParents(int n, VarConfig vc) {
         int[] parents = new int[n];
         Arrays.fill(parents, -2);

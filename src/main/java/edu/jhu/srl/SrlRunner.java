@@ -63,7 +63,7 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
-import edu.jhu.srl.SrlDecoder.SrlDecoderPrm;
+import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
@@ -421,7 +421,7 @@ public class SrlRunner {
             FgExample ex = data.get(i);
             SimpleAnnoSentence goldSent = goldSents.get(i);
             SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
-            SrlDecoder decoder = getDecoder();
+            JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);
             
             // Get the MBR variable assignment.
@@ -430,12 +430,14 @@ public class SrlRunner {
             
             // Update SRL graph on the sentence. 
             SrlGraph srlGraph = decoder.getSrlGraph();
-            predSent.setSrlGraph(srlGraph);
+            if (srlGraph != null) {
+                predSent.setSrlGraph(srlGraph);
+            }
             // Update the dependency tree on the sentence.
             int[] parents = decoder.getParents();
             if (parents != null) {
                 predSent.setParents(parents);
-            }            
+            }
             predSents.add(predSent);
             
             // Get the gold variable assignment.
@@ -464,6 +466,8 @@ public class SrlRunner {
         prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
         prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
         prm.fgPrm.srlPrm.predictSense = predictSense;
+        prm.fgPrm.includeDp = true;
+        prm.fgPrm.includeSrl = false;
         
         // Feature extraction.
         prm.srlFePrm = srlFePrm;
@@ -612,13 +616,13 @@ public class SrlRunner {
         return bpPrm;
     }
 
-    private SrlDecoder getDecoder() {
+    private JointNlpDecoder getDecoder() {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.ACCURACY;
-        SrlDecoderPrm prm = new SrlDecoderPrm();
+        JointNlpDecoderPrm prm = new JointNlpDecoderPrm();
         prm.mbrPrm = mbrPrm;
-        return new SrlDecoder(prm);
+        return new JointNlpDecoder(prm);
     }
     
     public static void main(String[] args) {

@@ -14,6 +14,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.set.IntHashSet;
 
 /**
  * A factor graph builder for SRL.
@@ -136,9 +137,9 @@ public class SrlFactorGraph implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+    public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), knownPreds, cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
     }
 
     /**
