@@ -804,7 +804,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False,
-                              useGoldSyntax=True, sgdNumPasses=5)
+                              useGoldSyntax=True, sgdNumPasses=10)
             # TODO: don't include features if edge is NOT present.
             for lang_short in p.cx_lang_short_names:
                 pl = p.langs[lang_short]
