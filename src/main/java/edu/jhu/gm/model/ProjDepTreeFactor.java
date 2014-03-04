@@ -226,6 +226,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // Set the outgoing messages.
             msgs[outEdge.getId()].newMessage.setValue(LinkVar.FALSE, beliefFalse);
             msgs[outEdge.getId()].newMessage.setValue(LinkVar.TRUE, beliefTrue);
+            assert !msgs[outEdge.getId()].newMessage.containsBadValues(logDomain) : "message = " + msgs[outEdge.getId()].newMessage;
         }
                 
     }
@@ -262,7 +263,11 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         // TODO: implement this properly.
         // Currently, we know that the configId will always correspond to a gold
         // config, which is going to be a tree. So we cheat and just return 1.0.
-        return 1.0;
+        if (logDomain) { 
+            return 0.0;
+        } else {
+            return 1.0;
+        }
     }
 
 }

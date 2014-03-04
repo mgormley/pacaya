@@ -9,7 +9,8 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
     private static final long serialVersionUID = 1L;
     private int id = -1;
     private int iterAtLastCreateMessagesCall = -1;
-
+    protected boolean logDomain;
+    
     public AbstractGlobalFactor() {
         reset();
     }
@@ -30,6 +31,7 @@ public abstract class AbstractGlobalFactor implements GlobalFactor {
     public void updateFromModel(FgModel model, boolean logDomain) {
         // Currently, global factors do not support features, and
         // therefore have no model parameters.
+        this.logDomain = logDomain;
     }   
 
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
