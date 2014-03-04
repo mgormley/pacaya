@@ -65,8 +65,8 @@ import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeature
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
 import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.cli.ArgParser;
@@ -231,15 +231,15 @@ public class SrlRunner {
         CorpusHandler corpus = new CorpusHandler();
         
         // Get a model.
-        SrlFgModel model = null;
+        JointNlpFgModel model = null;
         ObsFeatureConjoiner ofc;
         FactorTemplateList fts;
         CorpusStatistics cs;
-        SrlFeatureExtractorPrm srlFePrm;
+        JointNlpFeatureExtractorPrm srlFePrm;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
-            model = (SrlFgModel) Files.deserialize(modelIn);
+            model = (JointNlpFgModel) Files.deserialize(modelIn);
             ofc = model.getOfc();
             fts = ofc.getTemplates();
             cs = model.getCs();
@@ -261,7 +261,7 @@ public class SrlRunner {
             FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             
             if (model == null) {
-                model = new SrlFgModel(cs, ofc, srlFePrm);
+                model = new JointNlpFgModel(cs, ofc, srlFePrm);
                 if (initParams == InitParams.RANDOM) {
                     model.setRandomStandardNormal();
                 } else if (initParams == InitParams.UNIFORM) {
@@ -328,7 +328,7 @@ public class SrlRunner {
     /**
      * Do feature selection and update srlFePrm with the chosen feature templates.
      */
-    private void featureSelection(SimpleAnnoSentenceCollection sents, CorpusStatistics cs, SrlFeatureExtractorPrm srlFePrm) throws IOException,
+    private void featureSelection(SimpleAnnoSentenceCollection sents, CorpusStatistics cs, JointNlpFeatureExtractorPrm srlFePrm) throws IOException,
             ParseException {
         if (useTemplates && featureSelection) {
             CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
@@ -359,7 +359,7 @@ public class SrlRunner {
         }
     }
 
-    private void removeAts(SrlFeatureExtractorPrm srlFePrm) {
+    private void removeAts(JointNlpFeatureExtractorPrm srlFePrm) {
         for (AT at : Lists.union(CorpusHandler.getAts(CorpusHandler.removeAts), CorpusHandler.getAts(CorpusHandler.predAts))) {
             srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.soloTemplates, at);
             srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(srlFePrm.fePrm.pairTemplates, at);
@@ -367,7 +367,7 @@ public class SrlRunner {
     }
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, SrlFeatureExtractorPrm srlFePrm) {
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm srlFePrm) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
@@ -381,7 +381,7 @@ public class SrlRunner {
         }
         
         log.info("Building factor graphs and extracting features.");
-        SrlFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
+        JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(srlFePrm);        
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         
@@ -458,8 +458,8 @@ public class SrlRunner {
 
     /* --------- Factory Methods ---------- */
     
-    private static SrlFgExampleBuilderPrm getSrlFgExampleBuilderPrm(SrlFeatureExtractorPrm srlFePrm) {
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+    private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpFeatureExtractorPrm srlFePrm) {
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         // Factor graph structure.
         prm.fgPrm.dpPrm.linkVarType = linkVarType;
@@ -493,8 +493,8 @@ public class SrlRunner {
         return prm;
     }
     
-    private static SrlFeatureExtractorPrm getSrlFeatureExtractorPrm() {
-        SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
+    private static JointNlpFeatureExtractorPrm getSrlFeatureExtractorPrm() {
+        JointNlpFeatureExtractorPrm srlFePrm = new JointNlpFeatureExtractorPrm();
         srlFePrm.fePrm.biasOnly = biasOnly;
         srlFePrm.fePrm.useSimpleFeats = useSimpleFeats;
         srlFePrm.fePrm.useNaradFeats = useNaradFeats;

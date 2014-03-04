@@ -2,16 +2,16 @@ package edu.jhu.srl;
 
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
 
-public class SrlFgModel extends FgModel {
+public class JointNlpFgModel extends FgModel {
 
     private static final long serialVersionUID = 5827437917567173421L;
     private CorpusStatistics cs;
-    private SrlFeatureExtractorPrm srlFePrm;
+    private JointNlpFeatureExtractorPrm srlFePrm;
     private ObsFeatureConjoiner ofc;
     
-    public SrlFgModel(CorpusStatistics cs, ObsFeatureConjoiner ofc, SrlFeatureExtractorPrm srlFePrm) {
+    public JointNlpFgModel(CorpusStatistics cs, ObsFeatureConjoiner ofc, JointNlpFeatureExtractorPrm srlFePrm) {
         super(ofc.getNumParams());
         this.cs = cs;
         this.ofc = ofc;
@@ -22,7 +22,7 @@ public class SrlFgModel extends FgModel {
         return cs;
     }
 
-    public SrlFeatureExtractorPrm getSrlFePrm() {
+    public JointNlpFeatureExtractorPrm getSrlFePrm() {
         return srlFePrm;
     }
     

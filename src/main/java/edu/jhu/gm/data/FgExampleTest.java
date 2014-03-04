@@ -19,7 +19,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.util.collections.Lists;
 
@@ -44,7 +44,7 @@ public class FgExampleTest {
         
         System.out.println("Done reading.");
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;

@@ -47,7 +47,7 @@ import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
@@ -158,7 +158,7 @@ public class CrfObjectiveTest {
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = false;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
@@ -239,7 +239,7 @@ public class CrfObjectiveTest {
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.fgPrm.includeSrl = false;
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;

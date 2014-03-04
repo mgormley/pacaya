@@ -29,15 +29,15 @@ import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.util.collections.Lists;
 
 /**
- * Unit tests for {@link SrlFeatureExtractorTest}.
+ * Unit tests for {@link JointNlpFeatureExtractorTest}.
  * @author mgormley
  */
-public class SrlFeatureExtractorTest {
+public class JointNlpFeatureExtractorTest {
 
     @Test
     public void testCorrectNumFeatures() throws Exception {
@@ -55,10 +55,10 @@ public class SrlFeatureExtractorTest {
         
         fts.lookupTemplateIds(sfg);
         
-        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        JointNlpFeatureExtractorPrm prm = new JointNlpFeatureExtractorPrm();
         prm.fePrm.biasOnly = true;
         prm.featureHashMod = -1; // Disable feature hashing.
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sents.get(0), cs);
+        JointNlpFeatureExtractor featExt = new JointNlpFeatureExtractor(prm, sents.get(0), cs);
         featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));
@@ -88,7 +88,7 @@ public class SrlFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
 
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.biasOnly = false;
         prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
         prm.srlFePrm.fePrm.useNaradFeats = true;
@@ -139,7 +139,7 @@ public class SrlFeatureExtractorTest {
         }
         cs.init(simpleSents);
 
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.biasOnly = false;
         prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
         prm.srlFePrm.fePrm.useNaradFeats = true;
@@ -198,10 +198,10 @@ public class SrlFeatureExtractorTest {
         fePrm.useTemplates = true;
         fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
         fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
-        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
+        JointNlpFeatureExtractorPrm prm = new JointNlpFeatureExtractorPrm();
         prm.fePrm = fePrm;
         prm.featureHashMod = 2; // Enable feature hashing
-        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, simpleSents.get(0), cs);
+        JointNlpFeatureExtractor featExt = new JointNlpFeatureExtractor(prm, simpleSents.get(0), cs);
         featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
             featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));

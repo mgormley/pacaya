@@ -35,7 +35,7 @@ import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 
 /**
  * Unit tests for {@link JointNlpFgExamplesBuilderTest}.
@@ -61,7 +61,7 @@ public class JointNlpFgExamplesBuilderTest {
         
         System.out.println("Done reading.");
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         prm.srlFePrm.fePrm.biasOnly = true;
@@ -91,7 +91,7 @@ public class JointNlpFgExamplesBuilderTest {
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);        
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.biasOnly = true;
         //prm.includeUnsupportedFeatures = 
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
@@ -134,7 +134,7 @@ public class JointNlpFgExamplesBuilderTest {
         }
 
         cs.init(simpleSents);
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.useZhaoFeats = false;
         prm.srlFePrm.fePrm.useSimpleFeats = false;
         prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
@@ -212,7 +212,7 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(simpleSents);        
         
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
@@ -253,7 +253,7 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(simpleSents);        
         
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         prm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.srlPrm.predictSense = true;

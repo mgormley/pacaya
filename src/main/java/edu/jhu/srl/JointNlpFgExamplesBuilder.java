@@ -1,13 +1,7 @@
 package edu.jhu.srl;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.data.AbstractFgExampleList;
@@ -19,13 +13,9 @@ import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
 
 /**
  * Factory for NLP FgExamples.
@@ -35,20 +25,20 @@ import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
  */
 public class JointNlpFgExamplesBuilder {
 
-    public static class SrlFgExampleBuilderPrm {
+    public static class JointNlpFgExampleBuilderPrm {
         public JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
-        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();
+        public JointNlpFeatureExtractorPrm srlFePrm = new JointNlpFeatureExtractorPrm();
         public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
     }
     
     private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
 
     private ObsFeatureConjoiner ofc;
-    private SrlFgExampleBuilderPrm prm;
+    private JointNlpFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
     private FactorTemplateList fts;
 
-    public JointNlpFgExamplesBuilder(SrlFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
+    public JointNlpFgExamplesBuilder(JointNlpFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
         this.prm = prm;
         this.ofc = ofc;
         this.cs = cs;
@@ -79,7 +69,7 @@ public class JointNlpFgExamplesBuilder {
             SimpleAnnoSentence sent = sents.get(i);
             
             // Create a feature extractor for this example.
-            ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.srlFePrm, sent, cs);
+            ObsFeatureExtractor obsFe = new JointNlpFeatureExtractor(prm.srlFePrm, sent, cs);
             obsFe = new ObsFeatureCache(obsFe);
             
             // Construct the factor graph.
