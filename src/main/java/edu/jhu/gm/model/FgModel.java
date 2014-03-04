@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
 
+import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.feat.FeatureVector;
@@ -180,6 +181,18 @@ public class FgModel implements Serializable, IFgModel {
                 return multiplier * val;
             }
         });
+    }
+
+    public double l2Norm() {
+        final MutableDouble l2Norm = new MutableDouble(0);
+        apply(new FnIntDoubleToDouble() {            
+            @Override
+            public double call(int idx, double val) {
+                l2Norm.add(val*val);
+                return val;
+            }
+        });
+        return l2Norm.doubleValue();
     }
         
 }

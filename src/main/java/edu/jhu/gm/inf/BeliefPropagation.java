@@ -368,7 +368,8 @@ public class BeliefPropagation implements FgInferencer {
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
-        
+        assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
+
         // update factor beliefs
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();

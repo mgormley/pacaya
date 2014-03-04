@@ -57,8 +57,9 @@ public class CrfObjective implements ExampleObjective {
         infLatPred.run();
         double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
         infLatPred.clear();
-        
+
         // "Multiply" in all the fully clamped factors to the numerator and denominator. 
+        int numFullyClamped = 0;
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
 
@@ -67,6 +68,7 @@ public class CrfObjective implements ExampleObjective {
                 int goldConfig = ex.getGoldConfigIdxPred(a);
                 numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
                         : FastMath.log(f.getUnormalizedScore(goldConfig));
+                numFullyClamped++;
 
                 if (fgLatPred.getFactor(a).getVars().size() == 0) {
                     // These are the factors which do not include any latent or predicted variables.
@@ -78,7 +80,9 @@ public class CrfObjective implements ExampleObjective {
         }
         
         double ll = numerator - denominator;
-
+        log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
+        log.trace(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
+        
         if ( ll > MAX_LOG_LIKELIHOOD ) {
             log.warn("Log-likelihood for example should be <= 0: " + ll);
         }

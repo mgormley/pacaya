@@ -1,7 +1,10 @@
 package edu.jhu.data.simple;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.log4j.Logger;
 
@@ -62,7 +65,10 @@ public class SimpleAnnoSentenceReader {
     
     public void loadSents(File dataFile, DatasetType type) throws IOException {
         log.info("Reading " + prm.name + " data of type " + type + " from " + dataFile);
+        loadSents(new FileInputStream(dataFile), type);
+    }
 
+    public void loadSents(InputStream fis, DatasetType type) throws UnsupportedEncodingException, IOException {
         if (prm.normalizeRoleNames) {
             if (type == DatasetType.CONLL_2008 || type == DatasetType.CONLL_2009) {
                 log.info("Normalizing role names");
@@ -71,16 +77,18 @@ public class SimpleAnnoSentenceReader {
         
         CloseableIterable<SimpleAnnoSentence> reader = null;
         if (type == DatasetType.CONLL_2009) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(dataFile), new CoNLL092SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(fis), new CoNLL092SimpleAnno());
         } else if (type == DatasetType.CONLL_2008) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(dataFile), new CoNLL082SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082SimpleAnno());
         } else if (type == DatasetType.CONLL_X) {
-            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(dataFile), new CoNLLX2SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2SimpleAnno());
         //} else if (type == DatasetType.PTB) {
             //reader = new Ptb2SimpleAnno(new PtbFileReader(dataFile));
         } else {
+            fis.close();
             throw new IllegalStateException("Unsupported data type: " + type);
         }
+        
         loadSents(reader);
         
         log.info("Num " + prm.name + " sentences: " + sents.size());   
