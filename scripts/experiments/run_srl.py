@@ -753,6 +753,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     
     # Class variables
     known_exps = (  "dp-conllx",
+                    "dp-conllx-tmp",
                     "srl-narad-dev20",
                     "srl-narad",
                     "srl-all",
@@ -805,25 +806,51 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False,
                               useGoldSyntax=True, sgdNumPasses=10)
-            # TODO: don't include features if edge is NOT present.
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
+            # TODO: don't include features if edge is NOT present.            
             for lang_short in p.cx_lang_short_names:
                 pl = p.langs[lang_short]
                 # Define a first-order parser
-                parser = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
+                parser = first_order
                 data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
+                                    propTrainAsDev=0.10, devType="CONLL_X",
                                     test=pl.cx_test, testType="CONLL_X", language=lang_short)
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
+        if self.expname == "dp-conllx-tmp":
+            # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
+            exps = []
+            g.defaults += g.feat_mcdonald
+            g.defaults.update(includeSrl=False, featureSelection=False,
+                              useGoldSyntax=True, sgdNumPasses=10, l2variance=10000000)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
+            # TODO: don't include features if edge is NOT present.
+            lang_short = "de"
+            for trainMaxNumSentences in [10, 50, 100, 500, 1000]:
+                pl = p.langs[lang_short]
+                # Define a first-order parser
+                parser = first_order
+                data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
+                                    propTrainAsDev=0.10, devType="CONLL_X",
+                                    #test=pl.cx_test, testType="CONLL_X", 
+                                    language=lang_short)
+                exp = g.defaults + data + parser
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "srl-narad-dev20":
-            g.defaults += g.feat_narad            
+            g.defaults += g.feat_tpl_narad
             g.defaults.update(trainMaxSentenceLength=20)
             return self._get_default_pipeline(g, l, gl, ll)
         
-        elif self.expname == "srl-narad":            
-            g.defaults += g.feat_narad
+        elif self.expname == "srl-narad":
+            g.defaults += g.feat_tpl_narad
             return self._get_default_pipeline(g, l, gl, ll)
         
         elif self.expname == "srl-all":

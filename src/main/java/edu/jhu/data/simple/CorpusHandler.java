@@ -10,6 +10,8 @@ import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
 import edu.jhu.data.simple.SimpleAnnoSentenceWriter.SimpleAnnoSentenceWriterPrm;
 import edu.jhu.featurize.TemplateLanguage.AT;
+import edu.jhu.prim.sample.Sample;
+import edu.jhu.prim.sort.IntIntSort;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
 
@@ -59,7 +61,9 @@ public class CorpusHandler {
 
     // Options for train/dev/test data
     @Opt(hasArg = true, description = "Brown cluster file")
-    public static File brownClusters = null;    
+    public static File brownClusters = null;
+    @Opt(hasArg = true, description = "Random proportion of train data to allocate as dev data.")
+    public static double propTrainAsDev = 0.0;
 
     // Options for SRL data munging.
     @Opt(hasArg = true, description = "SRL language.")
@@ -86,6 +90,8 @@ public class CorpusHandler {
     private SimpleAnnoSentenceCollection devInputSents;
     private SimpleAnnoSentenceCollection testGoldSents;
     private SimpleAnnoSentenceCollection testInputSents;
+    
+    private SimpleAnnoSentenceCollection trainAsDevSents;
 
     // -------------------- Train data --------------------------
     
@@ -133,6 +139,14 @@ public class CorpusHandler {
         // Cache gold train data.
         trainGoldSents = reader.getData();
         
+        if (hasTrain() && propTrainAsDev > 0) {
+            // Split into train and dev.
+            trainAsDevSents = new SimpleAnnoSentenceCollection();
+            SimpleAnnoSentenceCollection tmp = new SimpleAnnoSentenceCollection();
+            sample(trainGoldSents, propTrainAsDev, trainAsDevSents, tmp);
+            trainGoldSents = tmp;
+        }
+        
         if (trainGoldOut != null) {
             // Write gold train data.
             SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
@@ -144,11 +158,33 @@ public class CorpusHandler {
         // Cache input train data.
         trainInputSents = trainGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
     }
+    
+    /**
+     * Splits inList into two other lists.
+     * 
+     * @param inList 
+     * @param prop The proportion of inList to sample into outList1.
+     * @param outList1 The sample.
+     * @param outList2 The remaining (not sampled) entries.
+     */
+    public static <T> void sample(List<T> inList, double prop, List<T> outList1, List<T> outList2) {
+        if (prop < 0 || 1 < prop) {
+            throw new IllegalStateException("Invalid proportion: " + prop);
+        }
+        boolean[] isDev = Sample.sampleWithoutReplacementBooleans((int) (prop * inList.size()), inList.size());
+        for (int i=0; i<inList.size(); i++) {
+            if (isDev[i]) {
+                outList1.add(inList.get(i));
+            } else {
+                outList2.add(inList.get(i));
+            }
+        }
+    }
 
     // -------------------- Dev data --------------------------
 
     public boolean hasDev() {
-        return dev != null && devType != null;
+        return (dev != null && devType != null) || (hasTrain() && propTrainAsDev > 0);
     }
     
     public SimpleAnnoSentenceCollection getDevGold() throws IOException {
@@ -180,6 +216,23 @@ public class CorpusHandler {
     }
     
     private void loadDev() throws IOException {
+        if (dev != null && devType != null) {
+            readDev();
+        }
+        if (hasTrain() && propTrainAsDev > 0) {
+            loadTrainAsDev();
+        }
+        
+        if (devGoldOut != null) {
+            // Write gold dev data.
+            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            wPrm.name = "gold dev";
+            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            writer.write(devGoldOut, devType, devGoldSents);
+        }
+    }    
+    
+    private void readDev() throws IOException {        
         // Read dev data.
         SimpleAnnoSentenceReaderPrm prm = getDefaultReaderPrm();  
         prm.name = "dev";
@@ -191,15 +244,21 @@ public class CorpusHandler {
         // Cache gold dev data.
         devGoldSents = reader.getData();
         
-        if (devGoldOut != null) {
-            // Write gold dev data.
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
-            wPrm.name = "gold dev";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
-            writer.write(devGoldOut, devType, devGoldSents);
-        }
-        
         // Cache input dev data.
+        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
+    }
+    
+    private void loadTrainAsDev() throws IOException {
+        if (trainAsDevSents == null) {
+            // Ensure that trainAsDevSents is loaded.
+            loadTrain();
+        }
+        if (devGoldSents == null) {
+            devGoldSents = new SimpleAnnoSentenceCollection();
+        }
+        for (SimpleAnnoSentence sent : trainAsDevSents) {
+            devGoldSents.add(sent);
+        }
         devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
     }
     
