@@ -219,12 +219,12 @@ public class CrfObjectiveTest {
     }
     
     @Test
-    public void testSrlLogLikelihoodLessThanZero() throws Exception {
-        srlLogLikelihoodCorrectLessThanZero(false);
-        srlLogLikelihoodCorrectLessThanZero(true);
+    public void testDpLogLikelihoodLessThanZero() throws Exception {
+        dpLogLikelihoodCorrectLessThanZero(false);
+        dpLogLikelihoodCorrectLessThanZero(true);
     }
     
-    public void srlLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
+    public void dpLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
         Prng.seed(123456789101112l);
         SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 3;
@@ -246,6 +246,7 @@ public class CrfObjectiveTest {
         prm.srlFePrm.fePrm.useTemplates = true;
         prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
         prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
+        //prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);

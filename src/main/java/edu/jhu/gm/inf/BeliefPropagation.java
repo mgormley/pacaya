@@ -230,7 +230,7 @@ public class BeliefPropagation implements FgInferencer {
             // create all the messages from this factor to its variables, but only 
             // once per iteration.
             GlobalFactor globalFac = (GlobalFactor) factor;
-            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
             // The messages have been set, so just return.
             return;
         } else {

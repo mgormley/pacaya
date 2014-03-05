@@ -21,9 +21,10 @@ public interface GlobalFactor extends Factor {
      * @param msgs The message containers.
      * @param logDomain Whether the resulting messages should be represented in
      *            the log-domain.
+     * @param normalizeMessages TODO
      * @param iter The current belief propagation iteration.
      */
-    void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, int iter);
+    void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, int iter);
 
     /**
      * Resets this global factor for a new run of belief propagation.
