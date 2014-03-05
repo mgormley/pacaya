@@ -5,12 +5,14 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
+import java.util.Iterator;
 
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.map.IntDoubleMap;
+import edu.jhu.prim.map.IntDoubleSortedMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
@@ -37,13 +39,20 @@ public class FgModel implements Serializable, IFgModel {
     private final IntDoubleVector params;
     /** The number of model parameters. */
     private int numParams;
+    /** Provides iteration of the model parameter names. */
+    private Iterable<String> paramNames;
     
     public FgModel(int numParams) {
+        this(numParams, null);
+    }
+    
+    public FgModel(int numParams, Iterable<String> paramNames) {
         this.numParams = numParams;
         this.params = new IntDoubleDenseVector(numParams);
         for (int i=0; i<numParams; i++) {
             params.set(i, 0.0);
         }
+        this.paramNames = paramNames;
     }
     
     /** Shallow copy constructor which also sets params. */
@@ -124,9 +133,14 @@ public class FgModel implements Serializable, IFgModel {
         }
     }
     
-    public void printModel(Writer writer) throws IOException {        
+    public void printModel(Writer writer) throws IOException {
+        Iterator<String> iter = paramNames.iterator();
         for (int i=0; i<numParams; i++) {
-            writer.write(String.format("%d", i));
+            if (paramNames == null) {
+                writer.write(String.format("%d", i));
+            } else {
+                writer.write(iter.next());
+            }
             writer.write("\t");
             writer.write(String.format("%.13g", params.get(i)));
             writer.write("\n");

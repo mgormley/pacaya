@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
+import java.util.Iterator;
 
 import org.apache.log4j.Logger;
 
@@ -16,6 +17,7 @@ import edu.jhu.gm.model.ObsFeatureCarrier;
 import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.util.IntIter;
+import edu.jhu.gm.util.ArrayIter3D;
 import edu.jhu.prim.arrays.BoolArrays;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.vector.IntIntDenseVector;
@@ -280,6 +282,63 @@ public class ObsFeatureConjoiner implements Serializable {
         writer.flush();
     }
 
+    public Iterable<String> getParamNames() {
+        return new ParamNames();
+    }
+        
+    private class ParamNames implements Iterable<String>, Iterator<String>, Serializable {
+
+        private static final long serialVersionUID = 1L;
+        private ArrayIter3D iter;
+        private boolean hasNext;
+        
+        @Override
+        public Iterator<String> iterator() {
+            iter = new ArrayIter3D(indices);
+            hasNext = iter.next();
+            return this;
+        }
+        
+        @Override
+        public boolean hasNext() {
+            skipNonIncluded();
+            return hasNext;
+        }
+        
+        @Override
+        public String next() {
+            int t = iter.i;
+            int c = iter.j;
+            int k = iter.k;
+            
+            FactorTemplate template = templates.get(t);
+            Alphabet<Feature> alphabet = template.getAlphabet();
+            
+            StringBuilder name = new StringBuilder();
+            name.append(template.getKey().toString());
+            name.append("_");
+            name.append(template.getStateNamesStr(c));
+            name.append("_");
+            name.append(alphabet.lookupObject(k).toString());
+            name.append("_");
+            name.append(String.format("%d", indices[t][c][k]));
+            hasNext = iter.next();
+            return name.toString(); 
+        }
+
+        private void skipNonIncluded() {
+            while (!included[iter.i][iter.j][iter.k]) {
+                hasNext = iter.next();
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new RuntimeException("not supported");
+        }
+        
+    }
+
     public FactorTemplateList getTemplates() {
         return templates;
     }
@@ -291,5 +350,5 @@ public class ObsFeatureConjoiner implements Serializable {
     public int getFeatIndex(int t, int c, int feat) {
         return indices[t][c][feat];
     }
-            
+    
 }

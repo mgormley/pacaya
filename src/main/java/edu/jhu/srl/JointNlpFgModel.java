@@ -12,7 +12,7 @@ public class JointNlpFgModel extends FgModel {
     private ObsFeatureConjoiner ofc;
     
     public JointNlpFgModel(CorpusStatistics cs, ObsFeatureConjoiner ofc, JointNlpFeatureExtractorPrm srlFePrm) {
-        super(ofc.getNumParams());
+        super(ofc.getNumParams(), ofc.getParamNames());
         this.cs = cs;
         this.ofc = ofc;
         this.srlFePrm = srlFePrm;
