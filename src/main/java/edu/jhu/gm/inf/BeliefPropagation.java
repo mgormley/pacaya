@@ -44,9 +44,8 @@ public class BeliefPropagation implements FgInferencer {
         //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
-        public boolean normalizeMessages = true;
-        
-        public boolean cacheFactorBeliefs = true;
+        public boolean normalizeMessages = true;        
+        public boolean cacheFactorBeliefs = false;
         
         public BeliefPropagationPrm() {
         }
