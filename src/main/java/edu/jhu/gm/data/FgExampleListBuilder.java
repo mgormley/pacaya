@@ -74,7 +74,6 @@ public class FgExampleListBuilder {
     public static void constructAndStoreAll(FgExampleList examples, FgExampleStore store) {
         Timer fgTimer = new Timer();
         double totFgClampMs = 0;
-        double totFeatCacheMs = 0;
         for (int i = 0; i < examples.size(); i++) {
             if (i % 1000 == 0 && i > 0) {
                 log.debug("Preprocessed " + i + " examples...");
@@ -89,12 +88,10 @@ public class FgExampleListBuilder {
 
             // Get time spent on certain subtasks.
             totFgClampMs += ex.fgClampTimer.totMs();
-            totFeatCacheMs += ex.featCacheTimer.totMs();
         }
 
         log.info("Time (ms) to clamp factor graphs: " + totFgClampMs);
-        log.info("Time (ms) to cache features: " + totFeatCacheMs);
-        log.info("Time (ms) to construct factor graph: " + (fgTimer.totMs() - totFgClampMs - totFeatCacheMs));
+        log.info("Time (ms) to construct factor graph: " + (fgTimer.totMs() - totFgClampMs));
     }
     
 }

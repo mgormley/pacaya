@@ -43,7 +43,6 @@ public class FgExample implements Serializable {
     private VarConfig goldConfig;
 
     public Timer fgClampTimer = new Timer(); 
-    public Timer featCacheTimer = new Timer(); 
     
     // TODO: Figure out how to remove these "initializing" constructors.
     // TODO: Maybe convert to factor methods.
@@ -94,11 +93,6 @@ public class FgExample implements Serializable {
         assert (fg.getNumFactors() == fgLat.getNumFactors());
         
         fgClampTimer.stop();
-
-        // Cache the features in order to ensure we correctly populate the FeatureTemplateList.
-        featCacheTimer.start();
-        // TODO: is there a way to cache the features at this point. Or should we?
-        featCacheTimer.stop();
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {
