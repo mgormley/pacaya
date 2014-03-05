@@ -680,7 +680,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         if self.get("train") and self.get("trainType") == "CONLL_2009":
             script += self.get_eval09_script("train", True)
             script += self.get_eval09_script("train", False)
-        if self.get("dev") and self.get("devType") == "CONLL_2009":
+        if (self.get("dev") or self.get("propTrainAsDev") > 0) and self.get("devType") == "CONLL_2009":
             script += self.get_eval09_script("dev", True)
             script += self.get_eval09_script("dev", False)
         if self.get("test") and self.get("testType") == "CONLL_2009":
@@ -689,7 +689,7 @@ class SrlExpParams(experiment_runner.JavaExpParams):
                         
         if self.get("train") and self.get("trainType") == "CONLL_X":
             script += self.get_eval07_script("train")
-        if self.get("dev") and self.get("devType") == "CONLL_X":
+        if (self.get("dev") or self.get("propTrainAsDev") > 0) and self.get("devType") == "CONLL_X":
             script += self.get_eval07_script("dev")
         if self.get("test") and self.get("testType") == "CONLL_X":
             script += self.get_eval07_script("test")
