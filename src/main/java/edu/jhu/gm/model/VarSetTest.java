@@ -1,6 +1,6 @@
 package edu.jhu.gm.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,10 +8,54 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 
 public class VarSetTest {
 
+    @Test
+    public void testConvertBackAndForthBtwnVcAndId() {
+        backAndForthVc(4);
+        backAndForthVc(5);
+        backAndForthVc(6);
+        backAndForthVc(7);
+    }
+
+    private void backAndForthVc(int n) {
+        // Create vc for left branching tree.
+        VarConfig vc1 = new VarConfig();
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i == j) { continue; }
+                Var var = new LinkVar(VarType.PREDICTED, "Link_"+i+"_"+j, i, j);
+                vc1.put(var, (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
+            }
+        }
+        if (n <= 5) {
+            // We should be able to convert back and forth correctly.
+            int vcid1 = vc1.getConfigIndex();
+            VarConfig vc2 = vc1.getVars().getVarConfig(vcid1);
+            int vcid2 = vc2.getConfigIndex();
+            assertEquals(vcid1, vcid2);
+            assertEquals(vc1.getVars(), vc2.getVars());
+            System.out.println(vc1);
+            System.out.println(vc2);
+            for (Var var : vc1.getVars()) {
+                System.out.println(var);
+                assertEquals(vc1.getStateName(var), vc2.getStateName(var));
+            }
+            assertEquals(vc1, vc2);       
+        } else {
+            // We should hit an integer overflow exception.
+            try {
+                int vcid1 = vc1.getConfigIndex();
+                fail();
+            } catch(IllegalStateException e) {
+                assertTrue(e.getMessage().contains("overflow"));
+            }
+        }
+    }
+    
     @Test
     public void testGetNumConfigs() {
         Var v0 = getVar(0, 2);

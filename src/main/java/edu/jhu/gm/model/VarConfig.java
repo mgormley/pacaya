@@ -55,6 +55,9 @@ public class VarConfig implements Serializable {
             int state = config.get(var);
             configIndex += state * numStatesProd;
             numStatesProd *= var.getNumStates();
+            if (numStatesProd <= 0) {
+                throw new IllegalStateException("Integer overflow when computing config index -- this can occur if trying to compute the index of a high arity factor: " + numStatesProd);
+            }
         }
         return configIndex;
     }

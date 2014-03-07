@@ -27,7 +27,7 @@ public class Var implements Comparable<Var>, Serializable {
     /** The type of variable. */
     private Var.VarType type;
     /** The number of states that this variable can take on. */
-    private int numStates;
+    private final int numStates;
     /** The unique name of this variable. */
     private String name;
     /** State names, where the i'th entry gives the state names of the i'th state. */
@@ -49,6 +49,9 @@ public class Var implements Comparable<Var>, Serializable {
      * @param stateNames The state names, where the i'th entry gives the state names of the i'th state.
      */
     public Var(VarType type, int numStates, String name, List<String> stateNames) {
+        if (numStates < 0) {
+            throw new IllegalArgumentException("numStates must be >= 0: " + numStates);
+        }
         this.type = type;
         this.numStates = numStates;
         // Intern the name, but not the state names.

@@ -405,12 +405,13 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     protected DenseFactor getMarginals(Factor factor, FgNode node) {
-        if (!(factor instanceof ExplicitFactor)) {
-            throw new UnsupportedFactorTypeException(factor, "Getting marginals of a global factor is not supported."
-                    + " This would require exponential space to store the resulting factor.");
+        if (factor instanceof GlobalFactor) {
+            log.warn("Getting marginals of a global factor is not supported."
+                    + " This will require exponential space to store the resulting factor."
+                    + " This should only be used for testing.");
         }
         
-        DenseFactor prod = new DenseFactor((DenseFactor)factor);
+        DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
         // Compute the product of all messages sent to this factor.
         getProductOfMessagesNormalized(node, prod, null);
         return prod;

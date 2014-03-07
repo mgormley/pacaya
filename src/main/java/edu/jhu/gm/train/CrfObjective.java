@@ -10,6 +10,7 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.math.FastMath;
@@ -62,7 +63,12 @@ public class CrfObjective implements ExampleObjective {
         int numFullyClamped = 0;
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
-
+            if (f instanceof GlobalFactor) {
+                // TODO: We should remove this check. Currently,
+                // getGoldConfigIdxPred will hit an integer overflow exception
+                // since the global factors have too many variables.
+                continue;
+            }
             if (fgLat.getFactor(a).getVars().size() == 0) {
                 // These are the factors which do not include any latent variables. 
                 int goldConfig = ex.getGoldConfigIdxPred(a);

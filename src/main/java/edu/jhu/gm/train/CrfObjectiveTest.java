@@ -266,7 +266,7 @@ public class CrfObjectiveTest {
     }
 
     
-    private static Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+    public static Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         CrfObjective exObj = new CrfObjective(data, infFactory);
         return new AvgBatchObjective(exObj, model, 1);
     }

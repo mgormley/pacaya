@@ -365,12 +365,12 @@ public class BeliefPropagationTest {
         assertEqualMarginals(fg, bf, bp);
     }
 
-    private void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
+    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp) {
         assertEqualMarginals(fg, bf, bp, 1e-13);
     }
 
-    private void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
+    public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp, double tolerance) {
         for (Var var : fg.getVars()) {
             DenseFactor bfm = bf.getMarginals(var);

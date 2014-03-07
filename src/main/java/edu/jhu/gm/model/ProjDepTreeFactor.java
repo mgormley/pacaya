@@ -1,9 +1,12 @@
 package edu.jhu.gm.model;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.DepTree;
 import edu.jhu.data.WallDepTreeNode;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
@@ -15,6 +18,9 @@ import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.Semiring;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -113,12 +119,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     }
 
     private static VarSet createVarSet(int n, VarType type) {
-        VarSet vars = new VarSet() {
-            @Override
-            public int calcNumConfigs() {
-                throw new RuntimeException("This should never be called on a global factor.");
-            }
-        };
+        VarSet vars = new VarSet();
         // Add a variable for each pair of tokens.
         for (int i=0; i<n; i++) {
             for (int j=0; j<n; j++) {
@@ -155,6 +156,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             if (logDomain) {
                 oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
             } else {
+                assert inMsg.getValue(LinkVar.TRUE) >= 0 : inMsg.getValue(LinkVar.TRUE);
+                assert inMsg.getValue(LinkVar.FALSE) >= 0 : inMsg.getValue(LinkVar.FALSE);
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
                 oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
             }
@@ -278,14 +281,68 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
     @Override
     public double getUnormalizedScore(int configId) {
-        // TODO: implement this properly.
-        // Currently, we know that the configId will always correspond to a gold
-        // config, which is going to be a tree. So we cheat and just return 1.0.
-        if (logDomain) { 
-            return 0.0;
-        } else {
-            return 1.0;
+        Semiring s = logDomain ? new LogSemiring() : new RealSemiring();  
+        VarConfig vc = vars.getVarConfig(configId);
+        // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
+        if (!hasOneParentPerToken(n, vc)) {
+            log.trace("Tree does not have one parent per token.");
+            return s.zero();
         }
+        int[] parents = getParents(n, vc);
+        if (!DepTree.isDepTree(parents, true)) {
+            return s.zero();
+        }
+        return s.one();
+    }
+    
+    /**
+     * Returns whether this variable assignment specifies one parent per token.
+     */
+    public static boolean hasOneParentPerToken(int n, VarConfig vc) {
+        int[] parents = new int[n];
+        Arrays.fill(parents, -2);
+        for (Var v : vc.getVars()) {
+            if (v instanceof LinkVar) {
+                LinkVar link = (LinkVar) v;
+                if (vc.getState(v) == LinkVar.TRUE) {
+                    if (parents[link.getChild()] != -2) {
+                        // Multiple parents defined for the same child.
+                        return false;
+                    }
+                    parents[link.getChild()] = link.getParent();
+                }
+            }
+        }
+        return !ArrayUtils.contains(parents, -2);
+    }
+
+    /**
+     * Extracts the parents as defined by a variable assignment for a single
+     * sentence.
+     * 
+     * NOTE: This should NOT be used for decoding since a proper decoder will
+     * enforce the tree constraint.
+     * 
+     * @param n The sentence length.
+     * @param vc The variable assignment.
+     * @return The parents array.
+     */
+    public static int[] getParents(int n, VarConfig vc) {
+        int[] parents = new int[n];
+        Arrays.fill(parents, -2);
+        for (Var v : vc.getVars()) {
+            if (v instanceof LinkVar) {
+                LinkVar link = (LinkVar) v;
+                if (vc.getState(v) == LinkVar.TRUE) {
+                    if (parents[link.getChild()] != -2) {
+                        throw new IllegalStateException(
+                                "Multiple parents defined for the same child. Is this VarConfig for only one example?");
+                    }
+                    parents[link.getChild()] = link.getParent();
+                }
+            }
+        }
+        return parents;
     }
 
 }

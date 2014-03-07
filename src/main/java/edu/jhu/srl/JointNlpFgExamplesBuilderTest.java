@@ -26,7 +26,7 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -228,7 +228,7 @@ public class JointNlpFgExamplesBuilderTest {
 
         assertEquals(18 + 19*18 + 19, vc.size());
         
-        int[] parents = getParents(sents.get(0).size(), vc);
+        int[] parents = ProjDepTreeFactor.getParents(sents.get(0).size(), vc);
         System.out.println(Arrays.toString(parents));
         assertTrue(DepTree.checkIsProjective(parents));
         assertArrayEquals(new int[]{2, 2, -1, 4, 2, 4, 7, 5, 7, 8, 7, 14, 11, 11, 10, 14, 17, 15, 2}, parents);
@@ -274,35 +274,6 @@ public class JointNlpFgExamplesBuilderTest {
         assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
     }
    
-    
-    /**
-     * Extracts the parents as defined by a variable assignment for a single
-     * sentence.
-     * 
-     * NOTE: This should NOT be used for decoding since a proper decoder will
-     * enforce the tree constraint.
-     * 
-     * @param n The sentence length.
-     * @param vc The variable assignment.
-     * @return The parents array.
-     */
-    private static int[] getParents(int n, VarConfig vc) {
-        int[] parents = new int[n];
-        Arrays.fill(parents, -2);
-        for (Var v : vc.getVars()) {
-            if (v instanceof LinkVar) {
-                LinkVar link = (LinkVar) v;
-                if (vc.getState(v) == LinkVar.TRUE) {
-                    if (parents[link.getChild()] != -2) {
-                        throw new IllegalStateException(
-                                "Multiple link vars define the same parent/child edge. Is this VarConfig for only one example?");
-                    }
-                    parents[link.getChild()] = link.getParent();
-                }
-            }
-        }
-        return parents;
-    }
     
     private static FgModel train(FgModel model, FgExampleList data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
