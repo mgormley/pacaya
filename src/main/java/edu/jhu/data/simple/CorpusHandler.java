@@ -30,6 +30,8 @@ public class CorpusHandler {
     public static int trainMaxSentenceLength = Integer.MAX_VALUE;
     @Opt(hasArg = true, description = "Maximum number of sentences to include in train.")
     public static int trainMaxNumSentences = Integer.MAX_VALUE; 
+    @Opt(hasArg = true, description = "CoNLL-X: whether to use the P(rojective)HEAD column for parents.")
+    public static boolean trainUseCoNLLXPhead = true;
     
     // Options for dev data
     @Opt(hasArg = true, description = "Testing data input file or directory.")
@@ -132,7 +134,8 @@ public class CorpusHandler {
         SimpleAnnoSentenceReaderPrm prm = getDefaultReaderPrm();
         prm.name = "train";
         prm.maxNumSentences = trainMaxNumSentences;
-        prm.maxSentenceLength = trainMaxSentenceLength;        
+        prm.maxSentenceLength = trainMaxSentenceLength;
+        prm.useCoNLLXPhead = trainUseCoNLLXPhead;
         SimpleAnnoSentenceReader reader = new SimpleAnnoSentenceReader(prm);
         reader.loadSents(train, trainType);
          
