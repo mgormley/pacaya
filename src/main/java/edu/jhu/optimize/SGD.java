@@ -124,11 +124,17 @@ public class SGD implements BatchMaximizer, BatchMinimizer {
         
         assert (function.getNumDimensions() == point.length);
         double[] gradient = new double[point.length];
+        int passCount = 0;
+        double passCountFrac = 0;
+
+        {
+            function.setPoint(point);
+            double value = function.getValue(IntSort.getIndexArray(function.getNumExamples()));
+            log.info(String.format("Function value on all examples = %g at iteration = %d on pass = %.2f", value, iterCount, passCountFrac));
+        }
         
         Timer timer = new Timer();
         timer.start();
-        int passCount = 0;
-        double passCountFrac = 0;
         for (iterCount=0; iterCount < iterations; iterCount++) {
             function.setPoint(point);
             
