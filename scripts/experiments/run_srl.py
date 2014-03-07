@@ -805,7 +805,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False,
-                              useGoldSyntax=True, sgdNumPasses=10)
+                              useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
             # TODO: don't include features if edge is NOT present.            
@@ -815,7 +815,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 parser = first_order
                 data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
                                     propTrainAsDev=0.10, devType="CONLL_X",
-                                    test=pl.cx_test, testType="CONLL_X", language=lang_short)
+                                    test=pl.cx_test, testType="CONLL_X", 
+                                    language=lang_short, trainUseCoNLLXPhead=True)
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
@@ -825,20 +826,25 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
             exps = []
             g.defaults += g.feat_mcdonald
+            #g.defaults += g.feat_tpl_narad
             g.defaults.update(includeSrl=False, featureSelection=False,
-                              useGoldSyntax=True, sgdNumPasses=10, l2variance=10000000)
+                              useGoldSyntax=True, sgdNumPasses=5, l2variance=10000000,
+                              trainMaxSentenceLength=20, devMaxSentenceLength=20, testMaxSentenceLength=20,
+                              logDomain=True, featureHashMod=-1, adaGradEta=0.01
+                              )
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
             # TODO: don't include features if edge is NOT present.
             lang_short = "de"
-            for trainMaxNumSentences in [10, 50, 100, 500, 1000]:
+            for trainMaxNumSentences in [500, 10]: #[10, 50, 100, 500, 1000]:
                 pl = p.langs[lang_short]
                 # Define a first-order parser
                 parser = first_order
                 data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
                                     propTrainAsDev=0.10, devType="CONLL_X",
                                     #test=pl.cx_test, testType="CONLL_X", 
-                                    language=lang_short)
+                                    trainMaxNumSentences=trainMaxNumSentences,
+                                    language=lang_short, trainUseCoNLLXPhead=True)
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
