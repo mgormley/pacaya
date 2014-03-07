@@ -379,7 +379,9 @@ class ParamDefinitions():
             #stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
             predAts="SRL",
             includeSrl=True,
-            includeDp=True
+            includeDp=True,
+            cacheType="CACHE",
+            maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
         
         g.defaults += g.adagrad
@@ -646,6 +648,8 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*3*1024
                 else:
                     base_work_mem_megs = 5*1024
+            elif exp.get("includeSrl") == False:
+                base_work_mem_megs = 5 * 1000
             else:
                 if exp.get("useProjDepTreeFactor"):
                     base_work_mem_megs = 20 * 1000
@@ -810,14 +814,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
             # TODO: don't include features if edge is NOT present.
             p.cx_langs_with_phead = ["ar", "bg", "de", "es"]            
-            for lang_short in p.cx_langs_with_phead:
+            for lang_short in p.cx_lang_short_names:
                 pl = p.langs[lang_short]
                 # Define a first-order parser
                 parser = first_order
                 data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
                                     propTrainAsDev=0.10, devType="CONLL_X",
                                     test=pl.cx_test, testType="CONLL_X", 
-                                    language=lang_short, trainUseCoNLLXPhead=True)
+                                    language=lang_short, trainUseCoNLLXPhead=False)
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
@@ -1372,7 +1376,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
             if isinstance(stage, SrlExpParams) and not self.big_machine:
-                stage.update(work_mem_megs=1500, threads=1) 
+                stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
                 # Update the thread count
                 threads = stage.get("threads")
