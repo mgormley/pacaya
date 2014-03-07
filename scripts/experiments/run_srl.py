@@ -808,8 +808,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
-            # TODO: don't include features if edge is NOT present.            
-            for lang_short in p.cx_lang_short_names:
+            # TODO: don't include features if edge is NOT present.
+            p.cx_langs_with_phead = ["ar", "bg", "de", "es"]            
+            for lang_short in p.cx_langs_with_phead:
                 pl = p.langs[lang_short]
                 # Define a first-order parser
                 parser = first_order
