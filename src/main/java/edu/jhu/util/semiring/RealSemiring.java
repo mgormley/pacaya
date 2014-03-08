@@ -33,5 +33,15 @@ public class RealSemiring implements Semiring, SemiringExt {
     public double divide(double x, double y) {
         return x / y;
     }
+
+    @Override
+    public double toReal(double nonReal) {
+        return nonReal;
+    }
+
+    @Override
+    public double fromReal(double real) {
+        return real;
+    }
     
 }
