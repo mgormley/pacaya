@@ -66,6 +66,7 @@ public class JointNlpFgExamplesBuilder {
         }
         
         public FgExample get(int i) {
+            log.debug("Getting example: " + i);
             SimpleAnnoSentence sent = sents.get(i);
             
             // Create a feature extractor for this example.

@@ -1,6 +1,8 @@
 package edu.jhu.util.semiring;
 
-public class RealSemiring implements Semiring {
+import edu.jhu.prim.util.math.FastMath;
+
+public class RealSemiring implements Semiring, SemiringExt {
 
     @Override
     public double plus(double x, double y) {
@@ -22,4 +24,14 @@ public class RealSemiring implements Semiring {
         return 1;
     }
 
+    @Override
+    public double minus(double x, double y) {
+        return x - y;
+    }
+    
+    @Override
+    public double divide(double x, double y) {
+        return x / y;
+    }
+    
 }
