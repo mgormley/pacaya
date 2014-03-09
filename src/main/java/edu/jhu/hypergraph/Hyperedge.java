@@ -1,5 +1,6 @@
 package edu.jhu.hypergraph;
 
+import java.util.Arrays;
 import java.util.List;
 
 /** A hyperedge in a hypergraph. */
@@ -10,9 +11,16 @@ public class Hyperedge {
     private String label;
     private int id;
         
-    public Hyperedge(Hypernode headNode, List<Hypernode> tailNodes, String label, int id) {
+    public Hyperedge(int id, String label, Hypernode headNode, List<Hypernode> tailNodes) {
         this.headNode = headNode;
         this.tailNodes = tailNodes;
+        this.label = label;
+        this.id = id;
+    }
+    
+    public Hyperedge(int id, String label, Hypernode headNode, Hypernode... tailNodes) {
+        this.headNode = headNode;
+        this.tailNodes = Arrays.asList(tailNodes);
         this.label = label;
         this.id = id;
     }
@@ -35,6 +43,10 @@ public class Hyperedge {
     /** Gets a unique identifier for this edge within the hypergraph. */
     public int getId() {
         return id;
+    }
+    
+    public String toString() {
+        return label;
     }
     
 }
