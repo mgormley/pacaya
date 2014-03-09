@@ -2,12 +2,17 @@ package edu.jhu.hypergraph;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Logger;
+
+import edu.jhu.gm.model.FgModel;
 import edu.jhu.hypergraph.Hypergraph.HyperedgeFn;
 import edu.jhu.util.semiring.Semiring;
 import edu.jhu.util.semiring.SemiringExt;
 
 public class Hyperalgo {
 
+    private static final Logger log = Logger.getLogger(Hyperalgo.class);
+    
     private Hyperalgo() {
         // Private constructor.
     }
@@ -21,6 +26,9 @@ public class Hyperalgo {
     
     public static void backward(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
             final Scores scores) {
+        if (scores.marginalAdj == null) {
+            throw new IllegalStateException("scores.marginalAdj must be non-null.");
+        }
         outsideAdjoint(graph, w, s, scores);
         insideAdjoint(graph, w, s, scores);
         weightAdjoint(graph, w, s, scores);
@@ -48,7 +56,8 @@ public class Hyperalgo {
                     prod = s.times(prod, beta[jNode.getId()]);
                 }
                 int i = e.getHeadNode().getId();
-                beta[i] = s.plus(beta[i], s.times(w.getScore(e), prod));
+                beta[i] = s.plus(beta[i], s.times(w.getScore(e, s), prod));
+                //if (log.isTraceEnabled()) { log.trace(String.format("beta[%d] = %f", i, beta[i])); }
             }
             
         });
@@ -89,7 +98,8 @@ public class Hyperalgo {
                         prod = s.times(prod, beta[k]);
                     }
                     prod = s.times(prod, alpha[i]);
-                    prod = s.times(prod, w.getScore(e));
+                    prod = s.times(prod, w.getScore(e, s));
+                    //log.trace(String.format("i=%d j=%d prod=%f", i, j, prod));
                     alpha[j] = s.plus(alpha[j], prod);
                 }
             }
@@ -198,7 +208,7 @@ public class Hyperalgo {
                 // \forall j \in T(e):
                 // \adj{\alpha_i} += \adj{\alpha_j} * w_e * \prod_{k \in T(e): k \neq j} \beta_k
                 for (Hypernode j : e.getTailNodes()) {
-                    double prod = s.times(alphaAdj[j.getId()], w.getScore(e));
+                    double prod = s.times(alphaAdj[j.getId()], w.getScore(e, s));
                     for (Hypernode k : e.getTailNodes()) {
                         if (k == j) { continue; }
                         prod = s.times(prod, beta[k.getId()]);
@@ -260,7 +270,7 @@ public class Hyperalgo {
                 for (Hypernode jNode : e.getTailNodes()) {
                     int j = jNode.getId();
                     // \adj{\beta_{j}} += \sum_{e \in O(j)} \adj{\beta_{H(e)}} * w_e * \prod_{k \in T(e) : k \neq j} \beta_k  
-                    double prod = s.times(betaAdj[i], w.getScore(e));
+                    double prod = s.times(betaAdj[i], w.getScore(e, s));
                     for (Hypernode kNode : e.getTailNodes()) {
                         int k = kNode.getId();
                         if (j == k) { continue; }
@@ -272,11 +282,12 @@ public class Hyperalgo {
                     for (Hypernode kNode : e.getTailNodes()) {
                         int k = kNode.getId();
                         if (k == j) { continue; };
-                        prod = s.times(marginalAdj[k], w.getScore(e));
+                        prod = s.times(alphaAdj[k], w.getScore(e, s));
                         prod = s.times(prod, alpha[i]);
                         for (Hypernode lNode : e.getTailNodes()) {
                             int l = lNode.getId();
-                            prod = s.times(beta[l], prod);
+                            if (l == j || l == k) { continue; }
+                            prod = s.times(prod, beta[l]);
                         }
                         betaAdj[j] = s.plus(betaAdj[j], prod);
                     }
