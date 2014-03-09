@@ -14,6 +14,7 @@ import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.JUnitUtils;
+import edu.jhu.util.dist.Dirichlet;
 import edu.jhu.util.semiring.LogPosNegSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.Semiring;
@@ -62,48 +63,21 @@ public class HyperalgoTest {
     
     @Test
     public void testSimpleGraph() {
+        // NOTE: This graph yields marginals greater than one because of its cyclicity.
         MemHypergraph graph = getSimpleGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.forward(graph, w, new RealSemiring(), scores);
-        scores.marginalAdj = new double[graph.getNodes().size()];
-        DoubleArrays.fill(scores.marginalAdj, 1);
-        Hyperalgo.backward(graph, w, new RealSemiring(), scores);        
-        System.out.println(Arrays.toString(scores.weightAdj));
-    }   
-    
-    @Test
-    public void testInsideAlgorithmSimpleGraph() {
-        MemHypergraph graph = getSimpleGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.insideAlgorithm(graph, w, new RealSemiring(), scores);
-        System.out.println(Arrays.toString(scores.beta));
-        assertEquals(24, scores.beta[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{24.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 4.0, 3.0}, scores.beta, 1e-13);
-    }
 
-    @Test
-    public void testOutsideAlgorithmSimpleGraph() {
-        MemHypergraph graph = getSimpleGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.insideAlgorithm(graph, w, new RealSemiring(), scores);
-        Hyperalgo.outsideAlgorithm(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.alpha));
-        assertEquals(1, scores.alpha[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 32.0, 26.0, 14.0, 26.0, 6.0, 12.0, 6.0, 8.0}, scores.alpha, 1e-13);
-    }
-    
-    @Test
-    public void testMarginalsSimpleGraph() {
-        MemHypergraph graph = getSimpleGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.forward(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.marginal));
-        assertEquals(1, scores.marginal[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 1.3333333333333333, 1.0833333333333333, 0.5833333333333334, 2.1666666666666665, 0.5, 1.0, 1.0, 1.0}, scores.marginal, 1e-13);
-    }
-   
+        Scores expected = new Scores();
+        expected.beta = new double[]{24.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 4.0, 3.0};
+        expected.alpha = new double[]{1.0, 32.0, 26.0, 14.0, 26.0, 6.0, 12.0, 6.0, 8.0};
+        expected.marginal = new double[]{1.0, 1.3333333333333333, 1.0833333333333333, 0.5833333333333334, 2.1666666666666665, 0.5, 1.0, 1.0, 1.0};
+        expected.alphaAdj = null;
+        expected.betaAdj = null;
+        expected.weightAdj = null;
+        
+        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
+    } 
+       
     private static MemHypergraph getSimpleGraph() {
         MemHypergraph graph = new MemHypergraph();
         MemHypernode root = graph.newRoot("ROOT");
@@ -149,15 +123,19 @@ public class HyperalgoTest {
         expected.betaAdj = new double[]{0, 0, 0, -0.6666666666666667, -0.6666666666666667, -1.0};
         expected.weightAdj = new double[]{0, 0, 0, 0, 0, 0, 0, 0};
         
-        forwardBackwardCheck(graph, expected, new RealSemiring());
-        forwardBackwardCheck(graph, expected, new LogPosNegSemiring());
+        forwardBackwardCheck(graph, expected, new RealSemiring(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
     }
     
-    private void forwardBackwardCheck(MemHypergraph graph, Scores expected, SemiringExt s) {
+    private Scores forwardBackwardCheck(MemHypergraph graph, Scores expected, SemiringExt s, double[] marginalAdj) {
         Scores scores = new Scores();
         Hyperalgo.forward(graph, w, s, scores);
         scores.marginalAdj = new double[graph.getNodes().size()];
-        DoubleArrays.fill(scores.marginalAdj, s.fromReal(1));
+        if (marginalAdj == null) {
+            DoubleArrays.fill(scores.marginalAdj, s.fromReal(1));
+        } else {
+            scores.marginalAdj = fromReal(marginalAdj, s);
+        }
         Hyperalgo.backward(graph, w, s, scores);
         
         System.out.println("Nodes: " + graph.getNodes());
@@ -167,97 +145,35 @@ public class HyperalgoTest {
         printAndCheck("alphaAdj", expected.alphaAdj, scores.alphaAdj, s);
         printAndCheck("betaAdj", expected.betaAdj, scores.betaAdj, s);
         System.out.println("Edges: " + graph.getEdges());
-        printAndCheck("weightAdj", expected.weightAdj, scores.weightAdj, s);
+        printAndCheck("weightAdj", expected.weightAdj, scores.weightAdj, s);        
+        return scores;
     }
 
     private void printAndCheck(String name, double[] expectedReals, double[] actual, SemiringExt s) {
-        double[] actualReals = new double[actual.length];
-        for (int i=0; i<actual.length; i++) {
-            actualReals[i] = s.toReal(actual[i]);   
-        }
+        double[] actualReals = toReal(actual, s);
         System.out.println(name + ": " + Arrays.toString(actualReals));
         if (expectedReals == null) {
             System.out.println("WARN: skipping check of " + name);
+            return;
         }
         JUnitUtils.assertArrayEquals(expectedReals, actualReals, 1e-13);
     }
 
-    @Test
-    public void testInsideAlgorithmTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.insideAlgorithm(graph, w, new RealSemiring(), scores);
-        System.out.println(Arrays.toString(scores.beta));
-        assertEquals(3, scores.beta[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 1.0, 1.0, 2.0, 1.0, 3.0}, scores.beta, 1e-13);
+    private double[] toReal(double[] compacted, SemiringExt s) {
+        double[] reals = new double[compacted.length];
+        for (int i=0; i<compacted.length; i++) {
+            reals[i] = s.toReal(compacted[i]);   
+        }
+        return reals;
     }
     
-    @Test
-    public void testOutsideAlgorithmTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.insideAlgorithm(graph, w, new RealSemiring(), scores);
-        Hyperalgo.outsideAlgorithm(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.alpha));
-        assertEquals(1, scores.alpha[graph.getRoot().getId()], 1e-13);
-        // TODO: Why is \alpha_2 = 4.0? Shouldn't this be <= 2.0?
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 3.0, 2.0, 1.0, 1.0, 1.0}, scores.alpha, 1e-13);
+    private double[] fromReal(double[] reals, SemiringExt s) {
+        double[] compacted = new double[reals.length];
+        for (int i=0; i<reals.length; i++) {
+            compacted[i] = s.fromReal(reals[i]);   
+        }
+        return compacted;
     }
-    
-    @Test
-    public void testMarginalsTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.forward(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.marginal));
-        assertEquals(1, scores.marginal[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{0.3333333333333333, 1.0, 0.6666666666666666, 0.6666666666666666, 0.3333333333333333, 1.0}, scores.marginal, 1e-13);
-    }
-
-    @Test
-    public void testOutsideAdjointsTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        RealSemiring s = new RealSemiring();
-        Hyperalgo.forward(graph, w, s, scores);
-        scores.marginalAdj = new double[graph.getNodes().size()];
-        DoubleArrays.fill(scores.marginalAdj, 1);
-        Hyperalgo.backward(graph, w, s, scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.alphaAdj));
-        JUnitUtils.assertArrayEquals(new double[]{0.3333333333333333, 0.3333333333333333, 0.3333333333333333, 1.9999999999999998, 1.0, 4.0}, scores.alphaAdj, 1e-13);
-    }
-    
-    @Test
-    public void testInsideAdjointsTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        RealSemiring s = new RealSemiring();
-        Hyperalgo.forward(graph, w, s, scores);
-        scores.marginalAdj = new double[graph.getNodes().size()];
-        DoubleArrays.fill(scores.marginalAdj, 1);
-        Hyperalgo.backward(graph, w, s, scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.betaAdj));
-        JUnitUtils.assertArrayEquals(new double[]{0, 0, 0, -0.6666666666666667, -0.6666666666666667, -1.0}, scores.betaAdj, 1e-13);
-    }
-    
-    @Test
-    public void testWeightAdjointsTinyGraph() {
-        MemHypergraph graph = getTinyGraph();        
-        Scores scores = new Scores();
-        RealSemiring s = new RealSemiring();
-        Hyperalgo.forward(graph, w, s, scores);
-        scores.marginalAdj = new double[graph.getNodes().size()];
-        DoubleArrays.fill(scores.marginalAdj, 1);
-        Hyperalgo.backward(graph, w, s, scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.weightAdj));
-        JUnitUtils.assertArrayEquals(new double[]{0, 0, 0, 0, 0, 0, 0, 0}, scores.weightAdj, 1e-13);
-    }
-    
 
     private static MemHypergraph getTinyGraph() {
         MemHypergraph graph = new MemHypergraph();
@@ -291,34 +207,31 @@ public class HyperalgoTest {
         return graph;
     }
     
+
     @Test
-    public void testMarginalsCkyGraph() {
+    public void testCkyGraph() {
         MemHypergraph graph = getCkyGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.forward(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.beta));
-        System.out.println(Arrays.toString(scores.alpha)); 
-        System.out.println(Arrays.toString(scores.marginal));
-        assertEquals(4, scores.beta[graph.getRoot().getId()], 1e-13);
-        assertEquals(1, scores.alpha[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 1.0, 1.0, 1.0, 0.25, 0.75, 0.25, 0.75, 0.25, 0.5, 0.25, 0.25, 0.75, 1.0}, scores.marginal, 1e-13);
-    }
-    
-    @Test
-    public void testInsideAdjointsCkyGraph() {
-        MemHypergraph graph = getCkyGraph();        
-        Scores scores = new Scores();
-        Hyperalgo.forward(graph, w, new RealSemiring(), scores);
-        System.out.println(graph.getNodes());
-        System.out.println(Arrays.toString(scores.beta));
-        System.out.println(Arrays.toString(scores.alpha)); 
-        System.out.println(Arrays.toString(scores.marginal));
-        assertEquals(4, scores.beta[graph.getRoot().getId()], 1e-13);
-        assertEquals(1, scores.alpha[graph.getRoot().getId()], 1e-13);
-        JUnitUtils.assertArrayEquals(new double[]{1.0, 1.0, 1.0, 1.0, 0.25, 0.75, 0.25, 0.75, 0.25, 0.5, 0.25, 0.25, 0.75, 1.0}, scores.marginal, 1e-13);
-    }
+
+        Scores expected = new Scores();
+        expected.beta = null;
+        expected.alpha = null;
+        expected.marginal = new double[]{1.0, 1.0, 1.0, 1.0, 0.25, 0.75, 0.25, 0.75, 0.25, 0.5, 0.25, 0.25, 0.75, 1.0};
+        expected.alphaAdj = null;
+        expected.betaAdj = null;
+        expected.weightAdj = new double[] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
         
+        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), null);
+        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), null);
+        
+        // Check that both semirings get the same answers when using random marginal adjoints.
+        expected = new Scores();
+        double[] marginalAdj = new double[graph.getNodes().size()];
+        Arrays.fill(marginalAdj, 1.0);
+        marginalAdj = Dirichlet.staticDraw(marginalAdj);
+        expected = forwardBackwardCheck(graph, expected, new RealSemiring(), marginalAdj);
+        forwardBackwardCheck(graph, expected, new LogPosNegSemiring(), marginalAdj);
+    }
+            
     private static MemHypergraph getCkyGraph() {
         MemHypergraph graph = new MemHypergraph();
         // "the old boat"
