@@ -1,10 +1,10 @@
 package edu.jhu.util.semiring;
 
-public class TropicalSemiring implements Semiring {
+public class LogViterbiSemiring implements Semiring {
 
     @Override
     public double plus(double x, double y) {
-        return Math.min(x, y);
+        return Math.max(x, y);
     }
 
     @Override
@@ -14,7 +14,7 @@ public class TropicalSemiring implements Semiring {
 
     @Override
     public double zero() {
-        return Double.POSITIVE_INFINITY;
+        return Double.NEGATIVE_INFINITY;
     }
 
     @Override

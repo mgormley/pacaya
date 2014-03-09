@@ -51,7 +51,9 @@ public class ProjectiveDependencyParserTest {
         timer.stop();
         System.out.println("Total time: " + timer.totMs());
         int numSents = trials;
+        int numTokens = n * numSents;
         System.out.println("Sentences per second: " + numSents / timer.totSec());
+        System.out.println("Tokens per second: " + numTokens / timer.totSec());
     }
         
     @Test
