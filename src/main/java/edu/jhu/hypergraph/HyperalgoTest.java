@@ -1,6 +1,5 @@
 package edu.jhu.hypergraph;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -13,7 +12,7 @@ import org.junit.Test;
 import edu.jhu.hypergraph.Hyperalgo.Scores;
 import edu.jhu.hypergraph.MemHypergraph.MemHypernode;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.util.JUnitUtils;
+import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.dist.Dirichlet;
 import edu.jhu.util.semiring.LogPosNegSemiring;
 import edu.jhu.util.semiring.RealSemiring;
