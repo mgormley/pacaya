@@ -21,6 +21,7 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.eval.DepParseEvaluator;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -281,8 +282,10 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTrainInput(), name);
             corpus.writeTrainPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearTrainCache();
         }
           
         if (modelOut != null) {
@@ -309,8 +312,10 @@ public class SrlRunner {
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
             FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             // Decode and evaluate the dev data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getDevInput(), name);            
             corpus.writeDevPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
@@ -320,8 +325,10 @@ public class SrlRunner {
             SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
             FgExampleList data = getData(ofc, cs, name, goldSents, srlFePrm);
             // Decode and evaluate the test data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, goldSents, name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTestInput(), name);
             corpus.writeTestPreds(predSents);
+            eval(name, goldSents, predSents);
+            corpus.clearTestCache();
         }
     }
 
@@ -405,6 +412,11 @@ public class SrlRunner {
         log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
+
+    private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
+        DepParseEvaluator eval = new DepParseEvaluator(name);
+        eval.evaluate(goldSents, predSents);        
+    }
     
     private void eval(String name, VarConfigPair pair) {
         AccuracyEvaluator accEval = new AccuracyEvaluator();
@@ -412,26 +424,17 @@ public class SrlRunner {
         log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
     }
     
-    // TODO: This should take the input sentences and add predictions.
-    private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection goldSents, String name) throws IOException, ParseException {
+    private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection inputSents, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
 
-        // Predicted sentences
-        SimpleAnnoSentenceCollection predSents = new SimpleAnnoSentenceCollection();
-        List<VarConfig> predVcs = new ArrayList<VarConfig>();
-        List<VarConfig> goldVcs = new ArrayList<VarConfig>();
-        
-        for (int i=0; i< goldSents.size(); i++) {
+        // Add the new predictions to the input sentences.
+        for (int i = 0; i < inputSents.size(); i++) {
+            // TODO: We should construct the examples from the input sentences.
             FgExample ex = data.get(i);
-            SimpleAnnoSentence goldSent = goldSents.get(i);
-            SimpleAnnoSentence predSent = new SimpleAnnoSentence(goldSent);
+            SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);
-            
-            // Get the MBR variable assignment.
-            VarConfig predVc = decoder.getMbrVarConfig();
-            predVcs.add(predVc);
-            
+                        
             // Update SRL graph on the sentence. 
             SrlGraph srlGraph = decoder.getSrlGraph();
             if (srlGraph != null) {
@@ -442,16 +445,9 @@ public class SrlRunner {
             if (parents != null) {
                 predSent.setParents(parents);
             }
-            predSents.add(predSent);
-            
-            // Get the gold variable assignment.
-            goldVcs.add(ex.getGoldConfig());
         }
         
-        // Simple accuracy check of factor graph variables.
-        eval(name, new VarConfigPair(goldVcs, predVcs));
-        
-        return predSents;
+        return inputSents;
     }
 
     

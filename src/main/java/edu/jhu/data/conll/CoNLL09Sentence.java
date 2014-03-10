@@ -207,6 +207,22 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
     
     public void setColsFromSrlGraph(SrlGraph srlGraph, boolean warnMismatchedPreds, boolean setFillPred) {
+        if (srlGraph == null) {
+            // There are no predicates.
+            for (int i=0; i<size(); i++) {
+                CoNLL09Token tok = tokens.get(i);
+                if (warnMismatchedPreds && tok.isFillpred()) {
+                    log.warn("Not setting predicate sense on a row where FILLPRED=Y in original data.");
+                }
+                if (setFillPred) {
+                    tok.setFillpred(false);
+                }
+                tok.setPred(null);
+                List<String> emptyList = Collections.emptyList();
+                tok.setApreds(emptyList);
+            }
+            return;
+        }
         int numPreds = srlGraph.getNumPreds();
         // Set the FILLPRED and PRED column.
         for (int i=0; i<size(); i++) {

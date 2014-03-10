@@ -110,6 +110,8 @@ public class SimpleAnnoSentence {
 
     /** Gets the dependency relation label for the arc from the i'th word to its parent. */
     public String getDeprel(int i) {
+        // TODO: Decide whether we should always return null for these sorts of get calls.
+        if (deprels == null) { return null; }
         return deprels.get(i);
     }
         

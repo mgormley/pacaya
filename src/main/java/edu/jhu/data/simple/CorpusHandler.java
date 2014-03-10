@@ -174,7 +174,7 @@ public class CorpusHandler {
         if (prop < 0 || 1 < prop) {
             throw new IllegalStateException("Invalid proportion: " + prop);
         }
-        boolean[] isDev = Sample.sampleWithoutReplacementBooleans((int) (prop * inList.size()), inList.size());
+        boolean[] isDev = Sample.sampleWithoutReplacementBooleans((int) Math.ceil(prop * inList.size()), inList.size());
         for (int i=0; i<inList.size(); i++) {
             if (isDev[i]) {
                 outList1.add(inList.get(i));
