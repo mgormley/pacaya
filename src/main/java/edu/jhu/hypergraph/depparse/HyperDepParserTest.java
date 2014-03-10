@@ -108,6 +108,11 @@ public class HyperDepParserTest {
      * SEED=123456789101112
      * 100 trials: Tokens per second: 2700.2700270027003
      * 1000 trials: Tokens per second: 5395.6834532374105
+     * 
+     * After switching to setTailNodes() with Hypernode[] storage.
+     * 100 trials: Tokens per second: 2929.6875
+     * 1000 trials: Tokens per second: 6651.884700665189
+     * 1000 trials (with LogPosNegSemiring): Tokens per second: 4687.5
      */
     @Test
     public void testInsideOutsideSpeed() {

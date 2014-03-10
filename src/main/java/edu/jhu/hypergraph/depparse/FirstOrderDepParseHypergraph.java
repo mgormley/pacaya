@@ -136,8 +136,8 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
             // inChart.scores[s][s][RIGHT][COMPLETE] = 0.0;
             // inChart.scores[s][s][LEFT][COMPLETE] = 0.0;
             for (int d=0; d<2; d++) {
-                e.clearTailNodes();
                 e.setHeadNode(childChart[s][s][d][COMPLETE]);
+                e.setTailNodes();
                 e.setWeight(semiring.one());
                 e.setId(id++);
                 fn.apply(e);
@@ -157,10 +157,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                         //               inChart.scores[r+1][t][LEFT][COMPLETE] +  
                         //               edgeScore;
                         // inChart.updateCell(s, t, d, INCOMPLETE, score, r);
-                        e.clearTailNodes();
                         e.setHeadNode(childChart[s][t][d][INCOMPLETE]);
-                        e.addTailNode(childChart[s][r][RIGHT][COMPLETE]);
-                        e.addTailNode(childChart[r+1][t][LEFT][COMPLETE]);
+                        e.setTailNodes(childChart[s][r][RIGHT][COMPLETE],
+                                       childChart[r+1][t][LEFT][COMPLETE]);
                         e.setWeight((d==LEFT) ? childScores[t][s] : childScores[s][t]);
                         e.setId(id++);
                         fn.apply(e);
@@ -174,10 +173,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                     // double score = inChart.scores[s][r][d][COMPLETE] +
                     //               inChart.scores[r][t][d][INCOMPLETE];
                     // inChart.updateCell(s, t, d, COMPLETE, score, r);
-                    e.clearTailNodes();
                     e.setHeadNode(childChart[s][t][d][COMPLETE]);
-                    e.addTailNode(childChart[s][r][d][COMPLETE]);
-                    e.addTailNode(childChart[r][t][d][INCOMPLETE]);
+                    e.setTailNodes(childChart[s][r][d][COMPLETE],
+                                   childChart[r][t][d][INCOMPLETE]);
                     e.setWeight(semiring.one());
                     e.setId(id++);
                     fn.apply(e);
@@ -188,10 +186,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                     // double score = inChart.scores[s][r][d][INCOMPLETE] +
                     //                inChart.scores[r][t][d][COMPLETE];
                     // inChart.updateCell(s, t, d, COMPLETE, score, r);
-                    e.clearTailNodes();
                     e.setHeadNode(childChart[s][t][d][COMPLETE]);
-                    e.addTailNode(childChart[s][r][d][INCOMPLETE]);
-                    e.addTailNode(childChart[r][t][d][COMPLETE]);
+                    e.setTailNodes(childChart[s][r][d][INCOMPLETE],
+                                   childChart[r][t][d][COMPLETE]);
                     e.setWeight(semiring.one());
                     e.setId(id++);
                     fn.apply(e);
@@ -208,10 +205,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
             //                inChart.scores[r][n-1][RIGHT][COMPLETE] + 
             //                fracRoot[r];
             // inChart.updateGoalCell(r, score);
-            e.clearTailNodes();
             e.setHeadNode(wallChart[r]);
-            e.addTailNode(childChart[0][r][LEFT][COMPLETE]);
-            e.addTailNode(childChart[r][n-1][RIGHT][COMPLETE]);
+            e.setTailNodes(childChart[0][r][LEFT][COMPLETE],
+                           childChart[r][n-1][RIGHT][COMPLETE]);
             e.setWeight(rootScores[r]);
             e.setId(id++);
             fn.apply(e);
@@ -219,9 +215,8 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
         
         // Edges from wall to ROOT.
         for (int r=0; r<n; r++) {
-            e.clearTailNodes();
             e.setHeadNode(root);
-            e.addTailNode(wallChart[r]);
+            e.setTailNodes(wallChart[r]);
             e.setWeight(semiring.one());
             e.setId(id++);
             fn.apply(e);
@@ -237,9 +232,8 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
 
         // Edges from wall to ROOT.
         for (int r=0; r<n; r++) {
-            e.clearTailNodes();
             e.setHeadNode(root);
-            e.addTailNode(wallChart[r]);
+            e.setTailNodes(wallChart[r]);
             e.setWeight(semiring.one());
             e.setId(id++);
             fn.apply(e);
@@ -254,10 +248,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
             //                inChart.scores[r][n-1][RIGHT][COMPLETE] + 
             //                fracRoot[r];
             // inChart.updateGoalCell(r, score);
-            e.clearTailNodes();
             e.setHeadNode(wallChart[r]);
-            e.addTailNode(childChart[0][r][LEFT][COMPLETE]);
-            e.addTailNode(childChart[r][n-1][RIGHT][COMPLETE]);
+            e.setTailNodes(childChart[0][r][LEFT][COMPLETE],
+                           childChart[r][n-1][RIGHT][COMPLETE]);
             e.setWeight(rootScores[r]);
             e.setId(id++);
             fn.apply(e);
@@ -275,10 +268,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                     // double score = inChart.scores[s][r][d][COMPLETE] +
                     //               inChart.scores[r][t][d][INCOMPLETE];
                     // inChart.updateCell(s, t, d, COMPLETE, score, r);
-                    e.clearTailNodes();
                     e.setHeadNode(childChart[s][t][d][COMPLETE]);
-                    e.addTailNode(childChart[s][r][d][COMPLETE]);
-                    e.addTailNode(childChart[r][t][d][INCOMPLETE]);
+                    e.setTailNodes(childChart[s][r][d][COMPLETE],
+                                   childChart[r][t][d][INCOMPLETE]);
                     e.setWeight(semiring.one());
                     e.setId(id++);
                     fn.apply(e);
@@ -289,10 +281,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                     // double score = inChart.scores[s][r][d][INCOMPLETE] +
                     //                inChart.scores[r][t][d][COMPLETE];
                     // inChart.updateCell(s, t, d, COMPLETE, score, r);
-                    e.clearTailNodes();
                     e.setHeadNode(childChart[s][t][d][COMPLETE]);
-                    e.addTailNode(childChart[s][r][d][INCOMPLETE]);
-                    e.addTailNode(childChart[r][t][d][COMPLETE]);
+                    e.setTailNodes(childChart[s][r][d][INCOMPLETE],
+                                   childChart[r][t][d][COMPLETE]);
                     e.setWeight(semiring.one());
                     e.setId(id++);
                     fn.apply(e);
@@ -306,10 +297,9 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                         //               inChart.scores[r+1][t][LEFT][COMPLETE] +  
                         //               edgeScore;
                         // inChart.updateCell(s, t, d, INCOMPLETE, score, r);
-                        e.clearTailNodes();
                         e.setHeadNode(childChart[s][t][d][INCOMPLETE]);
-                        e.addTailNode(childChart[s][r][RIGHT][COMPLETE]);
-                        e.addTailNode(childChart[r+1][t][LEFT][COMPLETE]);
+                        e.setTailNodes(childChart[s][r][RIGHT][COMPLETE],
+                                       childChart[r+1][t][LEFT][COMPLETE]);
                         e.setWeight((d==LEFT) ? childScores[t][s] : childScores[s][t]);
                         e.setId(id++);
                         fn.apply(e);
@@ -323,8 +313,8 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
             // inChart.scores[s][s][RIGHT][COMPLETE] = 0.0;
             // inChart.scores[s][s][LEFT][COMPLETE] = 0.0;
             for (int d=0; d<2; d++) {
-                e.clearTailNodes();
                 e.setHeadNode(childChart[s][s][d][COMPLETE]);
+                e.setTailNodes();
                 e.setWeight(semiring.one());
                 e.setId(id++);
                 fn.apply(e);
