@@ -6,9 +6,7 @@ import edu.jhu.hypergraph.Hypernode;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseChart;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepParseType;
-import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.LogSemiring;
-import edu.jhu.util.semiring.Semiring;
 
 public class HyperDepParser {
 
@@ -21,7 +19,10 @@ public class HyperDepParser {
      */
     public static DepIoChart insideOutsideAlgorithm(double[] fracRoot, double[][] fracChild) {
         // Currently we only support this semiring since DepParseChart assumes log probs.
-        Semiring semiring = new LogSemiring();
+        LogSemiring semiring = new LogSemiring();
+        //LogPosNegSemiring semiring = new LogPosNegSemiring();
+        //Semirings.fromLogProb(fracRoot, semiring);
+        //Semirings.fromLogProb(fracChild, semiring);
         
         FirstOrderDepParseHypergraph graph = new FirstOrderDepParseHypergraph(fracRoot, fracChild, semiring);
         Scores scores = new Scores();

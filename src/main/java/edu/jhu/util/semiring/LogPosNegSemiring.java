@@ -34,6 +34,11 @@ public class LogPosNegSemiring implements Semiring, SemiringExt {
         }
         return compact(sign, FastMath.log(x));
     }
+
+    @Override
+    public double fromLogProb(double logProb) {
+        return compact(POSITIVE, natlog(logProb));
+    }
     
     /** Gets the sign bit of the compacted number. */
     public static final long sign(double xd) {

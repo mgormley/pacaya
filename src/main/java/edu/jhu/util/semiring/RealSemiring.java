@@ -43,5 +43,10 @@ public class RealSemiring implements Semiring, SemiringExt {
     public double fromReal(double real) {
         return real;
     }
+
+    @Override
+    public double fromLogProb(double logProb) {
+        return FastMath.exp(logProb);
+    }
     
 }

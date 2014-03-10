@@ -7,5 +7,6 @@ public interface SemiringExt extends Semiring {
     double divide(double x, double y);
     double toReal(double nonReal);
     double fromReal(double real);
+    double fromLogProb(double logProb);
     
 }

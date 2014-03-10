@@ -19,6 +19,7 @@ import edu.jhu.util.semiring.LogPosNegSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.Semiring;
 import edu.jhu.util.semiring.SemiringExt;
+import edu.jhu.util.semiring.Semirings;
 
 public class HyperalgoTest {
 
@@ -134,7 +135,7 @@ public class HyperalgoTest {
         if (marginalAdj == null) {
             DoubleArrays.fill(scores.marginalAdj, s.fromReal(1));
         } else {
-            scores.marginalAdj = fromReal(marginalAdj, s);
+            scores.marginalAdj = Semirings.getFromReal(marginalAdj, s);
         }
         Hyperalgo.backward(graph, w, s, scores);
         
@@ -150,29 +151,13 @@ public class HyperalgoTest {
     }
 
     private void printAndCheck(String name, double[] expectedReals, double[] actual, SemiringExt s) {
-        double[] actualReals = toReal(actual, s);
+        double[] actualReals = Semirings.getToReal(actual, s);
         System.out.println(name + ": " + Arrays.toString(actualReals));
         if (expectedReals == null) {
             System.out.println("WARN: skipping check of " + name);
             return;
         }
         JUnitUtils.assertArrayEquals(expectedReals, actualReals, 1e-13);
-    }
-
-    private double[] toReal(double[] compacted, SemiringExt s) {
-        double[] reals = new double[compacted.length];
-        for (int i=0; i<compacted.length; i++) {
-            reals[i] = s.toReal(compacted[i]);   
-        }
-        return reals;
-    }
-    
-    private double[] fromReal(double[] reals, SemiringExt s) {
-        double[] compacted = new double[reals.length];
-        for (int i=0; i<reals.length; i++) {
-            compacted[i] = s.fromReal(reals[i]);   
-        }
-        return compacted;
     }
 
     private static MemHypergraph getTinyGraph() {
