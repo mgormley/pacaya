@@ -2,6 +2,7 @@ package edu.jhu.hypergraph;
 
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.FastMath;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.model.FgModel;
@@ -56,8 +57,9 @@ public class Hyperalgo {
                     prod = s.times(prod, beta[jNode.getId()]);
                 }
                 int i = e.getHeadNode().getId();
+                //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
                 beta[i] = s.plus(beta[i], s.times(w.getScore(e, s), prod));
-                //if (log.isTraceEnabled()) { log.trace(String.format("beta[%d] = %f", i, beta[i])); }
+                //if (log.isTraceEnabled()) { log.trace(String.format("%s w_e=%f beta[%d] = %f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]))); }
             }
             
         });
@@ -118,7 +120,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void insideAlgorithm(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void insideAlgorithm(final Hypergraph graph, final Hyperpotential w, final Semiring s,
             final Scores scores) {
         scores.beta = insideAlgorithm(graph, w, s);
     }
@@ -133,7 +135,7 @@ public class Hyperalgo {
      * @param s The semiring.
      * @param scores Input and output struct.
      */
-    public static void outsideAlgorithm(final Hypergraph graph, final Hyperpotential w, final SemiringExt s,
+    public static void outsideAlgorithm(final Hypergraph graph, final Hyperpotential w, final Semiring s,
             final Scores scores) {
         scores.alpha = outsideAlgorithm(graph, w, s, scores.beta);
     }
