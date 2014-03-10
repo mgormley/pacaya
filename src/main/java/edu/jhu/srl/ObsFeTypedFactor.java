@@ -10,19 +10,19 @@ import edu.jhu.gm.model.VarSet;
  * 
  * @author mgormley
  */
-public class TypedFactor extends ObsFeExpFamFactor {
+public class ObsFeTypedFactor extends ObsFeExpFamFactor {
 
     private static final long serialVersionUID = 1L;
 
     Enum<?> type;
     
-    public TypedFactor(VarSet vars, Enum<?> type, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
+    public ObsFeTypedFactor(VarSet vars, Enum<?> type, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
         super(vars, type, cj, obsFe);
         this.type = type;
     }
     
     /**
-     * Constructs a {@link TypedFactor}.
+     * Constructs a {@link ObsFeTypedFactor}.
      * 
      * This constructor allows us to differentiate between the "type" of
      * factor (e.g. SENSE_UNARY) and its "templateKey" (e.g.
@@ -35,7 +35,7 @@ public class TypedFactor extends ObsFeExpFamFactor {
      * @param type The type.
      * @param templateKey The template key.
      */
-    public TypedFactor(VarSet vars, Enum<?> type, Object templateKey, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
+    public ObsFeTypedFactor(VarSet vars, Enum<?> type, Object templateKey, ObsFeatureConjoiner cj, ObsFeatureExtractor obsFe) {
         super(vars, templateKey, cj, obsFe);
         this.type = type;
     }

@@ -77,7 +77,7 @@ public class JointNlpFeatureExtractor implements ObsFeatureExtractor {
     
     @Override
     public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
-        TypedFactor f = (TypedFactor) factor;
+        ObsFeTypedFactor f = (ObsFeTypedFactor) factor;
         Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();
         

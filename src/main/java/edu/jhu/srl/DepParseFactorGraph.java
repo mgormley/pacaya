@@ -113,12 +113,12 @@ public class DepParseFactorGraph implements Serializable {
                 if (i == -1) {
                     // Add unary factors on root Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        fg.addFactor(new TypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                 } else {
                     // Add unary factors on child Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        fg.addFactor(new TypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
                     }
                 }
             }

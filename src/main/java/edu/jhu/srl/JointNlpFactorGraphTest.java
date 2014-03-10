@@ -187,7 +187,7 @@ public class JointNlpFactorGraphTest {
         // Assertions about the Sense factors.
         int numSenseFactors = 0;
         for (Factor f : sfg.getFactors()) {
-            TypedFactor srlf = (TypedFactor) f;
+            ObsFeTypedFactor srlf = (ObsFeTypedFactor) f;
             if (srlf.getFactorType() == SrlFactorTemplate.SENSE_UNARY) {
                 assertEquals(1, srlf.getVars().size());
                 assertTrue(srlf.getVars().iterator().next() instanceof SenseVar);

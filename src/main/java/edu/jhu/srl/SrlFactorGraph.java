@@ -200,14 +200,14 @@ public class SrlFactorGraph implements Serializable {
                 if (psMap.get(lemmas.get(i)) == null) {
                     templateKey = TEMPLATE_KEY_FOR_UNKNOWN_SENSE;
                 }
-                fg.addFactor(new TypedFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
+                fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
             }
             // Add the role/link factors.
             for (int j = 0; j < n; j++) {
                 if (i != -1) {
                     // Add unary factors on Roles.
                     if (prm.unaryFactors && roleVars[i][j] != null) {
-                        fg.addFactor(new TypedFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
                     }
                 }
             }
