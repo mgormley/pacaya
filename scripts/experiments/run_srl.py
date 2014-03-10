@@ -95,7 +95,7 @@ class PathDefinitions():
     def get_paths(self):
         p = Paths()
         p.c09_lang_short_names = ["ca", "cs", "es", "de", "en", "zh"] 
-        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
+        p.cx_lang_short_names = ["ar", "bg", "cs", "da", "ja", "nl", "de", "pt", "sl", "es", "sv", "tr", "en"]
 
         p.langs = {}        
         for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:
@@ -140,12 +140,14 @@ class PathDefinitions():
         self._set_paths_for_conllx_lang(p, "Danish",     "da", "ddt", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Dutch",      "nl", "alpino", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "German",     "de", "tiger", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Japanese",   "ja", "verbmobil", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Portuguese", "pt", "bosque", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Slovene",    "sl", "sdt", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Spanish",    "es", "cast3lb", conllx_dir, require=True)
         self._set_paths_for_conllx_lang(p, "Swedish",    "sv", "talbanken05", conllx_dir, require=True)
-        self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=True)    
-        self._set_paths_for_conllx_lang(p, "English",    "en", "ptb", conllx_dir, require=True)
+        self._set_paths_for_conllx_lang(p, "Turkish",    "tr", "metu_sabanci", conllx_dir, require=True)
+        # Other data in CoNLL-X format.
+        self._set_paths_for_conllx_lang(p, "English",    "en", "ptb_ym", conllx_dir, require=False, has_dev=True)
         
         # Grammar Induction Output.
         parser_prefix = self.root_dir + "/exp/vem-conll_006"
@@ -205,7 +207,7 @@ class PathDefinitions():
         if require:
             require_path_exists(pos_gold_train, pos_gold_dev, pos_gold_eval)
         
-    def _set_paths_for_conllx_lang(self, p, lang_long, lang_short, treebank, data_dir, require=False):
+    def _set_paths_for_conllx_lang(self, p, lang_long, lang_short, treebank, data_dir, require=False, has_dev=False):
         ''' Creates attributes on this object for the paths to the CoNLL-X data files. Also
         adds them to the language specific dictionary p.langs[lang_short].
          
@@ -219,23 +221,27 @@ class PathDefinitions():
         '''
         lang_low = lang_long.lower() 
         # Example: ./CoNLL-X/train/data/arabic/PADT/train/arabic_PADT_train.conll
-        train = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_train.conll")
         # Example: ./CoNLL-X/test/data/arabic/PADT/test/arabic_PADT_test.conll
-        test = os.path.join(data_dir, "test", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test.conll")
         # Example: ./CoNLL-X/test_blind/data/czech/pdt/test/czech_pdt_test_blind.conll
+        train = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_train.conll")
+        test = os.path.join(data_dir, "test", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test.conll")
         test_blind  = os.path.join(data_dir, "test_blind", "data", lang_low, treebank, "test", lang_low + "_" + treebank + "_test_blind.conll")
+        if has_dev: dev = os.path.join(data_dir, "train", "data", lang_low, treebank, "train", lang_low + "_" + treebank + "_dev.conll")
         # Set with setattr.
         p.set(lang_short + "_cx_train", train)
         p.set(lang_short + "_cx_test",   test)
         p.set(lang_short + "_cx_test_blind",  test_blind)
+        if has_dev: p.set(lang_short + "_cx_dev", dev)
         # Set on dictionary.
         pl = p.langs[lang_short]
         pl.cx_train = train
         pl.cx_test = test
         pl.cx_test_blind = test_blind
+        if has_dev: pl.cx_dev = dev
         # Require some paths.
         if require:
             require_path_exists(train, test, test_blind)
+            if has_dev: require_path_exists(dev)
             
     def _set_paths_for_conll09_parses(self, p, lang_long, lang_short, data_dir, require=False): 
         #if lang_short == "es": lang_short = "sp"       
@@ -813,15 +819,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
             # TODO: don't include features if edge is NOT present.
-            p.cx_langs_with_phead = ["ar", "bg", "de", "es"]            
-            for lang_short in p.cx_lang_short_names:
+            p.cx_langs_with_phead = ["ar", "bg", "en", "de", "ja", "es", ]            
+            for lang_short in p.cx_langs_with_phead:
                 pl = p.langs[lang_short]
                 # Define a first-order parser
                 parser = first_order
                 data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
                                     propTrainAsDev=0.10, devType="CONLL_X",
                                     test=pl.cx_test, testType="CONLL_X", 
-                                    language=lang_short, trainUseCoNLLXPhead=False)
+                                    language=lang_short, trainUseCoNLLXPhead=True)
                 exp = g.defaults + data + parser
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)

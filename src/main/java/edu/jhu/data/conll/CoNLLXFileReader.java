@@ -43,6 +43,7 @@ public class CoNLLXFileReader implements CloseableIterable<CoNLLXSentence>, Iter
         ArrayList<String> tokens = new ArrayList<String>();
 
         while ((line = reader.readLine()) != null) {
+            line = line.trim();
             if (line.equals("")) {
                 // End of sentence marker.
                 break;
