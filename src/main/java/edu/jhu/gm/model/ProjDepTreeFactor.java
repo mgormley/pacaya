@@ -281,15 +281,21 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
 
     @Override
     public double getUnormalizedScore(int configId) {
-        Semiring s = logDomain ? new LogSemiring() : new RealSemiring();  
         VarConfig vc = vars.getVarConfig(configId);
         // TODO: This would be faster: int[] cfg = vars.getVarConfigAsArray(configId);
+        return getUnormalizedScore(vc);
+    }
+
+    @Override
+    public double getUnormalizedScore(VarConfig vc) {
+        Semiring s = logDomain ? new LogSemiring() : new RealSemiring();  
         if (!hasOneParentPerToken(n, vc)) {
-            log.trace("Tree does not have one parent per token.");
+            log.warn("Tree has more than one arc to root.");
             return s.zero();
         }
         int[] parents = getParents(n, vc);
         if (!DepTree.isDepTree(parents, true)) {
+            log.warn("Tree is not a valid dependency tree.");
             return s.zero();
         }
         return s.one();

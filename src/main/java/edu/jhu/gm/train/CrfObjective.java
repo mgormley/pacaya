@@ -12,6 +12,7 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.IFgModel;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.math.FastMath;
 
@@ -63,24 +64,38 @@ public class CrfObjective implements ExampleObjective {
         int numFullyClamped = 0;
         for (int a=0; a<fgLatPred.getNumFactors(); a++) {
             Factor f = fgLatPred.getFactor(a);
+            boolean isNumeratorClamped = fgLat.getFactor(a).getVars().size() == 0;
+            boolean isDenominatorClamped = fgLatPred.getFactor(a).getVars().size() == 0;
             if (f instanceof GlobalFactor) {
-                // TODO: We should remove this check. Currently,
-                // getGoldConfigIdxPred will hit an integer overflow exception
-                // since the global factors have too many variables.
-                continue;
-            }
-            if (fgLat.getFactor(a).getVars().size() == 0) {
-                // These are the factors which do not include any latent variables. 
-                int goldConfig = ex.getGoldConfigIdxPred(a);
-                numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
-                        : FastMath.log(f.getUnormalizedScore(goldConfig));
-                numFullyClamped++;
-
-                if (fgLatPred.getFactor(a).getVars().size() == 0) {
-                    // These are the factors which do not include any latent or predicted variables.
-                    // This is a bit of an edge case, but we do it anyway.
-                    denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                GlobalFactor gf = (GlobalFactor)f;
+                if (isNumeratorClamped) {
+                    // These are the factors which do not include any latent variables. 
+                    VarConfig goldConfig = ex.getGoldConfig().getIntersection(fgLatPred.getFactor(a).getVars());
+                    numerator += infLat.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
+                            : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    numFullyClamped++;
+                    
+                    if (isDenominatorClamped) {
+                        // These are the factors which do not include any latent or predicted variables.
+                        // This is a bit of an edge case, but required for correctness.
+                        denominator += infLatPred.isLogDomain() ? gf.getUnormalizedScore(goldConfig) 
+                                : FastMath.log(gf.getUnormalizedScore(goldConfig));
+                    }
+                }
+            } else {
+                if (isNumeratorClamped) {
+                    // These are the factors which do not include any latent variables. 
+                    int goldConfig = ex.getGoldConfig().getConfigIndexOfSubset(f.getVars());
+                    numerator += infLat.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
                             : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    numFullyClamped++;
+
+                    if (isDenominatorClamped) {
+                        // These are the factors which do not include any latent or predicted variables.
+                        // This is a bit of an edge case, but required for correctness.
+                        denominator += infLatPred.isLogDomain() ? f.getUnormalizedScore(goldConfig) 
+                                : FastMath.log(f.getUnormalizedScore(goldConfig));
+                    }
                 }
             }
         }

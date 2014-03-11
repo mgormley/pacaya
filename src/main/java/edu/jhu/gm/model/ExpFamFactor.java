@@ -139,8 +139,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         private ExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedExpFamFactor(DenseFactor other, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
-            super(other);
+        public ClampedExpFamFactor(DenseFactor clmpDf, VarConfig clmpVarConfig, ExpFamFactor unclmpFactor) {
+            super(clmpDf);
             this.unclmpFactor = unclmpFactor;
             VarSet unclmpVarSet = unclmpFactor.getVars();
             if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {
