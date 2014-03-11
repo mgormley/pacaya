@@ -483,8 +483,10 @@ class ParamDefinitions():
     def combine_feat_tpls(self, tpls1, tpls2):
         senseFeatTpls = tpls1.get("senseFeatTpls") + ":" + tpls2.get("senseFeatTpls")
         argFeatTpls = tpls1.get("argFeatTpls") + ":" + tpls2.get("argFeatTpls")
+        dp1FeatTpls = tpls1.get("dp1FeatTpls") + ":" + tpls2.get("dp1FeatTpls")
         feature_set = tpls1.get("feature_set") + "_" + tpls2.get("feature_set")
-        return tpls1 + tpls2 + SrlExpParams(senseFeatTpls=senseFeatTpls, argFeatTpls=argFeatTpls, feature_set=feature_set)
+        return tpls1 + tpls2 + SrlExpParams(senseFeatTpls=senseFeatTpls, argFeatTpls=argFeatTpls, 
+                                            dp1FeatTpls=dp1FeatTpls, feature_set=feature_set)
         
     def _get_named_feature_set(self, simple, narad, zhao, dep, bjork, feature_set_name):
         feats = SrlExpParams()
@@ -512,6 +514,7 @@ class ParamDefinitions():
         feats.set('useTemplates', True, incl_name=False, incl_arg=True)
         feats.set('senseFeatTpls', sense, incl_name=False, incl_arg=True)
         feats.set('argFeatTpls', arg, incl_name=False, incl_arg=True)
+        feats.set('dp1FeatTpls', arg, incl_name=False, incl_arg=True)
         feats.set('featureSelection', feature_selection, incl_name=False, incl_arg=True)
         feats.set('feature_set', feature_set_name, incl_name=True, incl_arg=False)
         return feats
@@ -815,7 +818,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # CoNLL-X experiments.
             exps = []
             g.defaults += g.feat_mcdonald
-            g.defaults.update(includeSrl=False, featureSelection=False,
+            g.defaults.update(includeSrl=False, featureSelection=False, featureHashMod=2000000,
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
@@ -843,31 +846,33 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald
             g.defaults.update(seed=123456789) # NOTE THE FIXED SEED
-            g.defaults.update(includeSrl=False, featureSelection=False,
+            g.defaults.update(includeSrl=False, featureSelection=False, 
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
             # TODO: don't include features if edge is NOT present.
-            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
-            p.cx_langs_with_phead = ["bg", "en", "de", "ja", "es"]             
+            # Note: "ar" and "ja" have the PHEAD column, but it includes multiple roots per sentence.
+            p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
             for lang_short in p.cx_langs_with_phead:
                 for sgdNumPasses in [5, 3]:
                     for adaGradEta in [ 0.05, 0.01, 0.1, 0.001, 1.0]:
-                        for l2variance in [1000, 10000, 100, 100000]:
-                            hyper = SrlExpParams(sgdNumPasses=sgdNumPasses, adaGradEta=adaGradEta, l2variance=l2variance)
-                            pl = p.langs[lang_short]
-                            # Define a first-order parser
-                            parser = first_order            
-                            data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
-                                                test=pl.cx_test, testType="CONLL_X", 
-                                                language=lang_short, trainUseCoNLLXPhead=True)
-                            if lang_short == "en":
-                                data = data + SrlExpParams(dev=pl.cx_dev)
-                            else:
-                                data = data + SrlExpParams(propTrainAsDev=0.10)
-                            exp = g.defaults + data + parser + hyper
-                            exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                            exps.append(exp)
+                        for l2variance in [10000, 1000, 100000, 100,]:
+                            for featureHashMod in [10000000, 2000000]:
+                                hyper = SrlExpParams(sgdNumPasses=sgdNumPasses, adaGradEta=adaGradEta, 
+                                                     l2variance=l2variance, featureHashMod=featureHashMod)
+                                pl = p.langs[lang_short]
+                                # Define a first-order parser
+                                parser = first_order            
+                                data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                                    test=pl.cx_test, testType="CONLL_X", 
+                                                    language=lang_short, trainUseCoNLLXPhead=True)
+                                if lang_short == "en":
+                                    data = data + SrlExpParams(dev=pl.cx_dev)
+                                else:
+                                    data = data + SrlExpParams(propTrainAsDev=0.10)
+                                exp = g.defaults + data + parser + hyper
+                                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                                exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         if self.expname == "dp-conllx-tmp":

@@ -7,8 +7,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
@@ -70,15 +69,15 @@ public class DepParseFactorGraph implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, ObsFeatureExtractor obsFe,
-            ObsFeatureConjoiner ofc, FactorGraph fg) {
-        build(sent.getWords(), obsFe, ofc, fg);
+    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
+            FactorGraph fg) {
+        build(sent.getWords(), fe, fg);
     }
 
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(List<String> words, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
+    public void build(List<String> words, FeatureExtractor fe, FactorGraph fg) {
         this.n = words.size();
         
         // Create the Link variables.
@@ -113,12 +112,12 @@ public class DepParseFactorGraph implements Serializable {
                 if (i == -1) {
                     // Add unary factors on root Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        fg.addFactor(new ObsFeTypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new FeTypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, fe));
                     }
                 } else {
                     // Add unary factors on child Links
                     if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        fg.addFactor(new ObsFeTypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, ofc, obsFe));
+                        fg.addFactor(new FeTypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, fe));
                     }
                 }
             }

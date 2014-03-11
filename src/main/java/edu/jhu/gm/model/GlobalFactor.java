@@ -30,8 +30,5 @@ public interface GlobalFactor extends Factor {
      * Resets this global factor for a new run of belief propagation.
      */
     void reset();
-    
-    /** Gets the unnormalized numerator value contributed by this factor. */
-    double getUnormalizedScore(VarConfig goldConfig);
 
 }

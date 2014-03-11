@@ -18,7 +18,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 
 public class JointNlpFgModelTest {
 

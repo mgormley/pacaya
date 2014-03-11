@@ -40,7 +40,7 @@ public class FgModel implements Serializable, IFgModel {
     /** The number of model parameters. */
     private int numParams;
     /** Provides iteration of the model parameter names. */
-    private Iterable<String> paramNames;
+    private transient Iterable<String> paramNames;
     
     public FgModel(int numParams) {
         this(numParams, null);

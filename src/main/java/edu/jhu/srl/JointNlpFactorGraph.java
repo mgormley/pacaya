@@ -8,6 +8,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -58,14 +59,14 @@ public class JointNlpFactorGraph extends FactorGraph {
     private DepParseFactorGraph dp;  
     private SrlFactorGraph srl;
 
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
-        this(prm, sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc);
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
+        this(prm, sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
     }
     
     public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
-            List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc) {
+            List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
         this(prm);
-        build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, this);
+        build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fe, this);
     }
     
     public JointNlpFactorGraph(JointFactorGraphPrm prm) {
@@ -74,22 +75,24 @@ public class JointNlpFactorGraph extends FactorGraph {
 
     /**
      * Adds factors and variables to the given factor graph.
+     * @param fe TODO
      */
     public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
-            ObsFeatureConjoiner ofc, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
+            ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg);
     }
 
     /**
      * Adds factors and variables to the given factor graph.
+     * @param fe TODO
      */
     public void build(List<String> words, List<String> lemmas, Set<Integer> knownPreds, List<String> roleStateNames,
-            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
+            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
         this.n = words.size();
 
         if (prm.includeDp) {
             dp = new DepParseFactorGraph(prm.dpPrm);
-            dp.build(words, obsFe, ofc, fg);
+            dp.build(words, fe, fg);
         }
         if (prm.includeSrl) {
             srl = new SrlFactorGraph(prm.srlPrm); 

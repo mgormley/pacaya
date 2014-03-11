@@ -10,12 +10,15 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.util.Prm;
 
 /**
  * Factory for NLP FgExamples.
@@ -27,8 +30,14 @@ public class JointNlpFgExamplesBuilder {
 
     public static class JointNlpFgExampleBuilderPrm {
         public JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
-        public JointNlpFeatureExtractorPrm srlFePrm = new JointNlpFeatureExtractorPrm();
+        public JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
+    }
+    
+    public static class JointNlpFeatureExtractorPrm extends Prm {
+        private static final long serialVersionUID = 1L;
+        public DepParseFeatureExtractorPrm dpFePrm = new DepParseFeatureExtractorPrm();
+        public SrlFeatureExtractorPrm srlFePrm = new SrlFeatureExtractorPrm();        
     }
     
     private static final Logger log = Logger.getLogger(JointNlpFgExamplesBuilder.class);
@@ -70,16 +79,19 @@ public class JointNlpFgExamplesBuilder {
             SimpleAnnoSentence sent = sents.get(i);
             
             // Create a feature extractor for this example.
-            ObsFeatureExtractor obsFe = new JointNlpFeatureExtractor(prm.srlFePrm, sent, cs);
+            ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
             obsFe = new ObsFeatureCache(obsFe);
             
+            FeatureExtractor fe = new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
+            
             // Construct the factor graph.
-            JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc);        
+            JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);        
             // Get the variable assignments given in the training data.
             VarConfig trainConfig = getTrainAssignment(sent, sfg);
             
             // Create the example.
             FgExample ex = new FgExample(sfg, trainConfig, obsFe, fts);
+            fe.init(ex);
             
             return ex;
         }

@@ -36,9 +36,9 @@ import edu.jhu.util.hash.MurmurHash3;
  * @author mgormley
  * @author mmitchell
  */
-public class JointNlpFeatureExtractor implements ObsFeatureExtractor {
+public class SrlFeatureExtractor implements ObsFeatureExtractor {
 
-    public static class JointNlpFeatureExtractorPrm extends Prm {
+    public static class SrlFeatureExtractorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         /** Feature options. */
         public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
@@ -48,14 +48,14 @@ public class JointNlpFeatureExtractor implements ObsFeatureExtractor {
         public boolean humanReadable = true;
     }
     
-    private static final Logger log = Logger.getLogger(JointNlpFeatureExtractor.class); 
+    private static final Logger log = Logger.getLogger(SrlFeatureExtractor.class); 
     
-    private JointNlpFeatureExtractorPrm prm;
+    private SrlFeatureExtractorPrm prm;
     private FactorTemplateList fts;
     private VarConfig goldConfig;
     private SentFeatureExtractor sentFeatExt;
         
-    public JointNlpFeatureExtractor(JointNlpFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
         // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
         // SRL and dependency parsing use the same feature set, it's probably not worth the memory burden.

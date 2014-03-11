@@ -17,6 +17,7 @@ import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.feat.SlowFeatureExtractor;
 import edu.jhu.gm.feat.SlowObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
@@ -26,6 +27,7 @@ import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraphTest.FgAndVars;
+import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.FgModelTest;
 import edu.jhu.gm.model.ProjDepTreeFactor;
@@ -44,6 +46,48 @@ import edu.jhu.util.collections.Lists;
 
 public class CrfTrainerTest {
 
+    /**
+     * Constructs features for each factor graph configuration by creating a
+     * sorted list of all the variable states and concatenating them together.
+     * 
+     * For testing only.
+     * 
+     * @author mgormley
+     */
+    public static class SimpleVCFeatureExtractor2 extends SlowFeatureExtractor {
+
+        private Alphabet<Feature> alphabet;
+
+        public SimpleVCFeatureExtractor2(Alphabet<Feature> alphabet) {
+            super();
+            this.alphabet = alphabet;          
+        }
+        
+        // Just concatenates all the state names together (in-order).
+        @Override
+        public FeatureVector calcFeatureVector(FeExpFamFactor factor, VarConfig varConfig) {
+            FeatureVector fv = new FeatureVector();
+
+            if (varConfig.size() > 0) {
+                String[] strs = new String[varConfig.getVars().size()];
+                int i=0;
+                for (Var v : varConfig.getVars()) {
+                    strs[i] = varConfig.getStateName(v);
+                    i++;
+                }
+                Arrays.sort(strs);
+                Feature feat = new Feature(StringUtils.join(strs, ":"));
+                int featIdx = alphabet.lookupIndex(feat);
+                fv.set(featIdx, 1.0);
+            }
+            
+            int featIdx = alphabet.lookupIndex(new Feature("BIAS_FEATURE", true));
+            fv.set(featIdx, 1.0);
+            
+            return fv;
+        }
+    }
+    
     /**
      * Constructs features for each factor graph configuration by creating a
      * sorted list of all the variable states and concatenating them together.

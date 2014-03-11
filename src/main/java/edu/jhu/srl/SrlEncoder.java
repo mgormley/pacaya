@@ -4,8 +4,8 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 

@@ -15,29 +15,34 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
-import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
+import edu.jhu.srl.SrlFactorGraph.RoleStructure;
+import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 
 /**
- * Unit tests for {@link JointNlpFeatureExtractorTest}.
+ * Unit tests for {@link SrlFeatureExtractorTest}.
  * @author mgormley
  */
-public class JointNlpFeatureExtractorTest {
+public class SrlFeatureExtractorTest {
 
     @Test
     public void testCorrectNumFeatures() throws Exception {
@@ -55,19 +60,22 @@ public class JointNlpFeatureExtractorTest {
         
         fts.lookupTemplateIds(sfg);
         
-        JointNlpFeatureExtractorPrm prm = new JointNlpFeatureExtractorPrm();
+        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.fePrm.biasOnly = true;
         prm.featureHashMod = -1; // Disable feature hashing.
-        JointNlpFeatureExtractor featExt = new JointNlpFeatureExtractor(prm, sents.get(0), cs);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, sents.get(0), cs);
         featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
-            featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));
+            Factor f = sfg.getFactor(a);
+            if (f instanceof ObsFeExpFamFactor) {
+                featExt.calcObsFeatureVector((ObsFeExpFamFactor) f);
+            }
         }
         
         System.out.println(fts);
         
         //assertEquals(3*2 + 2 + 3, fts.getNumObsFeats());
-        assertEquals(3, fts.getNumObsFeats());
+        assertEquals(2, fts.getNumObsFeats());
     }
     
     @Test
@@ -88,14 +96,8 @@ public class JointNlpFeatureExtractorTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
 
-        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = false;
-        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
-        prm.srlFePrm.fePrm.useNaradFeats = true;
-        prm.srlFePrm.fePrm.useSimpleFeats = false;
-        prm.srlFePrm.fePrm.useZhaoFeats = false;   
-        
-        prm.srlFePrm.featureHashMod = -1;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();        
+        prm.fePrm.srlFePrm.featureHashMod = -1;
         
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
@@ -115,7 +117,7 @@ public class JointNlpFeatureExtractorTest {
         // For useNaradFeats=true: 
         // Correct number of obs feats 358, and seeing 358 after bad commit.
         // Correct number is 972, but seeing 932 after bad commit.
-        assertEquals(604, ofc.getNumParams());
+        assertEquals(665, ofc.getNumParams());
     }
     
     @Test
@@ -139,14 +141,8 @@ public class JointNlpFeatureExtractorTest {
         }
         cs.init(simpleSents);
 
-        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = false;
-        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
-        prm.srlFePrm.fePrm.useNaradFeats = true;
-        prm.srlFePrm.fePrm.useSimpleFeats = false;
-        prm.srlFePrm.fePrm.useZhaoFeats = false;   
-        
-        prm.srlFePrm.featureHashMod = -1;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();        
+        prm.fePrm.srlFePrm.featureHashMod = -1;
         
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.OBSERVED;
@@ -164,7 +160,7 @@ public class JointNlpFeatureExtractorTest {
         
         // For useNaradFeats=true: 
         // Correct number is 72, and seeing 72 after bad commit.
-        assertEquals(84, ofc.getNumParams());
+        assertEquals(92, ofc.getNumParams());
     }
     
     @Test
@@ -198,30 +194,34 @@ public class JointNlpFeatureExtractorTest {
         fePrm.useTemplates = true;
         fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
         fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
-        JointNlpFeatureExtractorPrm prm = new JointNlpFeatureExtractorPrm();
+        SrlFeatureExtractorPrm prm = new SrlFeatureExtractorPrm();
         prm.fePrm = fePrm;
         prm.featureHashMod = 2; // Enable feature hashing
-        JointNlpFeatureExtractor featExt = new JointNlpFeatureExtractor(prm, simpleSents.get(0), cs);
+        SrlFeatureExtractor featExt = new SrlFeatureExtractor(prm, simpleSents.get(0), cs);
         featExt.init(new VarConfig(), fts);
         for (int a=0; a<sfg.getNumFactors(); a++) {
-            featExt.calcObsFeatureVector((ObsFeExpFamFactor) sfg.getFactor(a));
+            Factor f = sfg.getFactor(a);
+            if (f instanceof ObsFeExpFamFactor) {
+                featExt.calcObsFeatureVector((ObsFeExpFamFactor) f);
+            }
         }
         
         System.out.println(fts);
         // We should include some bias features as well.
-        assertEquals(9, fts.getNumObsFeats());
+        assertEquals(6, fts.getNumObsFeats());
     }
     
 
     private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
+        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new Alphabet<Feature>());
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---        
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc);
+        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc, fe);
     }
 
 }

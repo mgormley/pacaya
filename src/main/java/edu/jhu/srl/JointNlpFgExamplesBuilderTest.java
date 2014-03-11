@@ -33,9 +33,9 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 
 /**
  * Unit tests for {@link JointNlpFgExamplesBuilderTest}.
@@ -64,7 +64,7 @@ public class JointNlpFgExamplesBuilderTest {
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
@@ -92,7 +92,7 @@ public class JointNlpFgExamplesBuilderTest {
         }
         cs.init(simpleSents);        
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         //prm.includeUnsupportedFeatures = 
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
 
@@ -135,13 +135,9 @@ public class JointNlpFgExamplesBuilderTest {
 
         cs.init(simpleSents);
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.useZhaoFeats = false;
-        prm.srlFePrm.fePrm.useSimpleFeats = false;
-        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
-        prm.srlFePrm.fePrm.useNaradFeats = false;
-        prm.srlFePrm.fePrm.useTemplates = true;
-        prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
-        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        prm.fePrm.srlFePrm.fePrm.useTemplates = true;
+        prm.fePrm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         
         {
@@ -152,8 +148,8 @@ public class JointNlpFgExamplesBuilderTest {
             JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);                   
-            assertEquals(1237, fts.getNumObsFeats());
-            assertEquals(2451, ofc.getNumParams());
+            assertEquals(340, fts.getNumObsFeats());
+            assertEquals(2916, ofc.getNumParams());
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
@@ -164,7 +160,7 @@ public class JointNlpFgExamplesBuilderTest {
             JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(2451, ofc.getNumParams());            
+            assertEquals(2916, ofc.getNumParams());            
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
@@ -175,7 +171,7 @@ public class JointNlpFgExamplesBuilderTest {
             JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(3834, ofc.getNumParams());            
+            assertEquals(4299, ofc.getNumParams());            
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
@@ -185,7 +181,7 @@ public class JointNlpFgExamplesBuilderTest {
             JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(604, ofc.getNumParams());
+            assertEquals(2349, ofc.getNumParams());
             // These are the old counts from when we used to filter based on the counting versions of 
             // FeatureTemplateList.
             //assertEquals(313, fts.getNumObsFeats());
@@ -213,7 +209,7 @@ public class JointNlpFgExamplesBuilderTest {
         cs.init(simpleSents);        
         
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
 
@@ -254,7 +250,7 @@ public class JointNlpFgExamplesBuilderTest {
         cs.init(simpleSents);        
         
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.srlPrm.predictSense = true;
 

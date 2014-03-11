@@ -1,7 +1,5 @@
 package edu.jhu.srl;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,17 +7,12 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
-import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.util.collections.Lists;
 
 public class DepParseDecoderTest {
     

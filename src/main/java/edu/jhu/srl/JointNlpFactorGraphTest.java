@@ -13,6 +13,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
+import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -22,11 +24,13 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
+import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -187,11 +191,13 @@ public class JointNlpFactorGraphTest {
         // Assertions about the Sense factors.
         int numSenseFactors = 0;
         for (Factor f : sfg.getFactors()) {
-            ObsFeTypedFactor srlf = (ObsFeTypedFactor) f;
-            if (srlf.getFactorType() == SrlFactorTemplate.SENSE_UNARY) {
-                assertEquals(1, srlf.getVars().size());
-                assertTrue(srlf.getVars().iterator().next() instanceof SenseVar);
-                numSenseFactors++;
+            if (f instanceof ObsFeTypedFactor) {
+                ObsFeTypedFactor srlf = (ObsFeTypedFactor) f;
+                if (srlf.getFactorType() == SrlFactorTemplate.SENSE_UNARY) {
+                    assertEquals(1, srlf.getVars().size());
+                    assertTrue(srlf.getVars().iterator().next() instanceof SenseVar);
+                    numSenseFactors++;
+                }
             }
         }        
         assertEquals(2, numSenseFactors);
@@ -200,6 +206,7 @@ public class JointNlpFactorGraphTest {
     private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
+        FeatureExtractor fe = new SimpleVCFeatureExtractor2(new Alphabet<Feature>()); 
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---                                         ---
@@ -213,7 +220,7 @@ public class JointNlpFactorGraphTest {
         };
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc);
+        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
     }
     
 }
