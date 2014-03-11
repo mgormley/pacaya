@@ -10,6 +10,7 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.FeatureCache;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -83,6 +84,7 @@ public class JointNlpFgExamplesBuilder {
             obsFe = new ObsFeatureCache(obsFe);
             
             FeatureExtractor fe = new DepParseFeatureExtractor(prm.fePrm.dpFePrm, sent, cs, ofc.getFeAlphabet());
+            fe = new FeatureCache(fe);
             
             // Construct the factor graph.
             JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);        
