@@ -111,6 +111,60 @@ public class Hyperalgo {
     }
     
     /**
+     * Runs the inside algorithm on a hypergraph with the first-order expectation semiring.
+     * 
+     * @param graph The hypergraph.
+     * @return The beta value for each Hypernode. Where beta[i] is the inside
+     *         score for the i'th node in the Hypergraph, graph.getNodes().get(i).
+     */
+    public static void insideAlgorithmFirstOrderExpect(final Hypergraph graph, final HyperpotentialFoe w,
+            final SemiringExt s, final Scores scores) {
+        final int n = graph.getNodes().size();
+        final double[] beta = new double[n];
+        final double[] betaFoe = new double[n];
+        // \beta_i = 0 \forall i
+        Arrays.fill(beta, s.zero());
+        Arrays.fill(betaFoe, s.zero());
+        graph.applyTopoSort(new HyperedgeFn() {
+
+            @Override
+            public void apply(Hyperedge e) {
+                // \beta_{H(e)} += w_e \prod_{j \in T(e)} \beta_j
+                double prod = s.one();
+                double prodFoe = s.zero();
+                for (Hypernode jNode : e.getTailNodes()) {
+                    int j = jNode.getId();
+                    // prod = s.times(prod, beta[j]);
+                    // prodFoe = s.plus(s.times(prod, betaFoe[j]), s.times(beta[j], prodFoe));
+                    double p1 = prod;
+                    double p2 = beta[j];
+                    double r1 = prodFoe;
+                    double r2 = betaFoe[j];
+                    prod = s.times(p1, p2);
+                    prodFoe = s.plus(s.times(p1, r2), s.times(p2, r1));
+                }
+                // prod = s.times(prod, w.getScore(e, s));
+                // prodFoe = s.plus(s.times(prod, w.getScoreFoe(e, s)), s.times(w.getScore(e, s), prodFoe));
+                double p1 = prod;
+                double p2 = w.getScore(e, s);
+                double r1 = prodFoe;
+                double r2 = w.getScoreFoe(e, s);
+                prod = s.times(p1, p2);
+                prodFoe = s.plus(s.times(p1, r2), s.times(p2, r1));
+                
+                int i = e.getHeadNode().getId();
+                //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
+                beta[i] = s.plus(beta[i], prod);
+                betaFoe[i] = s.plus(betaFoe[i], prodFoe);
+                log.debug(String.format("%s w_e=%f beta[%d] = %.3f betaFoe[%d] = %.3f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]), i, s.toReal(betaFoe[i]))); 
+            }
+            
+        });
+        scores.beta = beta;
+        scores.betaFoe = betaFoe;
+    }
+    
+    /**
      * Computes the marginal for each hypernode.
      * INPUT: 
      * OUTPUT: scores.beta.
@@ -175,6 +229,8 @@ public class Hyperalgo {
         public double[] betaAdj;
         public double[] marginalAdj;
         public double[] weightAdj;
+        // Inside scores for first-order expectation semiring.
+        public double[] betaFoe;
     }
 
     /**
