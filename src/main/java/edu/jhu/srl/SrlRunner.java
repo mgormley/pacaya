@@ -70,6 +70,7 @@ import edu.jhu.srl.JointNlpFeatureExtractor.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
+import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
@@ -427,6 +428,8 @@ public class SrlRunner {
     private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection inputSents, String name) throws IOException, ParseException {
         log.info("Running the decoder on " + name + " data.");
 
+        Timer timer = new Timer();
+        timer.start();
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             // TODO: We should construct the examples from the input sentences.
@@ -446,6 +449,8 @@ public class SrlRunner {
                 predSent.setParents(parents);
             }
         }
+        timer.stop();
+        log.info(String.format("Decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
         
         return inputSents;
     }
