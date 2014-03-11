@@ -54,7 +54,7 @@ public class LogLinearEDs {
     public void addEx(int count, String... featNames) {
         FeatureVector features = new FeatureVector();
         for (String featName : featNames) {
-            features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(new Feature(featName)), 1.0);
         }
         LogLinearExDesc ex = new LogLinearExDesc(count, features);
         descList.add(ex);
