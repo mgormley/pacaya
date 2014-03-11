@@ -38,6 +38,7 @@ public class TemplateSets {
     public static final String mcdonaldDepFeatsResource = "/edu/jhu/featurize/mcdonald-dep-feats.txt";
     public static final String kooBasicDepFeatsResource = "/edu/jhu/featurize/koo-basic-dep-feats.txt";
     public static final String kooHybridDepFeatsResource = "/edu/jhu/featurize/koo-hybrid-dep-feats.txt";
+    public static final String carreras07Dep2FeatsResource = "/edu/jhu/featurize/carreras07-dep2-feats.txt";
     
     // Constituency Parsing feature sets
     public static final String finkel08FeatsResource = "/edu/jhu/featurize/finkel08-parse-feats.txt";

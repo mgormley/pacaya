@@ -42,13 +42,33 @@ public class DepParseFactorGraph implements Serializable {
          * variables to form a projective dependency tree.
          */
         public boolean useProjDepTreeFactor = false;
-        
-        /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
+
+        /** Whether to include 1st-order unary factors in the model.*/
         public boolean unaryFactors = true;
+
+        /** Whether to include 2nd-order grandparent factors in the model. */
+        public boolean grandparentFactors = false;
+
+        /** Whether to include 2nd-order sibling factors in the model. */
+        public boolean siblingFactors = false;
+        
+        /** Whether to exclude non-projective grandparent factors. */
+        public boolean excludeNonprojectiveGrandparents = true;
+        
     }
     
     public enum DepParseFactorTemplate {
-        LINK_UNARY,
+        LINK_UNARY, LINK_GRANDPARENT, LINK_SIBLING
+    }
+    
+    public static class O2FeTypedFactor extends FeTypedFactor {
+        public int i,j,k;
+        public O2FeTypedFactor(VarSet vars, Enum<?> type, FeatureExtractor fe, int i, int j, int k) {
+            super(vars, type, fe);
+            this.i = i;
+            this.j = j;
+            this.k = k;
+        }        
     }
     
     // Parameters for constructing the factor graph.
@@ -73,7 +93,7 @@ public class DepParseFactorGraph implements Serializable {
             FactorGraph fg) {
         build(sent.getWords(), fe, fg);
     }
-
+    
     /**
      * Adds factors and variables to the given factor graph.
      */
@@ -105,19 +125,37 @@ public class DepParseFactorGraph implements Serializable {
             }
         }
         
-        // Add the factors.
-        for (int i = -1; i < n; i++) {
-            // Add the role/link factors.
-            for (int j = 0; j < n; j++) {
-                if (i == -1) {
-                    // Add unary factors on root Links
-                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && rootVars[j] != null) {
-                        fg.addFactor(new FeTypedFactor(new VarSet(rootVars[j]), DepParseFactorTemplate.LINK_UNARY, fe));
-                    }
-                } else {
-                    // Add unary factors on child Links
-                    if (prm.unaryFactors && prm.linkVarType != VarType.OBSERVED && childVars[i][j] != null) {
-                        fg.addFactor(new FeTypedFactor(new VarSet(childVars[i][j]), DepParseFactorTemplate.LINK_UNARY, fe));
+        // Don't include factors on observed variables.
+        if (prm.linkVarType != VarType.OBSERVED) { 
+            // Add the factors.
+            for (int i = -1; i < n; i++) {
+                // Add the role/link factors.
+                for (int j = 0; j < n; j++) {
+                    if (i == j) { continue; }
+                    LinkVar ijVar = getLinkVar(i, j);
+                    if (ijVar != null) {
+                        // Add unary factors on root / child Links
+                        if (prm.unaryFactors) {
+                            fg.addFactor(new FeTypedFactor(new VarSet(ijVar), DepParseFactorTemplate.LINK_UNARY, fe));
+                        }
+                        for (int k = 0; k < n; k++) {
+                            if (i == k || j == k) { continue; }
+                            // Add grandparent factors.
+                            boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
+                            if (!prm.excludeNonprojectiveGrandparents || !isNonprojectiveGrandparent) {
+                                LinkVar jkVar = getLinkVar(j, k);
+                                if (prm.grandparentFactors && jkVar != null) {
+                                    fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, i, j, k));
+                                }
+                            }
+                            if (j < k) {
+                                // Add sibling factors.
+                                LinkVar ikVar = getLinkVar(i, k);
+                                if (prm.siblingFactors && ikVar != null) {
+                                    fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
+                                }
+                            }
+                        }
                     }
                 }
             }

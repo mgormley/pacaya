@@ -113,7 +113,15 @@ public class SrlRunner {
     // Options for inference.
     @Opt(hasArg = true, description = "Whether to run inference in the log-domain.")
     public static boolean logDomain = true;
-
+    @Opt(hasArg = true, description = "The BP schedule type.")
+    public static BpScheduleType bpSchedule = BpScheduleType.TREE_LIKE;
+    @Opt(hasArg = true, description = "The BP update order.")
+    public static BpUpdateOrder bpUpdateOrder = BpUpdateOrder.SEQUENTIAL;
+    @Opt(hasArg = true, description = "The max number of BP iterations.")
+    public static int bpMaxIterations = 1;
+    @Opt(hasArg = true, description = "Whether to normalize the messages.")
+    public static boolean normalizeMessages = false;
+    
     // Options for dependency parse factor graph structure.
     @Opt(hasArg = true, description = "Whether to model the dependency parses.")
     public static boolean includeDp = true;
@@ -121,6 +129,12 @@ public class SrlRunner {
     public static VarType linkVarType = VarType.LATENT;
     @Opt(hasArg = true, description = "Whether to include a projective dependency tree global factor.")
     public static boolean useProjDepTreeFactor = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order grandparent factors in the model.")
+    public static boolean grandparentFactors = false;
+    @Opt(hasArg = true, description = "Whether to include 2nd-order sibling factors in the model.")
+    public static boolean siblingFactors = false;
+    @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
+    public static boolean excludeNonprojectiveGrandparents = true;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -135,7 +149,7 @@ public class SrlRunner {
     public static boolean predictSense = false;
 
     // Options for joint factor graph structure.
-    @Opt(hasArg = true, description = "Whether to include unary factors in the model. (Ignored if there are no Link variables.)")
+    @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
     public static boolean unaryFactors = false;
 
     // Options for SRL feature selection.
@@ -181,8 +195,10 @@ public class SrlRunner {
     public static File argFeatTplsOut = null;
     
     // Options for Dependency parser feature extraction.
-    @Opt(hasArg = true, description = "Arg feature templates.")
+    @Opt(hasArg = true, description = "1st-order factor feature templates.")
     public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
+    @Opt(hasArg = true, description = "2nd-order factor feature templates.")
+    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;
     
     // Options for data munging.
     @Deprecated
@@ -379,7 +395,8 @@ public class SrlRunner {
         for (AT at : Lists.union(CorpusHandler.getAts(CorpusHandler.removeAts), CorpusHandler.getAts(CorpusHandler.predAts))) {
             fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
             fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
-            fePrm.dpFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.fePrm.pairTemplates, at);
+            fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
+            fePrm.dpFePrm.secondOrderTpls   = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.secondOrderTpls, at);
         }
     }
 
@@ -395,7 +412,8 @@ public class SrlRunner {
             SimpleAnnoSentence sent = sents.get(0);
             TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
             TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.fePrm.pairTemplates);
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
         }
         
         log.info("Building factor graphs and extracting features.");
@@ -474,13 +492,18 @@ public class SrlRunner {
         
         // Factor graph structure.
         prm.fgPrm.dpPrm.linkVarType = linkVarType;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = useProjDepTreeFactor;
+        prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
+        prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
+        prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
+        
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
-        prm.fgPrm.dpPrm.useProjDepTreeFactor = useProjDepTreeFactor;
         prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
-        prm.fgPrm.dpPrm.unaryFactors = unaryFactors;
         prm.fgPrm.srlPrm.predictSense = predictSense;
+        
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;
         
@@ -520,9 +543,9 @@ public class SrlRunner {
                 
         // Dependency parsing Feature Extraction
         DepParseFeatureExtractorPrm dpFePrm = new DepParseFeatureExtractorPrm();
-        dpFePrm.fePrm.biasOnly = biasOnly;
-        dpFePrm.fePrm.useTemplates = useTemplates;
-        dpFePrm.fePrm.pairTemplates = getFeatTpls(dp1FeatTpls);
+        dpFePrm.biasOnly = biasOnly;
+        dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
+        dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
         
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
@@ -633,12 +656,11 @@ public class SrlRunner {
 
     private static BeliefPropagationPrm getInfFactory() {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
-        bpPrm.logDomain = logDomain;
-        bpPrm.schedule = BpScheduleType.TREE_LIKE;
-        bpPrm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        // TODO: we need to figure out how to compute the log-likelihood AND normalize the marginals.
-        bpPrm.normalizeMessages = false;
-        bpPrm.maxIterations = 1;
+        bpPrm.logDomain = logDomain;        
+        bpPrm.schedule = bpSchedule;
+        bpPrm.updateOrder = bpUpdateOrder;
+        bpPrm.normalizeMessages = normalizeMessages;
+        bpPrm.maxIterations = bpMaxIterations;
         return bpPrm;
     }
 

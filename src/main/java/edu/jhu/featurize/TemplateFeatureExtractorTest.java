@@ -58,8 +58,9 @@ public class TemplateFeatureExtractorTest {
         int ri = 1;
         int rj = 3;
         int rk = 6;
+        int midx = 1;
         Rule rule = getRule("NP", "Det", "N", 0);
-        LocalObservations local = new LocalObservations(pidx, cidx, rule, ri, rj, rk);
+        LocalObservations local = new LocalObservations(pidx, cidx, midx, rule, ri, rj, rk);
         
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);

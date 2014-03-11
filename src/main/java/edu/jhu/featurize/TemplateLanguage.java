@@ -34,10 +34,9 @@ public class TemplateLanguage {
     
     /** Word property. A mapping from a position to a string. */
     public enum TokProperty {
-        INDEX, WORD, LEMMA, POS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
+        INDEX, WORD, LEMMA, POS, CPOS, BC0, BC1, MORPHO, DEPREL, LC, UNK, CHPRE5, CAPITALIZED, WORD_TOP_N,
         //
-        MORPHO1, MORPHO2, MORPHO3;
-        
+        MORPHO1, MORPHO2, MORPHO3;        
     }
 
     /** Word property list expansion. A mapping from a position to a list of strings. */ 
@@ -95,7 +94,7 @@ public class TemplateLanguage {
     /** Positions. */
     public enum Position {
         // Dependency parsing
-        PARENT, CHILD, 
+        PARENT, CHILD, MODIFIER,
         // Constituency parsing
         RULE_START, RULE_MID, RULE_END;
     }
@@ -118,7 +117,7 @@ public class TemplateLanguage {
      * be present in order to utilize each structure.
      */
     public enum AT {
-        WORD, LEMMA, POS, BROWN, MORPHO, DEP_TREE, DEPREL, SRL, BINARY_TREE;
+        WORD, LEMMA, POS, CPOS, BROWN, MORPHO, DEP_TREE, DEPREL, SRL, BINARY_TREE;
     }
         
     public static Description getDescByName(String name) {
@@ -154,6 +153,7 @@ public class TemplateLanguage {
         /** Positions. */
         desc(Position.PARENT, "p", "Parent");
         desc(Position.CHILD, "c", "Child");
+        desc(Position.MODIFIER, "m", "Modifier");
         desc(Position.RULE_START, "ri", "Rule start");
         desc(Position.RULE_MID, "rj", "Rule mid");
         desc(Position.RULE_END, "rk", "Rule end");        
@@ -175,6 +175,7 @@ public class TemplateLanguage {
         desc(TokProperty.WORD, "word", "Word", AT.WORD);
         desc(TokProperty.LEMMA, "lemma", "Lemma", AT.LEMMA);
         desc(TokProperty.POS, "pos", "POS Tag", AT.POS);
+        desc(TokProperty.CPOS, "cpos", "Coarse POS Tag", AT.CPOS);
         desc(TokProperty.BC0, "bc0", "Coarse-grained Brown cluster", AT.BROWN);
         desc(TokProperty.BC1, "bc1", "Fine-grained Brown cluster", AT.BROWN);
         desc(TokProperty.MORPHO, "morpho", "Morphological features", AT.MORPHO);
@@ -524,24 +525,7 @@ public class TemplateLanguage {
     }
     
     public static boolean hasRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
-        switch (type) {
-        case WORD:
-            return sent.getWords() != null;
-        case LEMMA:
-            return sent.getLemmas() != null;
-        case POS:
-            return sent.getPosTags() != null;
-        case BROWN:
-            return sent.getClusters() != null;
-        case DEP_TREE:
-            return sent.getParents() != null;
-        case DEPREL:
-            return sent.getParents() != null && sent.getDeprels() != null;
-        case MORPHO:
-            return sent.getFeats() != null;
-        default:
-            throw new IllegalStateException();
-        }
+        return sent.hasAt(type);
     }
 
 

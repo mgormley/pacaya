@@ -39,8 +39,6 @@ public class SimpleAnnoSentenceReader {
         public boolean useSplitForms = true;
         /** CoNLL-X: whether to use the P(rojective)HEAD column for parents. */
         public boolean useCoNLLXPhead = false;
-        /** CoNLL-X: whether to use coarse POS tags. */
-        public boolean useCpostags = false;
     }
     
     public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009 };
@@ -149,7 +147,7 @@ public class SimpleAnnoSentenceReader {
 
         @Override
         public SimpleAnnoSentence convert(CoNLLXSentence x) {
-            return x.toSimpleAnnoSentence(prm.useCoNLLXPhead, prm.useCpostags);
+            return x.toSimpleAnnoSentence(prm.useCoNLLXPhead);
         }
         
     }

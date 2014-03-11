@@ -171,22 +171,19 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         }
     }
     
-    public SimpleAnnoSentence toSimpleAnnoSentence(boolean usePhead, boolean useCpostags) {
-        return toSimpleAnnoSentence(this, usePhead, useCpostags);
+    public SimpleAnnoSentence toSimpleAnnoSentence(boolean usePhead) {
+        return toSimpleAnnoSentence(this, usePhead);
     }
     
-    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLLXSentence cos, boolean usePhead, boolean useCpostags) {
+    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLLXSentence cos, boolean usePhead) {
         SimpleAnnoSentence s = new SimpleAnnoSentence();
         s.setSourceSent(cos);
         s.setWords(cos.getWords());
         s.setLemmas(cos.getLemmas());
         s.setFeats(cos.getFeats());
 
-        if (useCpostags) {
-            s.setPosTags(cos.getCposTags());
-        } else {
-            s.setPosTags(cos.getPosTags());
-        }
+        s.setCposTags(cos.getCposTags());
+        s.setPosTags(cos.getPosTags());
         
         if (usePhead) {
             s.setParents(cos.getParentsFromPhead());
@@ -210,7 +207,7 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
             tok.setId(i+1);
             tok.setForm(sent.getWord(i));            
             tok.setLemma(sent.getLemma(i));
-            tok.setCpostag(sent.getPosTag(i));
+            tok.setCpostag(sent.getCposTag(i));
             tok.setPostag(sent.getPosTag(i));
             tok.setFeats(sent.getFeats(i));
             tok.setHead(sent.getParent(i) + 1);

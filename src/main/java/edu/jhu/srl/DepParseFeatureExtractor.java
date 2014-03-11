@@ -1,13 +1,19 @@
 package edu.jhu.srl;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.featurize.FeaturizedSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
+import edu.jhu.featurize.TemplateFeatureExtractor;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
+import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -21,6 +27,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.DepParseFactorGraph.DepParseFactorTemplate;
+import edu.jhu.srl.DepParseFactorGraph.O2FeTypedFactor;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
 import edu.jhu.util.hash.MurmurHash3;
@@ -30,7 +37,9 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
     public static class DepParseFeatureExtractorPrm extends Prm {
         private static final long serialVersionUID = 1L;
         /** Feature options. */
-        public SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
+        public List<FeatTemplate> firstOrderTpls = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
+        public List<FeatTemplate> secondOrderTpls = TemplateSets.getFromResource(TemplateSets.carreras07Dep2FeatsResource);
+        public boolean biasOnly = false;
         /** The value of the mod for use in the feature hashing trick. If <= 0, feature-hashing will be disabled. */
         public int featureHashMod = -1;
         /** Whether to create human interpretable feature names when possible. */
@@ -41,15 +50,13 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
     
     private DepParseFeatureExtractorPrm prm;
     private VarConfig goldConfig;
-    private SentFeatureExtractor sentFeatExt;
     private Alphabet<Object> alphabet;
+    private TemplateFeatureExtractor ext;
     
     public DepParseFeatureExtractor(DepParseFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, Alphabet<Object> alphabet) {
         this.prm = prm;
-        // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
-        // SRL and dependency parsing use the same feature set, it's probably not worth the memory burden.
-        //this.sentFeatExt = new SentFeatureExtractorCache(new SentFeatureExtractor(prm.fePrm, sent, cs));
-        this.sentFeatExt = new SentFeatureExtractor(prm.fePrm, sent, cs);
+        FeaturizedSentence fSent = new FeaturizedSentence(sent, cs);
+        ext = new TemplateFeatureExtractor(fSent, cs);
         this.alphabet = alphabet;
     }
 
@@ -72,13 +79,16 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
         }
                 
         // Get the observation features.
-        ArrayList<String> obsFeats;
+        ArrayList<String> obsFeats = new ArrayList<String>();
         if (ft == DepParseFactorTemplate.LINK_UNARY) {
             // Look at the variables to determine the parent and child.
-            LinkVar var = (LinkVar) vars.iterator().next();
-            int parent = var.getParent();
-            int child = var.getChild();
-            obsFeats = sentFeatExt.createFeatureSet(parent, child);
+            LinkVar var = (LinkVar) vars.get(0);
+            int pidx = var.getParent();
+            int cidx = var.getChild();
+            ext.addFeatures(prm.firstOrderTpls, LocalObservations.newPidxCidx(pidx, cidx), obsFeats);
+        } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT || ft == DepParseFactorTemplate.LINK_SIBLING) {
+            O2FeTypedFactor f2 = (O2FeTypedFactor)f;
+            ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.i, f2.j, f2.k), obsFeats);
         } else {
             throw new RuntimeException("Unsupported template: " + ft);
         }

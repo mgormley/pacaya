@@ -33,6 +33,7 @@ public class SimpleAnnoSentence {
     private List<String> words;
     private List<String> lemmas;
     private List<String> posTags;
+    private List<String> cposTags;
     private List<String> clusters;
     private ArrayList<List<String>> feats;
     private List<String> deprels;
@@ -66,6 +67,7 @@ public class SimpleAnnoSentence {
         this.words = Lists.copyOf(other.words);
         this.lemmas = Lists.copyOf(other.lemmas);
         this.posTags = Lists.copyOf(other.posTags);
+        this.cposTags = Lists.copyOf(other.cposTags);
         this.clusters = Lists.copyOf(other.clusters);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
@@ -82,10 +84,15 @@ public class SimpleAnnoSentence {
     public String getWord(int i) {
         return words.get(i);
     }
-    
+
     /** Gets the i'th POS tag as a String. */
     public String getPosTag(int i) {
         return posTags.get(i);
+    }
+    
+    /** Gets the i'th Coarse POS tag as a String. */
+    public String getCposTag(int i) {
+        return cposTags.get(i);
     }
 
     /** Gets the i'th Distributional Similarity Cluster ID as a String. */
@@ -128,13 +135,19 @@ public class SimpleAnnoSentence {
     public List<Integer> getParents(Span span) {
         return getSpan(parents, span);
     }
-       
-
+    
     /**
      * Gets a list of POS tags corresponding to a token span.
      */
     public List<String> getPosTags(Span span) {
         return getSpan(posTags, span);
+    }
+    
+    /**
+     * Gets a list of coarse POS tags corresponding to a token span.
+     */
+    public List<String> getCposTags(Span span) {
+        return getSpan(cposTags, span);
     }
     
     /**
@@ -179,6 +192,15 @@ public class SimpleAnnoSentence {
      */
     public String getPosTagsStr(Span span) {
         return getSpanStr(posTags, span);
+    }
+
+    /**
+     * Gets a single string representing the coarse POS tags in a given token span.
+     * 
+     * @param span
+     */
+    public String getCposTagsStr(Span span) {
+        return getSpanStr(cposTags, span);
     }
     
     /**
@@ -315,6 +337,14 @@ public class SimpleAnnoSentence {
     public void setPosTags(List<String> posTags) {
         this.posTags = posTags;
     }
+    
+    public List<String> getCposTags() {
+        return cposTags;
+    }
+
+    public void setCposTags(List<String> cposTags) {
+        this.cposTags = cposTags;
+    }
 
     public List<String> getClusters() {
         return clusters;
@@ -386,6 +416,7 @@ public class SimpleAnnoSentence {
         case BROWN: this.clusters = null; break;
         case LEMMA: this.lemmas = null; break;
         case POS: this.posTags = null; break;
+        case CPOS: this.cposTags = null; break;
         case MORPHO: this.feats = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
@@ -401,6 +432,7 @@ public class SimpleAnnoSentence {
         case BROWN: return this.clusters != null;
         case LEMMA: return this.lemmas != null;
         case POS: return this.posTags != null;
+        case CPOS: return this.cposTags != null;
         case MORPHO: return this.feats != null;
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
@@ -414,6 +446,7 @@ public class SimpleAnnoSentence {
         Lists.intern(words);
         Lists.intern(lemmas);
         Lists.intern(posTags);
+        Lists.intern(cposTags);
         Lists.intern(clusters);
         if (feats != null) {
             for (int i=0; i<feats.size(); i++) {

@@ -202,8 +202,51 @@ public class JointNlpFactorGraphTest {
         }        
         assertEquals(2, numSenseFactors);
     }
+    
+    @Test
+    public void testFirstOrderParser() {
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.includeSrl = false;
+        prm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.dpPrm.unaryFactors = true;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
+        
+        assertEquals(9, sfg.getFactors().size());
+        assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
+    }
 
-    private static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
+    @Test
+    public void testSecondOrderParser() {
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.includeSrl = false;
+        prm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.dpPrm.unaryFactors = true;       
+        JointNlpFactorGraph sfg;
+        
+        // Grandparents only
+        prm.dpPrm.grandparentFactors = true;
+        prm.dpPrm.siblingFactors = false;
+        sfg = getSrlFg(prm);        
+        assertEquals(9 + 10, sfg.getFactors().size());
+        assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
+
+        // Siblings only 
+        prm.dpPrm.grandparentFactors = false;
+        prm.dpPrm.siblingFactors = true;
+        sfg = getSrlFg(prm);        
+        assertEquals(9 + 6, sfg.getFactors().size());
+        assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
+        
+        // Siblings and Grandparents 
+        prm.dpPrm.excludeNonprojectiveGrandparents = false;
+        prm.dpPrm.grandparentFactors = true;
+        prm.dpPrm.siblingFactors = true;
+        sfg = getSrlFg(prm);     
+        assertEquals(9 + 12 + 6, sfg.getFactors().size());
+        assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
+    }
+    
+    public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
         FeatureExtractor fe = new SimpleVCFeatureExtractor2(new Alphabet<Feature>()); 

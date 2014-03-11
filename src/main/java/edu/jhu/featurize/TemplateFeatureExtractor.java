@@ -54,15 +54,17 @@ public class TemplateFeatureExtractor {
         public static final int UNDEF_INT = Integer.MIN_VALUE;
         private int pidx = UNDEF_INT;
         private int cidx = UNDEF_INT;
+        private int midx = UNDEF_INT;
         private Rule rule = null;
         private int rStartIdx = UNDEF_INT;
         private int rMidIdx = UNDEF_INT;
         private int rEndIdx = UNDEF_INT;
         private LocalObservations() { }
-        public LocalObservations(int pidx, int cidx, Rule rule, int rStartIdx, int rMidIdx, int rEndIdx) {
+        public LocalObservations(int pidx, int cidx, int midx, Rule rule, int rStartIdx, int rMidIdx, int rEndIdx) {
             super();
             this.pidx = pidx;
             this.cidx = cidx;
+            this.midx = midx;
             this.rule = rule;
             this.rStartIdx = rStartIdx;
             this.rMidIdx = rMidIdx;
@@ -73,6 +75,9 @@ public class TemplateFeatureExtractor {
         }
         public int getCidx() {
             return getIfDefined(cidx, "child index");
+        }
+        public int getMidx() {
+            return getIfDefined(midx, "modifier index");
         }
         public Rule getRule() {
             return getIfDefined(rule, "rule");
@@ -103,6 +108,13 @@ public class TemplateFeatureExtractor {
             LocalObservations pi = new LocalObservations();
             pi.pidx = pidx;
             pi.cidx = cidx;
+            return pi;
+        }
+        public static LocalObservations newPidxCidxMidx(int pidx, int cidx, int midx) {
+            LocalObservations pi = new LocalObservations();
+            pi.pidx = pidx;
+            pi.cidx = cidx;
+            pi.midx = midx;
             return pi;
         }
         public static LocalObservations newPidx(int pidx) {
@@ -281,6 +293,7 @@ public class TemplateFeatureExtractor {
         switch (pos) {
         case PARENT: return local.getPidx();
         case CHILD: return local.getCidx();
+        case MODIFIER: return local.getMidx();
         case RULE_START: return local.getRStartIdx();
         case RULE_MID: return local.getRMidIdx();
         case RULE_END: return local.getREndIdx();
@@ -645,6 +658,8 @@ public class TemplateFeatureExtractor {
             return tok.getLemma();
         case POS:
             return tok.getPos();
+        case CPOS:
+            return tok.getCpos();
         case BC0:
             String bc = tok.getCluster();
             return bc.substring(0, Math.min(bc.length(), 5));
