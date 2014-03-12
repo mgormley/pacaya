@@ -826,19 +826,23 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             # TODO: don't include features if edge is NOT present.
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            l2var_map = {"bg" : 10000, "es" : 1000}
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
             for lang_short in ["bg", "es"]:
                 for parser in [second_order, second_grand, second_sib, first_order]:
                     pl = p.langs[lang_short]
                     data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
                                         test=pl.cx_test, testType="CONLL_X", 
-                                        language=lang_short, trainUseCoNLLXPhead=True)
+                                        language=lang_short, trainUseCoNLLXPhead=True,
+                                        l2variance=l2var_map[lang_short])
                     if lang_short == "en":
                         data = data + SrlExpParams(dev=pl.cx_dev)
                     else:
                         data = data + SrlExpParams(propTrainAsDev=0) #TODO: set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    if parser != first_order:
+                        exp += SrlExpParams(work_mem_megs=20*1000)
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
