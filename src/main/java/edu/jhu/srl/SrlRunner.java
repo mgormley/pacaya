@@ -17,6 +17,7 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
@@ -61,6 +62,7 @@ import edu.jhu.optimize.SGD;
 import edu.jhu.optimize.SGD.SGDPrm;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
 import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
@@ -99,12 +101,14 @@ public class SrlRunner {
     public static int threads = 1;
     
     // Options for model IO
-    @Opt(hasArg = true, description = "File from which we should read a serialized model.")
+    @Opt(hasArg = true, description = "File from which to read a serialized model.")
     public static File modelIn = null;
-    @Opt(hasArg = true, description = "File to which we should serialize the model.")
+    @Opt(hasArg = true, description = "File to which to serialize the model.")
     public static File modelOut = null;
-    @Opt(hasArg = true, description = "File to which we should print a human readable version of the model.")
+    @Opt(hasArg = true, description = "File to which to print a human readable version of the model.")
     public static File printModel = null;
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
 
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
@@ -281,6 +285,7 @@ public class SrlRunner {
 
         if (corpus.hasTrain()) {
             String name = "train";
+            addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
@@ -333,6 +338,7 @@ public class SrlRunner {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
+            addPruneMask(corpus.getDevInput(), corpus.getDevGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
             // Decode and evaluate the dev data.
@@ -346,6 +352,7 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
+            addPruneMask(corpus.getTestInput(), corpus.getTestGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
             // Decode and evaluate the test data.
@@ -356,6 +363,67 @@ public class SrlRunner {
         }
     }
 
+    private void addPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents, String name) {
+        if (pruneModel != null) {
+            // Read a model from a file.
+            log.info("Reading pruning model from file: " + pruneModel);
+            JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
+            ObsFeatureConjoiner ofc = model.getOfc();
+            CorpusStatistics cs = model.getCs();
+            JointNlpFeatureExtractorPrm fePrm = model.getFePrm();            
+
+            // Get configuration for first-order pruning model.
+            JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);   
+            prm.fgPrm.includeSrl = false;
+            prm.fgPrm.dpPrm = new DepParseFactorGraphPrm();
+            prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
+            prm.fgPrm.dpPrm.grandparentFactors = false;
+            prm.fgPrm.dpPrm.siblingFactors = false;
+            prm.fgPrm.dpPrm.unaryFactors = true;
+            prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+            
+            // Get data.            
+            FgExampleList data =  getData(ofc, cs, name, goldSents, fePrm, prm);
+            
+            // Decode and create edge pruning mask.
+            log.info("Running the pruning decoder on " + name + " data.");
+            int numEdgesTot = 0;
+            int numEdgesKept = 0;
+            Timer timer = new Timer();
+            timer.start();
+            // Add the new predictions to the input sentences.
+            for (int i = 0; i < inputSents.size(); i++) {
+                // TODO: We should construct the examples from the input sentences.
+                FgExample ex = data.get(i);
+                SimpleAnnoSentence predSent = inputSents.get(i);
+                JointNlpDecoder decoder = getDecoder();
+                decoder.decode(model, ex);
+                
+                // Update the dependency tree on the sentence.
+                DepEdgeMask mask = decoder.getDepEdgeMask();
+                if (mask != null) {
+                    predSent.setDepEdgeMask(mask);
+                }
+                numEdgesKept += mask.getCount();
+                int n = predSent.getWords().size();
+                numEdgesTot += n*n;                
+            }
+            timer.stop();
+            log.info(String.format("Pruning decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
+            int numEdgesPruned = numEdgesTot - numEdgesKept;
+            log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot, (double) numEdgesPruned / numEdgesTot));
+            copyPruneMask(inputSents, goldSents);
+        }
+    }
+
+    private void copyPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents) {
+        for (int i=0; i<inputSents.size(); i++) {
+            SimpleAnnoSentence input = inputSents.get(i);
+            SimpleAnnoSentence gold = goldSents.get(i);
+            gold.setDepEdgeMask(input.getDepEdgeMask());
+        }        
+    }
+    
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */
@@ -402,6 +470,12 @@ public class SrlRunner {
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
             SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) {
+        JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
+        return getData(ofc, cs, name, sents, fePrm, prm);
+    }
+
+    private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
@@ -417,7 +491,6 @@ public class SrlRunner {
         }
         
         log.info("Building factor graphs and extracting features.");
-        JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         
@@ -497,7 +570,8 @@ public class SrlRunner {
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
         prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
-        
+        prm.fgPrm.dpPrm.pruneEdges = (pruneModel != null); 
+                
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
         prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
@@ -664,7 +738,7 @@ public class SrlRunner {
         return bpPrm;
     }
 
-    private JointNlpDecoder getDecoder() {
+    private static JointNlpDecoder getDecoder() {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.ACCURACY;

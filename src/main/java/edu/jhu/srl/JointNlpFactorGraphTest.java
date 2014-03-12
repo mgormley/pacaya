@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -246,6 +247,26 @@ public class JointNlpFactorGraphTest {
         assertTrue(!sfg.isUndirectedTree(sfg.getFactorNode(0)));
     }
     
+    @Test
+    public void testSecondOrderParserPruned() {
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.includeSrl = false;
+        prm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.dpPrm.unaryFactors = true;       
+        JointNlpFactorGraph sfg;
+        
+        // Siblings and Grandparents 
+        prm.dpPrm.excludeNonprojectiveGrandparents = false;
+        prm.dpPrm.grandparentFactors = true;
+        prm.dpPrm.siblingFactors = true;
+        prm.dpPrm.pruneEdges = true;
+        sfg = getSrlFg(prm);     
+        assertEquals(11, sfg.getFactors().size());
+        System.out.println(sfg.getFactors());
+        // This pruned version is a tree.
+        assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
+    }
+    
     public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
         // --- These won't even be used in these tests ---
         FactorTemplateList fts = new FactorTemplateList();
@@ -262,8 +283,13 @@ public class JointNlpFactorGraphTest {
             
         };
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
-        List<String> words = Lists.getList("w1", "w2", "w3");
-        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
+        List<String> words = Lists.getList("w1", "w2", "w3");        
+        // Prune all but a left branching tree.
+        DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), false);
+        for (int c=0; c<words.size(); c++) {
+            depEdgeMask.setIsKept(c-1, c, true);
+        }
+        return new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), psMap, obsFe, ofc, fe);
     }
     
 }

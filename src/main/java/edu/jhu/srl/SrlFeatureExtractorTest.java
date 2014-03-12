@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -221,7 +222,8 @@ public class SrlFeatureExtractorTest {
         // ---        
         HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
         List<String> words = Lists.getList("w1", "w2", "w3");
-        return new JointNlpFactorGraph(prm, words, words, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc, fe);
+        DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), true);
+        return new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc, fe);
     }
 
 }

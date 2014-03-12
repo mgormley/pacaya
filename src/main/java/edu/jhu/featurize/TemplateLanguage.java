@@ -117,7 +117,7 @@ public class TemplateLanguage {
      * be present in order to utilize each structure.
      */
     public enum AT {
-        WORD, LEMMA, POS, CPOS, BROWN, MORPHO, DEP_TREE, DEPREL, SRL, BINARY_TREE;
+        WORD, LEMMA, POS, CPOS, BROWN, MORPHO, DEP_TREE, DEPREL, DEP_EDGE_MASK, SRL, BINARY_TREE;
     }
         
     public static Description getDescByName(String name) {

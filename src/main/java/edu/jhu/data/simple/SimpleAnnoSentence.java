@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.Span;
@@ -12,7 +13,6 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.parse.cky.data.BinaryTree;
-import edu.jhu.parse.cky.data.NaryTree;
 import edu.jhu.prim.arrays.IntArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
@@ -44,6 +44,7 @@ public class SimpleAnnoSentence {
      * with a head).
      */
     private int[] parents;
+    private DepEdgeMask depEdgeMask;
     private SrlGraph srlGraph;
     /** Constituency parse. */    
     private BinaryTree binaryTree;
@@ -71,6 +72,7 @@ public class SimpleAnnoSentence {
         this.clusters = Lists.copyOf(other.clusters);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
+        this.depEdgeMask = depEdgeMask == null ? null : new DepEdgeMask(depEdgeMask);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
         this.feats = Lists.copyOf(other.feats);
@@ -110,6 +112,11 @@ public class SimpleAnnoSentence {
         return parents[i];
     }
 
+    /** Returns whether the corresponding dependency arc should be pruned. */
+    public boolean isDepEdgePruned(int parent, int child) {
+        return depEdgeMask.isPruned(parent, child);
+    }
+    
     /** Gets the features (e.g. morphological features) of the i'th word. */
     public List<String> getFeats(int i) {
         return feats.get(i);
@@ -362,6 +369,14 @@ public class SimpleAnnoSentence {
         this.parents = parents;
     }
 
+    public DepEdgeMask getDepEdgeMask() {
+        return depEdgeMask;
+    }
+
+    public void setDepEdgeMask(DepEdgeMask depEdgeMask) {
+        this.depEdgeMask = depEdgeMask;
+    }
+
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
@@ -420,6 +435,7 @@ public class SimpleAnnoSentence {
         case MORPHO: this.feats = null; break;
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
+        case DEP_EDGE_MASK: this.depEdgeMask = null; break;
         case SRL: this.srlGraph = null; break;
         case BINARY_TREE: this.binaryTree = null; break;
         default: throw new RuntimeException("not implemented for " + at);
@@ -436,6 +452,7 @@ public class SimpleAnnoSentence {
         case MORPHO: return this.feats != null;
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
+        case DEP_EDGE_MASK: return this.depEdgeMask != null;
         case SRL: return this.srlGraph != null;
         case BINARY_TREE: return this.binaryTree != null;
         default: throw new RuntimeException("not implemented for " + at);

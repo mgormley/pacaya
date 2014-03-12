@@ -1,6 +1,7 @@
 package edu.jhu.srl;
 
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.decode.MbrDecoder;
@@ -8,12 +9,14 @@ import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.prim.matrix.BitSetBinaryMatrix;
 
 // TODO: This should modify a {@link SimpleAnnoSentence} rather than cache the parents and srlGraph explicitly.
 public class JointNlpDecoder {
 
     public static class JointNlpDecoderPrm {
         public MbrDecoderPrm mbrPrm = null;
+        public double pruneMargProp = 0.0001;
     }
 
     private JointNlpDecoderPrm prm;    
@@ -23,6 +26,7 @@ public class JointNlpDecoder {
     private SrlGraph srlGraph;
     // Cached MBR variable assignment.
     private VarConfig mbrVarConfig;
+    private DepEdgeMask depEdgeMask;
 
     public JointNlpDecoder(JointNlpDecoderPrm prm) {
         this.prm = prm;
@@ -56,6 +60,7 @@ public class JointNlpDecoder {
                 }
             }
         }
+        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp);
     }
 
     public int[] getParents() {
@@ -68,5 +73,9 @@ public class JointNlpDecoder {
     
     public VarConfig getMbrVarConfig() {
         return mbrVarConfig;
+    }
+
+    public DepEdgeMask getDepEdgeMask() {
+        return depEdgeMask;
     }
 }

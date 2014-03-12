@@ -25,6 +25,10 @@ echo "Syncing results..."
     --exclude="*" 
 echo ""
 
+echo "Syncing models..."
+"${RSYNC[@]}" $REMOTE_EXP/models/ $LOCAL_COPY/models
+echo ""
+
 echo "Syncing grammar induction output..."
 "${RSYNC[@]}" $REMOTE_EXP/vem-conll_005/ $LOCAL_COPY/vem-conll_005 \
     --include="/*/" \

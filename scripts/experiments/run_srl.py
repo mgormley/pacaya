@@ -405,6 +405,7 @@ class ParamDefinitions():
         g.defaults.set_incl_name("brownClusters", False)        
         g.defaults.set_incl_name('removeAts', False)
         g.defaults.set_incl_name('predAts', False)
+        g.defaults.set_incl_name('pruneModel', False)
 
     def _define_groups_features(self, g, p):
         g.feat_bias_only         = self._get_named_feature_set(False, False, False, False, False, 'bias_only')
@@ -827,6 +828,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # TODO: don't include features if edge is NOT present.
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
+            models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
+                                               os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
             for lang_short in ["bg", "es"]:
                 for parser in [second_order, second_grand, second_sib, first_order]:
@@ -839,6 +842,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         data = data + SrlExpParams(dev=pl.cx_dev)
                     else:
                         data = data + SrlExpParams(propTrainAsDev=0) #TODO: set to zero for final experiments.
+                    if parser != first_order:
+                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
+                        parser += SrlExpParams(pruneModel=pruneModel)
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     if parser != first_order:

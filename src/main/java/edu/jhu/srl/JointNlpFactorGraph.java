@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -60,13 +61,13 @@ public class JointNlpFactorGraph extends FactorGraph {
     private SrlFactorGraph srl;
 
     public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
-        this(prm, sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
+        this(prm, sent.getWords(), sent.getLemmas(), sent.getDepEdgeMask(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
     }
     
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, Set<Integer> knownPreds,
-            List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, DepEdgeMask depEdgeMask,
+            Set<Integer> knownPreds, List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
         this(prm);
-        build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fe, this);
+        build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fe, this, depEdgeMask);
     }
     
     public JointNlpFactorGraph(JointFactorGraphPrm prm) {
@@ -79,20 +80,21 @@ public class JointNlpFactorGraph extends FactorGraph {
      */
     public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
-        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg);
+        build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg, sent.getDepEdgeMask());
     }
 
     /**
      * Adds factors and variables to the given factor graph.
      * @param fe TODO
+     * @param depEdgeMask TODO
      */
     public void build(List<String> words, List<String> lemmas, Set<Integer> knownPreds, List<String> roleStateNames,
-            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
+            Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg, DepEdgeMask depEdgeMask) {
         this.n = words.size();
 
         if (prm.includeDp) {
             dp = new DepParseFactorGraph(prm.dpPrm);
-            dp.build(words, fe, fg);
+            dp.build(words, depEdgeMask, fe, fg);
         }
         if (prm.includeSrl) {
             srl = new SrlFactorGraph(prm.srlPrm); 

@@ -6,8 +6,10 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
@@ -55,6 +57,9 @@ public class DepParseFactorGraph implements Serializable {
         /** Whether to exclude non-projective grandparent factors. */
         public boolean excludeNonprojectiveGrandparents = true;
         
+        /** Whether to prune edges not in the pruning mask. */
+        public boolean pruneEdges = false;
+        
     }
     
     public enum DepParseFactorTemplate {
@@ -91,13 +96,14 @@ public class DepParseFactorGraph implements Serializable {
      */
     public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
             FactorGraph fg) {
-        build(sent.getWords(), fe, fg);
+        build(sent.getWords(), sent.getDepEdgeMask(), fe, fg);
     }
     
     /**
      * Adds factors and variables to the given factor graph.
+     * @param depEdgeMask TODO
      */
-    public void build(List<String> words, FeatureExtractor fe, FactorGraph fg) {
+    public void build(List<String> words, DepEdgeMask depEdgeMask, FeatureExtractor fe, FactorGraph fg) {
         this.n = words.size();
         
         // Create the Link variables.
@@ -125,6 +131,11 @@ public class DepParseFactorGraph implements Serializable {
             }
         }
         
+        if (!prm.pruneEdges) {
+            // Keep all edges
+            depEdgeMask = new DepEdgeMask(words.size(), true);
+        }
+        
         // Don't include factors on observed variables.
         if (prm.linkVarType != VarType.OBSERVED) { 
             // Add the factors.
@@ -134,25 +145,34 @@ public class DepParseFactorGraph implements Serializable {
                     if (i == j) { continue; }
                     LinkVar ijVar = getLinkVar(i, j);
                     if (ijVar != null) {
-                        // Add unary factors on root / child Links
-                        if (prm.unaryFactors) {
-                            fg.addFactor(new FeTypedFactor(new VarSet(ijVar), DepParseFactorTemplate.LINK_UNARY, fe));
-                        }
-                        for (int k = 0; k < n; k++) {
-                            if (i == k || j == k) { continue; }
-                            // Add grandparent factors.
-                            boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
-                            if (!prm.excludeNonprojectiveGrandparents || !isNonprojectiveGrandparent) {
-                                LinkVar jkVar = getLinkVar(j, k);
-                                if (prm.grandparentFactors && jkVar != null) {
-                                    fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, i, j, k));
-                                }
+                        if (depEdgeMask.isPruned(i, j)) {
+                            ExplicitFactor f = new ExplicitFactor(new VarSet(ijVar));
+                            f.setValue(LinkVar.FALSE, Double.NEGATIVE_INFINITY);
+                            f.setValue(LinkVar.TRUE, 0.0);
+                            fg.addFactor(f);
+                            // TODO: Check if this is the logDomain!!!
+                            assert SrlRunner.logDomain == true;
+                        } else {
+                            // Add unary factors on root / child Links
+                            if (prm.unaryFactors) {
+                                fg.addFactor(new FeTypedFactor(new VarSet(ijVar), DepParseFactorTemplate.LINK_UNARY, fe));
                             }
-                            if (j < k) {
-                                // Add sibling factors.
-                                LinkVar ikVar = getLinkVar(i, k);
-                                if (prm.siblingFactors && ikVar != null) {
-                                    fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
+                            for (int k = 0; k < n; k++) {
+                                if (i == k || j == k) { continue; }
+                                // Add grandparent factors.
+                                boolean isNonprojectiveGrandparent = (i < j && k < i) || (j < i && i < k);
+                                if (!prm.excludeNonprojectiveGrandparents || !isNonprojectiveGrandparent) {
+                                    LinkVar jkVar = getLinkVar(j, k);
+                                    if (prm.grandparentFactors && jkVar != null && !depEdgeMask.isPruned(j, k)) {
+                                        fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, jkVar), DepParseFactorTemplate.LINK_GRANDPARENT, fe, i, j, k));
+                                    }
+                                }
+                                if (j < k) {
+                                    // Add sibling factors.
+                                    LinkVar ikVar = getLinkVar(i, k);
+                                    if (prm.siblingFactors && ikVar != null && !depEdgeMask.isPruned(i, k)) {
+                                        fg.addFactor(new O2FeTypedFactor(new VarSet(ijVar, ikVar), DepParseFactorTemplate.LINK_SIBLING, fe, i, j, k));
+                                    }
                                 }
                             }
                         }
