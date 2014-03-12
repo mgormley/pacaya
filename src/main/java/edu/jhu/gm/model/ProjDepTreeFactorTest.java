@@ -107,7 +107,7 @@ public class ProjDepTreeFactorTest {
         assertEquals(1, getNumberOfTreesByBruteForce(1, logDomain), 1e-13);
         assertEquals(2, getNumberOfTreesByBruteForce(2, logDomain), 1e-13);
         assertEquals(7, getNumberOfTreesByBruteForce(3, logDomain), 1e-13);
-        assertEquals(30, getNumberOfTreesByBruteForce(4, logDomain), 1e-13);
+        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, logDomain), 1e-13);
         
         assertEquals(1, getNumberOfTreesByBp(1, logDomain), 1e-13);
         assertEquals(2, getNumberOfTreesByBp(2, logDomain), 1e-13);
@@ -115,6 +115,13 @@ public class ProjDepTreeFactorTest {
         assertEquals(30, getNumberOfTreesByBp(4, logDomain), 1e-13); // TODO: is this correct
         assertEquals(143, getNumberOfTreesByBp(5, logDomain), 1e-13); 
         assertEquals(728, getNumberOfTreesByBp(6, logDomain), 1e-13);
+        
+        assertEquals(1, getNumberOfTreesByLoopyBp(1, logDomain), 1e-13);
+        assertEquals(2, getNumberOfTreesByLoopyBp(2, logDomain), 1e-13);
+        assertEquals(7, getNumberOfTreesByLoopyBp(3, logDomain), 1e-13);
+        assertEquals(30, getNumberOfTreesByLoopyBp(4, logDomain), 1e-13); 
+        assertEquals(143, getNumberOfTreesByLoopyBp(5, logDomain), 1e-10); 
+        assertEquals(728, getNumberOfTreesByLoopyBp(6, logDomain), 1e-10);
     }
 
     private double getNumberOfTreesByBruteForce(int n, boolean logDomain) {
@@ -153,6 +160,30 @@ public class ProjDepTreeFactorTest {
         }
     }
     
+
+    private double getNumberOfTreesByLoopyBp(int n, boolean logDomain) {
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+        FactorGraph fg = new FactorGraph();
+        fg.addFactor(treeFac);
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.normalizeMessages = true;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        if (logDomain) {
+            return Math.exp(bp.getPartition());
+        } else {
+            return bp.getPartition();
+        }
+    }
+    
+    // TODO: This and the next test are failing due to to an incorrect Bethe free energy computation.
+    // It seems as though some edges have weight zero.
     @Test
     public void testResultingMarginalsProb() {
         boolean logDomain = false;        
@@ -208,7 +239,7 @@ public class ProjDepTreeFactorTest {
         prm.logDomain = logDomain;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        prm.normalizeMessages = false;
+        prm.normalizeMessages = true;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         bp.clear();

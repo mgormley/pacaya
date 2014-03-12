@@ -31,4 +31,13 @@ public interface GlobalFactor extends Factor {
      */
     void reset();
 
+    /**
+     * Gets the expected log beliefs for this factor. We include factor's
+     * potential function in the expectation since for most constraint factors
+     * \chi(x_a) \in \{0,1\}.
+     * 
+     * E[ln(b(x_a) / \chi(x_a)) ] = \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
+     */
+    double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain);
+
 }

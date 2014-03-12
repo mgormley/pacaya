@@ -20,6 +20,34 @@ import edu.jhu.util.semiring.Semirings;
 public class HyperDepParser {
 
     /**
+     * First-order expectation semiring potential function used to compute
+     * entropy. See section 6.1 of Li & Eisner (2009).
+     * 
+     * @author mgormley
+     */
+    public static final class EntropyHyperpotentialFoe implements HyperpotentialFoe {
+        private final Hyperpotential w;
+
+        private EntropyHyperpotentialFoe(Hyperpotential w) {
+            this.w = w;
+        }
+
+        @Override
+        public double getScore(Hyperedge e, Semiring s) {
+            return w.getScore(e, s);
+        }
+
+        @Override
+        public double getScoreFoe(Hyperedge e, SemiringExt s) {
+            double p_e = w.getScore(e, s);
+            if (p_e == s.zero()) {
+                return p_e;
+            }
+            return s.times(p_e, s.fromReal(FastMath.log(s.toReal(p_e))));
+        }
+    }
+
+    /**
      * Runs the inside-outside algorithm for dependency parsing.
      * 
      * @param fracRoot Input: The edge weights from the wall to each child.
@@ -75,30 +103,20 @@ public class HyperDepParser {
      * @param fracChild Input: The edge weights from parent to child.
      * @return The parse chart.
      */
-    public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmFirstOrderExpect(double[] fracRoot, double[][] fracChild) {
-        // Currently we only support this semiring since DepParseChart assumes log probs.
-        //LogSemiring semiring = new LogSemiring();
-//        final LogPosNegSemiring semiring = new LogPosNegSemiring();
-        final SemiringExt semiring = new LogPosNegSemiring(); 
+    public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot, double[][] fracChild) {
+        final SemiringExt semiring = new LogPosNegSemiring();         
+        return insideAlgorithmEntropyFoe(fracRoot, fracChild, semiring);
+    }
+
+    public static Pair<FirstOrderDepParseHypergraph, Scores> insideAlgorithmEntropyFoe(double[] fracRoot,
+            double[][] fracChild, final SemiringExt semiring) {
         Semirings.fromLogProb(fracRoot, semiring);
         Semirings.fromLogProb(fracChild, semiring);
         
         FirstOrderDepParseHypergraph graph = new FirstOrderDepParseHypergraph(fracRoot, fracChild, semiring);
         Scores scores = new Scores();
         final Hyperpotential w = graph.getPotentials();
-        HyperpotentialFoe wFoe = new HyperpotentialFoe() {
-            
-            @Override
-            public double getScore(Hyperedge e, Semiring s) {
-                return w.getScore(e, s);
-            }
-            
-            @Override
-            public double getScoreFoe(Hyperedge e, Semiring s) {
-                double p_e = w.getScore(e, s);
-                return s.times(p_e, semiring.fromReal(FastMath.log(semiring.toReal(p_e))));
-            }
-        };
+        HyperpotentialFoe wFoe = new EntropyHyperpotentialFoe(w);
         Hyperalgo.insideAlgorithmFirstOrderExpect(graph, wFoe, semiring, scores);
 
         return new Pair<FirstOrderDepParseHypergraph, Scores>(graph, scores);

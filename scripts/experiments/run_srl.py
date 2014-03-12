@@ -820,25 +820,24 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, featureHashMod=2000000,
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
-            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
-            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
             # TODO: don't include features if edge is NOT present.
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
-            for lang_short in p.cx_langs_with_phead:
-                pl = p.langs[lang_short]
-                # Define a first-order parser
-                parser = first_order            
-                data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
-                                    test=pl.cx_test, testType="CONLL_X", 
-                                    language=lang_short, trainUseCoNLLXPhead=True)
-                if lang_short == "en":
-                    data = data + SrlExpParams(dev=pl.cx_dev)
-                else:
-                    data = data + SrlExpParams(propTrainAsDev=0.10)
-                exp = g.defaults + data + parser
-                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                exps.append(exp)
+            for lang_short in ["bg", "es"]:
+                for parser in [second_order, first_order]:
+                    pl = p.langs[lang_short]
+                    data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                        test=pl.cx_test, testType="CONLL_X", 
+                                        language=lang_short, trainUseCoNLLXPhead=True)
+                    if lang_short == "en":
+                        data = data + SrlExpParams(dev=pl.cx_dev)
+                    else:
+                        data = data + SrlExpParams(propTrainAsDev=0.10)
+                    exp = g.defaults + data + parser
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "dp-conllx-tune":
@@ -848,8 +847,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(seed=123456789) # NOTE THE FIXED SEED
             g.defaults.update(includeSrl=False, featureSelection=False, 
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01)
-            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL")
-            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
             # TODO: don't include features if edge is NOT present.
             # Note: "ar" and "ja" have the PHEAD column, but it includes multiple roots per sentence.
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
@@ -890,7 +889,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
             # TODO: don't include features if edge is NOT present.
             lang_short = "bg"
-            for parser in [first_order, second_order]:
+            for parser in [second_order, first_order]:
                 for trainMaxNumSentences in [10]: #[10, 50, 100, 500, 1000]:
                     pl = p.langs[lang_short]
                     data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",

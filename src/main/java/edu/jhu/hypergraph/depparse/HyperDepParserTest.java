@@ -12,6 +12,7 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
 import edu.jhu.util.semiring.LogPosNegSemiring;
+import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.SemiringExt;
 
@@ -147,31 +148,33 @@ public class HyperDepParserTest {
 
     @Test
     public void testInsideFirstOrderExpect1() {
+        helpTestInsideFirstOrderExpect(new RealSemiring());
+        helpTestInsideFirstOrderExpect(new LogPosNegSemiring());
+        helpTestInsideFirstOrderExpect(new LogSemiring());
+    }
+
+    private void helpTestInsideFirstOrderExpect(SemiringExt s) {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
         
         DoubleArrays.log(root);
         DoubleArrays.log(child);
         
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmFirstOrderExpect(root,  child);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root,  child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         // Fill with dummy outside scores.
         scores.alpha = new double[scores.beta.length];
         DepIoChart chart = HyperDepParser.getDepIoChart(graph, scores);
-        SemiringExt s = new LogPosNegSemiring();
         
-        //        // Check inside scores.
-        //        assertEquals(7, s.toReal(chart.getLogInsideScore(1, 2)), 1e-13);
-        //        assertEquals(9, s.toReal(chart.getLogInsideScore(2, 1)), 1e-13);
-        //        assertEquals(45+20, s.toReal(chart.getLogInsideScore(0, 2)), 1e-13);
-        //        assertEquals(45+28+20, s.toReal(chart.getLogInsideScore(-1, 0)), 1e-10);
-        //        assertEquals(84, s.toReal(chart.getLogInsideScore(-1, 1)), 1e-13);
-        //        assertEquals(8*9+8*4, s.toReal(chart.getLogInsideScore(2, 0)), 1e-10);
-        //        assertEquals(162+216+96, s.toReal(chart.getLogInsideScore(-1, 2)), 1e-3);
-        //        
-        //        // Check partition function.
-        //        assertEquals(45+28+20+84+162+216+96, s.toReal(chart.getLogPartitionFunction()), 1e-3);
+        // Check inside scores. (These LogInsideScore checks are mostly unnecessary.)
+        assertEquals(7, s.toReal(chart.getLogInsideScore(1, 2)), 1e-13);
+        assertEquals(9, s.toReal(chart.getLogInsideScore(2, 1)), 1e-13);
+        assertEquals(45+20, s.toReal(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(45+28+20, s.toReal(chart.getLogInsideScore(-1, 0)), 1e-10);
+        assertEquals(84, s.toReal(chart.getLogInsideScore(-1, 1)), 1e-13);
+        assertEquals(8*9+8*4, s.toReal(chart.getLogInsideScore(2, 0)), 1e-10);
+        assertEquals(162+216+96, s.toReal(chart.getLogInsideScore(-1, 2)), 1e-3);
         
         // Check partition function.
         int rt = graph.getRoot().getId();

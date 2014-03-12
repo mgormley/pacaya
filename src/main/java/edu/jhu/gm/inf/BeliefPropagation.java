@@ -499,7 +499,7 @@ public class BeliefPropagation implements FgInferencer {
         // G_{Bethe} = \sum_a \sum_{x_a} - b(x_a) ln \chi(x_a)
         //              + \sum_a \sum_{x_a} b(x_a) ln b(x_a)
         //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
-        //           = \sum_a \sum_{x_a} - b(x_a) ln (\chi(x_a) / b(x_a))
+        //           = \sum_a \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
         //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
         //
         //     where n_i is the number of neighbors of the variable x_i,
@@ -528,10 +528,7 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else {
-                // TODO: we need to support GlobalFactors here. Until that is done, this computation will be incorrect for 
-                // factor graphs with global factors.
-                // bethe += ((GlobalFactor) f).getExpectedLogBelief();
-                ignoredClasses.add(f.getClass());
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getNode(a), msgs, prm.logDomain);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

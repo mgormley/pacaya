@@ -12,15 +12,21 @@ import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.hypergraph.Hyperalgo.Scores;
+import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
+import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.semiring.LogPosNegSemiring;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.Semiring;
+import edu.jhu.util.semiring.SemiringExt;
 
 /**
  * Global factor which constrains O(n^2) variables to form a projective
@@ -145,46 +151,12 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         assert (this == parent.getFactor());        
         double[] root = new double[n];
         double[][] child = new double[n][n];
-
-        // Compute the odds ratios of the messages for each edge in the tree.
-        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
-        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
-        for (FgEdge inEdge : parent.getInEdges()) {
-            LinkVar link = (LinkVar) inEdge.getVar();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
-            double oddsRatio;
-            if (logDomain) {
-                oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
-            } else {
-                assert inMsg.getValue(LinkVar.TRUE) >= 0 : inMsg.getValue(LinkVar.TRUE);
-                assert inMsg.getValue(LinkVar.FALSE) >= 0 : inMsg.getValue(LinkVar.FALSE);
-                // We still need the log of this ratio since the parsing algorithm works in the log domain.
-                oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }
-            
-            if (link.getParent() == -1) {
-                root[link.getChild()] = oddsRatio;
-            } else {
-                child[link.getParent()][link.getChild()] = oddsRatio;
-            }
-        }
+        getLogOddsRatios(parent, msgs, logDomain, root, child);
+        double pi = getProductOfAllFalseMessages(parent, msgs, logDomain);
 
         // Compute the dependency tree marginals, summing over all projective
         // spanning trees via the inside-outside algorithm.
         DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
-
-        // Precompute the product of all the "false" messages.
-        // pi = \prod_i \mu_i(0)
-        // Here we store log pi.
-        double pi = 0.0;
-        for (FgEdge inEdge : parent.getInEdges()) {
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
-            if (logDomain) {
-                pi += inMsg.getValue(LinkVar.FALSE);
-            } else {
-                pi += FastMath.log(inMsg.getValue(LinkVar.FALSE));
-            }
-        }
 
         // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
         // Here we store the log partition.
@@ -250,6 +222,76 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             assert !msgs[outEdge.getId()].newMessage.containsBadValues(logDomain) : "message = " + msgs[outEdge.getId()].newMessage;
         }
                 
+    }
+
+    /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
+    private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[] root, double[][] child) {
+        // Compute the odds ratios of the messages for each edge in the tree.
+        DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
+        DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
+        for (FgEdge inEdge : parent.getInEdges()) {
+            LinkVar link = (LinkVar) inEdge.getVar();
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            double oddsRatio;
+            if (logDomain) {
+                oddsRatio = inMsg.getValue(LinkVar.TRUE) - inMsg.getValue(LinkVar.FALSE);
+            } else {
+                assert inMsg.getValue(LinkVar.TRUE) >= 0 : inMsg.getValue(LinkVar.TRUE);
+                assert inMsg.getValue(LinkVar.FALSE) >= 0 : inMsg.getValue(LinkVar.FALSE);
+                // We still need the log of this ratio since the parsing algorithm works in the log domain.
+                oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
+            }
+            
+            if (link.getParent() == -1) {
+                root[link.getChild()] = oddsRatio;
+            } else {
+                child[link.getParent()][link.getChild()] = oddsRatio;
+            }
+        }
+    }
+
+    /** Computes pi = \prod_i \mu_i(0). */
+    private double getProductOfAllFalseMessages(FgNode parent, Messages[] msgs, boolean logDomain) {
+        // Precompute the product of all the "false" messages.
+        // pi = \prod_i \mu_i(0)
+        // Here we store log pi.
+        double pi = 0.0;
+        for (FgEdge inEdge : parent.getInEdges()) {
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            if (logDomain) {
+                pi += inMsg.getValue(LinkVar.FALSE);
+            } else {
+                pi += FastMath.log(inMsg.getValue(LinkVar.FALSE));
+            }
+        }
+        return pi;
+    }    
+
+    @Override
+    public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
+        double[] root = new double[n];
+        double[][] child = new double[n][n];
+        getLogOddsRatios(parent, msgs, logDomain, root, child);
+        double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
+
+        SemiringExt s = new LogPosNegSemiring();
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child);
+        FirstOrderDepParseHypergraph graph = pair.get1();
+        Scores scores = pair.get2();
+        
+        int rt = graph.getRoot().getId();
+        double logZ = scores.beta[rt];     
+        double logRbar = scores.betaFoe[rt];
+        double logPartition = logPi + logZ;
+        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
+        // TODO: Keep these for debugging.
+        // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", logZ, logRbar, logPi, expectation));
+        // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", s.toReal(logZ), s.toReal(logRbar), FastMath.exp(logPi), expectation));
+        if (Double.isNaN(expectation)) {
+            log.warn("Expected log belief was NaN. Returning zero instead.");
+            return 0.0;
+        }
+        return expectation;
     }
 
     public LinkVar[] getRootVars() {
