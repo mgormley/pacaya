@@ -847,8 +847,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         parser += SrlExpParams(pruneModel=pruneModel)
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    if parser != first_order:
-                        exp += SrlExpParams(work_mem_megs=20*1000)
+                    #TODO: Maybe remove? if parser != first_order: exp += SrlExpParams(work_mem_megs=20*1000)
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
