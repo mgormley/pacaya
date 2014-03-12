@@ -6,16 +6,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
 import edu.jhu.data.simple.SimpleAnnoSentenceWriter.SimpleAnnoSentenceWriterPrm;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
-import edu.jhu.prim.sort.IntIntSort;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
 
 public class CorpusHandler {
+    private static final Logger log = Logger.getLogger(CorpusHandler.class);
 
     // Options for train data
     @Opt(hasArg = true, description = "Training data input file or directory.")
@@ -174,7 +176,9 @@ public class CorpusHandler {
         if (prop < 0 || 1 < prop) {
             throw new IllegalStateException("Invalid proportion: " + prop);
         }
-        boolean[] isDev = Sample.sampleWithoutReplacementBooleans((int) Math.ceil(prop * inList.size()), inList.size());
+        int numDev = (int) Math.ceil(prop * inList.size());
+        log.info("Num train-as-dev examples: " + numDev);
+        boolean[] isDev = Sample.sampleWithoutReplacementBooleans(numDev, inList.size());
         for (int i=0; i<inList.size(); i++) {
             if (isDev[i]) {
                 outList1.add(inList.get(i));
