@@ -888,26 +888,35 @@ class SrlExpParamsRunner(ExpParamsRunner):
         if self.expname == "dp-conllx-tmp":
             # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
             exps = []
-            g.defaults += g.feat_mcdonald
-            #g.defaults += g.feat_tpl_narad
-            g.defaults.update(includeSrl=False, featureSelection=False,
-                              useGoldSyntax=True, sgdNumPasses=1, adaGradEta=0.01, l2variance=10000000,
-                              #trainMaxSentenceLength=20, devMaxSentenceLength=20, testMaxSentenceLength=20,
-                              logDomain=True, 
-                              featureHashMod=-1,
-                              )
+            g.defaults += g.feat_tpl_narad #mcdonald
+            g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
+            second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
+            second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             # TODO: don't include features if edge is NOT present.
-            lang_short = "bg"
-            for parser in [second_order]:
-                for trainMaxNumSentences in [100]: #[10, 50, 100, 500, 1000]:
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            l2var_map = {"bg" : 10000, "es" : 1000}
+            models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
+                                               os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
+            p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
+            for lang_short in ["bg"]:
+                for parser in [second_order]: #second_order, second_grand, second_sib]:
                     pl = p.langs[lang_short]
-                    data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X",
-                                        propTrainAsDev=0.10, devType="CONLL_X",
-                                        #test=pl.cx_test, testType="CONLL_X", 
-                                        trainMaxNumSentences=trainMaxNumSentences,
-                                        language=lang_short, trainUseCoNLLXPhead=True)
+                    data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X", testType="CONLL_X", 
+                                        #test=pl.cx_test, 
+                                        trainMaxNumSentences=100,
+                                        language=lang_short, trainUseCoNLLXPhead=True,
+                                        l2variance=l2var_map[lang_short])
+                    if lang_short == "en":
+                        data = data + SrlExpParams(dev=pl.cx_dev)
+                    else:
+                        data = data + SrlExpParams(propTrainAsDev=0.10) #TODO: set to zero for final experiments.
+                    if parser != None: #first_order:
+                        #pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
+                        pruneModel = os.path.join(self.root_dir, "exp/dp-conllx-tmp_045/1st/model.binary.gz")
+                        parser += SrlExpParams(pruneModel=pruneModel)
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)

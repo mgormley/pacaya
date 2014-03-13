@@ -19,6 +19,8 @@ import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.inf.BeliefPropagation;
+import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
@@ -265,6 +267,14 @@ public class JointNlpFactorGraphTest {
         System.out.println(sfg.getFactors());
         // This pruned version is a tree.
         assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
+        
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+        BeliefPropagation bp = new BeliefPropagation(sfg, bpPrm);
+        bp.run();
+        System.out.println("\n\nVariable marginals:\n");
+        for (Var v : sfg.getVars()) {
+            System.out.println(bp.getMarginals(v));
+        }
     }
     
     public static JointNlpFactorGraph getSrlFg(JointFactorGraphPrm prm) {
