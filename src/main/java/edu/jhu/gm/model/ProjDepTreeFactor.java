@@ -267,8 +267,17 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return pi;
     }    
 
+    private static boolean warnedOnce = false;
     @Override
     public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
+        if (!warnedOnce) {
+            log.warn("Skipping getExpectedLogBelief computation and returning -10000 instead.");
+            warnedOnce = true;
+        }
+        if (true) {
+            return -10000;
+        }
+
         double[] root = new double[n];
         double[][] child = new double[n][n];
         getLogOddsRatios(parent, msgs, logDomain, root, child);
