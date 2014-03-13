@@ -86,14 +86,12 @@ import edu.jhu.util.files.Files;
  */
 public class SrlRunner {
 
-    public static enum DatasetType { ERMA, CONLL_2009, CONLL_2008 };
+    private static final Logger log = Logger.getLogger(SrlRunner.class);
 
     public static enum InitParams { UNIFORM, RANDOM };
     
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
     
-    private static final Logger log = Logger.getLogger(SrlRunner.class);
-
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
@@ -483,11 +481,19 @@ public class SrlRunner {
         FactorTemplateList fts = ofc.getTemplates();
         
         if (useTemplates) {
+            // Check that the first sentence has all the required annotation
+            // types for the specified feature templates.
             SimpleAnnoSentence sent = sents.get(0);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
+            if (includeSrl) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
+            }
+            if (includeDp) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
+                if (grandparentFactors || siblingFactors) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
+                }
+            }
         }
         
         log.info("Building factor graphs and extracting features.");

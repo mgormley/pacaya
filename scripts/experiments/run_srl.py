@@ -774,6 +774,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "srl-all",
                     "srl-all-nosup",
                     "srl-all-sup-lat",
+                    "srl-concrete",
                     "srl-conll09",
                     "srl-conll09-bjork",
                     "srl-conll09-zhao",
@@ -951,6 +952,23 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for parser_srl in l.all_parse_and_srl_sup_lat:
                 exp = g.defaults + parser_srl
                 exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "srl-concrete":    
+            # Run SRL on Concrete files.
+            exps = []
+            g.defaults += g.feat_tpl_narad
+            g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN", featureSelection=False)
+            lang_short = "en"
+            concrete_files = glob(os.path.join(self.root_dir, "data/thrift_anno/*.thrift"))
+            for concrete_file in concrete_files:
+                data = SrlExpParams(tagger_parser = 'srl-en', 
+                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
+                            trainMaxNumSentences = 10,
+                            test = concrete_file, testType = "CONCRETE", language = lang_short)
+                exp = g.defaults + data + g.model_pg_obs_tree
+                exp.set("concrete_file", os.path.basename(concrete_file), incl_arg=False)
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
 

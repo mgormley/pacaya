@@ -1,6 +1,11 @@
 package edu.jhu.data.simple;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,7 +53,7 @@ public class SimpleAnnoSentence {
     private SrlGraph srlGraph;
     /** Constituency parse. */    
     private BinaryTree binaryTree;
-
+    
     // TODO: add NER
     // TODO: add Relations (e.g. ACE relations)
     // TODO: add Token offsets.
@@ -475,6 +480,14 @@ public class SimpleAnnoSentence {
             binaryTree.intern();
         }
         // TODO: this.srlGraph.intern();
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleAnnoSentence [\n words=" + words + ",\n lemmas=" + lemmas + ",\n posTags=" + posTags + ",\n cposTags="
+                + cposTags + ",\n clusters=" + clusters + ",\n feats=" + feats + ",\n deprels=" + deprels + ",\n parents="
+                + Arrays.toString(parents) + ",\n depEdgeMask=" + depEdgeMask + ",\n srlGraph=" + srlGraph
+                + ",\n binaryTree=" + binaryTree + ",\n sourceSent=" + sourceSent + "]";
     }
     
 }
