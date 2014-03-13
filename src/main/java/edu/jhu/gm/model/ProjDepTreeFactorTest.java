@@ -242,8 +242,6 @@ public class ProjDepTreeFactorTest {
         prm.normalizeMessages = true;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
-        bp.clear();
-        bp.run();
         
         // Print schedule:
         BfsBpSchedule schedule = new BfsBpSchedule(fg);
@@ -274,6 +272,12 @@ public class ProjDepTreeFactorTest {
         assertEquals((162+216+96)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 2), 1e-3);
 
         // Check partition function.
+        double[] trees = new double[] {45, 28, 20, 84, 162, 216, 96};
+        double expectedRbar = 0;
+        for (int t=0; t<trees.length; t++) {
+            expectedRbar += trees[t] * FastMath.log(trees[t]);
+        }
+        System.out.println("expectedRbar: " + expectedRbar);
         assertEquals(45+28+20+84+162+216+96, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
         
         // Run brute force inference and compare.

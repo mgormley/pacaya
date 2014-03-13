@@ -1,6 +1,7 @@
-package edu.jhu.gm.inf;
+package edu.jhu.autodiff.erma;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -8,6 +9,15 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
+import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
+import edu.jhu.gm.inf.BeliefPropagation.Messages;
+import edu.jhu.gm.inf.BfsBpSchedule;
+import edu.jhu.gm.inf.BpSchedule;
+import edu.jhu.gm.inf.BruteForceInferencer;
+import edu.jhu.gm.inf.FgInferencer;
+import edu.jhu.gm.inf.RandomBpSchedule;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.Factor;
@@ -26,106 +36,54 @@ import edu.jhu.util.Timer;
  * @author mgormley
  *
  */
-public class BeliefPropagation implements FgInferencer {
+public class ErmaBp implements FgInferencer {
     
-    private static final Logger log = Logger.getLogger(BeliefPropagation.class);
-
-    public interface FgInferencerFactory {
-        FgInferencer getInferencer(FactorGraph fg);
-        boolean isLogDomain();
-    }
+    private static final Logger log = Logger.getLogger(ErmaBp.class);
     
-    public static class BeliefPropagationPrm implements FgInferencerFactory {
-        public BpScheduleType schedule = BpScheduleType.TREE_LIKE;
+    public static class ErmaBpPrm implements FgInferencerFactory {
+        public BpScheduleType schedule = BpScheduleType.RANDOM;
         public int maxIterations = 100;
-        public double timeoutSeconds = Double.POSITIVE_INFINITY;
-        public BpUpdateOrder updateOrder = BpUpdateOrder.PARALLEL;
+        public BpUpdateOrder updateOrder = BpUpdateOrder.SEQUENTIAL;
         //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
-        public boolean normalizeMessages = true;        
-        public boolean cacheFactorBeliefs = false;
+        public boolean normalizeMessages = true;
         
-        public BeliefPropagationPrm() {
+        public ErmaBpPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
-            return new BeliefPropagation(fg, this);
+            return new ErmaBp(fg, this);
         }
         public boolean isLogDomain() {
             return logDomain;
         }
     }
     
-    public enum BpScheduleType {
-        /** Send messages from a root to the leaves and back. */
-        TREE_LIKE,
-        /** Send messages in a random order. */
-        RANDOM
-    }
-    
-    public enum BpUpdateOrder {
-        /** Send each message in sequence according to the schedule. */ 
-        SEQUENTIAL,
-        /** Create all messages first. Then send them all at the same time. */
-        PARALLEL
-    };
-    
-    /**
-     * A container class for messages and properties of an edge in a factor
-     * graph.
-     * 
-     * @author mgormley
-     * 
-     */
-    public static class Messages {
-        
-        /** The current message. */
-        public DenseFactor message;
-        /** The pending messge. */
-        public DenseFactor newMessage;
-        
-        /** Constructs a message container, initializing the messages to the uniform distribution. */
-        public Messages(FgEdge edge, boolean logDomain, boolean normalizeMessages) {
-            // Initialize messages to the (possibly unnormalized) uniform
-            // distribution in case we want to run parallel BP.
-            double initialValue = logDomain ? 0.0 : 1.0;
-            // Every message to/from a variable will be a factor whose domain is
-            // that variable only.
-            Var var = edge.getVar();
-            message = new DenseFactor(new VarSet(var), initialValue);
-            newMessage = new DenseFactor(new VarSet(var), initialValue);
-            
-            if (normalizeMessages) {
-                // Normalize the initial messages.
-                if (logDomain) {
-                    message.logNormalize();
-                    newMessage.logNormalize();
-                } else {
-                    message.normalize();
-                    newMessage.normalize();
-                }
-            }
+    private static class Tape {
+        public List<DenseFactor> msgs = new ArrayList<DenseFactor>();
+        public List<FgEdge> edges = new ArrayList<FgEdge>();
+        public void add(FgEdge edge, DenseFactor msg) {
+            msgs.add(msg);
+            edges.add(edge);
         }
-        
+        public int size() {
+            return edges.size();
+        }
     }
-    
-    private final BeliefPropagationPrm prm;
+        
+    private final ErmaBpPrm prm;
     private final FactorGraph fg;
     /** A container of messages each edge in the factor graph. Indexed by edge id. */
     private final Messages[] msgs;
     private BpSchedule sched;
-    private List<FgEdge> order;
+    private Tape tape;
     
-    private DenseFactor[] factorBeliefCache;
-
-    public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
+    public ErmaBp(FactorGraph fg, ErmaBpPrm prm) {
         this.prm = prm;
         this.fg = fg;
         this.msgs = new Messages[fg.getNumEdges()];
-        this.factorBeliefCache = new DenseFactor[fg.getNumFactors()];
         
         if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-            // Cache the order if this is a sequential update.
             if (prm.schedule == BpScheduleType.TREE_LIKE) {
                 sched = new BfsBpSchedule(fg);
             } else if (prm.schedule == BpScheduleType.RANDOM) {
@@ -133,7 +91,8 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 throw new RuntimeException("Unknown schedule type: " + prm.schedule);
             }
-            order = sched.getOrder();
+        } else {
+            throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
         }
     }
     
@@ -147,9 +106,129 @@ public class BeliefPropagation implements FgInferencer {
     /** @inheritDoc */
     @Override
     public void run() {
-        Timer timer = new Timer();
-        timer.start();
+        forward();
+    }
+    
+    public void forward() {
+        // Initialization.
+        tape = new Tape();
+        for (int i=0; i<msgs.length; i++) {
+            // TODO: consider alternate initializations.
+            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
+        }
+        // Reset the global factors.
+        for (Factor factor : fg.getFactors()) {
+            if (factor instanceof GlobalFactor) {
+                ((GlobalFactor)factor).reset();
+            }
+        }
         
+        // Message passing.
+        List<FgEdge> order = sched.getOrder();
+        for (int iter=0; iter < prm.maxIterations; iter++) {
+            if (prm.schedule == BpScheduleType.RANDOM) {
+                order = sched.getOrder();
+            }
+            for (FgEdge edge : order) {
+                if (edge.isVarToFactor()) {
+                    forwardVarToFactor(edge);
+                } else if (!(edge.getFactor() instanceof GlobalFactor)) {
+                    forwardFactorToVar(edge);
+                } else {
+                    forwardGlobalFactorToVar(edge, iter);
+                }
+                if (prm.normalizeMessages) {
+                    forwardNormalize(edge);
+                }
+                sendMessage(edge);
+                tape.add(edge, new DenseFactor(msgs[edge.getId()].message));
+            }
+        }
+    }
+
+    private void forwardVarToFactor(FgEdge edge) {
+        // Since this is not a global factor, we send messages in the normal way, which
+        // in the case of a factor to variable message requires enumerating all possible
+        // variable configurations.
+        DenseFactor msg = msgs[edge.getId()].newMessage;
+        
+        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+        msg.set(prm.logDomain ? 0.0 : 1.0);
+        
+        // Message from variable v* to factor f*.
+        //
+        // Compute the product of all messages received by v* except for the
+        // one from f*.
+        getProductOfMessages(edge.getParent(), msg, edge.getChild());
+
+        // Set the final message in case we created a new object.
+        msgs[edge.getId()].newMessage = msg;
+    }    
+
+    private void forwardFactorToVar(FgEdge edge) {
+        Var var = edge.getVar();
+        Factor factor = edge.getFactor();
+        // Since this is not a global factor, we send messages in the normal way, which
+        // in the case of a factor to variable message requires enumerating all possible
+        // variable configurations.
+        DenseFactor msg = msgs[edge.getId()].newMessage;
+        
+        // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
+        msg.set(prm.logDomain ? 0.0 : 1.0);
+        
+        // Message from factor f* to variable v*.
+        //
+        // Compute the product of all messages received by f* (each
+        // of which will have a different domain) with the factor f* itself.
+        // Exclude the message going out to the variable, v*.
+        DenseFactor prod = new DenseFactor(factor.getVars());
+        // Set the initial values of the product to those of the sending factor.
+        int numConfigs = prod.getVars().calcNumConfigs();
+        for (int c = 0; c < numConfigs; c++) {
+            prod.setValue(c, factor.getUnormalizedScore(c));
+        }
+        getProductOfMessages(edge.getParent(), prod, edge.getChild());
+        
+        // Marginalize over all the assignments to variables for f*, except
+        // for v*.
+        if (prm.logDomain) { 
+            msg = prod.getLogMarginal(new VarSet(var), false);
+        } else {
+            msg = prod.getMarginal(new VarSet(var), false);
+        }
+
+        // Set the final message in case we created a new object.
+        msgs[edge.getId()].newMessage = msg;
+    }
+
+    private void forwardGlobalFactorToVar(FgEdge edge, int iter) {
+        log.trace("Creating messages for global factor.");
+        // Since this is a global factor, we pass the incoming messages to it, 
+        // and efficiently marginalize over the variables. The current setup is
+        // create all the messages from this factor to its variables, but only 
+        // once per iteration.
+        GlobalFactor globalFac = (GlobalFactor) edge.getFactor();
+        globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
+        // The messages have been set, so just return.        
+    }
+
+    private void forwardNormalize(FgEdge edge) {
+        DenseFactor msg = msgs[edge.getId()].newMessage;
+        assert (msg.getVars().equals(new VarSet(edge.getVar())));
+        
+        if (prm.normalizeMessages) {
+            if (prm.logDomain) { 
+                msg.logNormalize();
+            } else {
+                msg.normalize();
+            }
+        }
+        // normalize and logNormalize already check for NaN
+        else assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;        
+        msgs[edge.getId()].newMessage = msg;
+    }
+
+    public void backward() {
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
@@ -161,147 +240,49 @@ public class BeliefPropagation implements FgInferencer {
                 ((GlobalFactor)factor).reset();
             }
         }
-        // Initialize factor beliefs
-        for(FgNode node : fg.getNodes()) {
-        	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
-            	Factor f = node.getFactor();        		
-        		DenseFactor fBel = new DenseFactor(f.getVars());
-            	int c = f.getVars().calcNumConfigs();
-            	for(int i=0; i<c; i++)
-            		fBel.setValue(i, f.getUnormalizedScore(i));
-            	
-            	for(FgEdge v2f : node.getInEdges()) {
-            		DenseFactor vBel = msgs[v2f.getId()].message;
-            		if(prm.logDomain) fBel.add(vBel);
-            		else fBel.prod(vBel);
-            	}
-            	
-            	factorBeliefCache[f.getId()] = fBel;
-        	}
-        }
-        
         
         // Message passing.
-        for (int iter=0; iter < prm.maxIterations; iter++) {
-            if (timer.totSec() > prm.timeoutSeconds) {
-                break;
-            }
-            if (prm.updateOrder == BpUpdateOrder.SEQUENTIAL) {
-                for (FgEdge edge : order) {
-                    createMessage(edge, iter);
-                    sendMessage(edge);
-                }
-            } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
-                for (FgEdge edge : fg.getEdges()) {
-                    createMessage(edge, iter);
-                }
-                for (FgEdge edge : fg.getEdges()) {
-                    sendMessage(edge);
-                }
+        for (int i=0; i<tape.size(); i++) {
+            FgEdge edge = tape.edges.get(i);
+            DenseFactor msg = tape.msgs.get(i);
+            if (edge.isVarToFactor()) {
+                backwardVarToFactor(edge, msg);
+            } else if (!(edge.getFactor() instanceof GlobalFactor)) {
+                backwardFactorToVar(edge, msg);
             } else {
-                throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
+                // TODO: The schedule must be over edge sets, not individual edges.
+                backwardGlobalFactorToVar(edge, msg);
+            }
+            if (prm.normalizeMessages) {
+                backwardNormalize(edge, msg);
             }
         }
-        timer.stop();
     }
     
-    
+    private void backwardVarToFactor(FgEdge edge, DenseFactor msg) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void backwardFactorToVar(FgEdge edge, DenseFactor msg) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    private void backwardGlobalFactorToVar(FgEdge edge, DenseFactor msg) {
+        // TODO: The schedule must be over edge sets, not individual edges.       
+    }
+
+    private void backwardNormalize(FgEdge edge, DenseFactor msg) {
+        // TODO Auto-generated method stub
+        
+    }
+
     public void clear() {
         Arrays.fill(msgs, null);
+        tape = null;
     }
-
     
-    /**
-     * Creates a message and stores it in the "pending message" slot for this edge.
-     * @param edge The directed edge for which the message should be created.
-     * @param iter The iteration number.
-     */
-    protected void createMessage(FgEdge edge, int iter) {
-
-    	int edgeId = edge.getId();
-        Var var = edge.getVar();
-        Factor factor = edge.getFactor();
-        
-        if (!edge.isVarToFactor() && factor instanceof GlobalFactor) {
-            log.trace("Creating messages for global factor.");
-            // Since this is a global factor, we pass the incoming messages to it, 
-            // and efficiently marginalize over the variables. The current setup is
-            // create all the messages from this factor to its variables, but only 
-            // once per iteration.
-            GlobalFactor globalFac = (GlobalFactor) factor;
-            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
-            // The messages have been set, so just return.
-            return;
-        } else {
-        	// Since this is not a global factor, we send messages in the normal way, which
-            // in the case of a factor to variable message requires enumerating all possible
-            // variable configurations.
-            DenseFactor msg = msgs[edgeId].newMessage;
-            
-            // Initialize the message to all ones (zeros in log-domain) since we are "multiplying".
-            msg.set(prm.logDomain ? 0.0 : 1.0);
-            
-            if (edge.isVarToFactor()) {
-                // Message from variable v* to factor f*.
-                //
-                // Compute the product of all messages received by v* except for the
-                // one from f*.
-                getProductOfMessages(edge.getParent(), msg, edge.getChild());
-            } else {
-                // Message from factor f* to variable v*.
-                //
-                // Compute the product of all messages received by f* (each
-                // of which will have a different domain) with the factor f* itself.
-                // Exclude the message going out to the variable, v*.
-                DenseFactor prod;
-            	if(prm.cacheFactorBeliefs && !(factor instanceof GlobalFactor)) {
-            		// we are computing f->v, which is the product of a bunch of factor values and v->f messages
-            		// we can cache this product and remove the v->f message that would have been excluded from the product
-            		DenseFactor remove = msgs[edge.getOpposing().getId()].message;
-            		DenseFactor from = factorBeliefCache[factor.getId()];
-            		prod = new DenseFactor(from);
-            		if(prm.logDomain) prod.subBP(remove);
-            		else prod.divBP(remove);
-            		
-            		assert !prod.containsBadValues(prm.logDomain) : "prod from cached beliefs = " + prod;
-            	}
-            	else {	// fall back on normal way of computing messages without caching
-            		prod = new DenseFactor(factor.getVars());
-                	// Set the initial values of the product to those of the sending factor.
-                	int numConfigs = prod.getVars().calcNumConfigs();
-                	for (int c = 0; c < numConfigs; c++) {
-                		prod.setValue(c, factor.getUnormalizedScore(c));
-                	}
-                	getProductOfMessages(edge.getParent(), prod, edge.getChild());
-            	}
-
-            	
-                // Marginalize over all the assignments to variables for f*, except
-                // for v*.
-                if (prm.logDomain) { 
-                    msg = prod.getLogMarginal(new VarSet(var), false);
-                } else {
-                    msg = prod.getMarginal(new VarSet(var), false);
-                }
-            }
-            
-            assert (msg.getVars().equals(new VarSet(var)));
-            
-            if (prm.normalizeMessages) {
-                if (prm.logDomain) { 
-                    msg.logNormalize();
-                } else {
-                    msg.normalize();
-                }
-            }
-            // normalize and logNormalize already check for NaN
-            else assert !msg.containsBadValues(prm.logDomain) : "msg = " + msg;
-            
-            // Set the final message in case we created a new object.
-            msgs[edgeId].newMessage = msg;
-        }
-    }
-
     /**
      * Computes the product of all messages being sent to a node, optionally
      * excluding messages sent from another node.
@@ -367,20 +348,6 @@ public class BeliefPropagation implements FgInferencer {
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
         assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
-
-        // update factor beliefs
-        if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
-        	Factor f = edge.getFactor();
-        	DenseFactor update = factorBeliefCache[f.getId()];
-        	if(prm.isLogDomain()) {
-        		update.subBP(oldMessage);
-        		update.add(ec.message);
-        	}
-        	else {
-        		update.divBP(oldMessage);
-        		update.prod(ec.message);
-        	}
-        }
         
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);
