@@ -859,7 +859,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(includeSrl=False, featureSelection=False, 
                               useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01, featureHashMod=10000000)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
-            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+                                                      bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
+                                                      normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             # TODO: don't include features if edge is NOT present.
@@ -891,8 +893,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_narad #mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                               adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
-            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
-            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", bpUpdateOrder="PARALLEL", bpMaxIterations=5, normalizeMessages=True)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
+                                       tagger_parser="1st")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+                                                      bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
+                                                      normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             # TODO: don't include features if edge is NOT present.
