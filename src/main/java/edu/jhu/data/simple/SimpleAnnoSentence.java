@@ -48,7 +48,7 @@ public class SimpleAnnoSentence {
     private SrlGraph srlGraph;
     /** Constituency parse. */    
     private BinaryTree binaryTree;
-
+    
     // TODO: add NER
     // TODO: add Relations (e.g. ACE relations)
     // TODO: add Token offsets.
