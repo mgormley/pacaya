@@ -4,7 +4,13 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.log4j.Logger;
+import org.apache.thrift.TException;
+import org.apache.thrift.TSerializer;
+import org.apache.thrift.protocol.TBinaryProtocol;
 
+import com.google.common.io.Files;
+
+import edu.jhu.data.concrete.ConcreteWriter;
 import edu.jhu.data.conll.CoNLL08Sentence;
 import edu.jhu.data.conll.CoNLL08Writer;
 import edu.jhu.data.conll.CoNLL09Sentence;
@@ -12,6 +18,7 @@ import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXWriter;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
+import edu.jhu.hlt.concrete.Communication;
 
 public class SimpleAnnoSentenceWriter {
 
@@ -51,7 +58,15 @@ public class SimpleAnnoSentenceWriter {
             }
             cw.close();
         } else if (type == DatasetType.CONCRETE) {
-            log.warn("Not writing."); // TODO: Fill this in.
+            Communication comm = (Communication) sents.getSourceSents();
+            ConcreteWriter w = new ConcreteWriter(false);
+            w.addDependencyParse(sents, comm);
+            try {
+                byte[] bytez = new TSerializer(new TBinaryProtocol.Factory()).serialize(comm);
+                Files.write(bytez, out);
+            } catch (TException e) {
+                throw new RuntimeException(e);
+            }
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
         }

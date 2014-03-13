@@ -73,7 +73,8 @@ public class SimpleAnnoSentenceReader {
                           + " This doesn't permit downselection of the number of sentences or sentence length.");
             }
             ConcreteReader cc = new ConcreteReader(new ConcreteReaderPrm());
-            sents.addAll(cc.toSentences(dataFile));
+            assert sents.size() == 0;
+            sents = cc.toSentences(dataFile);
         } else {
             loadSents(new FileInputStream(dataFile), type);
         }
