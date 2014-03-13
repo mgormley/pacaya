@@ -18,6 +18,7 @@ import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
 import edu.jhu.hlt.concrete.Section;
+import edu.jhu.hlt.concrete.SectionKind;
 import edu.jhu.hlt.concrete.SectionSegmentation;
 import edu.jhu.hlt.concrete.Sentence;
 import edu.jhu.hlt.concrete.SentenceSegmentation;
@@ -58,25 +59,36 @@ public class ConcreteReader {
         this.prm = prm;
     }
 
-    public SimpleAnnoSentenceCollection getSentences(File concreteFile) throws IOException, TException {
-        byte[] bytez = Files.readAllBytes(Paths.get(concreteFile.getAbsolutePath()));
-        TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());        
-        Communication communication = new Communication();
-        deser.deserialize(communication, bytez);
-        return getSentences(communication);
+    public SimpleAnnoSentenceCollection toSentences(File concreteFile) throws IOException {
+        try {
+            byte[] bytez = Files.readAllBytes(Paths.get(concreteFile.getAbsolutePath()));
+            TDeserializer deser = new TDeserializer(new TBinaryProtocol.Factory());        
+            Communication communication = new Communication();            
+            deser.deserialize(communication, bytez);
+            SimpleAnnoSentenceCollection sents = toSentences(communication);
+            sents.setSourceSents(communication);
+            return sents;
+        } catch (TException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public SimpleAnnoSentenceCollection getSentences(Communication communication) {
+    public SimpleAnnoSentenceCollection toSentences(Communication communication) {
         SimpleAnnoSentenceCollection annoSents = new SimpleAnnoSentenceCollection();
-        addSentences(annoSents, communication);
+        addSentences(communication, annoSents);
         return annoSents;
     }
 
-    public void addSentences(SimpleAnnoSentenceCollection annoSents, Communication communication) {
+    /**
+     * Converts each sentence in communication to a {@link SimpleAnnoSentence}
+     * and adds it to annoSents.
+     */
+    public void addSentences(Communication communication, SimpleAnnoSentenceCollection annoSents) {
         // Assume first theory.
         assert communication.getSectionSegmentationsSize() == 1;
         SectionSegmentation sectionSegmentation = communication.getSectionSegmentations().get(0);
         for (Section section : sectionSegmentation.getSectionList()) {
+            if (shouldSkipSection(section)) { continue; } 
             // Assume first theory.
             assert section.getSentenceSegmentationSize() == 1;
             SentenceSegmentation sentSegmentation = section.getSentenceSegmentation().get(0);
@@ -86,7 +98,7 @@ public class ConcreteReader {
         }
     }
 
-    public SimpleAnnoSentence getAnnoSentence(Sentence sentence) {
+    private SimpleAnnoSentence getAnnoSentence(Sentence sentence) {
         if (prm.tokenizationTheory >= sentence.getTokenizationListSize()) {
             throw new IllegalArgumentException("Sentence does not contain Tokenization theory: "
                     + prm.tokenizationTheory);
@@ -94,7 +106,7 @@ public class ConcreteReader {
         return getAnnoSentence(sentence.getTokenizationList().get(0));
     }
 
-    public SimpleAnnoSentence getAnnoSentence(Tokenization tokenization) {
+    private SimpleAnnoSentence getAnnoSentence(Tokenization tokenization) {
 
         TokenizationKind kind = tokenization.getKind();
         if (kind != TokenizationKind.TOKEN_LIST) {
@@ -132,10 +144,13 @@ public class ConcreteReader {
             int[] parents = getParents(tokenization.getDependencyParseList().get(prm.depParseTheory), numWords);
             as.setParents(parents);
         }
+        
+        // TODO: Semantic Role Labeling Graph        
+        
         return as;
     }
 
-    public List<String> getTagging(TokenTagging tagging) {
+    private List<String> getTagging(TokenTagging tagging) {
         List<String> tags = new ArrayList<String>();
         for (TaggedToken tok : tagging.getTaggedTokenList()) {
             tags.add(tok.getTag());
@@ -143,10 +158,13 @@ public class ConcreteReader {
         return tags;
     }
 
-    public int[] getParents(DependencyParse dependencyParse, int numWords) {
+    private int[] getParents(DependencyParse dependencyParse, int numWords) {
         int[] parents = new int[numWords];
         Arrays.fill(parents, -2);
         for (Dependency arc : dependencyParse.getDependencyList()) {
+            if (parents[arc.getDep()] != -2) {
+                throw new IllegalStateException("Multiple parents for token: " + dependencyParse);
+            }
             if (!arc.isSetGov()) {
                 parents[arc.getDep()] = -1;
             } else {
@@ -173,15 +191,20 @@ public class ConcreteReader {
         }
 
         ConcreteReader reader = new ConcreteReader(new ConcreteReaderPrm());
-        for (SimpleAnnoSentence sent : reader.getSentences(inputFile)) {
+        for (SimpleAnnoSentence sent : reader.toSentences(inputFile)) {
             System.out.println(sent);
         }        
+    }
+
+    /** Returns whether to skip this section. */
+    public static boolean shouldSkipSection(Section section) {
+        return section.getKind() != SectionKind.PASSAGE;
     }
 
 }
 
 
-// TODO: Switch to this code for reading TokenTagging theories.
+// TODO: Switch to this code for reading TokenTagging theories if the thrift schema changes.
 // 
 //        // POS Tags
 //        if (tokenization.isSetPosTagList() && prm.posTagTheory != SKIP) {

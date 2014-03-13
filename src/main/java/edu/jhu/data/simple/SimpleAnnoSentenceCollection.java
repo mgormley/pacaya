@@ -15,6 +15,9 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
 
     private static final long serialVersionUID = -6867088670574667680L;
 
+    /** Stores the source sentences (e.g. the Communication object for Concrete). */
+    private Object sourceSents;
+
     public SimpleAnnoSentenceCollection() {
         super();
     }
@@ -105,5 +108,13 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         }
         return newSents;
     }
-    
+
+    public Object getSourceSents() {
+        return sourceSents;
+    }
+
+    public void setSourceSents(Object sourceSents) {
+        this.sourceSents = sourceSents;
+    }
+            
 }
