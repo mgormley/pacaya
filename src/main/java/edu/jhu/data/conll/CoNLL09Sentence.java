@@ -407,10 +407,12 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
             CoNLL09Token tok = new CoNLL09Token();
             tok.setId(i+1);
             tok.setForm(sent.getWord(i));
+            // TODO: Check for nulls here!!
+            
             // Set "predicted" columns.
             tok.setPlemma(sent.getLemma(i));
-            tok.setPpos(sent.getPosTag(i));
-            tok.setPfeat(sent.getFeats(i));
+            tok.setPpos(sent.getPosTag(i));            
+            if (sent.getFeats() != null) { tok.setPfeat(sent.getFeats(i)); }
             tok.setPhead(sent.getParent(i) + 1);
             tok.setPdeprel(sent.getDeprel(i));
             // Set "gold" columns.
