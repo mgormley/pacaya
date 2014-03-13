@@ -959,15 +959,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Run SRL on Concrete files.
             exps = []
             g.defaults += g.feat_tpl_narad
-            g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN", featureSelection=False)
+            g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN,MORPHO", featureSelection=False)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL,BROWN,MORPHO", 
+                                       tagger_parser="1st", includeSrl=False)
             lang_short = "en"
             concrete_files = glob(os.path.join(self.root_dir, "data/thrift_anno/*.thrift"))
             for concrete_file in concrete_files:
                 data = SrlExpParams(tagger_parser = 'srl-en', 
-                            train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
+                            #train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",
+                            train = p.langs[lang_short].cx_train, trainType = "CONLL_X",
                             trainMaxNumSentences = 10,
                             test = concrete_file, testType = "CONCRETE", language = lang_short)
-                exp = g.defaults + data + g.model_pg_obs_tree
+                exp = g.defaults + data + first_order #g.model_pg_obs_tree
                 exp.set("concrete_file", os.path.basename(concrete_file), incl_arg=False)
                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
