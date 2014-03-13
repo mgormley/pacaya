@@ -15,7 +15,6 @@ import edu.jhu.hlt.concrete.Argument;
 import edu.jhu.hlt.concrete.Communication;
 import edu.jhu.hlt.concrete.Dependency;
 import edu.jhu.hlt.concrete.DependencyParse;
-import edu.jhu.hlt.concrete.Entity;
 import edu.jhu.hlt.concrete.EntityMention;
 import edu.jhu.hlt.concrete.EntityMentionSet;
 import edu.jhu.hlt.concrete.EntityType;
@@ -29,10 +28,7 @@ import edu.jhu.hlt.concrete.SituationMentionSet;
 import edu.jhu.hlt.concrete.TokenRefSequence;
 import edu.jhu.hlt.concrete.Tokenization;
 
-
-// TODO add ability to skip sections
-
-public class SrlGraphToConcrete {
+public class ConcreteWriter {
 
     private final long timestamp;     // time that every annotation that is processed will get
     private boolean careful;    // throw exceptions when things aren't unambiguously correct
@@ -51,7 +47,7 @@ public class SrlGraphToConcrete {
      * that is added to its own EntityMentionSet (all EntityMentions created
      * by this tool in a document are unioned before making an EntityMentionSet).
      */
-    public SrlGraphToConcrete(boolean srlIsSyntax) {
+    public ConcreteWriter(boolean srlIsSyntax) {
         timestamp = System.currentTimeMillis();
         careful = true;
         this.srlIsSyntax = srlIsSyntax;
@@ -78,7 +74,7 @@ public class SrlGraphToConcrete {
             throw new IllegalArgumentException();
         
         DependencyParse p = new DependencyParse();
-        p.uuid = UUID.randomUUID().toString();      // lol wut :)
+        p.uuid = UUID.randomUUID().toString();
         p.metadata = new AnnotationMetadata();
         p.metadata.confidence = 1d;
         p.metadata.tool = "pacaya dependency parser";
@@ -196,6 +192,8 @@ public class SrlGraphToConcrete {
             throw new RuntimeException();
         SectionSegmentation ss = from.getSectionSegmentations().get(0);
         for(Section s : ss.getSectionList()) {
+            if(ConcreteReader.shouldSkipSection(s))
+                continue;
             if(careful && s.getSentenceSegmentationSize() != 1)
                 throw new RuntimeException();
             SentenceSegmentation sentseg = s.getSentenceSegmentation().get(0);
