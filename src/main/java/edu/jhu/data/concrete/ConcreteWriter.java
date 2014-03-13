@@ -57,16 +57,17 @@ public class ConcreteWriter {
      * Adds a dependency parse to the first concrete.Tokenization.
      */
     public void addDependencyParse(
-            edu.jhu.data.simple.SimpleAnnoSentence hasDepParse,
-            edu.jhu.hlt.concrete.Sentence addTo) {
+            SimpleAnnoSentenceCollection containsDepParses,
+            Communication addTo) {
 
-        if(careful && addTo.tokenizationList.size() != 1)
-            throw new RuntimeException("this Sentence has more than one Tokenization");
-        Tokenization t = addTo.tokenizationList.get(0);
-        List<String> depTypes = hasDepParse.getDeprels();
-        int[] parents = hasDepParse.getParents();
-        t.dependencyParseList.add(makeDepParse(parents, depTypes));
-        
+        List<Tokenization> ts = getTokenizationsCorrespondingTo(containsDepParses, addTo);
+        for(int i=0; i<ts.size(); i++) {
+            Tokenization t = ts.get(i);
+            SimpleAnnoSentence s = containsDepParses.get(i);
+            List<String> depTypes = s.getDeprels();
+            int[] parents = s.getParents();
+            t.dependencyParseList.add(makeDepParse(parents, depTypes));
+        }
     }
 
     private DependencyParse makeDepParse(int[] parents, List<String> depRels) {
