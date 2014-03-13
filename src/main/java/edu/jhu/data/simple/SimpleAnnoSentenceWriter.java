@@ -50,6 +50,8 @@ public class SimpleAnnoSentenceWriter {
                 cw.write(conllSent);
             }
             cw.close();
+        } else if (type == DatasetType.CONCRETE) {
+            log.warn("Not writing."); // TODO: Fill this in.
         } else {
             throw new IllegalStateException("Unsupported data type: " + type);
         }

@@ -961,7 +961,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_narad
             g.defaults.update(predictSense=True, biasOnly=True, removeAts="BROWN", featureSelection=False)
             lang_short = "en"
-            concrete_files = glob("data/thrift_anno/*.thrift")
+            concrete_files = glob(os.path.join(self.root_dir, "data/thrift_anno/*.thrift"))
             for concrete_file in concrete_files:
                 data = SrlExpParams(tagger_parser = 'srl-en', 
                             train = p.get(lang_short + "_pos_gold_train"), trainType = "CONLL_2009",

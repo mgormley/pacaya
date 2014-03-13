@@ -86,14 +86,12 @@ import edu.jhu.util.files.Files;
  */
 public class SrlRunner {
 
-    public static enum DatasetType { ERMA, CONLL_2009, CONLL_2008 };
+    private static final Logger log = Logger.getLogger(SrlRunner.class);
 
     public static enum InitParams { UNIFORM, RANDOM };
     
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
     
-    private static final Logger log = Logger.getLogger(SrlRunner.class);
-
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
     public static long seed = Prng.DEFAULT_SEED;
