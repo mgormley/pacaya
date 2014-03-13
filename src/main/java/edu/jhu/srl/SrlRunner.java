@@ -494,11 +494,19 @@ public class SrlRunner {
         FactorTemplateList fts = ofc.getTemplates();
         
         if (useTemplates) {
+            // Check that the first sentence has all the required annotation
+            // types for the specified feature templates.
             SimpleAnnoSentence sent = sents.get(0);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
-            TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
+            if (includeSrl) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
+            }
+            if (includeDp) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
+                if (grandparentFactors || siblingFactors) {
+                    TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
+                }
+            }
         }
         
         log.info("Building factor graphs and extracting features.");
