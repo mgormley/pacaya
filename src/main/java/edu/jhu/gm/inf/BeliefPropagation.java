@@ -15,7 +15,6 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
@@ -86,19 +85,19 @@ public class BeliefPropagation implements FgInferencer {
         public DenseFactor newMessage;
         
         /** Constructs a message container, initializing the messages to the uniform distribution. */
-        public Messages(FgEdge edge, BeliefPropagationPrm prm) {
+        public Messages(FgEdge edge, boolean logDomain, boolean normalizeMessages) {
             // Initialize messages to the (possibly unormalized) uniform
             // distribution in case we want to run parallel BP.
-            double initialValue = prm.logDomain ? 0.0 : 1.0;
+            double initialValue = logDomain ? 0.0 : 1.0;
             // Every message to/from a variable will be a factor whose domain is
             // that variable only.
             Var var = edge.getVar();
             message = new DenseFactor(new VarSet(var), initialValue);
             newMessage = new DenseFactor(new VarSet(var), initialValue);
             
-            if (prm.normalizeMessages) {
+            if (normalizeMessages) {
                 // Normalize the initial messages.
-                if (prm.logDomain) {
+                if (logDomain) {
                     message.logNormalize();
                     newMessage.logNormalize();
                 } else {
@@ -154,7 +153,7 @@ public class BeliefPropagation implements FgInferencer {
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
-            msgs[i] = new Messages(fg.getEdge(i), prm);
+            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
         }
         // Reset the global factors.
         for (Factor factor : fg.getFactors()) {
