@@ -64,6 +64,8 @@ public class TemplateFeatureExtractorTest {
         
         SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);
+        // Add fake coarse POS tags.
+        sent.setCposTags(sent.getPosTags());
         
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));

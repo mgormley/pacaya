@@ -88,6 +88,7 @@ public class ProjectiveDependencyParserTest {
         int numTokens = n * numSents;
         System.out.println("Sentences per second: " + numSents / timer.totSec());
         System.out.println("Tokens per second: " + numTokens / timer.totSec());
+        FastMath.useLogAddTable = false;
     }
         
     @Test
