@@ -25,9 +25,12 @@ public interface Factor extends Serializable {
      *            log-probability domain.
      */
     void updateFromModel(FgModel model, boolean logDomain);
-
+    
     /** Gets the unnormalized numerator value contributed by this factor. */
-    double getUnormalizedScore(int configId);
+    double getUnormalizedScore(VarConfig goldConfig);
+    
+    /** Gets the unnormalized numerator value contributed by this factor. */
+    double getUnormalizedScore(int goldConfig);
 
     /**
      * Adds the expected feature counts for this factor, given the marginal distribution 

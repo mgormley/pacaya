@@ -115,6 +115,36 @@ public class DepTree implements Iterable<DepTreeNode> {
         }
     }
 
+    /**
+     * Returns whether this is a valid depedency tree: a directed acyclic graph
+     * with a single root which covers all the tokens.
+     */
+    public static boolean isDepTree(int[] parents, boolean isProjective) {
+        // Check that there is exactly one node with the WALL as its parent
+        int emptyCount = countChildrenOf(parents, EMPTY_POSITION);
+        if (emptyCount != 0) {
+            return false;
+        }
+        int wallCount = countChildrenOf(parents, WallDepTreeNode.WALL_POSITION);
+        if (wallCount != 1) {
+            return false;
+        }
+        
+        // Check that there are no cyles
+        if (containsCycle(parents)) {
+            return false;
+        }
+        
+        // Check for projectivity if necessary
+        if (isProjective) {
+            if (!checkIsProjective(parents)) {
+                return false;
+            }
+        }
+        // Is a valid dependency tree.
+        return true;
+    }
+
     @Override
     public String toString() {
         return nodes.toString();

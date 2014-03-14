@@ -93,6 +93,9 @@ public class VarSet extends SmallSet<Var> {
         int numConfigs = 1;
         for (Var var : this) {
             numConfigs *= var.getNumStates();
+            if (numConfigs <= 0) {
+                throw new IllegalStateException("Integer overflow. This can occur if computing the number of configs for factor of high arity.");
+            }
         }
         return numConfigs;
     }

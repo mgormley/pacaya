@@ -84,8 +84,8 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         private ObsCjExpFamFactor unclmpFactor;
         
         // Used only to create clamped factors.
-        public ClampedObsCjExpFamFactor(DenseFactor other, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
-            super(other, templateKey, unclmpFactor.ofc);
+        public ClampedObsCjExpFamFactor(DenseFactor clmpDf, Object templateKey, VarConfig clmpVarConfig, ObsCjExpFamFactor unclmpFactor) {
+            super(clmpDf, templateKey, unclmpFactor.ofc);
             this.unclmpFactor = unclmpFactor;  
             VarSet unclmpVarSet = unclmpFactor.getVars();
             if (VarSet.getVarsOfType(unclmpVarSet, VarType.OBSERVED).size() == 0) {

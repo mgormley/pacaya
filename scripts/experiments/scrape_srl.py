@@ -43,7 +43,7 @@ class SrlScraper(Scraper):
         #        order += hs.split()
         
         # Add the columns from the evaluation. 
-        for tt in ["test", "train"]:
+        for tt in ["dev", "test", "train"]:
             for lu in ["Labeled", "Unlabeled"]:
                 for fpr in ["F1", "precision", "recall", "attachment-score"]:
                     for ns in [False, True]:
@@ -75,6 +75,8 @@ class SrlScraper(Scraper):
             
         self.get_eval(exp, exp_dir, "train")
         self.get_eval(exp, exp_dir, "train-no-sense")
+        self.get_eval(exp, exp_dir, "dev")
+        self.get_eval(exp, exp_dir, "dev-no-sense")
         self.get_eval(exp, exp_dir, "test")
         self.get_eval(exp, exp_dir, "test-no-sense")
     

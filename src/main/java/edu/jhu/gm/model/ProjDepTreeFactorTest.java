@@ -1,6 +1,9 @@
 package edu.jhu.gm.model;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -8,15 +11,179 @@ import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.inf.BfsBpSchedule;
+import edu.jhu.gm.inf.BruteForceInferencer;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.gm.train.CrfObjective;
+import edu.jhu.gm.train.CrfObjectiveTest;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
+import edu.jhu.util.dist.Gaussian;
 
 public class ProjDepTreeFactorTest {
 
+    @Test
+    public void testHasParentPerToken() {
+        int n = 10;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        // Create vc for left branching tree.
+        VarConfig vc = new VarConfig();
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i == j) { continue; }
+                vc.put(treeFac.getLinkVar(i, j), (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
+            }
+        }
+        assertTrue(ProjDepTreeFactor.hasOneParentPerToken(n, vc));
+        // Add two parents for token 3.
+        vc.put(treeFac.getLinkVar(3, 6), LinkVar.TRUE);
+        assertFalse(ProjDepTreeFactor.hasOneParentPerToken(n, vc));
+        // No parents for token 3.
+        vc.put(treeFac.getLinkVar(3, 6), LinkVar.FALSE);
+        vc.put(treeFac.getLinkVar(3, 4), LinkVar.FALSE);
+        assertFalse(ProjDepTreeFactor.hasOneParentPerToken(n, vc));
+    }
+    
+    @Test
+    public void testGetParents() {
+        int n = 6;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        // Create vc for left branching tree.
+        VarConfig vc = new VarConfig();
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i == j) { continue; }
+                vc.put(treeFac.getLinkVar(i, j), (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
+            }
+        }
+        assertArrayEquals(new int[]{-1, 0, 1, 2, 3, 4}, ProjDepTreeFactor.getParents(n, vc));
+    }
+    
+    @Test
+    public void testGetScore() {
+        // For n >= 5, we will hit an integer overflow.
+        int n = 4;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        // Create vc for left branching tree.
+        VarConfig vc = new VarConfig();
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i == j) { continue; }
+                vc.put(treeFac.getLinkVar(i, j), (i == j - 1) ? LinkVar.TRUE : LinkVar.FALSE);
+            }
+        }
+        int vcid1 = vc.getConfigIndex();
+        VarConfig vc2 = treeFac.getVars().getVarConfig(vcid1);
+        int vcid2 = vc2.getConfigIndex();
+        assertEquals(vcid1, vcid2);
+        assertEquals(vc.getVars(), vc2.getVars());
+        assertEquals(vc, vc2);
+        // Not log domain.
+        treeFac.updateFromModel(null, false);
+        assertEquals(1.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        // Add two parents for token 3.
+        vc.put(treeFac.getLinkVar(1, 3), LinkVar.TRUE);
+        assertEquals(0.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+        // No parents for token 3.
+        vc.put(treeFac.getLinkVar(1, 3), LinkVar.FALSE);
+        vc.put(treeFac.getLinkVar(1, 2), LinkVar.FALSE);
+        assertEquals(0.0, treeFac.getUnormalizedScore(vc.getConfigIndex()), 1e-13);
+    }
+    
+    @Test
+    public void testPartitionFunctionWithoutUnaryFactorsProb() {
+        partitionFunctionWithoutUnaryFactors(false);       
+    }
+    
+    @Test
+    public void testPartitionFunctionWithoutUnaryFactorsLogProb() {
+        partitionFunctionWithoutUnaryFactors(true);
+    }
+    
+    public void partitionFunctionWithoutUnaryFactors(boolean logDomain) {
+        assertEquals(1, getNumberOfTreesByBruteForce(1, logDomain), 1e-13);
+        assertEquals(2, getNumberOfTreesByBruteForce(2, logDomain), 1e-13);
+        assertEquals(7, getNumberOfTreesByBruteForce(3, logDomain), 1e-13);
+        //Slow: assertEquals(30, getNumberOfTreesByBruteForce(4, logDomain), 1e-13);
+        
+        assertEquals(1, getNumberOfTreesByBp(1, logDomain), 1e-13);
+        assertEquals(2, getNumberOfTreesByBp(2, logDomain), 1e-13);
+        assertEquals(7, getNumberOfTreesByBp(3, logDomain), 1e-13);
+        assertEquals(30, getNumberOfTreesByBp(4, logDomain), 1e-13); // TODO: is this correct
+        assertEquals(143, getNumberOfTreesByBp(5, logDomain), 1e-13); 
+        assertEquals(728, getNumberOfTreesByBp(6, logDomain), 1e-13);
+        
+        assertEquals(1, getNumberOfTreesByLoopyBp(1, logDomain), 1e-13);
+        assertEquals(2, getNumberOfTreesByLoopyBp(2, logDomain), 1e-13);
+        assertEquals(7, getNumberOfTreesByLoopyBp(3, logDomain), 1e-13);
+        assertEquals(30, getNumberOfTreesByLoopyBp(4, logDomain), 1e-13); 
+        assertEquals(143, getNumberOfTreesByLoopyBp(5, logDomain), 1e-10); 
+        assertEquals(728, getNumberOfTreesByLoopyBp(6, logDomain), 1e-10);
+    }
+
+    private double getNumberOfTreesByBruteForce(int n, boolean logDomain) {
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+        FactorGraph fg = new FactorGraph();
+        fg.addFactor(treeFac);
+        
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        if (logDomain) {
+            return Math.exp(bf.getPartition());
+        } else {
+            return bf.getPartition();
+        }
+    }    
+
+    private double getNumberOfTreesByBp(int n, boolean logDomain) {
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+        FactorGraph fg = new FactorGraph();
+        fg.addFactor(treeFac);
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.normalizeMessages = false;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        if (logDomain) {
+            return Math.exp(bp.getPartition());
+        } else {
+            return bp.getPartition();
+        }
+    }
+    
+
+    private double getNumberOfTreesByLoopyBp(int n, boolean logDomain) {
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+        FactorGraph fg = new FactorGraph();
+        fg.addFactor(treeFac);
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.logDomain = logDomain;
+        prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        prm.normalizeMessages = true;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        if (logDomain) {
+            return Math.exp(bp.getPartition());
+        } else {
+            return bp.getPartition();
+        }
+    }
+    
+    // TODO: This and the next test are failing due to to an incorrect Bethe free energy computation.
+    // It seems as though some edges have weight zero.
     @Test
     public void testResultingMarginalsProb() {
         boolean logDomain = false;        
@@ -38,6 +205,7 @@ public class ProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
                 
@@ -71,7 +239,7 @@ public class ProjDepTreeFactorTest {
         prm.logDomain = logDomain;
         prm.schedule = BpScheduleType.TREE_LIKE;
         prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
-        prm.normalizeMessages = false;
+        prm.normalizeMessages = true;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
         bp.clear();
@@ -107,6 +275,11 @@ public class ProjDepTreeFactorTest {
 
         // Check partition function.
         assertEquals(45+28+20+84+162+216+96, logDomain ? FastMath.exp(bp.getPartition()) : bp.getPartition(), 1e-3);
+        
+        // Run brute force inference and compare.
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
     @Test
@@ -121,6 +294,7 @@ public class ProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
                 
@@ -197,6 +371,10 @@ public class ProjDepTreeFactorTest {
         assertEquals((3*3 + 3*7)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
         assertEquals((8*2 + 8*5)/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
 
+        // Run brute force inference and compare.
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
 
 
@@ -214,6 +392,7 @@ public class ProjDepTreeFactorTest {
         FactorGraph fg = new FactorGraph();
         int n = root.length;
         ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
         LinkVar[] rootVars = treeFac.getRootVars();
         LinkVar[][] childVars = treeFac.getChildVars();
               
@@ -304,6 +483,10 @@ public class ProjDepTreeFactorTest {
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, logDomain, -1, 0), 1e-3);
         assertEquals(2/Z, getExpectedCount(bp, rootVars, childVars, logDomain, 1, 0), 1e-3);
 
+        // Run brute force inference and compare.
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
     
     private double getExpectedCount(BeliefPropagation bp, LinkVar[] rootVars, LinkVar[][] childVars, boolean logDomain, int i, int j) {

@@ -39,6 +39,10 @@ public class ExplicitFactor extends DenseFactor implements Factor {
         return this.getValue(configId);
     }
 
+    public double getUnormalizedScore(VarConfig vc) {
+        return getUnormalizedScore(vc.getConfigIndex());
+    }
+
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
         // No op since this type of factor doesn't have any features.
     }

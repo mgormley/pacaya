@@ -40,22 +40,6 @@ public abstract class AbstractFgExampleList implements FgExampleList {
         }
         return numVars;
     }
-
-    public double getTotMsFgClampTimer() {
-        double tot = 0;
-        for (FgExample ex : this) {
-            tot += ex.fgClampTimer.totMs();
-        }
-        return tot;
-    }
-
-    public double getTotMsFeatCacheTimer() {
-        double tot = 0;
-        for (FgExample ex : this) {
-            tot += ex.featCacheTimer.totMs();
-        }
-        return tot;
-    }
     
     // ------------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@ public class TropicalSemiring implements Semiring {
 
     @Override
     public double plus(double x, double y) {
-        return Math.max(x, y);
+        return Math.min(x, y);
     }
 
     @Override
@@ -14,7 +14,7 @@ public class TropicalSemiring implements Semiring {
 
     @Override
     public double zero() {
-        return Double.NEGATIVE_INFINITY;
+        return Double.POSITIVE_INFINITY;
     }
 
     @Override

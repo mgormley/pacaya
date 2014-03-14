@@ -16,7 +16,7 @@ public class CoNLLXDepTree extends DepTree {
     
     public CoNLLXDepTree(CoNLLXSentence sent, Alphabet<String> alphabet) {
         // TODO: filter out punctuation.
-        super(new Sentence(sent, alphabet), sent.getParents(), false);
+        super(new Sentence(sent, alphabet), sent.getParentsFromHead(), false);
         this.sent = sent;
     }
 

@@ -15,12 +15,12 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
+import edu.jhu.gm.feat.ObsFeatureConjoinerTest;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 
-public class SrlFgModelTest {
+public class JointNlpFgModelTest {
 
     @Test
     public void testIsSerializable() throws IOException {
@@ -37,7 +37,7 @@ public class SrlFgModelTest {
             ofc.init();
             
             // Just test that no exception is thrown.
-            SrlFgModel model = new SrlFgModel(cs, ofc, new SrlFeatureExtractorPrm());
+            JointNlpFgModel model = new JointNlpFgModel(cs, ofc, new JointNlpFeatureExtractorPrm());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ObjectOutputStream out = new ObjectOutputStream(baos);
             out.writeObject(model);

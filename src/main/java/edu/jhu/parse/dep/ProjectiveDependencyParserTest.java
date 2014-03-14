@@ -28,6 +28,7 @@ public class ProjectiveDependencyParserTest {
      * After adding Inside/Outside:
      * Total time: 317.0
      * Sentences per second: 315.45741324921136
+     * Tokens per second: 8955.223880597014
      */
     @Test
     public void testParseSpeed() {
@@ -51,7 +52,42 @@ public class ProjectiveDependencyParserTest {
         timer.stop();
         System.out.println("Total time: " + timer.totMs());
         int numSents = trials;
+        int numTokens = n * numSents;
         System.out.println("Sentences per second: " + numSents / timer.totSec());
+        System.out.println("Tokens per second: " + numTokens / timer.totSec());
+    }
+
+    /**
+     * Output:
+     * SEED=123456789101112
+     * 100 trials: Tokens per second: 5338.078291814946
+     * 1000 trials: Tokens per second: 11406.84410646388
+     */
+    @Test
+    public void testInsideOutsideSpeed() {
+        FastMath.useLogAddTable = true;
+
+        int trials = 1000;
+        int n = 30;
+
+        // Just create one tree.
+        double[] root = Multinomials.randomMultinomial(n);
+        double[][] child = new double[n][];
+        for (int i=0; i<n; i++) {
+            child[i] =  Multinomials.randomMultinomial(n);
+        }
+        
+        Timer timer = new Timer();
+        timer.start();
+        for (int t=0; t<trials; t++) {
+            ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
+        }
+        timer.stop();
+        System.out.println("Total time: " + timer.totMs());
+        int numSents = trials;
+        int numTokens = n * numSents;
+        System.out.println("Sentences per second: " + numSents / timer.totSec());
+        System.out.println("Tokens per second: " + numTokens / timer.totSec());
     }
         
     @Test

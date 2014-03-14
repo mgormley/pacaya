@@ -16,7 +16,6 @@ import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -27,23 +26,23 @@ import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
+import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
 
 /**
- * Unit tests for {@link SrlFgExamplesBuilderTest}.
+ * Unit tests for {@link JointNlpFgExamplesBuilderTest}.
  * @author mgormley
  * @author mmitchell
  */
-public class SrlFgExamplesBuilderTest {
+public class JointNlpFgExamplesBuilderTest {
 
     @Test
     public void testGetData() throws Exception {
@@ -62,13 +61,13 @@ public class SrlFgExamplesBuilderTest {
         
         System.out.println("Done reading.");
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
         
-        prm.fgPrm.useProjDepTreeFactor = true;
-        prm.srlFePrm.fePrm.biasOnly = true;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
         ofc.init(data);
         
@@ -92,14 +91,13 @@ public class SrlFgExamplesBuilderTest {
             simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);        
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         //prm.includeUnsupportedFeatures = 
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.alwaysIncludeLinkVars = true;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
         ofc.init(data);
         FgExample ex = data.get(0);
@@ -136,27 +134,22 @@ public class SrlFgExamplesBuilderTest {
         }
 
         cs.init(simpleSents);
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.useZhaoFeats = false;
-        prm.srlFePrm.fePrm.useSimpleFeats = false;
-        prm.srlFePrm.fePrm.useLexicalDepPathFeats = false;
-        prm.srlFePrm.fePrm.useNaradFeats = false;
-        prm.srlFePrm.fePrm.useTemplates = true;
-        prm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
-        prm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.alwaysIncludeLinkVars = true;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fePrm.srlFePrm.fePrm.useTemplates = true;
+        prm.fePrm.srlFePrm.fePrm.soloTemplates = TemplateSets.getBjorkelundSenseUnigramFeatureTemplates();
+        prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getBjorkelundArgUnigramFeatureTemplates();
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         
         {
             FactorTemplateList fts = new FactorTemplateList();
             ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
             ofcPrm.featCountCutoff = 0;            
             ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);                   
-            assertEquals(1237, fts.getNumObsFeats());
-            assertEquals(2451, ofc.getNumParams());
+            assertEquals(340, fts.getNumObsFeats());
+            assertEquals(2916, ofc.getNumParams());
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
@@ -164,10 +157,10 @@ public class SrlFgExamplesBuilderTest {
             ofcPrm.includeUnsupportedFeatures = true;
             ofcPrm.featCountCutoff = 1;   
             ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(2451, ofc.getNumParams());            
+            assertEquals(2916, ofc.getNumParams());            
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
@@ -175,20 +168,20 @@ public class SrlFgExamplesBuilderTest {
             ofcPrm.includeUnsupportedFeatures = true;
             ofcPrm.featCountCutoff = -1;   
             ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(3834, ofc.getNumParams());            
+            assertEquals(4299, ofc.getNumParams());            
         }
         {
             FactorTemplateList fts = new FactorTemplateList();
             ObsFeatureConjoinerPrm ofcPrm = new ObsFeatureConjoinerPrm();
             ofcPrm.featCountCutoff = 5;            
             ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
-            SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+            JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
             ofc.init(data);
-            assertEquals(604, ofc.getNumParams());
+            assertEquals(2349, ofc.getNumParams());
             // These are the old counts from when we used to filter based on the counting versions of 
             // FeatureTemplateList.
             //assertEquals(313, fts.getNumObsFeats());
@@ -215,14 +208,13 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(simpleSents);        
         
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.linkVarType = VarType.PREDICTED;
-        prm.fgPrm.alwaysIncludeLinkVars = true;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
         ofc.init(data);
         FgExample ex = data.get(0);
@@ -232,7 +224,7 @@ public class SrlFgExamplesBuilderTest {
 
         assertEquals(18 + 19*18 + 19, vc.size());
         
-        int[] parents = getParents(sents.get(0).size(), vc);
+        int[] parents = ProjDepTreeFactor.getParents(sents.get(0).size(), vc);
         System.out.println(Arrays.toString(parents));
         assertTrue(DepTree.checkIsProjective(parents));
         assertArrayEquals(new int[]{2, 2, -1, 4, 2, 4, 7, 5, 7, 8, 7, 14, 11, 11, 10, 14, 17, 15, 2}, parents);
@@ -257,13 +249,13 @@ public class SrlFgExamplesBuilderTest {
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(simpleSents);        
         
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.srlFePrm.fePrm.biasOnly = true;
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.predictSense = true;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.srlPrm.predictSense = true;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
         ofc.init(data);
         FgExample ex = data.get(0);
@@ -278,34 +270,6 @@ public class SrlFgExamplesBuilderTest {
         assertEquals("fer.a2", srlGraph.getPredAt(2).getLabel());
     }
    
-    
-    /**
-     * Decodes the parents defined by a variable assignment for a single
-     * sentence.
-     * 
-     * @param n The sentence length.
-     * @param vc The variable assignment.
-     * @return The parents array.
-     */
-    // TODO: Maybe use this somewhere? Probably not... we should really decode
-    // using MBR decoding over the link marginals.
-    private static int[] getParents(int n, VarConfig vc) {
-        int[] parents = new int[n];
-        Arrays.fill(parents, -2);
-        for (Var v : vc.getVars()) {
-            if (v instanceof LinkVar) {
-                LinkVar link = (LinkVar) v;
-                if (vc.getState(v) == LinkVar.TRUE) {
-                    if (parents[link.getChild()] != -2) {
-                        throw new IllegalStateException(
-                                "Multiple link vars define the same parent/child edge. Is this VarConfig for only one example?");
-                    }
-                    parents[link.getChild()] = link.getParent();
-                }
-            }
-        }
-        return parents;
-    }
     
     private static FgModel train(FgModel model, FgExampleList data) {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();

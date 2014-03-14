@@ -1,6 +1,6 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.model.FactorGraph;
+import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -15,12 +15,14 @@ import edu.jhu.gm.model.VarSet;
  */
 public abstract class SlowFeatureExtractor implements FeatureExtractor {
 
-    private FactorGraph fg;
     private VarConfig goldConfig;
 
-    public SlowFeatureExtractor(FactorGraph fg, VarConfig goldConfig) {
-        this.fg = fg;
-        this.goldConfig = goldConfig;
+    public SlowFeatureExtractor() {
+    }
+
+    @Override
+    public void init(FgExample ex) {
+        this.goldConfig = ex.getGoldConfig();
     }
     
     @Override
