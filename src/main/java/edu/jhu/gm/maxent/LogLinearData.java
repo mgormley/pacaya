@@ -74,7 +74,7 @@ public class LogLinearData {
     public void addEx(double weight, String label, List<? extends Object> featNames) {
         FeatureVector features = new FeatureVector();
         for (Object featName : featNames) {
-            features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(new Feature(featName)), 1.0);
         }
         LogLinearExample ex = new LogLinearExample(weight, label, features);
         exList.add(ex);
