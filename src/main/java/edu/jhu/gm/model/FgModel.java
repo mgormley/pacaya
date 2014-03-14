@@ -134,12 +134,15 @@ public class FgModel implements Serializable, IFgModel {
     }
     
     public void printModel(Writer writer) throws IOException {
-        Iterator<String> iter = paramNames.iterator();
+        Iterator<String> iter = null;
+        if (paramNames != null) {
+            iter = paramNames.iterator();
+        }
         for (int i=0; i<numParams; i++) {
-            if (paramNames == null) {
-                writer.write(String.format("%d", i));
-            } else {
+            if (paramNames != null) {
                 writer.write(iter.next());
+            } else {
+                writer.write(String.format("%d", i));
             }
             writer.write("\t");
             writer.write(String.format("%.13g", params.get(i)));

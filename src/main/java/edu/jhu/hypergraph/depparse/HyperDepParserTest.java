@@ -144,13 +144,14 @@ public class HyperDepParserTest {
         int numTokens = n * numSents;
         System.out.println("Sentences per second: " + numSents / timer.totSec());
         System.out.println("Tokens per second: " + numTokens / timer.totSec());
+        FastMath.useLogAddTable = false;
     }
 
     @Test
     public void testInsideFirstOrderExpect1() {
         helpTestInsideFirstOrderExpect(new RealSemiring());
-        helpTestInsideFirstOrderExpect(new LogPosNegSemiring());
         helpTestInsideFirstOrderExpect(new LogSemiring());
+        helpTestInsideFirstOrderExpect(new LogPosNegSemiring());
     }
 
     private void helpTestInsideFirstOrderExpect(SemiringExt s) {
@@ -170,7 +171,7 @@ public class HyperDepParserTest {
         // Check inside scores. (These LogInsideScore checks are mostly unnecessary.)
         assertEquals(7, s.toReal(chart.getLogInsideScore(1, 2)), 1e-13);
         assertEquals(9, s.toReal(chart.getLogInsideScore(2, 1)), 1e-13);
-        assertEquals(45+20, s.toReal(chart.getLogInsideScore(0, 2)), 1e-13);
+        assertEquals(45+20, s.toReal(chart.getLogInsideScore(0, 2)), 1e-10);
         assertEquals(45+28+20, s.toReal(chart.getLogInsideScore(-1, 0)), 1e-10);
         assertEquals(84, s.toReal(chart.getLogInsideScore(-1, 1)), 1e-13);
         assertEquals(8*9+8*4, s.toReal(chart.getLogInsideScore(2, 0)), 1e-10);
