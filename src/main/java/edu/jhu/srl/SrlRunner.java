@@ -107,8 +107,6 @@ public class SrlRunner {
     public static File modelOut = null;
     @Opt(hasArg = true, description = "File to which to print a human readable version of the model.")
     public static File printModel = null;
-    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
-    public static File pruneModel = null;
 
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
@@ -139,6 +137,10 @@ public class SrlRunner {
     public static boolean siblingFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
+    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
+    public static boolean pruneEdges = false;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -570,7 +572,7 @@ public class SrlRunner {
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
         prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
-        prm.fgPrm.dpPrm.pruneEdges = (pruneModel != null); 
+        prm.fgPrm.dpPrm.pruneEdges = pruneEdges;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
