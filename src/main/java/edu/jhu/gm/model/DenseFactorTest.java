@@ -172,8 +172,8 @@ public class DenseFactorTest {
     @Test
     public void testFactorAddDiff() {   
         Var v0 = VarSetTest.getVar(0, 2);
-        Var v1 = VarSetTest.getVar(1, 3);
         Var v2 = VarSetTest.getVar(2, 2);
+        Var v1 = VarSetTest.getVar(1, 3);
 
         // Test where the difference of vars1 and vars2 is non-empty and so we must take their union.
         VarSet vars1 = new VarSet();
