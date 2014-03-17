@@ -824,10 +824,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                               adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
-            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
+                                       removeAts="DEPREL", tagger_parser="1st", pruneEdges=False)
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                       bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
-                                                      normalizeMessages=True, pruneEdges=False)
+                                                      normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             parsers = [second_order, second_grand, second_sib, first_order]
@@ -899,11 +900,11 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if not self.big_machine:
                 g.defaults.update(maxEntriesInMemory=1)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
-                                       tagger_parser="1st")
+                                       tagger_parser="1st", pruneEdges=False)
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                       #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
                                                       bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
-                                                      normalizeMessages=True, pruneEdges=False)
+                                                      normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             parsers = [second_order, second_grand, second_sib, first_order]
@@ -926,7 +927,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             data = data + SrlExpParams(dev=pl.cx_dev)
                         else:
                             data = data + SrlExpParams(propTrainAsDev=0.10) #TODO: set to zero for final experiments.
-                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
+                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
                         parser += SrlExpParams(pruneModel=pruneModel)
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
