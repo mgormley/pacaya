@@ -845,9 +845,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         data = data + SrlExpParams(dev=pl.cx_dev)
                     else:
                         data = data + SrlExpParams(propTrainAsDev=0) #TODO: set to zero for final experiments.
-                    if parser != first_order:
-                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
-                        parser += SrlExpParams(pruneModel=pruneModel)
+                    pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
+                    parser += SrlExpParams(pruneModel=pruneModel)
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     #TODO: Maybe remove? if parser != first_order: exp += SrlExpParams(work_mem_megs=20*1000)
@@ -925,10 +924,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                             data = data + SrlExpParams(dev=pl.cx_dev)
                         else:
                             data = data + SrlExpParams(propTrainAsDev=0.10) #TODO: set to zero for final experiments.
-                        if parser != None: #first_order:
-                            pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
-                            #pruneModel = os.path.join(self.root_dir, "exp/dp-conllx-tmp_045/1st/model.binary.gz")
-                            parser += SrlExpParams(pruneModel=pruneModel)
+                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
+                        parser += SrlExpParams(pruneModel=pruneModel)
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
