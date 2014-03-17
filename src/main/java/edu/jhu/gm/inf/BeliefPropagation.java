@@ -161,23 +161,25 @@ public class BeliefPropagation implements FgInferencer {
                 ((GlobalFactor)factor).reset();
             }
         }
-        // Initialize factor beliefs
-        for(FgNode node : fg.getNodes()) {
-        	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
-            	Factor f = node.getFactor();        		
-        		DenseFactor fBel = new DenseFactor(f.getVars());
-            	int c = f.getVars().calcNumConfigs();
-            	for(int i=0; i<c; i++)
-            		fBel.setValue(i, f.getUnormalizedScore(i));
-            	
-            	for(FgEdge v2f : node.getInEdges()) {
-            		DenseFactor vBel = msgs[v2f.getId()].message;
-            		if(prm.logDomain) fBel.add(vBel);
-            		else fBel.prod(vBel);
+        if (prm.cacheFactorBeliefs) {
+            // Initialize factor beliefs
+            for(FgNode node : fg.getNodes()) {
+            	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
+                	Factor f = node.getFactor();        		
+            		DenseFactor fBel = new DenseFactor(f.getVars());
+                	int c = f.getVars().calcNumConfigs();
+                	for(int i=0; i<c; i++)
+                		fBel.setValue(i, f.getUnormalizedScore(i));
+                	
+                	for(FgEdge v2f : node.getInEdges()) {
+                		DenseFactor vBel = msgs[v2f.getId()].message;
+                		if(prm.logDomain) fBel.add(vBel);
+                		else fBel.prod(vBel);
+                	}
+                	
+                	factorBeliefCache[f.getId()] = fBel;
             	}
-            	
-            	factorBeliefCache[f.getId()] = fBel;
-        	}
+            }
         }
         
         
