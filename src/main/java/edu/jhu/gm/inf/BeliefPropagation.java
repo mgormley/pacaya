@@ -527,7 +527,7 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else {
-                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getNode(a), msgs, prm.logDomain);
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs, prm.logDomain);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

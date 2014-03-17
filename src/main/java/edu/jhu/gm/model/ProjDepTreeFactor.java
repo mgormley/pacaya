@@ -267,24 +267,19 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return pi;
     }    
 
-    private static boolean warnedOnce = false;
     @Override
     public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
-        if (!warnedOnce) {
-            log.warn("Skipping getExpectedLogBelief computation and returning -10000 instead.");
-            warnedOnce = true;
+        if (n == 0) {
+            return 0.0;
         }
-        if (true) {
-            return -10000;
-        }
-
+        assert parent.getFactor() == this;
         double[] root = new double[n];
         double[][] child = new double[n][n];
         getLogOddsRatios(parent, msgs, logDomain, root, child);
         double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
 
-        SemiringExt s = new LogPosNegSemiring();
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child);
+        SemiringExt s = new LogSemiring();
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
