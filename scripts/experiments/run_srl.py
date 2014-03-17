@@ -895,6 +895,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_narad #mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                               adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
+            if not self.big_machine:
+                g.defaults.update(maxEntriesInMemory=1)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
                                        tagger_parser="1st")
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
@@ -924,8 +926,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         else:
                             data = data + SrlExpParams(propTrainAsDev=0.10) #TODO: set to zero for final experiments.
                         if parser != None: #first_order:
-                            #pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
-                            pruneModel = os.path.join(self.root_dir, "exp/dp-conllx-tmp_045/1st/model.binary.gz")
+                            pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary")
+                            #pruneModel = os.path.join(self.root_dir, "exp/dp-conllx-tmp_045/1st/model.binary.gz")
                             parser += SrlExpParams(pruneModel=pruneModel)
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
