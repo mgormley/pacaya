@@ -366,7 +366,10 @@ public class SrlRunner {
     }
 
     private void addPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents, String name) {
-        if (pruneModel != null) {
+        if (pruneEdges) {
+            if (pruneModel == null) {
+                throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
+            }
             // Read a model from a file.
             log.info("Reading pruning model from file: " + pruneModel);
             JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
