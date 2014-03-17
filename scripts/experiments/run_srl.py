@@ -660,6 +660,9 @@ class ParamDefinitions():
                     base_work_mem_megs = 5*1024
             elif exp.get("includeSrl") == False:
                 base_work_mem_megs = 5 * 1000
+                is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
+                if exp.get("pruneEdges") == False and is_higher_order: 
+                    base_work_mem_megs = 20*1000
             else:
                 if exp.get("useProjDepTreeFactor"):
                     base_work_mem_megs = 20 * 1000
@@ -849,7 +852,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     parser += SrlExpParams(pruneModel=pruneModel)
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    #TODO: Maybe remove? if parser != first_order: exp += SrlExpParams(work_mem_megs=20*1000)
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
