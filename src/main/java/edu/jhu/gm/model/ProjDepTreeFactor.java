@@ -278,16 +278,23 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         getLogOddsRatios(parent, msgs, logDomain, root, child);
         double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
 
-        SemiringExt s = new LogSemiring();
+        SemiringExt s = new LogPosNegSemiring();
         Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
-        int rt = graph.getRoot().getId();
-        double logZ = scores.beta[rt];     
-        double logRbar = scores.betaFoe[rt];
-        double logPartition = logPi + logZ;
-        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
+        int rt = graph.getRoot().getId();        
+        double Z = scores.beta[rt];
+        double rbar = scores.betaFoe[rt];
+        double pi = s.fromLogProb(logPi);
+        double partition = s.times(pi, Z);
+        double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
+        // Equivalent code:
+        //        double logZ = s.toLogProb(scores.beta[rt]);     
+        //        double logRbar = s.toLogProb(scores.betaFoe[rt]);
+        //        double logPartition = logPi + logZ;
+        //        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
+
         // TODO: Keep these for debugging.
         // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", logZ, logRbar, logPi, expectation));
         // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", s.toReal(logZ), s.toReal(logRbar), FastMath.exp(logPi), expectation));

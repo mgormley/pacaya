@@ -588,6 +588,70 @@ public class ProjDepTreeFactorTest {
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
     
+
+    @Test
+    public void testResultingMarginals3() {
+        testResultingMarginals3Helper(false, false);
+        testResultingMarginals3Helper(true, false);
+        testResultingMarginals3Helper(true, true);
+        testResultingMarginals3Helper(false, true);
+    }
+
+    // Just a test that we can have fractional values in the factors (e.g. 0.02),
+    // resulting in negative values for the odds ratios.
+    public void testResultingMarginals3Helper(boolean logDomain, boolean normalizeMessages) {
+        double[] root = new double[] {1, 0.02}; 
+        double[][] child = new double[][]{ {0, 3}, {4, 0} };
+        
+        // Create an edge factored dependency tree factor graph.
+        //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
+        FactorGraph fg = new FactorGraph();
+        int n = root.length;
+        ProjDepTreeFactor treeFac = new ProjDepTreeFactor(n, VarType.PREDICTED);
+        treeFac.updateFromModel(null, logDomain);
+        LinkVar[] rootVars = treeFac.getRootVars();
+        LinkVar[][] childVars = treeFac.getChildVars();
+                
+        // Add unary factors to each edge.
+        for (int i=-1; i<n; i++) {
+            for (int j=0; j<n; j++) {
+                if (i != j) {
+                    ExplicitFactor f;
+                    if (i == -1) {
+                        f = new ExplicitFactor(new VarSet(rootVars[j]));
+                        f.setValue(LinkVar.TRUE, root[j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    } else {
+                        f = new ExplicitFactor(new VarSet(childVars[i][j]));
+                        f.setValue(LinkVar.TRUE, child[i][j]);
+                        f.setValue(LinkVar.FALSE, 1.0);
+                    }
+                    if (logDomain) {
+                        f.convertRealToLog();
+                    }
+                    fg.addFactor(f);
+                }
+            }
+        }
+        
+        // Add this at the end, just to exercise the BFS schedule a bit more.
+        fg.addFactor(treeFac);
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 10;
+        prm.logDomain = logDomain;
+        //prm.schedule = BpScheduleType.TREE_LIKE;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.normalizeMessages = normalizeMessages;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+        
+        // Run brute force inference and compare.
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+    }
+    
     private double getExpectedCount(BeliefPropagation bp, LinkVar[] rootVars, LinkVar[][] childVars, boolean logDomain, int i, int j) {
         DenseFactor marg;
         if (i == -1) {
