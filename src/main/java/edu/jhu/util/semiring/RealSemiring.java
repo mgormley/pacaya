@@ -45,8 +45,26 @@ public class RealSemiring implements Semiring, SemiringExt {
     }
 
     @Override
+    public double toLogProb(double nonReal) {
+        return FastMath.log(nonReal);
+    }
+
+    @Override
     public double fromLogProb(double logProb) {
         return FastMath.exp(logProb);
+    }
+    
+    @Override
+    public double exp(double x) {
+        return FastMath.exp(x);
+    }
+
+    @Override
+    public double log(double x) {
+        if (x < 0) {
+            throw new IllegalStateException("Unable to take the log of a negative number.");
+        }
+        return FastMath.log(x);
     }
     
 }

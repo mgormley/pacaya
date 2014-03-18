@@ -36,6 +36,14 @@ public class LogPosNegSemiring implements Semiring, SemiringExt {
     }
 
     @Override
+    public double toLogProb(double nonReal) {
+        if (sign(nonReal) == NEGATIVE) {
+            throw new IllegalStateException("Unable to take the log of a negative number.");
+        }
+        return natlog(nonReal);
+    }
+    
+    @Override
     public double fromLogProb(double logProb) {
         return compact(POSITIVE, natlog(logProb));
     }
@@ -108,4 +116,15 @@ public class LogPosNegSemiring implements Semiring, SemiringExt {
         return compact(sign, natlog(x) - natlog(y));
     }
     
+    public double exp(double x) {
+        return compact(POSITIVE, toReal(x));
+    }
+
+    public double log(double x) {
+        if (sign(x) == NEGATIVE) {
+            throw new IllegalStateException("Unable to take the log of a negative number.");
+        }
+        return fromReal(natlog(x));
+    }
+        
 }
