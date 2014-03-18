@@ -104,7 +104,10 @@ public class CrfObjective implements ExampleObjective {
         log.trace(String.format("ll=%f numerator=%f denominator=%f", ll, numerator, denominator));
         log.trace(String.format("numFullyClamped=%d numFactors=%d", numFullyClamped, fgLatPred.getFactors().size()));
         
-        if ( ll > MAX_LOG_LIKELIHOOD ) {
+        if (ll > MAX_LOG_LIKELIHOOD) {
+            // Note: this can occur if the graph is loopy because the
+            // Bethe free energy has miss-estimated -log(Z) or because BP
+            // has not yet converged.
             log.warn("Log-likelihood for example should be <= 0: " + ll);
         }
         return ll;

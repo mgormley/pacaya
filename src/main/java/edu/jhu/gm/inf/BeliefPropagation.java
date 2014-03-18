@@ -16,6 +16,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
@@ -514,11 +515,11 @@ public class BeliefPropagation implements FgInferencer {
         Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
-            if (f instanceof ExplicitFactor) {
+            if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
                 DenseFactor beliefs = getMarginalsForFactorId(a);
                 for (int c=0; c<numConfigs; c++) {                
-                    double chi_c = ((ExplicitFactor) f).getValue(c);
+                    double chi_c = f.getUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
                     if (beliefs.getValue(c) != semiringZero) { 
                         if (prm.logDomain) {

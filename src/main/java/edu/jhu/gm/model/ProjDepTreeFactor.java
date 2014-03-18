@@ -187,6 +187,11 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 beliefFalse = FastMath.logSubtract(partition, beliefTrue);
             }
 
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("beliefTrue (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), beliefTrue));
+                log.trace(String.format("beliefFalse (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), beliefFalse));
+            }
+            
             // Divide out the incoming message to obtain the outgoing message from the belief. 
             FgEdge inEdge = outEdge.getOpposing();
             DenseFactor inMsg = msgs[inEdge.getId()].message;
@@ -197,7 +202,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 beliefTrue -= FastMath.log(inMsg.getValue(LinkVar.TRUE));
                 beliefFalse -= FastMath.log(inMsg.getValue(LinkVar.FALSE));                
             }
-
+            
             if (normalizeMessages) {
                 double[] logMsgs = new double[] {beliefTrue, beliefFalse};
                 Multinomials.normalizeLogProps(logMsgs);
