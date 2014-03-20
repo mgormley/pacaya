@@ -320,11 +320,13 @@ public class CrfObjectiveTest {
         bpPrm.maxIterations = 50;
         FgInferencerFactory infFactory = bpPrm;
         AvgBatchObjective obj = getCrfObj(model, data, infFactory);
-        double ll = obj.getValue();        
-        assertTrue(ll < 0d);
+        double ll = 0;
         for (int i=0; i<obj.getNumExamples(); i++) {
-            assertTrue(obj.getValue(new int[]{i}) <= 0);
+            double exll = obj.getValue(new int[]{i});
+            assertTrue(exll <= 0);
+            ll += exll;
         }
+        assertTrue(ll < 0d);
     }
 
     
