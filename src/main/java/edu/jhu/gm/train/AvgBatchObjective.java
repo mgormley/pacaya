@@ -9,8 +9,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.Function;
+import edu.jhu.hlt.optimize.function.BatchFunction;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.sort.IntSort;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Threads.TaskFactory;

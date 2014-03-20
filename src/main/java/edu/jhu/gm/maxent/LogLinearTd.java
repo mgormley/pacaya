@@ -35,7 +35,7 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.optimize.L2;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
 

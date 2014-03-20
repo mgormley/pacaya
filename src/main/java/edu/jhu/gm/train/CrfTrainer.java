@@ -6,17 +6,17 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.BatchFunctionOpts;
-import edu.jhu.optimize.BatchMaximizer;
-import edu.jhu.optimize.Function;
-import edu.jhu.optimize.FunctionAsBatchFunction;
-import edu.jhu.optimize.FunctionOpts;
-import edu.jhu.optimize.L2;
-import edu.jhu.optimize.MalletLBFGS;
-import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.Maximizer;
-import edu.jhu.optimize.Regularizer;
+import edu.jhu.hlt.optimize.BatchMaximizer;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.Maximizer;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.function.BatchFunction;
+import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
+import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
+import edu.jhu.hlt.optimize.function.FunctionOpts;
+import edu.jhu.hlt.optimize.function.Regularizer;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.sort.IntSort;
 
 /**
