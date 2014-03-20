@@ -16,7 +16,6 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
@@ -116,11 +115,11 @@ public class LogLinearTdTest {
         
         // Test log-likelihood.
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         // Test log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams())
+;
         System.out.println(ll);
         //assertEquals(-2.687, ll, 1e-3);
         
@@ -137,12 +136,9 @@ public class LogLinearTdTest {
         assertEquals(0.009, expFeats.get(1), 1e-3);
         
         // Test gradient.        
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
-                
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();                 
         System.out.println(Arrays.toString(gradient));
-        JUnitUtils.assertArrayEquals(
-new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
+        JUnitUtils.assertArrayEquals(new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
                 0.24941014930579491, -0.4049252957987691, -0.23748187663263962, -0.16349489515194487,
                 -0.01031601415740464 }, gradient, 1e-3);
     }
@@ -162,13 +158,13 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         model.updateModelFromDoubles(params);
         
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(1, exs.getAlphabet().size());
 
         // Test average log-likelihood.
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams())
+;        
         System.out.println(ll + " " + Math.exp(ll));
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
@@ -183,8 +179,7 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(0.5378, expFeats.get(0), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();  
         double[] expectedGradient = new double[]{1.0 - 0.5378, 1.0 - 1.4621};
         DoubleArrays.scale(expectedGradient, 1.0/2.0);
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
@@ -205,13 +200,13 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         model.updateModelFromDoubles(params);
 
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(1, exs.getAlphabet().size());
 
         // Test log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams())
+;
         System.out.println(ll);
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
@@ -226,8 +221,7 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(0.7310, expFeats.get(1), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();
         JUnitUtils.assertArrayEquals(new double[]{-0.2689, 0.2689}, gradient, 1e-3);
     }
     

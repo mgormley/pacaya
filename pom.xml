@@ -117,6 +117,16 @@
       <!-- <scope>test</scope> -->
     </dependency>
     <dependency>
+      <groupId>edu.jhu.prim</groupId>
+      <artifactId>prim</artifactId>
+      <version>2.0.2-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>edu.jhu.hlt.optimize</groupId>
+      <artifactId>optimize</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>edu.jhu.erma</groupId>
       <artifactId>erma</artifactId>
       <version>1.0.1-SNAPSHOT</version>
@@ -166,11 +176,6 @@
           <artifactId>jfreechart</artifactId>
         </exclusion>
       </exclusions> 
-    </dependency>
-    <dependency>
-      <groupId>edu.jhu.prim</groupId>
-      <artifactId>prim</artifactId>
-      <version>2.0.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>

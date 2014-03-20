@@ -9,9 +9,11 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.IFgModel;
-import edu.jhu.hlt.optimize.function.BatchFunction;
-import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.function.ValueGradient;
 import edu.jhu.prim.sort.IntSort;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Threads.TaskFactory;
 
@@ -30,7 +32,7 @@ import edu.jhu.util.Threads.TaskFactory;
  * 
  * @author mgormley
  */
-public class AvgBatchObjective implements Function, BatchFunction {
+public class AvgBatchObjective implements DifferentiableFunction, DifferentiableBatchFunction {
     
     /**
      * An objective function for a single example or instance. Calls to these
@@ -67,11 +69,6 @@ public class AvgBatchObjective implements Function, BatchFunction {
         this.gradient.zero();
         this.pool = Executors.newFixedThreadPool(numThreads);
     }
-        
-    public void setPoint(double[] params) {
-        log.trace("Updating model with new parameters");
-        model.updateModelFromDoubles(params);
-    }
     
     /**
      * Gets the average marginal conditional log-likelihood of the model for the given model parameters.
@@ -90,8 +87,8 @@ public class AvgBatchObjective implements Function, BatchFunction {
      * @inheritDoc
      */
     @Override
-    public double getValue() {        
-        return getValue(IntSort.getIndexArray(numExamples));
+    public double getValue(IntDoubleVector params) {        
+        return getValue(params, IntSort.getIndexArray(numExamples));
     }
 
     /**
@@ -99,7 +96,8 @@ public class AvgBatchObjective implements Function, BatchFunction {
      * @inheritDoc
      */
     @Override
-    public double getValue(int[] batch) {
+    public double getValue(IntDoubleVector params, int[] batch) {
+        model.setParams(params);
         // TODO: we shouldn't run inference again just to compute this!!
         boolean isFullDataset = batch.length == numExamples;
         double ll = 0.0;
@@ -152,8 +150,8 @@ public class AvgBatchObjective implements Function, BatchFunction {
      * @inheritDoc
      */
     @Override
-    public void getGradient(double[] g) {
-        getGradient(IntSort.getIndexArray(numExamples), g);
+    public IntDoubleVector getGradient(IntDoubleVector params) {
+        return getGradient(params, IntSort.getIndexArray(numExamples));
     }
 
     /**
@@ -161,7 +159,8 @@ public class AvgBatchObjective implements Function, BatchFunction {
      * @inheritDoc
      */
     @Override
-    public void getGradient(int[] batch, double[] g) {
+    public IntDoubleVector getGradient(IntDoubleVector params, int[] batch) {
+        model.setParams(params);
         this.gradient.zero();   
         if (numThreads == 1) {
             // Run serially.
@@ -179,7 +178,7 @@ public class AvgBatchObjective implements Function, BatchFunction {
             Threads.safelyParallelizeBatch(pool, batch, factory);
         }     
         this.gradient.scale(1.0 / batch.length);
-        gradient.updateDoublesFromModel(g);
+        return gradient.getParams();
     }
 
     private class AddGradientOfExample implements Callable<Object> {
@@ -206,6 +205,16 @@ public class AvgBatchObjective implements Function, BatchFunction {
             return null;
         }
         
+    }
+
+    @Override
+    public ValueGradient getValueGradient(IntDoubleVector point) {
+        return new ValueGradient(getValue(point), getGradient(point));
+    }
+
+    @Override
+    public ValueGradient getValueGradient(IntDoubleVector point, int[] batch) {
+        return new ValueGradient(getValue(point, batch), getGradient(point, batch));
     }
     
     /**

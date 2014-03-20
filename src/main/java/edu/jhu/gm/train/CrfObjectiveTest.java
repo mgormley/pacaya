@@ -130,7 +130,7 @@ public class CrfObjectiveTest {
 		
 		FgModel model = new FgModel(1);	// model is not important, have only Explicit/DenseFactors
 		Function objective = getCrfObj(model, exs, infFactory);
-		double objVal = objective.getValue();
+		double objVal = objective.getValue(model.getParams());
 		System.out.println("objVal = " + objVal);
 		assertTrue(objVal < 0d);
 		System.out.println("[logLikelihoodBelowZero] done");
@@ -215,7 +215,7 @@ public class CrfObjectiveTest {
         Function obj = getCrfObj(model, data, infFactory);
         //CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
         //obj.setPoint(FgModelTest.getParams(model));
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams());        
         assertEquals(2./6., FastMath.exp(ll), 1e-13);
     }
     
@@ -259,7 +259,7 @@ public class CrfObjectiveTest {
         
         FgInferencerFactory infFactory = getInfFactory(logDomain); 
         Function obj = getCrfObj(model, data, infFactory);
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams());        
         assertTrue(ll < 0d);
         assertEquals(-5.26574, ll, 1e-3);
     }
@@ -322,7 +322,7 @@ public class CrfObjectiveTest {
         AvgBatchObjective obj = getCrfObj(model, data, infFactory);
         double ll = 0;
         for (int i=0; i<obj.getNumExamples(); i++) {
-            double exll = obj.getValue(new int[]{i});
+            double exll = obj.getValue(model.getParams(), new int[]{i});
             assertTrue(exll <= 0);
             ll += exll;
         }

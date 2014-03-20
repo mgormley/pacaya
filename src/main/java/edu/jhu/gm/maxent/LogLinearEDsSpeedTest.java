@@ -5,14 +5,13 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
-import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.hlt.optimize.function.Function;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.JUnitUtils;
 
 public class LogLinearEDsSpeedTest {
@@ -33,11 +32,10 @@ public class LogLinearEDsSpeedTest {
         
         // Test log-likelihood.
         CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);
+        DifferentiableFunction obj = new AvgBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams());
         System.out.println(ll);
         assertEquals(-95.531 / (30.+15.+10.+5.), ll, 1e-3);
         
@@ -52,8 +50,7 @@ public class LogLinearEDsSpeedTest {
         assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
         // Test gradient.        
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();
         double[] expectedGradient = new double[]{-12.154447609345993, -12.847824678672943};
         DoubleArrays.scale(expectedGradient, 1.0 / (30.+15.+10.+5.));
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
