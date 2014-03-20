@@ -11,6 +11,7 @@ import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.inf.BeliefPropagationTest;
 import edu.jhu.gm.inf.BfsBpSchedule;
 import edu.jhu.gm.inf.BruteForceInferencer;
@@ -592,18 +593,104 @@ public class ProjDepTreeFactorTest {
     //
     @Test
     public void testResultingMarginals3() {
+        compareMessagesWithExplicitTreeFactor(true, true, true);
         // Below, we check both the case of an explicit tree factor and the ProjDepTreeFactor class.
         // 
         // Check that we can correctly compute the partition in the non-loopy setting.
-        testResultingMarginals3Helper(true, true, true, false);
-        testResultingMarginals3Helper(true, true, false, false);
+        comparePartitionWithBruteForce(true, true, true, false);
+        comparePartitionWithBruteForce(true, true, false, false);
         // Check that we can correctly compute the partition in the loopy setting.
-        testResultingMarginals3Helper(true, true, true, true);
-        testResultingMarginals3Helper(true, true, false, true);
-
+        comparePartitionWithBruteForce(true, true, true, true);
+        comparePartitionWithBruteForce(true, true, false, true);
     }
 
-    public void testResultingMarginals3Helper(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy) {
+    public void compareMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.logDomain = logDomain;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.maxIterations = 3;
+        prm.normalizeMessages = normalizeMessages;
+        
+        FactorGraph fgExpl = getFactorGraphForTesting(logDomain, true, makeLoopy);
+        BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
+        bpExpl.run();
+        //printMessages(fgExpl, bpExpl);
+        
+        FactorGraph fgDp = getFactorGraphForTesting(logDomain, false, makeLoopy);
+        BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
+        bpDp.run();
+        //printMessages(fgDp, bpDp);
+        
+        System.out.println("Messages");
+        Messages[] msgsExpl = bpExpl.getMessages();
+        Messages[] msgsDp = bpDp.getMessages();
+        for (int i=0; i<fgExpl.getNumEdges(); i++) {
+            DenseFactor msgExpl = msgsExpl[i].message;
+            DenseFactor msgDp = msgsDp[i].message;
+            if (!msgExpl.equals(msgDp, 1e-8)) {
+                System.out.println("NOT EQUAL:");
+                System.out.println(fgExpl.getEdge(i));
+                System.out.println(msgExpl);
+                System.out.println(msgDp);
+            } 
+            assertEquals(msgExpl.size(), msgDp.size());
+            for (int c=0; c<msgExpl.size(); c++) {
+                if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
+                        || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
+                    continue;
+                }
+                // TODO: This assertion exposes a very subtle problem with the dynamic programming
+                // calculation of the messages from a PTREE factor. Because it computes the belief about being false 
+                assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
+            }
+            //assertTrue(msgExpl.equals(msgDp, 1e-5));
+        }
+        System.out.println("Partition: " + bpExpl.getPartition());
+        System.out.println("Partition: " + bpDp.getPartition());
+        assertEquals(bpExpl.getPartition(), bpDp.getPartition(), 1e-10);
+    }
+
+    private void printMessages(FactorGraph fg, BeliefPropagation bp) {
+        System.out.println("Messages");
+        Messages[] msgs = bp.getMessages();
+        for (int i=0; i<fg.getNumEdges(); i++) {            
+            FgEdge edge = fg.getEdge(i);
+            //if (edge.isVarToFactor() && edge.getFactor().getVars().size() == 4) {
+                System.out.println(edge);
+                System.out.println(msgs[i].message);
+                System.out.println("Log odds: " + (msgs[i].message.getValue(1) - msgs[i].message.getValue(0)));
+            //}
+        }
+        System.out.println("Partition: " + bp.getPartition());
+    }
+    
+    public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy) {
+        FactorGraph fg = getFactorGraphForTesting(logDomain, useExplicitTreeFactor, makeLoopy);
+        
+        System.out.println(fg.getFactors());
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.logDomain = logDomain;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        prm.maxIterations = 20;
+        prm.normalizeMessages = normalizeMessages;
+        BeliefPropagation bp = new BeliefPropagation(fg, prm);
+        bp.run();
+
+        printMessages(fg, bp);
+        
+        printBeliefs(fg, bp);
+        
+        // Run brute force inference and compare.
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        printBeliefs(fg, bf);
+
+        assertEquals(bf.getPartition(), bp.getPartition(), 1e-1);
+        //BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+    }
+
+    private FactorGraph getFactorGraphForTesting(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
@@ -672,26 +759,7 @@ public class ProjDepTreeFactorTest {
         } else {
             fg.addFactor(treeFac);
         }
-        
-        System.out.println(fg.getFactors());
-        
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.logDomain = logDomain;
-        prm.updateOrder = BpUpdateOrder.PARALLEL;
-        prm.maxIterations = 20;
-        prm.normalizeMessages = normalizeMessages;
-        BeliefPropagation bp = new BeliefPropagation(fg, prm);
-        bp.run();
-
-        printBeliefs(fg, bp);
-        
-        // Run brute force inference and compare.
-        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
-        bf.run();
-        printBeliefs(fg, bf);
-
-        assertEquals(bf.getPartition(), bp.getPartition(), 1e-1);
-        //BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+        return fg;
     }
 
     private void printBeliefs(FactorGraph fg, FgInferencer bp) {
