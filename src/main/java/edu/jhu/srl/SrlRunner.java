@@ -735,6 +735,7 @@ public class SrlRunner {
         prm.lambda = 1.0 / l2variance;
         prm.stopBy = stopTrainingBy;
         prm.autoSelectLr = sgdAutoSelectLr;
+        prm.autoSelectFreq = sgdAutoSelecFreq;
         return prm;
     }
 
