@@ -136,9 +136,4 @@ public class BruteForceInferencer implements FgInferencer {
         return logDomain;
     }
 
-    @Override
-    public void clear() {
-        joint = null;
-    }
-
 }

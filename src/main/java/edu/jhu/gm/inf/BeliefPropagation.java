@@ -205,15 +205,16 @@ public class BeliefPropagation implements FgInferencer {
                 throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
             }
         }
+        
+        // Clear memory.
+        for (Messages msg : msgs) {
+            // These are not needed to compute the marginals.
+            msg.newMessage = null;
+        }
+        
         timer.stop();
     }
-    
-    
-    public void clear() {
-        Arrays.fill(msgs, null);
-    }
-
-    
+        
     /**
      * Creates a message and stores it in the "pending message" slot for this edge.
      * @param edge The directed edge for which the message should be created.

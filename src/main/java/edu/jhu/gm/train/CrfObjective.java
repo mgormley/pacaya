@@ -29,6 +29,30 @@ public class CrfObjective implements ExampleObjective {
         this.data = data;
         this.infFactory = infFactory;
     }
+
+    /** @inheritDoc */
+    // Assumed by caller to be threadsafe.
+    @Override
+    public void addValueGradient(FgModel model, int i, MutableValueGradient vg) {
+        FgExample ex = data.get(i);
+        
+        // Run inference to compute Z(y,x) by summing over the latent variables w.
+        FgInferencer infLat = getInfLat(ex);
+        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
+        infLat.run();
+        
+        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
+        FgInferencer infLatPred = getInfLatPred(ex);
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
+        infLatPred.run();
+        
+        if (vg.hasValue()) {
+            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred));
+        }
+        if (vg.hasGradient()) {
+            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);            
+        }
+    }
     
     /**
      * Gets the marginal conditional log-likelihood of the i'th example for the given model parameters.
@@ -40,25 +64,19 @@ public class CrfObjective implements ExampleObjective {
      * 
      * where y are the predicted variables, x are the observed variables, and z are the latent variables.
      * 
-     * @inheritDoc
+     * @param model The current model parameters.
+     * @param i The data example.
+     * @param fgLat The factor graph with the predicted and observed variables clamped. 
+     * @param infLat The inferencer for fgLat.
+     * @param fgLatPred The factor graph with the observed variables clamped. 
+     * @param infLatPred The inferencer for fgLatPred.
      */      
-    @Override
-    public double getValue(FgModel model, int i) {
-        FgExample ex = data.get(i);
-        
-        // Run inference to compute Z(y,x) by summing over the latent variables w.
-        FgInferencer infLat = getInfLat(ex);
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
+    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+        // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
-        infLat.clear();
         
-        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        FgInferencer infLatPred = getInfLatPred(ex);
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
+        // Inference computes Z(x) by summing over the latent variables w and the predicted variables y.
         double denominator = infLatPred.isLogDomain() ? infLatPred.getPartition() : FastMath.log(infLatPred.getPartition());        
-        infLatPred.clear();
 
         // "Multiply" in all the fully clamped factors to the numerator and denominator. 
         int numFullyClamped = 0;
@@ -117,27 +135,20 @@ public class CrfObjective implements ExampleObjective {
      * Adds the gradient of the marginal conditional log-likelihood for a particular example to the gradient vector.
      * 
      * @param model The current model parameters.
-     * @param i The index of the data example.
+     * @param i The data example.
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
+     * @param fgLat The factor graph with the predicted and observed variables clamped. 
+     * @param infLat The inferencer for fgLat.
+     * @param fgLatPred The factor graph with the observed variables clamped. 
+     * @param infLatPred The inferencer for fgLatPred.
      */
-    @Override
-    public void addGradient(FgModel model, int i, IFgModel gradient) {
-        FgExample ex = data.get(i);
-        
+    public void addGradient(FgModel model, FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        FgInferencer infLat = getInfLat(ex);
-        FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
         addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, gradient);
-        infLat.clear();
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        FgInferencer infLatPred = getInfLatPred(ex);
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
         addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0, gradient);
-        infLatPred.clear();
     }
 
     /** 

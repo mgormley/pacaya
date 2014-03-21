@@ -79,7 +79,4 @@ public interface FgInferencer {
      */
     boolean isLogDomain();
 
-    /** Clear any unneeded state to save memory. */
-    void clear();
-
 }
