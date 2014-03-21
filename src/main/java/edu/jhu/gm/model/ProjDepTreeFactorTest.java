@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static edu.jhu.prim.util.math.FastMath.*;
 
 import org.junit.Test;
 
@@ -688,6 +689,23 @@ public class ProjDepTreeFactorTest {
 
         assertEquals(bf.getPartition(), bp.getPartition(), 1e-1);
         //BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
+    }
+    
+    @Test
+    public void testFloatingPointPrecision() {
+        // Original computation.
+        System.out.println(89+23);
+        System.out.println(7+145);
+        System.out.println(logAdd(7+145, 89+23));
+        System.out.println(logSubtract(logAdd(7+145, 89+23), 7+145));
+        //
+        // Try scaling. (doesn't help.)
+        //
+        System.out.println(89+23-200);
+        System.out.println(7+145-200);
+        System.out.println(logAdd(7+145-200, 89+23-200));
+        System.out.println(logAdd(7+145-200, 89+23-200)+200);
+        System.out.println(logSubtract(logAdd(7+145-200, 89+23-200), 7+145-200)+200);
     }
 
     private FactorGraph getFactorGraphForTesting(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
