@@ -54,6 +54,8 @@ import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
 import edu.jhu.hlt.optimize.AdaGrad;
 import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
+import edu.jhu.hlt.optimize.BottouSchedule;
+import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
 import edu.jhu.hlt.optimize.MalletLBFGS;
 import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
 import edu.jhu.hlt.optimize.SGD;
@@ -696,22 +698,26 @@ public class SrlRunner {
         if (optimizer == Optimizer.LBFGS) {
             prm.maximizer = getLbfgs();
             prm.batchMaximizer = null;
-        } else if (optimizer == Optimizer.SGD){
+        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.maximizer = null;
-            prm.batchMaximizer = new SGD(getSgdPrm());
-        } else if (optimizer == Optimizer.ADAGRAD){
-            prm.maximizer = null;
-            AdaGradPrm adaGradPrm = new AdaGradPrm();
-            adaGradPrm.sgdPrm = getSgdPrm();
-            adaGradPrm.eta = adaGradEta;
-            prm.batchMaximizer = new AdaGrad(adaGradPrm);
-        } else if (optimizer == Optimizer.ADADELTA){
-            prm.maximizer = null;
-            AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
-            adaDeltaPrm.sgdPrm = getSgdPrm();
-            adaDeltaPrm.decayRate = adaDeltaDecayRate;
-            adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
-            prm.batchMaximizer = new AdaDelta(adaDeltaPrm);
+            SGDPrm sgdPrm = getSgdPrm();
+            if (optimizer == Optimizer.SGD){
+                BottouSchedulePrm boPrm = new BottouSchedulePrm();
+                boPrm.initialLr = sgdInitialLr;
+                boPrm.lambda = 1.0 / l2variance;
+                sgdPrm.sched = new BottouSchedule(boPrm);
+            } else if (optimizer == Optimizer.ADAGRAD){
+                AdaGradPrm adaGradPrm = new AdaGradPrm();
+                adaGradPrm.eta = adaGradEta;
+                sgdPrm.sched = new AdaGrad(adaGradPrm);
+            } else if (optimizer == Optimizer.ADADELTA){
+                AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
+                adaDeltaPrm.decayRate = adaDeltaDecayRate;
+                adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
+                sgdPrm.sched = new AdaDelta(adaDeltaPrm);
+                sgdPrm.autoSelectLr = false;
+            }
+            prm.batchMaximizer = new SGD(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
@@ -730,12 +736,12 @@ public class SrlRunner {
         SGDPrm prm = new SGDPrm();
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
-        prm.initialLr = sgdInitialLr;
         prm.withReplacement = sgdWithRepl;
-        prm.lambda = 1.0 / l2variance;
         prm.stopBy = stopTrainingBy;
         prm.autoSelectLr = sgdAutoSelectLr;
         prm.autoSelectFreq = sgdAutoSelecFreq;
+        // Make sure we correctly set the schedule somewhere else.
+        prm.sched = null;
         return prm;
     }
 

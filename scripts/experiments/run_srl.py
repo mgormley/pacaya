@@ -386,11 +386,11 @@ class ParamDefinitions():
             predAts="SRL",
             includeSrl=True,
             includeDp=True,
-            cacheType="CACHE",
-            maxEntriesInMemory=g.defaults.get("sgdBatchSize")
+            cacheType="NONE",
+            #maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
         
-        g.defaults += g.sgd #adagrad
+        g.defaults += g.adagrad
         g.defaults += g.feat_tpl_bjork_ig
                 
         # Exclude parameters from the command line arguments.
@@ -522,7 +522,7 @@ class ParamDefinitions():
     
     def _define_groups_optimizer(self, g):
         g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.1, sgdAutoSelectLr=True)
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=False)
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=True)
         g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0), sgdAutoSelectLr=False)
         g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
