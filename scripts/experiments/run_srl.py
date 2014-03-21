@@ -898,7 +898,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                               adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
             if not self.big_machine:
-                g.defaults.update(maxEntriesInMemory=1)
+                g.defaults.update(maxEntriesInMemory=1, sgdBatchSize=2)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
                                        tagger_parser="1st", pruneEdges=False)
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
