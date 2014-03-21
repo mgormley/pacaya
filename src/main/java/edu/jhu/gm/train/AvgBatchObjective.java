@@ -1,6 +1,5 @@
 package edu.jhu.gm.train;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,10 +8,9 @@ import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.hlt.optimize.function.AbstractDifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
-import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.function.ValueGradient;
-import edu.jhu.prim.sort.IntSort;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Threads.TaskFactory;
@@ -32,7 +30,7 @@ import edu.jhu.util.Threads.TaskFactory;
  * 
  * @author mgormley
  */
-public class AvgBatchObjective implements DifferentiableFunction, DifferentiableBatchFunction {
+public class AvgBatchObjective extends AbstractDifferentiableBatchFunction implements DifferentiableBatchFunction {
     
     /**
      * An objective function for a single example or instance. Calls to these
@@ -67,100 +65,20 @@ public class AvgBatchObjective implements DifferentiableFunction, Differentiable
         this.gradient.zero();
         this.pool = Executors.newFixedThreadPool(numThreads);
     }
-    
-    /**
-     * Gets the average marginal conditional log-likelihood of the model for the given model parameters.
-     * 
-     * We return:
-     * <p>
-     * \frac{1}{n} \sum_{i=1}^n \log p(y_i | x_i)
-     * </p>
-     * where:
-     * <p>
-     * \log p(y|x) = \log \sum_z p(y, z | x)
-     * </p>
-     * 
-     * where y are the predicted variables, x are the observed variables, and z are the latent variables.
-     * 
-     * @inheritDoc
-     */
-    @Override
-    public double getValue(IntDoubleVector params) {        
-        return getValue(params, IntSort.getIndexArray(numExamples));
-    }
 
-    /**
-     * Gets the average marginal conditional log-likelihood computed on a batch.
-     * @inheritDoc
-     */
+    /** @inheritDoc */
     @Override
     public double getValue(IntDoubleVector params, int[] batch) {
         return getValueGradient(params, batch, true, false).getValue();
     }
     
-    /**
-     * Gets the gradient of the conditional log-likelihood.
-     * @inheritDoc
-     */
-    @Override
-    public IntDoubleVector getGradient(IntDoubleVector params) {
-        return getGradient(params, IntSort.getIndexArray(numExamples));
-    }
-
-    /**
-     * Gets the gradient of the conditional log-likelihood on a batch of examples.
-     * @inheritDoc
-     */
+    /** @inheritDoc */
     @Override
     public IntDoubleVector getGradient(IntDoubleVector params, int[] batch) {
         return getValueGradient(params, batch, false, true).getGradient();
     }
-
-    private class AccumValueGradientOfExample implements Callable<Object> {
-
-        private MutableValueGradient vg;
-        private int i;
-
-        public AccumValueGradientOfExample(MutableValueGradient vg, int i) {
-            this.vg = vg;
-            this.i = i;
-        }
-
-        @Override
-        public Object call() {
-            MutableValueGradient sparseVg = new MutableValueGradient(null, null);
-            synchronized (vg) {
-                if (vg.hasValue()) {
-                    log.trace("Computing value for example " + i);
-                    sparseVg.setValue(new MutableDouble(0.0));    
-                }
-                if (vg.hasGradient()) {
-                    log.trace("Computing gradient for example " + i);
-                    FgModel gradient = vg.getGradient();
-                    sparseVg.setGradient(gradient.getSparseZeroedCopy());
-                }
-            }
-            
-            exObj.addValueGradient(model, i, sparseVg);
-            
-            synchronized (vg) {         
-                if (vg.hasValue()) {
-                    vg.addValue(sparseVg.getValue());
-                }
-                if (vg.hasGradient()) {
-                    vg.addGradient(sparseVg.getGradient());
-                }
-            }
-            return null;
-        }
-        
-    }
-
-    @Override
-    public ValueGradient getValueGradient(IntDoubleVector point) {
-        return new ValueGradient(getValue(point), getGradient(point));
-    }
-
+    
+    /** @inheritDoc */
     @Override
     public ValueGradient getValueGradient(IntDoubleVector params, int[] batch) {
         return getValueGradient(params, batch, true, true);
@@ -212,6 +130,46 @@ public class AvgBatchObjective implements DifferentiableFunction, Differentiable
 
         return new ValueGradient(addValue ? ll.doubleValue() : Double.NaN, 
                                  addGradient ? grad.getParams() : null);
+    }
+
+    private class AccumValueGradientOfExample implements Callable<Object> {
+
+        private MutableValueGradient vg;
+        private int i;
+
+        public AccumValueGradientOfExample(MutableValueGradient vg, int i) {
+            this.vg = vg;
+            this.i = i;
+        }
+
+        @Override
+        public Object call() {
+            MutableValueGradient sparseVg = new MutableValueGradient(null, null);
+            synchronized (vg) {
+                if (vg.hasValue()) {
+                    log.trace("Computing value for example " + i);
+                    sparseVg.setValue(new MutableDouble(0.0));    
+                }
+                if (vg.hasGradient()) {
+                    log.trace("Computing gradient for example " + i);
+                    FgModel gradient = vg.getGradient();
+                    sparseVg.setGradient(gradient.getSparseZeroedCopy());
+                }
+            }
+            
+            exObj.addValueGradient(model, i, sparseVg);
+            
+            synchronized (vg) {         
+                if (vg.hasValue()) {
+                    vg.addValue(sparseVg.getValue());
+                }
+                if (vg.hasGradient()) {
+                    vg.addGradient(sparseVg.getGradient());
+                }
+            }
+            return null;
+        }
+        
     }
     
     /**
