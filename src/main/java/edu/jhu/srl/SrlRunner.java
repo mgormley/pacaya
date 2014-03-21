@@ -233,7 +233,11 @@ public class SrlRunner {
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
     @Opt(hasArg=true, description="Whether to sample with replacement for SGD.")
-    public static boolean sgdWithRepl = false;    
+    public static boolean sgdWithRepl = false;
+    @Opt(hasArg=true, description="Whether to automatically select the learning rate.")
+    public static boolean sgdAutoSelectLr = true;
+    @Opt(hasArg=true, description="How many epochs between auto-select runs.")
+    public static int sgdAutoSelecFreq = 5;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -730,6 +734,7 @@ public class SrlRunner {
         prm.withReplacement = sgdWithRepl;
         prm.lambda = 1.0 / l2variance;
         prm.stopBy = stopTrainingBy;
+        prm.autoSelectLr = sgdAutoSelectLr;
         return prm;
     }
 

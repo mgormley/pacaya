@@ -52,8 +52,9 @@ def remote_srl(argv):
     env.host_string = "%s:%s" % ("test2", "22")
     run("uname -a")
     #prep_project("vector", "install", True)    
-    prep_project("prim", "install", True)    
+    prep_project("prim", "install", True)
     #prep_project("erma", "install", True)
+    prep_project("optimize", "install", True)    
     prep_project("pacaya", "compile", False)
     run_srl("pacaya", argv)
     

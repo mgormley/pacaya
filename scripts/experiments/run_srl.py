@@ -390,7 +390,7 @@ class ParamDefinitions():
             maxEntriesInMemory=g.defaults.get("sgdBatchSize")
             )
         
-        g.defaults += g.adagrad
+        g.defaults += g.sgd #adagrad
         g.defaults += g.feat_tpl_bjork_ig
                 
         # Exclude parameters from the command line arguments.
@@ -521,9 +521,9 @@ class ParamDefinitions():
         return feats
     
     def _define_groups_optimizer(self, g):
-        g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.5)
-        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9)
-        g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0))
+        g.sgd = SrlExpParams(optimizer="SGD", sgdInitialLr=0.1, sgdAutoSelectLr=True)
+        g.adagrad = SrlExpParams(optimizer="ADAGRAD", adaGradEta=0.1, adaGradConstantAddend=1e-9, sgdAutoSelectLr=False)
+        g.adadelta = SrlExpParams(optimizer="ADADELTA", adaDeltaDecayRate=0.95, adaDeltaConstantAddend=math.exp(-6.0), sgdAutoSelectLr=False)
         g.lbfgs = SrlExpParams(optimizer="LBFGS")
         
     def _define_lists_optimizer(self, g, l):
@@ -907,14 +907,14 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                       normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
-            parsers = [second_order, second_grand, second_sib, first_order]
+            parsers = [first_order, second_order, second_grand, second_sib]
             parsers += [x + SrlExpParams(pruneEdges=True) for x in parsers]
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
             models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
                                                os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
-            for trainMaxNumSentences in [1000, 9999999]:
+            for trainMaxNumSentences in [100, 1000, 9999999]:
                 for lang_short in ["bg", "es"]:
                     for parser in parsers:
                         pl = p.langs[lang_short]
