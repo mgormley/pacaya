@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.maxent.LogLinearTdData.LogLinearExample;
-import edu.jhu.gm.maxent.LogLinearTd.LogLinearTdPrm;
+import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearObsFeats.LogLinearObsFeatsPrm;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
@@ -21,20 +21,20 @@ import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
 
-public class LogLinearTdTest {
+public class LogLinearObsFeatsTest {
 
     @Test
     public void testLogLinearModelTrainDecode() {
-        LogLinearTdData exs = new LogLinearTdData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
         List<LogLinearExample> data = exs.getData();
         
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgModel model = td.train(exs);
         {
             Pair<String,DenseFactor> p = td.decode(model, data.get(0));
@@ -95,16 +95,16 @@ public class LogLinearTdTest {
     }
 
     private void testLogLinearModelShapesHelper(boolean logDomain) {
-        LogLinearTdData exs = new LogLinearTdData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
 
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgExampleList data = td.getData(exs);
 
         double[] params = new double[]{3.0, 2.0, 1.0, 4.0, 5.0, 6.0, 7.0, 8.0};
@@ -144,14 +144,14 @@ public class LogLinearTdTest {
     }
     
     private void testLogLinearModelShapesTwoExamplesHelper(boolean logDomain) {
-        LogLinearTdData exs = new LogLinearTdData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(1, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgExampleList data = td.getData(exs);
         
         FgModel model = new FgModel(params.length);
@@ -186,14 +186,14 @@ public class LogLinearTdTest {
     }
     
     private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
-        LogLinearTdData exs = new LogLinearTdData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(0, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = true;
-        LogLinearTd td = new LogLinearTd(prm);        
+        LogLinearObsFeats td = new LogLinearObsFeats(prm);        
         FgExampleList data = td.getData(exs);
         
         FgModel model = new FgModel(params.length);

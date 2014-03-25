@@ -8,7 +8,7 @@ import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.util.Alphabet;
 
 /**
- * Factory for log-linear model instances, specifying binary features of the
+ * Factory for log-linear model instances, specifying features of the
  * observed variable, x, and a label, y.
  * 
  * @author mgormley
@@ -57,6 +57,8 @@ public class LogLinearXYData {
     
     private int numYs;
     private final Alphabet<String> featAlphabet;
+    private final Alphabet<Object> xAlphabet;
+    private final Alphabet<Object> yAlphabet;
     private List<LogLinearExample> exList;
 
     public LogLinearXYData(int numYs) {
@@ -67,6 +69,8 @@ public class LogLinearXYData {
         this.numYs = numYs;
         this.featAlphabet = featAlphabet;
         this.exList = new ArrayList<LogLinearExample>();
+        this.xAlphabet = new Alphabet<Object>();
+        this.yAlphabet = new Alphabet<Object>();
     }
     
     /**
@@ -87,8 +91,53 @@ public class LogLinearXYData {
         exList.add(ex);
     }
 
-    public Alphabet<String> getAlphabet() {
+    /**
+     * Adds a new log-linear model instance.
+     * 
+     * @param weight The weight of this example.
+     * @param x The observation, x.
+     * @param y The prediction, y.
+     * @param fvs The binary features on the observations, x, for all possible labels, y'. Indexed by y'.
+     */
+    public void addEx(double weight, Object xObj, Object yObj, List<String>[] fvStrs) {
+        FeatureVector[] fvs = new FeatureVector[fvStrs.length];
+        for (int i=0; i<fvs.length; i++) {
+            fvs[i] = new FeatureVector();
+            for (String featName : fvStrs[i]) {
+                fvs[i].add(featAlphabet.lookupIndex(featName), 1);
+            }
+        }
+        addEx(weight, xObj, yObj, fvs);
+    }
+
+    /**
+     * Adds a new log-linear model instance.
+     * 
+     * @param weight The weight of this example.
+     * @param x The observation, x.
+     * @param y The prediction, y.
+     * @param fvs The binary features on the observations, x, for all possible labels, y'. Indexed by y'.
+     */
+    public void addEx(double weight, Object xObj, Object yObj, FeatureVector[] fvs) {
+        int x = xAlphabet.lookupIndex(xObj);
+        int y = yAlphabet.lookupIndex(yObj);
+        addEx(weight, x, y, fvs);
+    }
+
+    public int getNumYs() {
+        return numYs;
+    }
+
+    public Alphabet<String> getFeatAlphabet() {
         return featAlphabet;
+    }
+
+    public Alphabet<Object> getXAlphabet() {
+        return xAlphabet;
+    }
+
+    public Alphabet<Object> getYAlphabet() {
+        return yAlphabet;
     }
 
     public List<LogLinearExample> getData() {
@@ -98,5 +147,13 @@ public class LogLinearXYData {
     public void clear() {
         exList.clear();
     }
-        
+
+    public int size() {
+        return exList.size();
+    }
+    
+    public LogLinearExample get(int i) {
+        return exList.get(i);
+    }
+            
 }

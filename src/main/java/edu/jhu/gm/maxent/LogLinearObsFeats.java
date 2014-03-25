@@ -24,7 +24,7 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.maxent.LogLinearTdData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
@@ -44,17 +44,17 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class LogLinearTd {
+public class LogLinearObsFeats {
 
-    private static final Logger log = Logger.getLogger(LogLinearTd.class);
+    private static final Logger log = Logger.getLogger(LogLinearObsFeats.class);
 
-    public static class LogLinearTdPrm {
+    public static class LogLinearObsFeatsPrm {
         public boolean includeUnsupportedFeatures = true;
     }
     
-    private LogLinearTdPrm prm;
+    private LogLinearObsFeatsPrm prm;
     
-    public LogLinearTd(LogLinearTdPrm prm) {
+    public LogLinearObsFeats(LogLinearObsFeatsPrm prm) {
         this.prm = prm;
     }
     
@@ -72,7 +72,7 @@ public class LogLinearTd {
      *            LogLinearData.
      * @return Trained model.
      */
-    public FgModel train(LogLinearTdData data) {
+    public FgModel train(LogLinearObsFeatsData data) {
         return train(data.getAlphabet(), data.getData());
     }
     
@@ -115,7 +115,7 @@ public class LogLinearTd {
         return new Pair<String,DenseFactor>(stateName, marginals.get(0));
     }
 
-    public FgExampleList getData(LogLinearTdData data) {
+    public FgExampleList getData(LogLinearObsFeatsData data) {
         return getData(data.getAlphabet(), data.getData());
     }
     

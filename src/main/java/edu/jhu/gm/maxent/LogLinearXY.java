@@ -1,9 +1,7 @@
 package edu.jhu.gm.maxent;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -12,20 +10,16 @@ import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureCache;
-import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.StringIterable;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -33,7 +27,9 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.optimize.L2;
+import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
 
@@ -68,25 +64,24 @@ public class LogLinearXY {
      * @return Trained model.
      */
     public FgModel train(LogLinearXYData data) {
-        return train(data.getAlphabet(), data.getData());
-    }
-    
-    private FgModel train(Alphabet<String> alphabet, List<LogLinearExample> exList) {
-        FgExampleList data = getData(alphabet, exList);
-        log.info("Number of unweighted train instances: " + data.size());
+        Alphabet<String> alphabet = data.getFeatAlphabet();
+        FgExampleList list = getData(data);
+        log.info("Number of unweighted train instances: " + list.size());
         BeliefPropagationPrm bpPrm = getBpPrm();
         
         CrfTrainerPrm crfPrm = new CrfTrainerPrm();
-        crfPrm.infFactory = bpPrm;        
+        crfPrm.infFactory = new BruteForceInferencerPrm(true);
+        crfPrm.batchMaximizer = new SGD(new SGDPrm());
+        crfPrm.maximizer = null;
         if (prm.l2Variance == -1) {
-            crfPrm.regularizer = new L2(data.size());
+            crfPrm.regularizer = new L2(list.size());
         } else {
             crfPrm.regularizer = new L2(prm.l2Variance);
         }
         
         FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
         CrfTrainer trainer = new CrfTrainer(crfPrm);
-        trainer.train(model, data);
+        trainer.train(model, list);
         return model;
     }
 
@@ -114,25 +109,26 @@ public class LogLinearXY {
         return new Pair<String,DenseFactor>(stateName, marginals.get(0));
     }
 
-    private FgExampleList getData(LogLinearXYData data) {
-        return getData(data.getAlphabet(), data.getData());
-    }
-    
-    private FgExampleList getData(Alphabet<String> alphabet, List<LogLinearExample> exList) {    
+    /**
+     * For testing only. Converts to the graphical model's representation of the data.
+     */
+    public FgExampleList getData(LogLinearXYData data) {
+        Alphabet<String> alphabet = data.getFeatAlphabet();
+        List<LogLinearExample> exList = data.getData();    
         if (this.alphabet == null) {
             this.alphabet = alphabet;
-            this.stateNames = getStateNames(exList);
+            this.stateNames = getStateNames(exList, data.getYAlphabet());
         }
         
-        FgExampleMemoryStore data = new FgExampleMemoryStore();
+        FgExampleMemoryStore store = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
             for (int i=0; i<desc.getWeight(); i++) {
                 FgExample ex = getFgExample(desc);
-                data.add(ex);
+                store.add(ex);
             }
         }
         
-        return data;
+        return store;
     }
 
     private FgExample getFgExample(final LogLinearExample desc) {
@@ -162,12 +158,13 @@ public class LogLinearXY {
         return new Var(VarType.PREDICTED, stateNames.size(), "v0", stateNames);
     }
     
-    private static List<String> getStateNames(List<LogLinearExample> exList) {
-        Set<String> names = new HashSet<String>();
-        for (LogLinearExample desc : exList) {
-            names.add(Integer.toString(desc.getY()));
+    private static List<String> getStateNames(List<LogLinearExample> exList, Alphabet<Object> yAlphabet) {
+        StringIterable iter = new StringIterable(yAlphabet.getObjects());
+        List<String> list = new ArrayList<String>();
+        for (String s : iter) {
+            list.add(s);
         }
-        return new ArrayList<String>(names);
+        return list;
     }
     
     private BeliefPropagationPrm getBpPrm() {

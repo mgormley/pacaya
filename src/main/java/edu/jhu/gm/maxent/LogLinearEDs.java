@@ -47,13 +47,13 @@ public class LogLinearEDs {
         }
     }
     
-    private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
+    private final Alphabet<String> alphabet = new Alphabet<String>();
     private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
 
     public void addEx(int count, String... featNames) {
         FeatureVector features = new FeatureVector();
         for (String featName : featNames) {
-            features.add(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(featName), 1.0);
         }
         LogLinearExDesc ex = new LogLinearExDesc(count, features);
         descList.add(ex);
@@ -74,19 +74,19 @@ public class LogLinearEDs {
     
     public LogLinearXYData getData() {
         int numYs = descList.size();
-        LogLinearXYData data = new LogLinearXYData(numYs);
+        LogLinearXYData data = new LogLinearXYData(numYs, alphabet);
         FeatureVector[] fvs = new FeatureVector[numYs];
         for (int y=0; y<numYs; y++) {
             fvs[y] = descList.get(y).getFeatures();            
         }
         for (int y=0; y<numYs; y++) {
             LogLinearExDesc desc = descList.get(y);
-            data.addEx(desc.getCount(), 0, y, fvs);
+            data.addEx(desc.getCount(), "x=0", "y="+y, fvs);
         }
         return data;
     }
 
-    public Alphabet<Feature> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
         

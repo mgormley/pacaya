@@ -154,7 +154,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // Apply the feature-hashing trick.
             for (String obsFeat : obsFeats) {
                 String fname = prefix + obsFeat;
-                int hash = MurmurHash3.murmurhash3_x86_32(fname, 0, fname.length(), 123456789);
+                int hash = MurmurHash3.murmurhash3_x86_32(fname);
                 hash = FastMath.mod(hash, prm.featureHashMod);
                 int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
                 if (fidx != -1) {

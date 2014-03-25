@@ -62,14 +62,13 @@ public class LogLinearEDsTest {
         exs.addEx(15, "circle");
         exs.addEx(10, "solid");
         exs.addEx(5);
-
-        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
         
         double[] params = new double[]{3.0, 2.0};
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
 
-        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
@@ -103,7 +102,8 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
@@ -139,7 +139,8 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
         
         //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
-        CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
+        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
+        CrfObjective exObj = new CrfObjective(maxent.getData(exs.getData()), CrfObjectiveTest.getInfFactory(logDomain));
         AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
