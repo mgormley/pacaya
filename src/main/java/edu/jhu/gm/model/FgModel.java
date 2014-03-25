@@ -17,6 +17,7 @@ import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleHashVector;
+import edu.jhu.prim.vector.IntDoubleUnsortedVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
 
@@ -36,7 +37,7 @@ public class FgModel implements Serializable, IFgModel {
 
     private static final long serialVersionUID = 4477788767217412525L;
     /** The model parameters. */
-    private final IntDoubleVector params;
+    private IntDoubleVector params;
     /** The number of model parameters. */
     private int numParams;
     /** Provides iteration of the model parameter names. */
@@ -68,7 +69,7 @@ public class FgModel implements Serializable, IFgModel {
     
     /** Copy constructor, which initializes the parameter vector to all zeros. */
     public FgModel getSparseZeroedCopy() {
-        return new FgModel(this, new IntDoubleHashVector(10000));
+        return new FgModel(this, new IntDoubleUnsortedVector());
     }
 
     public void updateModelFromDoubles(double[] inParams) {
@@ -210,6 +211,17 @@ public class FgModel implements Serializable, IFgModel {
             }
         });
         return l2Norm.doubleValue();
+    }
+
+    public void setParams(IntDoubleVector params) {
+        if (!(params instanceof IntDoubleDenseVector)) {
+            log.warn("Setting params to class: " + params.getClass());
+        }
+        this.params = params;
+    }
+
+    public IntDoubleVector getParams() {
+        return params;
     }
         
 }

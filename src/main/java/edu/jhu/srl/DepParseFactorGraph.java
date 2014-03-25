@@ -148,7 +148,7 @@ public class DepParseFactorGraph implements Serializable {
                         if (depEdgeMask.isPruned(i, j)) {
                             ExplicitFactor f = new ExplicitFactor(new VarSet(ijVar));
                             f.setValue(LinkVar.FALSE, 0.0);
-                            f.setValue(LinkVar.TRUE, -1000000);
+                            f.setValue(LinkVar.TRUE, -1000000); // It is highly unlikely that this edge will be on.
                             fg.addFactor(f);
                             // TODO: Check if this is the logDomain!!!
                             assert SrlRunner.logDomain == true;

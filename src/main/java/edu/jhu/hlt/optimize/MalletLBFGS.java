@@ -1,13 +1,22 @@
-package edu.jhu.optimize;
+package edu.jhu.hlt.optimize;
 
 import java.util.Arrays;
+
+import org.apache.log4j.Logger;
 
 import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
-import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.function.FunctionOpts;
+import edu.jhu.prim.vector.IntDoubleDenseVector;
+import edu.jhu.prim.vector.IntDoubleVector;
 
-public class MalletLBFGS implements Maximizer {
+/**
+ * Wrapper of Mallet's L-BFGS implementation.
+ * @author mgormley
+ */
+public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
 
     public static class MalletLBFGSPrm {
         /** Max iterations. */
@@ -37,16 +46,16 @@ public class MalletLBFGS implements Maximizer {
      */
     private static class MalletFunction implements Optimizable.ByGradientValue {
 
-        private Function function;
-        private double[] params;
-        private double[] gradient;
+        private DifferentiableFunction function;
+        private IntDoubleVector params;
+        private IntDoubleVector gradient;
         private double value; 
         private boolean areGradientAndValueCached;
         
-        public MalletFunction(Function function) {
+        public MalletFunction(DifferentiableFunction function, IntDoubleVector point) {
             this.function = function;
-            params = new double[function.getNumDimensions()];
-            gradient = new double[function.getNumDimensions()];
+            params = point;
+            gradient = null;
             areGradientAndValueCached = false;
         }
         
@@ -57,18 +66,20 @@ public class MalletLBFGS implements Maximizer {
 
         @Override
         public double getParameter(int i) {
-            return params[i];
+            return params.get(i);
         }
 
         @Override
         public void getParameters(double[] buffer) {
             // Copy the parameters from params to the buffer.
-            System.arraycopy(params, 0, buffer, 0, params.length);
+            for (int i=0; i<buffer.length; i++) {
+                buffer[i] = params.get(i);
+            }
         }
 
         @Override
         public void setParameter(int i, double value) {
-            params[i] = value;
+            params.set(i, value);
             // Invalidate the cached gradient.
             areGradientAndValueCached = false;
         }
@@ -76,11 +87,13 @@ public class MalletLBFGS implements Maximizer {
         @Override
         public void setParameters(double[] buffer) {
             // Copy the parameters from the buffer to params.
-            System.arraycopy(buffer, 0, params, 0, params.length);
+            for (int i=0; i<buffer.length; i++) {
+                params.set(i, buffer[i]);
+            }
             // Invalidate the cached gradient.
             areGradientAndValueCached = false;
         }
-
+        
         @Override
         public double getValue() {
             maybeUpdateGradientAndValue();
@@ -91,23 +104,25 @@ public class MalletLBFGS implements Maximizer {
         public void getValueGradient(double[] buffer) {
             maybeUpdateGradientAndValue();            
             // Copy the gradient to the buffer.
-            System.arraycopy(gradient, 0, buffer, 0, gradient.length);            
+            for (int i=0; i<buffer.length; i++) {
+                buffer[i] = gradient.get(i);
+            }
         }
 
         private void maybeUpdateGradientAndValue() {
             if (!areGradientAndValueCached) {
-                function.setPoint(params);
                 // Recompute the value:
-                value = function.getValue();
+                value = function.getValue(params);
                 // Recompute the gradient.
-                Arrays.fill(gradient, 0.0);
-                function.getGradient(gradient);
+                gradient = function.getGradient(params);
                 areGradientAndValueCached = true;
             }
         }
         
     }
-    
+
+    private static final Logger log = Logger.getLogger(MalletLBFGS.class);
+
     private MalletLBFGSPrm prm;
     private boolean converged;
     
@@ -116,9 +131,8 @@ public class MalletLBFGS implements Maximizer {
     }
     
     @Override
-    public boolean maximize(Function function, double[] point) {
-        MalletFunction mf = new MalletFunction(function);
-        mf.setParameters(point);
+    public boolean maximize(DifferentiableFunction function, IntDoubleVector point) {
+        MalletFunction mf = new MalletFunction(function, point);
         
         BetterLimitedMemoryBFGS lbfgs = new BetterLimitedMemoryBFGS(mf);
         lbfgs.setTolerance(prm.tolerance);
@@ -131,9 +145,12 @@ public class MalletLBFGS implements Maximizer {
         
         converged = lbfgs.optimize(prm.maxIterations);
         
-        DoubleArrays.copy(mf.params, point);
-        
         return converged;
+    }
+
+    @Override
+    public boolean minimize(DifferentiableFunction function, IntDoubleVector point) {
+        return maximize(new FunctionOpts.NegateFunction(function), point);
     }
 
 }

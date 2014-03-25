@@ -174,51 +174,68 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // beliefTrue = pi * FastMath.exp(chart.getLogSumOfPotentials(link.getParent(), link.getChild()));
             // beliefFalse = partition - beliefTrue;
             // 
-            // Here we compute the log beliefs.
+            // Then the outgoing messages are computed as:
+            // outMsgTrue = beliefTrue / inMsgTrue
+            // outMsgFalse = beliefFalse / inMsgFalse
+            // 
+            // Here we compute the logs of these quantities.
+
+            // Get the incoming messages.
+            FgEdge inEdge = outEdge.getOpposing();
+            DenseFactor inMsg = msgs[inEdge.getId()].message;
+            double inMsgTrue, inMsgFalse;
+            if (logDomain) {
+                inMsgTrue = inMsg.getValue(LinkVar.TRUE);
+                inMsgFalse = inMsg.getValue(LinkVar.FALSE);
+            } else {
+                inMsgTrue = FastMath.log(inMsg.getValue(LinkVar.TRUE));
+                inMsgFalse = FastMath.log(inMsg.getValue(LinkVar.FALSE));                
+            }
+            
             double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
-            double beliefFalse;
-            if (partition < beliefTrue) {
+
+            double outMsgTrue = beliefTrue - inMsgTrue;
+            // We must divide out the incoming false message before computing (partition - beliefTrue) since
+            // in the logAdd() we can lose necessary precision and end up with infinities when we shouldn't.
+            double outMsgFalse;
+            double v1 = partition - inMsgFalse;
+            double v2 = beliefTrue - inMsgFalse;
+            if (v1 < v2) {
                 // TODO: This is a hack to get around the floating point
                 // error. We want beliefFalse to be effectively 0.0 in this
                 // case, but we use the floating point error to determine
                 // how small zero should be.
-                beliefFalse = FastMath.log(Math.abs(partition - beliefTrue));
+                outMsgFalse = FastMath.log(Math.abs(v1 - v2));
             } else {
-                beliefFalse = FastMath.logSubtract(partition, beliefTrue);
-            }
-
-            // Divide out the incoming message to obtain the outgoing message from the belief. 
-            FgEdge inEdge = outEdge.getOpposing();
-            DenseFactor inMsg = msgs[inEdge.getId()].message;
-            if (logDomain) {
-                beliefTrue -= inMsg.getValue(LinkVar.TRUE);
-                beliefFalse -= inMsg.getValue(LinkVar.FALSE);
-            } else {
-                beliefTrue -= FastMath.log(inMsg.getValue(LinkVar.TRUE));
-                beliefFalse -= FastMath.log(inMsg.getValue(LinkVar.FALSE));                
-            }
-
-            if (normalizeMessages) {
-                double[] logMsgs = new double[] {beliefTrue, beliefFalse};
-                Multinomials.normalizeLogProps(logMsgs);
-                beliefTrue = logMsgs[0];
-                beliefFalse = logMsgs[1];
+                outMsgFalse = FastMath.logSubtract(v1, v2);
             }
             
             if (log.isTraceEnabled()) {
-                log.trace(String.format("beliefTrue: %d %d = %.2f", link.getParent(), link.getChild(), beliefTrue));
-                log.trace(String.format("beliefFalse: %d %d = %.2f", link.getParent(), link.getChild(), beliefFalse));
+                log.trace(String.format("outMsgTrue (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), outMsgTrue));
+                log.trace(String.format("outMsgFalse (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), outMsgFalse));
             }
                         
-            // Convert log beliefs to beliefs for output.
+            if (normalizeMessages) {
+                double[] logMsgs = new double[] {outMsgTrue, outMsgFalse};
+                Multinomials.normalizeLogProps(logMsgs);
+                outMsgTrue = logMsgs[0];
+                outMsgFalse = logMsgs[1];
+            }
+            
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("outMsgTrue: %d %d = %.2f", link.getParent(), link.getChild(), outMsgTrue));
+                log.trace(String.format("outMsgFalse: %d %d = %.2f", link.getParent(), link.getChild(), outMsgFalse));
+            }
+                        
+            // Convert log messages to messages for output.
             if (!logDomain) {
-                beliefTrue = FastMath.exp(beliefTrue);
-                beliefFalse = FastMath.exp(beliefFalse);
+                outMsgTrue = FastMath.exp(outMsgTrue);
+                outMsgFalse = FastMath.exp(outMsgFalse);
             }
             
             // Set the outgoing messages.
-            msgs[outEdge.getId()].newMessage.setValue(LinkVar.FALSE, beliefFalse);
-            msgs[outEdge.getId()].newMessage.setValue(LinkVar.TRUE, beliefTrue);
+            msgs[outEdge.getId()].newMessage.setValue(LinkVar.FALSE, outMsgFalse);
+            msgs[outEdge.getId()].newMessage.setValue(LinkVar.TRUE, outMsgTrue);
             assert !msgs[outEdge.getId()].newMessage.containsBadValues(logDomain) : "message = " + msgs[outEdge.getId()].newMessage;
         }
                 
@@ -267,32 +284,34 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         return pi;
     }    
 
-    private static boolean warnedOnce = false;
     @Override
     public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {
-        if (!warnedOnce) {
-            log.warn("Skipping getExpectedLogBelief computation and returning -10000 instead.");
-            warnedOnce = true;
+        if (n == 0) {
+            return 0.0;
         }
-        if (true) {
-            return -10000;
-        }
-
+        assert parent.getFactor() == this;
         double[] root = new double[n];
         double[][] child = new double[n][n];
         getLogOddsRatios(parent, msgs, logDomain, root, child);
         double logPi = getProductOfAllFalseMessages(parent, msgs, logDomain);
 
         SemiringExt s = new LogPosNegSemiring();
-        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child);
+        Pair<FirstOrderDepParseHypergraph, Scores> pair = HyperDepParser.insideAlgorithmEntropyFoe(root, child, s);
         FirstOrderDepParseHypergraph graph = pair.get1();
         Scores scores = pair.get2();
         
-        int rt = graph.getRoot().getId();
-        double logZ = scores.beta[rt];     
-        double logRbar = scores.betaFoe[rt];
-        double logPartition = logPi + logZ;
-        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
+        int rt = graph.getRoot().getId();        
+        double Z = scores.beta[rt];
+        double rbar = scores.betaFoe[rt];
+        double pi = s.fromLogProb(logPi);
+        double partition = s.times(pi, Z);
+        double expectation = s.toLogProb(s.divide(pi, partition)) + s.toReal(s.divide(rbar, Z));
+        // Equivalent code:
+        //        double logZ = s.toLogProb(scores.beta[rt]);     
+        //        double logRbar = s.toLogProb(scores.betaFoe[rt]);
+        //        double logPartition = logPi + logZ;
+        //        double expectation = logPi - logPartition + FastMath.exp(logRbar - logZ);
+
         // TODO: Keep these for debugging.
         // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", logZ, logRbar, logPi, expectation));
         // log.debug(String.format("Z=%f rbar=%f pi=%f E=%f", s.toReal(logZ), s.toReal(logRbar), FastMath.exp(logPi), expectation));

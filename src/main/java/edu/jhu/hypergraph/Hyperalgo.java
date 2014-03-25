@@ -156,6 +156,7 @@ public class Hyperalgo {
                 //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
                 beta[i] = s.plus(beta[i], prod);
                 betaFoe[i] = s.plus(betaFoe[i], prodFoe);
+                assert !Double.isNaN(beta[i]) && !Double.isNaN(betaFoe[i]);
                 // log.debug(String.format("%s w_e=%f beta[%d] = %.3f betaFoe[%d] = %.3f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]), i, s.toReal(betaFoe[i]))); 
             }
             

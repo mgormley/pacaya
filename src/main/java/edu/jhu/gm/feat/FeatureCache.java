@@ -25,6 +25,7 @@ public class FeatureCache implements FeatureExtractor {
 
     @Override
     public void init(FgExample ex) {
+        this.featExtractor.init(ex);
         FactorGraph fg = ex.getFgLatPred();
         this.feats = new FeatureVector[fg.getNumFactors()][];
         for (int a=0; a<fg.getNumFactors(); a++) {

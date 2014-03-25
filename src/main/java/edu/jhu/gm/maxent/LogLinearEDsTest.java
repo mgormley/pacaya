@@ -10,7 +10,7 @@ import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.optimize.Function;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.util.JUnitUtils;
 
@@ -70,11 +70,10 @@ public class LogLinearEDsTest {
         model.updateModelFromDoubles(params);
 
         CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         // Test average log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams());
         System.out.println(ll);
         assertEquals(-95.531 / (30.+15.+10.+5.), ll, 1e-3);
         
@@ -89,8 +88,7 @@ public class LogLinearEDsTest {
         assertEquals(52.84782467867294, expFeats.get(1), 1e-3);
         
         // Test gradient.        
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
         double[] expectedGradient = new double[]{-12.154447609345993, -12.847824678672943};
         DoubleArrays.scale(expectedGradient, 1.0 / (30.+15.+10.+5.));
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
@@ -106,13 +104,12 @@ public class LogLinearEDsTest {
         
         //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
 
         // Test average log-likelihood.
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams());        
         System.out.println(ll + " " + Math.exp(ll));
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
@@ -127,8 +124,7 @@ public class LogLinearEDsTest {
         assertEquals(0.5378, expFeats.get(1), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();          
         double[] expectedGradient = new double[]{1.0 - 1.4621, 1.0 - 0.5378};
         DoubleArrays.scale(expectedGradient, 1.0/2.0);
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
@@ -144,13 +140,12 @@ public class LogLinearEDsTest {
         
         //FgInferencerFactory infFactory = new BruteForceInferencerPrm(logDomain); 
         CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(2, exs.getAlphabet().size());
 
         // Test log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams());
         System.out.println(ll);
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
@@ -165,8 +160,7 @@ public class LogLinearEDsTest {
         assertEquals(0.2689, expFeats.get(1), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();       
         JUnitUtils.assertArrayEquals(new double[]{0.2689, -0.2689}, gradient, 1e-3);
     }
     

@@ -43,7 +43,9 @@ public class HyperDepParser {
             if (p_e == s.zero()) {
                 return p_e;
             }
-            return s.times(p_e, s.fromReal(FastMath.log(s.toReal(p_e))));
+            double log_p_e = s.times(p_e, s.log(p_e));
+            assert !Double.isNaN(log_p_e);
+            return log_p_e;
         }
     }
 
