@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearTdData.LogLinearExample;
 import edu.jhu.gm.maxent.LogLinearTd.LogLinearTdPrm;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
@@ -26,7 +26,7 @@ public class LogLinearTdTest {
 
     @Test
     public void testLogLinearModelTrainDecode() {
-        LogLinearData exs = new LogLinearData();
+        LogLinearTdData exs = new LogLinearTdData();
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
@@ -96,7 +96,7 @@ public class LogLinearTdTest {
     }
 
     private void testLogLinearModelShapesHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearTdData exs = new LogLinearTdData();
 
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
@@ -148,7 +148,7 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
     }
     
     private void testLogLinearModelShapesTwoExamplesHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearTdData exs = new LogLinearTdData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(1, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};
@@ -191,7 +191,7 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
     }
     
     private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearTdData exs = new LogLinearTdData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(0, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};

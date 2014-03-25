@@ -23,52 +23,72 @@ public class LogLinearXYData {
      */
     public static class LogLinearExample {
         private double weight;
-        private String label;
-        private FeatureVector fv;
+        private int x;
+        private int y;
+        private FeatureVector[] fvs;
 
-        public LogLinearExample(double weight, String label, FeatureVector fv) {
+        public LogLinearExample(double weight, int x, int y, FeatureVector[] fvs) {
             this.weight = weight;
-            this.label = label;
-            this.fv = fv;
-        }
-
-        public String getLabel() {
-            return label;
+            this.x = x;
+            this.y = y;
+            this.fvs = fvs;
         }
 
         public double getWeight() {
             return weight;
         }
-
-        public FeatureVector getFeatures() {
-            return fv;
+        
+        public int getX() {
+            return x;
         }
+
+        public int getY() {
+            return y;
+        }
+
+        public FeatureVector getFeatures(int y) {
+            if (y >= fvs.length) {
+                throw new IllegalStateException("Invalid value for y. Must be less than " + fvs.length);
+            }
+            return fvs[y];
+        }
+        
     }
     
-    private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
-    private List<LogLinearExample> exList = new ArrayList<LogLinearExample>();
+    private int numYs;
+    private final Alphabet<String> featAlphabet;
+    private List<LogLinearExample> exList;
 
-    public LogLinearXYData() {
+    public LogLinearXYData(int numYs) {
+        this(numYs, new Alphabet<String>());
+    }
+    
+    public LogLinearXYData(int numYs, Alphabet<String> featAlphabet) {
+        this.numYs = numYs;
+        this.featAlphabet = featAlphabet;
+        this.exList = new ArrayList<LogLinearExample>();
     }
     
     /**
      * Adds a new log-linear model instance.
      * 
      * @param weight The weight of this example.
-     * @param label The label, y.
-     * @param featNames The binary features on the observations, x, and the label, y.
+     * @param x The observation, x.
+     * @param y The prediction, y.
+     * @param fvs The binary features on the observations, x, for all possible labels, y'. Indexed by y'.
      */
-    public void addEx(double weight, String label, List<? extends Object> featNames) {
-        FeatureVector features = new FeatureVector();
-        for (Object featName : featNames) {
-            features.put(alphabet.lookupIndex(new Feature(featName)), 1.0);
-        }
-        LogLinearExample ex = new LogLinearExample(weight, label, features);
+    public void addEx(double weight, int x, int y, FeatureVector[] fvs) {
+        if (y >= numYs) {
+            throw new IllegalArgumentException("Invalid y: " + y);
+        } else if (fvs.length != numYs) {
+            throw new IllegalArgumentException("Features must be given for all labels y");
+        }        
+        LogLinearExample ex = new LogLinearExample(weight, x, y, fvs);
         exList.add(ex);
     }
 
-    public Alphabet<Feature> getAlphabet() {
-        return alphabet;
+    public Alphabet<String> getAlphabet() {
+        return featAlphabet;
     }
 
     public List<LogLinearExample> getData() {

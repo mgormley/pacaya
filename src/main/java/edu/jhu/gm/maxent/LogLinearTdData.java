@@ -26,7 +26,7 @@ import edu.jhu.util.Alphabet;
  * 
  * @author mgormley
  */
-public class LogLinearData {
+public class LogLinearTdData {
 
     /**
      * A description of a weighted example for a log-linear model.
@@ -61,7 +61,7 @@ public class LogLinearData {
     private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
     private List<LogLinearExample> exList = new ArrayList<LogLinearExample>();
 
-    public LogLinearData() {
+    public LogLinearTdData() {
     }
     
     /**

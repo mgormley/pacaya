@@ -24,7 +24,7 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearTdData.LogLinearExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
@@ -72,7 +72,7 @@ public class LogLinearTd {
      *            LogLinearData.
      * @return Trained model.
      */
-    public FgModel train(LogLinearData data) {
+    public FgModel train(LogLinearTdData data) {
         return train(data.getAlphabet(), data.getData());
     }
     
@@ -115,7 +115,7 @@ public class LogLinearTd {
         return new Pair<String,DenseFactor>(stateName, marginals.get(0));
     }
 
-    public FgExampleList getData(LogLinearData data) {
+    public FgExampleList getData(LogLinearTdData data) {
         return getData(data.getAlphabet(), data.getData());
     }
     

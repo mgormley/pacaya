@@ -17,10 +17,11 @@ import edu.jhu.gm.feat.FeatureCache;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
+import edu.jhu.gm.feat.StringIterable;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ExpFamFactor;
 import edu.jhu.gm.model.FactorGraph;
@@ -45,19 +46,18 @@ public class LogLinearXY {
 
     private static final Logger log = Logger.getLogger(LogLinearXY.class);
 
-    public static class LogLinearTdPrm {
-        public boolean includeUnsupportedFeatures = true;
+    public static class LogLinearXYPrm {
+        /** Variance of L2 regularizer or -1 for automatic. */
+        public double l2Variance = -1;
     }
     
-    private LogLinearTdPrm prm;
+    private LogLinearXYPrm prm;
     
-    public LogLinearXY(LogLinearTdPrm prm) {
+    public LogLinearXY(LogLinearXYPrm prm) {
         this.prm = prm;
     }
     
-    private static final Object TEMPLATE_KEY = "loglin";
-
-    private Alphabet<Feature> alphabet = null;
+    private Alphabet<String> alphabet = null;
     private List<String> stateNames = null;
     
     /**
@@ -67,21 +67,25 @@ public class LogLinearXY {
      *            LogLinearData.
      * @return Trained model.
      */
-    public FgModel train(LogLinearData data) {
+    public FgModel train(LogLinearXYData data) {
         return train(data.getAlphabet(), data.getData());
     }
     
-    public FgModel train(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {
+    private FgModel train(Alphabet<String> alphabet, List<LogLinearExample> exList) {
         FgExampleList data = getData(alphabet, exList);
         log.info("Number of unweighted train instances: " + data.size());
         BeliefPropagationPrm bpPrm = getBpPrm();
         
-        CrfTrainerPrm prm = new CrfTrainerPrm();
-        prm.infFactory = bpPrm;        
-        prm.regularizer = new L2(100);
+        CrfTrainerPrm crfPrm = new CrfTrainerPrm();
+        crfPrm.infFactory = bpPrm;        
+        if (prm.l2Variance == -1) {
+            crfPrm.regularizer = new L2(data.size());
+        } else {
+            crfPrm.regularizer = new L2(prm.l2Variance);
+        }
         
-        FgModel model = new FgModel(alphabet.size());
-        CrfTrainer trainer = new CrfTrainer(prm);
+        FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
+        CrfTrainer trainer = new CrfTrainer(crfPrm);
         trainer.train(model, data);
         return model;
     }
@@ -110,15 +114,15 @@ public class LogLinearXY {
         return new Pair<String,DenseFactor>(stateName, marginals.get(0));
     }
 
-    public FgExampleList getData(LogLinearData data) {
+    private FgExampleList getData(LogLinearXYData data) {
         return getData(data.getAlphabet(), data.getData());
     }
     
-    public FgExampleList getData(Alphabet<Feature> alphabet, List<LogLinearExample> exList) {    
+    private FgExampleList getData(Alphabet<String> alphabet, List<LogLinearExample> exList) {    
         if (this.alphabet == null) {
             this.alphabet = alphabet;
             this.stateNames = getStateNames(exList);
-        }        
+        }
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
@@ -138,32 +142,20 @@ public class LogLinearXY {
         
         Var v0 = getVar();
         final VarConfig trainConfig = new VarConfig();
-        trainConfig.put(v0, desc.getLabel());
+        trainConfig.put(v0, desc.getY());
         
         FactorGraph fg = new FactorGraph();
         VarSet vars = new VarSet(v0);
-        FeatureExtractor fe = new FeatureExtractor() {
-            @Override
-            public FeatureVector calcObsFeatureVector(FeExpFamFactor factor, int configId) {
-                return desc.getFeatures();
-            }
-            @Override
-            public void init(FgExample ex) {             
-                // Do nothing.               
-            }
-        };
-        fe = new FeatureCache(fe);
         ExpFamFactor f0 = new ExpFamFactor(vars) {
-
+            
             @Override
             public FeatureVector getFeatures(int config) {
-                // TODO Auto-generated method stub
-                return null;
+                return desc.getFeatures(config);
             }
             
         };
         fg.addFactor(f0);
-        return new FgExample(fg, trainConfig, fe);
+        return new FgExample(fg, trainConfig);
     }
 
     private Var getVar() {
@@ -173,7 +165,7 @@ public class LogLinearXY {
     private static List<String> getStateNames(List<LogLinearExample> exList) {
         Set<String> names = new HashSet<String>();
         for (LogLinearExample desc : exList) {
-            names.add(desc.getLabel());
+            names.add(Integer.toString(desc.getY()));
         }
         return new ArrayList<String>(names);
     }
@@ -186,8 +178,5 @@ public class LogLinearXY {
         bpPrm.normalizeMessages = false;
         return bpPrm;
     }
-        
-    public ObsFeatureConjoiner getOfc() {
-        return ofc;
-    }
+    
 }

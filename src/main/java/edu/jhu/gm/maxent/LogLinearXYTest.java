@@ -2,21 +2,64 @@ package edu.jhu.gm.maxent;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.maxent.LogLinearXY.LogLinearXYPrm;
+import edu.jhu.gm.maxent.LogLinearXYData.LogLinearExample;
+import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
 import edu.jhu.optimize.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
+import edu.jhu.util.collections.Lists;
 
-public class LogLinearEDsTest {
+public class LogLinearXYTest {
 
-    // The following 4 tests require support for features of x and y.
+    // The following tests require support for features of x and y.
+    
+    @Test
+    public void testLogLinearModelTrainDecode() {
+        LogLinearXYData exs = new LogLinearXYData(4);
+        FeatureVector[] fvs = new FeatureVector[4];
+        for (int i=0; i<4; i++) {
+            fvs[i] = new FeatureVector();            
+        }
+        exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
+        exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
+        exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
+        exs.addEx(5,  "y=D", Lists.getList("BIAS"));
+        List<LogLinearExample> data = exs.getData();
+        
+        LogLinearXYPrm prm = new LogLinearXYPrm();
+        LogLinearXY td = new LogLinearXY(prm); 
+        FgModel model = td.train(exs);
+        {
+            Pair<String,DenseFactor> p = td.decode(model, data.get(0));
+            String predLabel = p.get1();
+            DenseFactor dist = p.get2();
+            System.out.println(Arrays.toString(dist.getValues()));
+            assertEquals("y=A", predLabel);
+            JUnitUtils.assertArrayEquals(new double[] { -2.6635044410250623, -2.4546874985293083, -0.1790960208295953,
+                    -4.781808684934602 }, dist.getValues(), 1e-3);
+        }
+        {
+            Pair<String,DenseFactor> p = td.decode(model, data.get(1));
+            String predLabel = p.get1();
+            DenseFactor dist = p.get2();
+            System.out.println(Arrays.toString(dist.getValues()));
+            assertEquals("y=B", predLabel);
+            JUnitUtils.assertArrayEquals(new double[] { -3.4406673404005783, -0.34125259077453896, -1.6728440342006794,
+                    -2.668373777179833 }, dist.getValues(), 1e-3);
+        }
+    }
     
     @Test
     public void testLogLinearModelShapesLogProbs() {
@@ -57,21 +100,20 @@ public class LogLinearEDsTest {
     }
 
     private void testLogLinearModelShapesHelper(boolean logDomain) {
-        LogLinearEDs exs = new LogLinearEDs();
-        exs.addEx(30, "circle", "solid");
-        exs.addEx(15, "circle");
-        exs.addEx(10, "solid");
-        exs.addEx(5);
+        LogLinearXYData exs = new LogLinearXYData(4);
+        exs.addEx(30, 0, 0, "circle", "solid");
+        exs.addEx(15, 0, 1, "circle");
+        exs.addEx(10, 0, 2, "solid");
+        exs.addEx(5, 0, 3, );
 
-        LogLinearXY maxent = new LogLinearXY(new LogLinearXYPrm());
-        
         double[] params = new double[]{3.0, 2.0};
         FgModel model = new FgModel(2);
         model.updateModelFromDoubles(params);
-
+        
+        // Test log-likelihood.
         CrfObjective exObj = new CrfObjective(exs.getData(), CrfObjectiveTest.getInfFactory(logDomain));
         Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        obj.setPoint(params);
         
         // Test average log-likelihood.
         double ll = obj.getValue();
