@@ -43,7 +43,6 @@ public class FgExample implements Serializable {
     private VarConfig goldConfig;
 
     public Timer fgClampTimer = new Timer(); 
-    public Timer featCacheTimer = new Timer(); 
     
     // TODO: Figure out how to remove these "initializing" constructors.
     // TODO: Maybe convert to factor methods.
@@ -94,11 +93,6 @@ public class FgExample implements Serializable {
         assert (fg.getNumFactors() == fgLat.getNumFactors());
         
         fgClampTimer.stop();
-
-        // Cache the features in order to ensure we correctly populate the FeatureTemplateList.
-        featCacheTimer.start();
-        // TODO: is there a way to cache the features at this point. Or should we?
-        featCacheTimer.stop();
     }
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {
@@ -198,29 +192,5 @@ public class FgExample implements Serializable {
         VarSet vars = VarSet.getVarsOfType(fg.getFactor(factorId).getVars(), VarType.PREDICTED);
         return goldConfig.getConfigIndexOfSubset(vars);
     }
-
-    // COMMMENTED OUT OLD CODE:
-
-//  * @param cacheFeats Whether to cache the features, thereby populating the alphabet.
-//  */
-// public FgExample(FactorGraph fg, VarConfig goldConfig, FeatureExtractor fe, boolean cacheFeats) {
-    
-//    public void cacheLatFeats() {
-//        getUpdatedFactorGraph(fgLat, new double[]{ }, true);
-//    }
-//    
-//    public void cacheLatPredFeats() {
-//        getUpdatedFactorGraph(fgLatPred, new double[]{ }, true);
-//    }
-    
-//    /**
-//     * Gets the specified feature vector.
-//     * @param factorId The factor id.
-//     * @param configId The configuration id of the latent and predicted variables for that factor.
-//     * @return The feature vector.
-//     */
-//    public FeatureVector getFeatureVector(int factorId, int configId) {
-//        return featExtractor.calcFeatureVector(factorId, configId);
-//    }
     
 }

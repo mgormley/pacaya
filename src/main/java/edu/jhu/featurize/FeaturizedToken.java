@@ -182,6 +182,15 @@ public class FeaturizedToken {
         }
         return sent.getPosTag(idx);
     }
+
+    public String getCpos() {
+        if (idx < 0) {
+            return "BEGIN_NO_CPOS";
+        } else if (idx >= sent.size()) {
+            return "END_NO_CPOS";
+        }
+        return sent.getCposTag(idx);
+    }
     
     public String getCluster() {
         if (idx < 0) {

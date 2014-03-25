@@ -4,6 +4,7 @@ import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +14,10 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.SimpleAnnoSentenceReader;
+import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
+import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -41,22 +46,23 @@ import edu.jhu.optimize.Function;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
+import edu.jhu.srl.JointNlpFgExamplesBuilder;
+import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
-import edu.jhu.srl.SrlFgExamplesBuilder;
-import edu.jhu.srl.SrlFgExamplesBuilder.SrlFgExampleBuilderPrm;
+import edu.jhu.util.Prng;
 import edu.jhu.util.collections.Lists;
 
 public class CrfObjectiveTest {
 
 	@Test
-	public void logLikelihoodBelowZeroBPLogDomain() {	// belief propagation
+	public void testLogLikelihoodBelowZeroBPLogDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.logDomain = true;
 		logLikelihoodBelowZero(bpPrm);
 	}
 	
 	@Test
-	public void logLikelihoodBelowZeroBPProbDomain() {	// belief propagation
+	public void testLogLikelihoodBelowZeroBPProbDomain() {	// belief propagation
 		BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
 		bpPrm.logDomain = false;
 		bpPrm.schedule = BpScheduleType.TREE_LIKE;
@@ -64,19 +70,18 @@ public class CrfObjectiveTest {
 	}
 	
 	@Test
-	public void logLikelihoodBelowZeroBF() {	// brute force
+	public void testLogLikelihoodBelowZeroBF() {	// brute force
 		logLikelihoodBelowZero(new BruteForceInferencerPrm(false));
 		logLikelihoodBelowZero(new BruteForceInferencerPrm(true));
 	}
-	
-	
+		
 	/**
 	 * log probabilities should be less than 0...
 	 * make a chain of binary variables with one factor one each.
 	 * more complicated models are not needed, just want to show
 	 * that LL comes out >0.
 	 */
-	public void logLikelihoodBelowZero(FgInferencerFactory infFactory) {
+	public static void logLikelihoodBelowZero(FgInferencerFactory infFactory) {
 		
 		System.out.println("[logLikelihoodBelowZero] starting...");
 		FactorGraph fg = new FactorGraph();
@@ -129,10 +134,14 @@ public class CrfObjectiveTest {
 		assertTrue(objVal < 0d);
 		System.out.println("[logLikelihoodBelowZero] done");
 	}
-    
-	
+    	
     @Test
     public void testSrlLogLikelihood() throws Exception {
+        srlLogLikelihoodCorrect(true);
+        srlLogLikelihoodCorrect(false);
+    }
+    
+    public void srlLogLikelihoodCorrect(boolean logDomain) {
         List<CoNLL09Token> tokens = new ArrayList<CoNLL09Token>();
         //tokens.add(new CoNLL09Token(1, "the", "_", "_", "Det", "_", getList("feat"), getList("feat") , 2, 2, "det", "_", false, "_", new ArrayList<String>()));
         //tokens.add(new CoNLL09Token(id, form, lemma, plemma, pos, ppos, feat, pfeat, head, phead, deprel, pdeprel, fillpred, pred, apreds));
@@ -149,21 +158,20 @@ public class CrfObjectiveTest {
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();
-        SrlFgExampleBuilderPrm prm = new SrlFgExampleBuilderPrm();
-        prm.fgPrm.makeUnknownPredRolesLatent = false;
-        prm.fgPrm.roleStructure = RoleStructure.PREDS_GIVEN;
-        prm.fgPrm.useProjDepTreeFactor = true;
-        prm.srlFePrm.fePrm.biasOnly = true;
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
-        SrlFgExamplesBuilder builder = new SrlFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         ofc.init(data);
         
         System.out.println("Num features: " + fts.getNumObsFeats());
         FgModel model = new FgModel(ofc.getNumParams());
 
-        boolean logDomain = false;
         FgInferencerFactory infFactory = getInfFactory(logDomain);        
         FgExample ex = data.get(0);
         
@@ -183,7 +191,7 @@ public class CrfObjectiveTest {
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
         infLatPred.run();        
         // 2 trees, and 3 different roles (including argUNK)
-        assertEquals(2*3, infLatPred.getPartition(), 2);         
+        assertEquals(2*3, logDomain ? FastMath.exp(infLatPred.getPartition()) : infLatPred.getPartition(), 1e-3);         
 
         // Print schedule:
         BfsBpSchedule schedule = new BfsBpSchedule(fgLatPred);        
@@ -209,8 +217,56 @@ public class CrfObjectiveTest {
         double ll = obj.getValue();        
         assertEquals(2./6., FastMath.exp(ll), 1e-13);
     }
+    
+    @Test
+    public void testDpLogLikelihoodLessThanZero() throws Exception {
+        dpLogLikelihoodCorrectLessThanZero(false);
+        dpLogLikelihoodCorrectLessThanZero(true);
+    }
+    
+    public void dpLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
+        Prng.seed(123456789101112l);
+        SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
+        rPrm.maxNumSentences = 3;
+        rPrm.maxSentenceLength = 7;
+        SimpleAnnoSentenceReader r = new SimpleAnnoSentenceReader(rPrm);
+        //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
+        r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
+        
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentenceCollection sents = r.getData();
+        cs.init(sents);
+        
+        FactorTemplateList fts = new FactorTemplateList();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fgPrm.includeSrl = false;
+        prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        prm.fePrm.srlFePrm.fePrm.useTemplates = true;
+        prm.fePrm.srlFePrm.fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
+        prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
+        //prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
+        FgExampleList data = builder.getData(sents);
+        ofc.init(data);
+        
+        System.out.println("Num features: " + ofc.getNumParams());
+        FgModel model = new FgModel(ofc.getNumParams());
+        model.setRandomStandardNormal();
+        System.out.println("Model L2 norm: " + model.l2Norm());
+        
+        FgInferencerFactory infFactory = getInfFactory(logDomain);    
+        Function obj = getCrfObj(model, data, infFactory);
+        double ll = obj.getValue();        
+        assertTrue(ll < 0d);
+        //assertEquals(-10.207, ll, 1e-3);
+    }
 
-    private Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+    
+    public static Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         CrfObjective exObj = new CrfObjective(data, infFactory);
         return new AvgBatchObjective(exObj, model, 1);
     }

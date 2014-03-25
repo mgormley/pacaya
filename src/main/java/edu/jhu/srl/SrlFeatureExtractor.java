@@ -13,15 +13,17 @@ import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.srl.DepParseFactorGraph.DepParseFactorTemplate;
+import edu.jhu.srl.JointNlpFactorGraph.JointFactorTemplate;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
-import edu.jhu.srl.SrlFactorGraph.SrlFactor;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorTemplate;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
@@ -75,14 +77,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     @Override
     public FeatureVector calcObsFeatureVector(ObsFeExpFamFactor factor) {
-        SrlFactor f = (SrlFactor) factor;
-        SrlFactorTemplate ft = f.getFactorType();
+        ObsFeTypedFactor f = (ObsFeTypedFactor) factor;
+        Enum<?> ft = f.getFactorType();
         VarSet vars = f.getVars();
         
         // Get the observation features.
         ArrayList<String> obsFeats;
         Alphabet<Feature> alphabet;
-        if (ft == SrlFactorTemplate.LINK_ROLE_BINARY || ft == SrlFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
+        if (ft == JointFactorTemplate.LINK_ROLE_BINARY || ft == DepParseFactorTemplate.LINK_UNARY || ft == SrlFactorTemplate.ROLE_UNARY) {
             // Look at the variables to determine the parent and child.
             Var var = vars.iterator().next();
             int parent;
@@ -171,7 +173,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
      * Gets a string representation of the states of the observed variables for
      * this factor.
      */
-    private String getObsVarsStates(SrlFactor f) {
+    private String getObsVarsStates(Factor f) {
         if (prm.humanReadable) {
             StringBuilder sb = new StringBuilder();
             int i=0;

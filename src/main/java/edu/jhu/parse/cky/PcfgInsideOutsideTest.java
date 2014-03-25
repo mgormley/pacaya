@@ -46,7 +46,7 @@ public class PcfgInsideOutsideTest {
         // weights, since 3 is the weight of this NP.
         sum = FastMath.logAdd(-8, -9);
         sum = FastMath.logAdd(sum, -12);
-        assertEquals(sum, chart.getLogOutsideScore(grammar.getNtAlphabet().lookupIndex("NP"), 3, 5), 1e-8);
+        assertEquals(sum, chart.getLogOutsideScore(grammar.getNtAlphabet().lookupIndex("NP"), 3, 5), 1e-6);
         
         System.out.println("");
         int numNonInfs = 0;

@@ -3,7 +3,7 @@
 
 RSYNC=(rsync -azv -e "ssh external.hltcoe.jhu.edu ssh")
 LOCAL_COPY=./remote_exp
-SERVER=test4
+SERVER=test2
 REMOTE_EXP=$SERVER:/export/common/SCALE13/Text/u/mgormley/active/working--parsing--exp
 #SERVER=external.hltcoe.jhu.edu
 #REMOTE_EXP=~/working/parsing/exp/
@@ -23,6 +23,10 @@ echo "Syncing results..."
     --include="results.tsv" \
     --include="results.data" \
     --exclude="*" 
+echo ""
+
+echo "Syncing models..."
+"${RSYNC[@]}" $REMOTE_EXP/models/ $LOCAL_COPY/models
 echo ""
 
 echo "Syncing grammar induction output..."

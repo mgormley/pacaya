@@ -93,6 +93,9 @@ public class VarSet extends SmallSet<Var> {
         int numConfigs = 1;
         for (Var var : this) {
             numConfigs *= var.getNumStates();
+            if (numConfigs <= 0) {
+                throw new IllegalStateException("Integer overflow. This can occur if computing the number of configs for factor of high arity.");
+            }
         }
         return numConfigs;
     }
@@ -126,14 +129,22 @@ public class VarSet extends SmallSet<Var> {
      * @see edu.jhu.gm.model.VarSet#getVarConfig
      */
     public int[] getVarConfigAsArray(int configIndex) {
-        int i;
         int[] states = new int[this.size()];
-        i=0;
+        getVarConfigAsArray(configIndex, states);
+        return states;
+    }
+    
+    /**
+     * this is the "no-allocation" version of the non-void method of the same name.
+     */
+    public void getVarConfigAsArray(int configIndex, int[] putInto) {
+        if(putInto.length != this.size())
+            throw new IllegalArgumentException();
+        int i = 0;
         for (Var var : this) {
-            states[i++] = configIndex % var.getNumStates();
+            putInto[i++] = configIndex % var.getNumStates();
             configIndex /= var.getNumStates();
         }
-        return states;
     }
 
     @Override

@@ -15,7 +15,6 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
-import edu.jhu.gm.model.UnsupportedFactorTypeException;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
@@ -44,9 +43,8 @@ public class BeliefPropagation implements FgInferencer {
         //public final FactorGraph fg;
         public boolean logDomain = true;
         /** Whether to normalize the messages after sending. */
-        public boolean normalizeMessages = true;
-        
-        public boolean cacheFactorBeliefs = true;
+        public boolean normalizeMessages = true;        
+        public boolean cacheFactorBeliefs = false;
         
         public BeliefPropagationPrm() {
         }
@@ -87,19 +85,19 @@ public class BeliefPropagation implements FgInferencer {
         public DenseFactor newMessage;
         
         /** Constructs a message container, initializing the messages to the uniform distribution. */
-        public Messages(FgEdge edge, BeliefPropagationPrm prm) {
+        public Messages(FgEdge edge, boolean logDomain, boolean normalizeMessages) {
             // Initialize messages to the (possibly unormalized) uniform
             // distribution in case we want to run parallel BP.
-            double initialValue = prm.logDomain ? 0.0 : 1.0;
+            double initialValue = logDomain ? 0.0 : 1.0;
             // Every message to/from a variable will be a factor whose domain is
             // that variable only.
             Var var = edge.getVar();
             message = new DenseFactor(new VarSet(var), initialValue);
             newMessage = new DenseFactor(new VarSet(var), initialValue);
             
-            if (prm.normalizeMessages) {
+            if (normalizeMessages) {
                 // Normalize the initial messages.
-                if (prm.logDomain) {
+                if (logDomain) {
                     message.logNormalize();
                     newMessage.logNormalize();
                 } else {
@@ -155,7 +153,7 @@ public class BeliefPropagation implements FgInferencer {
         // Initialization.
         for (int i=0; i<msgs.length; i++) {
             // TODO: consider alternate initializations.
-            msgs[i] = new Messages(fg.getEdge(i), prm);
+            msgs[i] = new Messages(fg.getEdge(i), prm.logDomain, prm.normalizeMessages);
         }
         // Reset the global factors.
         for (Factor factor : fg.getFactors()) {
@@ -231,7 +229,7 @@ public class BeliefPropagation implements FgInferencer {
             // create all the messages from this factor to its variables, but only 
             // once per iteration.
             GlobalFactor globalFac = (GlobalFactor) factor;
-            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, iter);
+            globalFac.createMessages(edge.getParent(), msgs, prm.logDomain, prm.normalizeMessages, iter);
             // The messages have been set, so just return.
             return;
         } else {
@@ -368,7 +366,8 @@ public class BeliefPropagation implements FgInferencer {
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
-        
+        assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
+
         // update factor beliefs
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();
@@ -405,12 +404,13 @@ public class BeliefPropagation implements FgInferencer {
     }
 
     protected DenseFactor getMarginals(Factor factor, FgNode node) {
-        if (!(factor instanceof ExplicitFactor)) {
-            throw new UnsupportedFactorTypeException(factor, "Getting marginals of a global factor is not supported."
-                    + " This would require exponential space to store the resulting factor.");
+        if (factor instanceof GlobalFactor) {
+            log.warn("Getting marginals of a global factor is not supported."
+                    + " This will require exponential space to store the resulting factor."
+                    + " This should only be used for testing.");
         }
         
-        DenseFactor prod = new DenseFactor((DenseFactor)factor);
+        DenseFactor prod = new DenseFactor(BruteForceInferencer.safeGetDenseFactor(factor));
         // Compute the product of all messages sent to this factor.
         getProductOfMessagesNormalized(node, prod, null);
         return prod;
@@ -498,7 +498,7 @@ public class BeliefPropagation implements FgInferencer {
         // G_{Bethe} = \sum_a \sum_{x_a} - b(x_a) ln \chi(x_a)
         //              + \sum_a \sum_{x_a} b(x_a) ln b(x_a)
         //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
-        //           = \sum_a \sum_{x_a} - b(x_a) ln (\chi(x_a) / b(x_a))
+        //           = \sum_a \sum_{x_a} b(x_a) ln (b(x_a) / \chi(x_a))
         //              + \sum_i (n_i - 1) \sum_{x_i} b(x_i) ln b(x_i)
         //
         //     where n_i is the number of neighbors of the variable x_i,
@@ -527,10 +527,7 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else {
-                // TODO: we need to support GlobalFactors here. Until that is done, this computation will be incorrect for 
-                // factor graphs with global factors.
-                // bethe += ((GlobalFactor) f).getExpectedLogBelief();
-                ignoredClasses.add(f.getClass());
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getNode(a), msgs, prm.logDomain);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

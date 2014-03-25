@@ -1,0 +1,31 @@
+# Carreras (2007) defines \phi_2(x, h, m ,c) as, where h is the parent
+# of m and c is either a grandchild of h or a sibling of m.
+#
+# dir(xh,xm) + xh.cpos + xm.cpos + xc.cpos
+# dir(xh,xm) + xh.cpos + xc.cpos
+# dir(xh,xm) + xm.cpos + xc.cpos
+# dir(xh,xm) + xh.word + xc.word
+# dir(xh,xm) + xm.word + xc.word
+# dir(xh,xm) + xh.cpos + xc.word
+# dir(xh,xm) + xm.cpos + xc.word
+# dir(xh,xm) + xh.word + xc.cpos
+# dir(xh,xm) + xm.word + xc.cpos
+
+
+# Note below, we use a different indexing of positions
+# p = xi = xh 
+# c = xj = xm
+# m = xk = xc
+
+# Carreras (2007)
+#
+relative(p,c) + p.cpos + c.cpos + m.cpos
+relative(p,c) + p.cpos + m.cpos
+relative(p,c) + c.cpos + m.cpos
+relative(p,c) + p.word + m.word
+relative(p,c) + c.word + m.word
+relative(p,c) + p.cpos + m.word
+relative(p,c) + c.cpos + m.word
+relative(p,c) + p.word + m.cpos
+relative(p,c) + c.word + m.cpos
+

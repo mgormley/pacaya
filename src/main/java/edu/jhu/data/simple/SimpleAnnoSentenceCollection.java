@@ -8,6 +8,7 @@ import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTreebank;
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
+import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.util.Alphabet;
 
 public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> {
@@ -88,6 +89,21 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
 
     public SimpleAnnoSentenceCollection subList(int start, int end) {
         return new SimpleAnnoSentenceCollection(super.subList(start, end));
+    }
+
+    /**
+     * Gets a deep copy of these sentences with some annotation layers removed.
+     * @param removeAts The annotation layers to remove.
+     * @return The filtered deep copy.
+     */
+    public SimpleAnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
+        SimpleAnnoSentenceCollection newSents = new SimpleAnnoSentenceCollection();
+        for (SimpleAnnoSentence sent : this) {
+            SimpleAnnoSentence newSent = new SimpleAnnoSentence(sent);
+            newSent.removeAts(removeAts);
+            newSents.add(newSent);
+        }
+        return newSents;
     }
     
 }
