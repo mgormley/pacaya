@@ -55,12 +55,17 @@ public class LogLinearXYData {
         
     }
     
+    public static final int UNKNOWN_NUMBER_OF_YS = -1;
     private int numYs;
     private final Alphabet<String> featAlphabet;
     private final Alphabet<Object> xAlphabet;
     private final Alphabet<Object> yAlphabet;
     private List<LogLinearExample> exList;
 
+    public LogLinearXYData() {
+        this(UNKNOWN_NUMBER_OF_YS);
+    }
+    
     public LogLinearXYData(int numYs) {
         this(numYs, new Alphabet<String>());
     }
@@ -82,6 +87,12 @@ public class LogLinearXYData {
      * @param fvs The binary features on the observations, x, for all possible labels, y'. Indexed by y'.
      */
     public void addEx(double weight, int x, int y, FeatureVector[] fvs) {
+        if (numYs == -1) {
+            numYs = fvs.length;
+        }
+        if (yAlphabet.size() > numYs) {
+            throw new IllegalStateException("Y alphabet has grown larger than the number of Ys");
+        }
         if (y >= numYs) {
             throw new IllegalArgumentException("Invalid y: " + y);
         } else if (fvs.length != numYs) {
@@ -99,7 +110,7 @@ public class LogLinearXYData {
      * @param y The prediction, y.
      * @param fvs The binary features on the observations, x, for all possible labels, y'. Indexed by y'.
      */
-    public void addEx(double weight, Object xObj, Object yObj, List<String>[] fvStrs) {
+    public void addExStrFeats(double weight, Object xObj, Object yObj, List<String>[] fvStrs) {
         FeatureVector[] fvs = new FeatureVector[fvStrs.length];
         for (int i=0; i<fvs.length; i++) {
             fvs[i] = new FeatureVector();

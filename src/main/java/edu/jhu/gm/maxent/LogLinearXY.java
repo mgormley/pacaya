@@ -27,8 +27,6 @@ import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.hlt.optimize.SGD;
-import edu.jhu.hlt.optimize.SGD.SGDPrm;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -45,6 +43,12 @@ public class LogLinearXY {
     public static class LogLinearXYPrm {
         /** Variance of L2 regularizer or -1 for automatic. */
         public double l2Variance = -1;
+        public CrfTrainerPrm crfPrm = new CrfTrainerPrm();
+        public LogLinearXYPrm() {
+            crfPrm.infFactory = new BruteForceInferencerPrm(true);
+            //crfPrm.batchMaximizer = new SGD(new SGDPrm());
+            //crfPrm.maximizer = null;
+        }
     }
     
     private LogLinearXYPrm prm;
@@ -67,20 +71,15 @@ public class LogLinearXY {
         Alphabet<String> alphabet = data.getFeatAlphabet();
         FgExampleList list = getData(data);
         log.info("Number of unweighted train instances: " + list.size());
-        BeliefPropagationPrm bpPrm = getBpPrm();
         
-        CrfTrainerPrm crfPrm = new CrfTrainerPrm();
-        crfPrm.infFactory = new BruteForceInferencerPrm(true);
-        crfPrm.batchMaximizer = new SGD(new SGDPrm());
-        crfPrm.maximizer = null;
         if (prm.l2Variance == -1) {
-            crfPrm.regularizer = new L2(list.size());
+            prm.crfPrm.regularizer = new L2(list.size());
         } else {
-            crfPrm.regularizer = new L2(prm.l2Variance);
+            prm.crfPrm.regularizer = new L2(prm.l2Variance);
         }
-        
+        log.info("Number of model parameters: " + alphabet.size());
         FgModel model = new FgModel(alphabet.size(), new StringIterable(alphabet.getObjects()));
-        CrfTrainer trainer = new CrfTrainer(crfPrm);
+        CrfTrainer trainer = new CrfTrainer(prm.crfPrm);
         trainer.train(model, list);
         return model;
     }
@@ -120,9 +119,11 @@ public class LogLinearXY {
             this.stateNames = getStateNames(exList, data.getYAlphabet());
         }
         
+        // Because we don't directly support weights in the CrfObjective, 
+        // we instead just add multiple examples.
         FgExampleMemoryStore store = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
-            for (int i=0; i<desc.getWeight(); i++) {
+            for (int i = 0; i < (desc.getWeight() * 100); i++) {
                 FgExample ex = getFgExample(desc);
                 store.add(ex);
             }
