@@ -339,22 +339,25 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
             CoNLL08Token tok = new CoNLL08Token();
             tok.setId(i+1);
             tok.setForm(sent.getWord(i));
-            tok.setLemma(sent.getLemma(i));
-            tok.setGpos(sent.getPosTag(i));
-            tok.setPpos(sent.getPosTag(i));
+            
+            if (sent.getLemmas() != null) { tok.setLemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setGpos(sent.getPosTag(i)); }
+            if (sent.getPosTags() != null) { tok.setPpos(sent.getPosTag(i)); }
             tok.setSplitForm(sent.getWord(i));
-            tok.setSplitLemma(sent.getLemma(i));
-            tok.setSplitPpos(sent.getPosTag(i));
-            tok.setHead(sent.getParent(i) + 1);
-            tok.setDeprel(sent.getDeprel(i));            
+            if (sent.getLemmas() != null) { tok.setSplitLemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setSplitPpos(sent.getPosTag(i)); }
+            if (sent.getParents() != null) { tok.setHead(sent.getParent(i) + 1); }
+            if (sent.getDeprels() != null) { tok.setDeprel(sent.getDeprel(i)); }            
             toks.add(tok);
         }
         
         // Create the new sentence.
         CoNLL08Sentence updatedSentence = new CoNLL08Sentence(toks);
         
-        // Update SRL columns from the SRL graph.
-        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
+        if (sent.getSrlGraph() != null) {
+            // Update SRL columns from the SRL graph.
+            updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
+        }
         
         return updatedSentence;
     }
