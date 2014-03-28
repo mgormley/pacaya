@@ -3,10 +3,10 @@ package edu.jhu.gm.model;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.util.Lambda;
 import edu.jhu.prim.util.Lambda.LambdaBinOpDouble;
 import edu.jhu.prim.util.math.FastMath;

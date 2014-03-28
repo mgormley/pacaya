@@ -3,8 +3,8 @@ package edu.jhu.gm.model;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.util.IncrIntIter;
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIncrIter;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.util.math.FastMath;
 
 
@@ -25,17 +25,17 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     public ExpFamFactor(VarSet vars) {
         super(vars);
-        this.iter = new IncrIntIter(getVars().calcNumConfigs());
+        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
     public ExpFamFactor(ExpFamFactor other) {
         super(other);
-        this.iter = new IncrIntIter(getVars().calcNumConfigs());
+        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
     
     public ExpFamFactor(DenseFactor other) {
         super(other);
-        this.iter = new IncrIntIter(getVars().calcNumConfigs());
+        this.iter = new IntIncrIter(getVars().calcNumConfigs());
     }
 
     public abstract FeatureVector getFeatures(int config);

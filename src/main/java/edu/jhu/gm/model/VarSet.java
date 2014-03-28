@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.collections.SmallSet;
 
