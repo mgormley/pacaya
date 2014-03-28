@@ -41,6 +41,8 @@ public class FgExample implements Serializable {
     private boolean hasLatentVars;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
+    /** The variable assignments for the observed variables only. */
+    private VarConfig obsConfig;
 
     public Timer fgClampTimer = new Timer(); 
     
@@ -71,20 +73,21 @@ public class FgExample implements Serializable {
         checkGoldConfig(fg, goldConfig);
         this.fg = fg;
         this.goldConfig = goldConfig;
-
         fgClampTimer.start();
                         
         // Get a copy of the factor graph where the observed variables are clamped.
         List<Var> observedVars = VarSet.getVarsOfType(fg.getVars(), VarType.OBSERVED);
+        this.obsConfig = goldConfig.getIntersection(observedVars);
         if (observedVars.size() > 0) {
-            fgLatPred = fg.getClamped(goldConfig.getIntersection(observedVars));
+            fgLatPred = fg.getClamped(obsConfig);
         } else {
             fgLatPred = fg;
         }
         
         // Get a copy of the factor graph where the observed and predicted variables are clamped.
         List<Var> predictedVars = VarSet.getVarsOfType(fg.getVars(), VarType.PREDICTED);
-        fgLat = fgLatPred.getClamped(goldConfig.getIntersection(predictedVars));
+        VarConfig predConfig = goldConfig.getIntersection(predictedVars);
+        fgLat = fgLatPred.getClamped(predConfig);
         
         // Does this factor graph contain latent variables?
         hasLatentVars = fg.getVars().size() - observedVars.size() - predictedVars.size() > 0;

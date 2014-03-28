@@ -14,6 +14,8 @@ import edu.jhu.data.conll.SrlGraph.SrlPred;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.parse.cky.data.BinaryTree;
 import edu.jhu.prim.arrays.IntArrays;
+import edu.jhu.prim.set.IntHashSet;
+import edu.jhu.prim.set.IntSet;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.collections.Lists;
 
@@ -46,6 +48,7 @@ public class SimpleAnnoSentence {
     private int[] parents;
     private DepEdgeMask depEdgeMask;
     private SrlGraph srlGraph;
+    private IntHashSet knownPreds;    
     /** Constituency parse. */    
     private BinaryTree binaryTree;
 
@@ -72,7 +75,8 @@ public class SimpleAnnoSentence {
         this.clusters = Lists.copyOf(other.clusters);
         this.deprels = Lists.copyOf(other.deprels);
         this.parents = IntArrays.copyOf(other.parents);
-        this.depEdgeMask = depEdgeMask == null ? null : new DepEdgeMask(depEdgeMask);
+        this.depEdgeMask = (other.depEdgeMask == null) ? null : new DepEdgeMask(other.depEdgeMask);
+        this.knownPreds = (other.knownPreds == null) ? null : new IntHashSet(other.knownPreds);
         this.sourceSent = other.sourceSent;
         // TODO: this should be a deep copy.
         this.feats = Lists.copyOf(other.feats);
@@ -301,22 +305,24 @@ public class SimpleAnnoSentence {
     public List<Pair<Integer, Dir>> getDependencyPath(int start, int end) {
         return DepTree.getDependencyPath(start, end, parents);
     }
-        
-    // TODO: Return an IntHashSet after supporting iteration.
-    public Set<Integer> getKnownPreds() {
+    
+    public Integer size() {
+        return words.size();
+    }
+    
+    public boolean isKnownPred(int i) {
+        return knownPreds.contains(i);
+    }
+    
+    public void setKnownPredsFromSrlGraph() {
         if (srlGraph == null) {
-            return null;
+            throw new IllegalStateException("This can only be called if srlGraph is non-null.");
         }
-        Set<Integer> knownPreds = new HashSet<Integer>();
+        knownPreds = new IntHashSet();
         // All the "Y"s
         for (SrlPred pred : srlGraph.getPreds()) {
             knownPreds.add(pred.getPosition());
         }
-        return knownPreds;
-    }
-
-    public Integer size() {
-        return words.size();
     }
     
     /* ----------- Getters/Setters for internal storage ------------ */
@@ -377,12 +383,22 @@ public class SimpleAnnoSentence {
         this.depEdgeMask = depEdgeMask;
     }
 
+    public IntHashSet getKnownPreds() {
+        return knownPreds;
+    }
+    
+    public void setKnownPreds(IntHashSet knownPreds) {
+        this.knownPreds = knownPreds;
+    }
+    
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
     
+    /** Sets the SRL graph and also the known predicate positions. */
     public void setSrlGraph(SrlGraph srlGraph) {
         this.srlGraph = srlGraph;
+        this.setKnownPredsFromSrlGraph();
     }
     
     public List<String> getDeprels() {
@@ -436,6 +452,7 @@ public class SimpleAnnoSentence {
         case DEP_TREE: this.parents = null; break; // TODO: Should DEP_TREE also remove the labels? Not clear.
         case DEPREL: this.deprels = null; break;
         case DEP_EDGE_MASK: this.depEdgeMask = null; break;
+        case SRL_PRED_IDX: this.knownPreds = null; break;
         case SRL: this.srlGraph = null; break;
         case BINARY_TREE: this.binaryTree = null; break;
         default: throw new RuntimeException("not implemented for " + at);
@@ -453,6 +470,7 @@ public class SimpleAnnoSentence {
         case DEP_TREE: return this.parents != null;
         case DEPREL: return this.deprels != null;
         case DEP_EDGE_MASK: return this.depEdgeMask != null;
+        case SRL_PRED_IDX: return this.knownPreds != null;
         case SRL: return this.srlGraph != null;
         case BINARY_TREE: return this.binaryTree != null;
         default: throw new RuntimeException("not implemented for " + at);

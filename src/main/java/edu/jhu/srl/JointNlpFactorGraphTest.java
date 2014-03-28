@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +27,8 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
+import edu.jhu.prim.set.IntHashSet;
+import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
@@ -292,7 +293,7 @@ public class JointNlpFactorGraphTest {
             }
             
         };
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
+        IntSet knownPreds = IntHashSet.fromArray(0, 2);
         List<String> words = Lists.getList("w1", "w2", "w3");        
         // Prune all but a left branching tree.
         DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), false);

@@ -3,7 +3,6 @@ package edu.jhu.srl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -14,6 +13,8 @@ import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.iter.IntIter;
+import edu.jhu.prim.set.IntSet;
 
 /**
  * A factor graph builder for SRL.
@@ -144,7 +145,7 @@ public class SrlFactorGraph implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(List<String> words, List<String> lemmas, Set<Integer> knownPreds, List<String> roleStateNames,
+    public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
             Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
         this.n = words.size();
 
@@ -152,7 +153,9 @@ public class SrlFactorGraph implements Serializable {
         roleVars = new RoleVar[n][n];
         if (prm.roleStructure == RoleStructure.PREDS_GIVEN) {
             // CoNLL-friendly model; preds given
-            for (int i : knownPreds) {
+            IntIter iter = knownPreds.iterator();
+            while (iter.hasNext()) {
+                int i = iter.next();
                 for (int j = 0; j < n;j++) {
                     if (i==j && !prm.allowPredArgSelfLoops) {
                         continue;
@@ -215,7 +218,7 @@ public class SrlFactorGraph implements Serializable {
 
     // ----------------- Creating Variables -----------------
 
-    private RoleVar createRoleVar(int parent, int child, Set<Integer> knownPreds, List<String> roleStateNames) {
+    private RoleVar createRoleVar(int parent, int child, IntSet knownPreds, List<String> roleStateNames) {
         RoleVar roleVar;
         String roleVarName = "Role_" + parent + "_" + child;
         if (!prm.makeUnknownPredRolesLatent || knownPreds.contains((Integer) parent)) {

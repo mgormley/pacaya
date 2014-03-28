@@ -3,7 +3,6 @@ package edu.jhu.srl;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -15,6 +14,7 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarSet;
+import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
@@ -65,7 +65,7 @@ public class JointNlpFactorGraph extends FactorGraph {
     }
     
     public JointNlpFactorGraph(JointFactorGraphPrm prm, List<String> words, List<String> lemmas, DepEdgeMask depEdgeMask,
-            Set<Integer> knownPreds, List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
+            IntSet knownPreds, List<String> roleStateNames, Map<String,List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
         this(prm);
         build(words, lemmas, knownPreds, roleStateNames, psMap, obsFe, ofc, fe, this, depEdgeMask);
     }
@@ -88,7 +88,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * @param fe TODO
      * @param depEdgeMask TODO
      */
-    public void build(List<String> words, List<String> lemmas, Set<Integer> knownPreds, List<String> roleStateNames,
+    public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
             Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg, DepEdgeMask depEdgeMask) {
         this.n = words.size();
 
