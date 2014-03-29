@@ -87,7 +87,7 @@ public class FgExampleListBuilder {
             fgTimer.stop();
 
             // Get time spent on certain subtasks.
-            totFgClampMs += ex.fgClampTimer.totMs();
+            totFgClampMs += ((UnlabeledFgExample)ex).fgClampTimer.totMs();
         }
 
         log.info("Time (ms) to clamp factor graphs: " + totFgClampMs);

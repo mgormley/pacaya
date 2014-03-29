@@ -1,6 +1,6 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.model.FeExpFamFactor;
 
 
@@ -13,7 +13,7 @@ public interface FeatureExtractor {
      * 
      * @param ex The factor graph example.
      */
-    void init(FgExample ex);
+    void init(UFgExample ex);
 
     /**
      * Creates the feature vector for the specified factor, given the

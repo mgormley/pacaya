@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -51,7 +51,7 @@ public class MbrDecoder {
      * @param ex The input data.
      * @return the FgInferencer that was used.
      */
-    public FgInferencer decode(FgModel model, UnlabeledFgExample ex) {
+    public FgInferencer decode(FgModel model, UFgExample ex) {
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<DenseFactor>();
         varMargMap = new HashMap<Var,Double>();

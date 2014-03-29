@@ -4,15 +4,25 @@ import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
 import edu.jhu.util.Timer;
 
-public class UnlabeledFgExample implements Serializable {
+/**
+ * An unlabeled factor graph example. This class only stores the factor graph
+ * and the assignment to the observed variables.
+ * 
+ * @author mgormley
+ */
+public class UnlabeledFgExample implements FgExample, Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(UnlabeledFgExample.class);
@@ -26,7 +36,23 @@ public class UnlabeledFgExample implements Serializable {
     /** The variable assignments for the observed variables only. */
     protected VarConfig obsConfig;
     public Timer fgClampTimer = new Timer();
-
+    
+    // TODO: Figure out how to remove these "initializing" constructors.
+    // TODO: Maybe convert to factory methods.
+    public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig, ObsFeatureExtractor obsFe, FactorTemplateList fts) {
+        this(fg, obsConfig);        
+        // Initialize the observation function.
+        obsFe.init(this, fts);
+        // Update the factor templates.
+        fts.lookupTemplateIds(this.getFgLatPred());
+        fts.getTemplateIds(this.getOriginalFactorGraph());
+    }
+    public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig, FeatureExtractor fe) {
+        this(fg, obsConfig);        
+        // Initialize the feature extractor.
+        fe.init(this);        
+    }
+    
     public UnlabeledFgExample(FactorGraph fg, VarConfig obsConfig) {
         checkObsConfig(fg, obsConfig);
         this.fg = fg;
@@ -55,12 +81,24 @@ public class UnlabeledFgExample implements Serializable {
     }
 
     private void checkObsConfig(FactorGraph fg, VarConfig obsConfig) {
+        int numObsVarsInFg = 0;
         for (Var var : fg.getVars()) {
             if (var.getType() == VarType.OBSERVED) {
+                numObsVarsInFg++;
                 if (obsConfig.getState(var, -1) == -1) {
-                    throw new IllegalStateException("Vars missing from train configuration: " + var);
+                    throw new IllegalStateException("Vars missing from obs configuration: " + var);
                 }
             }
+        }
+        if (numObsVarsInFg < obsConfig.size()) {
+            // TODO: Add this check back in.
+            //            VarSet vcVars = obsConfig.getVars();
+            //            VarSet fgVars = new VarSet();
+            //            fgVars.addAll(fg.getVars());
+            //            log.debug("OBSERVED fgVars: " + fgVars.getVarsOfType(VarType.OBSERVED));
+            //            throw new RuntimeException("Extra vars in obs configuration:" 
+            //                    + " num=" + (obsConfig.size() - numObsVarsInFg) 
+            //                    + " vars=" + vcVars.diff(fgVars));
         }
     }
 
@@ -105,5 +143,18 @@ public class UnlabeledFgExample implements Serializable {
     public VarConfig getObsConfig() {
         return obsConfig;
     }
+    
+    // Methods of FgExample which throw exceptions if called.
+    private static final String DO_NOT_CALL = "Cannot call a labeled factor graph method on an unlabeled factor graph.";
+    @Override
+    public FactorGraph getFgLat() { throw new RuntimeException(DO_NOT_CALL); }
+    @Override
+    public FactorGraph updateFgLat(FgModel model, boolean logDomain) { throw new RuntimeException(DO_NOT_CALL); }
+    @Override
+    public VarConfig getGoldConfig() { throw new RuntimeException(DO_NOT_CALL); }
+    @Override
+    public VarConfig getGoldConfigPred(int factorId) { throw new RuntimeException(DO_NOT_CALL); }
+    @Override
+    public int getGoldConfigIdxPred(int factorId) { throw new RuntimeException(DO_NOT_CALL); }
 
 }

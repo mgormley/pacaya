@@ -5,9 +5,9 @@ import java.util.Arrays;
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaReaderTest;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -174,7 +174,7 @@ public class CrfTrainerTest {
 
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new FgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 
@@ -218,7 +218,7 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t2, 1);
 
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new FgExample(fgv.fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});
@@ -279,7 +279,7 @@ public class CrfTrainerTest {
         trainConfig.put(childRoles[1][0], "A2");   
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new FgExample(fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
         //model.setParams(new double[]{1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0, 0});

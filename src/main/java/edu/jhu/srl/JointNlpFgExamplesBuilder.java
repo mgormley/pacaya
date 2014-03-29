@@ -9,6 +9,8 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
+import edu.jhu.gm.data.LabeledFgExample;
+import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.FeatureCache;
 import edu.jhu.gm.feat.FeatureExtractor;
@@ -47,13 +49,18 @@ public class JointNlpFgExamplesBuilder {
     private JointNlpFgExampleBuilderPrm prm;
     private CorpusStatistics cs;
     private FactorTemplateList fts;
+    private boolean labeledExamples;
 
     public JointNlpFgExamplesBuilder(JointNlpFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs) {
+        this(prm, ofc, cs, true);
+    }
+    
+    public JointNlpFgExamplesBuilder(JointNlpFgExampleBuilderPrm prm, ObsFeatureConjoiner ofc, CorpusStatistics cs, boolean labeledExamples) {
         this.prm = prm;
         this.ofc = ofc;
         this.cs = cs;
         this.fts = ofc.getTemplates();
-        //this.sents = sents;
+        this.labeledExamples = labeledExamples;
     }
 
     public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
@@ -90,10 +97,15 @@ public class JointNlpFgExamplesBuilder {
             JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);
             log.trace("Number of variables: " + sfg.getNumVars() + " Number of factors: " + sfg.getNumFactors());
             // Get the variable assignments given in the training data.
-            VarConfig trainConfig = getTrainAssignment(sent, sfg);
+            VarConfig vc = getVarAssignment(sent, sfg);
             
             // Create the example.
-            FgExample ex = new FgExample(sfg, trainConfig, obsFe, fts);
+            FgExample ex;
+            if (labeledExamples) {
+                ex = new LabeledFgExample(sfg, vc, obsFe, fts);
+            } else {
+                ex = new UnlabeledFgExample(sfg, vc, obsFe, fts);
+            }
             fe.init(ex);
             
             return ex;
@@ -105,7 +117,8 @@ public class JointNlpFgExamplesBuilder {
 
     }
 
-    private static VarConfig getTrainAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg) {
+    /** Gets the variable assignment for either all variables or only the observed variables. */
+    private static VarConfig getVarAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg) {
         VarConfig vc = new VarConfig();
         DepParseEncoder.getDepParseTrainAssignment(sent, sfg, vc);       
         SrlEncoder.getSrlTrainAssignment(sent, sfg, vc);

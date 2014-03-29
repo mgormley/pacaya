@@ -14,7 +14,7 @@ import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
@@ -49,7 +49,7 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
     private static final Logger log = Logger.getLogger(DepParseFeatureExtractor.class); 
     
     private DepParseFeatureExtractorPrm prm;
-    private VarConfig goldConfig;
+    private VarConfig obsConfig;
     private Alphabet<Object> alphabet;
     private TemplateFeatureExtractor ext;
     
@@ -61,8 +61,8 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
     }
 
     @Override
-    public void init(FgExample ex) {
-        this.goldConfig = ex.getGoldConfig();
+    public void init(UFgExample ex) {
+        this.obsConfig = ex.getObsConfig();
     }
     
     private final FeatureVector emptyFv = new FeatureVector();
@@ -155,11 +155,11 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
             StringBuilder sb = new StringBuilder();
             int i=0;
             for (Var v : f.getVars()) {
-                if (i > 0) {
-                    sb.append("_");
-                }
                 if (v.getType() == VarType.OBSERVED) {
-                    sb.append(goldConfig.getStateName(v));
+                    if (i > 0) {
+                        sb.append("_");
+                    }
+                    sb.append(obsConfig.getStateName(v));
                     i++;
                 }
             }

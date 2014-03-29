@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FeatureVector;
@@ -152,7 +153,7 @@ public class LogLinearXY {
             
         };
         fg.addFactor(f0);
-        return new FgExample(fg, trainConfig);
+        return new LabeledFgExample(fg, trainConfig);
     }
 
     private Var getVar() {

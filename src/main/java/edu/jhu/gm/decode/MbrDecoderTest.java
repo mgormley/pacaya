@@ -4,15 +4,15 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.ObsFeExpFamFactor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
-import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
+import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -53,7 +53,7 @@ public class MbrDecoderTest {
         }
         
         FgExampleMemoryStore data = new FgExampleMemoryStore();
-        data.add(new FgExample(fg, trainConfig, obsFe, fts));
+        data.add(new LabeledFgExample(fg, trainConfig, obsFe, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 

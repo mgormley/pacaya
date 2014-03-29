@@ -10,6 +10,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.feat.FactorTemplate;
@@ -166,14 +168,14 @@ public class LogLinearObsFeats {
                 return desc.getObsFeatures();
             }
             @Override
-            public void init(FgExample ex, FactorTemplateList fts) {             
+            public void init(UFgExample ex, FactorTemplateList fts) {             
                 // Do nothing.               
             }
         };
         obsFe = new ObsFeatureCache(obsFe);
         ExpFamFactor f0 = new ObsFeExpFamFactor(vars, TEMPLATE_KEY, ofc, obsFe);
         fg.addFactor(f0);
-        return new FgExample(fg, trainConfig, obsFe, fts);
+        return new LabeledFgExample(fg, trainConfig, obsFe, fts);
     }
 
     private Var getVar() {

@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.Var;
@@ -105,7 +106,7 @@ public class ObsFeatureConjoinerTest {
         vc.put(v1, state1);
         vc.put(v2, state2);
         
-        return new FgExample(fg, vc, obsFe, fts);
+        return new LabeledFgExample(fg, vc, obsFe, fts);
     }
 
     public static FactorTemplateList getFtl() {

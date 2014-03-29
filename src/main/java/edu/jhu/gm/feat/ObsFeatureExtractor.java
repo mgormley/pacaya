@@ -1,6 +1,6 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 
 public interface ObsFeatureExtractor {
 
@@ -11,7 +11,7 @@ public interface ObsFeatureExtractor {
      * @param ex The factor graph example.
      * @param fts The templates.
      */
-    void init(FgExample ex, FactorTemplateList fts);
+    void init(UFgExample ex, FactorTemplateList fts);
 
     /**
      * Creates the observation function feature vector for the specified factor.

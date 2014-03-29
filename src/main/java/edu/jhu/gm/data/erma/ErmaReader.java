@@ -20,6 +20,8 @@ import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
+import edu.jhu.gm.data.LabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
@@ -341,7 +343,7 @@ public class ErmaReader {
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
         featExtractor.setFeatureRefVec(feature_ref_vec);
         
-        FgExample fgEx = new FgExample(fg, trainConfig, featExtractor);
+        FgExample fgEx = new LabeledFgExample(fg, trainConfig, featExtractor);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;
@@ -399,7 +401,7 @@ public class ErmaReader {
         }
 
         @Override
-        public void init(FgExample ex) {
+        public void init(UFgExample ex) {
             // Do nothing.
         }
     }

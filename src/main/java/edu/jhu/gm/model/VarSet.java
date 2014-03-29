@@ -166,6 +166,10 @@ public class VarSet extends SmallSet<Var> {
         return sb.toString();
     }
 
+    public VarSet getVarsOfType(VarType type) {
+        return getVarsOfType(this, type);
+    }
+    
     /** Gets the subset of vars with the specified type. */
     public static List<Var> getVarsOfType(List<Var> vars, VarType type) {
         ArrayList<Var> subset = new ArrayList<Var>();

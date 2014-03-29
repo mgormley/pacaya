@@ -17,11 +17,11 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
-import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
+import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -124,7 +124,7 @@ public class CrfObjectiveTest {
 			VarConfig gold = new VarConfig();
 			for(int j=0; j<chainLen; j++)
 				gold.put(x.get(j), rand.nextInt(xNames.size()));
-			FgExample e = new FgExample(fg, gold);
+			FgExample e = new LabeledFgExample(fg, gold);
 			exs.add(e);
 		}
 		

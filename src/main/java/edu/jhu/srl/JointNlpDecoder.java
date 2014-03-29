@@ -3,7 +3,7 @@ package edu.jhu.srl;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.model.FgModel;
@@ -37,7 +37,7 @@ public class JointNlpDecoder {
      * @param model The model.
      * @param ex The example to decode.
      */
-    public void decode(FgModel model, UnlabeledFgExample ex) {
+    public void decode(FgModel model, UFgExample ex) {
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
         JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();

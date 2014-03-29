@@ -2,7 +2,7 @@ package edu.jhu.gm.feat;
 
 import java.io.Serializable;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.util.Alphabet;
 
@@ -20,7 +20,7 @@ public class ObsFeatureCache implements ObsFeatureExtractor, Serializable {
     }
 
     @Override
-    public void init(FgExample ex, FactorTemplateList fts) {
+    public void init(UFgExample ex, FactorTemplateList fts) {
         this.feats = new FeatureVector[ex.getOriginalFactorGraph().getNumFactors()];
         this.featExtractor.init(ex, fts);
     }

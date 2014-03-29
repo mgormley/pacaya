@@ -32,7 +32,7 @@ import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
-import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
@@ -297,7 +297,7 @@ public class SrlRunner {
             addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
             
             if (model == null) {
                 model = new JointNlpFgModel(cs, ofc, fePrm);
@@ -350,7 +350,7 @@ public class SrlRunner {
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
             SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
             addPruneMask(inputSents, goldSents, name);
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
             SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
             corpus.writeDevPreds(predSents);
@@ -362,11 +362,12 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            addPruneMask(corpus.getTestInput(), corpus.getTestGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
+            addPruneMask(inputSents, goldSents, name);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTestInput(), name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTestPreds(predSents);
             eval(name, goldSents, predSents);
             corpus.clearTestCache();
@@ -395,8 +396,8 @@ public class SrlRunner {
             prm.fgPrm.dpPrm.unaryFactors = true;
             prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
             
-            // Get data.            
-            FgExampleList data =  getData(ofc, cs, name, goldSents, fePrm, prm);
+            // Get unlabeled data.
+            FgExampleList data =  getData(ofc, cs, name, inputSents, fePrm, prm, false);
             
             // Decode and create edge pruning mask.
             log.info("Running the pruning decoder on " + name + " data.");
@@ -482,13 +483,14 @@ public class SrlRunner {
     }
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) {
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, boolean labeledExamples) {
         JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
-        return getData(ofc, cs, name, sents, fePrm, prm);
+        return getData(ofc, cs, name, sents, fePrm, prm, labeledExamples);
     }
 
     private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm) {
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm,
+            boolean labeledExamples) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
@@ -512,7 +514,7 @@ public class SrlRunner {
         }
         
         log.info("Building factor graphs and extracting features.");
-        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
         FgExampleList data = builder.getData(sents);
         
         // Special case: we somehow need to be able to create test examples
@@ -555,7 +557,7 @@ public class SrlRunner {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             // TODO: We should construct the examples from the input sentences.
-            UnlabeledFgExample ex = data.get(i);
+            UFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);
