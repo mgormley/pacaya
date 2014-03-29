@@ -1,6 +1,6 @@
 package edu.jhu.gm.model;
 
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.list.IntArrayList;
 
 /**

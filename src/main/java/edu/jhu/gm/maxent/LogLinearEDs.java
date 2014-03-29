@@ -47,14 +47,13 @@ public class LogLinearEDs {
         }
     }
     
-    private static final Object TEMPLATE_KEY = "loglin";
-    private final Alphabet<Feature> alphabet = new Alphabet<Feature>();
+    private final Alphabet<String> alphabet = new Alphabet<String>();
     private ArrayList<LogLinearExDesc> descList = new ArrayList<LogLinearExDesc>();
 
     public void addEx(int count, String... featNames) {
         FeatureVector features = new FeatureVector();
         for (String featName : featNames) {
-            features.add(alphabet.lookupIndex(new Feature(featName)), 1.0);
+            features.add(alphabet.lookupIndex(featName), 1.0);
         }
         LogLinearExDesc ex = new LogLinearExDesc(count, features);
         descList.add(ex);
@@ -73,41 +72,21 @@ public class LogLinearEDs {
         return names;
     }
     
-    public FgExampleList getData() {        
-        FgExampleMemoryStore data = new FgExampleMemoryStore();
-        int state=0;
-        for (final LogLinearExDesc desc : descList) {
-            for (int i=0; i<desc.getCount(); i++) {
-                final Var v0 = new Var(VarType.PREDICTED, descList.size(), "v0", getStateNames());
-                final VarConfig trainConfig = new VarConfig();
-                trainConfig.put(v0, state);
-                
-                FactorGraph fg = new FactorGraph();
-                final VarSet varSet = new VarSet(v0);
-                // This FeatureExtractor was restored from commit [31ea8a7] which followed a commit
-                // with description "Updating code to cache only observed features 
-                // and implicitly construct features with the predicted variables."
-                FeatureExtractor fe = new FeatureExtractor() {
-                    @Override
-                    public FeatureVector calcFeatureVector(FeExpFamFactor factor, int configId) {
-                        VarConfig varConfig = varSet.getVarConfig(configId);
-                        return descList.get(varConfig.getState(v0)).getFeatures();
-                    }
-                    @Override
-                    public void init(FgExample ex) {
-                    }
-                };
-                fe = new FeatureCache(fe);
-                ExpFamFactor f0 = new FeExpFamFactor(varSet, fe);
-                fg.addFactor(f0);
-                data.add(new FgExample(fg, trainConfig, fe));
-            }
-            state++;
+    public LogLinearXYData getData() {
+        int numYs = descList.size();
+        LogLinearXYData data = new LogLinearXYData(numYs, alphabet);
+        FeatureVector[] fvs = new FeatureVector[numYs];
+        for (int y=0; y<numYs; y++) {
+            fvs[y] = descList.get(y).getFeatures();            
+        }
+        for (int y=0; y<numYs; y++) {
+            LogLinearExDesc desc = descList.get(y);
+            data.addEx(desc.getCount(), "x=0", "y="+y, fvs);
         }
         return data;
     }
 
-    public Alphabet<Feature> getAlphabet() {
+    public Alphabet<String> getAlphabet() {
         return alphabet;
     }
         

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.list.IntArrayList;
 import edu.jhu.util.collections.SmallSet;
 
@@ -166,6 +166,10 @@ public class VarSet extends SmallSet<Var> {
         return sb.toString();
     }
 
+    public VarSet getVarsOfType(VarType type) {
+        return getVarsOfType(this, type);
+    }
+    
     /** Gets the subset of vars with the specified type. */
     public static List<Var> getVarsOfType(List<Var> vars, VarType type) {
         ArrayList<Var> subset = new ArrayList<Var>();
@@ -188,4 +192,13 @@ public class VarSet extends SmallSet<Var> {
         return subset;      
     }
             
+    public boolean hasVarsOfType(VarType type) {
+        for (Var v : this) {
+            if (v.getType() == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 }

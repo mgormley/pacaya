@@ -16,6 +16,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.GlobalFactor;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.Timer;
@@ -161,23 +162,25 @@ public class BeliefPropagation implements FgInferencer {
                 ((GlobalFactor)factor).reset();
             }
         }
-        // Initialize factor beliefs
-        for(FgNode node : fg.getNodes()) {
-        	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
-            	Factor f = node.getFactor();        		
-        		DenseFactor fBel = new DenseFactor(f.getVars());
-            	int c = f.getVars().calcNumConfigs();
-            	for(int i=0; i<c; i++)
-            		fBel.setValue(i, f.getUnormalizedScore(i));
-            	
-            	for(FgEdge v2f : node.getInEdges()) {
-            		DenseFactor vBel = msgs[v2f.getId()].message;
-            		if(prm.logDomain) fBel.add(vBel);
-            		else fBel.prod(vBel);
+        if (prm.cacheFactorBeliefs) {
+            // Initialize factor beliefs
+            for(FgNode node : fg.getNodes()) {
+            	if(node.isFactor() && !(node.getFactor() instanceof GlobalFactor)) {
+                	Factor f = node.getFactor();        		
+            		DenseFactor fBel = new DenseFactor(f.getVars());
+                	int c = f.getVars().calcNumConfigs();
+                	for(int i=0; i<c; i++)
+                		fBel.setValue(i, f.getUnormalizedScore(i));
+                	
+                	for(FgEdge v2f : node.getInEdges()) {
+                		DenseFactor vBel = msgs[v2f.getId()].message;
+                		if(prm.logDomain) fBel.add(vBel);
+                		else fBel.prod(vBel);
+                	}
+                	
+                	factorBeliefCache[f.getId()] = fBel;
             	}
-            	
-            	factorBeliefCache[f.getId()] = fBel;
-        	}
+            }
         }
         
         
@@ -202,15 +205,16 @@ public class BeliefPropagation implements FgInferencer {
                 throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
             }
         }
+        
+        // Clear memory.
+        for (Messages msg : msgs) {
+            // These are not needed to compute the marginals.
+            msg.newMessage = null;
+        }
+        
         timer.stop();
     }
-    
-    
-    public void clear() {
-        Arrays.fill(msgs, null);
-    }
-
-    
+        
     /**
      * Creates a message and stores it in the "pending message" slot for this edge.
      * @param edge The directed edge for which the message should be created.
@@ -512,11 +516,11 @@ public class BeliefPropagation implements FgInferencer {
         Set<Class<?>> ignoredClasses = new HashSet<Class<?>>();
         for (int a=0; a<fg.getFactors().size(); a++) {
             Factor f = fg.getFactors().get(a);
-            if (f instanceof ExplicitFactor) {
+            if (!(f instanceof GlobalFactor)) {
                 int numConfigs = f.getVars().calcNumConfigs();
                 DenseFactor beliefs = getMarginalsForFactorId(a);
                 for (int c=0; c<numConfigs; c++) {                
-                    double chi_c = ((ExplicitFactor) f).getValue(c);
+                    double chi_c = f.getUnormalizedScore(c);
                     // Since we want multiplication by 0 to always give 0 (not the case for Double.POSITIVE_INFINITY or Double.NaN.
                     if (beliefs.getValue(c) != semiringZero) { 
                         if (prm.logDomain) {
@@ -527,7 +531,7 @@ public class BeliefPropagation implements FgInferencer {
                     }
                 }
             } else {
-                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getNode(a), msgs, prm.logDomain);
+                bethe += ((GlobalFactor) f).getExpectedLogBelief(fg.getFactorNode(a), msgs, prm.logDomain);
             }
         }
         for (int i=0; i<fg.getVars().size(); i++) {

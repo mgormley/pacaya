@@ -32,6 +32,7 @@ import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
@@ -50,16 +51,18 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
-import edu.jhu.optimize.AdaDelta;
-import edu.jhu.optimize.AdaDelta.AdaDeltaPrm;
-import edu.jhu.optimize.AdaGrad;
-import edu.jhu.optimize.AdaGrad.AdaGradPrm;
-import edu.jhu.optimize.L2;
-import edu.jhu.optimize.MalletLBFGS;
-import edu.jhu.optimize.MalletLBFGS.MalletLBFGSPrm;
-import edu.jhu.optimize.Maximizer;
-import edu.jhu.optimize.SGD;
-import edu.jhu.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.AdaDelta;
+import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
+import edu.jhu.hlt.optimize.AdaGrad;
+import edu.jhu.hlt.optimize.AdaGrad.AdaGradPrm;
+import edu.jhu.hlt.optimize.BottouSchedule;
+import edu.jhu.hlt.optimize.BottouSchedule.BottouSchedulePrm;
+import edu.jhu.hlt.optimize.MalletLBFGS;
+import edu.jhu.hlt.optimize.MalletLBFGS.MalletLBFGSPrm;
+import edu.jhu.hlt.optimize.SGD;
+import edu.jhu.hlt.optimize.SGD.SGDPrm;
+import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
@@ -105,8 +108,6 @@ public class SrlRunner {
     public static File modelOut = null;
     @Opt(hasArg = true, description = "File to which to print a human readable version of the model.")
     public static File printModel = null;
-    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
-    public static File pruneModel = null;
 
     // Options for initialization.
     @Opt(hasArg = true, description = "How to initialize the parameters of the model.")
@@ -137,6 +138,10 @@ public class SrlRunner {
     public static boolean siblingFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
+    @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
+    public static File pruneModel = null;
+    @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
+    public static boolean pruneEdges = false;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -229,7 +234,11 @@ public class SrlRunner {
     @Opt(hasArg=true, description="The initial learning rate for SGD.")
     public static double sgdInitialLr = 0.1;
     @Opt(hasArg=true, description="Whether to sample with replacement for SGD.")
-    public static boolean sgdWithRepl = false;    
+    public static boolean sgdWithRepl = false;
+    @Opt(hasArg=true, description="Whether to automatically select the learning rate.")
+    public static boolean sgdAutoSelectLr = true;
+    @Opt(hasArg=true, description="How many epochs between auto-select runs.")
+    public static int sgdAutoSelecFreq = 5;
     @Opt(hasArg=true, description="The AdaGrad parameter for scaling the learning rate.")
     public static double adaGradEta = 0.1;
     @Opt(hasArg=true, description="The constant addend for AdaGrad.")
@@ -286,7 +295,7 @@ public class SrlRunner {
             addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
             
             if (model == null) {
                 model = new JointNlpFgModel(cs, ofc, fePrm);
@@ -336,11 +345,12 @@ public class SrlRunner {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            addPruneMask(corpus.getDevInput(), corpus.getDevGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
+            addPruneMask(inputSents, goldSents, name);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getDevInput(), name);            
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
             corpus.writeDevPreds(predSents);
             eval(name, goldSents, predSents);
             corpus.clearDevCache();
@@ -350,11 +360,12 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            addPruneMask(corpus.getTestInput(), corpus.getTestGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
+            SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
+            addPruneMask(inputSents, goldSents, name);
+            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTestInput(), name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTestPreds(predSents);
             eval(name, goldSents, predSents);
             corpus.clearTestCache();
@@ -362,7 +373,10 @@ public class SrlRunner {
     }
 
     private void addPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents, String name) {
-        if (pruneModel != null) {
+        if (pruneEdges) {
+            if (pruneModel == null) {
+                throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
+            }
             // Read a model from a file.
             log.info("Reading pruning model from file: " + pruneModel);
             JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
@@ -380,8 +394,8 @@ public class SrlRunner {
             prm.fgPrm.dpPrm.unaryFactors = true;
             prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
             
-            // Get data.            
-            FgExampleList data =  getData(ofc, cs, name, goldSents, fePrm, prm);
+            // Get unlabeled data.
+            FgExampleList data =  getData(ofc, cs, name, inputSents, fePrm, prm, false);
             
             // Decode and create edge pruning mask.
             log.info("Running the pruning decoder on " + name + " data.");
@@ -467,13 +481,14 @@ public class SrlRunner {
     }
 
     private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) {
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, boolean labeledExamples) {
         JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
-        return getData(ofc, cs, name, sents, fePrm, prm);
+        return getData(ofc, cs, name, sents, fePrm, prm, labeledExamples);
     }
 
     private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm) {
+            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm,
+            boolean labeledExamples) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
@@ -497,7 +512,7 @@ public class SrlRunner {
         }
         
         log.info("Building factor graphs and extracting features.");
-        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
         FgExampleList data = builder.getData(sents);
         
         // Special case: we somehow need to be able to create test examples
@@ -540,7 +555,7 @@ public class SrlRunner {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             // TODO: We should construct the examples from the input sentences.
-            FgExample ex = data.get(i);
+            UFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);
@@ -576,7 +591,7 @@ public class SrlRunner {
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
         prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
-        prm.fgPrm.dpPrm.pruneEdges = (pruneModel != null); 
+        prm.fgPrm.dpPrm.pruneEdges = pruneEdges;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
@@ -693,22 +708,26 @@ public class SrlRunner {
         if (optimizer == Optimizer.LBFGS) {
             prm.maximizer = getLbfgs();
             prm.batchMaximizer = null;
-        } else if (optimizer == Optimizer.SGD){
+        } else if (optimizer == Optimizer.SGD || optimizer == Optimizer.ADAGRAD || optimizer == Optimizer.ADADELTA) {
             prm.maximizer = null;
-            prm.batchMaximizer = new SGD(getSgdPrm());
-        } else if (optimizer == Optimizer.ADAGRAD){
-            prm.maximizer = null;
-            AdaGradPrm adaGradPrm = new AdaGradPrm();
-            adaGradPrm.sgdPrm = getSgdPrm();
-            adaGradPrm.eta = adaGradEta;
-            prm.batchMaximizer = new AdaGrad(adaGradPrm);
-        } else if (optimizer == Optimizer.ADADELTA){
-            prm.maximizer = null;
-            AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
-            adaDeltaPrm.sgdPrm = getSgdPrm();
-            adaDeltaPrm.decayRate = adaDeltaDecayRate;
-            adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
-            prm.batchMaximizer = new AdaDelta(adaDeltaPrm);
+            SGDPrm sgdPrm = getSgdPrm();
+            if (optimizer == Optimizer.SGD){
+                BottouSchedulePrm boPrm = new BottouSchedulePrm();
+                boPrm.initialLr = sgdInitialLr;
+                boPrm.lambda = 1.0 / l2variance;
+                sgdPrm.sched = new BottouSchedule(boPrm);
+            } else if (optimizer == Optimizer.ADAGRAD){
+                AdaGradPrm adaGradPrm = new AdaGradPrm();
+                adaGradPrm.eta = adaGradEta;
+                sgdPrm.sched = new AdaGrad(adaGradPrm);
+            } else if (optimizer == Optimizer.ADADELTA){
+                AdaDeltaPrm adaDeltaPrm = new AdaDeltaPrm();
+                adaDeltaPrm.decayRate = adaDeltaDecayRate;
+                adaDeltaPrm.constantAddend = adaDeltaConstantAddend;
+                sgdPrm.sched = new AdaDelta(adaDeltaPrm);
+                sgdPrm.autoSelectLr = false;
+            }
+            prm.batchMaximizer = new SGD(sgdPrm);
         } else {
             throw new RuntimeException("Optimizer not supported: " + optimizer);
         }
@@ -717,7 +736,7 @@ public class SrlRunner {
         return prm;
     }
 
-    private static Maximizer getLbfgs() {
+    private static edu.jhu.hlt.optimize.Optimizer<DifferentiableFunction> getLbfgs() {
         MalletLBFGSPrm prm = new MalletLBFGSPrm();
         prm.maxIterations = maxLbfgsIterations;
         return new MalletLBFGS(prm);
@@ -727,10 +746,12 @@ public class SrlRunner {
         SGDPrm prm = new SGDPrm();
         prm.numPasses = sgdNumPasses;
         prm.batchSize = sgdBatchSize;
-        prm.initialLr = sgdInitialLr;
         prm.withReplacement = sgdWithRepl;
-        prm.lambda = 1.0 / l2variance;
         prm.stopBy = stopTrainingBy;
+        prm.autoSelectLr = sgdAutoSelectLr;
+        prm.autoSelectFreq = sgdAutoSelecFreq;
+        // Make sure we correctly set the schedule somewhere else.
+        prm.sched = null;
         return prm;
     }
 

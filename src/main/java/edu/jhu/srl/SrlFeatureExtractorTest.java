@@ -31,6 +31,8 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
+import edu.jhu.prim.set.IntHashSet;
+import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
@@ -220,7 +222,7 @@ public class SrlFeatureExtractorTest {
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         // ---        
-        HashSet<Integer> knownPreds = new HashSet<Integer>(Lists.getList(0, 2));
+        IntSet knownPreds = IntHashSet.fromArray(0, 2);
         List<String> words = Lists.getList("w1", "w2", "w3");
         DepEdgeMask depEdgeMask = new DepEdgeMask(words.size(), true);
         return new JointNlpFactorGraph(prm, words, words, depEdgeMask, knownPreds, Lists.getList("A1", "A2", "A3"), null, obsFe, ofc, fe);

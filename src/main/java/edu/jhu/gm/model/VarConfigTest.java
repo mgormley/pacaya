@@ -51,8 +51,8 @@ public class VarConfigTest {
     public void testGetConfigIndex() {
 
         Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
         Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 1);
@@ -86,15 +86,15 @@ public class VarConfigTest {
 
     @Test
     public void testGetConfigIndex2() {
-
         Var w0 = new Var(VarType.OBSERVED, 2, "w0", null);
-        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
         Var w2 = new Var(VarType.OBSERVED, 3, "w2", null);
+        Var w1 = new Var(VarType.OBSERVED, 5, "w1", null);
         
         VarConfig config = new VarConfig();
         config.put(w0, 0);
         config.put(w1, 0);
         config.put(w2, 0);
+
 
         HashSet<Integer> set = new HashSet<Integer>();
         for (int b = 0; b < 5; b++) {
@@ -104,8 +104,8 @@ public class VarConfigTest {
                 for (int a = 0; a < 2; a++) {
                     config.put(w0, a);
                     int configIndex = a * 1 + c * 2 + b * 6;
-                    assertEquals(configIndex, config.getConfigIndex());
                     System.out.println(configIndex);
+                    assertEquals(configIndex, config.getConfigIndex());
                     set.add(configIndex);
                     
                     // Check that this equals the result of getVarConfig().

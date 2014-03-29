@@ -31,7 +31,15 @@ public class LogSemiring implements SemiringExt {
 
     @Override
     public double fromReal(double real) {
+        if (real < 0) {
+            throw new IllegalStateException("LogSemiring only supports positive reals: " + real);
+        }
         return FastMath.log(real);
+    }
+
+    @Override
+    public double toLogProb(double nonReal) {
+        return nonReal;
     }
 
     @Override
@@ -51,6 +59,19 @@ public class LogSemiring implements SemiringExt {
     public double divide(double x, double y) {
         // return x - y;
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public double exp(double x) {
+        return FastMath.exp(x);
+    }
+
+    @Override
+    public double log(double x) {
+        if (x < 0) {
+            throw new IllegalStateException("Unable to take the log of a negative number.");
+        }
+        return FastMath.log(x);
     }
     
 }

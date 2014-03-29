@@ -205,16 +205,16 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         for (int i = 0; i < sent.size(); i++) {
             CoNLLXToken tok = new CoNLLXToken();
             tok.setId(i+1);
-            tok.setForm(sent.getWord(i));            
-            tok.setLemma(sent.getLemma(i));
-            tok.setCpostag(sent.getCposTag(i));
-            tok.setPostag(sent.getPosTag(i));
-            // TODO: Check for nulls here!!!
+            tok.setForm(sent.getWord(i));
+            
+            if (sent.getLemmas() != null) { tok.setLemma(sent.getLemma(i)); }
+            if (sent.getCposTags() != null) { tok.setCpostag(sent.getCposTag(i)); }
+            if (sent.getPosTags() != null) { tok.setPostag(sent.getPosTag(i)); }
             if (sent.getFeats() != null) { tok.setFeats(sent.getFeats(i)); }
-            tok.setHead(sent.getParent(i) + 1);
-            tok.setPhead(sent.getParent(i) + 1);
-            tok.setDeprel(sent.getDeprel(i));
-            tok.setPdeprel(sent.getDeprel(i));
+            if (sent.getParents() != null) { tok.setHead(sent.getParent(i) + 1); }
+            if (sent.getParents() != null) { tok.setPhead(sent.getParent(i) + 1); }
+            if (sent.getDeprels() != null) { tok.setDeprel(sent.getDeprel(i)); }
+            if (sent.getDeprels() != null) { tok.setPdeprel(sent.getDeprel(i)); }
             
             toks.add(tok);
         }

@@ -1,6 +1,6 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph;
@@ -24,7 +24,8 @@ public class FeatureCache implements FeatureExtractor {
     }
 
     @Override
-    public void init(FgExample ex) {
+    public void init(UFgExample ex) {
+        this.featExtractor.init(ex);
         FactorGraph fg = ex.getFgLatPred();
         this.feats = new FeatureVector[fg.getNumFactors()][];
         for (int a=0; a<fg.getNumFactors(); a++) {

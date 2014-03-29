@@ -1,17 +1,17 @@
 package edu.jhu.gm.train;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.IFgModel;
-import edu.jhu.optimize.BatchFunction;
-import edu.jhu.optimize.Function;
-import edu.jhu.prim.sort.IntSort;
+import edu.jhu.hlt.optimize.function.AbstractDifferentiableBatchFunction;
+import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
+import edu.jhu.hlt.optimize.function.ValueGradient;
+import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.Threads;
 import edu.jhu.util.Threads.TaskFactory;
 
@@ -30,7 +30,7 @@ import edu.jhu.util.Threads.TaskFactory;
  * 
  * @author mgormley
  */
-public class AvgBatchObjective implements Function, BatchFunction {
+public class AvgBatchObjective extends AbstractDifferentiableBatchFunction implements DifferentiableBatchFunction {
     
     /**
      * An objective function for a single example or instance. Calls to these
@@ -39,10 +39,8 @@ public class AvgBatchObjective implements Function, BatchFunction {
      * @author mgormley
      */
     public interface ExampleObjective {
-        /** Gets the value for the i'th example. Assumed to be threadsafe. */
-        double getValue(FgModel model, int i);
-        /** Adds the gradient for the i'th example. Assumed to be threadsafe. */
-        void addGradient(FgModel model, int i, IFgModel gradient);
+        /** Adds the value and gradient for the i'th example. Assumed to be threadsafe. */
+        void addValueGradient(FgModel model, int i, MutableValueGradient vg);
         /** Gets the number of examples (i.e. maximum (exclusive) valid value for i in the value / gradient methods. */
         int getNumExamples();
     }
@@ -67,141 +65,107 @@ public class AvgBatchObjective implements Function, BatchFunction {
         this.gradient.zero();
         this.pool = Executors.newFixedThreadPool(numThreads);
     }
-        
-    public void setPoint(double[] params) {
-        log.trace("Updating model with new parameters");
-        model.updateModelFromDoubles(params);
+
+    /** @inheritDoc */
+    @Override
+    public double getValue(IntDoubleVector params, int[] batch) {
+        return getValueGradient(params, batch, true, false).getValue();
     }
     
-    /**
-     * Gets the average marginal conditional log-likelihood of the model for the given model parameters.
-     * 
-     * We return:
-     * <p>
-     * \frac{1}{n} \sum_{i=1}^n \log p(y_i | x_i)
-     * </p>
-     * where:
-     * <p>
-     * \log p(y|x) = \log \sum_z p(y, z | x)
-     * </p>
-     * 
-     * where y are the predicted variables, x are the observed variables, and z are the latent variables.
-     * 
-     * @inheritDoc
-     */
+    /** @inheritDoc */
     @Override
-    public double getValue() {        
-        return getValue(IntSort.getIndexArray(numExamples));
+    public IntDoubleVector getGradient(IntDoubleVector params, int[] batch) {
+        return getValueGradient(params, batch, false, true).getGradient();
     }
-
-    /**
-     * Gets the average marginal conditional log-likelihood computed on a batch.
-     * @inheritDoc
-     */
+    
+    /** @inheritDoc */
     @Override
-    public double getValue(int[] batch) {
-        // TODO: we shouldn't run inference again just to compute this!!
+    public ValueGradient getValueGradient(IntDoubleVector params, int[] batch) {
+        return getValueGradient(params, batch, true, true);
+    }
+    
+    private ValueGradient getValueGradient(IntDoubleVector params, int[] batch, boolean addValue, boolean addGradient) {
         boolean isFullDataset = batch.length == numExamples;
-        double ll = 0.0;
+
+        // Get accumulator for value and gradient. If we don't want to
+        // accumulate one or the other, set it to null.
+        MutableDouble ll = null;
+        FgModel grad = null;
+        if (addValue) {
+            ll = new MutableDouble(0.0);            
+        }
+        if (addGradient) {
+            this.gradient.zero();
+            grad = this.gradient;
+        }
+        final MutableValueGradient vg = new MutableValueGradient(ll, grad);
         
+        model.setParams(params);        
         if (numThreads == 1) {
             // Run serially.
             for (int i=0; i<batch.length; i++) {
-                log.trace("Computing value for example " + i);
-                ll += exObj.getValue(model, batch[i]);
-            }
-        } else {
-            // Run in parallel.
-            TaskFactory<Double> factory = new TaskFactory<Double>() {
-                public Callable<Double> getTask(int i) {
-                    return new GetValueOfExample(i);
-                }
-            };
-            List<Double> results = Threads.safelyParallelizeBatch(pool, batch, factory);
-            for (Double r : results) {
-                ll += r;
-            }
-        }
-        
-        ll /= batch.length;
-        if (isFullDataset) {
-            // Print out the likelihood if we're computing it on the entire dataset.
-            log.info("Average objective for full dataset: " + ll);
-        }
-        return ll;
-    }
-    
-    private class GetValueOfExample implements Callable<Double> {
-
-        private int i;
-        
-        public GetValueOfExample(int i) {
-            this.i = i;
-        }
-
-        @Override
-        public Double call() throws Exception {
-            log.trace("Computing value for example " + i);
-            return exObj.getValue(model, i);
-        }
-        
-    }
-
-    /**
-     * Gets the gradient of the conditional log-likelihood.
-     * @inheritDoc
-     */
-    @Override
-    public void getGradient(double[] g) {
-        getGradient(IntSort.getIndexArray(numExamples), g);
-    }
-
-    /**
-     * Gets the gradient of the conditional log-likelihood on a batch of examples.
-     * @inheritDoc
-     */
-    @Override
-    public void getGradient(int[] batch, double[] g) {
-        this.gradient.zero();   
-        if (numThreads == 1) {
-            // Run serially.
-            for (int i=0; i<batch.length; i++) {
-                log.trace("Computing gradient for example " + batch[i]);
-                exObj.addGradient(model, batch[i], gradient);
+                log.trace("Computing value/gradient for example " + i);
+                exObj.addValueGradient(model, batch[i], vg);
             }
         } else {
             // Run in parallel.
             TaskFactory<Object> factory = new TaskFactory<Object>() {
                 public Callable<Object> getTask(int i) {
-                    return new AddGradientOfExample(gradient, i);
+                    return new AccumValueGradientOfExample(vg, i);
                 }
             };
             Threads.safelyParallelizeBatch(pool, batch, factory);
-        }     
-        this.gradient.scale(1.0 / batch.length);
-        gradient.updateDoublesFromModel(g);
+        }
+        
+        if (addValue) {
+            ll.setValue(ll.doubleValue() / batch.length);
+            if (isFullDataset) {
+                // Print out the likelihood if we're computing it on the entire dataset.
+                log.info("Average objective for full dataset: " + ll);
+            }
+        }
+        if (addGradient) {
+            grad.scale(1.0 / batch.length);    
+        }
+
+        return new ValueGradient(addValue ? ll.doubleValue() : Double.NaN, 
+                                 addGradient ? grad.getParams() : null);
     }
 
-    private class AddGradientOfExample implements Callable<Object> {
+    private class AccumValueGradientOfExample implements Callable<Object> {
 
-        private FgModel gradient;
+        private MutableValueGradient vg;
         private int i;
 
-        public AddGradientOfExample(FgModel gradient, int i) {
-            this.gradient = gradient;
+        public AccumValueGradientOfExample(MutableValueGradient vg, int i) {
+            this.vg = vg;
             this.i = i;
         }
 
         @Override
         public Object call() {
-            log.trace("Computing gradient for example " + i);
-            FgModel sparseg;
-            synchronized (gradient) {
-                sparseg = gradient.getSparseZeroedCopy();
+            MutableValueGradient sparseVg = new MutableValueGradient(null, null);
+            synchronized (vg) {
+                if (vg.hasValue()) {
+                    log.trace("Computing value for example " + i);
+                    sparseVg.setValue(new MutableDouble(0.0));    
+                }
+                if (vg.hasGradient()) {
+                    log.trace("Computing gradient for example " + i);
+                    FgModel gradient = vg.getGradient();
+                    sparseVg.setGradient(gradient.getSparseZeroedCopy());
+                }
             }
-            exObj.addGradient(model, i, sparseg);
-            synchronized (gradient) {
-                gradient.add(sparseg);
+            
+            exObj.addValueGradient(model, i, sparseVg);
+            
+            synchronized (vg) {         
+                if (vg.hasValue()) {
+                    vg.addValue(sparseVg.getValue());
+                }
+                if (vg.hasGradient()) {
+                    vg.addGradient(sparseVg.getGradient());
+                }
             }
             return null;
         }

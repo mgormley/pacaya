@@ -17,10 +17,11 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
-import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.data.FgExampleMemoryStore;
+import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -42,7 +43,7 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.optimize.Function;
+import edu.jhu.hlt.optimize.function.Function;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -123,13 +124,13 @@ public class CrfObjectiveTest {
 			VarConfig gold = new VarConfig();
 			for(int j=0; j<chainLen; j++)
 				gold.put(x.get(j), rand.nextInt(xNames.size()));
-			FgExample e = new FgExample(fg, gold);
+			FgExample e = new LabeledFgExample(fg, gold);
 			exs.add(e);
 		}
 		
 		FgModel model = new FgModel(1);	// model is not important, have only Explicit/DenseFactors
 		Function objective = getCrfObj(model, exs, infFactory);
-		double objVal = objective.getValue();
+		double objVal = objective.getValue(model.getParams());
 		System.out.println("objVal = " + objVal);
 		assertTrue(objVal < 0d);
 		System.out.println("[logLikelihoodBelowZero] done");
@@ -214,13 +215,13 @@ public class CrfObjectiveTest {
         Function obj = getCrfObj(model, data, infFactory);
         //CrfObjective obj = new CrfObjective(new CrfObjectivePrm(), model, data, infFactory);
         //obj.setPoint(FgModelTest.getParams(model));
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams());        
         assertEquals(2./6., FastMath.exp(ll), 1e-13);
     }
     
     @Test
     public void testDpLogLikelihoodLessThanZero() throws Exception {
-        dpLogLikelihoodCorrectLessThanZero(false);
+        //dpLogLikelihoodCorrectLessThanZero(false);
         dpLogLikelihoodCorrectLessThanZero(true);
     }
     
@@ -229,6 +230,7 @@ public class CrfObjectiveTest {
         SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 3;
         rPrm.maxSentenceLength = 7;
+        rPrm.useCoNLLXPhead = true;
         SimpleAnnoSentenceReader r = new SimpleAnnoSentenceReader(rPrm);
         //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
         r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
@@ -243,10 +245,7 @@ public class CrfObjectiveTest {
         prm.fgPrm.includeSrl = false;
         prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
-        prm.fePrm.srlFePrm.fePrm.useTemplates = true;
-        prm.fePrm.srlFePrm.fePrm.soloTemplates = TemplateSets.getNaradowskySenseUnigramFeatureTemplates();
-        prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getNaradowskyArgUnigramFeatureTemplates();
-        //prm.fePrm.srlFePrm.fePrm.pairTemplates = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        prm.exPrm.cacheType = CacheType.NONE;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
@@ -258,15 +257,80 @@ public class CrfObjectiveTest {
         model.setRandomStandardNormal();
         System.out.println("Model L2 norm: " + model.l2Norm());
         
-        FgInferencerFactory infFactory = getInfFactory(logDomain);    
+        FgInferencerFactory infFactory = getInfFactory(logDomain); 
         Function obj = getCrfObj(model, data, infFactory);
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams());        
         assertTrue(ll < 0d);
-        //assertEquals(-10.207, ll, 1e-3);
+        assertEquals(-5.26574, ll, 1e-3);
+    }
+
+    // TODO: This (slow) test exposes a bug:
+    // 
+    //    Model L2 norm: 8723053.171453144
+    //    9547     WARN  CrfObjective - Log-likelihood for example should be <= 0: 4314.9944514715135
+    //    9817     WARN  CrfObjective - Log-likelihood for example should be <= 0: 1280.385933105526
+    //    10252    WARN  CrfObjective - Log-likelihood for example should be <= 0: 216.61074154658888
+    //    10856    INFO  AvgBatchObjective - Average objective for full dataset: -1320.3962741774715
+    @Test
+    public void testDpLogLikelihoodLessThanZero2() throws Exception {
+        dpLogLikelihoodCorrectLessThanZero2(true);
+    }
+    
+    public void dpLogLikelihoodCorrectLessThanZero2(boolean logDomain) throws Exception {
+        Prng.seed(123456789101112l);
+        SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
+        rPrm.maxNumSentences = 10;
+        //rPrm.maxSentenceLength = 7;
+        rPrm.useCoNLLXPhead = true;
+        SimpleAnnoSentenceReader r = new SimpleAnnoSentenceReader(rPrm);
+        //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
+        r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
+        
+        CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
+        CorpusStatistics cs = new CorpusStatistics(csPrm);
+        SimpleAnnoSentenceCollection sents = r.getData();
+        cs.init(sents);
+        
+        FactorTemplateList fts = new FactorTemplateList();
+        JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
+        prm.fgPrm.includeSrl = false;
+        prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
+        prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
+        //prm.fgPrm.dpPrm.grandparentFactors = true;
+        prm.fgPrm.dpPrm.siblingFactors = true;
+        //prm.fePrm.dpFePrm.featureHashMod = 10;
+        //prm.fePrm.dpFePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        prm.exPrm.cacheType = CacheType.NONE;
+        
+        ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
+        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
+        FgExampleList data = builder.getData(sents);
+        ofc.init(data);
+        
+        System.out.println("Num features: " + ofc.getNumParams());
+        FgModel model = new FgModel(ofc.getNumParams());
+        model.setRandomStandardNormal();
+        model.scale(20);
+        System.out.println("Model L2 norm: " + model.l2Norm());
+        
+        BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
+        bpPrm.logDomain = logDomain;
+        bpPrm.updateOrder = BpUpdateOrder.PARALLEL;
+        bpPrm.normalizeMessages = true;
+        bpPrm.maxIterations = 50;
+        FgInferencerFactory infFactory = bpPrm;
+        AvgBatchObjective obj = getCrfObj(model, data, infFactory);
+        double ll = 0;
+        for (int i=0; i<obj.getNumExamples(); i++) {
+            double exll = obj.getValue(model.getParams(), new int[]{i});
+            assertTrue(exll <= 0);
+            ll += exll;
+        }
+        assertTrue(ll < 0d);
     }
 
     
-    public static Function getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
+    public static AvgBatchObjective getCrfObj(FgModel model, FgExampleList data, FgInferencerFactory infFactory) {
         CrfObjective exObj = new CrfObjective(data, infFactory);
         return new AvgBatchObjective(exObj, model, 1);
     }

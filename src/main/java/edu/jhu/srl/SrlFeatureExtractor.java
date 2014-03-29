@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureVector;
@@ -52,7 +52,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     
     private SrlFeatureExtractorPrm prm;
     private FactorTemplateList fts;
-    private VarConfig goldConfig;
+    private VarConfig obsConfig;
     private SentFeatureExtractor sentFeatExt;
         
     public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
@@ -64,14 +64,14 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     }
 
     @Override
-    public void init(FgExample ex, FactorTemplateList fts) {
-        this.goldConfig = ex.getGoldConfig();
+    public void init(UFgExample ex, FactorTemplateList fts) {
+        this.obsConfig = ex.getObsConfig();
         this.fts = fts;
     }
 
     // For testing only.
-    void init(VarConfig goldConfig, FactorTemplateList fts) {
-        this.goldConfig = goldConfig;
+    void init(VarConfig obsConfig, FactorTemplateList fts) {
+        this.obsConfig = obsConfig;
         this.fts = fts;
     }
     
@@ -154,7 +154,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             // Apply the feature-hashing trick.
             for (String obsFeat : obsFeats) {
                 String fname = prefix + obsFeat;
-                int hash = MurmurHash3.murmurhash3_x86_32(fname, 0, fname.length(), 123456789);
+                int hash = MurmurHash3.murmurhash3_x86_32(fname);
                 hash = FastMath.mod(hash, prm.featureHashMod);
                 int fidx = alphabet.lookupIndex(new Feature(hash, isBiasFeat));
                 if (fidx != -1) {
@@ -178,11 +178,11 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
             StringBuilder sb = new StringBuilder();
             int i=0;
             for (Var v : f.getVars()) {
-                if (i > 0) {
-                    sb.append("_");
-                }
                 if (v.getType() == VarType.OBSERVED) {
-                    sb.append(goldConfig.getStateName(v));
+                    if (i > 0) {
+                        sb.append("_");
+                    }
+                    sb.append(obsConfig.getStateName(v));
                     i++;
                 }
             }

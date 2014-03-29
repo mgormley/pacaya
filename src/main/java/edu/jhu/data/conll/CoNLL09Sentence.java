@@ -407,20 +407,19 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
             CoNLL09Token tok = new CoNLL09Token();
             tok.setId(i+1);
             tok.setForm(sent.getWord(i));
-            // TODO: Check for nulls here!!
             
             // Set "predicted" columns.
-            tok.setPlemma(sent.getLemma(i));
-            tok.setPpos(sent.getPosTag(i));            
+            if (sent.getLemmas() != null) { tok.setPlemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setPpos(sent.getPosTag(i)); }            
             if (sent.getFeats() != null) { tok.setPfeat(sent.getFeats(i)); }
-            tok.setPhead(sent.getParent(i) + 1);
-            tok.setPdeprel(sent.getDeprel(i));
+            if (sent.getParents() != null) { tok.setPhead(sent.getParent(i) + 1); }
+            if (sent.getDeprels() != null) { tok.setPdeprel(sent.getDeprel(i)); }
             // Set "gold" columns.
-            tok.setLemma(sent.getLemma(i));
-            tok.setPos(sent.getPosTag(i));
-            tok.setFeat(sent.getFeats(i));
-            tok.setHead(sent.getParent(i) + 1);
-            tok.setDeprel(sent.getDeprel(i));
+            if (sent.getLemmas() != null) { tok.setLemma(sent.getLemma(i)); }
+            if (sent.getPosTags() != null) { tok.setPos(sent.getPosTag(i)); }
+            if (sent.getFeats() != null) { tok.setFeat(sent.getFeats(i)); }
+            if (sent.getParents() != null) { tok.setHead(sent.getParent(i) + 1); }
+            if (sent.getDeprels() != null) { tok.setDeprel(sent.getDeprel(i)); }
             
             toks.add(tok);
         }
@@ -429,6 +428,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         CoNLL09Sentence updatedSentence = new CoNLL09Sentence(toks);
         
         // Update SRL columns from the SRL graph.
+        // (This correctly handles null SRL graphs.)
         updatedSentence.setColsFromSrlGraph(sent.getSrlGraph(), false, true);
         
         return updatedSentence;

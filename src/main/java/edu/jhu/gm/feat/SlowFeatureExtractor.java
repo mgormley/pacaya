@@ -1,6 +1,6 @@
 package edu.jhu.gm.feat;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.model.FeExpFamFactor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -15,14 +15,14 @@ import edu.jhu.gm.model.VarSet;
  */
 public abstract class SlowFeatureExtractor implements FeatureExtractor {
 
-    private VarConfig goldConfig;
+    private VarConfig obsConfig;
 
     public SlowFeatureExtractor() {
     }
 
     @Override
-    public void init(FgExample ex) {
-        this.goldConfig = ex.getGoldConfig();
+    public void init(UFgExample ex) {
+        this.obsConfig = ex.getObsConfig();
     }
     
     @Override
@@ -30,7 +30,7 @@ public abstract class SlowFeatureExtractor implements FeatureExtractor {
         VarSet vars = factor.getVars();
         VarSet latPredVars = new VarSet(VarSet.getVarsOfType(vars, VarType.PREDICTED), VarSet.getVarsOfType(vars, VarType.LATENT));
         VarConfig varConfig = latPredVars.getVarConfig(configId);
-        varConfig = new VarConfig(goldConfig.getSubset(VarSet.getVarsOfType(vars, VarType.OBSERVED)), varConfig);
+        varConfig = new VarConfig(obsConfig, varConfig);
         return calcFeatureVector(factor, varConfig);
     }
     

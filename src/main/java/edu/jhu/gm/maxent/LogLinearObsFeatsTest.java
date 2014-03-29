@@ -9,33 +9,32 @@ import org.junit.Test;
 
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.maxent.LogLinearData.LogLinearExample;
-import edu.jhu.gm.maxent.LogLinearTd.LogLinearTdPrm;
+import edu.jhu.gm.maxent.LogLinearObsFeatsData.LogLinearExample;
+import edu.jhu.gm.maxent.LogLinearObsFeats.LogLinearObsFeatsPrm;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.train.AvgBatchObjective;
 import edu.jhu.gm.train.CrfObjective;
 import edu.jhu.gm.train.CrfObjectiveTest;
-import edu.jhu.optimize.Function;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.JUnitUtils;
 import edu.jhu.util.collections.Lists;
 
-public class LogLinearTdTest {
+public class LogLinearObsFeatsTest {
 
     @Test
     public void testLogLinearModelTrainDecode() {
-        LogLinearData exs = new LogLinearData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
         List<LogLinearExample> data = exs.getData();
         
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgModel model = td.train(exs);
         {
             Pair<String,DenseFactor> p = td.decode(model, data.get(0));
@@ -96,16 +95,16 @@ public class LogLinearTdTest {
     }
 
     private void testLogLinearModelShapesHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
 
         exs.addEx(30, "y=A", Lists.getList("BIAS", "circle", "solid"));
         exs.addEx(15, "y=B", Lists.getList("BIAS", "circle"));
         exs.addEx(10, "y=C", Lists.getList("BIAS", "solid"));
         exs.addEx(5,  "y=D", Lists.getList("BIAS"));
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgExampleList data = td.getData(exs);
 
         double[] params = new double[]{3.0, 2.0, 1.0, 4.0, 5.0, 6.0, 7.0, 8.0};
@@ -116,11 +115,11 @@ public class LogLinearTdTest {
         
         // Test log-likelihood.
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         // Test log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams())
+;
         System.out.println(ll);
         //assertEquals(-2.687, ll, 1e-3);
         
@@ -137,38 +136,35 @@ public class LogLinearTdTest {
         assertEquals(0.009, expFeats.get(1), 1e-3);
         
         // Test gradient.        
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
-                
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();                 
         System.out.println(Arrays.toString(gradient));
-        JUnitUtils.assertArrayEquals(
-new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
+        JUnitUtils.assertArrayEquals(new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
                 0.24941014930579491, -0.4049252957987691, -0.23748187663263962, -0.16349489515194487,
                 -0.01031601415740464 }, gradient, 1e-3);
     }
     
     private void testLogLinearModelShapesTwoExamplesHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(1, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = false;
-        LogLinearTd td = new LogLinearTd(prm); 
+        LogLinearObsFeats td = new LogLinearObsFeats(prm); 
         FgExampleList data = td.getData(exs);
         
         FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
         
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(1, exs.getAlphabet().size());
 
         // Test average log-likelihood.
-        double ll = obj.getValue();        
+        double ll = obj.getValue(model.getParams())
+;        
         System.out.println(ll + " " + Math.exp(ll));
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         
@@ -183,35 +179,34 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(0.5378, expFeats.get(0), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();  
         double[] expectedGradient = new double[]{1.0 - 0.5378, 1.0 - 1.4621};
         DoubleArrays.scale(expectedGradient, 1.0/2.0);
         JUnitUtils.assertArrayEquals(expectedGradient, gradient, 1e-3);
     }
     
     private void testLogLinearModelShapesOneExampleHelper(boolean logDomain) {
-        LogLinearData exs = new LogLinearData();
+        LogLinearObsFeatsData exs = new LogLinearObsFeatsData();
         exs.addEx(1, "y=A", Lists.getList("circle"));
         exs.addEx(0, "y=B", Lists.getList("circle"));
         double[] params = new double[]{2.0, 3.0};
 
-        LogLinearTdPrm prm = new LogLinearTdPrm();
+        LogLinearObsFeatsPrm prm = new LogLinearObsFeatsPrm();
         prm.includeUnsupportedFeatures = true;
-        LogLinearTd td = new LogLinearTd(prm);        
+        LogLinearObsFeats td = new LogLinearObsFeats(prm);        
         FgExampleList data = td.getData(exs);
         
         FgModel model = new FgModel(params.length);
         model.updateModelFromDoubles(params);
 
         CrfObjective exObj = new CrfObjective(data, CrfObjectiveTest.getInfFactory(logDomain));
-        Function obj = new AvgBatchObjective(exObj, model, 1);
-        obj.setPoint(params);        
+        AvgBatchObjective obj = new AvgBatchObjective(exObj, model, 1);
         
         assertEquals(1, exs.getAlphabet().size());
 
         // Test log-likelihood.
-        double ll = obj.getValue();
+        double ll = obj.getValue(model.getParams())
+;
         System.out.println(ll);
         assertEquals(3*1 - Math.log(Math.exp(3*1) + Math.exp(2*1)), ll, 1e-2);
         
@@ -226,8 +221,7 @@ new double[] { 0.16590575430912835, 0.16651642575232348, 0.24933555564704535,
         assertEquals(0.7310, expFeats.get(1), 1e-3);
         
         // Test gradient.         
-        double[] gradient = new double[params.length]; 
-        obj.getGradient(gradient);        
+        double[] gradient = obj.getGradient(model.getParams()).toNativeArray();
         JUnitUtils.assertArrayEquals(new double[]{-0.2689, 0.2689}, gradient, 1e-3);
     }
     

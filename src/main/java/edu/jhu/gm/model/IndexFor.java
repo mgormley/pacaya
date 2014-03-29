@@ -3,7 +3,7 @@ package edu.jhu.gm.model;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import edu.jhu.gm.util.IntIter;
+import edu.jhu.prim.iter.IntIter;
 
   /** Ported by hand from libDAI in C++.
    * Originally released under the BSD license.

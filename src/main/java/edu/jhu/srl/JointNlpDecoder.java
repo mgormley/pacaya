@@ -3,13 +3,12 @@ package edu.jhu.srl;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.prim.matrix.BitSetBinaryMatrix;
 
 // TODO: This should modify a {@link SimpleAnnoSentence} rather than cache the parents and srlGraph explicitly.
 public class JointNlpDecoder {
@@ -38,7 +37,7 @@ public class JointNlpDecoder {
      * @param model The model.
      * @param ex The example to decode.
      */
-    public void decode(FgModel model, FgExample ex) {
+    public void decode(FgModel model, UFgExample ex) {
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
         JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();

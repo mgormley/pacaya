@@ -26,8 +26,8 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.util.ArrayIter3D;
-import edu.jhu.gm.util.IntIter;
 import edu.jhu.prim.arrays.BoolArrays;
+import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.util.SafeCast;
 import edu.jhu.prim.vector.IntIntDenseVector;
@@ -198,10 +198,7 @@ public class ObsFeatureConjoiner implements Serializable {
         
         @Override
         public DenseFactor getMarginals(Var var) { throw new RuntimeException("This method should never be called."); }
-        
-        @Override
-        public void clear() { throw new RuntimeException("This method should never be called."); }
-    
+            
     }
     
     /**
@@ -358,42 +355,6 @@ public class ObsFeatureConjoiner implements Serializable {
 
     public Iterable<String> getParamNames() {
         return Iterables.concat(new StringIterable(feAlphabet.getObjects()), new ParamNames());        
-    }
-    
-    private static class StringIterable implements Iterable<String>, Iterator<String>, Serializable{
-
-        private static final long serialVersionUID = 1L;
-        private Iterable<?> iterable;
-        private Iterator<?> iter;
-        public StringIterable(Iterable<?> iterable) {
-            this.iterable = iterable;
-        }
-        
-        @Override
-        public Iterator<String> iterator() { 
-            iter = iterable.iterator();
-            return this;
-        }
-
-        @Override
-        public boolean hasNext() {
-            return iter.hasNext();
-        }
-
-        @Override
-        public String next() {
-            Object next = iter.next();
-            if (next == null) {
-                return "null";
-            }   
-            return next.toString();
-        }
-
-        @Override
-        public void remove() {
-            iter.remove();
-        }
-        
     }
     
     private class ParamNames implements Iterable<String>, Iterator<String>, Serializable {
