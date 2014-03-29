@@ -21,6 +21,11 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     public SimpleAnnoSentenceCollection() {
         super();
     }
+
+    public SimpleAnnoSentenceCollection(SimpleAnnoSentenceCollection other) {
+        super(other);
+        this.sourceSents = other.sourceSents;
+    }
     
     public SimpleAnnoSentenceCollection(Collection<SimpleAnnoSentence> list) {
         super(list);
@@ -101,6 +106,7 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
      */
     public SimpleAnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
         SimpleAnnoSentenceCollection newSents = new SimpleAnnoSentenceCollection();
+        newSents.sourceSents = this.sourceSents;
         for (SimpleAnnoSentence sent : this) {
             SimpleAnnoSentence newSent = new SimpleAnnoSentence(sent);
             newSent.removeAts(removeAts);

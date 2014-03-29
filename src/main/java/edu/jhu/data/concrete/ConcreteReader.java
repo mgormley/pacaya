@@ -66,7 +66,6 @@ public class ConcreteReader {
             Communication communication = new Communication();            
             deser.deserialize(communication, bytez);
             SimpleAnnoSentenceCollection sents = toSentences(communication);
-            sents.setSourceSents(communication);
             return sents;
         } catch (TException e) {
             throw new RuntimeException(e);
@@ -76,6 +75,7 @@ public class ConcreteReader {
     public SimpleAnnoSentenceCollection toSentences(Communication communication) {
         SimpleAnnoSentenceCollection annoSents = new SimpleAnnoSentenceCollection();
         addSentences(communication, annoSents);
+        annoSents.setSourceSents(communication);
         return annoSents;
     }
 
