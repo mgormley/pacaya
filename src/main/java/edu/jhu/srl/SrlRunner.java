@@ -32,6 +32,7 @@ import edu.jhu.featurize.TemplateWriter;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
+import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
@@ -346,11 +347,12 @@ public class SrlRunner {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            addPruneMask(corpus.getDevInput(), corpus.getDevGold(), name);
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
+            SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
+            addPruneMask(inputSents, goldSents, name);
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm);
             // Decode and evaluate the dev data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getDevInput(), name);            
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
             corpus.writeDevPreds(predSents);
             eval(name, goldSents, predSents);
             corpus.clearDevCache();
@@ -553,7 +555,7 @@ public class SrlRunner {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             // TODO: We should construct the examples from the input sentences.
-            FgExample ex = data.get(i);
+            UnlabeledFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
             decoder.decode(model, ex);

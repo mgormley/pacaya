@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.UnlabeledFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -51,14 +51,13 @@ public class MbrDecoder {
      * @param ex The input data.
      * @return the FgInferencer that was used.
      */
-    public FgInferencer decode(FgModel model, FgExample ex) {
+    public FgInferencer decode(FgModel model, UnlabeledFgExample ex) {
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<DenseFactor>();
         varMargMap = new HashMap<Var,Double>();
 
         // Add in the observed variables.
-        VarSet obsVars = VarSet.getVarsOfType(ex.getGoldConfig().getVars(), VarType.OBSERVED);
-        mbrVarConfig.put(ex.getGoldConfig().getSubset(obsVars));
+        mbrVarConfig.put(ex.getObsConfig());
 
         // Run inference.
         FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());

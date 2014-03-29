@@ -188,4 +188,13 @@ public class VarSet extends SmallSet<Var> {
         return subset;      
     }
             
+    public boolean hasVarsOfType(VarType type) {
+        for (Var v : this) {
+            if (v.getType() == type) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
 }

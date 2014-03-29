@@ -427,10 +427,9 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         // Create the new sentence.
         CoNLL09Sentence updatedSentence = new CoNLL09Sentence(toks);
         
-        if (sent.getSrlGraph() != null) {
-            // Update SRL columns from the SRL graph.
-            updatedSentence.setColsFromSrlGraph(sent.getSrlGraph(), false, true);
-        }
+        // Update SRL columns from the SRL graph.
+        // (This correctly handles null SRL graphs.)
+        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph(), false, true);
         
         return updatedSentence;
     }

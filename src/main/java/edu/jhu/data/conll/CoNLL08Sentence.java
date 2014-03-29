@@ -160,10 +160,21 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
     public SrlGraph getSrlGraph() {
         return new SrlGraph(this);
     }
-    
+
+    // Note: CoNLL-2008 doesn't have the FILLPRED column like CoNLL-2009.
     public void setColsFromSrlGraph(SrlGraph srlGraph) {
+        if (srlGraph == null) {
+            // There are no predicates.
+            for (int i=0; i<size(); i++) {
+                CoNLL08Token tok = tokens.get(i);
+                tok.setPred(null);
+                List<String> emptyList = Collections.emptyList();
+                tok.setApreds(emptyList);
+            }
+            return;
+        }
         int numPreds = srlGraph.getNumPreds();
-        // Set the FILLPRED and PRED column.
+        // Set the PRED column.
         for (int i=0; i<size(); i++) {
             CoNLL08Token tok = tokens.get(i);
             SrlPred pred = srlGraph.getPredAt(i);
@@ -354,10 +365,9 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         // Create the new sentence.
         CoNLL08Sentence updatedSentence = new CoNLL08Sentence(toks);
         
-        if (sent.getSrlGraph() != null) {
-            // Update SRL columns from the SRL graph.
-            updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
-        }
+        // Update SRL columns from the SRL graph.
+        // (This correctly handles null SRL graphs.)
+        updatedSentence.setColsFromSrlGraph(sent.getSrlGraph());
         
         return updatedSentence;
     }
