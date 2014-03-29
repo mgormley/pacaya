@@ -71,7 +71,7 @@ public class ConcreteWriter {
     }
 
     private DependencyParse makeDepParse(int[] parents, List<String> depRels) {
-        if(parents.length != depRels.size())
+        if(depRels != null && parents.length != depRels.size())
             throw new IllegalArgumentException();
         
         DependencyParse p = new DependencyParse();
@@ -85,7 +85,7 @@ public class ConcreteWriter {
             Dependency d = new Dependency();
             d.dep = i;
             d.gov = parents[i];
-            d.edgeType = depRels.get(i);
+            d.edgeType = (depRels == null) ? "NO_LABEL" : depRels.get(i);
             p.dependencyList.add(d);
         }
         return p;
