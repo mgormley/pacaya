@@ -17,6 +17,7 @@ import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
 import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.arrays.Multinomials;
 import edu.jhu.prim.tuple.Pair;
@@ -142,7 +143,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         }
         return vars;
     }
-    
+        
     @Override
     protected void createMessages(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages) {
         // Note on logDomain: all internal computation is done in the logDomain
@@ -166,6 +167,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             log.trace(String.format("partition: %.2f", partition));
         }
         
+        boolean numericalPrecisionError = false;
+        FgEdge numericalPrecisionEdge = null;
+        
         // Create the messages and stage them in the Messages containers.
         for (FgEdge outEdge : parent.getOutEdges()) {
             LinkVar link = (LinkVar) outEdge.getVar();
@@ -180,6 +184,27 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             // 
             // Here we compute the logs of these quantities.
 
+            double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
+            double beliefFalse = safeLogSubtract(partition, beliefTrue);
+            
+            // Detect numerical precision error.
+            if (beliefFalse == Double.NEGATIVE_INFINITY) {
+                if (!DoubleArrays.contains(root, Double.NEGATIVE_INFINITY, 1e-13) && !childContains(child, Double.NEGATIVE_INFINITY, 1e-13)) {
+                    //log.debug("Accounting for possible numerical precision error.");
+                    //beliefFalse = beliefTrue;
+                    numericalPrecisionError = true;
+                    numericalPrecisionEdge = outEdge;
+                    log.debug("Fixing edge: " + numericalPrecisionEdge);
+                    //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
+                    //continue;
+                } else {
+                    //log.warn("Unable to account for possible numerical precision error.");
+                    // TODO: There could still be a numerical precision error. How do we detect it?
+                    //
+                    //log.warn("Infs: " + Arrays.toString(root) + " " + Arrays.deepToString(child));
+                }
+            }
+
             // Get the incoming messages.
             FgEdge inEdge = outEdge.getOpposing();
             DenseFactor inMsg = msgs[inEdge.getId()].message;
@@ -192,57 +217,109 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 inMsgFalse = FastMath.log(inMsg.getValue(LinkVar.FALSE));                
             }
             
-            double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
-
             double outMsgTrue = beliefTrue - inMsgTrue;
-            // We must divide out the incoming false message before computing (partition - beliefTrue) since
-            // in the logAdd() we can lose necessary precision and end up with infinities when we shouldn't.
-            double outMsgFalse;
-            double v1 = partition - inMsgFalse;
-            double v2 = beliefTrue - inMsgFalse;
-            if (v1 < v2) {
-                // TODO: This is a hack to get around the floating point
-                // error. We want beliefFalse to be effectively 0.0 in this
-                // case, but we use the floating point error to determine
-                // how small zero should be.
-                outMsgFalse = FastMath.log(Math.abs(v1 - v2));
-            } else {
-                outMsgFalse = FastMath.logSubtract(v1, v2);
-            }
+            double outMsgFalse = beliefFalse - inMsgFalse;
             
-            if (log.isTraceEnabled()) {
-                log.trace(String.format("outMsgTrue (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), outMsgTrue));
-                log.trace(String.format("outMsgFalse (prenorm): %d %d = %.2f", link.getParent(), link.getChild(), outMsgFalse));
-            }
-                        
-            if (normalizeMessages) {
-                double[] logMsgs = new double[] {outMsgTrue, outMsgFalse};
-                Multinomials.normalizeLogProps(logMsgs);
-                outMsgTrue = logMsgs[0];
-                outMsgFalse = logMsgs[1];
-            }
-            
-            if (log.isTraceEnabled()) {
-                log.trace(String.format("outMsgTrue: %d %d = %.2f", link.getParent(), link.getChild(), outMsgTrue));
-                log.trace(String.format("outMsgFalse: %d %d = %.2f", link.getParent(), link.getChild(), outMsgFalse));
-            }
-                        
-            // Convert log messages to messages for output.
-            if (!logDomain) {
-                outMsgTrue = FastMath.exp(outMsgTrue);
-                outMsgFalse = FastMath.exp(outMsgFalse);
-            }
-            
-            // Set the outgoing messages.
-            msgs[outEdge.getId()].newMessage.setValue(LinkVar.FALSE, outMsgFalse);
-            msgs[outEdge.getId()].newMessage.setValue(LinkVar.TRUE, outMsgTrue);
-            assert !msgs[outEdge.getId()].newMessage.containsBadValues(logDomain) : "message = " + msgs[outEdge.getId()].newMessage;
+            setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, link, outMsgTrue, outMsgFalse);
         }
-                
+     
+        if (numericalPrecisionEdge != null) {
+            //log.debug("Fixing edge: " + numericalPrecisionEdge);
+            //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
+        }
+        
+        //log.debug(String.format("Proportion very high odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
     }
+    
+    
+    private void fixEdge(FgNode parent, Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge) {
+        // Note on logDomain: all internal computation is done in the logDomain
+        // since (for example) pi the product of all incoming false messages
+        // would overflow.        
+        assert (this == parent.getFactor());        
+        double[] root = new double[n];
+        double[][] child = new double[n][n];
+        getLogOddsRatios(parent, msgs, logDomain, root, child);
+        double pi = getProductOfAllFalseMessages(parent, msgs, logDomain);
+
+        // Get the incoming messages.
+        FgEdge inEdge = outEdge.getOpposing();
+        DenseFactor inMsg = msgs[inEdge.getId()].message;
+        double inMsgTrue, inMsgFalse;
+        if (logDomain) {
+            inMsgTrue = inMsg.getValue(LinkVar.TRUE);
+            inMsgFalse = inMsg.getValue(LinkVar.FALSE);
+        } else {
+            inMsgTrue = FastMath.log(inMsg.getValue(LinkVar.TRUE));
+            inMsgFalse = FastMath.log(inMsg.getValue(LinkVar.FALSE));                
+        }
+        // Divide out the skipped edge ahead of time.
+        // This is equivalent to setting the odds ratio to 1.0.
+        LinkVar link = (LinkVar) outEdge.getVar();
+        if (link.parent == -1) {
+            root[link.child] = 0.0;
+        } else {
+            child[link.parent][link.child] = 0.0;
+        }
+        pi -= inMsgFalse;
+        
+        // Compute the dependency tree marginals, summing over all projective
+        // spanning trees via the inside-outside algorithm.
+        DepIoChart chart = ProjectiveDependencyParser.insideOutsideAlgorithm(root, child);
+
+        // partition = pi * \sum_{y \in Trees} \prod_{edge \in y} weight(edge) 
+        // Here we store the log partition.
+        double partition = pi + chart.getLogPartitionFunction();
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("partition: %.2f", partition));
+        } 
+        
+        // Create the messages and stage them in the Messages containers.
+        // The beliefs are computed as follows.
+        double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
+        double beliefFalse = safeLogSubtract(partition, beliefTrue);        
+        // Don't divide out.
+        double outMsgTrue = beliefTrue;
+        double outMsgFalse = beliefFalse;        
+        setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, link, outMsgTrue, outMsgFalse);
+    }
+
+    // TODO: Move this elsewhere.
+    /** Safely checks whether the child array contains a value -- ignoring diagonal entries. */
+    private static boolean childContains(double[][] child, double value, double delta) {
+        for (int i=0; i<child.length; i++) {
+            for (int j=0; j<child.length; j++) {
+                if (i == j) { continue; }
+                if (Primitives.equals(child[i][j], value, delta)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private double safeLogSubtract(double v1, double v2) {
+        double outMsgFalse;
+        if (v1 < v2) {
+            // TODO: This is a hack to get around the floating point
+            // error. We want beliefFalse to be effectively 0.0 in this
+            // case, but we use the floating point error to determine
+            // how small zero should be.
+            outMsgFalse = FastMath.log(Math.abs(v1 - v2));
+        } else {
+            outMsgFalse = FastMath.logSubtract(v1, v2);
+        }
+        return outMsgFalse;
+    }
+    
+    private static int extremeOddsRatios = 0;
+    private static int oddsRatioCount = 0;
 
     /** Computes the log odds ratio for each edge. w_i = \mu_i(1) / \mu_i(0) */
     private void getLogOddsRatios(FgNode parent, Messages[] msgs, boolean logDomain, double[] root, double[][] child) {
+
+        //extremeOddsRatios = 0;
+        //oddsRatioCount = 0;
         // Compute the odds ratios of the messages for each edge in the tree.
         DoubleArrays.fill(root, Double.NEGATIVE_INFINITY);
         DoubleArrays.fill(child, Double.NEGATIVE_INFINITY);
@@ -258,6 +335,11 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
                 // We still need the log of this ratio since the parsing algorithm works in the log domain.
                 oddsRatio = FastMath.log(inMsg.getValue(LinkVar.TRUE)) - FastMath.log(inMsg.getValue(LinkVar.FALSE));
             }
+            
+            if (oddsRatio > 30) {
+                extremeOddsRatios++;
+            }
+            oddsRatioCount++;
             
             if (link.getParent() == -1) {
                 root[link.getChild()] = oddsRatio;
@@ -282,7 +364,47 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             }
         }
         return pi;
-    }    
+    } 
+
+    /** Sets the outgoing messages. */
+    private void setOutMsgs(Messages[] msgs, boolean logDomain, boolean normalizeMessages, FgEdge outEdge,
+            LinkVar link, double outMsgTrue, double outMsgFalse) {
+        
+        // Set the outgoing messages.
+        DenseFactor outMsg = msgs[outEdge.getId()].newMessage;
+        outMsg.setValue(LinkVar.FALSE, outMsgFalse);
+        outMsg.setValue(LinkVar.TRUE, outMsgTrue);
+        
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("outMsgTrue (prenorm): %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
+            log.trace(String.format("outMsgFalse (prenorm): %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
+        }
+        
+        if (normalizeMessages) {
+            outMsg.logNormalize();
+            boundToSafeValues(outMsg.getValues());
+        }
+        
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("outMsgTrue: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.TRUE)));
+            log.trace(String.format("outMsgFalse: %s = %.2f", link.getName(), outMsg.getValue(LinkVar.FALSE)));
+        }
+                
+        // Convert log messages to messages for output.
+        if (!logDomain) {
+            outMsg.convertLogToReal();
+        }
+        
+        assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
+    }
+
+    private void boundToSafeValues(double[] values) {
+        for (int i=0; i<values.length; i++) {
+            if (values[i] == Double.NEGATIVE_INFINITY) {
+                values[i] = -300;
+            }
+        }
+    }
 
     @Override
     public double getExpectedLogBelief(FgNode parent, Messages[] msgs, boolean logDomain) {

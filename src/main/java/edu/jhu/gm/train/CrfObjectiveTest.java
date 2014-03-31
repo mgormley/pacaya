@@ -17,6 +17,7 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
+import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
@@ -298,8 +299,8 @@ public class CrfObjectiveTest {
         prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
         //prm.fgPrm.dpPrm.grandparentFactors = true;
         prm.fgPrm.dpPrm.siblingFactors = true;
-        //prm.fePrm.dpFePrm.featureHashMod = 10;
-        //prm.fePrm.dpFePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
+        prm.fePrm.dpFePrm.featureHashMod = 10;
+        prm.fePrm.dpFePrm.firstOrderTpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         prm.exPrm.cacheType = CacheType.NONE;
         
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
