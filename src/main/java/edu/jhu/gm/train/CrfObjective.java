@@ -47,7 +47,7 @@ public class CrfObjective implements ExampleObjective {
         infLatPred.run();
         
         if (vg.hasValue()) {
-            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred));
+            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i));
         }
         if (vg.hasGradient()) {
             addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);            
@@ -71,7 +71,7 @@ public class CrfObjective implements ExampleObjective {
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
      */      
-    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
         
@@ -126,7 +126,7 @@ public class CrfObjective implements ExampleObjective {
             // Note: this can occur if the graph is loopy because the
             // Bethe free energy has miss-estimated -log(Z) or because BP
             // has not yet converged.
-            log.warn("Log-likelihood for example should be <= 0: " + ll);
+            log.warn("Log-likelihood for example "+i+" should be <= 0: " + ll);
         }
         return ll;
     }
