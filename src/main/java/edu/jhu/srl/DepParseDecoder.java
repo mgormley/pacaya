@@ -11,8 +11,8 @@ import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 
@@ -20,24 +20,6 @@ public class DepParseDecoder {
 
     private static final Logger log = Logger.getLogger(DepParseDecoder.class);
 
-    public static class EdgeScores {
-        public double[] root;
-        public double[][] child;
-        public EdgeScores(int n, double value) {
-            this.root = new double[n];
-            this.child = new double[n][n];
-            DoubleArrays.fill(root, value);
-            DoubleArrays.fill(child, value);
-        }
-        public EdgeScores(double[] root, double[][] child) {
-            this.root = root;
-            this.child = child;
-        }
-        public double getScore(int p, int c) {
-            return (p == -1) ? root[c] : child[p][c];
-        }
-    }
-    
     public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n) {        
         // Build up the beliefs about the link variables (if present),
         // and compute the MBR dependency parse.
