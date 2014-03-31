@@ -395,6 +395,7 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             outMsg.convertLogToReal();
         }
         
+        //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
         assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
     }
 
