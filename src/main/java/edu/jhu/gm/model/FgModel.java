@@ -94,9 +94,10 @@ public class FgModel implements Serializable, IFgModel {
     }
 
     public void addAfterScaling(FeatureVector fv, double multiplier) {
+        int used = fv.getUsed();
         int[] fvInd = fv.getInternalIndices();
         double[] fvVal = fv.getInternalValues();
-        for (int i=0; i<fvInd.length; i++) {
+        for (int i=0; i<used; i++) {
             add(fvInd[i], multiplier * fvVal[i]);
         }
     }

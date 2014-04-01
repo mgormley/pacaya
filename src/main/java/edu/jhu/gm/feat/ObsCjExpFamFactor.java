@@ -58,7 +58,7 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         ObsCjExpFamFactor factor = this;
         final int ft = factor.getTemplateId();
         FeatureVector obsFv = ((ObsFeatureCarrier) factor).getObsFeatures();
-        final FeatureVector fv = new FeatureVector(obsFv.size());
+        final FeatureVector fv = new FeatureVector(obsFv.getUsed());
         obsFv.apply(new FnIntDoubleToDouble() {            
             @Override
             public double call(int feat, double val) {

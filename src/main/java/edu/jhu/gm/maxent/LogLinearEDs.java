@@ -3,21 +3,9 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExampleList;
-import edu.jhu.gm.data.FgExampleMemoryStore;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.FeatureCache;
-import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.FeatureVector;
-import edu.jhu.gm.model.ExpFamFactor;
-import edu.jhu.gm.model.FactorGraph;
-import edu.jhu.gm.model.FeExpFamFactor;
-import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.map.IntDoubleEntry;
+import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -62,11 +50,14 @@ public class LogLinearEDs {
     public List<String> getStateNames() {
         List<String> names = new ArrayList<String>();
         for (LogLinearExDesc desc : descList) {
-            StringBuilder sb = new StringBuilder();
-            for (IntDoubleEntry entry : desc.getFeatures()) {
-                sb.append(entry.index());
-                sb.append(":");
-            }
+            final StringBuilder sb = new StringBuilder();
+            desc.getFeatures().apply(new FnIntDoubleToDouble() {
+                public double call(int idx, double val) {
+                    sb.append(idx);
+                    sb.append(":");
+                    return val;
+                }
+            });
             names.add(sb.toString());
         }
         return names;
