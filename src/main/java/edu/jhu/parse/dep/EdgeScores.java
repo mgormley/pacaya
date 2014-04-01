@@ -1,5 +1,6 @@
 package edu.jhu.parse.dep;
 
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
 
 public class EdgeScores {
@@ -17,5 +18,17 @@ public class EdgeScores {
     }
     public double getScore(int p, int c) {
         return (p == -1) ? root[c] : child[p][c];
+    }
+    /** Safely checks whether the child array contains a value -- ignoring diagonal entries. */
+    public static boolean childContains(double[][] child, double value, double delta) {
+        for (int i=0; i<child.length; i++) {
+            for (int j=0; j<child.length; j++) {
+                if (i == j) { continue; }
+                if (Primitives.equals(child[i][j], value, delta)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

@@ -257,7 +257,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            FastMath.useLogAddTable = true;
+            FastMath.useLogAddTable = false;
         }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
