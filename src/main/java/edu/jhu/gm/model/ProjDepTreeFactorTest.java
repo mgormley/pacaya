@@ -21,6 +21,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.prim.util.math.LogAddTable;
 import edu.jhu.util.collections.Lists;
 
 public class ProjDepTreeFactorTest {
@@ -706,6 +707,27 @@ public class ProjDepTreeFactorTest {
         System.out.println(logAdd(7+145-200, 89+23-200));
         System.out.println(logAdd(7+145-200, 89+23-200)+200);
         System.out.println(logSubtract(logAdd(7+145-200, 89+23-200), 7+145-200)+200);
+        
+        // Find the point at which logAdd loses precision.
+        //double j = 10d;
+        for (int j : Lists.getList(1, 10, 20)) {
+            for (boolean useExact : Lists.getList(true, false)) {
+                for (int i = j - 40; i < j + 40; i++) {
+                    double diff;
+                    if (useExact) {
+                        diff = FastMath.logSubtractExact(FastMath.logAddExact((double) i, (double) j), (double) i);
+                    } else {
+                        diff = LogAddTable.logSubtract(LogAddTable.logAdd((double) i, (double) j), (double) i); 
+                    }
+                    if (diff == Double.NEGATIVE_INFINITY) {
+                        System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
+                                ""+(diff == Double.NEGATIVE_INFINITY), diff));
+                        break;
+                    }
+                }
+            }
+        }
+        
     }
 
     private FactorGraph getFactorGraphForTesting(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {

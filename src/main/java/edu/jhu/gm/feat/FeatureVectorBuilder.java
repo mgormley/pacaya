@@ -1,9 +1,9 @@
 package edu.jhu.gm.feat;
 
+import edu.jhu.prim.map.IntDoubleEntry;
 import edu.jhu.prim.map.IntDoubleHashMap;
 import edu.jhu.prim.sort.IntDoubleSort;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 
 /**
  * For building large (e.g. 20000+) sparse feature vectors quickly.
@@ -22,13 +22,9 @@ public class FeatureVectorBuilder extends IntDoubleHashMap {
     }
     
     public void add(FeatureVector fv) {
-        final FeatureVectorBuilder thisFvb = this;
-        fv.apply(new FnIntDoubleToDouble() {
-            public double call(int idx, double val) {
-                thisFvb.add(idx, val);
-                return val;
-            }
-        });
+        for (IntDoubleEntry e : fv) {
+            this.add(e.index(), e.get());
+        }
     }
     
     public FeatureVector toFeatureVector() {

@@ -5,7 +5,6 @@ import java.util.List;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.map.IntDoubleEntry;
-import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
 import edu.jhu.util.Alphabet;
 
 /**
@@ -50,14 +49,11 @@ public class LogLinearEDs {
     public List<String> getStateNames() {
         List<String> names = new ArrayList<String>();
         for (LogLinearExDesc desc : descList) {
-            final StringBuilder sb = new StringBuilder();
-            desc.getFeatures().apply(new FnIntDoubleToDouble() {
-                public double call(int idx, double val) {
-                    sb.append(idx);
-                    sb.append(":");
-                    return val;
-                }
-            });
+            StringBuilder sb = new StringBuilder();
+            for (IntDoubleEntry entry : desc.getFeatures()) {
+                sb.append(entry.index());
+                sb.append(":");
+            }
             names.add(sb.toString());
         }
         return names;
