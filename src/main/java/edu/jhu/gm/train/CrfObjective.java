@@ -15,6 +15,7 @@ import edu.jhu.gm.model.IFgModel;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.train.AvgBatchObjective.ExampleObjective;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     
@@ -25,6 +26,15 @@ public class CrfObjective implements ExampleObjective {
     private FgExampleList data;
     private FgInferencerFactory infFactory;
         
+    // Timer: update the model.
+    private Timer updTimer = new Timer();
+    // Timer: run inference.
+    private Timer infTimer = new Timer();
+    // Timer: compute the log-likelihood.
+    private Timer valTimer = new Timer();
+    // Timer: compute the gradient.
+    private Timer gradTimer = new Timer();
+    
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
         this.data = data;
         this.infFactory = infFactory;
@@ -35,22 +45,43 @@ public class CrfObjective implements ExampleObjective {
     @Override
     public void addValueGradient(FgModel model, int i, MutableValueGradient vg) {
         FgExample ex = data.get(i);
+        Timer t = new Timer();
         
-        // Run inference to compute Z(y,x) by summing over the latent variables w.
-        FgInferencer infLat = getInfLat(ex);
+        // Get the inferencers.
+        t.reset(); t.start();
+        FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
+        FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
+        t.stop(); infTimer.add(t);
+        
+        // Update the inferences with the current model parameters.
+        // (This is usually where feature extraction happens.)
+        t.reset(); t.start();
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
-        infLat.run();
-        
-        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
-        FgInferencer infLatPred = getInfLatPred(ex);
         FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
-        infLatPred.run();
+        t.stop(); updTimer.add(t);
         
+        t.reset(); t.start();
+        // Run inference to compute Z(y,x) by summing over the latent variables w.
+        infLat.run();        
+        // Run inference to compute Z(x) by summing over the latent variables w and the predicted variables y.
+        infLatPred.run();
+        t.stop(); infTimer.add(t);
+
         if (vg.hasValue()) {
+            // Compute the condition log-likelihood for this example.
+            t.reset(); t.start();
             vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i));
+            t.stop(); valTimer.add(t);
         }
         if (vg.hasGradient()) {
-            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);            
+            // Compute the gradient for this example.
+            t.reset(); t.start();
+            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            t.stop(); gradTimer.add(t);
+        }
+        
+        if (i == 0) {
+            report();
         }
     }
     
@@ -176,7 +207,7 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLat = getInfLat(ex);
+            FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
             addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, feats);
@@ -193,7 +224,7 @@ public class CrfObjective implements ExampleObjective {
         feats.zero();
         for (int i=0; i<data.size(); i++) {
             FgExample ex = data.get(i);
-            FgInferencer infLatPred = getInfLatPred(ex);
+            FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();
             addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0, feats);
@@ -209,14 +240,12 @@ public class CrfObjective implements ExampleObjective {
         return data.size();
     }
 
-    // The old way was to cache all the inferencers. This causes problems
-    // because the examples might be recreated on a call to data.get(i).
-    private FgInferencer getInfLat(FgExample ex) {
-        return infFactory.getInferencer(ex.getFgLat());
+    private void report() {
+        log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+        double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
+        double mult = 100.0 / sum;
+        log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                updTimer.totMs()*mult, infTimer.totMs()*mult, valTimer.totMs()*mult, gradTimer.totMs()*mult));
     }
-
-    private FgInferencer getInfLatPred(FgExample ex) {
-        return infFactory.getInferencer(ex.getFgLatPred());
-    }
-    
 }
