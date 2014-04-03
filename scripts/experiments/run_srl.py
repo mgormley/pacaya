@@ -1458,6 +1458,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
+                # Uncomment next line for multiple threads on a fast run: 
+                # stage.update(threads=2)
             if isinstance(stage, SrlExpParams) and not self.big_machine:
                 stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):
