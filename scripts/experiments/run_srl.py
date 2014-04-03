@@ -823,7 +823,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=7, sgdAutoSelecFreq=2, l2variance=10000)
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
+                              sgdAutoSelecFreq=2, sgdAutoSelectLr=False)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                        removeAts="DEPREL", tagger_parser="1st", pruneEdges=False)
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
@@ -832,7 +833,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             parsers = [second_order, second_grand, second_sib, first_order]
-            parsers += [x + SrlExpParams(pruneEdges=True) for x in parsers]
+            parsers += [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
             models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
@@ -842,6 +843,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for parser in parsers:
                     pl = p.langs[lang_short]
                     data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                        trainMaxSentenceLength=80,
                                         test=pl.cx_test, testType="CONLL_X", 
                                         language=lang_short, trainUseCoNLLXPhead=True,
                                         l2variance=l2var_map[lang_short])
@@ -908,17 +910,19 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             parsers = [second_sib, first_order, second_order, second_grand]
-            # NO PRUNING: parsers += [x + SrlExpParams(pruneEdges=True) for x in parsers]
+            # PRUNING ONLY
+            parsers = [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
             models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
                                                os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
             for trainMaxNumSentences in [100, 500, 1000, 2000, 9999999]:
-                for lang_short in ["bg"]:#, "es"]:
+                for lang_short in ["bg"]: #, "es"]:
                     for parser in parsers:
                         pl = p.langs[lang_short]
                         data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X", testType="CONLL_X", 
+                                            trainMaxSentenceLength=80,
                                             #test=pl.cx_test, 
                                             trainMaxNumSentences=trainMaxNumSentences,
                                             language=lang_short, trainUseCoNLLXPhead=True,

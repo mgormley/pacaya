@@ -102,6 +102,8 @@ public class SrlRunner {
     public static long seed = Prng.DEFAULT_SEED;
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
+    @Opt(hasArg = true, description = "Whether to use a log-add table for faster computation.")
+    public static boolean useLogAddTable = true;
     
     // Options for model IO
     @Opt(hasArg = true, description = "File from which to read a serialized model.")
@@ -257,7 +259,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            FastMath.useLogAddTable = false;
+            FastMath.useLogAddTable = useLogAddTable;
         }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);

@@ -722,9 +722,11 @@ public class ProjDepTreeFactorTest {
                     } else {
                         diff = LogAddTable.logSubtract(LogAddTable.logAdd((double) i, (double) j), (double) i); 
                     }
+                    System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
+                            ""+(diff == Double.NEGATIVE_INFINITY), diff));
                     if (diff == Double.NEGATIVE_INFINITY) {
-                        System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
-                                ""+(diff == Double.NEGATIVE_INFINITY), diff));
+                        //System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
+                                //""+(diff == Double.NEGATIVE_INFINITY), diff));
                         break;
                     }
                 }
