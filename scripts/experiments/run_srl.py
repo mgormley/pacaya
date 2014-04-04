@@ -872,6 +872,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 # Add observed trees experiment.
                 parser_srl = gl.pos_sup + g.model_pg_obs_tree
                 exp = g.defaults + parser_srl
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                 exps.append(exp)
                 # Add latent trees experiments.
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
