@@ -91,15 +91,15 @@ public class TemplateSetsTest {
             System.out.println("Number of templates: " + numArg);
             assertEquals(127, numArg);
         }
-        // Remove each level of supervision.
-        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
-            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
-            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
-        }
 
         // This tests that names are created correctly.
         for (FeatTemplate tpl : tpls) {
             System.out.println(tpl);
+        }
+        // Remove each level of supervision.
+        for (AT at : new AT[] { AT.DEPREL, AT.DEP_TREE, AT.MORPHO, AT.POS, AT.LEMMA }) {
+            tpls = TemplateLanguage.filterOutRequiring(tpls, at);
+            System.out.println(String.format("Number of templates after filtering %s: %d", at.name(), tpls.size()));
         }
     }
     

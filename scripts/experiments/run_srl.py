@@ -404,8 +404,11 @@ class ParamDefinitions():
                                                                 False, 'tpl_bjork_ls_%s' % (lang_short))
 
         # The coarse set uses the bjorkelund sense features.
-        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
-        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
+        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
+                                                                 "/edu/jhu/featurize/coarse1-arg-feats.txt", 
+                                                                 False, 'tpl_coarse1')
+        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
+                                                                 "coarse2", False, 'tpl_coarse2')
         g.feat_tpl_custom1        = self._get_named_template_set("/edu/jhu/featurize/custom1-sense-feats.txt",
                                                                 "/edu/jhu/featurize/custom1-arg-feats.txt",
                                                                 False, 'tpl_custom1')
@@ -760,9 +763,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_tpl_custom1
+            g.defaults += g.feat_tpl_coarse1
             g.defaults.set_incl_name('removeAts', True)
-            g.defaults.update(predictSense=True, biasOnly=True)
+            g.defaults.update(predictSense=True)
             for removeBrown in [True, False]:
                 for lang_short in p.lang_short_names:
                     gl = g.langs[lang_short]
