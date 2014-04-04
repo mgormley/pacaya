@@ -880,7 +880,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     removeAts = ",".join(removeAtsList[:i+1])
                     exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    #exps.append(exp)
+                    #TODO:exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-lc-sem": 
