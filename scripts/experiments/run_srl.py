@@ -300,7 +300,7 @@ class ParamDefinitions():
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
         g.defaults.set("sgdBatchSize", 20)
-        
+                
         g.defaults.update(
             printModel="./model.txt.gz",                          
             trainPredOut="./train-pred.txt",
@@ -324,7 +324,10 @@ class ParamDefinitions():
             featureSelection=True,
             numFeatsToSelect=32,
             numSentsForFeatSelect=1000,
-            stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
+            #stopTrainingBy="01-10-14.06:00PM", # Stop by 9 hours before the ACL 2014 deadline.
+            # TODO: Remove these after merging fb/depparse branch.
+            cacheType="CACHE",
+            maxEntriesInMemory=g.defaults.get("sgdBatchSize"),
             )
         
         g.defaults += g.adagrad
@@ -830,7 +833,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for lang_short in p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                       combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -856,15 +860,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        elif self.expname == "srl-subtraction":            
+        elif self.expname == "srl-subtraction":
             exps = []
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
-            for lang_short in p.lang_short_names:
+            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
+                # Add observed trees experiment.
+                parser_srl = gl.pos_sup + g.model_pg_obs_tree
+                exp = g.defaults + parser_srl
+                exps.append(exp)
+                # Add latent trees experiments.
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
                 for i in range(len(removeAtsList)):
                     removeAts = ",".join(removeAtsList[:i+1])
@@ -882,7 +891,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            for lang_short in ['ca', 'de']: #p.lang_short_names:
+            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 #parser_srl = gl.pos_sup + g.model_pg_lat_tree + SrlExpParams(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
@@ -890,7 +899,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for trainMaxNumSentences in [1000, 2000, 4000, 8000, 16000, 32000, 64000]:
                     if trainMaxNumSentences/2 >= cl_map[lang_short]:
                         break
-                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumSentences=trainMaxNumSentences)
+                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumSentences=trainMaxNumSentences,
+                                                                 l2variance=min(trainMaxNumSentences, cl_map[lang_short]))
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)

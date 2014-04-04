@@ -55,7 +55,7 @@ def remote_srl(argv):
     prep_project("prim", "install", True)    
     #prep_project("erma", "install", True)
     prep_project("pacaya", "compile", False)
-    run_srl("pacaya", argv)
+    run_srl("pacaya2", argv)
     
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
