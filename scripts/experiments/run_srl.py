@@ -839,7 +839,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     if exp.get("language") == "cs":
-                        #exp.update(sgdNumPasses=3)
+                        exp.update(sgdNumPasses=2)
                         if exp.get("tagger_parser") == "pos-sup":
                             exp.update(work_mem_megs=60*1000, trainMaxSentenceLength=80)
                     exps.append(exp)
