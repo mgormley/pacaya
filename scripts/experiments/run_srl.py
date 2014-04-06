@@ -838,7 +838,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    if exp.get("language") == "cs":
+                        #exp.update(sgdNumPasses=3)
+                        if exp.get("tagger_parser") == "pos-sup":
+                            exp.update(work_mem_megs=60*1000, trainMaxSentenceLength=80)
                     exps.append(exp)
+            # Filter to just Czech
+            exps = [x for x in exps if x.get("language") == "cs"]
             return self._get_pipeline_from_exps(exps)
        
         elif self.expname == "srl-conll08":
