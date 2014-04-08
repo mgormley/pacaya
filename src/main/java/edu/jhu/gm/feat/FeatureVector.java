@@ -22,8 +22,7 @@ public class FeatureVector extends IntDoubleUnsortedVector {
     /** Copy constructor. */
     public FeatureVector(FeatureVector featureVector) {
         super(featureVector.capacity());
-        // cast ensures it is dispatched to the correct implementation
-        this.add((travis.Vector) featureVector); 
+        this.add(featureVector); 
     }
 
     public FeatureVector(int[] index, double[] values) {

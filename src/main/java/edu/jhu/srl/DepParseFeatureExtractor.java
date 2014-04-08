@@ -44,6 +44,10 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
         public int featureHashMod = -1;
         /** Whether to create human interpretable feature names when possible. */
         public boolean humanReadable = true;
+        /** Whether to only include non-bias features on edges in the tree. */
+        public boolean onlyTrueEdges = true;
+        /** Whether to only include the bias feature on edges in the tree. */ 
+        public boolean onlyTrueBias = true;
     }
     
     private static final Logger log = Logger.getLogger(DepParseFeatureExtractor.class); 
@@ -74,29 +78,30 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
         VarSet vars = f.getVars();
         
         int[] vc = vars.getVarConfigAsArray(configId);
-        if (ArrayUtils.contains(vc, LinkVar.FALSE)) {
+        if (prm.onlyTrueBias && prm.onlyTrueEdges && ArrayUtils.contains(vc, LinkVar.FALSE)) {
             return emptyFv;
         }
-                
-        // Get the observation features.
+
         ArrayList<String> obsFeats = new ArrayList<String>();
-        if (ft == DepParseFactorTemplate.LINK_UNARY) {
-            // Look at the variables to determine the parent and child.
-            LinkVar var = (LinkVar) vars.get(0);
-            int pidx = var.getParent();
-            int cidx = var.getChild();
-            ext.addFeatures(prm.firstOrderTpls, LocalObservations.newPidxCidx(pidx, cidx), obsFeats);
-        } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT || ft == DepParseFactorTemplate.LINK_SIBLING) {
-            O2FeTypedFactor f2 = (O2FeTypedFactor)f;
-            ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.i, f2.j, f2.k), obsFeats);
-        } else {
-            throw new RuntimeException("Unsupported template: " + ft);
+        if (!prm.onlyTrueEdges || !ArrayUtils.contains(vc, LinkVar.FALSE)) {                
+            // Get the observation features.
+            if (ft == DepParseFactorTemplate.LINK_UNARY) {
+                // Look at the variables to determine the parent and child.
+                LinkVar var = (LinkVar) vars.get(0);
+                int pidx = var.getParent();
+                int cidx = var.getChild();
+                ext.addFeatures(prm.firstOrderTpls, LocalObservations.newPidxCidx(pidx, cidx), obsFeats);
+            } else if (ft == DepParseFactorTemplate.LINK_GRANDPARENT || ft == DepParseFactorTemplate.LINK_SIBLING) {
+                O2FeTypedFactor f2 = (O2FeTypedFactor)f;
+                ext.addFeatures(prm.secondOrderTpls, LocalObservations.newPidxCidxMidx(f2.i, f2.j, f2.k), obsFeats);
+            } else {
+                throw new RuntimeException("Unsupported template: " + ft);
+            }
         }
         
-        // NOTE: We don't need to append the state of the LinkVars since they are all True.
-        // Create prefix containing the states of the observed variables.
-        String prefix = ft + "_" + getObsVarsStates(f) + "_";
-                
+        // Create prefix containing the states of the variables.
+        String prefix = ft + "_" + configId + "_" + getObsVarsStates(f) + "_";
+        
         FeatureVector fv = new FeatureVector(obsFeats.size());
         
         // Add the bias features.
