@@ -646,6 +646,11 @@ public class SrlRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
+        if (includeSrl) {
+            // TODO: Add options for these, or remove them.
+            dpFePrm.onlyTrueBias = false;
+            dpFePrm.onlyTrueEdges = false;
+        }
         
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         fePrm.srlFePrm = srlFePrm;
