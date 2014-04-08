@@ -15,6 +15,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.prim.iter.IntIter;
 import edu.jhu.prim.set.IntSet;
+import edu.jhu.util.collections.Lists;
 
 /**
  * A factor graph builder for SRL.
@@ -53,8 +54,14 @@ public class SrlFactorGraph implements Serializable {
         /** Whether to include unary factors in the model. (Ignored if there are no Link variables.) */
         public boolean unaryFactors = true;
         
+        /** Whether to include factors between the sense and role variables. */
+        public boolean binarySenseRoleFactors = false;
+        
         /** Whether to predict the predicate sense. */
         public boolean predictSense = false;
+        
+        /** Whether to predict the predicate positions. */
+        public boolean predictPredPos = false;
     }
 
     public enum RoleStructure {
@@ -66,7 +73,8 @@ public class SrlFactorGraph implements Serializable {
     
     public enum SrlFactorTemplate {
         ROLE_UNARY,
-        SENSE_UNARY,
+        SENSE_UNARY, 
+        SENSE_ROLE_BINARY,
     }
     
     /**
@@ -147,6 +155,17 @@ public class SrlFactorGraph implements Serializable {
      */
     public void build(List<String> words, List<String> lemmas, IntSet knownPreds, List<String> roleStateNames,
             Map<String, List<String>> psMap, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FactorGraph fg) {
+        // Check for null arguments.
+        if (prm.roleStructure == RoleStructure.PREDS_GIVEN && knownPreds == null) {
+            throw new IllegalArgumentException("knownPreds must be non-null");
+        }
+        if (prm.predictSense && (lemmas == null || psMap == null)) {
+            throw new IllegalArgumentException("lemmas and psMap must be non-null");
+        }
+        if (prm.roleStructure == RoleStructure.PREDS_GIVEN && prm.predictPredPos) {
+            throw new IllegalStateException("PREDS_GIVEN assumes that the predicate positions are always observed.");
+        }
+        
         this.n = words.size();
 
         // Create the Role variables.
@@ -179,29 +198,50 @@ public class SrlFactorGraph implements Serializable {
         
         // Create the Sense variables.
         senseVars = new SenseVar[n];
-        if (prm.predictSense) {
-            for (int i = 0; i < n; i++) {
-                if (knownPreds.contains(i)) {
-                    List<String> senseStateNames = psMap.get(lemmas.get(i));
-                    if (senseStateNames == null) {
-                        senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
-                    }
-                    senseVars[i] = createSenseVar(i, senseStateNames);
+        for (int i = 0; i < n; i++) {
+            // Only look at the knownPreds if the predicate positions are given.
+            if (prm.roleStructure == RoleStructure.PREDS_GIVEN && !knownPreds.contains(i)) {
+                // Skip non-predicate positions.
+                continue;
+            }
+            if (prm.roleStructure == RoleStructure.ALL_PAIRS && prm.predictSense && prm.predictPredPos) {
+                // Sense and position.
+                List<String> senseStateNames = psMap.get(lemmas.get(i));
+                if (senseStateNames == null) {
+                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
                 }
+                // Include the state of "no predicate".
+                senseStateNames = Lists.cons("_", senseStateNames);
+                senseVars[i] = createSenseVar(i, senseStateNames);
+            } else if (prm.predictSense) {
+                // Sense without positions.
+                List<String> senseStateNames = psMap.get(lemmas.get(i));
+                if (senseStateNames == null) {
+                    senseStateNames = CorpusStatistics.SENSES_FOR_UNK_PRED;
+                }
+                senseVars[i] = createSenseVar(i, senseStateNames);
+            } else if (prm.predictPredPos) {
+                // Positions without sense.
+                senseVars[i] = createSenseVar(i, CorpusStatistics.PRED_POSITION_STATE_NAMES);
             }
         }
+
                 
         // Add the factors.
         for (int i = -1; i < n; i++) {
-            // Add the unary factors for the sense variables.
-            if (prm.predictSense && i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {
+            // Get the lemma or UNK if we don't know it.
+            String lemmaForTk;
+            if (prm.predictSense && psMap.get(lemmas.get(i)) != null) {
                 // The template key must include the lemma appended, so that
                 // there is a unique set of model parameters for each predicate.
-                String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmas.get(i);
+                lemmaForTk = lemmas.get(i);
+            } else {
                 // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
-                if (psMap.get(lemmas.get(i)) == null) {
-                    templateKey = TEMPLATE_KEY_FOR_UNKNOWN_SENSE;
-                }
+                lemmaForTk = CorpusStatistics.UNKNOWN_SENSE;
+            }
+            // Add the unary factors for the sense variables.
+            if (i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {
+                String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmaForTk;
                 fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
             }
             // Add the role/link factors.
@@ -210,6 +250,10 @@ public class SrlFactorGraph implements Serializable {
                     // Add unary factors on Roles.
                     if (prm.unaryFactors && roleVars[i][j] != null) {
                         fg.addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
+                    }
+                    if (prm.binarySenseRoleFactors && senseVars[i] != null && roleVars[i][j] != null) {
+                        String templateKey = SrlFactorTemplate.SENSE_ROLE_BINARY + "_" + lemmaForTk;
+                        fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i], roleVars[i][j]), SrlFactorTemplate.SENSE_ROLE_BINARY, templateKey, ofc, obsFe));
                     }
                 }
             }

@@ -50,6 +50,8 @@ public class SrlFeatureExtractorTest {
     @Test
     public void testCorrectNumFeatures() throws Exception {
         JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
+        fgPrm.srlPrm.predictPredPos = true;
+        fgPrm.srlPrm.binarySenseRoleFactors = true;
         JointNlpFactorGraph sfg = getSrlFg(fgPrm);
 
         FactorTemplateList fts = new FactorTemplateList();
@@ -77,8 +79,8 @@ public class SrlFeatureExtractorTest {
         
         System.out.println(fts);
         
-        //assertEquals(3*2 + 2 + 3, fts.getNumObsFeats());
-        assertEquals(2, fts.getNumObsFeats());
+        assertEquals(4, fts.size());
+        assertEquals(4, fts.getNumObsFeats());
     }
     
     @Test

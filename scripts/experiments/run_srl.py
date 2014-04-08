@@ -535,7 +535,8 @@ class ParamDefinitions():
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
         g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
         g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
+        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")
+        g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, binarySenseRoleFactors=True, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")                        
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
@@ -1069,16 +1070,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
+            removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA", "SRL_PRED_IDX"]
             for lang_short in p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
                 for i in range(len(removeAtsList)):
                     removeAts = ",".join(removeAtsList[:i+1])
-                    exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
+                    if removeAtsList[i] == "SRL_PRED_IDX":
+                        exp = g.defaults + gl.pos_sup + g.model_ap_lat_tree_predpos + SrlExpParams(removeAts=removeAts)
+                    else:
+                        exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
+
             return self._get_pipeline_from_exps(exps)
         
         elif self.expname == "srl-lc-sem": 

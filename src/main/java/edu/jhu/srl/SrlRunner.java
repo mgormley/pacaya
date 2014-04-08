@@ -156,8 +156,12 @@ public class SrlRunner {
     public static boolean makeUnknownPredRolesLatent = true;
     @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
     public static boolean allowPredArgSelfLoops = false;
+    @Opt(hasArg = true, description = "Whether to include factors between the sense and role variables.")
+    public static boolean binarySenseRoleFactors = false;
     @Opt(hasArg = true, description = "Whether to predict predicate sense.")
     public static boolean predictSense = false;
+    @Opt(hasArg = true, description = "Whether to predict predicate positions.")
+    public static boolean predictPredPos = false;
 
     // Options for joint factor graph structure.
     @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
@@ -209,7 +213,9 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "1st-order factor feature templates.")
     public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
     @Opt(hasArg = true, description = "2nd-order factor feature templates.")
-    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;
+    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
+    @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
+    public static final boolean acl14DepFeats = true;
     
     // Options for data munging.
     @Deprecated
@@ -409,7 +415,6 @@ public class SrlRunner {
             timer.start();
             // Add the new predictions to the input sentences.
             for (int i = 0; i < inputSents.size(); i++) {
-                // TODO: We should construct the examples from the input sentences.
                 FgExample ex = data.get(i);
                 SimpleAnnoSentence predSent = inputSents.get(i);
                 JointNlpDecoder decoder = getDecoder();
@@ -462,6 +467,9 @@ public class SrlRunner {
             srlFePrm.fePrm.soloTemplates = sft.srlSense;
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
             removeAts(fePrm); // TODO: This probably isn't necessary, but just in case.
+        }
+        if (includeSrl && acl14DepFeats) {
+            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
         }
         if (useTemplates) {
             log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
@@ -558,7 +566,6 @@ public class SrlRunner {
         timer.start();
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
-            // TODO: We should construct the examples from the input sentences.
             UFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
@@ -601,7 +608,9 @@ public class SrlRunner {
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
         prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.srlPrm.binarySenseRoleFactors = binarySenseRoleFactors;
         prm.fgPrm.srlPrm.predictSense = predictSense;
+        prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;
@@ -646,8 +655,8 @@ public class SrlRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
-        if (includeSrl) {
-            // TODO: Add options for these, or remove them.
+        if (includeSrl && acl14DepFeats) {
+            // This special case is only for historical consistency.
             dpFePrm.onlyTrueBias = false;
             dpFePrm.onlyTrueEdges = false;
         }

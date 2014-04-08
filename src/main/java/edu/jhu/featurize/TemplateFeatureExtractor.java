@@ -360,7 +360,6 @@ public class TemplateFeatureExtractor {
             }
         } else if (lmod == ListModifier.BIGRAM) {
             for (int i = -1; i < vals.size() - 1; i++) {
-                String v1 = safeGet(vals, i);
                 feat = toFeat(tpl.getName(), safeGet(vals, i), safeGet(vals, i+1));
                 feats.add(feat);
             }

@@ -208,7 +208,7 @@ public class JointNlpFactorGraphTest {
     }
     
     @Test
-    public void testFirstOrderParser() {
+    public void testFirstOrderDepParser() {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.includeSrl = false;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
@@ -220,7 +220,7 @@ public class JointNlpFactorGraphTest {
     }
 
     @Test
-    public void testSecondOrderParser() {
+    public void testSecondOrderDepParser() {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.includeSrl = false;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
@@ -251,7 +251,7 @@ public class JointNlpFactorGraphTest {
     }
     
     @Test
-    public void testSecondOrderParserPruned() {
+    public void testSecondOrderDepParserPruned() {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();
         prm.includeSrl = false;
         prm.dpPrm.linkVarType = VarType.PREDICTED;
