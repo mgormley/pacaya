@@ -57,6 +57,9 @@ public class UnlabeledFgExample implements FgExample, Serializable {
         checkObsConfig(fg, obsConfig);
         this.fg = fg;
         this.obsConfig = obsConfig;
+        for(Var v : obsConfig.getVars())
+            if(v.getType() != VarType.OBSERVED)
+                throw new IllegalArgumentException("obsConfig should only contain observed variables");
         
         fgClampTimer.start();
                         
