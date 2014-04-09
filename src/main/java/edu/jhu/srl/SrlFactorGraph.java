@@ -230,14 +230,16 @@ public class SrlFactorGraph implements Serializable {
         // Add the factors.
         for (int i = -1; i < n; i++) {
             // Get the lemma or UNK if we don't know it.
-            String lemmaForTk;
-            if (prm.predictSense && psMap.get(lemmas.get(i)) != null) {
-                // The template key must include the lemma appended, so that
-                // there is a unique set of model parameters for each predicate.
-                lemmaForTk = lemmas.get(i);
-            } else {
-                // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
-                lemmaForTk = CorpusStatistics.UNKNOWN_SENSE;
+            String lemmaForTk = null;
+            if (i >= 0) {
+                if (prm.predictSense && psMap.get(lemmas.get(i)) != null) {
+                    // The template key must include the lemma appended, so that
+                    // there is a unique set of model parameters for each predicate.
+                    lemmaForTk = lemmas.get(i);
+                } else {
+                    // If we've never seen this predicate, just give it to the (untrained) unknown classifier.
+                    lemmaForTk = CorpusStatistics.UNKNOWN_SENSE;
+                }
             }
             // Add the unary factors for the sense variables.
             if (i >= 0 && senseVars[i] != null && senseVars[i].getType() != VarType.OBSERVED) {

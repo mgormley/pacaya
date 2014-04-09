@@ -161,7 +161,7 @@ public class CorpusHandler {
         }
         
         // Cache input train data.
-        trainInputSents = trainGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
+        trainInputSents = trainGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
     }
     
     /**
@@ -252,7 +252,7 @@ public class CorpusHandler {
         devGoldSents = reader.getData();
         
         // Cache input dev data.
-        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
+        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
     }
     
     private void loadTrainAsDev() throws IOException {
@@ -266,7 +266,7 @@ public class CorpusHandler {
         for (SimpleAnnoSentence sent : trainAsDevSents) {
             devGoldSents.add(sent);
         }
-        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
+        devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
     }
     
     // -------------------- Test data --------------------------
@@ -324,9 +324,8 @@ public class CorpusHandler {
         }
         
         // Cache input test data.
-        testInputSents = testGoldSents.getWithAtsRemoved(Lists.union(getAts(removeAts), getAts(predAts)));
+        testInputSents = testGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
     }
-
     
     private SimpleAnnoSentenceReaderPrm getDefaultReaderPrm() {
         SimpleAnnoSentenceReaderPrm prm = new SimpleAnnoSentenceReaderPrm();
@@ -336,6 +335,14 @@ public class CorpusHandler {
         prm.normalizeRoleNames = normalizeRoleNames;
         prm.useGoldSyntax = useGoldSyntax;
         return prm;
+    }
+
+    public static List<AT> getPredAts() {
+        return getAts(predAts);
+    }
+
+    public static List<AT> getRemoveAts() {
+        return getAts(removeAts);
     }
     
     public static List<AT> getAts(String atsStr) {

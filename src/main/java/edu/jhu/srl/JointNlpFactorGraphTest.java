@@ -21,6 +21,7 @@ import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.model.Factor;
+import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -74,6 +75,27 @@ public class JointNlpFactorGraphTest {
         assertEquals(6 + 6 + 9, sfg.getNumFactors());
     }
 
+    @Test
+    public void testNSquaredModelIsTree() {
+        JointFactorGraphPrm prm = new JointFactorGraphPrm();
+        prm.srlPrm.roleStructure = RoleStructure.ALL_PAIRS;
+        prm.dpPrm.linkVarType = VarType.LATENT;
+        prm.srlPrm.makeUnknownPredRolesLatent = false;
+        prm.srlPrm.allowPredArgSelfLoops = false;
+        prm.dpPrm.useProjDepTreeFactor = false;
+        prm.srlPrm.predictSense = true;
+        prm.srlPrm.binarySenseRoleFactors = true;
+        JointNlpFactorGraph sfg = getSrlFg(prm);
+        
+        for (FgNode node : sfg.getConnectedComponents()) {
+            if (!sfg.isUndirectedTree(node)) {
+                System.out.println(sfg);
+                System.out.println(node);
+            }
+            assertTrue(sfg.isUndirectedTree(node));
+        }
+    }
+    
     @Test
     public void testPredsGiven() {
         JointFactorGraphPrm prm = new JointFactorGraphPrm();

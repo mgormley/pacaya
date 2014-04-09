@@ -484,7 +484,7 @@ public class SrlRunner {
     }
 
     private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
-        for (AT at : Lists.union(CorpusHandler.getAts(CorpusHandler.removeAts), CorpusHandler.getAts(CorpusHandler.predAts))) {
+        for (AT at : Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts())) {
             fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
             fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
             fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
