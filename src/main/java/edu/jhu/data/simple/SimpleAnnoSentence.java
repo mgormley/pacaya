@@ -86,6 +86,24 @@ public class SimpleAnnoSentence {
         this.binaryTree = other.binaryTree;
     }
     
+    public SimpleAnnoSentence getShallowCopy() {
+        SimpleAnnoSentence newSent = new SimpleAnnoSentence();
+        newSent.words = this.words;
+        newSent.lemmas = this.lemmas;
+        newSent.posTags = this.posTags;
+        newSent.cposTags = this.cposTags;
+        newSent.clusters = this.clusters;
+        newSent.deprels = this.deprels;
+        newSent.parents = this.parents;
+        newSent.depEdgeMask = this.depEdgeMask;
+        newSent.knownPreds = this.knownPreds;
+        newSent.sourceSent = this.sourceSent;
+        newSent.feats = this.feats;
+        newSent.srlGraph = this.srlGraph;
+        newSent.binaryTree = this.binaryTree;
+        return newSent;
+    }
+    
     /** Gets the i'th word as a String. */
     public String getWord(int i) {
         return words.get(i);

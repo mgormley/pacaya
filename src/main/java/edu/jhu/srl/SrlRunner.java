@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
@@ -301,7 +302,7 @@ public class SrlRunner {
         }
 
         if (corpus.hasTrain()) {
-            String name = "train";
+            String name = "train";            
             addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
@@ -522,6 +523,7 @@ public class SrlRunner {
                 }
             }
         }
+        printPredArgSelfLoopStats(sents);
         
         log.info("Building factor graphs and extracting features.");
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
@@ -546,6 +548,24 @@ public class SrlRunner {
         log.info(String.format("Num factor/clique templates: %d", fts.size()));
         log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
+    }
+
+    private static void printPredArgSelfLoopStats(SimpleAnnoSentenceCollection sents) {
+        int numPredArgSelfLoop = 0;
+        int numPredArgs = 0;
+        for (SimpleAnnoSentence sent : sents) {
+            if (sent.getSrlGraph() != null) {
+                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
+                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
+                        numPredArgSelfLoop += 1;
+                    }
+                }
+                numPredArgs += sent.getSrlGraph().getEdges().size();
+            }
+        }
+        if (numPredArgs > 0) {
+            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
+        }
     }
 
     private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
