@@ -778,11 +778,13 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     gl = g.langs[lang_short]
                     ll = l.langs[lang_short]
                     if feats == "bjork_ls": 
-                        feats = gl.feat_tpl_bjork_ls + SrlExpParams(featureSelection=False)
+                        feats_ls = gl.feat_tpl_bjork_ls + SrlExpParams(featureSelection=False)
+                    else:
+                        feats_ls = feats
                     parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
                                        combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                     for parser_srl in parser_srl_list:
-                        exp = g.defaults + feats + parser_srl 
+                        exp = g.defaults + feats_ls + parser_srl 
                         if lang_short == "en":
                             exp.update(allowPredArgSelfLoops=True)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
