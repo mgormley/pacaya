@@ -359,7 +359,7 @@ class ParamDefinitions():
             threads = 1
         g.defaults.set("threads", threads, incl_name=False)
         g.defaults.set("sgdBatchSize", 20)
-        
+                
         g.defaults.update(
             printModel="./model.txt.gz",                          
             trainPredOut="./train-pred.txt",
@@ -468,8 +468,11 @@ class ParamDefinitions():
                                                                 False, 'tpl_bjork_ls_%s' % (lang_short))
 
         # The coarse set uses the bjorkelund sense features.
-        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse1", False, 'tpl_coarse1')
-        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", "coarse2", False, 'tpl_coarse2')
+        g.feat_tpl_coarse1        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
+                                                                 "/edu/jhu/featurize/coarse1-arg-feats.txt", 
+                                                                 False, 'tpl_coarse1')
+        g.feat_tpl_coarse2        = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt", 
+                                                                 "coarse2", False, 'tpl_coarse2')
         g.feat_tpl_custom1        = self._get_named_template_set("/edu/jhu/featurize/custom1-sense-feats.txt",
                                                                 "/edu/jhu/featurize/custom1-arg-feats.txt",
                                                                 False, 'tpl_custom1')
@@ -535,7 +538,9 @@ class ParamDefinitions():
         g.model_pg_obs_tree = SrlExpParams(roleStructure="PREDS_GIVEN", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
         g.model_ap_lat_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="LATENT", removeAts="DEP_TREE,DEPREL")
         g.model_ap_prd_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="SRL,DEP_TREE", removeAts="DEPREL")
-        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")                        
+        g.model_ap_obs_tree = SrlExpParams(roleStructure="ALL_PAIRS", useProjDepTreeFactor=False, linkVarType="OBSERVED")
+        g.model_ap_lat_tree_predpos = g.model_ap_lat_tree + SrlExpParams(roleStructure="ALL_PAIRS", makeUnknownPredRolesLatent=False, predictSense=False, predictPredPos=True, 
+                                                                         binarySenseRoleFactors=False, predAts="SRL,SRL_PRED_IDX,DEP_TREE", removeAts="DEPREL")                        
 
     def _define_lists_model(self, g, l):
         l.models = [g.model_pg_obs_tree, g.model_pg_prd_tree, g.model_pg_lat_tree,
@@ -662,7 +667,7 @@ class ParamDefinitions():
                 base_work_mem_megs = 5 * 1000
                 is_higher_order = exp.get("grandparentFactors") or exp.get("siblingFactors")
                 if exp.get("pruneEdges") == False and is_higher_order: 
-                    base_work_mem_megs = 20*1000
+                    base_work_mem_megs = 10*1000
             else:
                 if exp.get("useProjDepTreeFactor"):
                     base_work_mem_megs = 20 * 1000
@@ -823,7 +828,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             exps = []
             g.defaults += g.feat_mcdonald
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=7, sgdAutoSelecFreq=2, l2variance=10000)
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
+                              sgdAutoSelecFreq=2, sgdAutoSelectLr=False)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                        removeAts="DEPREL", tagger_parser="1st", pruneEdges=False)
             second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
@@ -832,7 +838,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
             parsers = [second_order, second_grand, second_sib, first_order]
-            parsers += [x + SrlExpParams(pruneEdges=True) for x in parsers]
+            parsers += [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
             models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
@@ -842,6 +848,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for parser in parsers:
                     pl = p.langs[lang_short]
                     data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                        trainMaxSentenceLength=80,
                                         test=pl.cx_test, testType="CONLL_X", 
                                         language=lang_short, trainUseCoNLLXPhead=True,
                                         l2variance=l2var_map[lang_short])
@@ -894,9 +901,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
         if self.expname == "dp-conllx-tmp":
             # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
             exps = []
-            g.defaults += g.feat_tpl_narad #mcdonald
+            g.defaults += g.feat_mcdonald #tpl_narad 
             g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
-                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000)
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=2, l2variance=10000, sgdAutoSelectLr=False)
             if not self.big_machine:
                 g.defaults.update(maxEntriesInMemory=1, sgdBatchSize=2)
             first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
@@ -907,18 +914,20 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                       normalizeMessages=True)
             second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
             second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
-            parsers = [first_order, second_order, second_grand, second_sib]
-            parsers += [x + SrlExpParams(pruneEdges=True) for x in parsers]
+            parsers = [second_sib, first_order, second_order, second_grand]
+            # PRUNING ONLY
+            parsers = [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
             # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
             l2var_map = {"bg" : 10000, "es" : 1000}
             models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
                                                os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
             p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
-            for trainMaxNumSentences in [100, 1000, 9999999]:
-                for lang_short in ["bg", "es"]:
+            for trainMaxNumSentences in [100, 500, 1000, 2000, 9999999]:
+                for lang_short in ["bg"]: #, "es"]:
                     for parser in parsers:
                         pl = p.langs[lang_short]
                         data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X", testType="CONLL_X", 
+                                            trainMaxSentenceLength=80,
                                             #test=pl.cx_test, 
                                             trainMaxNumSentences=trainMaxNumSentences,
                                             language=lang_short, trainUseCoNLLXPhead=True,
@@ -967,9 +976,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # and marginalized syntax in a joint model.
             # We only include grammar induction run on brown clusters.
             exps = []
-            g.defaults += g.feat_tpl_custom1
+            g.defaults += g.feat_tpl_coarse1
             g.defaults.set_incl_name('removeAts', True)
-            g.defaults.update(predictSense=True, biasOnly=True)
+            g.defaults.update(predictSense=True)
             for removeBrown in [True, False]:
                 for lang_short in p.c09_lang_short_names:
                     gl = g.langs[lang_short]
@@ -1034,11 +1043,18 @@ class SrlExpParamsRunner(ExpParamsRunner):
             for lang_short in p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
-                parser_srl_list = combine_pairs([gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) 
+                parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
+                                       combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                 for parser_srl in parser_srl_list:
                     exp = g.defaults + parser_srl
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    if exp.get("language") == "cs":
+                        exp.update(sgdNumPasses=2)
+                        if exp.get("tagger_parser") == "pos-sup":
+                            exp.update(work_mem_megs=60*1000, trainMaxSentenceLength=80)
                     exps.append(exp)
+            # Filter to just Czech
+            exps = [x for x in exps if x.get("language") == "cs"]
             return self._get_pipeline_from_exps(exps)
        
         elif self.expname == "srl-conll08":
@@ -1060,19 +1076,28 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        elif self.expname == "srl-subtraction":            
+        elif self.expname == "srl-subtraction":
             exps = []
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA"]
-            for lang_short in p.c09_lang_short_names:
+            removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA", "SRL_PRED_IDX"]
+            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
+                # Add observed trees experiment.
+                parser_srl = gl.pos_sup + g.model_pg_obs_tree
+                exp = g.defaults + parser_srl
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
+                # Add latent trees experiments.
                 parser_srl = gl.pos_sup + g.model_pg_lat_tree
-                for i in range(len(removeAtsList)):
+                for i in reversed(range(len(removeAtsList))):
                     removeAts = ",".join(removeAtsList[:i+1])
-                    exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
+                    if removeAtsList[i] == "SRL_PRED_IDX":
+                        exp = g.defaults + gl.pos_sup + g.model_ap_lat_tree_predpos + SrlExpParams(removeAts=removeAts)
+                    else:
+                        exp = g.defaults + parser_srl + SrlExpParams(removeAts=removeAts)
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
@@ -1086,7 +1111,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            for lang_short in ['ca', 'de']: #p.c09_lang_short_names:
+            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 #parser_srl = gl.pos_sup + g.model_pg_lat_tree + SrlExpParams(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
@@ -1094,7 +1119,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 for trainMaxNumSentences in [1000, 2000, 4000, 8000, 16000, 32000, 64000]:
                     if trainMaxNumSentences/2 >= cl_map[lang_short]:
                         break
-                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumSentences=trainMaxNumSentences)
+                    exp = g.defaults + parser_srl + SrlExpParams(trainMaxNumSentences=trainMaxNumSentences,
+                                                                 l2variance=min(trainMaxNumSentences, cl_map[lang_short]))
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
@@ -1454,6 +1480,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # First make sure that the "fast" setting is actually fast.
             if isinstance(stage, SrlExpParams) and self.fast:
                 self.make_stage_fast(stage)
+                # Uncomment next line for multiple threads on a fast run: 
+                # stage.update(threads=2)
             if isinstance(stage, SrlExpParams) and not self.big_machine:
                 stage.update(work_mem_megs=1100, threads=1) 
             if isinstance(stage, experiment_runner.ExpParams):

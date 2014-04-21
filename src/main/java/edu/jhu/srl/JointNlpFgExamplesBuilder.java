@@ -97,7 +97,7 @@ public class JointNlpFgExamplesBuilder {
             JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);
             log.trace("Number of variables: " + sfg.getNumVars() + " Number of factors: " + sfg.getNumFactors());
             // Get the variable assignments given in the training data.
-            VarConfig vc = getVarAssignment(sent, sfg);
+            VarConfig vc = getVarAssignment(sent, sfg, prm.fgPrm);
             
             // Create the example.
             FgExample ex;
@@ -117,11 +117,12 @@ public class JointNlpFgExamplesBuilder {
 
     }
 
-    /** Gets the variable assignment for either all variables or only the observed variables. */
-    private static VarConfig getVarAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg) {
+    /** Gets the variable assignment for either all variables or only the observed variables. 
+     * @param fgPrm */
+    private static VarConfig getVarAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, JointFactorGraphPrm fgPrm) {
         VarConfig vc = new VarConfig();
         DepParseEncoder.getDepParseTrainAssignment(sent, sfg, vc);       
-        SrlEncoder.getSrlTrainAssignment(sent, sfg, vc);
+        SrlEncoder.getSrlTrainAssignment(sent, sfg, vc, fgPrm.srlPrm.predictSense, fgPrm.srlPrm.predictPredPos);
         return vc;
     }
     

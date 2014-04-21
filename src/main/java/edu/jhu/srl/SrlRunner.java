@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
@@ -102,6 +103,8 @@ public class SrlRunner {
     public static long seed = Prng.DEFAULT_SEED;
     @Opt(hasArg = true, description = "Number of threads for computation.")
     public static int threads = 1;
+    @Opt(hasArg = true, description = "Whether to use a log-add table for faster computation.")
+    public static boolean useLogAddTable = true;
     
     // Options for model IO
     @Opt(hasArg = true, description = "File from which to read a serialized model.")
@@ -154,8 +157,12 @@ public class SrlRunner {
     public static boolean makeUnknownPredRolesLatent = true;
     @Opt(hasArg = true, description = "Whether to allow a predicate to assign a role to itself. (This should be turned on for English)")
     public static boolean allowPredArgSelfLoops = false;
+    @Opt(hasArg = true, description = "Whether to include factors between the sense and role variables.")
+    public static boolean binarySenseRoleFactors = false;
     @Opt(hasArg = true, description = "Whether to predict predicate sense.")
     public static boolean predictSense = false;
+    @Opt(hasArg = true, description = "Whether to predict predicate positions.")
+    public static boolean predictPredPos = false;
 
     // Options for joint factor graph structure.
     @Opt(hasArg = true, description = "Whether to include unary factors in the model.")
@@ -207,7 +214,9 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "1st-order factor feature templates.")
     public static String dp1FeatTpls = TemplateSets.mcdonaldDepFeatsResource;
     @Opt(hasArg = true, description = "2nd-order factor feature templates.")
-    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;
+    public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
+    @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
+    public static final boolean acl14DepFeats = true;
     
     // Options for data munging.
     @Deprecated
@@ -257,7 +266,7 @@ public class SrlRunner {
 
     public void run() throws ParseException, IOException {  
         if (logDomain) {
-            FastMath.useLogAddTable = true;
+            FastMath.useLogAddTable = useLogAddTable;
         }
         if (stopTrainingBy != null && new Date().after(stopTrainingBy)) {
             log.warn("Training will never begin since stopTrainingBy has already happened: " + stopTrainingBy);
@@ -293,7 +302,7 @@ public class SrlRunner {
         }
 
         if (corpus.hasTrain()) {
-            String name = "train";
+            String name = "train";            
             addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
             // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
@@ -407,7 +416,6 @@ public class SrlRunner {
             timer.start();
             // Add the new predictions to the input sentences.
             for (int i = 0; i < inputSents.size(); i++) {
-                // TODO: We should construct the examples from the input sentences.
                 FgExample ex = data.get(i);
                 SimpleAnnoSentence predSent = inputSents.get(i);
                 JointNlpDecoder decoder = getDecoder();
@@ -461,6 +469,9 @@ public class SrlRunner {
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
             removeAts(fePrm); // TODO: This probably isn't necessary, but just in case.
         }
+        if (includeSrl && acl14DepFeats) {
+            fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
+        }
         if (useTemplates) {
             log.info("Num sense feature templates: " + srlFePrm.fePrm.soloTemplates.size());
             log.info("Num arg feature templates: " + srlFePrm.fePrm.pairTemplates.size());
@@ -474,7 +485,7 @@ public class SrlRunner {
     }
 
     private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
-        for (AT at : Lists.union(CorpusHandler.getAts(CorpusHandler.removeAts), CorpusHandler.getAts(CorpusHandler.predAts))) {
+        for (AT at : Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts())) {
             fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
             fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
             fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
@@ -512,6 +523,7 @@ public class SrlRunner {
                 }
             }
         }
+        printPredArgSelfLoopStats(sents);
         
         log.info("Building factor graphs and extracting features.");
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
@@ -538,6 +550,24 @@ public class SrlRunner {
         return data;
     }
 
+    private static void printPredArgSelfLoopStats(SimpleAnnoSentenceCollection sents) {
+        int numPredArgSelfLoop = 0;
+        int numPredArgs = 0;
+        for (SimpleAnnoSentence sent : sents) {
+            if (sent.getSrlGraph() != null) {
+                for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
+                    if (edge.getArg().getPosition() == edge.getPred().getPosition()) {
+                        numPredArgSelfLoop += 1;
+                    }
+                }
+                numPredArgs += sent.getSrlGraph().getEdges().size();
+            }
+        }
+        if (numPredArgs > 0) {
+            log.info(String.format("Proportion pred-arg self loops: %.4f (%d / %d)", (double) numPredArgSelfLoop/numPredArgs, numPredArgSelfLoop, numPredArgs));
+        }
+    }
+
     private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
         DepParseEvaluator eval = new DepParseEvaluator(name);
         eval.evaluate(goldSents, predSents);        
@@ -556,7 +586,6 @@ public class SrlRunner {
         timer.start();
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
-            // TODO: We should construct the examples from the input sentences.
             UFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = getDecoder();
@@ -599,7 +628,9 @@ public class SrlRunner {
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
         prm.fgPrm.srlPrm.allowPredArgSelfLoops = allowPredArgSelfLoops;
         prm.fgPrm.srlPrm.unaryFactors = unaryFactors;
+        prm.fgPrm.srlPrm.binarySenseRoleFactors = binarySenseRoleFactors;
         prm.fgPrm.srlPrm.predictSense = predictSense;
+        prm.fgPrm.srlPrm.predictPredPos = predictPredPos;
         
         prm.fgPrm.includeDp = includeDp;
         prm.fgPrm.includeSrl = includeSrl;
@@ -644,6 +675,11 @@ public class SrlRunner {
         dpFePrm.firstOrderTpls = getFeatTpls(dp1FeatTpls);
         dpFePrm.secondOrderTpls = getFeatTpls(dp2FeatTpls);
         dpFePrm.featureHashMod = featureHashMod;
+        if (includeSrl && acl14DepFeats) {
+            // This special case is only for historical consistency.
+            dpFePrm.onlyTrueBias = false;
+            dpFePrm.onlyTrueEdges = false;
+        }
         
         JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         fePrm.srlFePrm = srlFePrm;

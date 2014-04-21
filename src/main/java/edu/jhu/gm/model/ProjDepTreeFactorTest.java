@@ -1,10 +1,11 @@
 package edu.jhu.gm.model;
 
+import static edu.jhu.prim.util.math.FastMath.logAdd;
+import static edu.jhu.prim.util.math.FastMath.logSubtract;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static edu.jhu.prim.util.math.FastMath.*;
 
 import org.junit.Test;
 
@@ -20,6 +21,7 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.math.LogAddTable;
 import edu.jhu.util.collections.Lists;
@@ -629,18 +631,19 @@ public class ProjDepTreeFactorTest {
         for (int i=0; i<fgExpl.getNumEdges(); i++) {
             DenseFactor msgExpl = msgsExpl[i].message;
             DenseFactor msgDp = msgsDp[i].message;
-            if (!msgExpl.equals(msgDp, 1e-8)) {
-                System.out.println("NOT EQUAL:");
-                System.out.println(fgExpl.getEdge(i));
-                System.out.println(msgExpl);
-                System.out.println(msgDp);
-            } 
             assertEquals(msgExpl.size(), msgDp.size());
             for (int c=0; c<msgExpl.size(); c++) {
                 if (msgDp.getValue(c) == Double.NEGATIVE_INFINITY //&& msgExpl.getValue(c) < -30
                         || msgExpl.getValue(c) == Double.NEGATIVE_INFINITY ) {//&& msgDp.getValue(c) < -30) {
-                    continue;
+                    //continue;
                 }
+
+                if (!Primitives.equals(msgExpl.getValue(c), msgDp.getValue(c), 1e-8)) {
+                    System.out.println("NOT EQUAL:");
+                    System.out.println(fgExpl.getEdge(i));
+                    System.out.println(msgExpl);
+                    System.out.println(msgDp);
+                } 
                 // TODO: This assertion exposes a very subtle problem with the dynamic programming
                 // calculation of the messages from a PTREE factor. Because it computes the belief about being false 
                 assertEquals(msgExpl.getValue(c), msgDp.getValue(c), 1e-13);
@@ -719,9 +722,11 @@ public class ProjDepTreeFactorTest {
                     } else {
                         diff = LogAddTable.logSubtract(LogAddTable.logAdd((double) i, (double) j), (double) i); 
                     }
+                    System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
+                            ""+(diff == Double.NEGATIVE_INFINITY), diff));
                     if (diff == Double.NEGATIVE_INFINITY) {
-                        System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
-                                ""+(diff == Double.NEGATIVE_INFINITY), diff));
+                        //System.out.println(String.format("exact=%7s j=%2d i=%2d (i-j)=%2d eq0=%7s diff=%g", ""+useExact, j, i, (i-j), 
+                                //""+(diff == Double.NEGATIVE_INFINITY), diff));
                         break;
                     }
                 }

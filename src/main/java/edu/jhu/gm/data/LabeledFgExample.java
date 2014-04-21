@@ -74,7 +74,8 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
 
     private static void checkGoldConfig(FactorGraph fg, VarConfig goldConfig) {
         for (Var var : fg.getVars()) {
-            if (var.getType() == VarType.PREDICTED && goldConfig.getState(var, -1) == -1) {
+            // Latent variables don't need to be specified in the gold variable assignment.
+            if (var.getType() != VarType.LATENT && goldConfig.getState(var, -1) == -1) {
                 throw new IllegalStateException("Vars missing from train configuration: " + var);
             }
         }
