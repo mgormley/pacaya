@@ -2,6 +2,8 @@ package edu.jhu.util.semiring;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import edu.jhu.prim.util.math.FastMath;
@@ -20,6 +22,32 @@ public class LogPosNegSemiringTest {
     private static final int NUM_RANDS = 100;
     private LogPosNegSemiring sLog = new LogPosNegSemiring();
     private RealSemiring sReal = new RealSemiring();
+    
+    @Test
+    public void travisTest() {
+        // code:
+//        double oldBeta = beta[i];
+//        double oldBetaFoe = betaFoe[i];
+//        beta[i] = s.plus(beta[i], prod);
+//        betaFoe[i] = s.plus(betaFoe[i], prodFoe);
+        
+        // results
+//        370461   DEBUG Hyperalgo - oldBeta: -4848124998864338944
+//        370461   DEBUG Hyperalgo - oldBetaFoe: -4593159590437072925
+//                 DEBUG Hyperalgo - prod: 4375247037990436864
+//        370461   DEBUG Hyperalgo - prodFoe: -4593159590437072926
+//        370461   DEBUG Hyperalgo - beta: 4604418534313441774
+//        370461   DEBUG Hyperalgo - betaFoe: 9221120237041090560
+//        370461   DEBUG Hyperalgo - beta is NaN: false
+//        370461   DEBUG Hyperalgo - betaFoe is NaN: true
+//        370461   DEBUG Hyperalgo - s.class: class edu.jhu.util.semiring.LogPosNegSemiring
+//        370461   DEBUG Hyperalgo - beta == betaFoe: false
+
+        double betaFoe = Double.longBitsToDouble(-4593159590437072925l);
+        double prodFoe = Double.longBitsToDouble(-4593159590437072926l);
+        LogPosNegSemiring s = new LogPosNegSemiring();
+        assertFalse(Double.isNaN(s.plus(betaFoe, prodFoe)));
+    }
     
     @Test
     public void testToFromReal() {

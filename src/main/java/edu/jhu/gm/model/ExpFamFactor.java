@@ -93,7 +93,6 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     @Override
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
-        ExpFamFactor f = this;
 
         DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
         

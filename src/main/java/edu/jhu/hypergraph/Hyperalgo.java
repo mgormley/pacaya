@@ -154,9 +154,24 @@ public class Hyperalgo {
                 
                 int i = e.getHeadNode().getId();
                 //if (log.isTraceEnabled()) { log.trace(String.format("old beta[%d] = %f",  i, s.toReal(beta[i]))); }
+                double oldBeta = beta[i];
+                double oldBetaFoe = betaFoe[i];
                 beta[i] = s.plus(beta[i], prod);
                 betaFoe[i] = s.plus(betaFoe[i], prodFoe);
-                assert !Double.isNaN(beta[i]) && !Double.isNaN(betaFoe[i]);
+                //assert !Double.isNaN(beta[i]) && !Double.isNaN(betaFoe[i]);
+                if (Double.isNaN(beta[i]) || Double.isNaN(betaFoe[i])) {
+                    log.debug("oldBeta: " + Double.doubleToLongBits(oldBeta));
+                    log.debug("oldBetaFoe: " + Double.doubleToLongBits(oldBetaFoe));
+                    log.debug("prod: " + Double.doubleToLongBits(prod));
+                    log.debug("prodFoe: " + Double.doubleToLongBits(prodFoe));
+                    log.debug("beta: " + Double.doubleToLongBits(beta[i]));
+                    log.debug("betaFoe: " + Double.doubleToLongBits(betaFoe[i]));
+                    log.debug("beta is NaN: " + Double.isNaN(beta[i]));
+                    log.debug("betaFoe is NaN: " + Double.isNaN(betaFoe[i]));
+                    log.debug("s.class: " + s.getClass());
+                    log.debug("beta == betaFoe: " + (beta == betaFoe));
+                    assert false;
+                }
                 // log.debug(String.format("%s w_e=%f beta[%d] = %.3f betaFoe[%d] = %.3f", e.getLabel(), s.toReal(w.getScore(e, s)), i, s.toReal(beta[i]), i, s.toReal(betaFoe[i]))); 
             }
             
