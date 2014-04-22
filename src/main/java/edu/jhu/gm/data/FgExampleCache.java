@@ -70,5 +70,10 @@ public class FgExampleCache extends AbstractFgExampleList implements FgExampleLi
     public synchronized int size() {
         return exampleFactory.size();
     }
+    
+    /** removes all cached FgExamples */
+    public synchronized void clear() {
+        cache.clear();
+    }
 
 }
