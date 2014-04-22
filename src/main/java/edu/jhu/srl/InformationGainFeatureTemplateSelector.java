@@ -23,6 +23,8 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateFeatureExtractor;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
+import edu.jhu.featurize.TemplateLanguage.FeatTemplate0;
+import edu.jhu.featurize.TemplateLanguage.OtherFeat;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.arrays.DoubleArrays;
@@ -91,7 +93,10 @@ public class InformationGainFeatureTemplateSelector {
     private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
             List<FeatTemplate> unigrams, ValExtractor valExt) {
         int numUni = 45;
-        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);        
+        List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);
+        // Don't include PathGrams feature.
+        boolean removedPathGrams = selUnigrams.remove(new FeatTemplate0(OtherFeat.PATH_GRAMS));
+        if (removedPathGrams) { log.debug("Not allowing PathGrams feature in feature bigrams."); }
         assert selUnigrams.size() <= numUni : "selUnigrams.size(): " + selUnigrams.size();
         List<FeatTemplate> bigrams = TemplateSets.getBigramFeatureTemplates(selUnigrams);
         assert bigrams.size() <= numUni*(numUni-1.0)/2.0;

@@ -11,7 +11,7 @@ import edu.jhu.srl.SrlFactorGraph.SenseVar;
 
 public class SrlEncoder {
 
-    public static void getSrlTrainAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc) {
+    public static void getSrlTrainAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
         SrlGraph srlGraph = sent.getSrlGraph();
         if (srlGraph == null) {
             return;
@@ -50,15 +50,27 @@ public class SrlEncoder {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                // Tries to map the sense variable to its label (e.g. argM-TMP).
-                // If the variable state space does not include that label, we
-                // fall back on the UNKNOWN_SENSE constant. If for some reason
-                // the UNKNOWN_SENSE constant isn't present, we just predict the
-                // first possible sense.
-                if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
-                    if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
-                        // This is a hack to ensure that something is added at test time.
-                        vc.put(senseVar, 0);
+                if (predictSense && predictPredPos) {
+                    if (predictPredPos && !sent.isKnownPred(i)) {
+                        vc.put(senseVar, "_");
+                    } else {
+                        // Tries to map the sense variable to its label (e.g. argM-TMP).
+                        // If the variable state space does not include that label, we
+                        // fall back on the UNKNOWN_SENSE constant. If for some reason
+                        // the UNKNOWN_SENSE constant isn't present, we just predict the
+                        // first possible sense.
+                        if (!tryPut(vc, senseVar, srlGraph.getPredAt(i).getLabel())) {
+                            if (!tryPut(vc, senseVar, CorpusStatistics.UNKNOWN_SENSE)) {
+                                // This is a hack to ensure that something is added at test time.
+                                vc.put(senseVar, 0);
+                            }
+                        }
+                    }
+                } else {
+                    if (sent.isKnownPred(i)) {
+                        vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);
+                    } else {
+                        vc.put(senseVar, "_");
                     }
                 }
             }

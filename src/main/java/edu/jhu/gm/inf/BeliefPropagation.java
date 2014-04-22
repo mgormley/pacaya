@@ -93,8 +93,9 @@ public class BeliefPropagation implements FgInferencer {
             // Every message to/from a variable will be a factor whose domain is
             // that variable only.
             Var var = edge.getVar();
-            message = new DenseFactor(new VarSet(var), initialValue);
-            newMessage = new DenseFactor(new VarSet(var), initialValue);
+            VarSet vars = new VarSet(var); // TODO: Can we create only one of these per variable?
+            message = new DenseFactor(vars, initialValue);
+            newMessage = new DenseFactor(vars, initialValue);
             
             if (normalizeMessages) {
                 // Normalize the initial messages.

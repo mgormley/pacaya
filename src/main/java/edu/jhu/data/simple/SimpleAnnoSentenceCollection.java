@@ -105,5 +105,16 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         }
         return newSents;
     }
+
+    /** Gets the length of the longest sentence in this collection. */
+    public int getMaxLength() {
+        int maxLen = Integer.MIN_VALUE;
+        for (SimpleAnnoSentence sent : this) {
+            if (sent.size() > maxLen) {
+                maxLen = sent.size();
+            }
+        }
+        return maxLen;
+    }
     
 }

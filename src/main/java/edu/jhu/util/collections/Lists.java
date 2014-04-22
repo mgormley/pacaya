@@ -60,6 +60,12 @@ public class Lists {
         list.add(val);
         return list;
     }
+    
+    public static <T> List<T> cons(T val, List<T> values) {
+        List<T> list = new ArrayList<T>(values);
+        list.add(val);
+        return list;
+    }
 
     public static <T> List<T> union(List<T> ats1, List<T> ats2) {
         ArrayList<T> newList = new ArrayList<T>(ats1.size() + ats2.size());

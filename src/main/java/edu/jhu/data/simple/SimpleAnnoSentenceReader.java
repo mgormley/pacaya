@@ -28,6 +28,7 @@ public class SimpleAnnoSentenceReader {
         public boolean useGoldSyntax = false;
         public int maxNumSentences = Integer.MAX_VALUE; 
         public int maxSentenceLength = Integer.MAX_VALUE; 
+        public int minSentenceLength = 0;
         public SentFilter filter = null;
         public File brownClusters = null;        
         public String name = "";
@@ -91,7 +92,8 @@ public class SimpleAnnoSentenceReader {
         
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());
-
+        log.info("Longest sentence: " + sents.getMaxLength());
+        
         if (prm.brownClusters != null) {            
             log.info("Adding Brown clusters.");
             BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
@@ -110,7 +112,7 @@ public class SimpleAnnoSentenceReader {
             if (sents.size() >= prm.maxNumSentences) {
                 break;
             }
-            if (sent.size() <= prm.maxSentenceLength) {
+            if (sent.size() <= prm.maxSentenceLength && prm.minSentenceLength <= sent.size()) {
                 if (prm.filter == null || prm.filter.accept(sent)) {
                     sent.intern();
                     sents.add(sent);
