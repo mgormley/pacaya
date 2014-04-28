@@ -1,12 +1,12 @@
 package edu.jhu.util.semiring;
 
-import static org.junit.Assert.*;
-
-import java.util.Arrays;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
-import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.dist.Gaussian;
 
 public class LogPosNegSemiringTest {
@@ -22,33 +22,7 @@ public class LogPosNegSemiringTest {
     private static final int NUM_RANDS = 100;
     private LogPosNegSemiring sLog = new LogPosNegSemiring();
     private RealSemiring sReal = new RealSemiring();
-    
-    @Test
-    public void travisTest() {
-        // code:
-//        double oldBeta = beta[i];
-//        double oldBetaFoe = betaFoe[i];
-//        beta[i] = s.plus(beta[i], prod);
-//        betaFoe[i] = s.plus(betaFoe[i], prodFoe);
-        
-        // results
-//        370461   DEBUG Hyperalgo - oldBeta: -4848124998864338944
-//        370461   DEBUG Hyperalgo - oldBetaFoe: -4593159590437072925
-//                 DEBUG Hyperalgo - prod: 4375247037990436864
-//        370461   DEBUG Hyperalgo - prodFoe: -4593159590437072926
-//        370461   DEBUG Hyperalgo - beta: 4604418534313441774
-//        370461   DEBUG Hyperalgo - betaFoe: 9221120237041090560
-//        370461   DEBUG Hyperalgo - beta is NaN: false
-//        370461   DEBUG Hyperalgo - betaFoe is NaN: true
-//        370461   DEBUG Hyperalgo - s.class: class edu.jhu.util.semiring.LogPosNegSemiring
-//        370461   DEBUG Hyperalgo - beta == betaFoe: false
-
-        double betaFoe = Double.longBitsToDouble(-4593159590437072925l);
-        double prodFoe = Double.longBitsToDouble(-4593159590437072926l);
-        LogPosNegSemiring s = new LogPosNegSemiring();
-        assertFalse(Double.isNaN(s.plus(betaFoe, prodFoe)));
-    }
-    
+            
     @Test
     public void testToFromReal() {
         toFromCheck(1);
@@ -140,6 +114,21 @@ public class LogPosNegSemiringTest {
         x = -44.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
 
+        // Test numbers whose abs is equal.
+        double abs = 13.1313;
+        y = abs;
+        x = -abs;        
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        y = abs;
+        x = abs;        
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        y = -abs;
+        x = abs;        
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        y = -abs;
+        x = -abs;        
+        assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
+        
         // Test positive and negative numbers with abs(x) < 1.
         x = 0.11;
         y = 0.44;        
@@ -167,7 +156,7 @@ public class LogPosNegSemiringTest {
         x = -0.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13); 
 
-        
+        // Test with one value as an infinity.
         x = Double.POSITIVE_INFINITY;
         y = 44.44;        
         assertEquals(compute(lambda, x, y, sReal), compute(lambda, x, y, sLog), 1e-13);    
@@ -208,7 +197,42 @@ public class LogPosNegSemiringTest {
         return s.toReal(compacted);
     }
 
-
+    /**
+     * The correct bit representation of -0 in this semiring happens to be a NaN.
+     */
+    @Test
+    public void testAbsEqual() {        
+        {
+            double v1 = sLog.fromReal(3);
+            double v2 = sLog.fromReal(-3);
+            double sum = sLog.plus(v1, v2);
+            System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sum));
+            assertEquals(0l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY), Double.doubleToRawLongBits(sum));
+            assertFalse(Double.isNaN(sum));
+            assertFalse(Double.isNaN(sLog.toReal(sum)));
+        }
+        {
+            double v1 = sLog.fromReal(-3);
+            double v2 = sLog.fromReal(3);
+            double sum = sLog.plus(v1, v2);
+            System.out.printf("%0#16x\n", Double.doubleToRawLongBits(sum));
+            assertEquals(1l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY), Double.doubleToRawLongBits(sum));
+            assertTrue(Double.isNaN(sum));
+            assertFalse(Double.isNaN(sLog.toReal(sum)));
+        }
+    }
+    
+    @Test
+    public void countNaNs() {
+        // This shows that the internal representation of some numbers will CORRECTLY be NaN.
+        long numNaNs = 0;
+        if (Double.isNaN(Double.longBitsToDouble(1l | Double.doubleToRawLongBits(Double.POSITIVE_INFINITY)))) { numNaNs++; }
+        if (Double.isNaN(Double.longBitsToDouble(1l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY)))) { numNaNs++; }
+        if (Double.isNaN(Double.longBitsToDouble(0l | Double.doubleToRawLongBits(Double.POSITIVE_INFINITY)))) { numNaNs++; }
+        if (Double.isNaN(Double.longBitsToDouble(0l | Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY)))) { numNaNs++; }
+        System.out.println("Number of longs which are NaNs: " + numNaNs);
+    }
+    
     @Test
     public void testSomeFloatingPointRepresentations() {
         System.out.printf("0x%x\n", Double.doubleToRawLongBits(1));
@@ -221,9 +245,9 @@ public class LogPosNegSemiringTest {
         double nan1 = (double)0/0;
         double nan2 = (double)0/0;
         double nan3 = (double)i/j;
-        System.out.printf("0x%x\n", Double.doubleToRawLongBits(nan1));
-        System.out.printf("0x%x\n", Double.doubleToRawLongBits(nan2));
-        System.out.printf("0x%x\n", Double.doubleToRawLongBits(nan3));
+        System.out.printf("nan1 0x%x\n", Double.doubleToRawLongBits(nan1));
+        System.out.printf("nan2 0x%x\n", Double.doubleToRawLongBits(nan2));
+        System.out.printf("nan3 0x%x\n", Double.doubleToRawLongBits(nan3));
 
         System.out.printf("0x%x\n", Double.doubleToRawLongBits(Double.POSITIVE_INFINITY));
         System.out.printf("0x%x\n", Double.doubleToRawLongBits(Double.NEGATIVE_INFINITY));

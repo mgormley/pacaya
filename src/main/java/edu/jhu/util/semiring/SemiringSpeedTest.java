@@ -9,7 +9,7 @@ import edu.jhu.util.Timer;
 public class SemiringSpeedTest {
 
     @Test
-    public void testSemiringSpeed() {
+    public void testRealSemiringSpeed() {
         Semiring s = new RealSemiring();
         
         int numTrials = 10;
