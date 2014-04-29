@@ -8,7 +8,7 @@ import edu.jhu.gm.model.TemplateFactor;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
-import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
+import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 
 /**
  * An exponential family factor which takes an ObsFeatureExtractor at
@@ -59,13 +59,12 @@ public abstract class ObsCjExpFamFactor extends ExpFamFactor implements ObsFeatu
         final int ft = factor.getTemplateId();
         FeatureVector obsFv = ((ObsFeatureCarrier) factor).getObsFeatures();
         final FeatureVector fv = new FeatureVector(obsFv.getUsed());
-        obsFv.apply(new FnIntDoubleToDouble() {            
+        obsFv.iterate(new FnIntDoubleToVoid() {            
             @Override
-            public double call(int feat, double val) {
+            public void call(int feat, double val) {
                 if (ofc.included[ft][config][feat]) {
                     fv.add(ofc.indices[ft][config][feat], val);
                 }
-                return val;
             }
         });
         return fv;

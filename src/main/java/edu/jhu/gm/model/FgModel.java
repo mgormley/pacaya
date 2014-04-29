@@ -12,11 +12,10 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.prim.map.IntDoubleMap;
-import edu.jhu.prim.map.IntDoubleSortedMap;
 import edu.jhu.prim.util.Lambda.FnIntDoubleToDouble;
+import edu.jhu.prim.util.Lambda.FnIntDoubleToVoid;
 import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
-import edu.jhu.prim.vector.IntDoubleHashVector;
 import edu.jhu.prim.vector.IntDoubleUnsortedVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 import edu.jhu.util.dist.Gaussian;
@@ -204,11 +203,10 @@ public class FgModel implements Serializable, IFgModel {
 
     public double l2Norm() {
         final MutableDouble l2Norm = new MutableDouble(0);
-        apply(new FnIntDoubleToDouble() {            
+        params.iterate(new FnIntDoubleToVoid() {            
             @Override
-            public double call(int idx, double val) {
+            public void call(int idx, double val) {
                 l2Norm.add(val*val);
-                return val;
             }
         });
         return l2Norm.doubleValue();
