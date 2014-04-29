@@ -246,13 +246,14 @@ public class SrlFactorGraph implements Serializable {
                 String templateKey = SrlFactorTemplate.SENSE_UNARY + "_" + lemmaForTk;
                 fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i]), SrlFactorTemplate.SENSE_UNARY, templateKey, ofc, obsFe));
             }
-            // Add the role/link factors.
+            // Add the role factors.
             for (int j = 0; j < n; j++) {
                 if (i != -1) {
                     // Add unary factors on Roles.
                     if (prm.unaryFactors && roleVars[i][j] != null) {
                         fg.addFactor(new ObsFeTypedFactor(new VarSet(roleVars[i][j]), SrlFactorTemplate.ROLE_UNARY, ofc, obsFe));
                     }
+                    // Add binary factors between Role and Sense variables.
                     if (prm.binarySenseRoleFactors && senseVars[i] != null && roleVars[i][j] != null) {
                         String templateKey = SrlFactorTemplate.SENSE_ROLE_BINARY + "_" + lemmaForTk;
                         fg.addFactor(new ObsFeTypedFactor(new VarSet(senseVars[i], roleVars[i][j]), SrlFactorTemplate.SENSE_ROLE_BINARY, templateKey, ofc, obsFe));

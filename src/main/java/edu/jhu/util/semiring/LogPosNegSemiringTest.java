@@ -201,7 +201,9 @@ public class LogPosNegSemiringTest {
      * The correct bit representation of -0 in this semiring happens to be a NaN.
      */
     @Test
-    public void testAbsEqual() {        
+    public void testAbsEqual() {   
+        assertTrue(!Double.isNaN(sLog.fromReal(Double.POSITIVE_INFINITY)));
+        assertTrue(Double.isNaN(sLog.fromReal(Double.NEGATIVE_INFINITY)));
         {
             double v1 = sLog.fromReal(3);
             double v2 = sLog.fromReal(-3);

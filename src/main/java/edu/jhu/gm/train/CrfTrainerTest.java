@@ -156,14 +156,17 @@ public class CrfTrainerTest {
     
     @Test
     public void testTrainNoLatentVars() {
+        // Boiler plate feature extraction code.
         FactorTemplateList fts = new FactorTemplateList();        
         ObsFeatureExtractor obsFe = new SimpleVCFeatureExtractor(fts);
         ObsFeatureConjoinerPrm prm = new ObsFeatureConjoinerPrm();
         prm.includeUnsupportedFeatures = true;
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(prm, fts);
 
+        // Create the factor graph.
         FgAndVars fgv = getLinearChainFgWithVars(true, ofc, obsFe);
 
+        // Create a "gold" assignment of the variables.
         VarConfig trainConfig = new VarConfig();
         trainConfig.put(fgv.w0, 0);
         trainConfig.put(fgv.w1, 1);
@@ -172,14 +175,16 @@ public class CrfTrainerTest {
         trainConfig.put(fgv.t1, 1);
         trainConfig.put(fgv.t2, 1);
 
-        
+        // Create a set of examples, consisting of ONLY ONE example.
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(new LabeledFgExample(fgv.fg, trainConfig, obsFe, fts));
         ofc.init(data);
         FgModel model = new FgModel(ofc.getNumParams());
 
+        // Train the model.
         model = train(model, data);
         
+        // Assertions:
         System.out.println(model);
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
