@@ -124,8 +124,8 @@ public class LogLinearXY {
         // we instead just add multiple examples.
         FgExampleMemoryStore store = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
+            FgExample ex = getFgExample(desc);
             for (int i = 0; i < (desc.getWeight() * 100); i++) {
-                FgExample ex = getFgExample(desc);
                 store.add(ex);
             }
         }
