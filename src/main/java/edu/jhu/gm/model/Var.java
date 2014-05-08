@@ -33,6 +33,9 @@ public class Var implements Comparable<Var>, Serializable {
     private String name;
     /** State names, where the i'th entry gives the state names of the i'th state. */
     private List<String> stateNames;
+    /** ID of this variable within its factor graph. */
+    private int id = -1;
+    
     
     // TODO: Maybe remove
     /** Counter used to create a unique id for each instance of this class. */
@@ -91,6 +94,14 @@ public class Var implements Comparable<Var>, Serializable {
         return "Var [type=" + type + ", numStates=" + numStates
                 + ", name=" + name + ", stateNames=" + stateNames + "]";
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }    
     
     // TODO: Maybe remove
     /*

@@ -184,10 +184,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
     /** The variables in this factor graph. */
     private ArrayList<Var> vars;
     /**
-     * Map from {@link Var} objects to their respective nodes.
-     */
-    private HashMap<Var,FgNode> varToNodeMap;
-    /**
      * Internal list of factor nodes allowing for fast lookups of nodes. It is
      * always true that factors.get(i) corresponds to the node
      * factorNodes.get(i).
@@ -203,7 +199,6 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         super();
         factors = new ArrayList<Factor>();
         vars = new ArrayList<Var>();
-        varToNodeMap = new HashMap<Var,FgNode>();
         factorNodes = new ArrayList<FgNode>();
         varNodes = new ArrayList<FgNode>();
     }
@@ -218,6 +213,12 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
      */
     public FactorGraph getClamped(VarConfig clampVars) {
         FactorGraph clmpFg = new FactorGraph();
+        
+        // Add ALL the variables to the clamped factor graph.
+        for (Var v : this.vars) {
+            clmpFg.addVar(v);
+        }
+        
         for (Factor origFactor : this.getFactors()) {
             VarConfig factorConfig = clampVars.getIntersection(origFactor.getVars());
             Factor clmpFactor = origFactor.getClamped(factorConfig);
@@ -227,7 +228,7 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
     }
     
     public FgNode getNode(Var var) {
-        return varToNodeMap.get(var);
+        return getVarNode(var.getId());
     }
 
     public FgNode getNode(Factor factor) {
@@ -305,13 +306,26 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
      * @return The node for this variable.
      */
     public FgNode addVar(Var var) {
-        FgNode vnode = varToNodeMap.get(var);
-        if (vnode == null) {
-            // Variable was not yet in the factor graph, so add it.
+        int id = var.getId();
+        boolean alreadyAdded = (0 <= id && id < vars.size());
+        FgNode vnode;
+        if (alreadyAdded) {
+            if (vars.get(id) != var) {
+                throw new IllegalStateException("Var id already set, but factor not yet added.");
+            }
+            vnode = varNodes.get(id);
+        } else {  
+            // Var was not yet in the factor graph.
+            //
+            // Check and set the id.
+            if (id != -1 && id != vars.size()) {
+                throw new IllegalStateException("Var id already set, but incorrect: " + id);
+            }
+            var.setId(vars.size());
+            // Add the Var.
             vnode = new FgNode(var);
             vars.add(var);
             varNodes.add(vnode);
-            varToNodeMap.put(var, vnode);
             super.add(vnode);
         }
         return vnode;
