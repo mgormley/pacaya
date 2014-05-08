@@ -213,6 +213,9 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             double outMsgTrue = beliefTrue - inMsgTrue;
             double outMsgFalse = beliefFalse - inMsgFalse;
             
+            outMsgTrue = (inMsgTrue == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgTrue;
+            outMsgFalse = (inMsgFalse == Double.NEGATIVE_INFINITY) ? Double.NEGATIVE_INFINITY : outMsgFalse;
+            
             setOutMsgs(msgs, logDomain, normalizeMessages, outEdge, link, outMsgTrue, outMsgFalse);
         }
     }

@@ -20,6 +20,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
@@ -28,6 +29,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor;
 import edu.jhu.gm.train.CrfTrainerTest.SimpleVCFeatureExtractor2;
+import edu.jhu.prim.Primitives;
 import edu.jhu.prim.set.IntHashSet;
 import edu.jhu.prim.set.IntSet;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
@@ -294,9 +296,24 @@ public class JointNlpFactorGraphTest {
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         BeliefPropagation bp = new BeliefPropagation(sfg, bpPrm);
         bp.run();
+        
+        // Marginals should yield a left-branching tree.        
         System.out.println("\n\nVariable marginals:\n");
         for (Var v : sfg.getVars()) {
-            System.out.println(bp.getMarginals(v));
+            DenseFactor marg = bp.getMarginals(v);
+            if (v instanceof LinkVar) {
+                LinkVar link = (LinkVar) v;
+                if (link.getParent() + 1 == link.getChild()) {
+                    // Is left-branching edge.
+                    assertTrue(!Primitives.equals(0.0, marg.getValue(LinkVar.FALSE), 1e-13)); 
+                    assertTrue(!Primitives.equals(Double.NEGATIVE_INFINITY, marg.getValue(LinkVar.TRUE), 1e-13)); 
+                } else {
+                    // Not left-branching edge.
+                    assertEquals(0.0, marg.getValue(LinkVar.FALSE), 1e-13); 
+                    assertEquals(Double.NEGATIVE_INFINITY, marg.getValue(LinkVar.TRUE), 1e-13); 
+                }
+            }
+            System.out.println(marg);
         }
     }
     

@@ -22,6 +22,7 @@ import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.prim.Primitives;
+import edu.jhu.prim.arrays.DoubleArrays;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.prim.util.math.LogAddTable;
 import edu.jhu.util.collections.Lists;
@@ -185,23 +186,20 @@ public class ProjDepTreeFactorTest {
         }
     }
     
-    // TODO: This and the next test are failing due to to an incorrect Bethe free energy computation.
-    // It seems as though some edges have weight zero.
     @Test
-    public void testResultingMarginalsProb() {
-        boolean logDomain = false;        
-        testResultMarginalsHelper(logDomain, false);        
-        testResultMarginalsHelper(logDomain, true);        
+    public void testMarginalsAndPartitionFunction() {
+        boolean logDomain;
+        logDomain = false;        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
+        logDomain = true;        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, false, false);        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, false);        
+        inferAndCheckMarginalsAndPartitionFunction(logDomain, true, true); 
     }
 
-    @Test
-    public void testResultingMarginalsLogProb() {
-        boolean logDomain = true;        
-        testResultMarginalsHelper(logDomain, false);        
-        testResultMarginalsHelper(logDomain, true);        
-    }
-
-    private void testResultMarginalsHelper(boolean logDomain, boolean normalizeMessages) {
+    private void inferAndCheckMarginalsAndPartitionFunction(boolean logDomain, boolean normalizeMessages, boolean useBetheFreeEnergy) {
         double[] root = new double[] {1, 2, 3}; 
         double[][] child = new double[][]{ {0, 4, 5}, {6, 0, 7}, {8, 9, 0} };
         
@@ -239,11 +237,16 @@ public class ProjDepTreeFactorTest {
         // Add this at the end, just to exercise the BFS schedule a bit more.
         fg.addFactor(treeFac);
                 
-        BeliefPropagationPrm prm = new BeliefPropagationPrm();
-        prm.maxIterations = 1;
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();        
         prm.logDomain = logDomain;
-        prm.schedule = BpScheduleType.TREE_LIKE;
-        prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        if (useBetheFreeEnergy) {
+            prm.maxIterations = 20;
+            prm.updateOrder = BpUpdateOrder.PARALLEL;
+        } else {
+            prm.maxIterations = 1;
+            prm.schedule = BpScheduleType.TREE_LIKE;
+            prm.updateOrder = BpUpdateOrder.SEQUENTIAL;
+        }
         prm.normalizeMessages = normalizeMessages;
         BeliefPropagation bp = new BeliefPropagation(fg, prm);
         bp.run();
@@ -292,7 +295,7 @@ public class ProjDepTreeFactorTest {
     }
 
     @Test
-    public void testPartitionWithAdditionalVariable() {
+    public void testMarginalsAndPartitionWithAdditionalVariable() {
         testPartitionWithAdditionalVariableHelper(false, false);
         testPartitionWithAdditionalVariableHelper(true, false);
         testPartitionWithAdditionalVariableHelper(true, true);
@@ -391,9 +394,8 @@ public class ProjDepTreeFactorTest {
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp, 1e-10);
     }
 
-
     @Test
-    public void testPartitionWithAllOnes() {
+    public void testPartitionWithAllOnesAndLatentRoleVar() {
         boolean logDomain = false;        
 
         double[] root = new double[] {1, 1}; 
@@ -505,7 +507,7 @@ public class ProjDepTreeFactorTest {
     
 
     @Test
-    public void testResultingMarginals2() {
+    public void testMarginalsAndPartitionWithAllOnes() {
         boolean logDomain = false;        
 
         double[] root = new double[] {1, 1}; 
@@ -591,21 +593,11 @@ public class ProjDepTreeFactorTest {
         BeliefPropagationTest.assertEqualMarginals(fg, bf, bp);
     }
 
-    // This test used to fail when the number of iterations was too low. But
-    // passes with sufficient iterations. It seems loopy BP might even
-    // oscillate.
-    //
+    // This test fails because of a known floating point precision limitation of the ProjDepTreeFactor.
     @Test
-    public void testResultingMarginals3() {
+    public void testCompareMessagesWithExplicitTreeFactor() {
+        compareMessagesWithExplicitTreeFactor(true, true, false);
         compareMessagesWithExplicitTreeFactor(true, true, true);
-        // Below, we check both the case of an explicit tree factor and the ProjDepTreeFactor class.
-        // 
-        // Check that we can correctly compute the partition in the non-loopy setting.
-        comparePartitionWithBruteForce(true, true, true, false);
-        comparePartitionWithBruteForce(true, true, false, false);
-        // Check that we can correctly compute the partition in the loopy setting.
-        comparePartitionWithBruteForce(true, true, true, true);
-        comparePartitionWithBruteForce(true, true, false, true);
     }
 
     public void compareMessagesWithExplicitTreeFactor(boolean logDomain, boolean normalizeMessages, boolean makeLoopy) {
@@ -615,12 +607,12 @@ public class ProjDepTreeFactorTest {
         prm.maxIterations = 3;
         prm.normalizeMessages = normalizeMessages;
         
-        FactorGraph fgExpl = getFactorGraphForTesting(logDomain, true, makeLoopy);
+        FactorGraph fgExpl = get2WordSentFactorGraph(logDomain, true, makeLoopy);
         BeliefPropagation bpExpl = new BeliefPropagation(fgExpl, prm);
         bpExpl.run();
         //printMessages(fgExpl, bpExpl);
         
-        FactorGraph fgDp = getFactorGraphForTesting(logDomain, false, makeLoopy);
+        FactorGraph fgDp = get2WordSentFactorGraph(logDomain, false, makeLoopy);
         BeliefPropagation bpDp = new BeliefPropagation(fgDp, prm);
         bpDp.run();
         //printMessages(fgDp, bpDp);
@@ -668,9 +660,31 @@ public class ProjDepTreeFactorTest {
         }
         System.out.println("Partition: " + bp.getPartition());
     }
+
+    // This test used to fail when the number of iterations was too low. But
+    // passes with sufficient iterations. It seems loopy BP might even
+    // oscillate.
+    //
+    @Test
+    public void testComparePartitionWithBruteForce() {
+        // Below, we check both the case of an explicit tree factor and the ProjDepTreeFactor class.
+        // 
+        // Check that we can correctly compute the partition in the non-loopy setting.
+        comparePartitionWithBruteForce(true, true, true, false, false);
+        comparePartitionWithBruteForce(true, true, false, false, false);
+        // Check that we can correctly compute the partition in the loopy setting.
+        comparePartitionWithBruteForce(true, true, true, true, false);
+        comparePartitionWithBruteForce(true, true, false, true, false);
+    }
     
-    public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy) {
-        FactorGraph fg = getFactorGraphForTesting(logDomain, useExplicitTreeFactor, makeLoopy);
+    @Test
+    public void testComparePartitionWithBruteForceInfiniteEdgeWeight() {
+        // Check the case of a negative infinity edge weight
+        comparePartitionWithBruteForce(true, true, false, false, true);
+    }
+
+    public void comparePartitionWithBruteForce(boolean logDomain, boolean normalizeMessages, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
+        FactorGraph fg = get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, negInfEdgeWeight);
         
         System.out.println(fg.getFactors());
         
@@ -735,10 +749,20 @@ public class ProjDepTreeFactorTest {
         
     }
 
-    private FactorGraph getFactorGraphForTesting(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
+    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy) {
+        return get2WordSentFactorGraph(logDomain, useExplicitTreeFactor, makeLoopy, false);
+    }
+    
+    private FactorGraph get2WordSentFactorGraph(boolean logDomain, boolean useExplicitTreeFactor, boolean makeLoopy, boolean negInfEdgeWeight) {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
+        
+        if (negInfEdgeWeight) {
+            child[0][1] = Double.NEGATIVE_INFINITY;
+            DoubleArrays.scale(root, .1);
+            DoubleArrays.scale(child, .1);
+        }
         
         // Create an edge factored dependency tree factor graph.
         //FactorGraph fg = getEdgeFactoredDepTreeFactorGraph(root, child);
