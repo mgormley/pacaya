@@ -78,7 +78,7 @@ public class UnlabeledFgExample implements FgExample, Serializable {
             }
         }
 
-        assert (fg.getNumFactors() == fgLatPred.getNumFactors());
+        assert (fg.getNumFactors() <= fgLatPred.getNumFactors());
         
         fgClampTimer.stop();
     }

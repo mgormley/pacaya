@@ -66,11 +66,13 @@ public class FactorGraphTest {
         
         FactorGraph fgClmp = fgv.fg.getClamped(clmpConfig);
                 
-        assertEquals(5, fgClmp.getNumFactors());
-        assertEquals(2, fgClmp.getNumVars());
-        assertEquals(7, fgClmp.getNumNodes());
+        // The original 5 factors, plus 4 ClampFactors.
+        assertEquals(5 + 4, fgClmp.getNumFactors());
+        // 2 unconstrained variables, plus 4 clamped variables.
+        assertEquals(2 + 4, fgClmp.getNumVars());
+        assertEquals(15, fgClmp.getNumNodes());
         // There is a pair of edges for each emission factor and a 
-        assertEquals(8, fgClmp.getNumEdges());
+        assertEquals(16, fgClmp.getNumEdges());
     }
     
     @Test

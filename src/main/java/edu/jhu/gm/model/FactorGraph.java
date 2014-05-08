@@ -9,6 +9,7 @@ import java.util.List;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.util.DirectedGraph;
+import edu.jhu.srl.SrlRunner;
 
 /**
  * Factor graph.
@@ -224,6 +225,13 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
             Factor clmpFactor = origFactor.getClamped(factorConfig);
             clmpFg.addFactor(clmpFactor);
         }
+        
+        // Add unary factors to the clamped variables to ensure they take on the correct value.
+        for (Var v : clampVars.getVars()) {
+            int c = clampVars.getState(v);
+            clmpFg.addFactor(new ClampFactor(v, c));
+        }
+        
         return clmpFg;
     }
     

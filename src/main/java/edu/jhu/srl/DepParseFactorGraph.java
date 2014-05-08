@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
+import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.ExplicitFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.ProjDepTreeFactor;
@@ -146,13 +147,8 @@ public class DepParseFactorGraph implements Serializable {
                     LinkVar ijVar = getLinkVar(i, j);
                     if (ijVar != null) {
                         if (depEdgeMask.isPruned(i, j)) {
-                            ExplicitFactor f = new ExplicitFactor(new VarSet(ijVar));
                             // This edge will never be "on".
-                            f.setValue(LinkVar.FALSE, 0.0);
-                            f.setValue(LinkVar.TRUE, Double.NEGATIVE_INFINITY);
-                            fg.addFactor(f);
-                            // TODO: Check if this is the logDomain!!!
-                            assert SrlRunner.logDomain == true;
+                            fg.addFactor(new ClampFactor(ijVar, LinkVar.FALSE));
                         } else {
                             // Add unary factors on root / child Links
                             if (prm.unaryFactors) {

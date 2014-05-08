@@ -67,7 +67,7 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
         VarConfig predConfig = goldConfig.getIntersection(predictedVars);
         fgLat = fgLatPred.getClamped(predConfig);
 
-        assert (fg.getNumFactors() == fgLat.getNumFactors());
+        assert (fg.getNumFactors() <= fgLat.getNumFactors());
         
         fgClampTimer.stop();
     }

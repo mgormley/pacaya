@@ -27,6 +27,7 @@ public class DepParseDecoderTest {
     
     @Test
     public void testGetParents() {
+        boolean logDomain = true;
         int n = 3;
         List<DenseFactor> margs = new ArrayList<DenseFactor>();
         List<Var> vars = new ArrayList<Var>();
@@ -48,13 +49,14 @@ public class DepParseDecoderTest {
             }
         }
         
-        int[] parents = DepParseDecoder.getParents(margs, vars, n);
+        int[] parents = DepParseDecoder.getParents(margs, vars, n, logDomain);
         System.out.println(Arrays.toString(parents));
         Assert.assertArrayEquals(new int[]{1, -1, 1}, parents);
     }
     
     @Test
     public void testGetDepEdgeMask() {
+        boolean logDomain = true;
         int n = 3;
         List<DenseFactor> margs = new ArrayList<DenseFactor>();
         List<Var> vars = new ArrayList<Var>();
@@ -77,7 +79,7 @@ public class DepParseDecoderTest {
         }
 
         double propMaxMarg = 0.1;
-        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
+        DepEdgeMask mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, logDomain);
         System.out.println(mask);
         assertEquals(n*n, mask.getCount());
         for (int p=-1; p<n; p++) {
@@ -89,7 +91,7 @@ public class DepParseDecoderTest {
         }
         
         propMaxMarg = 0.5;
-        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg);
+        mask = DepParseDecoder.getDepEdgeMask(margs, vars, n, propMaxMarg, logDomain);
         System.out.println(mask);
         assertEquals(3, mask.getCount());
         for (int p=-1; p<n; p++) {

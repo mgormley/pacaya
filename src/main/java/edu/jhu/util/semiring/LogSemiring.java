@@ -57,8 +57,7 @@ public class LogSemiring implements SemiringExt {
     
     @Override
     public double divide(double x, double y) {
-        // return x - y;
-        throw new UnsupportedOperationException();
+        return x - y;
     }
     
     @Override

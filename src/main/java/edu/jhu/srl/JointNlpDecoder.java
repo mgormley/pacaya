@@ -38,6 +38,7 @@ public class JointNlpDecoder {
      * @param ex The example to decode.
      */
     public void decode(FgModel model, UFgExample ex) {
+        boolean logDomain = prm.mbrPrm.infFactory.isLogDomain();
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
         JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();
@@ -47,7 +48,7 @@ public class JointNlpDecoder {
         // Get the SRL graph.
         srlGraph = SrlDecoder.getSrlGraphFromVarConfig(mbrVarConfig, n);
         // Get the dependency tree.
-        parents = DepParseDecoder.getParents(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n);
+        parents = DepParseDecoder.getParents(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, logDomain);
         if (parents != null) {
             // Update predictions with parse.
             for (int p=-1; p<n; p++) {
@@ -59,7 +60,7 @@ public class JointNlpDecoder {
                 }
             }
         }
-        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp);
+        depEdgeMask = DepParseDecoder.getDepEdgeMask(mbrDecoder.getVarMarginals(), ex.getFgLatPred().getVars(), n, prm.pruneMargProp, logDomain);
     }
 
     public int[] getParents() {

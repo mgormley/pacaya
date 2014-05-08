@@ -61,7 +61,8 @@ public class FgExampleTest {
         
         // Global factor should still be there.
         assertEquals(1 + 3 + 3*2 + 2 + 2, ex.getFgLatPred().getFactors().size());
-        assertEquals(1 + 3 + 3*2 + 2 + 2, ex.getFgLat().getFactors().size());
+        // Includes an extra 2 ClampFactors
+        assertEquals(1 + 3 + 3*2 + 2 + 2 + 2, ex.getFgLat().getFactors().size());
 
         assertEquals(0, getEmpty(ex.getFgLatPred().getFactors()).size());
         // Just the two Role unary factors. The link/role binary factors shouldn't be empty.

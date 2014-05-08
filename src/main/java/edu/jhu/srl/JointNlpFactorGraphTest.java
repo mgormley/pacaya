@@ -20,6 +20,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.inf.BeliefPropagation;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
+import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Factor;
 import edu.jhu.gm.model.FactorGraph.FgNode;
@@ -292,6 +293,13 @@ public class JointNlpFactorGraphTest {
         System.out.println(sfg.getFactors());
         // This pruned version is a tree.
         assertTrue(sfg.isUndirectedTree(sfg.getFactorNode(0)));
+        
+        // Init the ClampFactors.
+        for (Factor f : sfg.getFactors()) {
+            if (f instanceof ClampFactor) {
+                f.updateFromModel(null, true);
+            }
+        }
         
         BeliefPropagationPrm bpPrm = new BeliefPropagationPrm();
         BeliefPropagation bp = new BeliefPropagation(sfg, bpPrm);

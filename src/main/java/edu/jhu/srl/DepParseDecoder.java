@@ -15,15 +15,18 @@ import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.SemiringExt;
 
 public class DepParseDecoder {
 
     private static final Logger log = Logger.getLogger(DepParseDecoder.class);
 
-    public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n) {        
+    public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n, boolean logDomain) {        
         // Build up the beliefs about the link variables (if present),
         // and compute the MBR dependency parse.
-        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, true);
+        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, true, logDomain);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
         
@@ -37,7 +40,8 @@ public class DepParseDecoder {
         }
     }
 
-    private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds) {
+    private static Pair<EdgeScores, Integer> getEdgeScores(List<DenseFactor> margs, List<Var> vars, int n, boolean logOdds, boolean logDomain) {
+        SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
         int linkVarCount = 0;
         EdgeScores scores = new EdgeScores(n, Double.NEGATIVE_INFINITY);
         for (int varId = 0; varId < vars.size(); varId++) {
@@ -47,16 +51,15 @@ public class DepParseDecoder {
                 LinkVar link = ((LinkVar)var);
                 int c = link.getChild();
                 int p = link.getParent();
-                // TODO: Check if this is the logDomain!!!
-                assert SrlRunner.logDomain == true;
-                double logBelief = marg.getValue(LinkVar.TRUE);
+
+                double belief = marg.getValue(LinkVar.TRUE);
                 if (logOdds) {
-                    logBelief = marg.getValue(LinkVar.TRUE) - marg.getValue(LinkVar.FALSE);
+                    belief = s.divide(marg.getValue(LinkVar.TRUE), marg.getValue(LinkVar.FALSE));
                 }
                 if (p == -1) {
-                    scores.root[c] = logBelief;
+                    scores.root[c] = belief;
                 } else {
-                    scores.child[p][c] = logBelief;
+                    scores.child[p][c] = belief;
                 }
                 linkVarCount++;
             }
@@ -64,8 +67,8 @@ public class DepParseDecoder {
         return new Pair<EdgeScores, Integer>(scores, linkVarCount);
     }
 
-    public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg) {
-        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false);
+    public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg, boolean logDomain) {
+        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
         if (linkVarCount > 0) {
