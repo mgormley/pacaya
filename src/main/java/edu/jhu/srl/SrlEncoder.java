@@ -50,7 +50,7 @@ public class SrlEncoder {
         for (int i=0; i<sent.size(); i++) {
             SenseVar senseVar = sfg.getSenseVar(i);
             if (senseVar != null) {
-                if (predictSense && predictPredPos) {
+                if (predictSense) {
                     if (predictPredPos && !sent.isKnownPred(i)) {
                         vc.put(senseVar, "_");
                     } else {
@@ -66,12 +66,18 @@ public class SrlEncoder {
                             }
                         }
                     }
-                } else {
+                } else if (predictPredPos) {
                     if (sent.isKnownPred(i)) {
+                        // We use CorpusStatistics.UNKNOWN_SENSE to indicate that
+                        // there exists a predicate at this position.
                         vc.put(senseVar, CorpusStatistics.UNKNOWN_SENSE);
                     } else {
+                        // The "_" indicates that there is no predicate at this
+                        // position.
                         vc.put(senseVar, "_");
                     }
+                } else {
+                    throw new IllegalStateException("Neither predictSense nor predictPredPos is set. So there shouldn't be any SenseVars.");
                 }
             }
         }

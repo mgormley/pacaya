@@ -16,11 +16,12 @@ import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.srl.SrlRunner;
 import edu.jhu.util.Timer;
 
-public class ZhaoFeatureExtractorSpeedTest {
+public class FeatureExtractorSpeedTest {
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
     
-    @Test
+    // TODO: Switch this to use feature templates.
+    //@Test
     public void testZhaoFeatureBuilding() throws ParseException, IOException {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;

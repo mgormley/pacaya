@@ -189,7 +189,7 @@ public class CrfTrainerTest {
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{3.58, -0.75, -2.16, -2.17, -3.58, 0.75, 2.16, 2.17, -2.17, -2.17, 3.59, 0.75}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{-0.10, -0.10, 0.10, 0.10, -3.15, -3.15, -3.29, -3.29, 5.30, 5.30, 1.14, 1.14}, FgModelTest.getParams(model), 1e-2);
         
         // OLD WAY:
         //        assertEquals(4.79, getParam(model, "emit", "N:man"), 1e-2);
@@ -232,7 +232,7 @@ public class CrfTrainerTest {
         System.out.println(fts);
         System.out.println(DoubleArrays.toString(FgModelTest.getParams(model), "%.2f"));
         //FeatureTemplateList [isGrowing=true, fts=[FeatureTemplate [key=emit, numConfigs=2, alphabet=Alphabet [idxObjMap=[man, BIAS_FEATURE, jump, fence], isGrowing=true]], FeatureTemplate [key=latent-emit, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]], FeatureTemplate [key=tran, numConfigs=4, alphabet=Alphabet [idxObjMap=[BIAS_FEATURE], isGrowing=true]]]]
-        JUnitUtils.assertArrayEquals(new double[]{0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.31, 0.31, -0.31, -0.31, -6.42, -6.52, 10.24, 2.69}, FgModelTest.getParams(model), 1e-2);
+        JUnitUtils.assertArrayEquals(new double[]{-0.00, -0.00, -0.00, -0.00, 0.01, 0.01, 0.01, 0.01, -0.01, -0.01, -0.01, -0.01, -3.08, -3.08, -3.33, -3.33, 5.25, 5.25, 1.16, 1.16}, FgModelTest.getParams(model), 1e-2);
           
         // OLD PARAMS:
         //[C1:man, C2:man, C1:jump, C2:jump, C1:fence, C2:fence, C1:N, C2:N, C1:V, C2:V, N:N, N:V, V:V]
