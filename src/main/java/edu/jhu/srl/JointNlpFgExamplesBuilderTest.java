@@ -253,6 +253,7 @@ public class JointNlpFgExamplesBuilderTest {
         prm.fePrm.srlFePrm.fePrm.biasOnly = true;
         prm.fgPrm.srlPrm.roleStructure = RoleStructure.PREDS_GIVEN;
         prm.fgPrm.srlPrm.predictSense = true;
+        prm.fgPrm.srlPrm.predictPredPos = false;
 
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
