@@ -757,11 +757,11 @@ public class ProjDepTreeFactorTest {
         // These are the log values, not the exp.
         double[] root = new double[] {8.571183, 89.720164}; 
         double[][] child = new double[][]{ {0, 145.842585}, {23.451215, 0} };
-        
+
+        DoubleArrays.scale(root, .1);
+        DoubleArrays.scale(child, .1);
         if (negInfEdgeWeight) {
             child[0][1] = Double.NEGATIVE_INFINITY;
-            DoubleArrays.scale(root, .1);
-            DoubleArrays.scale(child, .1);
         }
         
         // Create an edge factored dependency tree factor graph.

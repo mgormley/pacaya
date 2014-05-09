@@ -33,6 +33,8 @@ public class CnfGrammar {
     
     private Alphabet<String> lexAlphabet;
     private Alphabet<String> ntAlphabet;
+
+    private LoopOrder loopOrder;
     
     @SuppressWarnings("unchecked")
     public CnfGrammar(ArrayList<Rule> allRules, int rootSymbol, Alphabet<String> lexAlphabet, Alphabet<String> ntAlphabet, LoopOrder loopOrder) {
@@ -40,6 +42,8 @@ public class CnfGrammar {
         this.lexAlphabet = lexAlphabet;
         this.ntAlphabet = ntAlphabet;
         this.allRules = allRules;
+        this.loopOrder = loopOrder;
+        
         lexRulesForChild = new ArrayList[lexAlphabet.size()];
         unaryRulesForChild = new ArrayList[ntAlphabet.size()];
         unaryRulesForParent = new ArrayList[ntAlphabet.size()];
@@ -192,6 +196,10 @@ public class CnfGrammar {
             return true;
         }
         return false;
+    }
+    
+    public LoopOrder getLoopOrder() {
+        return loopOrder;
     }
     
 }

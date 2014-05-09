@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -79,7 +80,11 @@ public class CnfGrammarReader {
     }
 
     public void loadFromInputStream(InputStream inputStream) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+        loadFromReader(new InputStreamReader(inputStream));
+    }
+
+    public void loadFromReader(Reader rr) throws IOException {
+        BufferedReader reader = new BufferedReader(rr);
         String line;
         GrReaderState state = GrReaderState.RootSymbol;
         
