@@ -31,6 +31,8 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
     private FactorGraph fgLat;
     /** The variable assignments given in the gold data for all the variables in the factor graph. */
     private VarConfig goldConfig;
+    /** The weight of this example for use in training. */
+    private double weight = 1.0;
     
     // TODO: Figure out how to remove these "initializing" constructors.
     // TODO: Maybe convert to factory methods.
@@ -115,5 +117,13 @@ public class LabeledFgExample extends UnlabeledFgExample implements FgExample, S
         VarSet vars = VarSet.getVarsOfType(fg.getFactor(factorId).getVars(), VarType.PREDICTED);
         return goldConfig.getConfigIndexOfSubset(vars);
     }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
     
+    @Override
+    public double getWeight() { 
+        return weight;
+    }
 }

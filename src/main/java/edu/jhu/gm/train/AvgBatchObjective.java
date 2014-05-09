@@ -98,7 +98,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
             this.gradient.zero();
             grad = this.gradient;
         }
-        final MutableValueGradient vg = new MutableValueGradient(ll, grad);
+        final MutableValueGradient vg = new MutableValueGradient(ll, grad, new MutableDouble(0.0));
         
         model.setParams(params);        
         if (numThreads == 1) {
@@ -118,16 +118,18 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         
         if (addValue) {
-            ll.setValue(ll.doubleValue() / batch.length);
+            ll.setValue(ll.doubleValue() / vg.getWeight());
             if (isFullDataset) {
                 // Print out the likelihood if we're computing it on the entire dataset.
                 log.info("Average objective for full dataset: " + ll);
             }
         }
         if (addGradient) {
-            grad.scale(1.0 / batch.length);    
+            grad.scale(1.0 / vg.getWeight());    
         }
 
+        log.debug("vg.weight = " + vg.getWeight());
+        
         return new ValueGradient(addValue ? ll.doubleValue() : Double.NaN, 
                                  addGradient ? grad.getParams() : null);
     }
@@ -144,7 +146,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
 
         @Override
         public Object call() {
-            MutableValueGradient sparseVg = new MutableValueGradient(null, null);
+            MutableValueGradient sparseVg = new MutableValueGradient(null, null, new MutableDouble(0.0));
             synchronized (vg) {
                 if (vg.hasValue()) {
                     log.trace("Computing value for example " + i);
@@ -166,6 +168,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
                 if (vg.hasGradient()) {
                     vg.addGradient(sparseVg.getGradient());
                 }
+                vg.addWeight(sparseVg.getWeight());
             }
             return null;
         }

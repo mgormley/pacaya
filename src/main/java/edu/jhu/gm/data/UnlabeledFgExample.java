@@ -159,5 +159,7 @@ public class UnlabeledFgExample implements FgExample, Serializable {
     public VarConfig getGoldConfigPred(int factorId) { throw new RuntimeException(DO_NOT_CALL); }
     @Override
     public int getGoldConfigIdxPred(int factorId) { throw new RuntimeException(DO_NOT_CALL); }
+    @Override
+    public double getWeight() { throw new RuntimeException(DO_NOT_CALL); }
 
 }
