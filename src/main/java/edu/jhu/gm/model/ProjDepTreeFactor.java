@@ -373,7 +373,6 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         
         if (normalizeMessages) {
             outMsg.logNormalize();
-            boundToSafeValues(outMsg.getValues());
         }
         
         if (log.isTraceEnabled()) {
@@ -388,14 +387,6 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
         
         //assert !Double.isInfinite(outMsg.getValue(0)) && !Double.isInfinite(outMsg.getValue(1));
         assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
-    }
-
-    private void boundToSafeValues(double[] values) {
-        for (int i=0; i<values.length; i++) {
-            if (values[i] == Double.NEGATIVE_INFINITY) {
-                values[i] = -300;
-            }
-        }
     }
 
     @Override
