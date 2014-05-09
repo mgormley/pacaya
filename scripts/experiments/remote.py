@@ -10,14 +10,10 @@ import tempfile
 import stat
 import subprocess
 from optparse import OptionParser
-from experiments.run_srl import SrlExpParams
 from glob import glob
 from experiments.core.util import get_all_following, get_following, get_time, get_following_literal,\
     to_str, to_int, get_group1, head, get_match
-from experiments.core.scrape import Scraper
-from experiments.core.util import tail
 import shlex
-from experiments.core import scrape
 
 from fabric.state import env
 from fabric.api import local, settings, abort, run, cd, lcd

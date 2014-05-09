@@ -977,24 +977,30 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # We only include grammar induction run on brown clusters.
             exps = []
             g.defaults += g.feat_tpl_coarse1
-            g.defaults.set_incl_name('removeAts', True)
             g.defaults.update(predictSense=True)
-            for removeBrown in [True, False]:
+            feats_list = [ g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True),
+                      g.feat_tpl_bjork + SrlExpParams(featureSelection=True),
+                      g.feat_tpl_zhao + SrlExpParams(featureSelection=False),
+                      "bjork_ls"
+                      ]
+            for feats in feats_list:
                 for lang_short in p.c09_lang_short_names:
                     gl = g.langs[lang_short]
                     ll = l.langs[lang_short]
+                    if feats == "bjork_ls": 
+                        feats_ls = gl.feat_tpl_bjork_ls + SrlExpParams(featureSelection=False)
+                    else:
+                        feats_ls = feats
                     parser_srl_list = combine_pairs([gl.pos_gold, gl.pos_sup, gl.brown_semi, gl.brown_unsup], [g.model_pg_obs_tree]) + \
                                        combine_pairs([gl.pos_sup], [g.model_pg_lat_tree])
                     for parser_srl in parser_srl_list:
-                        exp = g.defaults + parser_srl
-                        if removeBrown:
-                            if exp.get("removeAts"):
-                                exp += SrlExpParams(removeAts=",".join([exp.get("removeAts"), "BROWN"]))
-                            else:
-                                exp += SrlExpParams(removeAts="BROWN")
+                        exp = g.defaults + feats_ls + parser_srl 
+                        if lang_short == "en":
+                            exp.update(allowPredArgSelfLoops=True)
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                        exps.append(exp)
-            #exps = [x for x in exps if x.get("linkVarType") == "LATENT"]
+                        exps.append(exp)                        
+            # Filter to just English
+            exps = [x for x in exps if x.get("language") == "en" and x.get("feature_set").find("zhao") == -1]
             return self._get_pipeline_from_exps(exps)
 
         elif self.expname == "srl-conll09-bjork":    
@@ -1051,7 +1057,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     if exp.get("language") == "cs":
                         exp.update(sgdNumPasses=2)
                         if exp.get("tagger_parser") == "pos-sup":
-                            exp.update(work_mem_megs=60*1000, trainMaxSentenceLength=80)
+                            exp.update(work_mem_megs=60*1000)
                     exps.append(exp)
             # Filter to just Czech
             exps = [x for x in exps if x.get("language") == "cs"]
@@ -1082,7 +1088,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
             removeAtsList = ["DEP_TREE,DEPREL", "MORPHO", "POS", "LEMMA", "SRL_PRED_IDX"]
-            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
+            for lang_short in ['ca', 'de', 'es']: #p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 # Add observed trees experiment.
@@ -1111,7 +1117,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             g.defaults += g.feat_tpl_coarse1 + SrlExpParams(featureSelection=True)
             g.defaults.update(predictSense=False)
             g.defaults.set_incl_name('removeAts', True)
-            for lang_short in ['ca', 'de', 'es']: #p.lang_short_names:
+            for lang_short in ['ca', 'de', 'es']: #p.c09_lang_short_names:
                 gl = g.langs[lang_short]
                 ll = l.langs[lang_short]
                 #parser_srl = gl.pos_sup + g.model_pg_lat_tree + SrlExpParams(removeAts="DEP_TREE,DEPREL,MORPHO,POS,LEMMA")
