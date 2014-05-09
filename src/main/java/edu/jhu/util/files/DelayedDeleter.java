@@ -20,18 +20,7 @@ public class DelayedDeleter implements Serializable {
         queue.addLast(file);
         if (queue.size() > numItemsToDelay) {
             File head = queue.remove();
-            delete(head);
-        }
-    }
-
-    private void delete(File file) {
-        if (file.isDirectory()) {
-            for (File c : file.listFiles()) {
-                delete(c);
-            }
-        }
-        if (!file.delete()) {
-            System.err.println("WARN: unable to delete file: " + file.getPath());
+            Files.deleteRecursively(head);
         }
     }
 

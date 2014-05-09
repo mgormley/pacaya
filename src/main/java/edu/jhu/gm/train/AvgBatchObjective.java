@@ -127,8 +127,6 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         if (addGradient) {
             grad.scale(1.0 / vg.getWeight());    
         }
-
-        log.debug("vg.weight = " + vg.getWeight());
         
         return new ValueGradient(addValue ? ll.doubleValue() : Double.NaN, 
                                  addGradient ? grad.getParams() : null);
