@@ -1,0 +1,264 @@
+#!/usr/bin/python
+
+import sys
+import os
+import getopt
+import math
+import tempfile
+import stat
+import shlex
+import subprocess
+from subprocess import Popen
+from optparse import OptionParser
+from experiments.core.util import get_new_file, sweep_mult, fancify_cmd, frange
+from experiments.core.util import head_sentences
+import platform
+from glob import glob
+from experiments.core.experiment_runner import ExpParamsRunner, get_subset
+from experiments.core import experiment_runner
+from experiments.core import pipeline
+import re
+import random
+from experiments.core.pipeline import write_script, RootStage, Stage
+import multiprocessing
+from experiments.exp_util import *
+from experiments.path_defs import *
+from experiments.param_defs import *
+from experiments.srl_stages import ScrapeSrl, SrlExpParams
+
+# ---------------------------- Experiments Creator Class ----------------------------------
+
+class SrlExpParamsRunner(ExpParamsRunner):
+    
+    # Class variables
+    known_exps = (  "dp-conllx",
+                    "dp-conllx-tmp",
+                    "dp-conllx-tune",
+                    )
+    
+    def __init__(self, options):
+        if options.expname not in SrlExpParamsRunner.known_exps:
+            sys.stderr.write("Unknown experiment setting.\n")
+            parser.print_help()
+            sys.exit()
+        #if options.fast: name = 
+        name = options.expname if not options.fast else "fast_" + options.expname 
+        ExpParamsRunner.__init__(self, name, options.queue, print_to_console=True, dry_run=options.dry_run)
+        self.root_dir = os.path.abspath(get_root_dir())
+        self.fast = options.fast
+        self.expname = options.expname
+        self.hprof = options.hprof   
+        self.eval = options.eval
+        self.big_machine = (multiprocessing.cpu_count() > 2)
+        self.prm_defs = ParamDefinitions(options) 
+
+    def get_experiments(self):
+        g, l, p = self.prm_defs.get_param_groups_and_lists_and_paths()
+        
+        if self.expname == "dp-conllx":
+            # CoNLL-X experiments.
+            exps = []
+            g.defaults += g.feat_mcdonald
+            g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
+                              sgdAutoSelecFreq=2, sgdAutoSelectLr=False)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
+                                       removeAts="DEPREL", tagger_parser="1st", pruneEdges=False)
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+                                                      bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
+                                                      normalizeMessages=True)
+            second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
+            second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
+            parsers = [second_order, second_grand, second_sib, first_order]
+            parsers += [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            l2var_map = {"bg" : 10000, "es" : 1000}
+            models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
+                                               os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
+            p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
+            for lang_short in ["bg", "es"]:
+                for parser in parsers:
+                    pl = p.langs[lang_short]
+                    data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                        trainMaxSentenceLength=80,
+                                        test=pl.cx_test, testType="CONLL_X", 
+                                        language=lang_short, trainUseCoNLLXPhead=True,
+                                        l2variance=l2var_map[lang_short])
+                    if lang_short == "en":
+                        data = data + SrlExpParams(dev=pl.cx_dev)
+                    else:
+                        data = data + SrlExpParams(propTrainAsDev=0) #TODO: set to zero for final experiments.
+                    pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
+                    parser += SrlExpParams(pruneModel=pruneModel)
+                    exp = g.defaults + data + parser
+                    exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                    exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        elif self.expname == "dp-conllx-tune":
+            # CoNLL-X experiments.
+            exps = []
+            g.defaults += g.feat_mcdonald
+            g.defaults.update(seed=123456789) # NOTE THE FIXED SEED
+            g.defaults.update(includeSrl=False, featureSelection=False, 
+                              useGoldSyntax=True, sgdNumPasses=5, adaGradEta=0.01, featureHashMod=10000000)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", tagger_parser="1st")
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+                                                      bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
+                                                      normalizeMessages=True)
+            second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
+            second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
+            # Note: "ar" and "ja" have the PHEAD column, but it includes multiple roots per sentence.
+            p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
+            for lang_short in ["es", "bg"]:
+                for parser in [second_order, first_order]:
+                    for adaGradEta in [ 0.05, 0.01, 0.1, 0.001, 1.0]:
+                        for l2variance in [10000, 1000, 100000, 100,]:
+                            for sgdNumPasses in [3, 5]:
+                                hyper = SrlExpParams(sgdNumPasses=sgdNumPasses, adaGradEta=adaGradEta, 
+                                                     l2variance=l2variance)
+                                pl = p.langs[lang_short]      
+                                data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
+                                                    test=pl.cx_test, testType="CONLL_X", 
+                                                    language=lang_short, trainUseCoNLLXPhead=True)
+                                if lang_short == "en":
+                                    data = data + SrlExpParams(dev=pl.cx_dev)
+                                else:
+                                    data = data + SrlExpParams(propTrainAsDev=0.10)
+                                exp = g.defaults + data + parser + hyper
+                                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        if self.expname == "dp-conllx-tmp":
+            # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
+            exps = []
+            g.defaults += g.feat_mcdonald #tpl_narad 
+            g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
+                              adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=2, l2variance=10000, sgdAutoSelectLr=False)
+            if not self.big_machine:
+                g.defaults.update(maxEntriesInMemory=1, sgdBatchSize=2)
+            first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", removeAts="DEPREL", 
+                                       tagger_parser="1st", pruneEdges=False)
+            second_order = first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
+                                                      #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
+                                                      bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
+                                                      normalizeMessages=True)
+            second_grand = second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
+            second_sib = second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
+            parsers = [second_sib, first_order, second_order, second_grand]
+            # PRUNING ONLY
+            parsers = [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in parsers]
+            # Note: "ar" has a PHEAD column, but it includes multiple roots per sentence.
+            l2var_map = {"bg" : 10000, "es" : 1000}
+            models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
+                                               os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
+            p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
+            for trainMaxNumSentences in [100, 500, 1000, 2000, 9999999]:
+                for lang_short in ["bg"]: #, "es"]:
+                    for parser in parsers:
+                        pl = p.langs[lang_short]
+                        data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X", testType="CONLL_X", 
+                                            trainMaxSentenceLength=80,
+                                            #test=pl.cx_test, 
+                                            trainMaxNumSentences=trainMaxNumSentences,
+                                            language=lang_short, trainUseCoNLLXPhead=True,
+                                            l2variance=l2var_map[lang_short])
+                        if lang_short == "en":
+                            data = data + SrlExpParams(dev=pl.cx_dev)
+                        else:
+                            data = data + SrlExpParams(propTrainAsDev=0.10) #TODO: set to zero for final experiments.
+                        pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
+                        parser += SrlExpParams(pruneModel=pruneModel)
+                        exp = g.defaults + data + parser
+                        exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                        exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
+        else:
+            raise Exception("Unknown expname: " + str(self.expname))
+    
+    def _get_pipeline_from_exps(self, exps):
+        if self.fast and len(exps) > 4: exps = exps[:4]
+        root = RootStage()            
+        root.add_dependents(exps)    
+        scrape = ScrapeSrl(csv_file="results.csv", tsv_file="results.data")
+        scrape.add_prereqs(root.dependents)
+        return root
+    
+    def update_stages_for_qsub(self, root_stage):
+        ''' Makes sure that the stage object specifies reasonable values for the 
+            qsub parameters given its experimental parameters.
+        '''
+        for stage in self.get_stages_as_list(root_stage):
+            # First make sure that the "fast" setting is actually fast.
+            if isinstance(stage, SrlExpParams) and self.fast:
+                self.make_stage_fast(stage)
+                # Uncomment next line for multiple threads on a fast run: 
+                # stage.update(threads=2)
+            if isinstance(stage, SrlExpParams) and not self.big_machine:
+                stage.update(work_mem_megs=1100, threads=1) 
+            if isinstance(stage, experiment_runner.ExpParams):
+                # Update the thread count
+                threads = stage.get("threads")
+                if threads != None: 
+                    # Add an extra thread just as a precaution.
+                    stage.threads = threads + 1
+                work_mem_megs = stage.get("work_mem_megs")
+                if work_mem_megs != None:
+                    stage.work_mem_megs = work_mem_megs
+                # Update the runtime
+                timeoutSeconds = stage.get("timeoutSeconds")
+                if timeoutSeconds != None:
+                    stage.minutes = (timeoutSeconds / 60.0)
+                    # Add some extra time in case some other part of the experiment
+                    # (e.g. evaluation) takes excessively long.
+                    stage.minutes = (stage.minutes * 2.0) + 10
+            if self.hprof:
+                if isinstance(stage, experiment_runner.JavaExpParams):
+                    stage.hprof = self.hprof
+            # Put the output of a fast run in a directory with "fast_"
+            # prepended.
+            # TODO: This doesn't work quite right...find a better solution.
+            #if self.fast:
+            #    self.expname = "fast_" + self.expname
+        return root_stage
+    
+    def make_stage_fast(self, stage):       
+        ''' Makes the stage run in a very short period of time (under 5 seconds).
+        ''' 
+        stage.update(maxLbfgsIterations=3,
+                     trainMaxSentenceLength=7,
+                     trainMaxNumSentences=3,
+                     devMaxSentenceLength=11,
+                     devMaxNumSentences=3,
+                     testMaxSentenceLength=7,
+                     testMaxNumSentences=3,
+                     work_mem_megs=2000,
+                     timeoutSeconds=20)
+
+if __name__ == "__main__":
+    usage = "%prog "
+
+    parser = OptionParser(usage=usage)
+    parser.add_option('-q', '--queue', help="Which SGE queue to use")
+    parser.add_option('-f', '--fast', action="store_true", help="Run a fast version")
+    parser.add_option('-e', '--expname',  help="Experiment name. [" + ", ".join(SrlExpParamsRunner.known_exps) + "]")
+    parser.add_option('--hprof',  help="What type of profiling to use [cpu, heap]")
+    parser.add_option('-n', '--dry_run',  action="store_true", help="Whether to just do a dry run.")
+    parser.add_option('-v', '--eval', help="Experiment directory to use as input for eval")
+    parser.add_option('-r', '--remote',  action="store_true", help="Whether to run remotely.")
+    (options, args) = parser.parse_args(sys.argv)
+    # TODO: Above, we still want to list the experiment names in the usage printout, but we should
+    # somehow pull them from SrlExpParamsRunner so that they are less likely to get stale.
+
+    if len(args) != 1:
+        parser.print_help()
+        sys.exit(1)
+    
+    runner = SrlExpParamsRunner(options)
+    root_stage = runner.get_experiments()
+    root_stage = runner.update_stages_for_qsub(root_stage)
+    runner.run_pipeline(root_stage)
+
+
