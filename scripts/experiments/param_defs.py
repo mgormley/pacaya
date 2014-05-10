@@ -55,7 +55,7 @@ class ParamDefinitions():
         p = self.path_defs.get_paths()
         g.langs = {} # Language-specific parameter groups. (always reference as "gl")
         l.langs = {} # Language-specific parameter lists.  (always reference as "ll")
-        for lang_short in p.c09_lang_short_names:            
+        for lang_short in p.c09_lang_short_names + p.cx_lang_short_names:            
             g.langs[lang_short] = ParamGroups()
             l.langs[lang_short] = ParamGroups()
         
@@ -179,6 +179,9 @@ class ParamDefinitions():
         g.feat_mcdonald          = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
                                                                 "/edu/jhu/featurize/mcdonald-dep-feats.txt",
                                                                 False, 'tpl_mcdonald')
+        g.feat_mcdonald_basic    = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
+                                                                "/edu/jhu/featurize/mcdonald-basic-dep-feats.txt",
+                                                                False, 'tpl_mcdonald_basic')
         g.feat_koo_basic         = self._get_named_template_set("/edu/jhu/featurize/bjorkelund-sense-feats.txt",
                                                                 "/edu/jhu/featurize/koo-basic-dep-feats.txt",
                                                                 False, 'tpl_koo_basic')

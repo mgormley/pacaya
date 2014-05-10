@@ -34,6 +34,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
     known_exps = (  "dp-conllx",
                     "dp-conllx-tmp",
                     "dp-conllx-tune",
+                    "dp-pruning",
                     )
     
     def __init__(self, options):
@@ -68,10 +69,9 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                                   normalizeMessages=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
-        g.parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
-        # Parsers with pruning
-        g.parsers += [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.parsers]
-        
+        g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
+        g.pruned_parsers = [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
+        g.parsers = g.unpruned_parsers + g.pruned_parsers
         
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
@@ -102,14 +102,29 @@ class SrlExpParamsRunner(ExpParamsRunner):
                 pl = p.langs[lang_short]
                 for parser in g.parsers:
                     data = gl.cx_data
-                    data = SrlExpParams(l2variance=l2var_map[lang_short],
-                                        pruneModel=gl.pruneModel)
-                    data = data + SrlExpParams(propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                    data.update(l2variance=l2var_map[lang_short],
+                                pruneModel=gl.pruneModel,
+                                propTrainAsDev=0) # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)
             return self._get_pipeline_from_exps(exps)
-                
+           
+        elif self.expname == "dp-pruning":            
+            # Trains the pruning models for the CoNLL-X languages.
+            exps = []
+            g.defaults += g.feat_mcdonald_basic
+            for lang_short in ["bg", "es"]:
+                gl = g.langs[lang_short]
+                pl = p.langs[lang_short]
+                data = gl.cx_data
+                data.update(l2variance=l2var_map[lang_short],
+                            propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                exp = g.defaults + data + g.first_order
+                exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
+                exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+        
         elif self.expname == "dp-conllx-tune":
             # CoNLL-X experiments.
             exps = []
@@ -141,8 +156,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     pl = p.langs[lang_short]
                     for parser in g.parsers:
                         data = gl.cx_data
-                        data = SrlExpParams(l2variance=l2var_map[lang_short],
-                                            pruneModel=gl.pruneModel)
+                        data.update(l2variance=l2var_map[lang_short],
+                                    pruneModel=gl.pruneModel)
                         data.remove("test")
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
@@ -191,11 +206,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if self.hprof:
                 if isinstance(stage, experiment_runner.JavaExpParams):
                     stage.hprof = self.hprof
-            # Put the output of a fast run in a directory with "fast_"
-            # prepended.
-            # TODO: This doesn't work quite right...find a better solution.
-            #if self.fast:
-            #    self.expname = "fast_" + self.expname
         return root_stage
     
     def make_stage_fast(self, stage):       
