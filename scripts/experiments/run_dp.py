@@ -54,6 +54,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         self.prm_defs = ParamDefinitions(options) 
 
     def get_experiments(self):
+        # ------------------------ PARAMETERS --------------------------
+        
         g, l, p = self.prm_defs.get_param_groups_and_lists_and_paths()
         
         g.defaults += g.feat_mcdonald
@@ -77,7 +79,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                            os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
         
         # Language specific parameters
-        p.cx_langs_with_phead = ["bg", "en", "de", "es"]             
+        p.cx_langs_with_phead = ["bg", "en", "de", "es"]
         l2var_map = {"bg" : 10000, "es" : 1000}
 
         for lang_short in p.cx_lang_short_names:
@@ -85,14 +87,15 @@ class SrlExpParamsRunner(ExpParamsRunner):
             pl = p.langs[lang_short]
             gl.pruneModel = os.path.join(models_dir, "1st_"+lang_short, "model.binary.gz")
             gl.cx_data = SrlExpParams(train=pl.cx_train, trainType="CONLL_X", devType="CONLL_X",
-                                        trainMaxSentenceLength=80,
-                                        test=pl.cx_test, testType="CONLL_X", 
-                                        language=lang_short, trainUseCoNLLXPhead=True)        
+                                      test=pl.cx_test, testType="CONLL_X", 
+                                      language=lang_short, trainUseCoNLLXPhead=True)        
             if lang_short == "en":
                 gl.cx_data += SrlExpParams(dev=pl.cx_dev)
             else:
                 gl.cx_data += SrlExpParams(propTrainAsDev=0.10) 
             
+        # ------------------------ EXPERIMENTS --------------------------
+        
         if self.expname == "dp-conllx":
             # CoNLL-X experiments.
             exps = []
@@ -104,7 +107,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     data = gl.cx_data
                     data.update(l2variance=l2var_map[lang_short],
                                 pruneModel=gl.pruneModel,
-                                propTrainAsDev=0) # TODO: Set to zero for final experiments.
+                                propTrainAsDev=0)  # TODO: Set to zero for final experiments.
+                    data.update(trainMaxSentenceLength=80) #TODO: Remove.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)

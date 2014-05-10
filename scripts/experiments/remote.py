@@ -37,22 +37,21 @@ def prep_project(name, mvn_command, check_local=True):
         if "Already up-to-date" not in run("git pull"):
             run("mvn %s -DskipTests" % (mvn_command))
 
-def run_srl(name, argv):
+def run_command(name, argv):
     args = " ".join(argv[1:])
     with cd("~/working/%s" % (name)):
         with prefix("source setupenv.sh"):
             run("%s" % (args))
         
-def remote_srl(argv):
+def remote_command(argv):
     env.gateway = "%s:%s" % ("external.hltcoe.jhu.edu", "22")
     env.host_string = "%s:%s" % ("test2", "22")
     run("uname -a")
-    #prep_project("vector", "install", True)    
     prep_project("prim", "install", True)
     #prep_project("erma", "install", True)
-    prep_project("optimize", "install", True)    
+    prep_project("optimize", "install", True)
     prep_project("pacaya", "compile", False)
-    run_srl("pacaya", argv)
+    run_command("pacaya", argv)
     
 if __name__ == "__main__":
     usage = "%prog [top_dir...]"
@@ -61,4 +60,4 @@ if __name__ == "__main__":
     #scrape.add_options(parser)
     #(options, args) = parser.parse_args(sys.argv)
     
-    remote_srl(sys.argv)
+    remote_command(sys.argv)
