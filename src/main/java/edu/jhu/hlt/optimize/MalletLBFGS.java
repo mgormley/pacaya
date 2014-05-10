@@ -8,7 +8,7 @@ import cc.mallet.optimize.BackTrackLineSearch;
 import cc.mallet.optimize.BetterLimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
-import edu.jhu.hlt.optimize.function.FunctionOpts;
+import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.prim.vector.IntDoubleDenseVector;
 import edu.jhu.prim.vector.IntDoubleVector;
 
@@ -150,7 +150,7 @@ public class MalletLBFGS implements Optimizer<DifferentiableFunction> {
 
     @Override
     public boolean minimize(DifferentiableFunction function, IntDoubleVector point) {
-        return maximize(new FunctionOpts.NegateFunction(function), point);
+        return maximize(new DifferentiableFunctionOpts.NegateFunction(function), point);
     }
 
 }

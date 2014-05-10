@@ -12,8 +12,8 @@ import edu.jhu.hlt.optimize.Optimizer;
 import edu.jhu.hlt.optimize.function.BatchFunctionOpts;
 import edu.jhu.hlt.optimize.function.DifferentiableBatchFunction;
 import edu.jhu.hlt.optimize.function.DifferentiableFunction;
+import edu.jhu.hlt.optimize.function.DifferentiableFunctionOpts;
 import edu.jhu.hlt.optimize.function.FunctionAsBatchFunction;
-import edu.jhu.hlt.optimize.function.FunctionOpts;
 import edu.jhu.hlt.optimize.function.Regularizer;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.sort.IntSort;
@@ -52,7 +52,7 @@ public class CrfTrainer {
             DifferentiableFunction fn = objective;
             if (prm.regularizer != null) {
                 prm.regularizer.setNumDimensions(model.getNumParams());
-                fn = new FunctionOpts.AddFunctions(objective, prm.regularizer);
+                fn = new DifferentiableFunctionOpts.AddFunctions(objective, prm.regularizer);
             }
             prm.maximizer.maximize(fn, model.getParams());
             log.info("Final objective value: " + fn.getValue(model.getParams()));
