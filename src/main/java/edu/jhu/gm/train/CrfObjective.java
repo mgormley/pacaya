@@ -1,5 +1,6 @@
 package edu.jhu.gm.train;
 
+import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
 import edu.jhu.gm.data.FgExample;
@@ -80,6 +81,8 @@ public class CrfObjective implements ExampleObjective {
             t.stop(); gradTimer.add(t);
         }
         
+        vg.addWeight(ex.getWeight());
+        
         if (i == 0) {
             report();
         }
@@ -159,7 +162,7 @@ public class CrfObjective implements ExampleObjective {
             // has not yet converged.
             log.warn("Log-likelihood for example "+i+" should be <= 0: " + ll);
         }
-        return ll;
+        return ll * ex.getWeight();
     }
     
     /**
@@ -176,10 +179,10 @@ public class CrfObjective implements ExampleObjective {
      */
     public void addGradient(FgModel model, FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
-        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, gradient);
+        addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
         
         // Compute the "expected" feature counts for this factor, by summing over the latent and predicted variables.
-        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0, gradient);
+        addExpectedFeatureCounts(fgLatPred, ex, infLatPred, -1.0 * ex.getWeight(), gradient);
     }
 
     /** 
@@ -210,7 +213,7 @@ public class CrfObjective implements ExampleObjective {
             FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
-            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0, feats);
+            addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);
@@ -227,7 +230,7 @@ public class CrfObjective implements ExampleObjective {
             FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();
-            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0, feats);
+            addExpectedFeatureCounts(fgLatPred, ex, infLatPred, 1.0 * ex.getWeight(), feats);
         }
         double[] f = new double[model.getNumParams()];
         feats.updateDoublesFromModel(f);

@@ -238,5 +238,17 @@ public class Files {
         }
         return files;
     }
+
+    /** CAUTION: This is equivalent to calling rm -r on file. */
+    public static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            for (File c : file.listFiles()) {
+                deleteRecursively(c);
+            }
+        }
+        if (!file.delete()) {
+            System.err.println("WARN: unable to delete file: " + file.getPath());
+        }
+    }
     
 }

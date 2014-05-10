@@ -8,15 +8,15 @@ public class MutableValueGradient {
 
     private MutableDouble value;
     private FgModel gradient;
+    private MutableDouble weight;
     
-    public MutableValueGradient(MutableDouble value, FgModel gradient) {
+    public MutableValueGradient(MutableDouble value, FgModel gradient, MutableDouble weight) {
         this.value = value;
         this.gradient = gradient;
+        this.weight = weight;
     }
-    
-    public boolean hasValue() {
-        return value != null;
-    }
+   
+    /* ------ Gradient ------ */
     
     public boolean hasGradient() {
         return gradient != null;
@@ -24,6 +24,20 @@ public class MutableValueGradient {
 
     public FgModel getGradient() {
         return gradient;
+    }
+    
+    public void setGradient(FgModel gradient) {
+        this.gradient = gradient;
+    }   
+    
+    public void addGradient(FgModel gradient) {
+        this.gradient.add(gradient);
+    }
+    
+    /* ------ Value ------ */
+    
+    public boolean hasValue() {
+        return value != null;
     }
     
     public double getValue() {
@@ -34,16 +48,26 @@ public class MutableValueGradient {
         this.value = value;
     }
 
-    public void setGradient(FgModel gradient) {
-        this.gradient = gradient;
+    public void addValue(double value) {
+        this.value.add(value);
+    } 
+
+    /* ------ Weight ------ */
+    
+    public boolean hasWeight() {
+        return weight != null;
     }
 
-    public void addValue(double ll) {
-        this.value.add(ll);
+    public double getWeight() {
+        return weight.doubleValue();
     }
     
-    public void addGradient(FgModel gradient) {
-        this.gradient.add(gradient);
+    public void setWeight(MutableDouble weight) {
+        this.weight = weight;
+    }
+    
+    public void addWeight(double weight) {
+        this.weight.add(weight);
     }
 
 }

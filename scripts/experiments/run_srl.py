@@ -643,11 +643,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
             if self.hprof:
                 if isinstance(stage, experiment_runner.JavaExpParams):
                     stage.hprof = self.hprof
-            # Put the output of a fast run in a directory with "fast_"
-            # prepended.
-            # TODO: This doesn't work quite right...find a better solution.
-            #if self.fast:
-            #    self.expname = "fast_" + self.expname
         return root_stage
     
     def make_stage_fast(self, stage):       

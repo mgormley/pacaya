@@ -39,4 +39,7 @@ public interface FgExample extends UFgExample, Serializable {
     /** Gets the gold configuration index of the predicted variables for the given factor. */
     public int getGoldConfigIdxPred(int factorId);
     
+    /** Gets the weight of this example for use in log-liklihood training. */
+    public double getWeight();
+    
 }

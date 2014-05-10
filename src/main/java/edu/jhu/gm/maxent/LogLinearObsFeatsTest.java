@@ -163,8 +163,7 @@ public class LogLinearObsFeatsTest {
         assertEquals(1, exs.getAlphabet().size());
 
         // Test average log-likelihood.
-        double ll = obj.getValue(model.getParams())
-;        
+        double ll = obj.getValue(model.getParams());        
         System.out.println(ll + " " + Math.exp(ll));
         assertEquals(((3*1 + 2*1) - 2*Math.log((Math.exp(3*1) + Math.exp(2*1)))) / 2.0, ll, 1e-2);
         

@@ -71,7 +71,7 @@ public class LogLinearXY {
     public FgModel train(LogLinearXYData data) {
         Alphabet<String> alphabet = data.getFeatAlphabet();
         FgExampleList list = getData(data);
-        log.info("Number of unweighted train instances: " + list.size());
+        log.info("Number of train instances: " + list.size());
         
         if (prm.l2Variance == -1) {
             prm.crfPrm.regularizer = new L2(list.size());
@@ -125,9 +125,7 @@ public class LogLinearXY {
         FgExampleMemoryStore store = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
             FgExample ex = getFgExample(desc);
-            for (int i = 0; i < desc.getWeight(); i++) {
-                store.add(ex);
-            }
+            store.add(ex);
         }
         
         return store;
@@ -153,7 +151,9 @@ public class LogLinearXY {
             
         };
         fg.addFactor(f0);
-        return new LabeledFgExample(fg, trainConfig);
+        LabeledFgExample ex = new LabeledFgExample(fg, trainConfig);
+        ex.setWeight(desc.getWeight());
+        return ex;
     }
 
     private Var getVar() {
