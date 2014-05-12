@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
@@ -12,6 +14,7 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
+import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -33,6 +36,8 @@ public class MbrDecoder {
         // TODO: support other loss functions.
         ACCURACY
     }
+
+    private static final Logger log = Logger.getLogger(MbrDecoder.class);
 
     private MbrDecoderPrm prm;    
     private VarConfig mbrVarConfig;
@@ -65,7 +70,7 @@ public class MbrDecoder {
         inf.run();
         
         // Get the MBR configuration of all the latent and predicted
-        // variables.
+        // variables.        
         if (prm.loss == Loss.ACCURACY) {
             for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                 Var var = fgLatPred.getVar(varId);
@@ -75,6 +80,9 @@ public class MbrDecoder {
                 mbrVarConfig.put(var, argmaxState);
 
                 varMargMap.put(var, marg.getValue(argmaxState));
+                if (log.isTraceEnabled()) {
+                    log.trace("Variable marginal: " + marg);
+                }
             }
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);

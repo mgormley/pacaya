@@ -319,7 +319,7 @@ public class SrlRunner {
             // Ensure that the gold data is annotated with the pruning mask as well.
             copyPruneMask(inputSents, goldSents);
             printOracleAccuracyAfterPruning(inputSents, goldSents, "train");
-            
+
             // Train a model.
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
             
@@ -342,7 +342,7 @@ public class SrlRunner {
             CrfTrainer trainer = new CrfTrainer(prm);
             trainer.train(model, data);
             trainer = null; // Allow for GC.
-            
+                        
             // Decode and evaluate the train data.
             SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTrainPreds(predSents);
@@ -472,22 +472,24 @@ public class SrlRunner {
     }
 
     private void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
-        int numTot = 0;
-        int numCorrect = 0;
-        for (int i=0; i<predSents.size(); i++) {
-            SimpleAnnoSentence predSent = predSents.get(i);
-            SimpleAnnoSentence goldSent = goldSents.get(i);
-            if (predSent.getDepEdgeMask() != null) {
-                for (int c=0; c<goldSent.size(); c++) {
-                    int p = goldSent.getParent(c);
-                    if (predSent.getDepEdgeMask().isKept(p, c)) {
-                        numCorrect++;
+        if (pruneByDist || pruneByModel) {
+            int numTot = 0;
+            int numCorrect = 0;
+            for (int i=0; i<predSents.size(); i++) {
+                SimpleAnnoSentence predSent = predSents.get(i);
+                SimpleAnnoSentence goldSent = goldSents.get(i);
+                if (predSent.getDepEdgeMask() != null) {
+                    for (int c=0; c<goldSent.size(); c++) {
+                        int p = goldSent.getParent(c);
+                        if (predSent.getDepEdgeMask().isKept(p, c)) {
+                            numCorrect++;
+                        }
+                        numTot++;
                     }
-                    numTot++;
                 }
             }
+            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
         }
-        log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
     }
     
     /**

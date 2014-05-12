@@ -132,6 +132,9 @@ public class DepParseFactorGraph implements Serializable {
             }
         }
         
+        if (prm.pruneEdges &&  depEdgeMask == null) {
+            throw new IllegalStateException("Cannot prune when dependency edge pruning mask is null");
+        }
         if (!prm.pruneEdges) {
             // Keep all edges
             depEdgeMask = new DepEdgeMask(words.size(), true);

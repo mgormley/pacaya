@@ -192,7 +192,7 @@ public class FirstOrderDepParseHypergraph implements Hypergraph {
                     e.setWeight(semiring.one());
                     e.setId(id++);
                     fn.apply(e);
-                }                
+                }
             }
         }
         
