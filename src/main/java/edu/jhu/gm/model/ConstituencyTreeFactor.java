@@ -5,19 +5,14 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTree;
 import edu.jhu.data.Sentence;
 import edu.jhu.gm.inf.BeliefPropagation.Messages;
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.hypergraph.Hyperalgo.Scores;
-import edu.jhu.hypergraph.depparse.FirstOrderDepParseHypergraph;
-import edu.jhu.hypergraph.depparse.HyperDepParser;
 import edu.jhu.parse.cky.CkyPcfgParser.LoopOrder;
 import edu.jhu.parse.cky.CnfGrammar;
 import edu.jhu.parse.cky.CnfGrammarReader;
@@ -26,18 +21,12 @@ import edu.jhu.parse.cky.PcfgInsideOutside.PcfgInsideOutsidePrm;
 import edu.jhu.parse.cky.PcfgInsideOutside.PcfgIoChart;
 import edu.jhu.parse.cky.Rule;
 import edu.jhu.parse.cky.Scorer;
-import edu.jhu.parse.dep.EdgeScores;
-import edu.jhu.parse.dep.ProjectiveDependencyParser;
-import edu.jhu.parse.dep.ProjectiveDependencyParser.DepIoChart;
 import edu.jhu.prim.arrays.DoubleArrays;
-import edu.jhu.prim.tuple.Pair;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.semiring.LogPosNegSemiring;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.Semiring;
-import edu.jhu.util.semiring.SemiringExt;
 
 /**
  * Global factor which constrains O(n^2) variables to form a constituency tree,
@@ -132,7 +121,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
             SpanVar span = (SpanVar) var;
             spanVars[span.getStart()][span.getEnd()] = span;
         }
-                
+         
         // Construct sentence.
         int[] sent = new int[n];
         Arrays.fill(sent, grammar.getLexAlphabet().lookupIndex("a"));
@@ -342,7 +331,7 @@ public class ConstituencyTreeFactor extends AbstractGlobalFactor implements Glob
         assert !outMsg.containsBadValues(logDomain) : "message = " + outMsg;
     }
 
-    private void boundToSafeValues(double[] values) {
+    public static void boundToSafeValues(double[] values) {
         for (int i=0; i<values.length; i++) {
             if (values[i] == Double.NEGATIVE_INFINITY) {
                 values[i] = -300;
