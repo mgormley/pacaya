@@ -26,7 +26,7 @@ public class DepParseDecoder {
     public static int[] getParents(List<DenseFactor> margs, List<Var> vars, int n, boolean logDomain) {        
         // Build up the beliefs about the link variables (if present),
         // and compute the MBR dependency parse.
-        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, true, logDomain);
+        Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
         
@@ -34,6 +34,8 @@ public class DepParseDecoder {
             int[] parents = new int[n];
             Arrays.fill(parents, DepTree.EMPTY_POSITION);
             ProjectiveDependencyParser.parse(scores.root, scores.child, parents);
+            log.debug(scores);
+            log.debug(Arrays.toString(parents));
             return parents;
         } else {
             return null;
@@ -52,9 +54,14 @@ public class DepParseDecoder {
                 int c = link.getChild();
                 int p = link.getParent();
 
-                double belief = marg.getValue(LinkVar.TRUE);
+                double belief;
                 if (logOdds) {
+                    // TODO: Using logOdds is the method of MBR decoding
+                    // prescribed in Smith & Eisner (2008). However, this breaks the parser
+                    // when the log-odds are positive infinity.
                     belief = s.divide(marg.getValue(LinkVar.TRUE), marg.getValue(LinkVar.FALSE));
+                } else {
+                    belief = s.toReal(marg.getValue(LinkVar.TRUE));
                 }
                 if (p == -1) {
                     scores.root[c] = belief;
