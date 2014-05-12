@@ -61,7 +61,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.feat_mcdonald
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
-                          sgdAutoSelecFreq=2, sgdAutoSelectLr=False, pruneByDist=True)
+                          sgdAutoSelecFreq=2, sgdAutoSelectLr=False, pruneByDist=True,
+                          useLogAddTable=True)
         
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
@@ -75,7 +76,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.unpruned_parsers + g.pruned_parsers
         
-        models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
+        models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"), # This is a fast model locally.
                                            os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
         
         # Language specific parameters
@@ -117,6 +118,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
             # Trains the pruning models for the CoNLL-X languages.
             exps = []
             g.defaults += g.feat_mcdonald_basic
+            g.defaults.update(pruneByDist=False) # TODO: Consider changing this.
             for lang_short in ["bg", "es"]:
                 gl = g.langs[lang_short]
                 pl = p.langs[lang_short]
