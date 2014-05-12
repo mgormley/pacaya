@@ -51,6 +51,7 @@ public class BruteForceInferencer implements FgInferencer {
         for (int a=0; a<fg.getNumFactors(); a++) {
             Factor f = fg.getFactor(a);
             DenseFactor factor = safeGetDenseFactor(f);
+            assert !factor.containsBadValues(logDomain) : factor;
             if (logDomain) {
                 joint.add(factor);
             } else {
@@ -76,7 +77,7 @@ public class BruteForceInferencer implements FgInferencer {
     }
     
     @Override
-    public void run() {
+    public void run() {        
         joint = getProductOfAllFactors(fg, logDomain);
     }
 

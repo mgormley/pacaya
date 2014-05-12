@@ -118,14 +118,14 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         }
         
         if (addValue) {
-            ll.setValue(ll.doubleValue() / vg.getWeight());
+            ll.setValue(ll.doubleValue() / batch.length);
             if (isFullDataset) {
                 // Print out the likelihood if we're computing it on the entire dataset.
                 log.info("Average objective for full dataset: " + ll);
             }
         }
         if (addGradient) {
-            grad.scale(1.0 / vg.getWeight());    
+            grad.scale(1.0 / batch.length);    
         }
         
         return new ValueGradient(addValue ? ll.doubleValue() : Double.NaN, 

@@ -66,6 +66,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 int config = (iter != null) ? iter.next() : c;
                 
                 double dot = getDotProd(config, model, logDomain);
+                assert !Double.isNaN(dot);
                 f.setValue(c, dot);
             }
             assert(iter == null || !iter.hasNext());
@@ -87,8 +88,8 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     public double getDotProd(int config, FgModel model, boolean logDomain) {
     	 FeatureVector fv = getFeatures(config);
          double dot = model.dot(fv);
-         if (logDomain) return dot;
-         else return FastMath.exp(dot);
+         if (logDomain) { return dot; }
+         else { return FastMath.exp(dot); }
     }
 
     @Override
