@@ -9,6 +9,15 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.prim.matrix.DenseIntegerMatrix;
 import edu.jhu.util.Alphabet;
 
+/**
+ * Distance-based pruning method from Rush & Petrov (2012).
+ * 
+ * For any pair of POS tag types, this approach prunes any edge for which the
+ * distance is longer than the maximum distance observed at training time for
+ * that POS tag type pair.
+ * 
+ * @author mgormley
+ */
 public class PosTagDistancePruner implements Trainable, Annotator {
 
     private static final Logger log = Logger.getLogger(PosTagDistancePruner.class);
