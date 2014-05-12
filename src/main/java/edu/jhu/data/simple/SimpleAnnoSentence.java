@@ -1,6 +1,7 @@
 package edu.jhu.data.simple;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -512,5 +513,40 @@ public class SimpleAnnoSentence {
         }
         // TODO: this.srlGraph.intern();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        appendIfNotNull(sb, "words", words);
+        appendIfNotNull(sb, "lemmas", lemmas);
+        appendIfNotNull(sb, "tags", posTags);
+        appendIfNotNull(sb, "cposTags", cposTags);
+        appendIfNotNull(sb, "clusters", clusters);
+        appendIfNotNull(sb, "feats", feats);
+        if (parents != null) {
+            sb.append("parents=");
+            sb.append(Arrays.toString(parents));
+            sb.append(",\n");
+        }
+        appendIfNotNull(sb, "deprels", deprels);
+        appendIfNotNull(sb, "depEdgeMask", depEdgeMask);
+        appendIfNotNull(sb, "srlGraph", srlGraph);
+        appendIfNotNull(sb, "knownPreds", knownPreds);
+        appendIfNotNull(sb, "binaryTree", binaryTree);
+        appendIfNotNull(sb, "sourceSent", sourceSent);
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private void appendIfNotNull(StringBuilder sb, String name, Object l) {
+        if (l != null) {
+            sb.append(name);
+            sb.append("=");
+            sb.append(l);
+            sb.append(",\n");
+        }
+    }
+    
     
 }

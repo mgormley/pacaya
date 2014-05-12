@@ -88,6 +88,9 @@ public class DenseFactor implements Serializable {
         margVars.retainAll(vars);
         
         DenseFactor marg = new DenseFactor(margVars, logDomain ? Double.NEGATIVE_INFINITY : 0.0);
+        if (margVars.size() == 0) {
+            return marg;
+        }
         
         IntIter iter = margVars.getConfigIter(this.vars);
         for (int i=0; i<this.values.length; i++) {

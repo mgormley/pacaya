@@ -61,10 +61,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.feat_mcdonald
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
-                          sgdAutoSelecFreq=2, sgdAutoSelectLr=False)
+                          sgdAutoSelecFreq=2, sgdAutoSelectLr=False, pruneByDist=True)
         
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
-                                   removeAts="DEPREL", tagger_parser="1st", pruneEdges=False)
+                                   removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
                                                   bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
@@ -72,7 +72,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
-        g.pruned_parsers = [x + SrlExpParams(pruneEdges=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
+        g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
         g.parsers = g.unpruned_parsers + g.pruned_parsers
         
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_005"), # This is a fast model locally.
@@ -108,7 +108,6 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     data.update(l2variance=l2var_map[lang_short],
                                 pruneModel=gl.pruneModel,
                                 propTrainAsDev=0)  # TODO: Set to zero for final experiments.
-                    data.update(trainMaxSentenceLength=80) #TODO: Remove.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                     exps.append(exp)

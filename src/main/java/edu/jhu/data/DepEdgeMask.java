@@ -75,6 +75,10 @@ public class DepEdgeMask implements Serializable {
     @Override
     public String toString() {
         return "DepEdgeMask [n=" + n + ", mat=\n" + mat + "]";
+    }
+
+    public void and(DepEdgeMask other) {
+        this.mat.and(other.mat);
     }        
     
 }

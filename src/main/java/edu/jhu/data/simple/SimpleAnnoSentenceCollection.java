@@ -117,4 +117,18 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         return maxLen;
     }
     
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i=0; i<size(); i++) {
+            sb.append(get(i));
+            if (i != size()-1) {
+                sb.append(",\n");
+            }
+        }
+        sb.append("]");
+        return sb.toString();        
+    }
+    
 }

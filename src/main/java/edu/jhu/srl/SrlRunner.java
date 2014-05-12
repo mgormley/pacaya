@@ -46,6 +46,7 @@ import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
+import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
@@ -146,7 +147,9 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
     public static File pruneModel = null;
     @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
-    public static boolean pruneEdges = false;
+    public static boolean pruneByModel = false;
+    @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
+    public static boolean pruneByDist = false;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -283,6 +286,7 @@ public class SrlRunner {
         FactorTemplateList fts;
         CorpusStatistics cs;
         JointNlpFeatureExtractorPrm fePrm;
+        PosTagDistancePruner ptdPruner = null;
         if (modelIn != null) {
             // Read a model from a file.
             log.info("Reading model from file: " + modelIn);
@@ -303,9 +307,20 @@ public class SrlRunner {
 
         if (corpus.hasTrain()) {
             String name = "train";            
-            addPruneMask(corpus.getTrainInput(), corpus.getTrainGold(), name);
-            // Train a model.
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
+            SimpleAnnoSentenceCollection inputSents = corpus.getTrainInput();
+
+            // Train the distance-based pruner. 
+            if (pruneByDist) {
+                ptdPruner = new PosTagDistancePruner();
+                ptdPruner.train(goldSents);
+            }
+            addPruneMask(inputSents, ptdPruner, name);
+            // Ensure that the gold data is annotated with the pruning mask as well.
+            copyPruneMask(inputSents, goldSents);
+            printOracleAccuracyAfterPruning(inputSents, goldSents, "train");
+            
+            // Train a model.
             FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
             
             if (model == null) {
@@ -329,7 +344,7 @@ public class SrlRunner {
             trainer = null; // Allow for GC.
             
             // Decode and evaluate the train data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, corpus.getTrainInput(), name);
+            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTrainPreds(predSents);
             eval(name, goldSents, predSents);
             corpus.clearTrainCache();
@@ -356,13 +371,14 @@ public class SrlRunner {
             // Test the model on dev data.
             fts.stopGrowth();
             String name = "dev";
-            SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
             SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
-            addPruneMask(inputSents, goldSents, name);
+            addPruneMask(inputSents, ptdPruner, name);
             FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
             SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
             corpus.writeDevPreds(predSents);
+            SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
+            printOracleAccuracyAfterPruning(inputSents, goldSents, "dev");
             eval(name, goldSents, predSents);
             corpus.clearDevCache();
         }
@@ -371,23 +387,29 @@ public class SrlRunner {
             // Test the model on test data.
             fts.stopGrowth();
             String name = "test";
-            SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
             SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
-            addPruneMask(inputSents, goldSents, name);
+            addPruneMask(inputSents, ptdPruner, name);
             FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
             SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTestPreds(predSents);
+            SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
+            printOracleAccuracyAfterPruning(inputSents, goldSents, "test");
             eval(name, goldSents, predSents);
             corpus.clearTestCache();
         }
     }
 
-    private void addPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents, String name) {
-        if (pruneEdges) {
+    private void addPruneMask(SimpleAnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) {
+        if (pruneByDist) {
+            // Prune via the distance-based pruner.
+            ptdPruner.annotate(inputSents);
+        }
+        if (pruneByModel) {
             if (pruneModel == null) {
                 throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
             }
+            
             // Read a model from a file.
             log.info("Reading pruning model from file: " + pruneModel);
             JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
@@ -424,7 +446,11 @@ public class SrlRunner {
                 // Update the dependency tree on the sentence.
                 DepEdgeMask mask = decoder.getDepEdgeMask();
                 if (mask != null) {
-                    predSent.setDepEdgeMask(mask);
+                    if (predSent.getDepEdgeMask() == null) {
+                        predSent.setDepEdgeMask(mask);
+                    } else {
+                        predSent.getDepEdgeMask().and(mask);
+                    }
                 }
                 numEdgesKept += mask.getCount();
                 int n = predSent.getWords().size();
@@ -433,8 +459,7 @@ public class SrlRunner {
             timer.stop();
             log.info(String.format("Pruning decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
             int numEdgesPruned = numEdgesTot - numEdgesKept;
-            log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot, (double) numEdgesPruned / numEdgesTot));
-            copyPruneMask(inputSents, goldSents);
+            log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot, (double) numEdgesPruned / numEdgesTot));            
         }
     }
 
@@ -444,6 +469,25 @@ public class SrlRunner {
             SimpleAnnoSentence gold = goldSents.get(i);
             gold.setDepEdgeMask(input.getDepEdgeMask());
         }        
+    }
+
+    private void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
+        int numTot = 0;
+        int numCorrect = 0;
+        for (int i=0; i<predSents.size(); i++) {
+            SimpleAnnoSentence predSent = predSents.get(i);
+            SimpleAnnoSentence goldSent = goldSents.get(i);
+            if (predSent.getDepEdgeMask() != null) {
+                for (int c=0; c<goldSent.size(); c++) {
+                    int p = goldSent.getParent(c);
+                    if (predSent.getDepEdgeMask().isKept(p, c)) {
+                        numCorrect++;
+                    }
+                    numTot++;
+                }
+            }
+        }
+        log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
     }
     
     /**
@@ -485,7 +529,13 @@ public class SrlRunner {
     }
 
     private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
-        for (AT at : Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts())) {
+        List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
+        if (CorpusHandler.brownClusters == null) {
+            // Filter out the Brown cluster features.
+            log.warn("Filtering out Brown cluster features.");
+            ats.add(AT.BROWN);
+        }
+        for (AT at : ats) {
             fePrm.srlFePrm.fePrm.soloTemplates = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.soloTemplates, at);
             fePrm.srlFePrm.fePrm.pairTemplates   = TemplateLanguage.filterOutRequiring(fePrm.srlFePrm.fePrm.pairTemplates, at);
             fePrm.dpFePrm.firstOrderTpls = TemplateLanguage.filterOutRequiring(fePrm.dpFePrm.firstOrderTpls, at);
@@ -622,7 +672,7 @@ public class SrlRunner {
         prm.fgPrm.dpPrm.excludeNonprojectiveGrandparents = excludeNonprojectiveGrandparents;
         prm.fgPrm.dpPrm.grandparentFactors = grandparentFactors;
         prm.fgPrm.dpPrm.siblingFactors = siblingFactors;
-        prm.fgPrm.dpPrm.pruneEdges = pruneEdges;
+        prm.fgPrm.dpPrm.pruneEdges = pruneByDist || pruneByModel;
                 
         prm.fgPrm.srlPrm.makeUnknownPredRolesLatent = makeUnknownPredRolesLatent;
         prm.fgPrm.srlPrm.roleStructure = roleStructure;
@@ -705,11 +755,6 @@ public class SrlRunner {
                     coarseUnigramSet = TemplateSets.getCoarseUnigramSet2();
                 } else {
                     throw new IllegalStateException();
-                }
-                if (CorpusHandler.brownClusters == null) {
-                    // Filter out the Brown cluster features.
-                    log.warn("Filtering out Brown cluster features from coarse set.");
-                    coarseUnigramSet = TemplateLanguage.filterOutRequiring(coarseUnigramSet, AT.BROWN);
                 }
                 tpls.addAll(coarseUnigramSet);
             } else {
