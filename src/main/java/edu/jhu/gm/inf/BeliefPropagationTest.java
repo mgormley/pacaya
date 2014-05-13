@@ -364,6 +364,54 @@ public class BeliefPropagationTest {
                     
         assertEqualMarginals(fg, bf, bp);
     }
+    
+    @Test
+    public void testConvergence() {
+        // Test with a threshold of 0 (i.e. exact equality implies convergence)
+        testConvergenceHelper(true, 0, 7);
+        testConvergenceHelper(false, 0, 7);
+        // Test with a threshold of 1e-3 (i.e. fewer iterations, 5, to convergence)
+        testConvergenceHelper(true, 1e-3, 5);
+        testConvergenceHelper(false, 1e-3, 5);
+    }
+
+    private void testConvergenceHelper(boolean logDomain, double convergenceThreshold, int expectedConvergenceIterations) {
+        FactorGraph fg = BruteForceInferencerTest.getLinearChainGraph(logDomain);
+
+        BruteForceInferencer bf = new BruteForceInferencer(fg, logDomain);
+        bf.run();
+        
+        BeliefPropagationPrm prm = new BeliefPropagationPrm();
+        prm.maxIterations = 1;
+        prm.logDomain = logDomain;
+        prm.normalizeMessages = true;
+        prm.updateOrder = BpUpdateOrder.PARALLEL;
+        // Enforce exact convergence.
+        prm.convergenceThreshold = convergenceThreshold;        
+        
+        BeliefPropagation bp = null;
+        
+        for (int i=0; i<20; i++) {
+            prm.maxIterations = i;
+            bp = new BeliefPropagation(fg, prm);
+            bp.run();
+            System.out.println("maxiters: " + i);
+            System.out.println("isConverged: " + bp.isConverged());
+            if (bp.isConverged()) {
+                assertEqualMarginals(fg, bf, bp, convergenceThreshold + 1e-13);
+                assertTrue(prm.maxIterations >= expectedConvergenceIterations);
+            } else {
+                assertTrue(prm.maxIterations < expectedConvergenceIterations);
+                try {
+                    assertEqualMarginals(fg, bf, bp);
+                    fail("Marginals should not be equal");
+                } catch (AssertionError e) {
+                    // pass
+                }
+            }
+        }
+        assertTrue(bp.isConverged());
+    }
 
     public static void assertEqualMarginals(FactorGraph fg, BruteForceInferencer bf,
             BeliefPropagation bp) {

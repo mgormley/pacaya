@@ -386,5 +386,20 @@ public class DenseFactor implements Serializable {
     public int size() {
         return values.length;
     }
+
+    /**
+     * Gets the infinity norm of this tensor. Defined as the maximum absolute
+     * value of the entries.
+     */
+    public double getInfNorm() {
+        double maxAbs = Double.NEGATIVE_INFINITY;
+        for (int c=0; c<values.length; c++) {
+            double abs = Math.abs(values[c]);
+            if (abs > maxAbs) {
+                maxAbs = abs;
+            }
+        }
+        return maxAbs;
+    }
     
 }

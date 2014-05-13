@@ -130,6 +130,8 @@ public class SrlRunner {
     public static int bpMaxIterations = 1;
     @Opt(hasArg = true, description = "Whether to normalize the messages.")
     public static boolean normalizeMessages = false;
+    @Opt(hasArg = true, description = "The maximum message residual for convergence testing.")
+    public static double bpConvergenceThreshold = 1e-3;
     
     // Options for dependency parse factor graph structure.
     @Opt(hasArg = true, description = "Whether to model the dependency parses.")
@@ -847,6 +849,7 @@ public class SrlRunner {
         bpPrm.updateOrder = bpUpdateOrder;
         bpPrm.normalizeMessages = normalizeMessages;
         bpPrm.maxIterations = bpMaxIterations;
+        bpPrm.convergenceThreshold = bpConvergenceThreshold;
         return bpPrm;
     }
 
