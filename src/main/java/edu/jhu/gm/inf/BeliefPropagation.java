@@ -47,7 +47,7 @@ public class BeliefPropagation implements FgInferencer {
         public boolean normalizeMessages = true;        
         public boolean cacheFactorBeliefs = false;
         /** The maximum message residual for convergence testing. */
-        public double convergenceThreshold = 1e-3;
+        public double convergenceThreshold = 0;
         public BeliefPropagationPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
