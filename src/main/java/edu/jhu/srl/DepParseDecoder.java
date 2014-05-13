@@ -14,7 +14,7 @@ import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.parse.dep.EdgeScores;
 import edu.jhu.parse.dep.ProjectiveDependencyParser;
 import edu.jhu.prim.tuple.Pair;
-import edu.jhu.prim.util.math.FastMath;
+import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 import edu.jhu.util.semiring.LogSemiring;
 import edu.jhu.util.semiring.RealSemiring;
 import edu.jhu.util.semiring.SemiringExt;
@@ -31,6 +31,17 @@ public class DepParseDecoder {
         int linkVarCount = pair.get2();
         
         if (linkVarCount > 0) {
+            // Convert from probs or log-probs to actual probabilities.
+            final SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
+            scores.apply(new LambdaUnaryOpDouble() {
+                @Override
+                public double call(double v) {
+                    return s.toReal(v);
+                }
+            });
+
+            // Get MBR parse, by finding the argmax tree where we treat the
+            // score of a tree as the sum of the edge scores.
             int[] parents = new int[n];
             Arrays.fill(parents, DepTree.EMPTY_POSITION);
             ProjectiveDependencyParser.parse(scores.root, scores.child, parents);
@@ -59,7 +70,7 @@ public class DepParseDecoder {
                     // when the log-odds are positive infinity.
                     belief = s.divide(marg.getValue(LinkVar.TRUE), marg.getValue(LinkVar.FALSE));
                 } else {
-                    belief = s.toReal(marg.getValue(LinkVar.TRUE));
+                    belief = marg.getValue(LinkVar.TRUE);
                 }
                 if (p == -1) {
                     scores.root[c] = belief;
@@ -73,6 +84,8 @@ public class DepParseDecoder {
     }
 
     public static DepEdgeMask getDepEdgeMask(List<DenseFactor> margs, List<Var> vars, int n, double propMaxMarg, boolean logDomain) {
+        SemiringExt s = logDomain ? new LogSemiring() : new RealSemiring();
+
         Pair<EdgeScores, Integer> pair = getEdgeScores(margs, vars, n, false, logDomain);
         EdgeScores scores = pair.get1();
         int linkVarCount = pair.get2();
@@ -92,7 +105,7 @@ public class DepParseDecoder {
             // For each token, prune any heads for which the marginal
             // probability is less than propMaxMarg (e.g. 0.0001) times the
             // maximum head marginal for that token.
-            double logPropMaxMarg = FastMath.log(propMaxMarg);
+            double logPropMaxMarg = s.fromReal(propMaxMarg);
             DepEdgeMask mask = new DepEdgeMask(n, false);
             for (int p=-1; p<n; p++) {
                 for (int c=0; c<n; c++) {
@@ -102,7 +115,7 @@ public class DepParseDecoder {
                     if (log.isTraceEnabled()) {
                         log.trace(String.format("p=%d c=%d marg=%f maxMarg=%f thresh=%f", p, c, marg, maxMargForTok[c], logPropMaxMarg + maxMargForTok[c]));
                     }
-                    if (marg < logPropMaxMarg + maxMargForTok[c]) {
+                    if (marg < s.times(logPropMaxMarg, maxMargForTok[c])) {
                         mask.setIsKept(p, c, false);
                     } else {
                         mask.setIsKept(p, c, true);

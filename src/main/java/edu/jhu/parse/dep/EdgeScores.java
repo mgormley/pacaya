@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import edu.jhu.prim.Primitives;
 import edu.jhu.prim.arrays.DoubleArrays;
+import edu.jhu.prim.util.Lambda.LambdaUnaryOpDouble;
 
 /**
  * Edge scores for a dependency parser.
@@ -47,6 +48,18 @@ public class EdgeScores {
     @Override
     public String toString() {
         return "EdgeScores [root=" + Arrays.toString(root) + ", child=" + Arrays.deepToString(child) + "]";
-    }    
+    }
+
+    public void apply(LambdaUnaryOpDouble lambda) {
+        for (int i=0; i<root.length; i++) {
+            root[i] = lambda.call(root[i]);
+        }
+        for (int i=0; i<child.length; i++) {
+            for (int j=0; j<child.length; j++) {
+                if (i == j) { continue; }
+                child[i][j] = lambda.call(child[i][j]);
+            }
+        }
+    }
     
 }
