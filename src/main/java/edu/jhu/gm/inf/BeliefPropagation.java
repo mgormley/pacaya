@@ -46,7 +46,8 @@ public class BeliefPropagation implements FgInferencer {
         /** Whether to normalize the messages after sending. */
         public boolean normalizeMessages = true;        
         public boolean cacheFactorBeliefs = false;
-        
+        /** The maximum message residual for convergence testing. */
+        public double convergenceThreshold = 1e-3;
         public BeliefPropagationPrm() {
         }
         public FgInferencer getInferencer(FactorGraph fg) {
@@ -84,6 +85,8 @@ public class BeliefPropagation implements FgInferencer {
         public DenseFactor message;
         /** The pending messge. */
         public DenseFactor newMessage;
+        /** The residual between the previous message and the current message. */
+        public double residual = Double.POSITIVE_INFINITY;
         
         /** Constructs a message container, initializing the messages to the uniform distribution. */
         public Messages(FgEdge edge, boolean logDomain, boolean normalizeMessages) {
@@ -119,6 +122,8 @@ public class BeliefPropagation implements FgInferencer {
     private List<FgEdge> order;
     
     private DenseFactor[] factorBeliefCache;
+    // The number of messages that have converged.
+    private int numConverged = 0;
 
     public BeliefPropagation(FactorGraph fg, BeliefPropagationPrm prm) {
         this.prm = prm;
@@ -194,6 +199,10 @@ public class BeliefPropagation implements FgInferencer {
                 for (FgEdge edge : order) {
                     createMessage(edge, iter);
                     sendMessage(edge);
+                    if (isConverged()) {
+                        // Stop on convergence: Break out of inner loop.
+                        break;
+                    }
                 }
             } else if (prm.updateOrder == BpUpdateOrder.PARALLEL) {
                 for (FgEdge edge : fg.getEdges()) {
@@ -205,6 +214,11 @@ public class BeliefPropagation implements FgInferencer {
             } else {
                 throw new RuntimeException("Unsupported update order: " + prm.updateOrder);
             }
+            if (isConverged()) {
+                // Stop on convergence.
+                log.trace("Stopping on convergence. Iterations = " + (iter+1));
+                break;
+            }
         }
         
         // Clear memory.
@@ -214,6 +228,10 @@ public class BeliefPropagation implements FgInferencer {
         }
         
         timer.stop();
+    }
+
+    public boolean isConverged() {
+        return numConverged == msgs.length;
     }
         
     /**
@@ -366,14 +384,26 @@ public class BeliefPropagation implements FgInferencer {
         int edgeId = edge.getId();
        
         Messages ec = msgs[edgeId];
-        // Just swap the pointers to the current message and the new message, so
+        // Update the residual
+        double oldResidual = ec.residual;
+        ec.residual = getResidual(ec.message, ec.newMessage);
+        if (oldResidual > prm.convergenceThreshold && ec.residual <= prm.convergenceThreshold) {
+            // This message has (newly) converged.
+            numConverged ++;
+        }
+        if (oldResidual <= prm.convergenceThreshold && ec.residual > prm.convergenceThreshold) {
+            // This message was marked as converged, but is no longer converged.
+            numConverged--;
+        }
+        
+        // Send message: Just swap the pointers to the current message and the new message, so
         // that we don't have to create a new factor object.
         DenseFactor oldMessage = ec.message;
         ec.message = ec.newMessage;
         ec.newMessage = oldMessage;
         assert !ec.message.containsBadValues(prm.logDomain) : "ec.message = " + ec.message;
 
-        // update factor beliefs
+        // Update factor beliefs
         if(prm.cacheFactorBeliefs && edge.isVarToFactor() && !(edge.getFactor() instanceof GlobalFactor)) {
         	Factor f = edge.getFactor();
         	DenseFactor update = factorBeliefCache[f.getId()];
@@ -390,6 +420,25 @@ public class BeliefPropagation implements FgInferencer {
         if (log.isTraceEnabled()) {
             log.trace("Message sent: " + ec.message);
         }
+    }
+
+    /**
+     * Gets the residual for a new message, as the maximum error over all
+     * assignments.
+     * 
+     * Following the definition of Sutton & McCallum (2007), we compute the
+     * residual as the infinity norm of the difference of the log of the message
+     * vectors.
+     */
+    private double getResidual(DenseFactor message, DenseFactor newMessage) {
+        DenseFactor logRatio = new DenseFactor(newMessage);
+        if (prm.logDomain) {
+            logRatio.subBP(message);
+        } else {
+            logRatio.divBP(message);
+            logRatio.convertRealToLog();
+        }
+        return logRatio.getInfNorm();
     }
 
     /** @inheritDoc */
