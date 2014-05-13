@@ -34,8 +34,6 @@ public class DepParseDecoder {
             int[] parents = new int[n];
             Arrays.fill(parents, DepTree.EMPTY_POSITION);
             ProjectiveDependencyParser.parse(scores.root, scores.child, parents);
-            log.debug(scores);
-            log.debug(Arrays.toString(parents));
             return parents;
         } else {
             return null;
