@@ -95,7 +95,7 @@ public class JointNlpFgExamplesBuilder {
             
             // Construct the factor graph.
             JointNlpFactorGraph sfg = new JointNlpFactorGraph(prm.fgPrm, sent, cs, obsFe, ofc, fe);
-            log.trace("Number of variables: " + sfg.getNumVars() + " Number of factors: " + sfg.getNumFactors());
+            log.trace("Number of variables: " + sfg.getNumVars() + " Number of factors: " + sfg.getNumFactors() + " Number of edges: " + sfg.getNumEdges());
             // Get the variable assignments given in the training data.
             VarConfig vc = getVarAssignment(sent, sfg, prm.fgPrm);
             

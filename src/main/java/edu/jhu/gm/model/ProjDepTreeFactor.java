@@ -184,17 +184,19 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             double beliefTrue = pi + chart.getLogSumOfPotentials(link.getParent(), link.getChild());
             double beliefFalse = safeLogSubtract(partition, beliefTrue);
             
-            // Detect numerical precision error.
-            if (beliefFalse == Double.NEGATIVE_INFINITY) {
-                if (!DoubleArrays.contains(root, Double.NEGATIVE_INFINITY, 1e-13) && !EdgeScores.childContains(child, Double.NEGATIVE_INFINITY, 1e-13)) {
-                    log.warn("Found possible numerical precision error.");
-                    // For now don't try to fix anything. Just log that there might be a problem.
-                    //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
-                    //continue;
-                } else {
-                    //log.warn("Unable to account for possible numerical precision error.");
-                    //log.warn("Infs: " + Arrays.toString(root) + " " + Arrays.deepToString(child));
-                    // TODO: There could still be a numerical precision error. How do we detect it?
+            if (log.isTraceEnabled()) {
+                // Detect numerical precision error.
+                if (beliefFalse == Double.NEGATIVE_INFINITY) {
+                    if (!DoubleArrays.contains(root, Double.NEGATIVE_INFINITY, 1e-13) && !EdgeScores.childContains(child, Double.NEGATIVE_INFINITY, 1e-13)) {
+                        log.trace("Found possible numerical precision error.");
+                        // For now don't try to fix anything. Just log that there might be a problem.
+                        //fixEdge(parent, msgs, logDomain, normalizeMessages, numericalPrecisionEdge);
+                        //continue;
+                    } else {
+                        //log.warn("Unable to account for possible numerical precision error.");
+                        //log.warn("Infs: " + Arrays.toString(root) + " " + Arrays.deepToString(child));
+                        // TODO: There could still be a numerical precision error. How do we detect it?
+                    }
                 }
             }
 
@@ -280,18 +282,23 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
     private double safeLogSubtract(double partition, double beliefTrue) {
         double outMsgFalse;
         if (partition < beliefTrue) {
-            log.warn(String.format("Partition function less than belief: partition=%.20f belief=%.20f", partition, beliefTrue));
-            // TODO: This is a hack to get around the floating point
-            // error. We want beliefFalse to be effectively 0.0 in this
-            // case, but we use the floating point error to determine
-            // how small zero should be.
-            outMsgFalse = Double.NEGATIVE_INFINITY; //FastMath.log(Math.abs(v1 - v2));
+            // This will happen very frequently if the log-add table is used
+            // instead of "exact" log-add.
+            if (log.isTraceEnabled()) {
+                log.trace(String.format("Partition function less than belief: partition=%.20f belief=%.20f", partition, beliefTrue));
+            }
+            // To get around the floating point error, we truncate the
+            // subtraction to log(0).
+            outMsgFalse = Double.NEGATIVE_INFINITY;
+            unsafeLogSubtracts++;
         } else {
             outMsgFalse = FastMath.logSubtractExact(partition, beliefTrue);
         }
+        logSubtractCount++;
         return outMsgFalse;
     }
-    
+    private static int unsafeLogSubtracts = 0;
+    private static int logSubtractCount = 0;
     private static int extremeOddsRatios = 0;
     private static int oddsRatioCount = 0;
 
@@ -341,6 +348,8 @@ public class ProjDepTreeFactor extends AbstractGlobalFactor implements GlobalFac
             extremeOddsRatios++;            
             log.debug(String.format("maxOddsRatio=%.20g minOddsRatio=%.20g", maxOddsRatio, minOddsRatio));
             log.debug(String.format("Proportion extreme odds ratios:  %f (%d / %d)", (double) extremeOddsRatios/ oddsRatioCount, extremeOddsRatios, oddsRatioCount));
+            // We log the proportion of unsafe log-subtracts here only as a convenient way of highlighting the two floating point errors together.
+            log.debug(String.format("Proportion unsafe log subtracts:  %f (%d / %d)", (double) unsafeLogSubtracts / logSubtractCount, unsafeLogSubtracts, logSubtractCount));
         }
     }
 
