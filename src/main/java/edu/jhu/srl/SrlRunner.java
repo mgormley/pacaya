@@ -317,7 +317,7 @@ public class SrlRunner {
             }
             addPruneMask(inputSents, ptdPruner, name);
             // Ensure that the gold data is annotated with the pruning mask as well.
-            copyPruneMask(inputSents, goldSents);
+            SimpleAnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
             printOracleAccuracyAfterPruning(inputSents, goldSents, "train");
 
             // Train a model.
@@ -411,14 +411,6 @@ public class SrlRunner {
             }
             FirstOrderPruner foPruner = new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm());
             foPruner.annotate(inputSents);
-        }
-    }
-
-    private void copyPruneMask(SimpleAnnoSentenceCollection inputSents, SimpleAnnoSentenceCollection goldSents) {
-        for (int i=0; i<inputSents.size(); i++) {
-            SimpleAnnoSentence input = inputSents.get(i);
-            SimpleAnnoSentence gold = goldSents.get(i);
-            gold.setDepEdgeMask(input.getDepEdgeMask());
         }
     }
 

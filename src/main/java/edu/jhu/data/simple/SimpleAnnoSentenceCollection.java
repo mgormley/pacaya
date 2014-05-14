@@ -117,6 +117,14 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         return maxLen;
     }
     
+    public static void copyShallow(SimpleAnnoSentenceCollection srcSents, SimpleAnnoSentenceCollection destSents, AT at) {
+        for (int i=0; i<srcSents.size(); i++) {
+            SimpleAnnoSentence src = srcSents.get(i);
+            SimpleAnnoSentence dest = destSents.get(i);
+            SimpleAnnoSentence.copyShallow(src, dest, at);
+        }
+    }
+    
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -495,6 +495,24 @@ public class SimpleAnnoSentence {
         default: throw new RuntimeException("not implemented for " + at);
         }
     }
+
+    public static void copyShallow(SimpleAnnoSentence src, SimpleAnnoSentence dest, AT at) {
+        switch (at) {
+        case WORD: dest.words = src.words; break;
+        case BROWN: dest.clusters = src.clusters; break;
+        case LEMMA: dest.lemmas = src.lemmas; break;
+        case POS: dest.posTags = src.posTags; break;
+        case CPOS: dest.cposTags = src.cposTags; break;
+        case MORPHO: dest.feats = src.feats; break;
+        case DEP_TREE: dest.parents = src.parents; break;
+        case DEPREL: dest.deprels = src.deprels; break;
+        case DEP_EDGE_MASK: dest.depEdgeMask = src.depEdgeMask; break;
+        case SRL_PRED_IDX: dest.knownPreds = src.knownPreds; break;
+        case SRL: dest.srlGraph = src.srlGraph; break;
+        case BINARY_TREE: dest.binaryTree = src.binaryTree; break;
+        default: throw new RuntimeException("not implemented for " + at);
+        }
+    }
     
     public void intern() {
         Lists.intern(words);
