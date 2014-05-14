@@ -91,8 +91,6 @@ import edu.jhu.util.files.Files;
  */
 public class SrlRunner {
 
-    public static enum DatasetType { ERMA, CONLL_2009, CONLL_2008 };
-
     public static enum InitParams { UNIFORM, RANDOM };
     
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
