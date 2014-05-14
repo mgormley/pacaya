@@ -110,7 +110,6 @@ public class SrlFeatureExtractorTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
-        ofc.init(data);
         
         System.out.println("Num tokens: " + sents.get(0).size());
         System.out.println(ofc);
@@ -155,7 +154,6 @@ public class SrlFeatureExtractorTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        ofc.init(data);
         
         System.out.println("Num tokens: " + sents.get(0).size());
         System.out.println(ofc);

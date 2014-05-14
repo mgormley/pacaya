@@ -344,7 +344,7 @@ public class SrlRunner {
             CrfTrainer trainer = new CrfTrainer(prm);
             trainer.train(model, data);
             trainer = null; // Allow for GC.
-                        
+            
             // Decode and evaluate the train data.
             SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
             corpus.writeTrainPreds(predSents);
@@ -411,57 +411,8 @@ public class SrlRunner {
             if (pruneModel == null) {
                 throw new IllegalStateException("If pruneEdges is true, pruneModel must be specified.");
             }
-            
-            // Read a model from a file.
-            log.info("Reading pruning model from file: " + pruneModel);
-            JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
-            ObsFeatureConjoiner ofc = model.getOfc();
-            CorpusStatistics cs = model.getCs();
-            JointNlpFeatureExtractorPrm fePrm = model.getFePrm();            
-
-            // Get configuration for first-order pruning model.
-            JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);   
-            prm.fgPrm.includeSrl = false;
-            prm.fgPrm.dpPrm = new DepParseFactorGraphPrm();
-            prm.fgPrm.dpPrm.linkVarType = VarType.PREDICTED;
-            prm.fgPrm.dpPrm.grandparentFactors = false;
-            prm.fgPrm.dpPrm.siblingFactors = false;
-            prm.fgPrm.dpPrm.unaryFactors = true;
-            prm.fgPrm.dpPrm.useProjDepTreeFactor = true;
-            
-            // Get unlabeled data.
-            FgExampleList data =  getData(ofc, cs, name, inputSents, fePrm, prm, false);
-            
-            // Decode and create edge pruning mask.
-            log.info("Running the pruning decoder on " + name + " data.");
-            int numEdgesTot = 0;
-            int numEdgesKept = 0;
-            Timer timer = new Timer();
-            timer.start();
-            // Add the new predictions to the input sentences.
-            for (int i = 0; i < inputSents.size(); i++) {
-                FgExample ex = data.get(i);
-                SimpleAnnoSentence predSent = inputSents.get(i);
-                JointNlpDecoder decoder = getDecoder();
-                decoder.decode(model, ex);
-                
-                // Update the dependency tree on the sentence.
-                DepEdgeMask mask = decoder.getDepEdgeMask();
-                if (mask != null) {
-                    if (predSent.getDepEdgeMask() == null) {
-                        predSent.setDepEdgeMask(mask);
-                    } else {
-                        predSent.getDepEdgeMask().and(mask);
-                    }
-                }
-                numEdgesKept += mask.getCount();
-                int n = predSent.getWords().size();
-                numEdgesTot += n*n;                
-            }
-            timer.stop();
-            log.info(String.format("Pruning decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
-            int numEdgesPruned = numEdgesTot - numEdgesKept;
-            log.info(String.format("Pruned %d / %d = %f edges", numEdgesPruned, numEdgesTot, (double) numEdgesPruned / numEdgesTot));            
+            FirstOrderPruner foPruner = new FirstOrderPruner(pruneModel, getSrlFgExampleBuilderPrm(null), getDecoderPrm());
+            foPruner.annotate(inputSents);
         }
     }
 
@@ -470,7 +421,7 @@ public class SrlRunner {
             SimpleAnnoSentence input = inputSents.get(i);
             SimpleAnnoSentence gold = goldSents.get(i);
             gold.setDepEdgeMask(input.getDepEdgeMask());
-        }        
+        }
     }
 
     private void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
@@ -555,52 +506,9 @@ public class SrlRunner {
 
     private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
             SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm,
-            boolean labeledExamples) {
-        if (!cs.isInitialized()) {
-            log.info("Initializing corpus statistics.");
-            cs.init(sents);
-        }
-        FactorTemplateList fts = ofc.getTemplates();
-        
-        if (useTemplates) {
-            // Check that the first sentence has all the required annotation
-            // types for the specified feature templates.
-            SimpleAnnoSentence sent = sents.get(0);
-            if (includeSrl) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.soloTemplates);
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.srlFePrm.fePrm.pairTemplates);
-            }
-            if (includeDp) {
-                TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.firstOrderTpls);
-                if (grandparentFactors || siblingFactors) {
-                    TemplateLanguage.assertRequiredAnnotationTypes(sent, fePrm.dpFePrm.secondOrderTpls);
-                }
-            }
-        }
-        printPredArgSelfLoopStats(sents);
-        
-        log.info("Building factor graphs and extracting features.");
+            boolean labeledExamples) {        
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
         FgExampleList data = builder.getData(sents);
-        
-        // Special case: we somehow need to be able to create test examples
-        // where we've never seen the predicate.
-        if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
-            // TODO: This should have a bias feature.
-            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
-            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
-        }
-        
-        if (!ofc.isInitialized()) {
-            log.info("Initializing the observation function conjoiner.");
-            ofc.init(data);
-        }
-        
-        log.info(String.format("Num examples in %s: %d", name, data.size()));
-        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
-        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
-        log.info(String.format("Num factor/clique templates: %d", fts.size()));
-        log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
 
@@ -623,8 +531,10 @@ public class SrlRunner {
     }
 
     private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
+        printPredArgSelfLoopStats(goldSents);
+
         DepParseEvaluator eval = new DepParseEvaluator(name);
-        eval.evaluate(goldSents, predSents);        
+        eval.evaluate(goldSents, predSents);
     }
     
     private void eval(String name, VarConfigPair pair) {
@@ -642,7 +552,7 @@ public class SrlRunner {
         for (int i = 0; i < inputSents.size(); i++) {
             UFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
-            JointNlpDecoder decoder = getDecoder();
+            JointNlpDecoder decoder = new JointNlpDecoder(getDecoderPrm());
             decoder.decode(model, ex);
                         
             // Update SRL graph on the sentence. 
@@ -853,13 +763,13 @@ public class SrlRunner {
         return bpPrm;
     }
 
-    private static JointNlpDecoder getDecoder() {
+    private static JointNlpDecoderPrm getDecoderPrm() {
         MbrDecoderPrm mbrPrm = new MbrDecoderPrm();
         mbrPrm.infFactory = getInfFactory();
         mbrPrm.loss = Loss.ACCURACY;
         JointNlpDecoderPrm prm = new JointNlpDecoderPrm();
         prm.mbrPrm = mbrPrm;
-        return new JointNlpDecoder(prm);
+        return prm;
     }
     
     public static void main(String[] args) {

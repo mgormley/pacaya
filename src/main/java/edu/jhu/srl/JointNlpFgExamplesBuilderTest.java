@@ -69,7 +69,6 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        ofc.init(data);
         
 //        System.out.println("Num features: " + alphabet.size());
 //        FgModel model = new FgModel(alphabet);
@@ -99,7 +98,6 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        ofc.init(data);
         FgExample ex = data.get(0);
         //assertEquals(1, obsAlphabet.size());
         //assertEquals(6*2 + 2 + 6, fts.size());
@@ -147,7 +145,6 @@ public class JointNlpFgExamplesBuilderTest {
             ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(ofcPrm, fts);
             JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
             FgExampleList data = builder.getData(simpleSents);
-            ofc.init(data);                   
             assertEquals(340, fts.getNumObsFeats());
             assertEquals(2916, ofc.getNumParams());
         }
@@ -216,7 +213,6 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        ofc.init(data);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
@@ -258,7 +254,6 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        ofc.init(data);
         FgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();

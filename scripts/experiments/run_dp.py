@@ -74,9 +74,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
         g.pruned_parsers = [x + SrlExpParams(pruneByModel=True,tagger_parser=x.get("tagger_parser")+"-pr") for x in g.unpruned_parsers]
-        g.parsers = g.unpruned_parsers + g.pruned_parsers
+        g.parsers = g.pruned_parsers + g.unpruned_parsers
         
-        models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"), # This is a fast model locally.
+        models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
+                                           os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"),
                                            os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
         
         # Language specific parameters

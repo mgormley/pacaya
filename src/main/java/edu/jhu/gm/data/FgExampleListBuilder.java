@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.util.Prm;
 import edu.jhu.util.Timer;
 
 /**
@@ -25,7 +26,9 @@ public class FgExampleListBuilder {
     }
 
     /** Parameters for FgExamplesBuilder. */
-    public static class FgExamplesBuilderPrm {
+    public static class FgExamplesBuilderPrm extends Prm {
+        
+        private static final long serialVersionUID = 1L;
 
         /** The type of FgExamples object to wrap the factory in. */
         public CacheType cacheType = CacheType.MEMORY_STORE;

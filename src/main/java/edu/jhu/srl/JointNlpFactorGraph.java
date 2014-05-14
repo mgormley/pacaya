@@ -19,6 +19,7 @@ import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleVar;
 import edu.jhu.srl.SrlFactorGraph.SenseVar;
 import edu.jhu.srl.SrlFactorGraph.SrlFactorGraphPrm;
+import edu.jhu.util.Prm;
 
 /**
  * A factor graph builder for joint dependency parsing and semantic role
@@ -38,7 +39,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * Parameters for the SrlFactorGraph.
      * @author mgormley
      */
-    public static class JointFactorGraphPrm implements Serializable {
+    public static class JointFactorGraphPrm extends Prm {
         private static final long serialVersionUID = 1L;
         public boolean includeDp = true;
         public DepParseFactorGraphPrm dpPrm = new DepParseFactorGraphPrm();

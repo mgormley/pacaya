@@ -55,7 +55,6 @@ public class FgExampleTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
-        ofc.init(data);
         
         FgExample ex = data.get(0);
         

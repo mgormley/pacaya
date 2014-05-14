@@ -250,7 +250,6 @@ public class CrfObjectiveTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
-        ofc.init(data);
         
         System.out.println("Num features: " + ofc.getNumParams());
         FgModel model = new FgModel(ofc.getNumParams());

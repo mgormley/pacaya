@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.FgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -11,16 +12,22 @@ import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.data.UnlabeledFgExample;
+import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;
+import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.feat.FeatureCache;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureCache;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
+import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.gm.model.VarSet;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFactorGraph.JointFactorGraphPrm;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prm;
 
 /**
@@ -31,7 +38,8 @@ import edu.jhu.util.Prm;
  */
 public class JointNlpFgExamplesBuilder {
 
-    public static class JointNlpFgExampleBuilderPrm {
+    public static class JointNlpFgExampleBuilderPrm extends Prm {
+        private static final long serialVersionUID = 1L;
         public JointFactorGraphPrm fgPrm = new JointFactorGraphPrm();
         public JointNlpFeatureExtractorPrm fePrm = new JointNlpFeatureExtractorPrm();
         public FgExamplesBuilderPrm exPrm = new FgExamplesBuilderPrm();
@@ -64,8 +72,35 @@ public class JointNlpFgExamplesBuilder {
     }
 
     public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
+        if (!cs.isInitialized()) {
+            log.info("Initializing corpus statistics.");
+            cs.init(sents);
+        }
+        checkForRequiredAnnotations(sents);
+        
+        log.info("Building factor graphs and extracting features.");
         FgExampleListBuilder builder = new FgExampleListBuilder(prm.exPrm);
         FgExampleList data = builder.getInstance(new SrlFgExampleFactory(sents, ofc));
+        
+        // Special case: we somehow need to be able to create test examples
+        // where we've never seen the predicate.
+        FactorTemplateList fts = ofc.getTemplates();
+        if (prm.fgPrm.srlPrm.predictSense && fts.isGrowing()) {
+            // TODO: This should have a bias feature.
+            Var v = new Var(VarType.PREDICTED, 1, CorpusStatistics.UNKNOWN_SENSE, CorpusStatistics.SENSES_FOR_UNK_PRED);
+            fts.add(new FactorTemplate(new VarSet(v), new Alphabet<Feature>(), SrlFactorGraph.TEMPLATE_KEY_FOR_UNKNOWN_SENSE));
+        }
+        
+        if (!ofc.isInitialized()) {
+            log.info("Initializing the observation function conjoiner.");
+            ofc.init(data);
+        }
+                
+        log.info(String.format("Num examples: %d", data.size()));
+        // TODO: log.info(String.format("Num factors in %s: %d", name, data.getNumFactors()));
+        // TODO: log.info(String.format("Num variables in %s: %d", name, data.getNumVars()));
+        log.info(String.format("Num factor/clique templates: %d", fts.size()));
+        log.info(String.format("Num observation function features: %d", fts.getNumObsFeats()));
         return data;
     }
     
@@ -124,6 +159,25 @@ public class JointNlpFgExamplesBuilder {
         DepParseEncoder.getDepParseTrainAssignment(sent, sfg, vc);       
         SrlEncoder.getSrlTrainAssignment(sent, sfg, vc, fgPrm.srlPrm.predictSense, fgPrm.srlPrm.predictPredPos);
         return vc;
+    }
+    
+
+    private void checkForRequiredAnnotations(SimpleAnnoSentenceCollection sents) {
+        // Check that the first sentence has all the required annotation
+        // types for the specified feature templates.
+        SimpleAnnoSentence sent = sents.get(0);
+        if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
+            if (prm.fgPrm.includeSrl) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.pairTemplates);
+            }
+        }
+        if (prm.fgPrm.includeDp) {
+            TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.firstOrderTpls);
+            if (prm.fgPrm.dpPrm.grandparentFactors || prm.fgPrm.dpPrm.siblingFactors) {
+                TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.dpFePrm.secondOrderTpls);
+            }
+        }
     }
     
 }
