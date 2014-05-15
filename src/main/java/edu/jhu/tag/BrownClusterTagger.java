@@ -14,13 +14,14 @@ import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.srl.Annotator;
 import edu.jhu.util.Alphabet;
 
 /**
  * Reads a brown clusters file and tags a sentence, by replacing each word with
  * its corresponding cluster.
  */
-public class BrownClusterTagger {
+public class BrownClusterTagger implements Annotator {
 
     public static class BrownClusterTaggerPrm {
         /** Maximum length for Brown cluster tag. */
@@ -111,13 +112,13 @@ public class BrownClusterTagger {
         return (double) (numLookups - numMisses) / numLookups;
     }
 
-    public void addClusters(SimpleAnnoSentenceCollection sents) {
+    public void annotate(SimpleAnnoSentenceCollection sents) {
         for (SimpleAnnoSentence s : sents) {
-            addClusters(s);
+            annotate(s);
         }
     }
 
-    public void addClusters(SimpleAnnoSentence sent) {
+    public void annotate(SimpleAnnoSentence sent) {
         ArrayList<String> clusters = new ArrayList<String>();
         for (String word : sent.getWords()) {
             clusters.add(getCluster(word));

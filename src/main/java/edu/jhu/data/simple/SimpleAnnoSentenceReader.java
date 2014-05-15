@@ -24,13 +24,11 @@ import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 public class SimpleAnnoSentenceReader {
 
     public static class SimpleAnnoSentenceReaderPrm {
-        public BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
         public boolean useGoldSyntax = false;
         public int maxNumSentences = Integer.MAX_VALUE; 
         public int maxSentenceLength = Integer.MAX_VALUE; 
         public int minSentenceLength = 0;
         public SentFilter filter = null;
-        public File brownClusters = null;        
         public String name = "";
         
         // Parameters specific to data set type.
@@ -93,17 +91,7 @@ public class SimpleAnnoSentenceReader {
         log.info("Num " + prm.name + " sentences: " + sents.size());   
         log.info("Num " + prm.name + " tokens: " + sents.getNumTokens());
         log.info("Longest sentence: " + sents.getMaxLength());
-        
-        if (prm.brownClusters != null) {            
-            log.info("Adding Brown clusters.");
-            BrownClusterTagger bct = new BrownClusterTagger(prm.bcPrm);
-            bct.read(prm.brownClusters);
-            bct.addClusters(sents);
-            log.info("Brown cluster hit rate: " + bct.getHitRate());
-        } else {
-            log.warn("No Brown cluster file specified.");            
-        }
-        
+                
         reader.close();
     }
     

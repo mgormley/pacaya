@@ -66,8 +66,6 @@ public class CorpusHandler {
     public static int testMaxNumSentences = Integer.MAX_VALUE; 
 
     // Options for train/dev/test data
-    @Opt(hasArg = true, description = "Brown cluster file")
-    public static File brownClusters = null;
     @Opt(hasArg = true, description = "Random proportion of train data to allocate as dev data.")
     public static double propTrainAsDev = 0.0;
 
@@ -332,9 +330,6 @@ public class CorpusHandler {
     
     private SimpleAnnoSentenceReaderPrm getDefaultReaderPrm() {
         SimpleAnnoSentenceReaderPrm prm = new SimpleAnnoSentenceReaderPrm();
-        // TODO: prm.bcPrm.maxTagLength
-        prm.bcPrm.language = language;
-        prm.brownClusters = brownClusters;
         prm.normalizeRoleNames = normalizeRoleNames;
         prm.useGoldSyntax = useGoldSyntax;
         return prm;

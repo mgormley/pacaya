@@ -175,7 +175,7 @@ public class FeatureCreationSpeedTest {
         // Add Brown clusters
         BrownClusterTagger bct = new BrownClusterTagger(new BrownClusterTaggerPrm());
         bct.read(new File("./data/bc_out_1000/full.txt_en_1000/bc/paths"));
-        bct.addClusters(sents);
+        bct.annotate(sents);
         
         // Run
         System.out.println("Num sents: " + sents.size());

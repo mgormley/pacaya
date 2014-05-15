@@ -76,6 +76,8 @@ import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
 import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
+import edu.jhu.tag.BrownClusterTagger;
+import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
 import edu.jhu.util.Timer;
@@ -144,12 +146,18 @@ public class SrlRunner {
     public static boolean siblingFactors = false;
     @Opt(hasArg = true, description = "Whether to exclude non-projective grandparent factors.")
     public static boolean excludeNonprojectiveGrandparents = true;
+    
+    // Options for dependency parsing pruning.
     @Opt(hasArg = true, description = "File from which to read a first-order pruning model.")
     public static File pruneModel = null;
     @Opt(hasArg = true, description = "Whether to prune higher-order factors via a first-order pruning model.")
     public static boolean pruneByModel = false;
     @Opt(hasArg = true, description = "Whether to prune edges with a deterministic distance-based pruning approach.")
     public static boolean pruneByDist = false;
+    
+    // Options for Brown clusters.
+    @Opt(hasArg = true, description = "Brown cluster file")
+    public static File brownClusters = null;
     
     // Options for SRL factor graph structure.
     @Opt(hasArg = true, description = "Whether to model SRL.")
@@ -310,6 +318,8 @@ public class SrlRunner {
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
             SimpleAnnoSentenceCollection inputSents = corpus.getTrainInput();
 
+            addBrownClusters(inputSents);
+            SimpleAnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
             // Train the distance-based pruner. 
             if (pruneByDist) {
                 ptdPruner = new PosTagDistancePruner();
@@ -372,6 +382,7 @@ public class SrlRunner {
             fts.stopGrowth();
             String name = "dev";
             SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
+            addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
@@ -388,6 +399,7 @@ public class SrlRunner {
             fts.stopGrowth();
             String name = "test";
             SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
+            addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
@@ -397,6 +409,18 @@ public class SrlRunner {
             printOracleAccuracyAfterPruning(inputSents, goldSents, "test");
             eval(name, goldSents, predSents);
             corpus.clearTestCache();
+        }
+    }
+
+    private void addBrownClusters(SimpleAnnoSentenceCollection sents) throws IOException {
+        if (brownClusters != null) {            
+            log.info("Adding Brown clusters.");
+            BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
+            bct.read(brownClusters);
+            bct.annotate(sents);
+            log.info("Brown cluster hit rate: " + bct.getHitRate());
+        } else {
+            log.warn("No Brown cluster file specified.");            
         }
     }
 
@@ -475,7 +499,7 @@ public class SrlRunner {
 
     private void removeAts(JointNlpFeatureExtractorPrm fePrm) {
         List<AT> ats = Lists.union(CorpusHandler.getRemoveAts(), CorpusHandler.getPredAts());
-        if (CorpusHandler.brownClusters == null) {
+        if (brownClusters == null) {
             // Filter out the Brown cluster features.
             log.warn("Filtering out Brown cluster features.");
             ats.add(AT.BROWN);
@@ -760,6 +784,12 @@ public class SrlRunner {
         JointNlpDecoderPrm prm = new JointNlpDecoderPrm();
         prm.mbrPrm = mbrPrm;
         return prm;
+    }
+
+    private static BrownClusterTaggerPrm getBrownCluterTaggerPrm() {
+        BrownClusterTaggerPrm bcPrm = new BrownClusterTaggerPrm();
+        bcPrm.language = CorpusHandler.language;
+        return bcPrm;
     }
     
     public static void main(String[] args) {
