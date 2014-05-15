@@ -1,24 +1,16 @@
 package edu.jhu.srl;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.CorpusHandler;
 import edu.jhu.data.simple.SimpleAnnoSentence;
@@ -30,28 +22,14 @@ import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.featurize.TemplateReader;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.featurize.TemplateWriter;
-import edu.jhu.gm.data.FgExample;
-import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
-import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
-import edu.jhu.gm.eval.AccuracyEvaluator;
-import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
-import edu.jhu.gm.feat.FactorTemplate;
-import edu.jhu.gm.feat.FactorTemplateList;
-import edu.jhu.gm.feat.Feature;
-import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.BpScheduleType;
 import edu.jhu.gm.inf.BeliefPropagation.BpUpdateOrder;
-import edu.jhu.gm.inf.BruteForceInferencer.BruteForceInferencerPrm;
-import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
-import edu.jhu.gm.model.VarSet;
-import edu.jhu.gm.train.CrfTrainer;
 import edu.jhu.gm.train.CrfTrainer.CrfTrainerPrm;
 import edu.jhu.hlt.optimize.AdaDelta;
 import edu.jhu.hlt.optimize.AdaDelta.AdaDeltaPrm;
@@ -67,10 +45,11 @@ import edu.jhu.hlt.optimize.function.DifferentiableFunction;
 import edu.jhu.hlt.optimize.functions.L2;
 import edu.jhu.prim.util.math.FastMath;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
-import edu.jhu.srl.DepParseFactorGraph.DepParseFactorGraphPrm;
 import edu.jhu.srl.DepParseFeatureExtractor.DepParseFeatureExtractorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.InformationGainFeatureTemplateSelectorPrm;
 import edu.jhu.srl.InformationGainFeatureTemplateSelector.SrlFeatTemplates;
+import edu.jhu.srl.JointNlpAnnotator.InitParams;
+import edu.jhu.srl.JointNlpAnnotator.JointNlpAnnotatorPrm;
 import edu.jhu.srl.JointNlpDecoder.JointNlpDecoderPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFeatureExtractorPrm;
 import edu.jhu.srl.JointNlpFgExamplesBuilder.JointNlpFgExampleBuilderPrm;
@@ -78,13 +57,10 @@ import edu.jhu.srl.SrlFactorGraph.RoleStructure;
 import edu.jhu.srl.SrlFeatureExtractor.SrlFeatureExtractorPrm;
 import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
-import edu.jhu.util.Alphabet;
 import edu.jhu.util.Prng;
-import edu.jhu.util.Timer;
 import edu.jhu.util.cli.ArgParser;
 import edu.jhu.util.cli.Opt;
 import edu.jhu.util.collections.Lists;
-import edu.jhu.util.files.Files;
 
 /**
  * Pipeline runner for SRL experiments.
@@ -93,8 +69,6 @@ import edu.jhu.util.files.Files;
  */
 public class SrlRunner {
 
-    public static enum InitParams { UNIFORM, RANDOM };
-    
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
     
     private static final Logger log = Logger.getLogger(SrlRunner.class);
@@ -288,31 +262,18 @@ public class SrlRunner {
         // Initialize the data reader/writer.
         CorpusHandler corpus = new CorpusHandler();
         
-        // Get a model.
-        JointNlpFgModel model = null;
-        ObsFeatureConjoiner ofc;
-        FactorTemplateList fts;
-        CorpusStatistics cs;
-        JointNlpFeatureExtractorPrm fePrm;
         PosTagDistancePruner ptdPruner = null;
-        if (modelIn != null) {
-            // Read a model from a file.
-            log.info("Reading model from file: " + modelIn);
-            model = (JointNlpFgModel) Files.deserialize(modelIn);
-            ofc = model.getOfc();
-            fts = ofc.getTemplates();
-            cs = model.getCs();
-            fePrm = model.getFePrm();            
-            // TODO: use atList here.
-        } else {
-            fePrm = getJointNlpFeatureExtractorPrm();
-            removeAts(fePrm);
-            cs = new CorpusStatistics(getCorpusStatisticsPrm());
-            featureSelection(corpus.getTrainGold(), cs, fePrm);
-            fts = new FactorTemplateList();
-            ofc = new ObsFeatureConjoiner(getObsFeatureConjoinerPrm(), fts);
+        // Get a model.
+        JointNlpAnnotatorPrm prm = getJointNlpAnnotatorPrm();
+        if (modelIn == null) {
+            // Feature selection.
+            featureSelection(corpus.getTrainGold(), prm.buPrm.fePrm);
         }
-
+        JointNlpAnnotator jointAnno = new JointNlpAnnotator(prm);
+        if (modelIn != null) {
+            jointAnno.loadModel(modelIn);
+        }
+        
         if (corpus.hasTrain()) {
             String name = "train";            
             SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
@@ -328,86 +289,49 @@ public class SrlRunner {
             addPruneMask(inputSents, ptdPruner, name);
             // Ensure that the gold data is annotated with the pruning mask as well.
             SimpleAnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
-            printOracleAccuracyAfterPruning(inputSents, goldSents, "train");
 
             // Train a model.
-            FgExampleList data = getData(ofc, cs, name, goldSents, fePrm, true);
-            
-            if (model == null) {
-                model = new JointNlpFgModel(cs, ofc, fePrm);
-                if (initParams == InitParams.RANDOM) {
-                    model.setRandomStandardNormal();
-                } else if (initParams == InitParams.UNIFORM) {
-                    // Do nothing.
-                } else {
-                    throw new ParseException("Parameter initialization method not implemented: " + initParams);
-                }
-            } else {
-                log.info("Using read model as initial parameters for training.");
-            }
-            log.info(String.format("Num model params: %d", model.getNumParams()));
-
-            log.info("Training model.");
-            CrfTrainerPrm prm = getCrfTrainerPrm();
-            CrfTrainer trainer = new CrfTrainer(prm);
-            trainer.train(model, data);
-            trainer = null; // Allow for GC.
+            jointAnno.train(goldSents);
             
             // Decode and evaluate the train data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
-            corpus.writeTrainPreds(predSents);
-            eval(name, goldSents, predSents);
+            jointAnno.annotate(inputSents);
+            corpus.writeTrainPreds(inputSents);
+            eval(name, goldSents, inputSents);
             corpus.clearTrainCache();
         }
           
         if (modelOut != null) {
-            // Write the model to a file.
-            log.info("Serializing model to file: " + modelOut);
-            Files.serialize(model, modelOut);
+            jointAnno.saveModel(modelOut);
         }
         if (printModel != null) {
-            // Print the model to a file.
-            log.info("Printing human readable model to file: " + printModel);            
-            OutputStream os = new FileOutputStream(printModel);
-            if (printModel.getName().endsWith(".gz")) {
-                os = new GZIPOutputStream(os);
-            }
-            Writer writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            model.printModel(writer);
-            writer.close();
+            jointAnno.printModel(printModel);
         }
 
         if (corpus.hasDev()) {
             // Test the model on dev data.
-            fts.stopGrowth();
             String name = "dev";
             SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
             addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the dev data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);            
-            corpus.writeDevPreds(predSents);
+            jointAnno.annotate(inputSents);            
+            corpus.writeDevPreds(inputSents);
             SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
-            printOracleAccuracyAfterPruning(inputSents, goldSents, "dev");
-            eval(name, goldSents, predSents);
+            eval(name, goldSents, inputSents);
             corpus.clearDevCache();
         }
         
         if (corpus.hasTest()) {
             // Test the model on test data.
-            fts.stopGrowth();
             String name = "test";
             SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
             addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
-            FgExampleList data = getData(ofc, cs, name, inputSents, fePrm, false);
             // Decode and evaluate the test data.
-            SimpleAnnoSentenceCollection predSents = decode(model, data, inputSents, name);
-            corpus.writeTestPreds(predSents);
+            jointAnno.annotate(inputSents);
+            corpus.writeTestPreds(inputSents);
             SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
-            printOracleAccuracyAfterPruning(inputSents, goldSents, "test");
-            eval(name, goldSents, predSents);
+            eval(name, goldSents, inputSents);
             corpus.clearTestCache();
         }
     }
@@ -437,34 +361,15 @@ public class SrlRunner {
             foPruner.annotate(inputSents);
         }
     }
-
-    private void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
-        if (pruneByDist || pruneByModel) {
-            int numTot = 0;
-            int numCorrect = 0;
-            for (int i=0; i<predSents.size(); i++) {
-                SimpleAnnoSentence predSent = predSents.get(i);
-                SimpleAnnoSentence goldSent = goldSents.get(i);
-                if (predSent.getDepEdgeMask() != null) {
-                    for (int c=0; c<goldSent.size(); c++) {
-                        int p = goldSent.getParent(c);
-                        if (predSent.getDepEdgeMask().isKept(p, c)) {
-                            numCorrect++;
-                        }
-                        numTot++;
-                    }
-                }
-            }
-            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
-        }
-    }
     
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */
-    private void featureSelection(SimpleAnnoSentenceCollection sents, CorpusStatistics cs, JointNlpFeatureExtractorPrm fePrm) throws IOException,
+    private void featureSelection(SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) throws IOException,
             ParseException {
         SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
+        // Remove annotation types from the features which are explicitly excluded.
+        removeAts(fePrm);
         if (useTemplates && featureSelection) {
             CorpusStatisticsPrm csPrm = getCorpusStatisticsPrm();
             
@@ -480,7 +385,6 @@ public class SrlRunner {
             ig.shutdown();
             srlFePrm.fePrm.soloTemplates = sft.srlSense;
             srlFePrm.fePrm.pairTemplates = sft.srlArg;
-            removeAts(fePrm); // TODO: This probably isn't necessary, but just in case.
         }
         if (includeSrl && acl14DepFeats) {
             fePrm.dpFePrm.firstOrderTpls = srlFePrm.fePrm.pairTemplates;            
@@ -512,20 +416,35 @@ public class SrlRunner {
         }
     }
 
-    private FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, boolean labeledExamples) {
-        JointNlpFgExampleBuilderPrm prm = getSrlFgExampleBuilderPrm(fePrm);        
-        return getData(ofc, cs, name, sents, fePrm, prm, labeledExamples);
+    private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
+        printOracleAccuracyAfterPruning(predSents, goldSents, name);
+        printPredArgSelfLoopStats(goldSents);
+
+        DepParseEvaluator eval = new DepParseEvaluator(name);
+        eval.evaluate(goldSents, predSents);
     }
 
-    private static FgExampleList getData(ObsFeatureConjoiner ofc, CorpusStatistics cs, String name,
-            SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm, JointNlpFgExampleBuilderPrm prm,
-            boolean labeledExamples) {        
-        JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs, labeledExamples);
-        FgExampleList data = builder.getData(sents);
-        return data;
+    private static void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
+        if (pruneByDist || pruneByModel) {
+            int numTot = 0;
+            int numCorrect = 0;
+            for (int i=0; i<predSents.size(); i++) {
+                SimpleAnnoSentence predSent = predSents.get(i);
+                SimpleAnnoSentence goldSent = goldSents.get(i);
+                if (predSent.getDepEdgeMask() != null) {
+                    for (int c=0; c<goldSent.size(); c++) {
+                        int p = goldSent.getParent(c);
+                        if (predSent.getDepEdgeMask().isKept(p, c)) {
+                            numCorrect++;
+                        }
+                        numTot++;
+                    }
+                }
+            }
+            log.info("Oracle pruning accuracy on " + name + ": " + (double) numCorrect / numTot);
+        }
     }
-
+    
     private static void printPredArgSelfLoopStats(SimpleAnnoSentenceCollection sents) {
         int numPredArgSelfLoop = 0;
         int numPredArgs = 0;
@@ -544,51 +463,19 @@ public class SrlRunner {
         }
     }
 
-    private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
-        printPredArgSelfLoopStats(goldSents);
-
-        DepParseEvaluator eval = new DepParseEvaluator(name);
-        eval.evaluate(goldSents, predSents);
-    }
-    
-    private void eval(String name, VarConfigPair pair) {
-        AccuracyEvaluator accEval = new AccuracyEvaluator();
-        double accuracy = accEval.evaluate(pair.gold, pair.pred);
-        log.info(String.format("Accuracy on %s: %.6f", name, accuracy));
-    }
-    
-    private SimpleAnnoSentenceCollection decode(FgModel model, FgExampleList data, SimpleAnnoSentenceCollection inputSents, String name) throws IOException, ParseException {
-        log.info("Running the decoder on " + name + " data.");
-
-        Timer timer = new Timer();
-        timer.start();
-        // Add the new predictions to the input sentences.
-        for (int i = 0; i < inputSents.size(); i++) {
-            UFgExample ex = data.get(i);
-            SimpleAnnoSentence predSent = inputSents.get(i);
-            JointNlpDecoder decoder = new JointNlpDecoder(getDecoderPrm());
-            decoder.decode(model, ex);
-                        
-            // Update SRL graph on the sentence. 
-            SrlGraph srlGraph = decoder.getSrlGraph();
-            if (srlGraph != null) {
-                predSent.setSrlGraph(srlGraph);
-            }
-            // Update the dependency tree on the sentence.
-            int[] parents = decoder.getParents();
-            if (parents != null) {
-                predSent.setParents(parents);
-            }
-        }
-        timer.stop();
-        log.info(String.format("Decoded %s at %.2f tokens/sec", name, inputSents.getNumTokens() / timer.totSec()));
-        
-        return inputSents;
-    }
-
-    
-
     /* --------- Factory Methods ---------- */
+
+    private static JointNlpAnnotatorPrm getJointNlpAnnotatorPrm() {
+        JointNlpAnnotatorPrm prm = new JointNlpAnnotatorPrm();
+        prm.crfPrm = getCrfTrainerPrm();
+        prm.csPrm = getCorpusStatisticsPrm();
+        prm.dePrm = getDecoderPrm();
+        prm.initParams = initParams;
+        prm.ofcPrm = getObsFeatureConjoinerPrm();
+        JointNlpFeatureExtractorPrm fePrm = getJointNlpFeatureExtractorPrm();
+        prm.buPrm = getSrlFgExampleBuilderPrm(fePrm);
+        return prm;
+    }
     
     private static JointNlpFgExampleBuilderPrm getSrlFgExampleBuilderPrm(JointNlpFeatureExtractorPrm fePrm) {
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
