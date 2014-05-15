@@ -227,7 +227,7 @@ public class SrlRunner {
     @Opt(hasArg = true, description = "2nd-order factor feature templates.")
     public static String dp2FeatTpls = TemplateSets.carreras07Dep2FeatsResource;   
     @Opt(hasArg = true, description = "Whether to use SRL features for dep parsing.")
-    public static final boolean acl14DepFeats = true;
+    public static boolean acl14DepFeats = true;
     
     // Options for data munging.
     @Deprecated

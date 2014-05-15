@@ -77,6 +77,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
         gl = g.langs["es"]
         ll = l.langs["es"]
                 
+        g.defaults.update(acl14DepFeats=True)
+        
         if self.expname == "srl-narad-dev20":
             g.defaults += g.feat_tpl_narad
             g.defaults.update(trainMaxSentenceLength=20)

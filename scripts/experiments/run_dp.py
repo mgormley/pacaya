@@ -62,7 +62,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
                           sgdAutoSelecFreq=2, sgdAutoSelectLr=False, pruneByDist=True,
-                          useLogAddTable=True)
+                          useLogAddTable=True, acl14DepFeats=False)
         
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
                                    removeAts="DEPREL", tagger_parser="1st", pruneByModel=False)
