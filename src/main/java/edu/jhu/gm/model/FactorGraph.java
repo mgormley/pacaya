@@ -3,13 +3,11 @@ package edu.jhu.gm.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import edu.jhu.gm.model.FactorGraph.FgEdge;
 import edu.jhu.gm.model.FactorGraph.FgNode;
 import edu.jhu.gm.util.DirectedGraph;
-import edu.jhu.srl.SrlRunner;
 
 /**
  * Factor graph.

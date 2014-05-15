@@ -67,11 +67,11 @@ import edu.jhu.util.collections.Lists;
  * @author mgormley
  * @author mmitchell
  */
-public class SrlRunner {
+public class JointNlpRunner {
 
     public static enum Optimizer { LBFGS, SGD, ADAGRAD, ADADELTA };
     
-    private static final Logger log = Logger.getLogger(SrlRunner.class);
+    private static final Logger log = Logger.getLogger(JointNlpRunner.class);
 
     // Options not specific to the model
     @Opt(name = "seed", hasArg = true, description = "Pseudo random number generator seed for everything else.")
@@ -246,7 +246,7 @@ public class SrlRunner {
     @Opt(hasArg=true, description="Stop training by this date/time.")
     public static Date stopTrainingBy = null;
 
-    public SrlRunner() {
+    public JointNlpRunner() {
     }
 
     public void run() throws ParseException, IOException {  
@@ -681,8 +681,8 @@ public class SrlRunner {
     
     public static void main(String[] args) {
         try {
-            ArgParser parser = new ArgParser(SrlRunner.class);
-            parser.addClass(SrlRunner.class);
+            ArgParser parser = new ArgParser(JointNlpRunner.class);
+            parser.addClass(JointNlpRunner.class);
             parser.addClass(CorpusHandler.class);
             try {
                 parser.parseArgs(args);
@@ -694,7 +694,7 @@ public class SrlRunner {
             
             Prng.seed(seed);
             
-            SrlRunner pipeline = new SrlRunner();
+            JointNlpRunner pipeline = new JointNlpRunner();
             try {
                 pipeline.run();
             } catch (ParseException e1) {
