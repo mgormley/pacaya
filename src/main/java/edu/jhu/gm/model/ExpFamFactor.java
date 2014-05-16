@@ -67,6 +67,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
                 
                 double dot = getDotProd(config, model, logDomain);
                 assert !Double.isNaN(dot);
+                assert !Double.isInfinite(dot);
                 f.setValue(c, dot);
             }
             assert(iter == null || !iter.hasNext());
