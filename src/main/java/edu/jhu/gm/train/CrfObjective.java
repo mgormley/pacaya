@@ -44,7 +44,7 @@ public class CrfObjective implements ExampleObjective {
     /** @inheritDoc */
     // Assumed by caller to be threadsafe.
     @Override
-    public void addValueGradient(FgModel model, int i, MutableValueGradient vg) {
+    public void accum(FgModel model, int i, Accumulator ac) {
         FgExample ex = data.get(i);
         Timer t = new Timer();
         
@@ -68,23 +68,20 @@ public class CrfObjective implements ExampleObjective {
         infLatPred.run();
         t.stop(); infTimer.add(t);
 
-        if (vg.hasValue()) {
+        if (ac.accumValue) {
             // Compute the condition log-likelihood for this example.
             t.reset(); t.start();
-            vg.addValue(getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i));
+            ac.value += getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i);
             t.stop(); valTimer.add(t);
         }
-        if (vg.hasGradient()) {
+        if (ac.accumGradient) {
             // Compute the gradient for this example.
             t.reset(); t.start();
-            addGradient(model, ex, vg.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            addGradient(model, ex, ac.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
             t.stop(); gradTimer.add(t);
         }
-        
-        vg.addWeight(ex.getWeight());
-        
-        if (i == 0) {
-            report();
+        if (ac.accumWeight) {
+            ac.weight += ex.getWeight();
         }
     }
     
@@ -243,9 +240,11 @@ public class CrfObjective implements ExampleObjective {
         return data.size();
     }
 
-    private void report() {
-        log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
-                updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+    public void report() {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Timers avg (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
+                    updTimer.avgMs(), infTimer.avgMs(), valTimer.avgMs(), gradTimer.avgMs()));
+        }
         double sum = updTimer.totMs() + infTimer.totMs() + valTimer.totMs() + gradTimer.totMs();
         double mult = 100.0 / sum;
         log.debug(String.format("Timers total%% (ms): model=%.1f inf=%.1f val=%.1f grad=%.1f", 
