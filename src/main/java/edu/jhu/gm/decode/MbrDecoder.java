@@ -59,13 +59,18 @@ public class MbrDecoder {
     public FgInferencer decode(FgModel model, UFgExample ex) {
         // Run inference.
         FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
-        FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
-        inf.run();        
-        decode(inf, ex);
-        return inf;
+        FgInferencer infLatPred = prm.infFactory.getInferencer(fgLatPred);
+        infLatPred.run();        
+        decode(infLatPred, ex);
+        return infLatPred;
     }
 
-    private void decode(FgInferencer inf, UFgExample ex) {
+    /**
+     * Computes the MBR variable configuration from the marginals cached in the
+     * inferencer, which is assumed to have already been run. The outputs are
+     * stored on the class, and can be queried after this call to decode.
+     */
+    public void decode(FgInferencer infLatPred, UFgExample ex) {
         FactorGraph fgLatPred = ex.getFgLatPred();
         
         mbrVarConfig = new VarConfig();
@@ -80,7 +85,7 @@ public class MbrDecoder {
         if (prm.loss == Loss.ACCURACY || prm.loss == Loss.MSE || prm.loss == Loss.L1) {
             for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                 Var var = fgLatPred.getVar(varId);
-                DenseFactor marg = inf.getMarginalsForVarId(varId);
+                DenseFactor marg = infLatPred.getMarginalsForVarId(varId);
                 margs.add(marg);
                 int argmaxState = marg.getArgmaxConfigId();
                 mbrVarConfig.put(var, argmaxState);

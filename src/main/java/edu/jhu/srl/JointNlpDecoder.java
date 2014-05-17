@@ -6,6 +6,7 @@ import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
+import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.FgModel;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
@@ -41,6 +42,17 @@ public class JointNlpDecoder {
         boolean logDomain = prm.mbrPrm.infFactory.isLogDomain();
         MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
         mbrDecoder.decode(model, ex);
+        decode(ex, logDomain, mbrDecoder);
+    }
+    
+    public void decode(FgInferencer infLatPred, UFgExample ex) {
+        boolean logDomain = prm.mbrPrm.infFactory.isLogDomain();
+        MbrDecoder mbrDecoder = new MbrDecoder(prm.mbrPrm);
+        mbrDecoder.decode(infLatPred, ex);
+        decode(ex, logDomain, mbrDecoder);
+    }
+
+    private void decode(UFgExample ex, boolean logDomain, MbrDecoder mbrDecoder) {
         JointNlpFactorGraph srlFg = (JointNlpFactorGraph) ex.getOriginalFactorGraph();
         int n = srlFg.getSentenceLength();
         mbrVarConfig = mbrDecoder.getMbrVarConfig();
@@ -70,12 +82,13 @@ public class JointNlpDecoder {
     public SrlGraph getSrlGraph() {
         return srlGraph;
     }
-    
-    public VarConfig getMbrVarConfig() {
-        return mbrVarConfig;
-    }
 
     public DepEdgeMask getDepEdgeMask() {
         return depEdgeMask;
     }
+    
+    public VarConfig getMbrVarConfig() {
+        return mbrVarConfig;
+    }
+    
 }
