@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
@@ -102,7 +102,7 @@ public class LogLinearObsFeats {
      *         distribution over y values.
      */
     public Pair<String, DenseFactor> decode(FgModel model, LogLinearExample llex) {
-        FgExample ex = getFgExample(llex);
+        LFgExample ex = getFgExample(llex);
         
         MbrDecoderPrm prm = new MbrDecoderPrm();
         prm.infFactory = getBpPrm(); 
@@ -140,7 +140,7 @@ public class LogLinearObsFeats {
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         for (final LogLinearExample desc : exList) {
             for (int i=0; i<desc.getWeight(); i++) {
-                FgExample ex = getFgExample(desc);
+                LFgExample ex = getFgExample(desc);
                 data.add(ex);
             }
         }
@@ -151,7 +151,7 @@ public class LogLinearObsFeats {
         return data;
     }
 
-    private FgExample getFgExample(final LogLinearExample desc) {
+    private LFgExample getFgExample(final LogLinearExample desc) {
         if (fts == null) {
             throw new IllegalStateException("decode can only be called after train");
         }

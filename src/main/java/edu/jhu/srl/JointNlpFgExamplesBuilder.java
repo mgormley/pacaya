@@ -6,7 +6,7 @@ import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.gm.data.AbstractFgExampleList;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder;
 import edu.jhu.gm.data.FgExampleListBuilder.FgExamplesBuilderPrm;
@@ -117,7 +117,7 @@ public class JointNlpFgExamplesBuilder {
             this.ofc = ofc;
         }
         
-        public FgExample get(int i) {
+        public LFgExample get(int i) {
             log.trace("Getting example: " + i);
             SimpleAnnoSentence sent = sents.get(i);
             
@@ -135,7 +135,7 @@ public class JointNlpFgExamplesBuilder {
             VarConfig vc = getVarAssignment(sent, sfg, prm.fgPrm);
             
             // Create the example.
-            FgExample ex;
+            LFgExample ex;
             if (labeledExamples) {
                 ex = new LabeledFgExample(sfg, vc, obsFe, fts);
             } else {

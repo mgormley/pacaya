@@ -13,19 +13,19 @@ public class FgExampleMemoryStore extends AbstractFgExampleList implements FgExa
 
     // Note: ArrayList is not synchronized, so we must synchronize access to
     // this class.
-    private ArrayList<FgExample> examples;
+    private ArrayList<LFgExample> examples;
 
     public FgExampleMemoryStore() {
-        this.examples = new ArrayList<FgExample>();
+        this.examples = new ArrayList<LFgExample>();
     }
 
     /** Adds an example. */
-    public synchronized void add(FgExample example) {
+    public synchronized void add(LFgExample example) {
         examples.add(example);
     }
 
     /** Gets the i'th example. */
-    public synchronized FgExample get(int i) {
+    public synchronized LFgExample get(int i) {
         return examples.get(i);
     }
 

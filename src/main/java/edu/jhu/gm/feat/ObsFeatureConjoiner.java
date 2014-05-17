@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
@@ -215,7 +215,7 @@ public class ObsFeatureConjoiner implements Serializable {
         
         // Loop over all factors in the dataset. 
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             // Create a "no-op" inferencer, which returns arbitrary marginals.
             FgInferencer inferencer = new NoOpInferencer(ex.getFgLatPred());   
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
@@ -250,7 +250,7 @@ public class ObsFeatureConjoiner implements Serializable {
             }
         }
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             for (int a=0; a<ex.getOriginalFactorGraph().getNumFactors(); a++) {
                 Factor f = ex.getFgLat().getFactor(a);
                 if (f instanceof ObsFeatureCarrier && f instanceof TemplateFactor) {

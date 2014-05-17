@@ -9,7 +9,7 @@ import java.io.ObjectOutputStream;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.FactorTemplate;
 import edu.jhu.gm.feat.FactorTemplateList;

@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.simple.SimpleAnnoSentence;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.model.Var.VarType;
@@ -64,7 +64,7 @@ public class FirstOrderPruner implements Annotator {
         timer.start();
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             SimpleAnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
             decoder.decode(model, ex);

@@ -18,7 +18,7 @@ import data.FeatureFile;
 import data.RV;
 import data.VariableSet;
 import dataParser.DataParser;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.model.Factor;
@@ -61,7 +61,7 @@ public class ErmaReaderTest {
             //System.out.println(s);
             //System.out.println(fg);
 
-            FgExample ex = data.get(i);            
+            LFgExample ex = data.get(i);            
             FactorGraph ourFg = ex.getOriginalFactorGraph();
             
             assertEquals(ermaFg.getFactors().size(), ourFg.getNumFactors());

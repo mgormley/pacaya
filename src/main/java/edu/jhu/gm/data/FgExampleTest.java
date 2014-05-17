@@ -56,7 +56,7 @@ public class FgExampleTest {
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(sents);
         
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         
         // Global factor should still be there.
         assertEquals(1 + 3 + 3*2 + 2 + 2, ex.getFgLatPred().getFactors().size());

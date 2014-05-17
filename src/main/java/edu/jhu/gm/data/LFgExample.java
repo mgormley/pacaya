@@ -14,7 +14,7 @@ import edu.jhu.gm.model.VarConfig;
  * @author mgormley
  * 
  */
-public interface FgExample extends UFgExample, Serializable {
+public interface LFgExample extends UFgExample, Serializable {
 
     /**
      * Gets the factor graph with the OBSERVED and PREDICTED variables clamped

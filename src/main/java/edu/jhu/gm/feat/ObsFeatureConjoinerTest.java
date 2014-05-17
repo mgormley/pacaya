@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.LabeledFgExample;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -95,7 +95,7 @@ public class ObsFeatureConjoinerTest {
         }
     }
     
-    private FgExample getExForFts(String state1, String state2, ObsFeatureConjoiner ofc, FactorTemplateList fts, boolean useLat) {
+    private LFgExample getExForFts(String state1, String state2, ObsFeatureConjoiner ofc, FactorTemplateList fts, boolean useLat) {
         Var v1 = new Var(VarType.PREDICTED, 2, "1", Lists.getList("1a", "1b"));
         Var v2 = new Var(useLat ? VarType.LATENT : VarType.PREDICTED, 3, "2", Lists.getList("2a", "2b", "2c"));
         FactorGraph fg = new FactorGraph();

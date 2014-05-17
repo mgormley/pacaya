@@ -17,7 +17,7 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.featurize.TemplateSets;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -98,7 +98,7 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         //assertEquals(1, obsAlphabet.size());
         //assertEquals(6*2 + 2 + 6, fts.size());
 
@@ -213,7 +213,7 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
         System.out.println(vc.toString().replace(",", "\n"));
@@ -254,7 +254,7 @@ public class JointNlpFgExamplesBuilderTest {
         ObsFeatureConjoiner ofc = new ObsFeatureConjoiner(new ObsFeatureConjoinerPrm(), fts);
         JointNlpFgExamplesBuilder builder = new JointNlpFgExamplesBuilder(prm, ofc, cs);
         FgExampleList data = builder.getData(simpleSents);
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         
         VarConfig vc = ex.getGoldConfig();
         System.out.println(vc.toString().replace(",", "\n"));

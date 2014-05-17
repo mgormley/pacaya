@@ -13,7 +13,7 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.erma.ErmaReader;
 import edu.jhu.gm.data.erma.ErmaWriter;
@@ -204,7 +204,7 @@ public class CrfRunner {
 
         for (int i=0; i<data.size(); i++) {
             MbrDecoder decoder = getDecoder();
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             decoder.decode(model, ex);
             predVcs.add(decoder.getMbrVarConfig());
             varMargMap.putAll(decoder.getVarMargMap());

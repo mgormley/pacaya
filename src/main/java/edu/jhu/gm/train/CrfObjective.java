@@ -3,7 +3,7 @@ package edu.jhu.gm.train;
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
@@ -22,7 +22,7 @@ public class CrfObjective implements ExampleObjective {
     
     public interface CrfLoss {
 
-        double getLoss(int i, FgExample ex, FgInferencer infLatPred);
+        double getLoss(int i, LFgExample ex, FgInferencer infLatPred);
         
     }
     
@@ -59,7 +59,7 @@ public class CrfObjective implements ExampleObjective {
     // Assumed by caller to be threadsafe.
     @Override
     public void accum(FgModel model, int i, Accumulator ac) {
-        FgExample ex = data.get(i);
+        LFgExample ex = data.get(i);
         Timer t = new Timer();
         
         // Get the inferencers.
@@ -117,7 +117,7 @@ public class CrfObjective implements ExampleObjective {
      * @param infLatPred The inferencer for fgLatPred.
      * @param i The data example.
      */      
-    public double getValue(FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
+    public double getValue(LFgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
         
@@ -187,7 +187,7 @@ public class CrfObjective implements ExampleObjective {
      * @param infLatPred The inferencer for fgLatPred.
      * @param i The data example.
      */
-    public void addGradient(FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+    public void addGradient(LFgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
         addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
         
@@ -204,7 +204,7 @@ public class CrfObjective implements ExampleObjective {
      * @param factorId The id of the factor.
      * @param featCache The feature cache for the clamped factor graph, on which the inferencer was run.
      */
-    private void addExpectedFeatureCounts(FactorGraph fg, FgExample ex, FgInferencer inferencer, double multiplier,
+    private void addExpectedFeatureCounts(FactorGraph fg, LFgExample ex, FgInferencer inferencer, double multiplier,
             IFgModel gradient) {
         // For each factor...
         for (int factorId=0; factorId<fg.getNumFactors(); factorId++) {     
@@ -219,7 +219,7 @@ public class CrfObjective implements ExampleObjective {
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
             FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());
             infLat.run();
@@ -236,7 +236,7 @@ public class CrfObjective implements ExampleObjective {
         FgModel feats = model.getDenseCopy();
         feats.zero();
         for (int i=0; i<data.size(); i++) {
-            FgExample ex = data.get(i);
+            LFgExample ex = data.get(i);
             FgInferencer infLatPred = infFactory.getInferencer(ex.getFgLatPred());
             FactorGraph fgLatPred = ex.updateFgLatPred(model, infLatPred.isLogDomain());
             infLatPred.run();

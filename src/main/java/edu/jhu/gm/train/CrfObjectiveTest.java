@@ -17,7 +17,7 @@ import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
 import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
 import edu.jhu.gm.data.FgExampleMemoryStore;
@@ -124,7 +124,7 @@ public class CrfObjectiveTest {
 			VarConfig gold = new VarConfig();
 			for(int j=0; j<chainLen; j++)
 				gold.put(x.get(j), rand.nextInt(xNames.size()));
-			FgExample e = new LabeledFgExample(fg, gold);
+			LFgExample e = new LabeledFgExample(fg, gold);
 			exs.add(e);
 		}
 		
@@ -174,7 +174,7 @@ public class CrfObjectiveTest {
         FgModel model = new FgModel(ofc.getNumParams());
 
         FgInferencerFactory infFactory = getInfFactory(logDomain);        
-        FgExample ex = data.get(0);
+        LFgExample ex = data.get(0);
         
         FgInferencer infLat = infFactory.getInferencer(ex.getFgLat());
         FactorGraph fgLat = ex.updateFgLat(model, infLat.isLogDomain());

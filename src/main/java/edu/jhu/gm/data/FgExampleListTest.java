@@ -19,7 +19,7 @@ public class FgExampleListTest {
         }
         
         FactorTemplateList fts = new FactorTemplateList();
-        FgExample ex = new LabeledFgExample(fg, vc, new SimpleVCFeatureExtractor(fts), fts);
+        LFgExample ex = new LabeledFgExample(fg, vc, new SimpleVCFeatureExtractor(fts), fts);
         FgExampleMemoryStore data = new FgExampleMemoryStore();
         data.add(ex);
         

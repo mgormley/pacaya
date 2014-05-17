@@ -3,7 +3,7 @@ package edu.jhu.gm.maxent;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.feat.Feature;

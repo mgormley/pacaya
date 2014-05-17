@@ -83,7 +83,7 @@ public class FgExampleListBuilder {
             }
             // Construct the example to update counter, and then discard it.
             fgTimer.start();
-            FgExample ex = examples.get(i);
+            LFgExample ex = examples.get(i);
             if (store != null) {
                 store.add(ex);
             }

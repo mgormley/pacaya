@@ -23,7 +23,7 @@ import edu.jhu.gm.model.VarSet;
  * 
  */
 // TODO: rename to CrfExample
-public class LabeledFgExample extends UnlabeledFgExample implements FgExample, Serializable {
+public class LabeledFgExample extends UnlabeledFgExample implements LFgExample, Serializable {
 
     private static final long serialVersionUID = 1L;
     

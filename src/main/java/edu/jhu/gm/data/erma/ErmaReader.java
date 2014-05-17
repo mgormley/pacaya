@@ -16,7 +16,7 @@ import data.FeatureFile;
 import data.FeatureInstance;
 import data.RV;
 import dataParser.DataParser;
-import edu.jhu.gm.data.FgExample;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleMemoryStore;
 import edu.jhu.gm.data.FgExampleStore;
@@ -186,7 +186,7 @@ public class ErmaReader {
     
     
     /**
-     * Creates our {@link FgExample} from an ERMA {@link DataSample} and
+     * Creates our {@link LFgExample} from an ERMA {@link DataSample} and
      * {@link FeatureFile}.
      * 
      * The feature vector reuse is (currently) consistent with ERMA. That is,
@@ -200,7 +200,7 @@ public class ErmaReader {
      * @param alphabet The alphabet corresponding to our factor graph model.
      * @return A new factor graph example constructed from the inputs.
      */
-    private static FgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
+    private static LFgExample toFgExample(DataSample s, FeatureFile ff, Alphabet<Feature> alphabet){
         //Saves the variable set to factor HashMappings
         HashMap<String,ExpFamFactor> facs = new HashMap<String, ExpFamFactor>();
         // MRG: A mapping from a string identifier for a FeatureInstance, to a
@@ -343,7 +343,7 @@ public class ErmaReader {
         // MRG: Create a feature extractor which just looks up the appropriate feature vectors in feature_ref_vec.
         featExtractor.setFeatureRefVec(feature_ref_vec);
         
-        FgExample fgEx = new LabeledFgExample(fg, trainConfig, featExtractor);
+        LFgExample fgEx = new LabeledFgExample(fg, trainConfig, featExtractor);
         return fgEx;
         // MRG: ERMA WAY: FeatureFactorGraph ffg = new FeatureFactorGraph(facs_vec,feature_ref_vec); return ffg;
         //cout << "--de "<<endl;
