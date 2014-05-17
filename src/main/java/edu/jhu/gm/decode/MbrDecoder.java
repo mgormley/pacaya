@@ -57,6 +57,17 @@ public class MbrDecoder {
      * @return the FgInferencer that was used.
      */
     public FgInferencer decode(FgModel model, UFgExample ex) {
+        // Run inference.
+        FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
+        FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
+        inf.run();        
+        decode(inf, ex);
+        return inf;
+    }
+
+    private void decode(FgInferencer inf, UFgExample ex) {
+        FactorGraph fgLatPred = ex.getFgLatPred();
+        
         mbrVarConfig = new VarConfig();
         margs = new ArrayList<DenseFactor>();
         varMargMap = new HashMap<Var,Double>();
@@ -64,11 +75,6 @@ public class MbrDecoder {
         // Add in the observed variables.
         mbrVarConfig.put(ex.getObsConfig());
 
-        // Run inference.
-        FactorGraph fgLatPred = ex.updateFgLatPred(model, prm.infFactory.isLogDomain());
-        FgInferencer inf = prm.infFactory.getInferencer(fgLatPred);
-        inf.run();
-        
         // Get the MBR configuration of all the latent and predicted
         // variables.        
         if (prm.loss == Loss.ACCURACY || prm.loss == Loss.MSE || prm.loss == Loss.L1) {
@@ -87,7 +93,6 @@ public class MbrDecoder {
         } else {
             throw new RuntimeException("Loss type not implemented: " + prm.loss);
         }
-        return inf;
     }
     
     /** Gets the MBR variable configuration for the example that was decoded. */

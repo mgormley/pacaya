@@ -20,13 +20,20 @@ import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     
+    public interface CrfLoss {
+
+        double getLoss(int i, FgExample ex, FgInferencer infLatPred);
+        
+    }
+    
     private static final Logger log = Logger.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
     private FgExampleList data;
     private FgInferencerFactory infFactory;
-        
+    private CrfLoss loss;
+    
     // Timer: update the model.
     private Timer updTimer = new Timer();
     // Timer: run inference.
@@ -39,6 +46,13 @@ public class CrfObjective implements ExampleObjective {
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
         this.data = data;
         this.infFactory = infFactory;
+        this.loss = null;
+    }
+
+    public CrfObjective(FgExampleList data, FgInferencerFactory infFactory, CrfLoss loss) {
+        this.data = data;
+        this.infFactory = infFactory;
+        this.loss = loss;
     }
 
     /** @inheritDoc */
@@ -69,22 +83,25 @@ public class CrfObjective implements ExampleObjective {
         t.stop(); infTimer.add(t);
 
         if (ac.accumValue) {
-            // Compute the condition log-likelihood for this example.
+            // Compute the conditional log-likelihood for this example.
             t.reset(); t.start();
-            ac.value += getValue(model, ex, fgLat, infLat, fgLatPred, infLatPred, i);
+            ac.value += getValue(ex, fgLat, infLat, fgLatPred, infLatPred, i);
             t.stop(); valTimer.add(t);
         }
         if (ac.accumGradient) {
             // Compute the gradient for this example.
             t.reset(); t.start();
-            addGradient(model, ex, ac.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
+            addGradient(ex, ac.getGradient(), fgLat, infLat, fgLatPred, infLatPred);
             t.stop(); gradTimer.add(t);
         }
         if (ac.accumWeight) {
             ac.weight += ex.getWeight();
         }
+        if (ac.accumTrainLoss && loss != null) {
+            ac.trainLoss += loss.getLoss(i, ex, infLatPred);
+        }
     }
-    
+
     /**
      * Gets the marginal conditional log-likelihood of the i'th example for the given model parameters.
      * 
@@ -94,15 +111,13 @@ public class CrfObjective implements ExampleObjective {
      * </p>
      * 
      * where y are the predicted variables, x are the observed variables, and z are the latent variables.
-     * 
-     * @param model The current model parameters.
-     * @param i The data example.
      * @param fgLat The factor graph with the predicted and observed variables clamped. 
      * @param infLat The inferencer for fgLat.
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
+     * @param i The data example.
      */      
-    public double getValue(FgModel model, FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
+    public double getValue(FgExample ex, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred, int i) {        
         // Inference computes Z(y,x) by summing over the latent variables w.
         double numerator = infLat.isLogDomain() ? infLat.getPartition() : FastMath.log(infLat.getPartition());
         
@@ -164,17 +179,15 @@ public class CrfObjective implements ExampleObjective {
     
     /**
      * Adds the gradient of the marginal conditional log-likelihood for a particular example to the gradient vector.
-     * 
-     * @param model The current model parameters.
-     * @param i The data example.
      * @param gradient The gradient vector to which this example's contribution
      *            is added.
      * @param fgLat The factor graph with the predicted and observed variables clamped. 
      * @param infLat The inferencer for fgLat.
      * @param fgLatPred The factor graph with the observed variables clamped. 
      * @param infLatPred The inferencer for fgLatPred.
+     * @param i The data example.
      */
-    public void addGradient(FgModel model, FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
+    public void addGradient(FgExample ex, IFgModel gradient, FactorGraph fgLat, FgInferencer infLat, FactorGraph fgLatPred, FgInferencer infLatPred) {        
         // Compute the "observed" feature counts for this factor, by summing over the latent variables.
         addExpectedFeatureCounts(fgLat, ex, infLat, 1.0 * ex.getWeight(), gradient);
         
