@@ -11,8 +11,8 @@ import java.util.List;
 
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
@@ -50,7 +50,7 @@ public class FeatureCreationSpeedTest {
         for (CoNLL09Sentence s : conllSents) {
             s.intern();
         }
-        SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(conllSents, false);
+        AnnoSentenceCollection sents = CoNLL09Sentence.toAnno(conllSents, false);
         
         // Run
         System.out.println("Num sents: " + sents.size());
@@ -65,7 +65,7 @@ public class FeatureCreationSpeedTest {
 //        testFeatExtract(numRounds, numTemplates, sents, 2, true);
     }
     
-    private void testFeatExtract(int numRounds, final int numTemplates, SimpleAnnoSentenceCollection sents, final int opt, final boolean lookup) {
+    private void testFeatExtract(int numRounds, final int numTemplates, AnnoSentenceCollection sents, final int opt, final boolean lookup) {
         Timer timer = new Timer();
         Timer lookupTimer = new Timer();
         Timer hashTimer = new Timer();
@@ -84,7 +84,7 @@ public class FeatureCreationSpeedTest {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             try {
                 for (int i=0; i<sents.size(); i++) {
-                    SimpleAnnoSentence sent = sents.get(i);
+                    AnnoSentence sent = sents.get(i);
                     Pair[] preds = null;
                     Pair[] args = null;
                     if (opt == 0) {
@@ -170,7 +170,7 @@ public class FeatureCreationSpeedTest {
         for (CoNLL09Sentence s : conllSents) {
             s.intern();
         }
-        SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(conllSents, false);
+        AnnoSentenceCollection sents = CoNLL09Sentence.toAnno(conllSents, false);
         
         // Add Brown clusters
         BrownClusterTagger bct = new BrownClusterTagger(new BrownClusterTaggerPrm());
@@ -194,7 +194,7 @@ public class FeatureCreationSpeedTest {
         }
     }
     
-    private void testFeatExtract2(int numRounds, List<FeatTemplate> tpls, SimpleAnnoSentenceCollection sents, String language, final int opt, final boolean lookup) {
+    private void testFeatExtract2(int numRounds, List<FeatTemplate> tpls, AnnoSentenceCollection sents, String language, final int opt, final boolean lookup) {
         Timer timer = new Timer();
         Timer lookupTimer = new Timer();
         Timer hashTimer = new Timer();
@@ -217,7 +217,7 @@ public class FeatureCreationSpeedTest {
             Alphabet<Feature> alphabet = new Alphabet<Feature>();
             try {
                 for (int i=0; i<sents.size(); i++) {
-                    SimpleAnnoSentence sent = sents.get(i);
+                    AnnoSentence sent = sents.get(i);
                     TemplateFeatureExtractor ext = new TemplateFeatureExtractor(sent, cs);
                     
                     for (int pred=0; pred<sent.size(); pred++) {

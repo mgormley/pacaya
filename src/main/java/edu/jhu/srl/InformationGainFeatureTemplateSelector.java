@@ -18,8 +18,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.featurize.TemplateFeatureExtractor;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -82,7 +82,7 @@ public class InformationGainFeatureTemplateSelector {
         }
     }
     
-    public SrlFeatTemplates getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, 
+    public SrlFeatTemplates getFeatTemplatesForSrl(AnnoSentenceCollection sents, 
             CorpusStatisticsPrm csPrm, SrlFeatTemplates sft) {
         List<FeatTemplate> srlSense = prm.selectSense ? getFeatTemplatesForSrl(sents, csPrm, sft.srlSense, new SrlSenseExtractor()) : sft.srlSense;
         List<FeatTemplate> srlArg = getFeatTemplatesForSrl(sents, csPrm, sft.srlArg, new SrlArgExtractor());
@@ -90,7 +90,7 @@ public class InformationGainFeatureTemplateSelector {
         return new SrlFeatTemplates(srlSense, srlArg, sft.depParse);
     }
     
-    private List<FeatTemplate> getFeatTemplatesForSrl(SimpleAnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
+    private List<FeatTemplate> getFeatTemplatesForSrl(AnnoSentenceCollection sents, CorpusStatisticsPrm csPrm,
             List<FeatTemplate> unigrams, ValExtractor valExt) {
         int numUni = 45;
         List<FeatTemplate> selUnigrams = selectFeatureTemplates(unigrams, Lists.getList(valExt), sents, csPrm, numUni).get(0);
@@ -109,12 +109,12 @@ public class InformationGainFeatureTemplateSelector {
     }
 
 
-//    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, SimpleAnnoSentenceCollection sents, 
+//    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, AnnoSentenceCollection sents, 
 //            CorpusStatisticsPrm csPrm) {  
 //        return selectFeatureTemplates(allTpls, valExts, sents, csPrm, prm.numToSelect);
 //    }
     
-    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, SimpleAnnoSentenceCollection sents, 
+    public List<List<FeatTemplate>> selectFeatureTemplates(List<FeatTemplate> allTpls, List<ValExtractor> valExts, AnnoSentenceCollection sents, 
             CorpusStatisticsPrm csPrm, int numToSelect) {      
         if (allTpls.size() <= numToSelect) {
             List<List<FeatTemplate>> selected = new ArrayList<List<FeatTemplate>>();
@@ -170,7 +170,7 @@ public class InformationGainFeatureTemplateSelector {
     }
 
     private Pair<double[][], int[]> computeInformationGain(List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-            SimpleAnnoSentenceCollection sents, CorpusStatistics cs) {
+            AnnoSentenceCollection sents, CorpusStatistics cs) {
         // Information gain, indexed by ValExtractor index, and template index.
         double[][] ig = new double[valExts.size()][allTpls.size()];
         // Feature count for each template.
@@ -191,10 +191,10 @@ public class InformationGainFeatureTemplateSelector {
     
     private class IGComputer implements Callable<Object> {
         int t; List<FeatTemplate> allTpls; List<ValExtractor> valExts;
-        SimpleAnnoSentenceCollection sents; CorpusStatistics cs; double[][] ig;
+        AnnoSentenceCollection sents; CorpusStatistics cs; double[][] ig;
         int[] featCount;
         public IGComputer(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-                SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, 
+                AnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, 
                 int[] featCount) {
             super();
             this.t = t;
@@ -213,13 +213,13 @@ public class InformationGainFeatureTemplateSelector {
     }
 
     private void computeInformationGain(int t, List<FeatTemplate> allTpls, List<ValExtractor> valExts,
-            SimpleAnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, int[] featCount) {
+            AnnoSentenceCollection sents, CorpusStatistics cs, double[][] ig, int[] featCount) {
         FeatTemplate tpl = allTpls.get(t);
 
         final IntDoubleDenseVector[][] counts = getCountsArray(valExts);
         Alphabet<String> alphabet = new Alphabet<String>();
         for (int i=0; i<sents.size(); i++) {                
-            SimpleAnnoSentence sent = sents.get(i);
+            AnnoSentence sent = sents.get(i);
             TemplateFeatureExtractor featExt = new TemplateFeatureExtractor(sent, cs);
 
             for (int pidx=-1; pidx<sent.size(); pidx++) {
@@ -357,10 +357,10 @@ public class InformationGainFeatureTemplateSelector {
     }
    
     public interface ValExtractor {
-        public void init(SimpleAnnoSentenceCollection sents, int valueHashMod);
+        public void init(AnnoSentenceCollection sents, int valueHashMod);
         public Object getName();
         public int getNumVals();
-        public int getValIdx(SimpleAnnoSentence sent, int pidx, int cidx);
+        public int getValIdx(AnnoSentence sent, int pidx, int cidx);
     }
     
     public static abstract class AbtractValExtractor implements ValExtractor {
@@ -369,10 +369,10 @@ public class InformationGainFeatureTemplateSelector {
         private int valueHashMod = -1;
         
         @Override
-        public void init(SimpleAnnoSentenceCollection sents, int valueHashMod) {
+        public void init(AnnoSentenceCollection sents, int valueHashMod) {
             this.valueHashMod = valueHashMod;
             for (int i=0; i<sents.size(); i++) {                
-                SimpleAnnoSentence sent = sents.get(i);
+                AnnoSentence sent = sents.get(i);
                 for (int pidx=-1; pidx<sent.size(); pidx++) {
                     for (int cidx=-1; cidx<sent.size(); cidx++) {
                         this.getValIdx(sent, pidx, cidx);
@@ -382,7 +382,7 @@ public class InformationGainFeatureTemplateSelector {
             valAlphabet.stopGrowth();
         }
         
-        public int getValIdx(SimpleAnnoSentence sent, int pidx, int cidx) {
+        public int getValIdx(AnnoSentence sent, int pidx, int cidx) {
             String val = getVal(sent, pidx, cidx);
             if (val == null) {
                 return -1;
@@ -401,7 +401,7 @@ public class InformationGainFeatureTemplateSelector {
             return valAlphabet.size();
         }
 
-        public abstract String getVal(SimpleAnnoSentence sent, int pidx, int cidx);
+        public abstract String getVal(AnnoSentence sent, int pidx, int cidx);
 
     }
     
@@ -413,7 +413,7 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(AnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1 || pidx == -1) {
                 return null;
             }
@@ -435,7 +435,7 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(AnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1 && pidx != -1) {
                 SrlPred pred = sent.getSrlGraph().getPredAt(pidx);
                 if (pred != null) {
@@ -455,7 +455,7 @@ public class InformationGainFeatureTemplateSelector {
         }
 
         @Override
-        public String getVal(SimpleAnnoSentence sent, int pidx, int aidx) {
+        public String getVal(AnnoSentence sent, int pidx, int aidx) {
             if (aidx == -1) {
                 return null;
             }

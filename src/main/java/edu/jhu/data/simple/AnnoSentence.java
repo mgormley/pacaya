@@ -28,7 +28,7 @@ import edu.jhu.util.collections.Lists;
  * @author mgormley
  * @author mmitchell
  */
-public class SimpleAnnoSentence {
+public class AnnoSentence {
 
     // TODO: maybe change this to something like underscore?
     private static final String SPAN_STR_SEP = " ";
@@ -60,7 +60,7 @@ public class SimpleAnnoSentence {
     /** The original object (e.g. CoNLL09Sentence) used to create this sentence. */
     private Object sourceSent;
     
-    public SimpleAnnoSentence() {
+    public AnnoSentence() {
 
     }
 
@@ -68,7 +68,7 @@ public class SimpleAnnoSentence {
      * Fairly deep copy constructor. Everything is deeply copied except for the
      * source sentence and the SRL graph, the features, and the constituency parse.
      */
-    public SimpleAnnoSentence(SimpleAnnoSentence other) {
+    public AnnoSentence(AnnoSentence other) {
         this.words = Lists.copyOf(other.words);
         this.lemmas = Lists.copyOf(other.lemmas);
         this.posTags = Lists.copyOf(other.posTags);
@@ -87,8 +87,8 @@ public class SimpleAnnoSentence {
         this.binaryTree = other.binaryTree;
     }
     
-    public SimpleAnnoSentence getShallowCopy() {
-        SimpleAnnoSentence newSent = new SimpleAnnoSentence();
+    public AnnoSentence getShallowCopy() {
+        AnnoSentence newSent = new AnnoSentence();
         newSent.words = this.words;
         newSent.lemmas = this.lemmas;
         newSent.posTags = this.posTags;
@@ -496,7 +496,7 @@ public class SimpleAnnoSentence {
         }
     }
 
-    public static void copyShallow(SimpleAnnoSentence src, SimpleAnnoSentence dest, AT at) {
+    public static void copyShallow(AnnoSentence src, AnnoSentence dest, AT at) {
         switch (at) {
         case WORD: dest.words = src.words; break;
         case BROWN: dest.clusters = src.clusters; break;

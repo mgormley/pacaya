@@ -13,8 +13,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.simple.CorpusHandler;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.eval.DepParseEvaluator;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.featurize.TemplateLanguage.AT;
@@ -276,11 +276,11 @@ public class JointNlpRunner {
         
         if (corpus.hasTrain()) {
             String name = "train";            
-            SimpleAnnoSentenceCollection goldSents = corpus.getTrainGold();
-            SimpleAnnoSentenceCollection inputSents = corpus.getTrainInput();
+            AnnoSentenceCollection goldSents = corpus.getTrainGold();
+            AnnoSentenceCollection inputSents = corpus.getTrainInput();
 
             addBrownClusters(inputSents);
-            SimpleAnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
+            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.BROWN);
             // Train the distance-based pruner. 
             if (pruneByDist) {
                 ptdPruner = new PosTagDistancePruner();
@@ -288,7 +288,7 @@ public class JointNlpRunner {
             }
             addPruneMask(inputSents, ptdPruner, name);
             // Ensure that the gold data is annotated with the pruning mask as well.
-            SimpleAnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
+            AnnoSentenceCollection.copyShallow(inputSents, goldSents, AT.DEP_EDGE_MASK);
 
             // Train a model.
             jointAnno.train(goldSents);
@@ -310,13 +310,13 @@ public class JointNlpRunner {
         if (corpus.hasDev()) {
             // Test the model on dev data.
             String name = "dev";
-            SimpleAnnoSentenceCollection inputSents = corpus.getDevInput();
+            AnnoSentenceCollection inputSents = corpus.getDevInput();
             addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             // Decode and evaluate the dev data.
             jointAnno.annotate(inputSents);            
             corpus.writeDevPreds(inputSents);
-            SimpleAnnoSentenceCollection goldSents = corpus.getDevGold();
+            AnnoSentenceCollection goldSents = corpus.getDevGold();
             eval(name, goldSents, inputSents);
             corpus.clearDevCache();
         }
@@ -324,19 +324,19 @@ public class JointNlpRunner {
         if (corpus.hasTest()) {
             // Test the model on test data.
             String name = "test";
-            SimpleAnnoSentenceCollection inputSents = corpus.getTestInput();
+            AnnoSentenceCollection inputSents = corpus.getTestInput();
             addBrownClusters(inputSents);
             addPruneMask(inputSents, ptdPruner, name);
             // Decode and evaluate the test data.
             jointAnno.annotate(inputSents);
             corpus.writeTestPreds(inputSents);
-            SimpleAnnoSentenceCollection goldSents = corpus.getTestGold();
+            AnnoSentenceCollection goldSents = corpus.getTestGold();
             eval(name, goldSents, inputSents);
             corpus.clearTestCache();
         }
     }
 
-    private void addBrownClusters(SimpleAnnoSentenceCollection sents) throws IOException {
+    private void addBrownClusters(AnnoSentenceCollection sents) throws IOException {
         if (brownClusters != null) {            
             log.info("Adding Brown clusters.");
             BrownClusterTagger bct = new BrownClusterTagger(getBrownCluterTaggerPrm());
@@ -348,7 +348,7 @@ public class JointNlpRunner {
         }
     }
 
-    private void addPruneMask(SimpleAnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) {
+    private void addPruneMask(AnnoSentenceCollection inputSents, PosTagDistancePruner ptdPruner, String name) {
         if (pruneByDist) {
             // Prune via the distance-based pruner.
             ptdPruner.annotate(inputSents);
@@ -365,7 +365,7 @@ public class JointNlpRunner {
     /**
      * Do feature selection and update fePrm with the chosen feature templates.
      */
-    private void featureSelection(SimpleAnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) throws IOException,
+    private void featureSelection(AnnoSentenceCollection sents, JointNlpFeatureExtractorPrm fePrm) throws IOException,
             ParseException {
         SrlFeatureExtractorPrm srlFePrm = fePrm.srlFePrm;
         // Remove annotation types from the features which are explicitly excluded.
@@ -416,7 +416,7 @@ public class JointNlpRunner {
         }
     }
 
-    private void eval(String name, SimpleAnnoSentenceCollection goldSents, SimpleAnnoSentenceCollection predSents) {
+    private void eval(String name, AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
         printOracleAccuracyAfterPruning(predSents, goldSents, name);
         printPredArgSelfLoopStats(goldSents);
 
@@ -424,13 +424,13 @@ public class JointNlpRunner {
         eval.evaluate(goldSents, predSents);
     }
 
-    private static void printOracleAccuracyAfterPruning(SimpleAnnoSentenceCollection predSents, SimpleAnnoSentenceCollection goldSents, String name) {
+    private static void printOracleAccuracyAfterPruning(AnnoSentenceCollection predSents, AnnoSentenceCollection goldSents, String name) {
         if (pruneByDist || pruneByModel) {
             int numTot = 0;
             int numCorrect = 0;
             for (int i=0; i<predSents.size(); i++) {
-                SimpleAnnoSentence predSent = predSents.get(i);
-                SimpleAnnoSentence goldSent = goldSents.get(i);
+                AnnoSentence predSent = predSents.get(i);
+                AnnoSentence goldSent = goldSents.get(i);
                 if (predSent.getDepEdgeMask() != null) {
                     for (int c=0; c<goldSent.size(); c++) {
                         int p = goldSent.getParent(c);
@@ -445,10 +445,10 @@ public class JointNlpRunner {
         }
     }
     
-    private static void printPredArgSelfLoopStats(SimpleAnnoSentenceCollection sents) {
+    private static void printPredArgSelfLoopStats(AnnoSentenceCollection sents) {
         int numPredArgSelfLoop = 0;
         int numPredArgs = 0;
-        for (SimpleAnnoSentence sent : sents) {
+        for (AnnoSentence sent : sents) {
             if (sent.getSrlGraph() != null) {
                 for (SrlEdge edge : sent.getSrlGraph().getEdges()) {
                     if (edge.getArg().getPosition() == edge.getPred().getPosition()) {

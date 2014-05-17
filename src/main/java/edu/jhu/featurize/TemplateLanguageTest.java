@@ -9,8 +9,8 @@ import java.util.Set;
 import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceTest;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 
@@ -18,7 +18,7 @@ public class TemplateLanguageTest {
 
     @Test
     public void testCheckRequiredAnnotations() {
-        SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
+        AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(AnnoSentenceTest.getDogConll09Sentence(), true);
         List<FeatTemplate> tpls = TemplateSets.getAllUnigramFeatureTemplates();
         Set<AT> types = TemplateLanguage.getRequiredAnnotationTypes(tpls);
         

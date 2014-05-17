@@ -11,42 +11,42 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Writer;
 import edu.jhu.data.conll.CoNLLXSentence;
 import edu.jhu.data.conll.CoNLLXWriter;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
+import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
 
-public class SimpleAnnoSentenceWriter {
+public class AnnoSentenceWriter {
 
-    public static class SimpleAnnoSentenceWriterPrm {
+    public static class AnnoSentenceWriterPrm {
         public String name = "";
     }
 
-    private static final Logger log = Logger.getLogger(SimpleAnnoSentenceWriter.class);
+    private static final Logger log = Logger.getLogger(AnnoSentenceWriter.class);
 
-    private SimpleAnnoSentenceWriterPrm prm;
+    private AnnoSentenceWriterPrm prm;
     
-    public SimpleAnnoSentenceWriter(SimpleAnnoSentenceWriterPrm prm) {
+    public AnnoSentenceWriter(AnnoSentenceWriterPrm prm) {
         this.prm = prm;
     }
     
-    public void write(File out, DatasetType type, SimpleAnnoSentenceCollection sents) throws IOException {
+    public void write(File out, DatasetType type, AnnoSentenceCollection sents) throws IOException {
         log.info("Writing sentences for " + prm.name + " data of type " + type + " to " + out);
         if (type == DatasetType.CONLL_2009) {
             CoNLL09Writer cw = new CoNLL09Writer(out);
-            for (SimpleAnnoSentence sent : sents) {
-                CoNLL09Sentence conllSent = CoNLL09Sentence.fromSimpleAnnoSentence(sent);
+            for (AnnoSentence sent : sents) {
+                CoNLL09Sentence conllSent = CoNLL09Sentence.fromAnnoSentence(sent);
                 cw.write(conllSent);
             }
             cw.close();
         } else if (type == DatasetType.CONLL_2008) {
             CoNLL08Writer cw = new CoNLL08Writer(out);
-            for (SimpleAnnoSentence sent : sents) {
-                CoNLL08Sentence conllSent = CoNLL08Sentence.fromSimpleAnnoSentence(sent);
+            for (AnnoSentence sent : sents) {
+                CoNLL08Sentence conllSent = CoNLL08Sentence.fromAnnoSentence(sent);
                 cw.write(conllSent);
             }
             cw.close();
         } else if (type == DatasetType.CONLL_X) {
             CoNLLXWriter cw = new CoNLLXWriter(out);
-            for (SimpleAnnoSentence sent : sents) {
-                CoNLLXSentence conllSent = CoNLLXSentence.fromSimpleAnnoSentence(sent);
+            for (AnnoSentence sent : sents) {
+                CoNLLXSentence conllSent = CoNLLXSentence.fromAnnoSentence(sent);
                 cw.write(conllSent);
             }
             cw.close();

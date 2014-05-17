@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceTest;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
@@ -21,7 +21,7 @@ public class FeaturizedTokenPairTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken zhaoPred = new FeaturizedToken(1, simpleSent);
         FeaturizedToken zhaoArg = new FeaturizedToken(0, simpleSent);
@@ -39,7 +39,7 @@ public class FeaturizedTokenPairTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         // Example indices.
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
@@ -97,7 +97,7 @@ public class FeaturizedTokenPairTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         // Example indices.
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
@@ -157,7 +157,7 @@ public class FeaturizedTokenPairTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = false;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
         FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
@@ -191,7 +191,7 @@ public class FeaturizedTokenPairTest {
     }
 
     public static CoNLL09Sentence getDogConll09Sentence() {
-        return SimpleAnnoSentenceTest.getDogConll09Sentence();
+        return AnnoSentenceTest.getDogConll09Sentence();
     }
 
 }

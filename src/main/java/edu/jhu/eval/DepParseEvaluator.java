@@ -3,7 +3,7 @@ package edu.jhu.eval;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepTreebank;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 
 /**
  * Computes the unlabeled directed dependency accuracy. This is simply the
@@ -25,7 +25,7 @@ public class DepParseEvaluator {
         this.dataName = dataName;
     }
 
-    public void evaluate(SimpleAnnoSentenceCollection gold, SimpleAnnoSentenceCollection pred) {
+    public void evaluate(AnnoSentenceCollection gold, AnnoSentenceCollection pred) {
         correct = 0;
         total = 0;
         assert(pred.size() == gold.size());

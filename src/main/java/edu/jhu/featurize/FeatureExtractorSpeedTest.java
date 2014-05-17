@@ -8,11 +8,11 @@ import java.util.List;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceReader;
+import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.gm.feat.Feature;
@@ -32,12 +32,12 @@ public class FeatureExtractorSpeedTest {
         List<FeatTemplate> tpls = TemplateSets.getFromResource(TemplateSets.mcdonaldDepFeatsResource);
         File train = new File("data/conllx/CoNLL-X/test/data/english/ptb/test/english_ptb_test.conll");
 
-        SimpleAnnoSentenceReaderPrm prm = new SimpleAnnoSentenceReaderPrm();
+        AnnoSentenceReaderPrm prm = new AnnoSentenceReaderPrm();
         //prm.maxNumSentences = 100;
         prm.name = train.getName();
-        SimpleAnnoSentenceReader reader = new SimpleAnnoSentenceReader(prm );
+        AnnoSentenceReader reader = new AnnoSentenceReader(prm );
         reader.loadSents(train, DatasetType.CONLL_X);
-        SimpleAnnoSentenceCollection sents = reader.getData();
+        AnnoSentenceCollection sents = reader.getData();
         
         int trials = 3;
         
@@ -47,7 +47,7 @@ public class FeatureExtractorSpeedTest {
         timer.start();
         int n=0;
         for (int trial = 0; trial < trials; trial++) {
-            for (SimpleAnnoSentence sent : sents) {
+            for (AnnoSentence sent : sents) {
                 TemplateFeatureExtractor ext = new TemplateFeatureExtractor(sent, null);
                 for (int i = -1; i < sent.size(); i++) {
                     for (int j = 0; j < sent.size(); j++) {

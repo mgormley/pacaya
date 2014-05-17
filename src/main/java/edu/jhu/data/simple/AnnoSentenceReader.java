@@ -18,12 +18,12 @@ import edu.jhu.tag.BrownClusterTagger;
 import edu.jhu.tag.BrownClusterTagger.BrownClusterTaggerPrm;
 
 /**
- * Generic reader of SimpleAnnoSentence objects from many different corpora. 
+ * Generic reader of AnnoSentence objects from many different corpora. 
  * 
  */
-public class SimpleAnnoSentenceReader {
+public class AnnoSentenceReader {
 
-    public static class SimpleAnnoSentenceReaderPrm {
+    public static class AnnoSentenceReaderPrm {
         public boolean useGoldSyntax = false;
         public int maxNumSentences = Integer.MAX_VALUE; 
         public int maxSentenceLength = Integer.MAX_VALUE; 
@@ -42,21 +42,21 @@ public class SimpleAnnoSentenceReader {
     
     public enum DatasetType { SYNTHETIC, PTB, CONLL_X, CONLL_2008, CONLL_2009 };
     
-    public interface SASReader extends Iterable<SimpleAnnoSentence> {
+    public interface SASReader extends Iterable<AnnoSentence> {
         public void close();        
     }
     
-    private static final Logger log = Logger.getLogger(SimpleAnnoSentenceReader.class);
+    private static final Logger log = Logger.getLogger(AnnoSentenceReader.class);
 
-    private SimpleAnnoSentenceReaderPrm prm;
-    private SimpleAnnoSentenceCollection sents;
+    private AnnoSentenceReaderPrm prm;
+    private AnnoSentenceCollection sents;
     
-    public SimpleAnnoSentenceReader(SimpleAnnoSentenceReaderPrm prm) {
+    public AnnoSentenceReader(AnnoSentenceReaderPrm prm) {
         this.prm = prm;
-        this.sents = new SimpleAnnoSentenceCollection();
+        this.sents = new AnnoSentenceCollection();
     }
     
-    public SimpleAnnoSentenceCollection getData() {
+    public AnnoSentenceCollection getData() {
         return sents;
     }
     
@@ -72,15 +72,15 @@ public class SimpleAnnoSentenceReader {
             }
         }
         
-        CloseableIterable<SimpleAnnoSentence> reader = null;
+        CloseableIterable<AnnoSentence> reader = null;
         if (type == DatasetType.CONLL_2009) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(fis), new CoNLL092SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLL09FileReader(fis), new CoNLL092Anno());
         } else if (type == DatasetType.CONLL_2008) {
-            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLL08FileReader(fis), new CoNLL082Anno());
         } else if (type == DatasetType.CONLL_X) {
-            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2SimpleAnno());
+            reader = ConvCloseableIterable.getInstance(new CoNLLXFileReader(fis), new CoNLLX2Anno());
         //} else if (type == DatasetType.PTB) {
-            //reader = new Ptb2SimpleAnno(new PtbFileReader(dataFile));
+            //reader = new Ptb2Anno(new PtbFileReader(dataFile));
         } else {
             fis.close();
             throw new IllegalStateException("Unsupported data type: " + type);
@@ -95,8 +95,8 @@ public class SimpleAnnoSentenceReader {
         reader.close();
     }
     
-    public void loadSents(Iterable<SimpleAnnoSentence> reader) {
-        for (SimpleAnnoSentence sent : reader) {
+    public void loadSents(Iterable<AnnoSentence> reader) {
+        for (AnnoSentence sent : reader) {
             if (sents.size() >= prm.maxNumSentences) {
                 break;
             }
@@ -109,35 +109,35 @@ public class SimpleAnnoSentenceReader {
         }
     }
     
-    public class CoNLL092SimpleAnno implements Converter<CoNLL09Sentence, SimpleAnnoSentence> {
+    public class CoNLL092Anno implements Converter<CoNLL09Sentence, AnnoSentence> {
 
         @Override
-        public SimpleAnnoSentence convert(CoNLL09Sentence x) {
+        public AnnoSentence convert(CoNLL09Sentence x) {
             if (prm.normalizeRoleNames) {
                 x.normalizeRoleNames();
             }
-            return x.toSimpleAnnoSentence(prm.useGoldSyntax);
+            return x.toAnnoSentence(prm.useGoldSyntax);
         }        
         
     }
     
-    public class CoNLL082SimpleAnno implements Converter<CoNLL08Sentence, SimpleAnnoSentence> {
+    public class CoNLL082Anno implements Converter<CoNLL08Sentence, AnnoSentence> {
 
         @Override
-        public SimpleAnnoSentence convert(CoNLL08Sentence x) {
+        public AnnoSentence convert(CoNLL08Sentence x) {
             if (prm.normalizeRoleNames) {
                 x.normalizeRoleNames();
             }
-            return x.toSimpleAnnoSentence(prm.useGoldSyntax, prm.useSplitForms );
+            return x.toAnnoSentence(prm.useGoldSyntax, prm.useSplitForms );
         }
         
     }
     
-    public class CoNLLX2SimpleAnno implements Converter<CoNLLXSentence, SimpleAnnoSentence> {
+    public class CoNLLX2Anno implements Converter<CoNLLXSentence, AnnoSentence> {
 
         @Override
-        public SimpleAnnoSentence convert(CoNLLXSentence x) {
-            return x.toSimpleAnnoSentence(prm.useCoNLLXPhead);
+        public AnnoSentence convert(CoNLLXSentence x) {
+            return x.toAnnoSentence(prm.useCoNLLXPhead);
         }
         
     }

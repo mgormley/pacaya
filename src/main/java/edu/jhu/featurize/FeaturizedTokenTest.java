@@ -8,8 +8,8 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceTest;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 import edu.jhu.util.collections.Lists;
@@ -21,7 +21,7 @@ public class FeaturizedTokenTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
         FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
@@ -43,7 +43,7 @@ public class FeaturizedTokenTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
         FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
@@ -73,7 +73,7 @@ public class FeaturizedTokenTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken zhaoPred = new FeaturizedToken(3, simpleSent);
         FeaturizedToken zhaoArg = new FeaturizedToken(4, simpleSent);
@@ -83,7 +83,7 @@ public class FeaturizedTokenTest {
         assertEquals(predPos,argPos,"p");
         
         csPrm.useGoldSyntax = false;
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         zhaoPred = new FeaturizedToken(3, simpleSent);
         zhaoArg = new FeaturizedToken(4, simpleSent);
@@ -100,7 +100,7 @@ public class FeaturizedTokenTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence2();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(Lists.getList(simpleSent));
         
@@ -125,7 +125,7 @@ public class FeaturizedTokenTest {
         CoNLL09Sentence sent = getSpanishConll09Sentence1();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = false;
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         FeaturizedToken b = new FeaturizedToken(3, simpleSent);
         assertEquals(b.getNearRightSibling(), 4);
@@ -134,14 +134,14 @@ public class FeaturizedTokenTest {
         assertEquals(b.getNearLeftSibling(), -1);
         assertEquals(b.getNearRightSibling(), 3);
         sent = getSpanishConll09Sentence2();
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         b = new FeaturizedToken(3, simpleSent);
         // Only true when we're using predicted siblings.
         assertEquals(b.getNearLeftSibling(), -1);
         assertEquals(b.getNearRightSibling(), 7);
         csPrm.useGoldSyntax = true;
-        simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
 
         b = new FeaturizedToken(3, simpleSent);
         assertEquals(b.getNearLeftSibling(), 2);
@@ -157,7 +157,7 @@ public class FeaturizedTokenTest {
     }
     
     public static CoNLL09Sentence getDogConll09Sentence() {
-        return SimpleAnnoSentenceTest.getDogConll09Sentence();
+        return AnnoSentenceTest.getDogConll09Sentence();
     }
 
 }

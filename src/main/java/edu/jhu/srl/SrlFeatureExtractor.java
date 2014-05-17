@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.gm.data.UFgExample;
@@ -55,7 +55,7 @@ public class SrlFeatureExtractor implements ObsFeatureExtractor {
     private VarConfig obsConfig;
     private SentFeatureExtractor sentFeatExt;
         
-    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public SrlFeatureExtractor(SrlFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
         // TODO: SentFeatureExtractorCache uses a lot of memory storing lists of Strings. While this saves time when
         // SRL and dependency parsing use the same feature set, it's probably not worth the memory burden.

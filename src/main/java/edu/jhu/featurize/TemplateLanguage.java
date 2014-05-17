@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.util.collections.Lists;
 
 /**
@@ -113,7 +113,7 @@ public class TemplateLanguage {
     /* -------------------- Descriptions of the Language Elements ---------------- */
 
     /**
-     * Annotation Type. These describe which part of a SimpleAnnoSentence must
+     * Annotation Type. These describe which part of a AnnoSentence must
      * be present in order to utilize each structure.
      */
     public enum AT {
@@ -511,11 +511,11 @@ public class TemplateLanguage {
     
     /* -------------------- Utilities for Checking Feature Template Sets ---------------- */
     
-    public static boolean hasRequiredAnnotationTypes(SimpleAnnoSentence sent, List<FeatTemplate> tpls) {
+    public static boolean hasRequiredAnnotationTypes(AnnoSentence sent, List<FeatTemplate> tpls) {
         return hasRequiredAnnotationTypes(sent, getRequiredAnnotationTypes(tpls));
     }
     
-    public static boolean hasRequiredAnnotationTypes(SimpleAnnoSentence sent, Set<AT> types) {
+    public static boolean hasRequiredAnnotationTypes(AnnoSentence sent, Set<AT> types) {
         for (AT type : types) {
             if (!hasRequiredAnnotationType(sent, type)) {
                 return false;
@@ -524,22 +524,22 @@ public class TemplateLanguage {
         return true;
     }
     
-    public static boolean hasRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
+    public static boolean hasRequiredAnnotationType(AnnoSentence sent, AT type) {
         return sent.hasAt(type);
     }
 
 
-    public static void assertRequiredAnnotationTypes(SimpleAnnoSentence sent, List<FeatTemplate> tpls) {
+    public static void assertRequiredAnnotationTypes(AnnoSentence sent, List<FeatTemplate> tpls) {
         assertRequiredAnnotationTypes(sent, getRequiredAnnotationTypes(tpls));
     }
     
-    public static void assertRequiredAnnotationTypes(SimpleAnnoSentence sent, Set<AT> types) {
+    public static void assertRequiredAnnotationTypes(AnnoSentence sent, Set<AT> types) {
         for (AT type : types) {
             assertRequiredAnnotationType(sent, type);
         }
     }
     
-    public static void assertRequiredAnnotationType(SimpleAnnoSentence sent, AT type) {
+    public static void assertRequiredAnnotationType(AnnoSentence sent, AT type) {
         if (!hasRequiredAnnotationType(sent, type)) {
             throw new IllegalStateException("Missing required annotation type: " + type);
         }        

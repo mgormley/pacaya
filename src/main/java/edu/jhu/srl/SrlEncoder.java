@@ -2,7 +2,7 @@ package edu.jhu.srl;
 
 import edu.jhu.data.conll.SrlGraph;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
@@ -11,7 +11,7 @@ import edu.jhu.srl.SrlFactorGraph.SenseVar;
 
 public class SrlEncoder {
 
-    public static void getSrlTrainAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
+    public static void getSrlTrainAssignment(AnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc, boolean predictSense, boolean predictPredPos) {
         SrlGraph srlGraph = sent.getSrlGraph();
         if (srlGraph == null) {
             return;

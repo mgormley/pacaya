@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import edu.jhu.data.Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 
 /**
  * One sentence from a CoNLL-X formatted file.
@@ -171,12 +171,12 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
         }
     }
     
-    public SimpleAnnoSentence toSimpleAnnoSentence(boolean usePhead) {
-        return toSimpleAnnoSentence(this, usePhead);
+    public AnnoSentence toAnnoSentence(boolean usePhead) {
+        return toAnnoSentence(this, usePhead);
     }
     
-    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLLXSentence cos, boolean usePhead) {
-        SimpleAnnoSentence s = new SimpleAnnoSentence();
+    public static AnnoSentence toAnnoSentence(CoNLLXSentence cos, boolean usePhead) {
+        AnnoSentence s = new AnnoSentence();
         s.setSourceSent(cos);
         s.setWords(cos.getWords());
         s.setLemmas(cos.getLemmas());
@@ -199,7 +199,7 @@ public class CoNLLXSentence implements Iterable<CoNLLXToken> {
     /**
      * Creates a new CoNLLXSentence with all columns set for each field.
      */
-    public static CoNLLXSentence fromSimpleAnnoSentence(SimpleAnnoSentence sent) {
+    public static CoNLLXSentence fromAnnoSentence(AnnoSentence sent) {
         // Get the tokens for this sentence.
         List<CoNLLXToken> toks = new ArrayList<CoNLLXToken>();
         for (int i = 0; i < sent.size(); i++) {

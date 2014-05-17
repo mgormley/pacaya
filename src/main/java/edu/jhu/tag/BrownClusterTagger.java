@@ -12,8 +12,8 @@ import java.util.regex.Pattern;
 
 import edu.jhu.data.Sentence;
 import edu.jhu.data.SentenceCollection;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.srl.Annotator;
 import edu.jhu.util.Alphabet;
 
@@ -112,13 +112,13 @@ public class BrownClusterTagger implements Annotator {
         return (double) (numLookups - numMisses) / numLookups;
     }
 
-    public void annotate(SimpleAnnoSentenceCollection sents) {
-        for (SimpleAnnoSentence s : sents) {
+    public void annotate(AnnoSentenceCollection sents) {
+        for (AnnoSentence s : sents) {
             annotate(s);
         }
     }
 
-    public void annotate(SimpleAnnoSentence sent) {
+    public void annotate(AnnoSentence sent) {
         ArrayList<String> clusters = new ArrayList<String>();
         for (String word : sent.getWords()) {
             clusters.add(getCluster(word));

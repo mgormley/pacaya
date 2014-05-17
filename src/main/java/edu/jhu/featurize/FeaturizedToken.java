@@ -9,7 +9,7 @@ import org.apache.commons.lang.StringUtils;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.LanguageConstants;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
 
@@ -42,7 +42,7 @@ public class FeaturizedToken {
 
     private static final String NO_MORPH = "NO_MORPH"; 
 
-    private SimpleAnnoSentence sent;
+    private AnnoSentence sent;
     private int idx = -1;
     private CorpusStatistics cs;
   
@@ -69,11 +69,11 @@ public class FeaturizedToken {
     private Dir direction = null; // null indicates no direction
         
     // The CorpusStatistics parameter is only needed if getHighSupportNoun/Verb is used.
-    public FeaturizedToken(int idx, SimpleAnnoSentence sent) {
+    public FeaturizedToken(int idx, AnnoSentence sent) {
         this(idx, sent, null);
     }
     
-    public FeaturizedToken(int idx, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public FeaturizedToken(int idx, AnnoSentence sent, CorpusStatistics cs) {
         /* Need following ZHAO we can get Word Property features.
          * Includes:
          * 1. word form, 
@@ -449,7 +449,7 @@ public class FeaturizedToken {
     }
 
     // Package private accessor for FeaturizedTokenPair
-    SimpleAnnoSentence getSent() {
+    AnnoSentence getSent() {
         return sent;
     }
     

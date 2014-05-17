@@ -8,21 +8,21 @@ import java.util.List;
 
 import org.junit.Test;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.util.collections.Lists;
 
 public class PosTagDistancePrunerTest {
 
     @Test
     public void testAutoSents() {
-        SimpleAnnoSentenceCollection sents = getSents(3, 10, 10);
+        AnnoSentenceCollection sents = getSents(3, 10, 10);
         System.out.println(sents);
         PosTagDistancePruner pruner = new PosTagDistancePruner();
         pruner.train(sents);
         pruner.annotate(sents);
         System.out.println(sents);
-        SimpleAnnoSentence sent = sents.get(0);
+        AnnoSentence sent = sents.get(0);
         for (int child=0; child<sent.size(); child++) {
             int trueParent = sent.getParent(child);
             for (int p=-1; p<sent.size(); p++) {
@@ -43,15 +43,15 @@ public class PosTagDistancePrunerTest {
 
     @Test
     public void testTwoSents() {
-        SimpleAnnoSentenceCollection sents1 = new SimpleAnnoSentenceCollection();        
-        SimpleAnnoSentence sent1 = new SimpleAnnoSentence();
+        AnnoSentenceCollection sents1 = new AnnoSentenceCollection();        
+        AnnoSentence sent1 = new AnnoSentence();
         sent1.setWords(  Lists.getList("0", "1", "2", "3", "4", "5", "6"));
         sent1.setPosTags(Lists.getList("N", "N", "V", "D", "N", "P", "N"));
         sent1.setParents(new int[]    {  1,   2,  -1,   4,   2,   2,  5 });
         sents1.add(sent1);
         
-        SimpleAnnoSentenceCollection sents2 = new SimpleAnnoSentenceCollection();        
-        SimpleAnnoSentence sent2 = new SimpleAnnoSentence();
+        AnnoSentenceCollection sents2 = new AnnoSentenceCollection();        
+        AnnoSentence sent2 = new AnnoSentence();
         sent2.setWords(  Lists.getList("0", "1", "2", "3", "4", "5", "6"));
         sent2.setPosTags(Lists.getList("N", "V", "P", "D", "P", "P", "N"));
         sent2.setParents(new int[]    { -1,   0,   1,   2,   3,   4,  5 });
@@ -75,15 +75,15 @@ public class PosTagDistancePrunerTest {
 
     @Test
     public void testUnknownTag() {
-        SimpleAnnoSentenceCollection sents1 = new SimpleAnnoSentenceCollection();        
-        SimpleAnnoSentence sent1 = new SimpleAnnoSentence();
+        AnnoSentenceCollection sents1 = new AnnoSentenceCollection();        
+        AnnoSentence sent1 = new AnnoSentence();
         sent1.setWords(  Lists.getList("0", "1"));
         sent1.setPosTags(Lists.getList("N", "N"));
         sent1.setParents(new int[]    {  -1,   0 } );
         sents1.add(sent1);
         
-        SimpleAnnoSentenceCollection sents2 = new SimpleAnnoSentenceCollection();        
-        SimpleAnnoSentence sent2 = new SimpleAnnoSentence();
+        AnnoSentenceCollection sents2 = new AnnoSentenceCollection();        
+        AnnoSentence sent2 = new AnnoSentence();
         sent2.setWords(  Lists.getList("0", "1"));
         sent2.setPosTags(Lists.getList("N", "NEW_TAG"));
         sent2.setParents(new int[]    { -1,   0 });
@@ -100,24 +100,24 @@ public class PosTagDistancePrunerTest {
         assertTrue(!sent2.getDepEdgeMask().isPruned(1, 0));
     }
     
-    public static SimpleAnnoSentenceCollection getSents(int numSents) {
-        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
+    public static AnnoSentenceCollection getSents(int numSents) {
+        AnnoSentenceCollection sents = new AnnoSentenceCollection();
         for (int i=0; i<numSents; i++) {
             sents.add(getPosTaggedSent((5 + i*2), (3 + i*2)));
         }
         return sents;
     }
 
-    public static SimpleAnnoSentenceCollection getSents(int numSents, int numTokens, int numTags) {
-        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
+    public static AnnoSentenceCollection getSents(int numSents, int numTokens, int numTags) {
+        AnnoSentenceCollection sents = new AnnoSentenceCollection();
         for (int i=0; i<numSents; i++) {
             sents.add(getPosTaggedSent(numTokens, numTags));
         }
         return sents;
     }
     
-    public static SimpleAnnoSentence getPosTaggedSent(int numTokens, int numTags) {
-        SimpleAnnoSentence sent = new SimpleAnnoSentence();
+    public static AnnoSentence getPosTaggedSent(int numTokens, int numTags) {
+        AnnoSentence sent = new AnnoSentence();
         
         // Add words.
         List<String> words = new ArrayList<String>();

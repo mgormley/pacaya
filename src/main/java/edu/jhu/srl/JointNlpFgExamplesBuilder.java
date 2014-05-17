@@ -2,8 +2,8 @@ package edu.jhu.srl;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.featurize.TemplateLanguage;
 import edu.jhu.gm.data.AbstractFgExampleList;
 import edu.jhu.gm.data.LFgExample;
@@ -71,7 +71,7 @@ public class JointNlpFgExamplesBuilder {
         this.labeledExamples = labeledExamples;
     }
 
-    public FgExampleList getData(SimpleAnnoSentenceCollection sents) {
+    public FgExampleList getData(AnnoSentenceCollection sents) {
         if (!cs.isInitialized()) {
             log.info("Initializing corpus statistics.");
             cs.init(sents);
@@ -109,17 +109,17 @@ public class JointNlpFgExamplesBuilder {
      */
     private class SrlFgExampleFactory extends AbstractFgExampleList implements FgExampleList {
 
-        private SimpleAnnoSentenceCollection sents;
+        private AnnoSentenceCollection sents;
         private ObsFeatureConjoiner ofc;
         
-        public SrlFgExampleFactory(SimpleAnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
+        public SrlFgExampleFactory(AnnoSentenceCollection sents, ObsFeatureConjoiner ofc) {
             this.sents = sents;
             this.ofc = ofc;
         }
         
         public LFgExample get(int i) {
             log.trace("Getting example: " + i);
-            SimpleAnnoSentence sent = sents.get(i);
+            AnnoSentence sent = sents.get(i);
             
             // Create a feature extractor for this example.
             ObsFeatureExtractor obsFe = new SrlFeatureExtractor(prm.fePrm.srlFePrm, sent, cs);
@@ -154,7 +154,7 @@ public class JointNlpFgExamplesBuilder {
 
     /** Gets the variable assignment for either all variables or only the observed variables. 
      * @param fgPrm */
-    private static VarConfig getVarAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, JointFactorGraphPrm fgPrm) {
+    private static VarConfig getVarAssignment(AnnoSentence sent, JointNlpFactorGraph sfg, JointFactorGraphPrm fgPrm) {
         VarConfig vc = new VarConfig();
         DepParseEncoder.getDepParseTrainAssignment(sent, sfg, vc);       
         SrlEncoder.getSrlTrainAssignment(sent, sfg, vc, fgPrm.srlPrm.predictSense, fgPrm.srlPrm.predictPredPos);
@@ -162,10 +162,10 @@ public class JointNlpFgExamplesBuilder {
     }
     
 
-    private void checkForRequiredAnnotations(SimpleAnnoSentenceCollection sents) {
+    private void checkForRequiredAnnotations(AnnoSentenceCollection sents) {
         // Check that the first sentence has all the required annotation
         // types for the specified feature templates.
-        SimpleAnnoSentence sent = sents.get(0);
+        AnnoSentence sent = sents.get(0);
         if (prm.fePrm.srlFePrm.fePrm.useTemplates) {
             if (prm.fgPrm.includeSrl) {
                 TemplateLanguage.assertRequiredAnnotationTypes(sent, prm.fePrm.srlFePrm.fePrm.soloTemplates);

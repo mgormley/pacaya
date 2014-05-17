@@ -1,13 +1,13 @@
 package edu.jhu.srl;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
 
 public class DepParseEncoder {
 
-    public static void getDepParseTrainAssignment(SimpleAnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc) {
+    public static void getDepParseTrainAssignment(AnnoSentence sent, JointNlpFactorGraph sfg, VarConfig vc) {
         int[] parents = sent.getParents();
         if (parents == null) {
             return;

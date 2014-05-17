@@ -15,7 +15,7 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
@@ -50,12 +50,12 @@ public class JointNlpFgExamplesBuilderTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
         
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
         
@@ -84,10 +84,10 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         List<CoNLL09Sentence> sents = cr.readSents(1);
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);        
         JointNlpFgExampleBuilderPrm prm = new JointNlpFgExampleBuilderPrm();
@@ -125,10 +125,10 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
 
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
 
         cs.init(simpleSents);
@@ -196,10 +196,10 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -236,10 +236,10 @@ public class JointNlpFgExamplesBuilderTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         
         CorpusStatistics cs = new CorpusStatistics(csPrm);

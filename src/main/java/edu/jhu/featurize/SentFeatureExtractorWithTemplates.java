@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.srl.CorpusStatistics;
@@ -35,7 +35,7 @@ public class SentFeatureExtractorWithTemplates extends SentFeatureExtractor {
     
     private SentFeatureExtractorWithTemplatesPrm prm;
 
-    public SentFeatureExtractorWithTemplates(SentFeatureExtractorWithTemplatesPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public SentFeatureExtractorWithTemplates(SentFeatureExtractorWithTemplatesPrm prm, AnnoSentence sent, CorpusStatistics cs) {
         super(prm, sent, cs);
         this.prm = prm;
         if (prm.useAllTemplates) {

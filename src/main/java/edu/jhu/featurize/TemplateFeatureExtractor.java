@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -153,7 +153,7 @@ public class TemplateFeatureExtractor {
         this.fSent = fSent;
     }
     
-    public TemplateFeatureExtractor(SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public TemplateFeatureExtractor(AnnoSentence sent, CorpusStatistics cs) {
         this.cs = cs;
         if (cs != null) {
             this.sig = cs.sig;

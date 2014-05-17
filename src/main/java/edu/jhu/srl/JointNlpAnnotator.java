@@ -12,8 +12,8 @@ import java.util.zip.GZIPOutputStream;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.conll.SrlGraph;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.feat.FactorTemplateList;
@@ -64,7 +64,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     }
     
     @Override
-    public void train(SimpleAnnoSentenceCollection sents) {
+    public void train(AnnoSentenceCollection sents) {
         log.info("Initializing data.");
         CorpusStatistics cs;
         ObsFeatureConjoiner ofc;
@@ -103,7 +103,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
     }
     
     @Override
-    public void annotate(SimpleAnnoSentenceCollection sents) {
+    public void annotate(AnnoSentenceCollection sents) {
         if (model == null) {
             throw new IllegalStateException("No model exists. Must call train() or loadModel() before annotate().");
         }
@@ -117,7 +117,7 @@ public class JointNlpAnnotator implements Trainable, Annotator {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < sents.size(); i++) {
             UFgExample ex = data.get(i);
-            SimpleAnnoSentence predSent = sents.get(i);
+            AnnoSentence predSent = sents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(prm.dePrm);
             decoder.decode(model, ex);
             

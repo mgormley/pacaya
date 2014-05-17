@@ -11,27 +11,27 @@ import edu.jhu.data.SentenceCollection;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.util.Alphabet;
 
-public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> {
+public class AnnoSentenceCollection extends ArrayList<AnnoSentence> {
 
     private static final long serialVersionUID = -6867088670574667680L;
 
-    public SimpleAnnoSentenceCollection() {
+    public AnnoSentenceCollection() {
         super();
     }
     
-    public SimpleAnnoSentenceCollection(Collection<SimpleAnnoSentence> list) {
+    public AnnoSentenceCollection(Collection<AnnoSentence> list) {
         super(list);
     }
 
-    public static SimpleAnnoSentenceCollection getSingleton(SimpleAnnoSentence sent) {
-        SimpleAnnoSentenceCollection col = new  SimpleAnnoSentenceCollection();
+    public static AnnoSentenceCollection getSingleton(AnnoSentence sent) {
+        AnnoSentenceCollection col = new  AnnoSentenceCollection();
         col.add(sent);
         return col;
     }
 
     public SentenceCollection getWordsAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             List<String> labels = new ArrayList<String>();
             for (String w : sent.getWords()) {
                 labels.add(w);
@@ -43,7 +43,7 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     
     public SentenceCollection getLemmasAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             List<String> labels = new ArrayList<String>();
             for (String l : sent.getLemmas()) {
                 labels.add(l);
@@ -55,7 +55,7 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     
     public SentenceCollection getPosTagsAsSentenceCollection(Alphabet<String> alphabet) {
         SentenceCollection sents = new SentenceCollection(alphabet);
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             List<String> labels = new ArrayList<String>();
             for (String t : sent.getPosTags()) {
                 labels.add(t);
@@ -67,7 +67,7 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     
     public DepTreebank getPosTagsAndParentsAsDepTreebank(Alphabet<String> alphabet) {
         DepTreebank trees = new DepTreebank(alphabet);
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             List<String> labels = new ArrayList<String>();
             for (String t : sent.getPosTags()) {
                 labels.add(t);
@@ -81,14 +81,14 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     
     public int getNumTokens() {
         int numTokens = 0;
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             numTokens += sent.size();
         }
         return numTokens;
     }
 
-    public SimpleAnnoSentenceCollection subList(int start, int end) {
-        return new SimpleAnnoSentenceCollection(super.subList(start, end));
+    public AnnoSentenceCollection subList(int start, int end) {
+        return new AnnoSentenceCollection(super.subList(start, end));
     }
 
     /**
@@ -96,10 +96,10 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
      * @param removeAts The annotation layers to remove.
      * @return The filtered deep copy.
      */
-    public SimpleAnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
-        SimpleAnnoSentenceCollection newSents = new SimpleAnnoSentenceCollection();
-        for (SimpleAnnoSentence sent : this) {
-            SimpleAnnoSentence newSent = new SimpleAnnoSentence(sent);
+    public AnnoSentenceCollection getWithAtsRemoved(List<AT> removeAts) {
+        AnnoSentenceCollection newSents = new AnnoSentenceCollection();
+        for (AnnoSentence sent : this) {
+            AnnoSentence newSent = new AnnoSentence(sent);
             newSent.removeAts(removeAts);
             newSents.add(newSent);
         }
@@ -109,7 +109,7 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
     /** Gets the length of the longest sentence in this collection. */
     public int getMaxLength() {
         int maxLen = Integer.MIN_VALUE;
-        for (SimpleAnnoSentence sent : this) {
+        for (AnnoSentence sent : this) {
             if (sent.size() > maxLen) {
                 maxLen = sent.size();
             }
@@ -117,11 +117,11 @@ public class SimpleAnnoSentenceCollection extends ArrayList<SimpleAnnoSentence> 
         return maxLen;
     }
     
-    public static void copyShallow(SimpleAnnoSentenceCollection srcSents, SimpleAnnoSentenceCollection destSents, AT at) {
+    public static void copyShallow(AnnoSentenceCollection srcSents, AnnoSentenceCollection destSents, AT at) {
         for (int i=0; i<srcSents.size(); i++) {
-            SimpleAnnoSentence src = srcSents.get(i);
-            SimpleAnnoSentence dest = destSents.get(i);
-            SimpleAnnoSentence.copyShallow(src, dest, at);
+            AnnoSentence src = srcSents.get(i);
+            AnnoSentence dest = destSents.get(i);
+            AnnoSentence.copyShallow(src, dest, at);
         }
     }
     

@@ -7,7 +7,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
@@ -61,7 +61,7 @@ public class JointNlpFactorGraph extends FactorGraph {
     private DepParseFactorGraph dp;  
     private SrlFactorGraph srl;
 
-    public JointNlpFactorGraph(JointFactorGraphPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
+    public JointNlpFactorGraph(JointFactorGraphPrm prm, AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe, ObsFeatureConjoiner ofc, FeatureExtractor fe) {
         this(prm, sent.getWords(), sent.getLemmas(), sent.getDepEdgeMask(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe);
     }
     
@@ -79,7 +79,7 @@ public class JointNlpFactorGraph extends FactorGraph {
      * Adds factors and variables to the given factor graph.
      * @param fe TODO
      */
-    public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FeatureExtractor fe, FactorGraph fg) {
         build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fe, fg, sent.getDepEdgeMask());
     }

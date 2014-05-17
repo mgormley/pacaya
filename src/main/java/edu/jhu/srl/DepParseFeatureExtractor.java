@@ -6,7 +6,7 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.FeaturizedSentence;
 import edu.jhu.featurize.SentFeatureExtractor;
 import edu.jhu.featurize.TemplateFeatureExtractor;
@@ -57,7 +57,7 @@ public class DepParseFeatureExtractor implements FeatureExtractor {
     private Alphabet<Object> alphabet;
     private TemplateFeatureExtractor ext;
     
-    public DepParseFeatureExtractor(DepParseFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs, Alphabet<Object> alphabet) {
+    public DepParseFeatureExtractor(DepParseFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs, Alphabet<Object> alphabet) {
         this.prm = prm;
         FeaturizedSentence fSent = new FeaturizedSentence(sent, cs);
         ext = new TemplateFeatureExtractor(fSent, cs);

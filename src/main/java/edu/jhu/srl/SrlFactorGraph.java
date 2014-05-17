@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureExtractor;
 import edu.jhu.gm.model.FactorGraph;
@@ -145,7 +145,7 @@ public class SrlFactorGraph implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(SimpleAnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
+    public void build(AnnoSentence sent, CorpusStatistics cs, ObsFeatureExtractor obsFe,
             ObsFeatureConjoiner ofc, FactorGraph fg) {
         build(sent.getWords(), sent.getLemmas(), sent.getKnownPreds(), cs.roleStateNames, cs.predSenseListMap, obsFe, ofc, fg);
     }

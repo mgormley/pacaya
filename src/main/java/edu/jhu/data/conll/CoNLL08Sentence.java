@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 
 /**
  * One sentence from a CoNLL-2008 formatted file.
@@ -277,12 +277,12 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         }
     }
 
-    public SimpleAnnoSentence toSimpleAnnoSentence(boolean useGoldSyntax, boolean useSplitForms) {
-        return toSimpleAnnoSentence(this, useGoldSyntax, useSplitForms);
+    public AnnoSentence toAnnoSentence(boolean useGoldSyntax, boolean useSplitForms) {
+        return toAnnoSentence(this, useGoldSyntax, useSplitForms);
     }
     
-    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLL08Sentence cos, boolean useGoldSyntax, boolean useSplitForms) {
-        SimpleAnnoSentence s = new SimpleAnnoSentence();
+    public static AnnoSentence toAnnoSentence(CoNLL08Sentence cos, boolean useGoldSyntax, boolean useSplitForms) {
+        AnnoSentence s = new AnnoSentence();
         s.setSourceSent(cos);
         s.setSrlGraph(cos.getSrlGraph());
 
@@ -341,9 +341,9 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
     /**
      * Creates a new CoNLL08Sentence with both columns set for each field
      * (i.e. LEMMA and SPLIT_LEMMA are both set from the values on the
-     * SimpleAnnoSentence).
+     * AnnoSentence).
      */
-    public static CoNLL08Sentence fromSimpleAnnoSentence(SimpleAnnoSentence sent) {
+    public static CoNLL08Sentence fromAnnoSentence(AnnoSentence sent) {
         // Get the tokens for this sentence.
         List<CoNLL08Token> toks = new ArrayList<CoNLL08Token>();
         for (int i = 0; i < sent.size(); i++) {
@@ -372,10 +372,10 @@ public class CoNLL08Sentence implements Iterable<CoNLL08Token> {
         return updatedSentence;
     }
     
-    public static SimpleAnnoSentenceCollection toSimpleAnno(Iterable<CoNLL08Sentence> conllSents, boolean useGoldSyntax, boolean useSplitForms) {
-        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
+    public static AnnoSentenceCollection toAnno(Iterable<CoNLL08Sentence> conllSents, boolean useGoldSyntax, boolean useSplitForms) {
+        AnnoSentenceCollection sents = new AnnoSentenceCollection();
         for (CoNLL08Sentence sent : conllSents) {
-            sents.add(sent.toSimpleAnnoSentence(useGoldSyntax, useSplitForms));
+            sents.add(sent.toAnnoSentence(useGoldSyntax, useSplitForms));
         }
         return sents;
     }

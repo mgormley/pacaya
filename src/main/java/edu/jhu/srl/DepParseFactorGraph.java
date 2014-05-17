@@ -7,7 +7,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.feat.FeatureExtractor;
 import edu.jhu.gm.model.ClampFactor;
 import edu.jhu.gm.model.ExplicitFactor;
@@ -95,7 +95,7 @@ public class DepParseFactorGraph implements Serializable {
     /**
      * Adds factors and variables to the given factor graph.
      */
-    public void build(SimpleAnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
+    public void build(AnnoSentence sent, Set<Integer> knownPreds, CorpusStatistics cs, FeatureExtractor fe,
             FactorGraph fg) {
         build(sent.getWords(), sent.getDepEdgeMask(), fe, fg);
     }

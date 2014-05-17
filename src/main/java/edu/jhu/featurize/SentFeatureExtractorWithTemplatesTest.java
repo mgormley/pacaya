@@ -3,7 +3,7 @@ package edu.jhu.featurize;
 import java.util.ArrayList;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractorWithTemplates.SentFeatureExtractorWithTemplatesPrm;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -17,7 +17,7 @@ public class SentFeatureExtractorWithTemplatesTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
         ArrayList<String> allFeats = new ArrayList<String>();
         SentFeatureExtractorWithTemplatesPrm fePrm = new SentFeatureExtractorWithTemplatesPrm();

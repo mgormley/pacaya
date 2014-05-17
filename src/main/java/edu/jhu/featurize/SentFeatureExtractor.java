@@ -9,7 +9,7 @@ import java.util.Set;
 
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.DepTree.Dir;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
 import edu.jhu.prim.tuple.Pair;
@@ -66,13 +66,13 @@ public class SentFeatureExtractor {
     // Parameters for feature extraction.
     private SentFeatureExtractorPrm prm;
     
-    private final SimpleAnnoSentence sent;
+    private final AnnoSentence sent;
     private final CorpusStatistics cs;
     private final SrlBerkeleySignatureBuilder sig;
     private FeaturizedSentence fSent;
     private TemplateFeatureExtractor ext;
         
-    public SentFeatureExtractor(SentFeatureExtractorPrm prm, SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public SentFeatureExtractor(SentFeatureExtractorPrm prm, AnnoSentence sent, CorpusStatistics cs) {
         this.prm = prm;
         this.sent = sent;
         this.cs = cs;

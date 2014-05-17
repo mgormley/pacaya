@@ -5,8 +5,8 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
@@ -33,7 +33,7 @@ public class FirstOrderPruner implements Annotator {
     }
     
     @Override
-    public void annotate(SimpleAnnoSentenceCollection inputSents) {
+    public void annotate(AnnoSentenceCollection inputSents) {
         // Read a model from a file.
         log.info("Reading pruning model from file: " + pruneModel);
         JointNlpFgModel model = (JointNlpFgModel) Files.deserialize(pruneModel);
@@ -65,7 +65,7 @@ public class FirstOrderPruner implements Annotator {
         // Add the new predictions to the input sentences.
         for (int i = 0; i < inputSents.size(); i++) {
             LFgExample ex = data.get(i);
-            SimpleAnnoSentence predSent = inputSents.get(i);
+            AnnoSentence predSent = inputSents.get(i);
             JointNlpDecoder decoder = new JointNlpDecoder(dPrm);
             decoder.decode(model, ex);
             

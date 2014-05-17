@@ -1,6 +1,6 @@
 package edu.jhu.gm.train;
 
-import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
+import static edu.jhu.data.simple.AnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -13,10 +13,10 @@ import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
+import edu.jhu.data.simple.AnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceReader;
+import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.data.FgExampleListBuilder.CacheType;
@@ -155,7 +155,7 @@ public class CrfObjectiveTest {
         System.out.println("Done reading.");
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+        AnnoSentenceCollection sents = getSingleton(sent.toAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();
@@ -227,17 +227,17 @@ public class CrfObjectiveTest {
     
     public void dpLogLikelihoodCorrectLessThanZero(boolean logDomain) throws Exception {
         Prng.seed(123456789101112l);
-        SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
+        AnnoSentenceReaderPrm rPrm = new AnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 3;
         rPrm.maxSentenceLength = 7;
         rPrm.useCoNLLXPhead = true;
-        SimpleAnnoSentenceReader r = new SimpleAnnoSentenceReader(rPrm);
+        AnnoSentenceReader r = new AnnoSentenceReader(rPrm);
         //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
         r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentenceCollection sents = r.getData();
+        AnnoSentenceCollection sents = r.getData();
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();
@@ -277,17 +277,17 @@ public class CrfObjectiveTest {
     
     public void dpLogLikelihoodCorrectLessThanZero2(boolean logDomain) throws Exception {
         Prng.seed(123456789101112l);
-        SimpleAnnoSentenceReaderPrm rPrm = new SimpleAnnoSentenceReaderPrm();
+        AnnoSentenceReaderPrm rPrm = new AnnoSentenceReaderPrm();
         rPrm.maxNumSentences = 10;
         //rPrm.maxSentenceLength = 7;
         rPrm.useCoNLLXPhead = true;
-        SimpleAnnoSentenceReader r = new SimpleAnnoSentenceReader(rPrm);
+        AnnoSentenceReader r = new AnnoSentenceReader(rPrm);
         //r.loadSents(CrfObjectiveTest.class.getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example), DatasetType.CONLL_2009);
         r.loadSents(new File("/Users/mgormley/research/pacaya/data/conllx/CoNLL-X/train/data/bulgarian/bultreebank/train/bulgarian_bultreebank_train.conll"), DatasetType.CONLL_X);
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentenceCollection sents = r.getData();
+        AnnoSentenceCollection sents = r.getData();
         cs.init(sents);
         
         FactorTemplateList fts = new FactorTemplateList();

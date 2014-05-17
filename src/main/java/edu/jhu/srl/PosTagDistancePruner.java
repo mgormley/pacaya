@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.LabelSequence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.prim.matrix.DenseIntegerMatrix;
 import edu.jhu.util.Alphabet;
 
@@ -27,8 +27,8 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     public PosTagDistancePruner() { }
     
     @Override
-    public void train(SimpleAnnoSentenceCollection sents) {
-        for (SimpleAnnoSentence sent : sents) {
+    public void train(AnnoSentenceCollection sents) {
+        for (AnnoSentence sent : sents) {
             // Populate the alphabet
             new LabelSequence<String>(alphabet, sent.getPosTags());
         }
@@ -36,7 +36,7 @@ public class PosTagDistancePruner implements Trainable, Annotator {
         mat = new DenseIntegerMatrix(alphabet.size(), alphabet.size());
         mat.fill(0);
         // For each sentence...
-        for (SimpleAnnoSentence sent : sents) {
+        for (AnnoSentence sent : sents) {
             LabelSequence<String> tagSeq = new LabelSequence<String>(alphabet, sent.getPosTags());        
             int[] tags = tagSeq.getLabelIds();
             int[] parents = sent.getParents();            
@@ -58,14 +58,14 @@ public class PosTagDistancePruner implements Trainable, Annotator {
     }
     
     @Override
-    public void annotate(SimpleAnnoSentenceCollection sents) {
+    public void annotate(AnnoSentenceCollection sents) {
         if (mat == null) {
             throw new IllegalStateException("The train() method must be called before annotate()");
         }
         int numEdgesTot = 0;
         int numEdgesKept = 0;
         // For each sentence...
-        for (SimpleAnnoSentence sent : sents) {
+        for (AnnoSentence sent : sents) {
             // Get existing DepEdgeMask or create a new one.
             DepEdgeMask mask = sent.getDepEdgeMask();
             if (mask == null) {

@@ -11,21 +11,21 @@ import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
 import edu.jhu.util.collections.Lists;
 
-public class SimpleAnnoSentenceTest {
+public class AnnoSentenceTest {
 
     @Test
     public void testGetParentsAndUseGoldSyntax() {
-        CoNLL09Sentence sent = SimpleAnnoSentenceTest.getDogConll09Sentence();
+        CoNLL09Sentence sent = AnnoSentenceTest.getDogConll09Sentence();
         {
             // Test with gold syntax.
             boolean useGoldSyntax = true;
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(useGoldSyntax);
+            AnnoSentence simpleSent = sent.toAnnoSentence(useGoldSyntax);
             assertArrayEquals(new int[] { 1, 2, -1, 2 }, simpleSent.getParents());
         }
         {
             // Test without gold syntax.
             boolean useGoldSyntax = false;
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(useGoldSyntax);
+            AnnoSentence simpleSent = sent.toAnnoSentence(useGoldSyntax);
             assertArrayEquals(new int[] { 2, 0, -1, 2 }, simpleSent.getParents());
         }
     }

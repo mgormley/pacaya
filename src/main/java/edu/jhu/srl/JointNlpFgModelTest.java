@@ -12,7 +12,7 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -28,7 +28,7 @@ public class JointNlpFgModelTest {
             InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
             CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
             CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-            SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
+            AnnoSentenceCollection sents = CoNLL09Sentence.toAnno(cr.readSents(1), csPrm.useGoldSyntax);
             CorpusStatistics cs = new CorpusStatistics(csPrm);
             cs.init(sents);
             

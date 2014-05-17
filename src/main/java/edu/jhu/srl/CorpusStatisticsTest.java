@@ -11,8 +11,8 @@ import org.junit.Test;
 import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
 
 /**
@@ -39,10 +39,10 @@ public class CorpusStatisticsTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.topN = 1;
         List<CoNLL09Sentence> sents = cr.readSents(4);
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         for (CoNLL09Sentence sent : sents) {
             sent.normalizeRoleNames();
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+            AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
             simpleSents.add(simpleSent);
         }
         CorpusStatistics cs = new CorpusStatistics(csPrm);

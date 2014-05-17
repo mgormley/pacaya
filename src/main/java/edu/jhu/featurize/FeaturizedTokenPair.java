@@ -7,7 +7,7 @@ import java.util.List;
 import edu.jhu.data.DepTree;
 import edu.jhu.data.DepTree.Dir;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.prim.tuple.Pair;
 
 /**
@@ -49,7 +49,7 @@ public class FeaturizedTokenPair {
     private List<Pair<Integer, Dir>> dpPathPred;
     private List<Pair<Integer, Dir>> dpPathArg;
     
-    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken pTok, FeaturizedToken aTok, SimpleAnnoSentence sent) {
+    public FeaturizedTokenPair(int pidx, int aidx, FeaturizedToken pTok, FeaturizedToken aTok, AnnoSentence sent) {
         assert pTok.getSent() == aTok.getSent();
         assert pTok.getSent() == sent;
         this.parents = sent.getParents();

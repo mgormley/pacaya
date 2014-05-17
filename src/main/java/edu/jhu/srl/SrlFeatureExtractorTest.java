@@ -14,8 +14,8 @@ import edu.jhu.data.conll.CoNLL09FileReader;
 import edu.jhu.data.conll.CoNLL09ReadWriteTest;
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.featurize.TemplateSets;
 import edu.jhu.gm.data.FgExampleList;
@@ -59,7 +59,7 @@ public class SrlFeatureExtractorTest {
         InputStream inputStream = this.getClass().getResourceAsStream(CoNLL09ReadWriteTest.conll2009Example);
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
-        SimpleAnnoSentenceCollection sents = CoNLL09Sentence.toSimpleAnno(cr.readSents(1), csPrm.useGoldSyntax);
+        AnnoSentenceCollection sents = CoNLL09Sentence.toAnno(cr.readSents(1), csPrm.useGoldSyntax);
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         cs.init(sents);
         
@@ -92,10 +92,10 @@ public class SrlFeatureExtractorTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         List<CoNLL09Sentence> conllSents = cr.readSents(1, 20);
-        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection sents = new AnnoSentenceCollection();
         for (CoNLL09Sentence sent : conllSents) {
             sent.normalizeRoleNames();
-            SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+            AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
             sents.add(simpleSent);
         }
         CorpusStatistics cs = new CorpusStatistics(csPrm);
@@ -136,12 +136,12 @@ public class SrlFeatureExtractorTest {
         CoNLL09Sentence sent = new CoNLL09Sentence(tokens);
         
         List<CoNLL09Sentence> sents = Lists.getList(sent);
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
 
@@ -177,12 +177,12 @@ public class SrlFeatureExtractorTest {
         CoNLL09FileReader cr = new CoNLL09FileReader(inputStream);
         List<CoNLL09Sentence> sents = cr.readSents(1);
 
-        SimpleAnnoSentenceCollection simpleSents = new SimpleAnnoSentenceCollection();
+        AnnoSentenceCollection simpleSents = new AnnoSentenceCollection();
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
         for (CoNLL09Sentence s : sents) {
             s.normalizeRoleNames();
-            simpleSents.add(s.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+            simpleSents.add(s.toAnnoSentence(csPrm.useGoldSyntax));
         }
         cs.init(simpleSents);
         

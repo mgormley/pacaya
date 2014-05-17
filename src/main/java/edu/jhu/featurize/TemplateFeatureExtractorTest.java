@@ -10,8 +10,8 @@ import java.util.List;
 import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceTest;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceTest;
 import edu.jhu.featurize.TemplateFeatureExtractor.LocalObservations;
 import edu.jhu.featurize.TemplateLanguage.EdgeProperty;
 import edu.jhu.featurize.TemplateLanguage.FeatTemplate;
@@ -62,7 +62,7 @@ public class TemplateFeatureExtractorTest {
         Rule rule = getRule("NP", "Det", "N", 0);
         LocalObservations local = new LocalObservations(pidx, cidx, midx, rule, ri, rj, rk);
         
-        SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
+        AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(AnnoSentenceTest.getDogConll09Sentence(), true);
         addFakeBrownClusters(sent);
         // Add fake coarse POS tags.
         sent.setCposTags(sent.getPosTags());
@@ -482,7 +482,7 @@ public class TemplateFeatureExtractorTest {
     }
 
     private static TemplateFeatureExtractor getDogSentenceExtractor() {
-        SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SimpleAnnoSentenceTest.getDogConll09Sentence(), true);
+        AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(AnnoSentenceTest.getDogConll09Sentence(), true);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
         TemplateFeatureExtractor extr = new TemplateFeatureExtractor(sent, cs);
@@ -490,7 +490,7 @@ public class TemplateFeatureExtractorTest {
     }
 
     private static TemplateFeatureExtractor getCoNLLSentenceExtractor1() {
-        SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence1(), true);
+        AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence1(), true);
         addFakeBrownClusters(sent);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
@@ -499,7 +499,7 @@ public class TemplateFeatureExtractorTest {
     }
 
     private static TemplateFeatureExtractor getCoNLLSentenceExtractor2() {
-        SimpleAnnoSentence sent = CoNLL09Sentence.toSimpleAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence2(), true);
+        AnnoSentence sent = CoNLL09Sentence.toAnnoSentence(SentFeatureExtractorTest.getSpanishConll09Sentence2(), true);
         addFakeBrownClusters(sent);
         CorpusStatistics cs = new CorpusStatistics(new CorpusStatisticsPrm());
         cs.init(Lists.getList(sent));
@@ -507,7 +507,7 @@ public class TemplateFeatureExtractorTest {
         return extr;
     }
     
-    public static void addFakeBrownClusters(SimpleAnnoSentence sent) {
+    public static void addFakeBrownClusters(AnnoSentence sent) {
         ArrayList<String> clusters = new ArrayList<String>();
         for (int i=0; i<sent.size(); i++) {
             clusters.add(FastMath.mod(i*7, 2) + "10101" + FastMath.mod(i*39, 2));

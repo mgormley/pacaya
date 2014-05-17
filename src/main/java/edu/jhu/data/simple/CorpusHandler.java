@@ -8,9 +8,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.DatasetType;
-import edu.jhu.data.simple.SimpleAnnoSentenceReader.SimpleAnnoSentenceReaderPrm;
-import edu.jhu.data.simple.SimpleAnnoSentenceWriter.SimpleAnnoSentenceWriterPrm;
+import edu.jhu.data.simple.AnnoSentenceReader.DatasetType;
+import edu.jhu.data.simple.AnnoSentenceReader.AnnoSentenceReaderPrm;
+import edu.jhu.data.simple.AnnoSentenceWriter.AnnoSentenceWriterPrm;
 import edu.jhu.featurize.TemplateLanguage.AT;
 import edu.jhu.prim.sample.Sample;
 import edu.jhu.util.cli.Opt;
@@ -88,14 +88,14 @@ public class CorpusHandler {
     // public static boolean normalizeWords = false;
     ///////////////////////////////////////
     
-    private SimpleAnnoSentenceCollection trainGoldSents;
-    private SimpleAnnoSentenceCollection trainInputSents;
-    private SimpleAnnoSentenceCollection devGoldSents;
-    private SimpleAnnoSentenceCollection devInputSents;
-    private SimpleAnnoSentenceCollection testGoldSents;
-    private SimpleAnnoSentenceCollection testInputSents;
+    private AnnoSentenceCollection trainGoldSents;
+    private AnnoSentenceCollection trainInputSents;
+    private AnnoSentenceCollection devGoldSents;
+    private AnnoSentenceCollection devInputSents;
+    private AnnoSentenceCollection testGoldSents;
+    private AnnoSentenceCollection testInputSents;
     
-    private SimpleAnnoSentenceCollection trainAsDevSents;
+    private AnnoSentenceCollection trainAsDevSents;
 
     // -------------------- Train data --------------------------
     
@@ -103,14 +103,14 @@ public class CorpusHandler {
         return train != null && trainType != null;
     }
     
-    public SimpleAnnoSentenceCollection getTrainGold() throws IOException {
+    public AnnoSentenceCollection getTrainGold() throws IOException {
         if (trainGoldSents == null) {
             loadTrain();
         }
         return trainGoldSents;
     }
     
-    public SimpleAnnoSentenceCollection getTrainInput() throws IOException {
+    public AnnoSentenceCollection getTrainInput() throws IOException {
         if (trainInputSents == null) {
             loadTrain();
         }
@@ -122,24 +122,24 @@ public class CorpusHandler {
         trainInputSents = null;
     }
     
-    public void writeTrainPreds(SimpleAnnoSentenceCollection trainPredSents) throws IOException {
+    public void writeTrainPreds(AnnoSentenceCollection trainPredSents) throws IOException {
         if (trainPredOut != null) {
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted train";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(trainPredOut, trainType, trainPredSents);
         }
     }
     
     private void loadTrain() throws IOException {
         // Read train data.
-        SimpleAnnoSentenceReaderPrm prm = getDefaultReaderPrm();
+        AnnoSentenceReaderPrm prm = getDefaultReaderPrm();
         prm.name = "train";
         prm.maxNumSentences = trainMaxNumSentences;
         prm.maxSentenceLength = trainMaxSentenceLength;
         prm.minSentenceLength = trainMinSentenceLength;
         prm.useCoNLLXPhead = trainUseCoNLLXPhead;
-        SimpleAnnoSentenceReader reader = new SimpleAnnoSentenceReader(prm);
+        AnnoSentenceReader reader = new AnnoSentenceReader(prm);
         reader.loadSents(train, trainType);
          
         // Cache gold train data.
@@ -147,17 +147,17 @@ public class CorpusHandler {
         
         if (hasTrain() && propTrainAsDev > 0) {
             // Split into train and dev.
-            trainAsDevSents = new SimpleAnnoSentenceCollection();
-            SimpleAnnoSentenceCollection tmp = new SimpleAnnoSentenceCollection();
+            trainAsDevSents = new AnnoSentenceCollection();
+            AnnoSentenceCollection tmp = new AnnoSentenceCollection();
             sample(trainGoldSents, propTrainAsDev, trainAsDevSents, tmp);
             trainGoldSents = tmp;
         }
         
         if (trainGoldOut != null) {
             // Write gold train data.
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold train";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(trainGoldOut, trainType, trainGoldSents);
         }
         
@@ -195,14 +195,14 @@ public class CorpusHandler {
         return (dev != null && devType != null) || (hasTrain() && propTrainAsDev > 0);
     }
     
-    public SimpleAnnoSentenceCollection getDevGold() throws IOException {
+    public AnnoSentenceCollection getDevGold() throws IOException {
         if (devGoldSents == null) {
             loadDev();
         }
         return devGoldSents;
     }
     
-    public SimpleAnnoSentenceCollection getDevInput() throws IOException {
+    public AnnoSentenceCollection getDevInput() throws IOException {
         if (devInputSents == null) {
             loadDev();
         }
@@ -214,11 +214,11 @@ public class CorpusHandler {
         devInputSents = null;
     }
     
-    public void writeDevPreds(SimpleAnnoSentenceCollection devPredSents) throws IOException {
+    public void writeDevPreds(AnnoSentenceCollection devPredSents) throws IOException {
         if (devPredOut != null) {
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted dev";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(devPredOut, devType, devPredSents);
         }
     }
@@ -233,20 +233,20 @@ public class CorpusHandler {
         
         if (devGoldOut != null) {
             // Write gold dev data.
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold dev";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(devGoldOut, devType, devGoldSents);
         }
     }    
     
     private void readDev() throws IOException {        
         // Read dev data.
-        SimpleAnnoSentenceReaderPrm prm = getDefaultReaderPrm();  
+        AnnoSentenceReaderPrm prm = getDefaultReaderPrm();  
         prm.name = "dev";
         prm.maxNumSentences = devMaxNumSentences;
         prm.maxSentenceLength = devMaxSentenceLength;        
-        SimpleAnnoSentenceReader reader = new SimpleAnnoSentenceReader(prm);
+        AnnoSentenceReader reader = new AnnoSentenceReader(prm);
         reader.loadSents(dev, devType);
          
         // Cache gold dev data.
@@ -262,9 +262,9 @@ public class CorpusHandler {
             loadTrain();
         }
         if (devGoldSents == null) {
-            devGoldSents = new SimpleAnnoSentenceCollection();
+            devGoldSents = new AnnoSentenceCollection();
         }
-        for (SimpleAnnoSentence sent : trainAsDevSents) {
+        for (AnnoSentence sent : trainAsDevSents) {
             devGoldSents.add(sent);
         }
         devInputSents = devGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
@@ -276,14 +276,14 @@ public class CorpusHandler {
         return test != null && testType != null;
     }
     
-    public SimpleAnnoSentenceCollection getTestGold() throws IOException {
+    public AnnoSentenceCollection getTestGold() throws IOException {
         if (testGoldSents == null) {
             loadTest();
         }
         return testGoldSents;
     }
     
-    public SimpleAnnoSentenceCollection getTestInput() throws IOException {
+    public AnnoSentenceCollection getTestInput() throws IOException {
         if (testInputSents == null) {
             loadTest();
         }
@@ -295,22 +295,22 @@ public class CorpusHandler {
         testInputSents = null;
     }
     
-    public void writeTestPreds(SimpleAnnoSentenceCollection testPredSents) throws IOException {
+    public void writeTestPreds(AnnoSentenceCollection testPredSents) throws IOException {
         if (testPredOut != null) {
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "predicted test";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(testPredOut, testType, testPredSents);
         }
     }
     
     private void loadTest() throws IOException {
         // Read test data.
-        SimpleAnnoSentenceReaderPrm prm = getDefaultReaderPrm();        
+        AnnoSentenceReaderPrm prm = getDefaultReaderPrm();        
         prm.name = "test";
         prm.maxNumSentences = testMaxNumSentences;
         prm.maxSentenceLength = testMaxSentenceLength;        
-        SimpleAnnoSentenceReader reader = new SimpleAnnoSentenceReader(prm);
+        AnnoSentenceReader reader = new AnnoSentenceReader(prm);
         reader.loadSents(test, testType);
          
         // Cache gold test data.
@@ -318,9 +318,9 @@ public class CorpusHandler {
         
         if (testGoldOut != null) {
             // Write gold test data.
-            SimpleAnnoSentenceWriterPrm wPrm = new SimpleAnnoSentenceWriterPrm();
+            AnnoSentenceWriterPrm wPrm = new AnnoSentenceWriterPrm();
             wPrm.name = "gold test";
-            SimpleAnnoSentenceWriter writer = new SimpleAnnoSentenceWriter(wPrm);
+            AnnoSentenceWriter writer = new AnnoSentenceWriter(wPrm);
             writer.write(testGoldOut, testType, testGoldSents);
         }
         
@@ -328,8 +328,8 @@ public class CorpusHandler {
         testInputSents = testGoldSents.getWithAtsRemoved(Lists.union(getRemoveAts(), getPredAts()));
     }
     
-    private SimpleAnnoSentenceReaderPrm getDefaultReaderPrm() {
-        SimpleAnnoSentenceReaderPrm prm = new SimpleAnnoSentenceReaderPrm();
+    private AnnoSentenceReaderPrm getDefaultReaderPrm() {
+        AnnoSentenceReaderPrm prm = new AnnoSentenceReaderPrm();
         prm.normalizeRoleNames = normalizeRoleNames;
         prm.useGoldSyntax = useGoldSyntax;
         return prm;

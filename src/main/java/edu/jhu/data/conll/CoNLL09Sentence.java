@@ -14,8 +14,8 @@ import org.apache.log4j.Logger;
 import edu.jhu.data.conll.SrlGraph.SrlArg;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.SimpleAnnoSentence;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 
 /**
  * One sentence from a CoNLL-2009 formatted file.
@@ -42,7 +42,7 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     }
 
 
-    /*public CoNLL09Sentence(SimpleAnnoSentence simpleSent) {
+    /*public CoNLL09Sentence(AnnoSentence simpleSent) {
         // public CoNLL09Token(int id, String form, String lemma, String plemma,
         // String pos, String ppos, List<String> feat, List<String> pfeat,
         // int head, int phead, String deprel, String pdeprel,
@@ -368,12 +368,12 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         }
     }
 
-    public SimpleAnnoSentence toSimpleAnnoSentence(boolean useGoldSyntax) {
-        return toSimpleAnnoSentence(this, useGoldSyntax);
+    public AnnoSentence toAnnoSentence(boolean useGoldSyntax) {
+        return toAnnoSentence(this, useGoldSyntax);
     }
     
-    public static SimpleAnnoSentence toSimpleAnnoSentence(CoNLL09Sentence cos, boolean useGoldSyntax) {
-        SimpleAnnoSentence s = new SimpleAnnoSentence();
+    public static AnnoSentence toAnnoSentence(CoNLL09Sentence cos, boolean useGoldSyntax) {
+        AnnoSentence s = new AnnoSentence();
         s.setSourceSent(cos);
         s.setWords(cos.getWords());
         s.setSrlGraph(cos.getSrlGraph());
@@ -396,11 +396,11 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
     /**
      * Creates a new CoNLL09Sentence with both columns set for each field
      * (i.e. PLEMMA and LEMMA are both set from the values on the
-     * SimpleAnnoSentence). The reason for setting both is that the CoNLL-2009
+     * AnnoSentence). The reason for setting both is that the CoNLL-2009
      * evaluation script uses the "gold" columns for evaluation, but we might
      * want to utilize the predictions in some downstream task.
      */
-    public static CoNLL09Sentence fromSimpleAnnoSentence(SimpleAnnoSentence sent) {
+    public static CoNLL09Sentence fromAnnoSentence(AnnoSentence sent) {
         // Get the tokens for this sentence.
         List<CoNLL09Token> toks = new ArrayList<CoNLL09Token>();
         for (int i = 0; i < sent.size(); i++) {
@@ -434,10 +434,10 @@ public class CoNLL09Sentence implements Iterable<CoNLL09Token> {
         return updatedSentence;
     }
     
-    public static SimpleAnnoSentenceCollection toSimpleAnno(Iterable<CoNLL09Sentence> conllSents, boolean useGoldSyntax) {
-        SimpleAnnoSentenceCollection sents = new SimpleAnnoSentenceCollection();
+    public static AnnoSentenceCollection toAnno(Iterable<CoNLL09Sentence> conllSents, boolean useGoldSyntax) {
+        AnnoSentenceCollection sents = new AnnoSentenceCollection();
         for (CoNLL09Sentence sent : conllSents) {
-            sents.add(sent.toSimpleAnnoSentence(useGoldSyntax));
+            sents.add(sent.toAnnoSentence(useGoldSyntax));
         }
         return sents;
     }

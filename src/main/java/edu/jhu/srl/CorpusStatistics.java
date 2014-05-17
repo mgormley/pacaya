@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import edu.berkeley.nlp.PCFGLA.smoothing.SrlBerkeleySignatureBuilder;
 import edu.jhu.data.conll.SrlGraph.SrlEdge;
 import edu.jhu.data.conll.SrlGraph.SrlPred;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.prim.tuple.ComparablePair;
 import edu.jhu.prim.tuple.Pair;
 import edu.jhu.util.Alphabet;
@@ -84,7 +84,7 @@ public class CorpusStatistics implements Serializable {
         initialized = false;
     }
 
-    public void init(Iterable<SimpleAnnoSentence> cr) {
+    public void init(Iterable<AnnoSentence> cr) {
         Map<String,Set<String>> predSenseSetMap = new HashMap<String,Set<String>>();
         Set<String> knownRoles = new HashSet<String>();
         Set<String> knownLinks = new HashSet<String>();
@@ -102,7 +102,7 @@ public class CorpusStatistics implements Serializable {
         // This is a hack:  '_' won't actually be in any of the defined edges.
         // However, removing this messes up what we assume as default.
         knownRoles.add("_");
-        for (SimpleAnnoSentence sent : cr) {
+        for (AnnoSentence sent : cr) {
             // Need to know max sent length because distance features
             // use these values explicitly; an unknown sentence length in
             // test data will result in an unknown feature.

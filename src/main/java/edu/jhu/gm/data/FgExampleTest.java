@@ -1,6 +1,6 @@
 package edu.jhu.gm.data;
 
-import static edu.jhu.data.simple.SimpleAnnoSentenceCollection.getSingleton;
+import static edu.jhu.data.simple.AnnoSentenceCollection.getSingleton;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.ObsFeatureConjoiner;
 import edu.jhu.gm.feat.ObsFeatureConjoiner.ObsFeatureConjoinerPrm;
@@ -39,7 +39,7 @@ public class FgExampleTest {
         
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentenceCollection sents = getSingleton(sent.toSimpleAnnoSentence(csPrm.useGoldSyntax));
+        AnnoSentenceCollection sents = getSingleton(sent.toAnnoSentence(csPrm.useGoldSyntax));
         cs.init(sents);
         
         System.out.println("Done reading.");

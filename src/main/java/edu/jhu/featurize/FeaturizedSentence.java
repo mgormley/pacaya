@@ -1,6 +1,6 @@
 package edu.jhu.featurize;
 
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.srl.CorpusStatistics;
 
 /**
@@ -11,13 +11,13 @@ import edu.jhu.srl.CorpusStatistics;
  */
 public class FeaturizedSentence {
 
-    private SimpleAnnoSentence sent;
+    private AnnoSentence sent;
     private CorpusStatistics cs;
     
     private FeaturizedToken[] toks;
     private FeaturizedTokenPair[][] pairs;
     
-    public FeaturizedSentence(SimpleAnnoSentence sent, CorpusStatistics cs) {
+    public FeaturizedSentence(AnnoSentence sent, CorpusStatistics cs) {
         this.sent = sent;
         this.cs = cs;
         // We use 1-indexing internally. This allows us to cache a BOS and EOS

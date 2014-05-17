@@ -1,9 +1,9 @@
 package edu.jhu.srl;
 
-import edu.jhu.data.simple.SimpleAnnoSentenceCollection;
+import edu.jhu.data.simple.AnnoSentenceCollection;
 
 public interface Trainable {
 
-    void train(SimpleAnnoSentenceCollection sents);
+    void train(AnnoSentenceCollection sents);
     
 }

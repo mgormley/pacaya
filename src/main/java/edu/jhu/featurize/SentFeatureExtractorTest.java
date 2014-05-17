@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import edu.jhu.data.conll.CoNLL09Sentence;
 import edu.jhu.data.conll.CoNLL09Token;
-import edu.jhu.data.simple.SimpleAnnoSentence;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.featurize.SentFeatureExtractor.SentFeatureExtractorPrm;
 import edu.jhu.srl.CorpusStatistics;
 import edu.jhu.srl.CorpusStatistics.CorpusStatisticsPrm;
@@ -21,7 +21,7 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         fePrm.withSupervision = false;
@@ -53,7 +53,7 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
@@ -76,7 +76,7 @@ public class SentFeatureExtractorTest {
         CorpusStatisticsPrm csPrm = new CorpusStatisticsPrm();
         csPrm.useGoldSyntax = true;
         CorpusStatistics cs = new CorpusStatistics(csPrm);
-        SimpleAnnoSentence simpleSent = sent.toSimpleAnnoSentence(csPrm.useGoldSyntax);
+        AnnoSentence simpleSent = sent.toAnnoSentence(csPrm.useGoldSyntax);
         cs.init(Lists.getList(simpleSent));
         SentFeatureExtractorPrm fePrm = new SentFeatureExtractorPrm();
         SentFeatureExtractor fe = new SentFeatureExtractor(fePrm, simpleSent, cs);
