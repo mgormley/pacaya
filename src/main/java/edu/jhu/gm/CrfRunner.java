@@ -21,7 +21,7 @@ import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.Loss;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
 import edu.jhu.gm.eval.AccuracyEvaluator;
-import edu.jhu.gm.eval.AccuracyEvaluator.VarConfigPair;
+import edu.jhu.gm.eval.VarConfigPair;
 import edu.jhu.gm.feat.FactorTemplateList;
 import edu.jhu.gm.feat.Feature;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;

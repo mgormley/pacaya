@@ -34,7 +34,7 @@ public class MbrDecoder {
 
     public enum Loss {
         // TODO: support other loss functions.
-        ACCURACY
+        ACCURACY, MSE, L1
     }
 
     private static final Logger log = Logger.getLogger(MbrDecoder.class);
@@ -71,7 +71,7 @@ public class MbrDecoder {
         
         // Get the MBR configuration of all the latent and predicted
         // variables.        
-        if (prm.loss == Loss.ACCURACY) {
+        if (prm.loss == Loss.ACCURACY || prm.loss == Loss.MSE || prm.loss == Loss.L1) {
             for (int varId = 0; varId < fgLatPred.getNumVars(); varId++) {
                 Var var = fgLatPred.getVar(varId);
                 DenseFactor marg = inf.getMarginalsForVarId(varId);
