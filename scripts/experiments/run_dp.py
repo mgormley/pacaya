@@ -78,6 +78,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.parsers = g.pruned_parsers + g.unpruned_parsers
         
         models_dir = get_first_that_exists(os.path.join(self.root_dir, "exp", "models", "dp-conllx_FAST"), # This is a fast model locally.
+                                           os.path.join(self.root_dir, "exp", "models", "dp-pruning_000"),
                                            os.path.join(self.root_dir, "exp", "models", "dp-pruning_001"),
                                            os.path.join(self.root_dir, "remote_exp", "models", "dp-conllx_005"))
         
