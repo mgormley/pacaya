@@ -2,7 +2,7 @@ package edu.jhu.eval;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.data.DepTreebank;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.data.simple.AnnoSentenceCollection;
 
 /**
@@ -25,23 +25,38 @@ public class DepParseEvaluator {
         this.dataName = dataName;
     }
 
-    public void evaluate(AnnoSentenceCollection gold, AnnoSentenceCollection pred) {
+    /** Gets the number of incorrect dependencies. */
+    public double loss(AnnoSentence pred, AnnoSentence gold) {
         correct = 0;
         total = 0;
-        assert(pred.size() == gold.size());
-        for (int i = 0; i < gold.size(); i++) {
-            int[] goldParents = gold.get(i).getParents();
-            int[] parseParents = pred.get(i).getParents();
-            assert(parseParents.length == goldParents.length);
-            for (int j = 0; j < goldParents.length; j++) {
-                if (goldParents[j] == parseParents[j]) {
-                    correct++;
-                }
-                total++;
-            }
+        evaluate(gold, pred);
+        return total-correct;
+    }  
+
+    /** Computes the number of correct dependencies, total dependencies, and accuracy. */
+    public void evaluate(AnnoSentenceCollection goldSents, AnnoSentenceCollection predSents) {
+        correct = 0;
+        total = 0;
+        assert(predSents.size() == goldSents.size());
+        for (int i = 0; i < goldSents.size(); i++) {
+            AnnoSentence gold = goldSents.get(i);
+            AnnoSentence pred = predSents.get(i);
+            evaluate(gold, pred);
         }
         accuracy = (double) correct / (double) total;
         log.info(String.format("Unlabeled attachment score on %s: %.4f", dataName, accuracy));
+    }
+
+    private void evaluate(AnnoSentence gold, AnnoSentence pred) {
+        int[] goldParents = gold.getParents();
+        int[] parseParents = pred.getParents();
+        assert(parseParents.length == goldParents.length);
+        for (int j = 0; j < goldParents.length; j++) {
+            if (goldParents[j] == parseParents[j]) {
+                correct++;
+            }
+            total++;
+        }
     }
 
     public double getAccuracy() {
@@ -54,6 +69,6 @@ public class DepParseEvaluator {
 
     public int getTotal() {
         return total;
-    }    
+    }  
 
 }
