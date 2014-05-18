@@ -2,7 +2,6 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.app.IdxLoss;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;

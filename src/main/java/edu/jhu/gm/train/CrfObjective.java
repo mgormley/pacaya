@@ -1,11 +1,9 @@
 package edu.jhu.gm.train;
 
-import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
-import edu.jhu.gm.app.IdxLoss;
-import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.eval.MseMarginalEvaluator;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
