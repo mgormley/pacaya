@@ -28,6 +28,7 @@ from experiments.path_defs import *
 
 # ---------------------------- Experiment/Stage Classes ----------------------------------
 
+
 class SrlExpParams(experiment_runner.JavaExpParams):
     
     def __init__(self, **keywords):
@@ -92,9 +93,6 @@ class SrlExpParams(experiment_runner.JavaExpParams):
         script += 'grep --after-context 3 "Labeled   attachment score:" %s\n' % (eval_out)        
         return script
     
-    def get_java_args(self):
-        return self._get_java_args(self.work_mem_megs)
-
 
 class ScrapeSrl(experiment_runner.PythonExpParams):
     
@@ -117,3 +115,122 @@ class ScrapeSrl(experiment_runner.PythonExpParams):
         cmd = "python %s/scripts/experiments/scrape_srl.py %s\n" % (self.root_dir, self.get_args())
         script += fancify_cmd(cmd)
         return script
+
+
+class ConcatStages(experiment_runner.ExpParams):
+    
+    def __init__(self, concat_stages):
+        experiment_runner.ExpParams.__init__(self,None)
+        self.concat_stages = concat_stages
+        for other in self.concat_stages:
+            if isinstance(other, experiment_runner.ExpParams):
+                self.params.update(other.params)
+                self.exclude_name_keys.update(other.exclude_name_keys)
+                self.exclude_arg_keys.update(other.exclude_arg_keys)
+            #self.update_from_stage(stage)
+        
+    def get_initial_keys(self):
+        keys = []
+        for stage in self.concat_stages:
+            keys += stage.get_initial_keys()
+        return keys
+    
+    def get_instance(self):
+        return RunIfPrereqsOOME()
+    
+    def create_experiment_script(self, exp_dir):
+        script = "\n"
+        for stage in self.concat_stages:
+            if hasattr(self, "work_mem_megs"): stage.work_mem_megs = self.work_mem_megs
+            if hasattr(self, "threads"):stage.threads = self.threads
+            if hasattr(self, "minutes"):stage.minutes = self.minutes
+            if hasattr(self, "hprof"): stage.hprof = self.hprof            
+            script += stage.create_experiment_script(exp_dir) + "\n\n"
+        return script
+
+
+class RunIfPrereqsOOME(experiment_runner.ExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.ExpParams.__init__(self,keywords)
+        
+    def get_instance(self):
+        return RunIfPrereqsOOME()
+    
+    def create_experiment_script(self, exp_dir):
+        script = "\n"
+        for prereq in self.prereqs:
+            script += "PREREQ_DIR=%s" % (prereq.exp_dir)
+            script += '''
+if [[ -e $PREREQ_DIR/DONE ]] ; then
+    echo "Previous stage ran successfully. Marking DONE and exiting."
+    touch DONE
+    exit 0
+elif [[ `tail -n 1000 $PREREQ_DIR/stdout` | grep "OutOfMemoryError"` ]] ; then
+    echo "Previous stage failed on OutOfMemoryError. Running this stage."
+else
+    echo "Previous stage failed with a different error. Not marking DONE and exiting."
+    exit 1
+fi
+            ''' 
+        return script
+    
+class GobbleMemory(experiment_runner.JavaExpParams):
+    
+    def __init__(self, **keywords):
+        experiment_runner.JavaExpParams.__init__(self,keywords)
+
+    def get_instance(self):
+        return GobbleMemory()
+    
+    def create_experiment_script(self, exp_dir):
+        script = "\n"
+        cmd = "java " + self.get_java_args() + " edu.jhu.util.GobbleMemoryTest %s \n" % (self.get_args())
+        script += fancify_cmd(cmd)
+        return script
+        
+def prereqs_create_experiment_script(stage, exp_dir):
+        script = "\n"
+        for prereq in stage.prereqs:
+            if not hasattr(prereq, "exp_dir"):
+                # Skip the root stage 
+                continue 
+            script += "PREREQ_DIR=%s" % (prereq.exp_dir)
+            script += '''
+if [[ -e $PREREQ_DIR/DONE ]] ; then
+    echo "Previous stage ran successfully. Marking DONE and exiting."
+    touch DONE
+    exit 0
+elif [[ `tail -n 1000 $PREREQ_DIR/stdout | grep "OutOfMemoryError"` ]] ; then
+    echo "Previous stage failed on OutOfMemoryError. Running this stage."
+else
+    echo "Previous stage failed with a different error. Not marking DONE and exiting."
+    exit 1
+fi
+            ''' 
+        return script
+    
+import types
+def get_oome_stages(stage, max_mem=100*1000, max_doubles=4):
+    '''Get a new list of stages which are copies of the given stage, 
+    except that they double the working memory up to either max_mem, 
+    or the max number of doubles. 
+    ''' 
+    stages = [stage]
+    mem = stage.get("work_mem_megs")
+    for _ in range(max_doubles):
+        mem *= 2
+        if mem > max_mem:
+            break
+        doubled = stage.copy_with(work_mem_megs=mem)
+        doubled.set("memory", str(mem)+"M", incl_arg=False)
+        create1 = prereqs_create_experiment_script
+        create2 = doubled.create_experiment_script
+        def create3(s, exp_dir): 
+            return create1(s, exp_dir) + create2(exp_dir)
+        doubled.create_experiment_script = types.MethodType(create3, doubled)
+        doubled.add_prereq(stages[len(stages)-1])
+        stages += [doubled]
+    return stages
+        
+        

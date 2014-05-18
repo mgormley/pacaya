@@ -24,7 +24,7 @@ import multiprocessing
 from experiments.exp_util import *
 from experiments.path_defs import *
 from experiments.param_defs import *
-from experiments.srl_stages import ScrapeSrl, SrlExpParams
+from experiments.srl_stages import ScrapeSrl, SrlExpParams, GobbleMemory, get_oome_stages
 
 # ---------------------------- Experiments Creator Class ----------------------------------
 
@@ -35,6 +35,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     "dp-conllx-tmp",
                     "dp-conllx-tune",
                     "dp-pruning",
+                    "gobble-memory",
                     )
     
     def __init__(self, options):
@@ -112,7 +113,10 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 propTrainAsDev=0)  # TODO: Set to zero for final experiments.
                     exp = g.defaults + data + parser
                     exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
-                    exps.append(exp)
+                    if parser in [g.second_order, g.second_grand, g.second_sib]:
+                        exps += get_oome_stages(exp)
+                    else:
+                        exps.append(exp)
             return self._get_pipeline_from_exps(exps)
            
         elif self.expname == "dp-pruning":            
@@ -149,7 +153,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
                                 exps.append(exp)
             return self._get_pipeline_from_exps(exps)
         
-        if self.expname == "dp-conllx-tmp":
+        elif self.expname == "dp-conllx-tmp":
             # Temporary CoNLL-X experiment setup (currently testing why we can't overfit train).
             exps = []
             g.defaults += g.feat_mcdonald #tpl_narad 
@@ -169,6 +173,12 @@ class SrlExpParamsRunner(ExpParamsRunner):
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))
                         exps.append(exp)
+            return self._get_pipeline_from_exps(exps)
+            
+        elif self.expname == "gobble-memory":
+            exps = []
+            stage = GobbleMemory(work_mem_megs=1000)
+            exps += get_oome_stages(stage)
             return self._get_pipeline_from_exps(exps)
         
         else:
