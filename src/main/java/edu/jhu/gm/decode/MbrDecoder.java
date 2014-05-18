@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
@@ -14,18 +15,15 @@ import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.FactorGraph;
 import edu.jhu.gm.model.FgModel;
-import edu.jhu.gm.model.ProjDepTreeFactor;
 import edu.jhu.gm.model.Var;
-import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
-import edu.jhu.gm.model.VarSet;
 
 /**
  * Minimum Bayes Risk (MBR) decoder for a CRF model.
  * 
  * @author mgormley
  */
-public class MbrDecoder {
+public class MbrDecoder implements Decoder<Object, VarConfig> {
 
     public static class MbrDecoderPrm {
         public FgInferencerFactory infFactory = new BeliefPropagationPrm();
@@ -48,6 +46,12 @@ public class MbrDecoder {
         this.prm = prm;
     }
 
+    @Override
+    public VarConfig decode(FgInferencer inf, UFgExample ex, Object x) {
+        decode(inf, ex);
+        return mbrVarConfig;
+    }
+    
     /**
      * Runs inference and computes the MBR variable configuration. The outputs
      * are stored on the class, and can be queried after this call to decode.
@@ -131,4 +135,5 @@ public class MbrDecoder {
     	}
     	return m;
     }
+    
 }

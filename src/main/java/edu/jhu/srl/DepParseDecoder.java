@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.DepTree;
+import edu.jhu.data.simple.AnnoSentence;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.Var;

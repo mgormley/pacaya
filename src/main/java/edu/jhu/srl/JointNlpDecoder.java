@@ -3,6 +3,8 @@ package edu.jhu.srl;
 
 import edu.jhu.data.DepEdgeMask;
 import edu.jhu.data.conll.SrlGraph;
+import edu.jhu.data.simple.AnnoSentence;
+import edu.jhu.gm.app.Decoder;
 import edu.jhu.gm.data.UFgExample;
 import edu.jhu.gm.decode.MbrDecoder;
 import edu.jhu.gm.decode.MbrDecoder.MbrDecoderPrm;
@@ -12,7 +14,7 @@ import edu.jhu.gm.model.ProjDepTreeFactor.LinkVar;
 import edu.jhu.gm.model.VarConfig;
 
 // TODO: This should modify a {@link AnnoSentence} rather than cache the parents and srlGraph explicitly.
-public class JointNlpDecoder {
+public class JointNlpDecoder implements Decoder<AnnoSentence, AnnoSentence> {
 
     public static class JointNlpDecoderPrm {
         public MbrDecoderPrm mbrPrm = null;
@@ -30,6 +32,34 @@ public class JointNlpDecoder {
 
     public JointNlpDecoder(JointNlpDecoderPrm prm) {
         this.prm = prm;
+    }
+
+    public AnnoSentence decode(JointNlpFgModel model, UFgExample ex, AnnoSentence predSent) {
+        decode(model, ex);        
+        setAllPreds(predSent);        
+        return predSent;
+    }
+
+    @Override
+    public AnnoSentence decode(FgInferencer inf, UFgExample ex, AnnoSentence predSent) {
+        decode(inf, ex);        
+        setAllPreds(predSent);        
+        return predSent;
+    }
+
+    private void setAllPreds(AnnoSentence predSent) {
+        // Update SRL graph on the sentence. 
+        if (srlGraph != null) {
+            predSent.setSrlGraph(srlGraph);
+        }
+        // Update the dependency tree on the sentence.
+        if (parents != null) {
+            predSent.setParents(parents);
+        }
+        // Update the dependency mask on the sentence.
+        if (depEdgeMask != null) {
+            predSent.setDepEdgeMask(depEdgeMask);
+        }
     }
 
     /**
