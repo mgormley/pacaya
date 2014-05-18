@@ -114,7 +114,6 @@ class PathDefinitions():
         
         # Grammar Induction Output.
         parser_prefix = self.root_dir + "/exp/vem-conll_006"
-        require_path_exists(parser_prefix)
         
         self._set_paths_for_conll09_parses(p, "Spanish", "es", parser_prefix, require=False)
         self._set_paths_for_conll09_parses(p, "German",  "de", parser_prefix, require=False)
