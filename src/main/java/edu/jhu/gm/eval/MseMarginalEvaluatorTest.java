@@ -2,6 +2,8 @@ package edu.jhu.gm.eval;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+
 import org.junit.Test;
 
 import edu.jhu.gm.inf.BruteForceInferencer;
@@ -10,12 +12,13 @@ import edu.jhu.gm.model.Var;
 import edu.jhu.gm.model.VarConfig;
 import edu.jhu.gm.model.VarSet;
 import edu.jhu.gm.model.VarSetTest;
+import edu.jhu.gm.model.Var.VarType;
 
 public class MseMarginalEvaluatorTest {
 
-    static Var v1 = VarSetTest.getVar(0, 2);
-    static Var v2 = VarSetTest.getVar(1, 2);
-    static Var v3 = VarSetTest.getVar(2, 3);
+    static Var v1 = getVar(0, 2);
+    static Var v2 = getVar(1, 2);
+    static Var v3 = getVar(2, 3);
     
     private static class MockFgInferencer extends BruteForceInferencer {
 
@@ -56,4 +59,11 @@ public class MseMarginalEvaluatorTest {
         assertEquals(eval, val, 1e-13);
     }
 
+    public static Var getVar(int id, int numStates) {
+        ArrayList<String> stateNames = new ArrayList<String>();
+        for (int i=0; i<numStates; i++) {
+            stateNames.add("state" + i);
+        }
+        return new Var(VarType.PREDICTED, numStates, "var"+id, stateNames);
+    }
 }

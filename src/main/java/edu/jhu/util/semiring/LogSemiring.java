@@ -46,13 +46,10 @@ public class LogSemiring implements SemiringExt {
     public double fromLogProb(double logProb) {
         return logProb;
     }
-
-    // These operations don't make sense here. The LogPosNegSemiring should be
-    // used if these are needed.   
+    
     @Override
     public double minus(double x, double y) {
-        // return FastMath.logSubtract(x, y);
-        throw new UnsupportedOperationException();
+        return FastMath.logSubtract(x, y);
     }
     
     @Override

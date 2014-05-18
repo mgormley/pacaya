@@ -245,7 +245,9 @@ public class JointNlpRunner {
     public static double adaDeltaConstantAddend = Math.pow(Math.E, -6.);
     @Opt(hasArg=true, description="Stop training by this date/time.")
     public static Date stopTrainingBy = null;
-
+    @Opt(hasArg=true, description="Whether to use the mean squared error instead of conditional log-likelihood when evaluating training quality.")
+    public static boolean useMseForValue = false;
+    
     public JointNlpRunner() {
     }
 
@@ -631,6 +633,8 @@ public class JointNlpRunner {
         }
         prm.regularizer = new L2(l2variance);
         prm.numThreads = threads;
+        prm.useMseForValue = useMseForValue;
+        
         return prm;
     }
 

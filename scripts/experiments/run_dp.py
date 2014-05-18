@@ -61,7 +61,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.defaults += g.feat_mcdonald
         g.defaults.update(includeSrl=False, featureSelection=False, useGoldSyntax=True, 
                           adaGradEta=0.05, featureHashMod=10000000, sgdNumPasses=5, l2variance=10000,
-                          sgdAutoSelecFreq=2, sgdAutoSelectLr=False, pruneByDist=True,
+                          sgdAutoSelecFreq=2, sgdAutoSelectLr=True, pruneByDist=True,
                           useLogAddTable=True, acl14DepFeats=False)
         
         g.first_order = SrlExpParams(useProjDepTreeFactor=True, linkVarType="PREDICTED", predAts="DEP_TREE", 
@@ -69,7 +69,7 @@ class SrlExpParamsRunner(ExpParamsRunner):
         g.second_order = g.first_order + SrlExpParams(grandparentFactors=True, siblingFactors=True, tagger_parser="2nd", 
                                                   #bpUpdateOrder="SEQUENTIAL", bpSchedule="RANDOM", bpMaxIterations=5, 
                                                   bpUpdateOrder="PARALLEL", bpMaxIterations=10, 
-                                                  normalizeMessages=True)
+                                                  normalizeMessages=True, useMseForValue=True)
         g.second_grand = g.second_order + SrlExpParams(grandparentFactors=True, siblingFactors=False, tagger_parser="2nd-gra")
         g.second_sib = g.second_order + SrlExpParams(grandparentFactors=False, siblingFactors=True, tagger_parser="2nd-sib")
         g.unpruned_parsers = [g.second_sib, g.first_order, g.second_order, g.second_grand]
@@ -163,7 +163,8 @@ class SrlExpParamsRunner(ExpParamsRunner):
                     for parser in g.parsers:
                         data = gl.cx_data
                         data.update(l2variance=l2var_map[lang_short],
-                                    pruneModel=gl.pruneModel)
+                                    pruneModel=gl.pruneModel,
+                                    trainMaxNumSentences=trainMaxNumSentences)
                         data.remove("test")
                         exp = g.defaults + data + parser
                         exp += SrlExpParams(work_mem_megs=self.prm_defs.get_srl_work_mem_megs(exp))

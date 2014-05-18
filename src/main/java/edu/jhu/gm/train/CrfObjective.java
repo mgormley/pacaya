@@ -3,8 +3,10 @@ package edu.jhu.gm.train;
 import org.apache.commons.lang.mutable.MutableDouble;
 import org.apache.log4j.Logger;
 
+import edu.jhu.gm.app.IdxLoss;
 import edu.jhu.gm.data.LFgExample;
 import edu.jhu.gm.data.FgExampleList;
+import edu.jhu.gm.eval.MseMarginalEvaluator;
 import edu.jhu.gm.feat.FeatureVector;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
 import edu.jhu.gm.inf.FgInferencer;
@@ -20,19 +22,13 @@ import edu.jhu.util.Timer;
 
 public class CrfObjective implements ExampleObjective {
     
-    public interface CrfLoss {
-
-        double getLoss(int i, LFgExample ex, FgInferencer infLatPred);
-        
-    }
-    
     private static final Logger log = Logger.getLogger(CrfObjective.class);
 
     private static final double MAX_LOG_LIKELIHOOD = 1e-10;
     
     private FgExampleList data;
     private FgInferencerFactory infFactory;
-    private CrfLoss loss;
+    private boolean useMseForValue;
     
     // Timer: update the model.
     private Timer updTimer = new Timer();
@@ -46,13 +42,12 @@ public class CrfObjective implements ExampleObjective {
     public CrfObjective(FgExampleList data, FgInferencerFactory infFactory) {
         this.data = data;
         this.infFactory = infFactory;
-        this.loss = null;
     }
 
-    public CrfObjective(FgExampleList data, FgInferencerFactory infFactory, CrfLoss loss) {
+    public CrfObjective(FgExampleList data, FgInferencerFactory infFactory, boolean useMseForValue) {
         this.data = data;
         this.infFactory = infFactory;
-        this.loss = loss;
+        this.useMseForValue = useMseForValue;
     }
 
     /** @inheritDoc */
@@ -85,7 +80,13 @@ public class CrfObjective implements ExampleObjective {
         if (ac.accumValue) {
             // Compute the conditional log-likelihood for this example.
             t.reset(); t.start();
-            ac.value += getValue(ex, fgLat, infLat, fgLatPred, infLatPred, i);
+            if (useMseForValue) {
+                // Add the negative MSE
+                ac.value += -getMseLoss(ex, infLatPred);                
+            } else {
+                // Add the conditional log-likelihood
+                ac.value += getValue(ex, fgLat, infLat, fgLatPred, infLatPred, i);
+            }
             t.stop(); valTimer.add(t);
         }
         if (ac.accumGradient) {
@@ -97,9 +98,15 @@ public class CrfObjective implements ExampleObjective {
         if (ac.accumWeight) {
             ac.weight += ex.getWeight();
         }
-        if (ac.accumTrainLoss && loss != null) {
-            ac.trainLoss += loss.getLoss(i, ex, infLatPred);
+        if (ac.accumTrainLoss) {
+            //if (loss != null) { ac.trainLoss += loss.getLoss(i, ex, infLatPred); }
+            //ac.trainLoss += getMseLoss(ex, infLatPred);
         }
+    }
+
+    private double getMseLoss(LFgExample ex, FgInferencer infLatPred) {
+        MseMarginalEvaluator mse = new MseMarginalEvaluator();
+        return mse.evaluate(ex.getGoldConfig(), infLatPred);
     }
 
     /**

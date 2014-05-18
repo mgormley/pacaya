@@ -3,7 +3,11 @@ package edu.jhu.gm.eval;
 import edu.jhu.gm.inf.FgInferencer;
 import edu.jhu.gm.model.DenseFactor;
 import edu.jhu.gm.model.Var;
+import edu.jhu.gm.model.Var.VarType;
 import edu.jhu.gm.model.VarConfig;
+import edu.jhu.util.semiring.LogSemiring;
+import edu.jhu.util.semiring.RealSemiring;
+import edu.jhu.util.semiring.SemiringExt;
 
 public class MseMarginalEvaluator {
 
@@ -17,19 +21,22 @@ public class MseMarginalEvaluator {
      * @return The UNORMALIZED mean squared error.
      */
     public double evaluate(VarConfig goldConfig, FgInferencer inf) {
-        double sum = 0.0;
+        SemiringExt s = (inf.isLogDomain()) ? new LogSemiring() : new RealSemiring();
+        double sum = s.zero();
 
         for (Var v : goldConfig.getVars()) {
-            DenseFactor marg = inf.getMarginals(v);
-            int goldState = goldConfig.getState(v);
-            for (int c=0; c<marg.size(); c++) {
-                double goldMarg = (c == goldState) ? 1.0 : 0.0;
-                double diff = goldMarg - marg.getValue(c);
-                sum += diff * diff; 
+            if (v.getType() == VarType.PREDICTED) {
+                DenseFactor marg = inf.getMarginals(v);
+                int goldState = goldConfig.getState(v);
+                for (int c=0; c<marg.size(); c++) {
+                    double goldMarg = (c == goldState) ? s.one() : s.zero();
+                    double predMarg = marg.getValue(c);
+                    double diff = s.minus(Math.max(goldMarg, predMarg), Math.min(goldMarg, predMarg));
+                    sum = s.plus(sum, s.times(diff, diff));
+                }
             }
         }
-        
-        return sum;
+        return s.toReal(sum);
     }
     
 }

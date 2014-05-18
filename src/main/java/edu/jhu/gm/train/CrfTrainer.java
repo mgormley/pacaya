@@ -2,6 +2,7 @@ package edu.jhu.gm.train;
 
 import org.apache.log4j.Logger;
 
+import edu.jhu.gm.app.IdxLoss;
 import edu.jhu.gm.data.FgExampleList;
 import edu.jhu.gm.inf.BeliefPropagation.BeliefPropagationPrm;
 import edu.jhu.gm.inf.BeliefPropagation.FgInferencerFactory;
@@ -34,6 +35,12 @@ public class CrfTrainer {
         public Optimizer<DifferentiableBatchFunction> batchMaximizer = null;//new SGD(new SGDPrm());
         public Regularizer regularizer = new L2(1.0);
         public int numThreads = 1;
+        /**
+         * Whether to use the mean squared error (MSE) in place of conditional
+         * log-likelihood in the CRF objective. This is useful for loopy graphs
+         * where the BP estimate of the partition function is unreliable.
+         */
+        public boolean useMseForValue;
     }
         
     private CrfTrainerPrm prm; 
@@ -47,7 +54,7 @@ public class CrfTrainer {
     
     public FgModel train(FgModel model, FgExampleList data) {
 
-        AvgBatchObjective objective = new AvgBatchObjective(new CrfObjective(data, prm.infFactory), model, prm.numThreads);
+        AvgBatchObjective objective = new AvgBatchObjective(new CrfObjective(data, prm.infFactory, prm.useMseForValue), model, prm.numThreads);
         if (prm.maximizer != null) {
             DifferentiableFunction fn = objective;
             if (prm.regularizer != null) {
