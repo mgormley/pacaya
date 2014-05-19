@@ -154,6 +154,7 @@ public class AvgBatchObjective extends AbstractDifferentiableBatchFunction imple
         @Override
         public Object call() {
             Accumulator sparseAc = new Accumulator();
+            sparseAc.setFlagsFromOther(ac);
             synchronized (ac) {
                 if (ac.accumValue) {
                     log.trace("Computing value for example " + i);

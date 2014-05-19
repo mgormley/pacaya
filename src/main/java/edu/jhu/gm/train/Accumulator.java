@@ -30,7 +30,15 @@ public class Accumulator {
             this.gradient.add(other.gradient);
         }
     }
-   
+
+    public void setFlagsFromOther(Accumulator other) {
+        this.accumValue = other.accumValue;
+        this.accumGradient = other.accumGradient;
+        this.accumWeight = other.accumWeight;
+        this.accumTrainLoss = other.accumTrainLoss;
+        this.accumDevLoss = other.accumDevLoss;        
+    }
+    
     /* ------ Gradient ------ */
     
     public FgModel getGradient() {
