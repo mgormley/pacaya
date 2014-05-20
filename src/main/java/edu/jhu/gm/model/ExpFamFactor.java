@@ -22,6 +22,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
     // clamped factors which represent the numerator factor graph.
     protected IntIter iter;
     protected int clmpConfigId = -1;
+    protected boolean initialized = false;
 
     public ExpFamFactor(VarSet vars) {
         super(vars);
@@ -42,6 +43,9 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
         
     /** Gets the unnormalized numerator value contributed by this factor. */
     public double getUnormalizedScore(int configId) {
+        if (!initialized) {
+            throw new IllegalStateException("Factor cannot be queried until updateFromModel() has been called.");
+        }
         return super.getUnormalizedScore(configId);
     }
 
@@ -54,6 +58,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      *            log-probability domain.
      */
     public void updateFromModel(FgModel model, boolean logDomain) {
+        initialized = true;
         if (iter != null) { iter.reset(); }
         
         ExpFamFactor f = this;
@@ -85,7 +90,7 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
      * expects to be able to call getFeatures, regardless of whether or not getDotProd has
      * ruled it out as having any mass.
      */
-    public double getDotProd(int config, FgModel model, boolean logDomain) {
+    protected double getDotProd(int config, FgModel model, boolean logDomain) {
     	 FeatureVector fv = getFeatures(config);
          double dot = model.dot(fv);
          if (logDomain) { return dot; }
@@ -94,7 +99,6 @@ public abstract class ExpFamFactor extends ExplicitFactor implements Factor, Fea
 
     @Override
     public void addExpectedFeatureCounts(IFgModel counts, double multiplier, FgInferencer inferencer, int factorId) {
-
         DenseFactor factorMarginal = inferencer.getMarginalsForFactorId(factorId);
         
         int numConfigs = factorMarginal.getVars().calcNumConfigs();
