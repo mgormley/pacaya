@@ -42,8 +42,10 @@ public class LogLinearObsFeatsTest {
             DenseFactor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=A", predLabel);
-            JUnitUtils.assertArrayEquals(new double[] { -2.6635044410250623, -2.4546874985293083, -0.1790960208295953,
-                    -4.781808684934602 }, dist.getValues(), 1e-3);
+            double[] goldLogMarg = new double[] { -2.6635044410250623, -2.4546874985293083, -0.1790960208295953,
+                    -4.781808684934602 };
+            DoubleArrays.exp(goldLogMarg);
+            JUnitUtils.assertArrayEquals(goldLogMarg, dist.getValues(), 1e-3);
         }
         {
             Pair<String,DenseFactor> p = td.decode(model, data.get(1));
@@ -51,8 +53,10 @@ public class LogLinearObsFeatsTest {
             DenseFactor dist = p.get2();
             System.out.println(Arrays.toString(dist.getValues()));
             assertEquals("y=B", predLabel);
-            JUnitUtils.assertArrayEquals(new double[] { -3.4406673404005783, -0.34125259077453896, -1.6728440342006794,
-                    -2.668373777179833 }, dist.getValues(), 1e-3);
+            double[] goldLogMarg = new double[] { -3.4406673404005783, -0.34125259077453896, -1.6728440342006794,
+                    -2.668373777179833 };
+            DoubleArrays.exp(goldLogMarg);
+            JUnitUtils.assertArrayEquals(goldLogMarg, dist.getValues(), 1e-3);
         }
     }
     
