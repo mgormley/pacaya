@@ -219,13 +219,19 @@ public class FactorGraph extends DirectedGraph<FgNode, FgEdge> implements Serial
         }
         
         for (Factor origFactor : this.getFactors()) {
-            VarConfig factorConfig = clampVars.getIntersection(origFactor.getVars());
-            Factor clmpFactor = origFactor.getClamped(factorConfig);
-            clmpFg.addFactor(clmpFactor);
+            if (origFactor instanceof ClampFactor) {
+                clmpFg.addFactor(origFactor);
+            } else {
+                VarConfig factorConfig = clampVars.getIntersection(origFactor.getVars());
+                Factor clmpFactor = origFactor.getClamped(factorConfig);
+                clmpFg.addFactor(clmpFactor);            
+            }
         }
         
         // Add unary factors to the clamped variables to ensure they take on the correct value.
         for (Var v : clampVars.getVars()) {
+            // TODO: We could skip these (cautiously) if there's already a
+            // ClampFactor attached to this variable. 
             int c = clampVars.getState(v);
             clmpFg.addFactor(new ClampFactor(v, c));
         }
